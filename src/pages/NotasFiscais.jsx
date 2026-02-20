@@ -13,7 +13,9 @@ export default function NotasFiscais() {
   const [clientes, setClientes] = useState([]);
   const [form, setForm] = useState(defaultForm());
   const [emitindo, setEmitindo] = useState(false);
+  const [transmitindo, setTransmitindo] = useState(null);
   const [msgFeedback, setMsgFeedback] = useState(null);
+  const [temSpedy, setTemSpedy] = useState(false);
 
   function defaultForm() {
     return { tipo: "NFe", cliente_id: "", cliente_nome: "", ordem_servico_id: "", valor_total: 0, observacoes: "", data_emissao: new Date().toISOString().split("T")[0] };
