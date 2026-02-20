@@ -145,6 +145,49 @@ export default function NotasFiscais() {
     setEmitindo(false);
   };
 
+  const imprimirNota = (nota) => {
+    const win = window.open("", "_blank");
+    win.document.write(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8"/>
+        <title>Nota Fiscal - ${nota.tipo} ${nota.numero || nota.id}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 40px; color: #111; }
+          h1 { font-size: 22px; margin-bottom: 4px; }
+          .sub { color: #666; font-size: 13px; margin-bottom: 24px; }
+          .row { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 6px; }
+          .label { font-size: 12px; color: #888; }
+          .value { font-size: 14px; font-weight: 600; }
+          .total { font-size: 20px; font-weight: bold; color: #f97316; }
+          .badge { display: inline-block; background: #f3f4f6; color: #374151; padding: 2px 10px; border-radius: 20px; font-size: 12px; margin-bottom: 16px; }
+          .section { margin-top: 20px; }
+          .chave { font-size: 11px; color: #666; word-break: break-all; margin-top: 16px; background: #f9f9f9; padding: 8px; border-radius: 4px; }
+          @media print { body { padding: 20px; } }
+        </style>
+      </head>
+      <body>
+        <h1>${nota.tipo} - Nota Fiscal</h1>
+        <p class="sub">Emitida por Oficina Pro</p>
+        <span class="badge">${nota.status}</span>
+        <div class="section">
+          <div class="row"><span class="label">Número / Série</span><span class="value">${nota.numero || "—"}${nota.serie ? ` / ${nota.serie}` : ""}</span></div>
+          <div class="row"><span class="label">Cliente</span><span class="value">${nota.cliente_nome || "—"}</span></div>
+          <div class="row"><span class="label">Data de Emissão</span><span class="value">${nota.data_emissao || "—"}</span></div>
+          <div class="row"><span class="label">Descrição / Observações</span><span class="value">${nota.observacoes || "Serviços de manutenção automotiva"}</span></div>
+          <div class="row"><span class="label">Valor Total</span><span class="total">R$ ${Number(nota.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+        </div>
+        ${nota.chave_acesso ? `<div class="chave"><strong>Chave de Acesso:</strong> ${nota.chave_acesso}</div>` : ""}
+        ${nota.spedy_id ? `<div class="chave"><strong>ID Spedy:</strong> ${nota.spedy_id}</div>` : ""}
+        ${nota.pdf_url ? `<div style="margin-top:16px;"><a href="${nota.pdf_url}" target="_blank" style="color:#f97316;">Baixar PDF Oficial</a></div>` : ""}
+        <script>window.onload = function(){ window.print(); }</script>
+      </body>
+      </html>
+    `);
+    win.document.close();
+  };
+
   const filtradas = notas.filter(n =>
     !search ||
     n.numero?.includes(search) ||
