@@ -290,8 +290,16 @@ export default function NotasFiscais() {
                             {transmitindo === nota.id ? "..." : "Transmitir"}
                           </button>
                         )}
+                        {nota.pdf_url && (
+                          <a href={nota.pdf_url} target="_blank" rel="noreferrer" title="Baixar PDF" className="p-1 text-gray-500 hover:text-green-400 transition-all">
+                            <Download className="w-4 h-4" />
+                          </a>
+                        )}
+                        <button title="Imprimir" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
+                          <Printer className="w-4 h-4" />
+                        </button>
                         {nota.chave_acesso && (
-                          <button title="Ver chave" onClick={() => alert(`Chave de Acesso:\n${nota.chave_acesso}`)} className="p-1 text-gray-500 hover:text-white transition-all">
+                          <button title="Ver chave de acesso" onClick={() => alert(`Chave de Acesso:\n${nota.chave_acesso}`)} className="p-1 text-gray-500 hover:text-white transition-all">
                             <Eye className="w-4 h-4" />
                           </button>
                         )}
