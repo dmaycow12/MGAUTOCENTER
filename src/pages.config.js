@@ -53,6 +53,7 @@ import OrdemServico from './pages/OrdemServico';
 import Estoque from './pages/Estoque';
 import Financeiro from './pages/Financeiro';
 import NotasFiscais from './pages/NotasFiscais';
+import Configuracoes from './pages/Configuracoes';
 import __Layout from './Layout.jsx';
 
 
@@ -63,6 +64,7 @@ export const PAGES = {
     "Estoque": Estoque,
     "Financeiro": Financeiro,
     "NotasFiscais": NotasFiscais,
+    "Configuracoes": Configuracoes,
 }
 
 export const pagesConfig = {
