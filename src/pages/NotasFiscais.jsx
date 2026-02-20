@@ -165,7 +165,7 @@ export default function NotasFiscais() {
     <div className="space-y-4">
       {/* Feedback */}
       {msgFeedback && (
-        <div className={`flex items-center gap-3 p-4 rounded-xl border ${msgFeedback.tipo === "sucesso" ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"}`}>
+        <div className={`flex items-center gap-3 p-4 rounded-xl border ${msgFeedback.tipo === "sucesso" ? "bg-green-500/10 border-green-500/20 text-green-400" : msgFeedback.tipo === "erro" ? "bg-red-500/10 border-red-500/20 text-red-400" : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"}`}>
           {msgFeedback.tipo === "sucesso" ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
           <span className="text-sm">{msgFeedback.msg}</span>
         </div>
