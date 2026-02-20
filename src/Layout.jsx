@@ -28,9 +28,114 @@ const navItems = [
   { name: "Configurações", page: "Configuracoes", icon: Settings },
 ];
 
+function LoginPage() {
+  const [usuario, setUsuario] = useState("");
+  const [senha, setSenha] = useState("");
+  const [erro, setErro] = useState("");
+  const [carregando, setCarregando] = useState(false);
+
+  const ADMIN_USER = "admin";
+  const ADMIN_PASS = "admin123";
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setErro("");
+    setCarregando(true);
+    setTimeout(() => {
+      if (usuario === ADMIN_USER && senha === ADMIN_PASS) {
+        sessionStorage.setItem("oficina_auth", "ok");
+        window.location.reload();
+      } else {
+        setErro("Usuário ou senha incorretos.");
+        setCarregando(false);
+      }
+    }, 600);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-orange-500/20">
+            <Wrench className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-white font-bold text-2xl">Oficina Pro</h1>
+          <p className="text-gray-500 text-sm mt-1">ERP Automotivo — Acesso Restrito</p>
+        </div>
+
+        <form onSubmit={handleLogin} className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
+          <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
+            <Lock className="w-4 h-4 text-orange-400" />
+            <span>Entre com suas credenciais</span>
+          </div>
+
+          {erro && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg px-3 py-2">
+              {erro}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Usuário</label>
+            <input
+              type="text"
+              value={usuario}
+              onChange={e => setUsuario(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500 placeholder-gray-600"
+              placeholder="admin"
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Senha</label>
+            <input
+              type="password"
+              value={senha}
+              onChange={e => setSenha(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500 placeholder-gray-600"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={carregando}
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-lg font-medium text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {carregando ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : null}
+            {carregando ? "Entrando..." : "Entrar"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [autenticado, setAutenticado] = useState(false);
+  const [verificando, setVerificando] = useState(true);
+
+  useEffect(() => {
+    const auth = sessionStorage.getItem("oficina_auth");
+    setAutenticado(auth === "ok");
+    setVerificando(false);
+  }, []);
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("oficina_auth");
+    window.location.reload();
+  };
+
+  if (verificando) return (
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (!autenticado) return <LoginPage />;
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 flex">
