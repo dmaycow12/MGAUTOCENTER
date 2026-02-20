@@ -275,6 +275,13 @@ export default function Layout({ children, currentPageName }) {
             <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
               <span className="text-white text-xs font-bold">A</span>
             </div>
+            <button
+              onClick={handleLogout}
+              title="Sair do sistema"
+              className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-gray-800 transition-all"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </header>
 
