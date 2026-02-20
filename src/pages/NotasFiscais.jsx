@@ -78,6 +78,35 @@ export default function NotasFiscais() {
     setImportando(false);
   };
 
+  // Transmitir rascunho existente via Spedy
+  const transmitirRascunho = async (nota) => {
+    if (!confirm(`Transmitir nota ${nota.tipo} para a Spedy?`)) return;
+    setTransmitindo(nota.id);
+    try {
+      const response = await base44.functions.invoke("emitirNotaFiscal", {
+        tipo: nota.tipo,
+        cliente_id: nota.cliente_id,
+        cliente_nome: nota.cliente_nome,
+        ordem_servico_id: nota.ordem_servico_id,
+        valor_total: nota.valor_total,
+        observacoes: nota.observacoes,
+        data_emissao: nota.data_emissao,
+      });
+      if (response.data?.sucesso) {
+        await base44.entities.NotaFiscal.delete(nota.id);
+        setMsgFeedback({ tipo: "sucesso", msg: `Nota ${nota.tipo} transmitida e emitida com sucesso!` });
+      } else {
+        setMsgFeedback({ tipo: "erro", msg: response.data?.erro || "Erro ao transmitir para a Spedy." });
+      }
+      setTimeout(() => setMsgFeedback(null), 5000);
+      load();
+    } catch (e) {
+      setMsgFeedback({ tipo: "erro", msg: "Erro ao transmitir: " + e.message });
+      setTimeout(() => setMsgFeedback(null), 5000);
+    }
+    setTransmitindo(null);
+  };
+
   // Emissão via Spedy
   const emitirNota = async () => {
     if (!form.cliente_nome) return alert("Informe o cliente.");
