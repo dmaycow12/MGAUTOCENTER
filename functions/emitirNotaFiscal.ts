@@ -1,18 +1,76 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+/**
+ * Emite nota fiscal via Spedy usando o endpoint /orders (Venda).
+ * Essa é a forma mais simples: a Spedy usa as configurações tributárias
+ * já definidas no backoffice para gerar a NF automaticamente.
+ * 
+ * Payload esperado:
+ * {
+ *   nota_id: string (ID do registro NotaFiscal existente para atualizar, opcional),
+ *   tipo: 'NFSe' | 'NFe' | 'NFCe',
+ *   cliente_id: string,
+ *   cliente_nome: string,
+ *   cliente_cpf_cnpj: string,
+ *   cliente_email: string,
+ *   cliente_telefone: string,
+ *   cliente_endereco: string,
+ *   cliente_numero: string,
+ *   cliente_bairro: string,
+ *   cliente_cep: string,
+ *   cliente_cidade: string,
+ *   cliente_estado: string,
+ *   ordem_servico_id: string,
+ *   items: [{ descricao: string, quantidade: number, valor_unitario: number, valor_total: number }],
+ *   valor_total: number,
+ *   forma_pagamento: string,
+ *   observacoes: string,
+ *   data_emissao: string (YYYY-MM-DD),
+ * }
+ */
+
+const PAYMENT_MAP = {
+  'Dinheiro': 'cash',
+  'Cartão de Crédito': 'creditCard',
+  'Cartão de Débito': 'debitCard',
+  'PIX': 'pix',
+  'Boleto': 'billetBank',
+  'Transferência': 'bankTransfer',
+  'A Prazo': 'other',
+};
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-
     const user = await base44.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json();
-    const { tipo, cliente_id, cliente_nome, ordem_servico_id, valor_total, observacoes, data_emissao } = body;
+    const {
+      nota_id,
+      tipo,
+      cliente_id,
+      cliente_nome,
+      cliente_cpf_cnpj,
+      cliente_email,
+      cliente_telefone,
+      cliente_endereco,
+      cliente_numero,
+      cliente_bairro,
+      cliente_cep,
+      cliente_cidade,
+      cliente_estado,
+      ordem_servico_id,
+      items,
+      valor_total,
+      forma_pagamento,
+      observacoes,
+      data_emissao,
+    } = body;
 
-    // Busca configurações Spedy
+    // 1. Busca configurações Spedy
     const configs = await base44.asServiceRole.entities.Configuracao.list();
     const apiKeyConfig = configs.find(c => c.chave === 'spedy_api_key');
     const ambienteConfig = configs.find(c => c.chave === 'spedy_ambiente');
@@ -21,162 +79,153 @@ Deno.serve(async (req) => {
     const ambiente = ambienteConfig?.valor || 'homologacao';
 
     if (!spedyApiKey) {
-      return Response.json({ sucesso: false, erro: 'Chave API Spedy não configurada.' }, { status: 400 });
+      return Response.json({ sucesso: false, erro: 'Chave API Spedy não configurada. Acesse Configurações.' }, { status: 400 });
     }
 
-    // URL base Spedy conforme documentação oficial
     const baseUrl = ambiente === 'producao'
       ? 'https://api.spedy.com.br/v1'
       : 'https://sandbox-api.spedy.com.br/v1';
 
-    // Busca dados do cliente se tiver ID
-    let clienteData = { nome: cliente_nome || '', cpf_cnpj: '', email: '', telefone: '', endereco: '', cidade: '', estado: '', cep: '' };
-    if (cliente_id) {
-      const clientes = await base44.asServiceRole.entities.Cliente.list();
-      const c = clientes.find(cl => cl.id === cliente_id);
-      if (c) {
-        clienteData = {
-          nome: c.nome || '',
-          cpf_cnpj: c.cpf_cnpj || '',
-          email: c.email || '',
-          telefone: c.telefone || '',
-          endereco: c.endereco || '',
-          numero: c.numero || '',
-          bairro: c.bairro || '',
-          cidade: c.cidade || '',
-          estado: c.estado || '',
-          cep: c.cep || '',
-        };
-      }
-    }
+    // 2. Monta dados do cliente (tomador)
+    const cpfCnpj = (cliente_cpf_cnpj || '').replace(/\D/g, '') || null;
+    const cep = (cliente_cep || '').replace(/\D/g, '') || null;
 
-    // Monta receiver (destinatário/tomador)
-    const cpfCnpj = (clienteData.cpf_cnpj || '').replace(/\D/g, '');
-    const receiver = {
-      name: clienteData.nome,
-      ...(cpfCnpj.length === 14 ? { federalTaxNumber: cpfCnpj } : {}),
-      ...(cpfCnpj.length === 11 ? { federalTaxNumber: cpfCnpj } : {}),
-      email: clienteData.email || undefined,
-      address: clienteData.cidade ? {
-        street: clienteData.endereco || '',
-        number: clienteData.numero || '',
-        district: clienteData.bairro || '',
-        postalCode: (clienteData.cep || '').replace(/\D/g, ''),
-        city: {
-          name: clienteData.cidade || '',
-          state: clienteData.estado || '',
+    const customer = {
+      name: cliente_nome || 'Consumidor Final',
+      ...(cpfCnpj ? { federalTaxNumber: cpfCnpj } : {}),
+      ...(cliente_email ? { email: cliente_email } : {}),
+      ...(cliente_telefone ? { phone: cliente_telefone.replace(/\D/g, '').substring(0, 15) } : {}),
+      ...(cliente_cidade ? {
+        address: {
+          street: cliente_endereco || '',
+          number: cliente_numero || 'S/N',
+          district: cliente_bairro || '',
+          postalCode: cep || '',
+          city: {
+            name: cliente_cidade,
+            state: cliente_estado || '',
+          },
+          country: 'BRA',
         }
-      } : undefined,
+      } : {}),
     };
 
-    let endpoint = '';
-    let payload = {};
+    // 3. Monta itens da venda
+    const orderItems = (items && items.length > 0) ? items.map((item, idx) => ({
+      description: item.descricao || `Item ${idx + 1}`,
+      quantity: Number(item.quantidade) || 1,
+      price: Number(item.valor_unitario) || Number(item.valor_total) || Number(valor_total),
+      amount: Number(item.valor_total) || (Number(item.quantidade) * Number(item.valor_unitario)),
+      product: {
+        code: `SRV-${String(idx + 1).padStart(3, '0')}`,
+        name: (item.descricao || `Serviço ${idx + 1}`).substring(0, 120),
+        price: Number(item.valor_unitario) || Number(item.valor_total) || Number(valor_total),
+      },
+    })) : [{
+      description: observacoes || 'Serviços de manutenção automotiva',
+      quantity: 1,
+      price: Number(valor_total) || 0,
+      amount: Number(valor_total) || 0,
+      product: {
+        code: 'SRV-001',
+        name: (observacoes || 'Serviços de manutenção automotiva').substring(0, 120),
+        price: Number(valor_total) || 0,
+      },
+    }];
 
-    if (tipo === 'NFSe') {
-      // Endpoint NFSe: POST /service-invoices
-      endpoint = `${baseUrl}/service-invoices`;
-      payload = {
-        cityServiceCode: '1.01', // código genérico - idealmente configurável
-        description: observacoes || 'Serviços de manutenção automotiva',
-        servicesAmount: Number(valor_total) || 0,
-        issuedOn: data_emissao ? new Date(data_emissao).toISOString() : new Date().toISOString(),
-        externalId: ordem_servico_id || undefined,
-        taker: receiver,
-      };
-    } else if (tipo === 'NFe') {
-      // Endpoint NFe: POST /product-invoices
-      endpoint = `${baseUrl}/product-invoices`;
-      payload = {
-        nature: 1, // venda
-        recipient: receiver,
-        items: [{
-          code: '001',
-          description: observacoes || 'Serviços e peças - manutenção automotiva',
-          quantity: 1,
-          unitOfMeasure: 'UN',
-          unitPrice: Number(valor_total) || 0,
-          totalPrice: Number(valor_total) || 0,
-          ncm: '8708.99.90',
-          cfop: '5102',
-        }],
-        total: { goods: Number(valor_total) || 0 },
-      };
-    } else if (tipo === 'NFCe') {
-      // NFCe via product-invoices com model nfce
-      endpoint = `${baseUrl}/product-invoices`;
-      payload = {
-        model: 'nfce',
-        nature: 1,
-        recipient: receiver,
-        items: [{
-          code: '001',
-          description: observacoes || 'Serviços e peças - manutenção automotiva',
-          quantity: 1,
-          unitOfMeasure: 'UN',
-          unitPrice: Number(valor_total) || 0,
-          totalPrice: Number(valor_total) || 0,
-          ncm: '8708.99.90',
-          cfop: '5102',
-        }],
-        total: { goods: Number(valor_total) || 0 },
-      };
-    } else {
-      return Response.json({ sucesso: false, erro: `Tipo de nota "${tipo}" não suportado.` }, { status: 400 });
-    }
+    // 4. Monta payload do pedido (Order)
+    const orderPayload = {
+      date: data_emissao ? new Date(data_emissao).toISOString() : new Date().toISOString(),
+      amount: Number(valor_total) || 0,
+      customer,
+      items: orderItems,
+      status: 'approved',
+      autoIssueMode: 'immediately',
+      ...(forma_pagamento ? { paymentMethod: PAYMENT_MAP[forma_pagamento] || 'other' } : {}),
+      ...(ordem_servico_id ? { transactionId: ordem_servico_id } : {}),
+      sendEmailToCustomer: false,
+    };
 
-    console.log('Chamando Spedy:', endpoint);
-    console.log('Payload:', JSON.stringify(payload));
+    console.log('Criando venda na Spedy:', JSON.stringify(orderPayload, null, 2));
 
-    const response = await fetch(endpoint, {
+    // 5. Cria a venda na Spedy
+    const orderResp = await fetch(`${baseUrl}/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Api-Key': spedyApiKey,
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(orderPayload),
     });
 
-    const rawText = await response.text();
-    console.log('Spedy status:', response.status);
-    console.log('Spedy response:', rawText.substring(0, 1000));
+    const orderRawText = await orderResp.text();
+    console.log('Spedy /orders status:', orderResp.status);
+    console.log('Spedy /orders response:', orderRawText.substring(0, 1000));
 
-    let result = {};
-    try {
-      result = rawText ? JSON.parse(rawText) : {};
-    } catch (_) {
-      result = { raw: rawText };
-    }
+    let orderResult = {};
+    try { orderResult = orderRawText ? JSON.parse(orderRawText) : {}; } catch (_) { orderResult = { raw: orderRawText }; }
 
-    if (response.ok || response.status === 201 || response.status === 202) {
-      // Salva a nota fiscal no banco como Emitida
-      await base44.asServiceRole.entities.NotaFiscal.create({
-        tipo,
-        numero: String(result.number || result.numero || result.id || ''),
-        serie: String(result.series || result.serie || ''),
-        status: 'Emitida',
-        cliente_id: cliente_id || '',
-        cliente_nome: clienteData.nome,
-        ordem_servico_id: ordem_servico_id || '',
-        valor_total: Number(valor_total),
-        chave_acesso: result.accessKey || result.chave_acesso || result.chave || '',
-        spedy_id: String(result.id || ''),
-        xml_url: result.xmlUrl || result.xml_url || '',
-        pdf_url: result.pdfUrl || result.pdf_url || '',
-        data_emissao: data_emissao,
-        observacoes: observacoes || '',
-      });
-
-      return Response.json({ sucesso: true, nota: result });
-    } else {
-      const erroMsg = result.message || result.erro || result.error || result.errors?.join(', ') || rawText.substring(0, 500) || `Status ${response.status}`;
+    if (!orderResp.ok) {
+      const erroMsg = orderResult.message || orderResult.error || orderResult.errors?.join(', ') || orderRawText.substring(0, 400);
       return Response.json({
         sucesso: false,
-        erro: `Spedy (${response.status}): ${erroMsg}`,
-        detalhes: result,
+        erro: `Erro ao criar venda na Spedy (${orderResp.status}): ${erroMsg}`,
+        detalhes: orderResult,
       }, { status: 400 });
     }
+
+    const orderId = orderResult.id;
+
+    // 6. Emite as notas fiscais da venda
+    const issueResp = await fetch(`${baseUrl}/orders/${orderId}/invoices/issue`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Api-Key': spedyApiKey,
+      },
+      body: JSON.stringify({ effectiveDate: data_emissao ? new Date(data_emissao).toISOString() : new Date().toISOString() }),
+    });
+
+    const issueRawText = await issueResp.text();
+    console.log('Spedy /issue status:', issueResp.status);
+    console.log('Spedy /issue response:', issueRawText.substring(0, 500));
+
+    let issueResult = {};
+    try { issueResult = issueRawText ? JSON.parse(issueRawText) : {}; } catch (_) { issueResult = {}; }
+
+    // 7. Salva/atualiza no banco local
+    const notaData = {
+      tipo: tipo || 'NFSe',
+      numero: String(orderResult.number || orderResult.id || orderId || ''),
+      serie: String(orderResult.series || ''),
+      status: 'Emitida',
+      cliente_id: cliente_id || '',
+      cliente_nome: cliente_nome || '',
+      ordem_servico_id: ordem_servico_id || '',
+      valor_total: Number(valor_total),
+      spedy_id: String(orderId || ''),
+      xml_url: '',
+      pdf_url: '',
+      data_emissao: data_emissao || new Date().toISOString().split('T')[0],
+      observacoes: observacoes || '',
+    };
+
+    if (nota_id) {
+      await base44.asServiceRole.entities.NotaFiscal.update(nota_id, notaData);
+    } else {
+      await base44.asServiceRole.entities.NotaFiscal.create(notaData);
+    }
+
+    return Response.json({
+      sucesso: true,
+      ordem_id: orderId,
+      ordem: orderResult,
+      emissao: issueResult,
+      mensagem: `Venda criada (ID: ${orderId}) e NF enfileirada para emissão. Status: enqueued → será autorizada automaticamente pela prefeitura/SEFAZ.`,
+    });
+
   } catch (error) {
-    console.error('Erro função emitirNotaFiscal:', error.message);
+    console.error('Erro emitirNotaFiscal:', error.message, error.stack);
     return Response.json({ sucesso: false, erro: error.message }, { status: 500 });
   }
 });
