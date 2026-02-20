@@ -174,7 +174,31 @@ export default function NotasFiscais() {
       const response = await base44.functions.invoke("emitirNotaFiscal", payload);
 
       if (response.data?.sucesso) {
-        if (rascunhoNota) await base44.entities.NotaFiscal.delete(rascunhoNota.id);
+        // Salva a nota emitida no banco local
+        const notaSalva = {
+          tipo: f.tipo,
+          status: "Emitida",
+          cliente_id: f.cliente_id || "",
+          cliente_nome: f.cliente_nome || "",
+          ordem_servico_id: f.ordem_servico_id || "",
+          valor_total: Number(f.valor_total),
+          data_emissao: f.data_emissao || new Date().toISOString().split("T")[0],
+          observacoes: f.observacoes || "",
+          spedy_id: String(response.data.ordem_id || ""),
+          numero: String(response.data.ordem?.number || response.data.ordem_id || ""),
+          serie: String(response.data.ordem?.series || ""),
+          pdf_url: response.data.ordem?.pdfUrl || "",
+          xml_url: response.data.ordem?.xmlUrl || "",
+        };
+
+        if (rascunhoNota) {
+          // Atualiza o rascunho existente para "Emitida"
+          await base44.entities.NotaFiscal.update(rascunhoNota.id, notaSalva);
+        } else {
+          // Cria novo registro da nota emitida
+          await base44.entities.NotaFiscal.create(notaSalva);
+        }
+
         feedback("sucesso", `Nota ${f.tipo} transmitida com sucesso! ${response.data.mensagem || ""}`);
         setShowForm(false);
         setForm(defaultForm());
