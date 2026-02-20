@@ -75,7 +75,16 @@ Deno.serve(async (req) => {
       body: JSON.stringify(payload),
     });
 
-    const result = await response.json();
+    const rawText = await response.text();
+    console.log('Spedy status:', response.status);
+    console.log('Spedy response:', rawText.substring(0, 500));
+
+    let result = {};
+    try {
+      result = rawText ? JSON.parse(rawText) : {};
+    } catch (_) {
+      result = { raw: rawText };
+    }
 
     if (response.ok) {
       // Salva a nota fiscal no banco
@@ -89,7 +98,7 @@ Deno.serve(async (req) => {
         ordem_servico_id: ordem_servico_id || '',
         valor_total: Number(valor_total),
         chave_acesso: result.chave_acesso || result.chave || '',
-        spedy_id: result.id || '',
+        spedy_id: String(result.id || ''),
         xml_url: result.xml_url || '',
         pdf_url: result.pdf_url || '',
         data_emissao: data_emissao,
@@ -98,9 +107,10 @@ Deno.serve(async (req) => {
 
       return Response.json({ sucesso: true, nota: result });
     } else {
+      const erroMsg = result.message || result.erro || result.error || result.msg || rawText.substring(0, 300) || 'Erro ao emitir nota fiscal na Spedy.';
       return Response.json({
         sucesso: false,
-        erro: result.message || result.erro || 'Erro ao emitir nota fiscal na Spedy.',
+        erro: `Spedy retornou status ${response.status}: ${erroMsg}`,
         detalhes: result,
       }, { status: 400 });
     }
