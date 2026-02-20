@@ -16,68 +16,129 @@ Deno.serve(async (req) => {
     const configs = await base44.asServiceRole.entities.Configuracao.list();
     const apiKeyConfig = configs.find(c => c.chave === 'spedy_api_key');
     const ambienteConfig = configs.find(c => c.chave === 'spedy_ambiente');
-    const nomeOficinaConfig = configs.find(c => c.chave === 'nome_oficina');
-    const cnpjConfig = configs.find(c => c.chave === 'cnpj');
 
-    const spedyApiKey = apiKeyConfig?.valor;
+    const spedyApiKey = apiKeyConfig?.valor?.trim();
     const ambiente = ambienteConfig?.valor || 'homologacao';
-    const nomeOficina = nomeOficinaConfig?.valor || '';
-    const cnpj = cnpjConfig?.valor || '';
 
     if (!spedyApiKey) {
-      return Response.json({ sucesso: false, erro: 'Chave API Spedy não configurada. Acesse Configurações para inserir sua chave.' }, { status: 400 });
+      return Response.json({ sucesso: false, erro: 'Chave API Spedy não configurada.' }, { status: 400 });
     }
 
-    // URL base Spedy
+    // URL base Spedy conforme documentação oficial
     const baseUrl = ambiente === 'producao'
       ? 'https://api.spedy.com.br/v1'
-      : 'https://sandbox.spedy.com.br/v1';
+      : 'https://sandbox-api.spedy.com.br/v1';
 
     // Busca dados do cliente se tiver ID
-    let clienteData = { nome: cliente_nome };
+    let clienteData = { nome: cliente_nome || '', cpf_cnpj: '', email: '', telefone: '', endereco: '', cidade: '', estado: '', cep: '' };
     if (cliente_id) {
-      const clientes = await base44.asServiceRole.entities.Cliente.filter({ id: cliente_id });
-      if (clientes.length > 0) {
-        const c = clientes[0];
+      const clientes = await base44.asServiceRole.entities.Cliente.list();
+      const c = clientes.find(cl => cl.id === cliente_id);
+      if (c) {
         clienteData = {
-          nome: c.nome,
-          cpf_cnpj: c.cpf_cnpj,
-          email: c.email,
-          telefone: c.telefone,
-          endereco: c.endereco,
-          numero: c.numero,
-          bairro: c.bairro,
-          cidade: c.cidade,
-          estado: c.estado,
-          cep: c.cep,
+          nome: c.nome || '',
+          cpf_cnpj: c.cpf_cnpj || '',
+          email: c.email || '',
+          telefone: c.telefone || '',
+          endereco: c.endereco || '',
+          numero: c.numero || '',
+          bairro: c.bairro || '',
+          cidade: c.cidade || '',
+          estado: c.estado || '',
+          cep: c.cep || '',
         };
       }
     }
 
-    // Monta payload para Spedy
-    const payload = {
-      tipo,
-      emitente: { nome: nomeOficina, cnpj },
-      destinatario: clienteData,
-      valor_total: Number(valor_total) || 0,
-      descricao: observacoes || 'Serviços de manutenção automotiva',
-      data_emissao: data_emissao || new Date().toISOString().split('T')[0],
-      referencia: ordem_servico_id || '',
+    // Monta receiver (destinatário/tomador)
+    const cpfCnpj = (clienteData.cpf_cnpj || '').replace(/\D/g, '');
+    const receiver = {
+      name: clienteData.nome,
+      ...(cpfCnpj.length === 14 ? { federalTaxNumber: cpfCnpj } : {}),
+      ...(cpfCnpj.length === 11 ? { federalTaxNumber: cpfCnpj } : {}),
+      email: clienteData.email || undefined,
+      address: clienteData.cidade ? {
+        street: clienteData.endereco || '',
+        number: clienteData.numero || '',
+        district: clienteData.bairro || '',
+        postalCode: (clienteData.cep || '').replace(/\D/g, ''),
+        city: {
+          name: clienteData.cidade || '',
+          state: clienteData.estado || '',
+        }
+      } : undefined,
     };
 
-    // Chama API Spedy
-    const response = await fetch(`${baseUrl}/notas`, {
+    let endpoint = '';
+    let payload = {};
+
+    if (tipo === 'NFSe') {
+      // Endpoint NFSe: POST /service-invoices
+      endpoint = `${baseUrl}/service-invoices`;
+      payload = {
+        cityServiceCode: '1.01', // código genérico - idealmente configurável
+        description: observacoes || 'Serviços de manutenção automotiva',
+        servicesAmount: Number(valor_total) || 0,
+        issuedOn: data_emissao ? new Date(data_emissao).toISOString() : new Date().toISOString(),
+        externalId: ordem_servico_id || undefined,
+        taker: receiver,
+      };
+    } else if (tipo === 'NFe') {
+      // Endpoint NFe: POST /product-invoices
+      endpoint = `${baseUrl}/product-invoices`;
+      payload = {
+        nature: 1, // venda
+        recipient: receiver,
+        items: [{
+          code: '001',
+          description: observacoes || 'Serviços e peças - manutenção automotiva',
+          quantity: 1,
+          unitOfMeasure: 'UN',
+          unitPrice: Number(valor_total) || 0,
+          totalPrice: Number(valor_total) || 0,
+          ncm: '8708.99.90',
+          cfop: '5102',
+        }],
+        total: { goods: Number(valor_total) || 0 },
+      };
+    } else if (tipo === 'NFCe') {
+      // NFCe via product-invoices com model nfce
+      endpoint = `${baseUrl}/product-invoices`;
+      payload = {
+        model: 'nfce',
+        nature: 1,
+        recipient: receiver,
+        items: [{
+          code: '001',
+          description: observacoes || 'Serviços e peças - manutenção automotiva',
+          quantity: 1,
+          unitOfMeasure: 'UN',
+          unitPrice: Number(valor_total) || 0,
+          totalPrice: Number(valor_total) || 0,
+          ncm: '8708.99.90',
+          cfop: '5102',
+        }],
+        total: { goods: Number(valor_total) || 0 },
+      };
+    } else {
+      return Response.json({ sucesso: false, erro: `Tipo de nota "${tipo}" não suportado.` }, { status: 400 });
+    }
+
+    console.log('Chamando Spedy:', endpoint);
+    console.log('Payload:', JSON.stringify(payload));
+
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${spedyApiKey}`,
+        'X-Api-Key': spedyApiKey,
       },
       body: JSON.stringify(payload),
     });
 
     const rawText = await response.text();
     console.log('Spedy status:', response.status);
-    console.log('Spedy response:', rawText.substring(0, 500));
+    console.log('Spedy response:', rawText.substring(0, 1000));
 
     let result = {};
     try {
@@ -86,35 +147,36 @@ Deno.serve(async (req) => {
       result = { raw: rawText };
     }
 
-    if (response.ok) {
-      // Salva a nota fiscal no banco
+    if (response.ok || response.status === 201 || response.status === 202) {
+      // Salva a nota fiscal no banco como Emitida
       await base44.asServiceRole.entities.NotaFiscal.create({
         tipo,
-        numero: result.numero || result.id || '',
-        serie: result.serie || '',
+        numero: String(result.number || result.numero || result.id || ''),
+        serie: String(result.series || result.serie || ''),
         status: 'Emitida',
         cliente_id: cliente_id || '',
         cliente_nome: clienteData.nome,
         ordem_servico_id: ordem_servico_id || '',
         valor_total: Number(valor_total),
-        chave_acesso: result.chave_acesso || result.chave || '',
+        chave_acesso: result.accessKey || result.chave_acesso || result.chave || '',
         spedy_id: String(result.id || ''),
-        xml_url: result.xml_url || '',
-        pdf_url: result.pdf_url || '',
+        xml_url: result.xmlUrl || result.xml_url || '',
+        pdf_url: result.pdfUrl || result.pdf_url || '',
         data_emissao: data_emissao,
         observacoes: observacoes || '',
       });
 
       return Response.json({ sucesso: true, nota: result });
     } else {
-      const erroMsg = result.message || result.erro || result.error || result.msg || rawText.substring(0, 300) || 'Erro ao emitir nota fiscal na Spedy.';
+      const erroMsg = result.message || result.erro || result.error || result.errors?.join(', ') || rawText.substring(0, 500) || `Status ${response.status}`;
       return Response.json({
         sucesso: false,
-        erro: `Spedy retornou status ${response.status}: ${erroMsg}`,
+        erro: `Spedy (${response.status}): ${erroMsg}`,
         detalhes: result,
       }, { status: 400 });
     }
   } catch (error) {
+    console.error('Erro função emitirNotaFiscal:', error.message);
     return Response.json({ sucesso: false, erro: error.message }, { status: 500 });
   }
 });
