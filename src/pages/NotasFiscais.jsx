@@ -124,11 +124,10 @@ export default function NotasFiscais() {
       });
 
       if (response.data?.sucesso) {
-        setMsgFeedback({ tipo: "sucesso", msg: `Nota ${form.tipo} emitida com sucesso!` });
+        setMsgFeedback({ tipo: "sucesso", msg: `Nota ${form.tipo} emitida com sucesso na Spedy!` });
       } else {
-        // Salva como rascunho se não houver função configurada
         await base44.entities.NotaFiscal.create({ ...form, status: "Rascunho" });
-        setMsgFeedback({ tipo: "aviso", msg: "Salvo como rascunho. Configure a integração Spedy nas Configurações." });
+        setMsgFeedback({ tipo: "erro", msg: response.data?.erro || "Erro na Spedy. Nota salva como rascunho." });
       }
 
       setShowForm(false);
@@ -137,7 +136,7 @@ export default function NotasFiscais() {
       load();
     } catch (e) {
       await base44.entities.NotaFiscal.create({ ...form, status: "Rascunho" });
-      setMsgFeedback({ tipo: "aviso", msg: "Salvo como rascunho. Configure a API Spedy nas Configurações para emissão automática." });
+      setMsgFeedback({ tipo: "erro", msg: "Erro ao emitir. Nota salva como rascunho." });
       setShowForm(false);
       setForm(defaultForm());
       setTimeout(() => setMsgFeedback(null), 5000);
