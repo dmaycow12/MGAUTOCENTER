@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Settings, Save, CheckCircle, Car, Plus, Edit, Trash2, X } from "lucide-react";
+import { Settings, Save, CheckCircle, Plus, X, UserPlus, LogOut, AlertCircle, User } from "lucide-react";
 
 export default function Configuracoes() {
   const [config, setConfig] = useState({
@@ -11,25 +11,23 @@ export default function Configuracoes() {
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showVeiculo, setShowVeiculo] = useState(false);
-  const [veiculos, setVeiculos] = useState([]);
-  const [clientes, setClientes] = useState([]);
-  const [veiculoForm, setVeiculoForm] = useState(defaultVeiculo());
-  const [editandoVeiculo, setEditandoVeiculo] = useState(null);
 
-  function defaultVeiculo() {
-    return { cliente_id: "", placa: "", marca: "", modelo: "", ano: "", cor: "", chassis: "", combustivel: "Flex", observacoes: "" };
-  }
+  // Usuários
+  const [novoUsuario, setNovoUsuario] = useState({ nome: "", usuario: "", senha: "", confirmarSenha: "" });
+  const [salvandoUsuario, setSalvandoUsuario] = useState(false);
+  const [feedbackUsuario, setFeedbackUsuario] = useState(null);
+
+  // Usuários salvos no banco local
+  const [usuarios, setUsuarios] = useState([]);
 
   useEffect(() => {
     loadAll();
   }, []);
 
   const loadAll = async () => {
-    const [configs, veics, clts] = await Promise.all([
+    const [configs, users] = await Promise.all([
       base44.entities.Configuracao.list("-created_date", 100),
-      base44.entities.Veiculo.list("-created_date", 500),
-      base44.entities.Cliente.list("-created_date", 200),
+      base44.entities.Configuracao.filter({ chave: "usuario_extra" }, "-created_date", 50),
     ]);
 
     const c = { ...config };
@@ -37,8 +35,13 @@ export default function Configuracoes() {
       if (c.hasOwnProperty(item.chave)) c[item.chave] = item.valor;
     });
     setConfig(c);
-    setVeiculos(veics);
-    setClientes(clts);
+
+    // Usuários extras cadastrados
+    const usersExtras = configs.filter(i => i.chave === "usuario_extra").map(i => {
+      try { return JSON.parse(i.valor); } catch { return null; }
+    }).filter(Boolean);
+    setUsuarios(usersExtras);
+
     setLoading(false);
   };
 
@@ -60,24 +63,37 @@ export default function Configuracoes() {
     setTimeout(() => setSalvo(false), 3000);
   };
 
-  const salvarVeiculo = async () => {
-    if (!veiculoForm.placa) return alert("Informe a placa do veículo.");
-    if (!veiculoForm.cliente_id) return alert("Selecione o cliente.");
-    if (editandoVeiculo) {
-      await base44.entities.Veiculo.update(editandoVeiculo.id, veiculoForm);
-    } else {
-      await base44.entities.Veiculo.create(veiculoForm);
-    }
-    setShowVeiculo(false);
-    setEditandoVeiculo(null);
-    setVeiculoForm(defaultVeiculo());
+  const criarUsuario = async () => {
+    setFeedbackUsuario(null);
+    if (!novoUsuario.nome || !novoUsuario.usuario || !novoUsuario.senha)
+      return setFeedbackUsuario({ tipo: "erro", msg: "Preencha todos os campos obrigatórios." });
+    if (novoUsuario.senha !== novoUsuario.confirmarSenha)
+      return setFeedbackUsuario({ tipo: "erro", msg: "As senhas não coincidem." });
+    if (novoUsuario.usuario === "admin")
+      return setFeedbackUsuario({ tipo: "erro", msg: "Nome de usuário 'admin' já existe." });
+
+    setSalvandoUsuario(true);
+    await base44.entities.Configuracao.create({
+      chave: "usuario_extra",
+      valor: JSON.stringify({ nome: novoUsuario.nome, usuario: novoUsuario.usuario, senha: novoUsuario.senha }),
+      descricao: `Usuário extra: ${novoUsuario.nome}`,
+    });
+    setNovoUsuario({ nome: "", usuario: "", senha: "", confirmarSenha: "" });
+    setFeedbackUsuario({ tipo: "sucesso", msg: `Usuário "${novoUsuario.usuario}" criado com sucesso!` });
+    setSalvandoUsuario(false);
     loadAll();
   };
 
-  const excluirVeiculo = async (id) => {
-    if (!confirm("Excluir este veículo?")) return;
-    await base44.entities.Veiculo.delete(id);
-    loadAll();
+  const excluirUsuario = async (usuario) => {
+    if (!confirm(`Excluir o usuário "${usuario.usuario}"?`)) return;
+    const registros = await base44.entities.Configuracao.filter({ chave: "usuario_extra" }, "-created_date", 50);
+    const reg = registros.find(r => { try { return JSON.parse(r.valor).usuario === usuario.usuario; } catch { return false; } });
+    if (reg) { await base44.entities.Configuracao.delete(reg.id); loadAll(); }
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("oficina_auth");
+    window.location.reload();
   };
 
   if (loading) return <Loader />;
