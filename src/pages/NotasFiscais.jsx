@@ -237,6 +237,16 @@ export default function NotasFiscais() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">
+                        {nota.status === "Rascunho" && temSpedy && (
+                          <button
+                            title="Transmitir para Spedy"
+                            onClick={() => transmitirRascunho(nota)}
+                            disabled={transmitindo === nota.id}
+                            className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 rounded-lg transition-all disabled:opacity-50"
+                          >
+                            {transmitindo === nota.id ? "..." : "Transmitir"}
+                          </button>
+                        )}
                         {nota.chave_acesso && (
                           <button title="Ver chave" onClick={() => alert(`Chave de Acesso:\n${nota.chave_acesso}`)} className="p-1 text-gray-500 hover:text-white transition-all">
                             <Eye className="w-4 h-4" />
