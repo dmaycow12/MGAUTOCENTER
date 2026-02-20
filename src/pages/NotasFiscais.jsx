@@ -24,12 +24,15 @@ export default function NotasFiscais() {
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const [n, c] = await Promise.all([
+    const [n, c, configs] = await Promise.all([
       base44.entities.NotaFiscal.list("-created_date", 200),
       base44.entities.Cliente.list("-created_date", 200),
+      base44.entities.Configuracao.list("-created_date", 100),
     ]);
     setNotas(n);
     setClientes(c);
+    const apiKey = configs.find(cfg => cfg.chave === "spedy_api_key")?.valor;
+    setTemSpedy(!!(apiKey && apiKey.trim()));
     setLoading(false);
   };
 
