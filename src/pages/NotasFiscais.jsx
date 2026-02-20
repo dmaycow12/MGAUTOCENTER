@@ -302,9 +302,16 @@ export default function NotasFiscais() {
               <button onClick={() => setShowForm(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
             </div>
             <div className="p-5 space-y-4">
-              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3 text-sm text-yellow-400">
-                ⚠️ Para emissão via Spedy, configure a chave API em Configurações primeiro.
-              </div>
+              {!temSpedy && (
+                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3 text-sm text-yellow-400">
+                  ⚠️ Chave API Spedy não configurada. Acesse Configurações para habilitar a emissão automática.
+                </div>
+              )}
+              {temSpedy && (
+                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-sm text-green-400">
+                  ✓ Integração Spedy configurada. A nota será transmitida automaticamente.
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <F label="Tipo NF">
                   <select value={form.tipo} onChange={e => setForm({ ...form, tipo: e.target.value })} className="input-dark">
