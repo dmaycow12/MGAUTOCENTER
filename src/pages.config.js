@@ -49,12 +49,14 @@
  */
 import Dashboard from './pages/Dashboard';
 import Clientes from './pages/Clientes';
+import OrdemServico from './pages/OrdemServico';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Dashboard": Dashboard,
     "Clientes": Clientes,
+    "OrdemServico": OrdemServico,
 }
 
 export const pagesConfig = {
