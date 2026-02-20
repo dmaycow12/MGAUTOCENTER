@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { FileText, Plus, Upload, Download, Search, Trash2, Eye, X, CheckCircle, AlertCircle } from "lucide-react";
+import { FileText, Plus, Upload, Download, Search, Trash2, Eye, X, CheckCircle, AlertCircle, Printer } from "lucide-react";
 
 export default function NotasFiscais() {
   const [notas, setNotas] = useState([]);
