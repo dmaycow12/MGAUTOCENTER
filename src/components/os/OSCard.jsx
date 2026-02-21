@@ -123,24 +123,12 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
           {/* Número OS */}
           <span className="text-white font-bold text-sm w-8 flex-shrink-0">{os.numero}</span>
 
-          {/* Dados principais */}
-          <div className="flex-1 min-w-0">
-            {/* Desktop: tudo em uma linha */}
-            <div className="hidden md:flex items-center gap-1.5">
-              <span className="text-white text-sm font-medium">{primeiroNome(os.cliente_nome)}</span>
-              {os.veiculo_modelo && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-400 text-xs truncate">{os.veiculo_modelo}</span></>}
-              {os.veiculo_placa && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-400 text-xs">{os.veiculo_placa}</span></>}
-              {os.data_entrada && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-500 text-xs whitespace-nowrap">{os.data_entrada}</span></>}
-            </div>
-            {/* Mobile: dados em linhas */}
-            <div className="flex md:hidden flex-col gap-0.5">
-              <span className="text-white text-sm font-medium">{primeiroNome(os.cliente_nome)}</span>
-              <div className="flex items-center gap-2 flex-wrap">
-                {os.veiculo_modelo && <span className="text-gray-400 text-xs">{os.veiculo_modelo}</span>}
-                {os.veiculo_placa && <span className="text-gray-400 text-xs">{os.veiculo_placa}</span>}
-                {os.data_entrada && <span className="text-gray-500 text-xs">{os.data_entrada}</span>}
-              </div>
-            </div>
+          {/* Dados principais — tudo em uma linha tanto mobile quanto desktop */}
+          <div className="flex-1 min-w-0 flex items-center gap-1.5 flex-wrap">
+            <span className="text-white text-sm font-medium whitespace-nowrap">{primeiroNome(os.cliente_nome)}</span>
+            {os.veiculo_modelo && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-400 text-xs truncate max-w-[100px] md:max-w-none">{os.veiculo_modelo}</span></>}
+            {os.veiculo_placa && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-400 text-xs whitespace-nowrap">{os.veiculo_placa}</span></>}
+            {os.data_entrada && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-500 text-xs whitespace-nowrap">{os.data_entrada}</span></>}
           </div>
 
           {/* Ações — visíveis apenas no desktop */}
