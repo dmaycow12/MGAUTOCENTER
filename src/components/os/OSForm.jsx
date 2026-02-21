@@ -187,7 +187,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                 </Field>
               )}
               <Field label="Placa">
-                <input value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} className="input-dark" placeholder="AAA-0000" />
+                <input value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} className="input-dark" placeholder="AAA0000" />
               </Field>
               <Field label="Modelo">
                 <input value={form.veiculo_modelo} onChange={e => setForm(f => ({ ...f, veiculo_modelo: e.target.value }))} className="input-dark" />
