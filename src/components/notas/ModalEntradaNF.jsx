@@ -194,21 +194,38 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
       });
 
       // 2. Dar entrada no estoque (somente itens marcados)
+      // Busca estoque fresco para ter quantidades atualizadas a cada iteração
+      let estoqueAtual = await base44.entities.Estoque.list("-created_date", 500);
+      // Rastreia IDs já usados nesta importação para não reutilizar o mesmo item para itens duplicados na NF
+      const idsUsados = new Set();
+
       for (const item of itens) {
         if (!item.dar_entrada_estoque || !item.descricao) continue;
-        const existente = estoqueExistente.find(e =>
-          e.descricao?.toLowerCase() === item.descricao.toLowerCase() ||
-          (item.codigo && item.codigo !== "SEM GTIN" && item.codigo !== "" && e.codigo === item.codigo)
-        );
+
+        // Busca por código EAN primeiro (mais preciso), depois por descrição — mas nunca reutiliza o mesmo ID
+        let existente = null;
+        if (item.codigo && item.codigo !== "SEM GTIN" && item.codigo !== "") {
+          existente = estoqueAtual.find(e => e.codigo === item.codigo && !idsUsados.has(e.id));
+        }
+        if (!existente) {
+          existente = estoqueAtual.find(e =>
+            e.descricao?.trim().toLowerCase() === item.descricao.trim().toLowerCase() && !idsUsados.has(e.id)
+          );
+        }
+
         if (existente) {
+          idsUsados.add(existente.id);
+          const novaQtd = (existente.quantidade || 0) + item.quantidade;
           await base44.entities.Estoque.update(existente.id, {
-            quantidade: (existente.quantidade || 0) + item.quantidade,
+            quantidade: novaQtd,
             valor_custo: item.valor_unitario,
             ncm: item.ncm || existente.ncm,
             cfop: item.cfop || existente.cfop,
           });
+          // Atualiza o cache local para refletir a nova quantidade
+          estoqueAtual = estoqueAtual.map(e => e.id === existente.id ? { ...e, quantidade: novaQtd } : e);
         } else {
-          await base44.entities.Estoque.create({
+          const criado = await base44.entities.Estoque.create({
             descricao: item.descricao,
             codigo: item.codigo && item.codigo !== "SEM GTIN" ? item.codigo : "",
             quantidade: item.quantidade,
@@ -219,6 +236,10 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
             ncm: item.ncm || "",
             cfop: item.cfop || "",
           });
+          if (criado?.id) {
+            idsUsados.add(criado.id);
+            estoqueAtual.push({ ...criado, quantidade: item.quantidade });
+          }
         }
       }
 
