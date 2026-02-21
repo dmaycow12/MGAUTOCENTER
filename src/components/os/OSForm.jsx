@@ -34,11 +34,14 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   const [saving, setSaving] = useState(false);
   const [veiculosCliente, setVeiculosCliente] = useState([]);
 
-  // Auto-number for new OS
+  // Auto-number for new OS — sequencial a partir de 1
   useEffect(() => {
     if (!os) {
-      const num = String(Date.now()).slice(-6);
-      setForm(f => ({ ...f, numero: num }));
+      base44.entities.OrdemServico.list("-created_date", 500).then(all => {
+        const nums = all.map(o => parseInt(o.numero, 10)).filter(n => !isNaN(n));
+        const proximo = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+        setForm(f => ({ ...f, numero: String(proximo) }));
+      });
     }
   }, []);
 
