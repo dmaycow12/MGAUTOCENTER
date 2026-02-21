@@ -243,6 +243,50 @@ export default function Financeiro() {
   );
 }
 
+function StatusDropdown({ item, onAlterarStatus }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const opcoes = ["Pendente", "Atrasado", "Pago"];
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const cores = {
+    "Pendente": "text-yellow-400 bg-yellow-500/10 border-yellow-500/30",
+    "Pago": "text-green-400 bg-green-500/10 border-green-500/30",
+    "Atrasado": "text-red-400 bg-red-500/10 border-red-500/30",
+    "Cancelado": "text-gray-400 bg-gray-500/10 border-gray-500/30",
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium border cursor-pointer hover:opacity-80 transition-all ${cores[item.status] || ""}`}
+      >
+        {item.status}
+        <ChevronDown className="w-3 h-3" />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-30 w-28 py-1">
+          {opcoes.map(s => (
+            <button
+              key={s}
+              onClick={() => { onAlterarStatus(item, s); setOpen(false); }}
+              className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${item.status === s ? "text-orange-400" : "text-gray-300"}`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function FluxoCaixa({ items }) {
   const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
   const ano = new Date().getFullYear();
