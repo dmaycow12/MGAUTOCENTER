@@ -152,17 +152,35 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
       }
 
       // 3. Lançar no financeiro
-      await base44.entities.Financeiro.create({
-        tipo: "Despesa",
-        categoria: "Compra de Peças / Materiais",
-        descricao: `NF ${dados.numero} — ${dados.emitente}`,
-        valor: dados.valor,
-        forma_pagamento: financeiro.forma_pagamento,
-        data_vencimento: financeiro.data_vencimento,
-        data_pagamento: financeiro.status === "Pago" ? (financeiro.data_pagamento || new Date().toISOString().split("T")[0]) : "",
-        status: financeiro.status,
-        observacoes: financeiro.observacoes,
-      });
+      const isBoleto = financeiro.forma_pagamento === "Boleto" && boletos.length > 1;
+      if (isBoleto) {
+        // Lança um registro por boleto
+        for (const bol of boletos) {
+          await base44.entities.Financeiro.create({
+            tipo: "Despesa",
+            categoria: "Compra de Peças / Materiais",
+            descricao: `NF ${dados.numero} — ${dados.emitente}${bol.nDup ? ` (Bol. ${bol.nDup})` : ""}`,
+            valor: bol.vDup,
+            forma_pagamento: "Boleto",
+            data_vencimento: bol.dVenc || financeiro.data_vencimento,
+            data_pagamento: "",
+            status: "Pendente",
+            observacoes: financeiro.observacoes,
+          });
+        }
+      } else {
+        await base44.entities.Financeiro.create({
+          tipo: "Despesa",
+          categoria: "Compra de Peças / Materiais",
+          descricao: `NF ${dados.numero} — ${dados.emitente}`,
+          valor: dados.valor,
+          forma_pagamento: financeiro.forma_pagamento,
+          data_vencimento: financeiro.data_vencimento,
+          data_pagamento: financeiro.status === "Pago" ? (financeiro.data_pagamento || new Date().toISOString().split("T")[0]) : "",
+          status: financeiro.status,
+          observacoes: financeiro.observacoes,
+        });
+      }
 
       onSalvo?.();
     } catch (e) {
