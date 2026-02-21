@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, TrendingUp, TrendingDown, DollarSign, X, Filter } from "lucide-react";
+import { Plus, Search, Edit, Trash2, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown } from "lucide-react";
 
 const defaultForm = () => ({
   tipo: "Receita", categoria: "", descricao: "", valor: 0,
