@@ -112,7 +112,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   const veiculo = [os.veiculo_modelo, os.veiculo_placa].filter(Boolean).join(" • ");
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
       {/* Linha principal — tudo em uma única linha alinhada */}
       <div
         className="flex items-center gap-2 px-3 py-3 cursor-pointer select-none"
