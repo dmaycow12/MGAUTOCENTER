@@ -110,40 +110,44 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all">
-      {/* Linha principal */}
-      <div className="flex items-center gap-2 p-3 sm:p-4">
-        {/* Dados - layout limpo e simétrico */}
-        <div className="flex-1 min-w-0">
-          {/* Linha 1: número + status */}
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-white font-bold text-sm whitespace-nowrap">OS #{os.numero}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full border font-medium flex-shrink-0 ${statusColors[os.status] || "bg-gray-500/10 text-gray-400"}`}>
+      {/* Card principal - layout de 2 colunas: dados | ações */}
+      <div className="flex items-center p-3 gap-3">
+        {/* Coluna dados */}
+        <div className="flex-1 min-w-0 space-y-1">
+          {/* Linha 1: número OS + badge status */}
+          <div className="flex items-center gap-2">
+            <span className="text-white font-bold text-sm">OS #{os.numero}</span>
+            <span className={`text-xs px-2 py-0.5 rounded-full border font-medium whitespace-nowrap ${statusColors[os.status] || "bg-gray-500/10 text-gray-400"}`}>
               {os.status}
             </span>
           </div>
-          {/* Linha 2: cliente | veículo | data */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-white text-sm font-medium">{primeiroNome(os.cliente_nome)}</span>
-            {veiculo && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-400 text-xs truncate">{veiculo}</span></>}
-            {os.data_entrada && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-500 text-xs whitespace-nowrap">{os.data_entrada}</span></>}
+          {/* Linha 2: primeiro nome */}
+          <div className="text-white text-sm font-medium truncate">
+            {primeiroNome(os.cliente_nome) || <span className="text-gray-500">—</span>}
+          </div>
+          {/* Linha 3: veículo + data */}
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            {veiculo && <span className="truncate">{veiculo}</span>}
+            {veiculo && os.data_entrada && <span className="text-gray-600 flex-shrink-0">•</span>}
+            {os.data_entrada && <span className="text-gray-500 flex-shrink-0">{os.data_entrada}</span>}
           </div>
         </div>
 
-        {/* Ações alinhadas à direita */}
-        <div className="flex items-center gap-0.5 flex-shrink-0">
-          <button onClick={onEdit} title="Editar" className="p-1.5 text-gray-400 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
+        {/* Coluna ações - todos centralizados verticalmente */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button onClick={onEdit} title="Editar" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
             <Edit className="w-4 h-4" />
           </button>
-          <button onClick={imprimir} title="Imprimir" className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
+          <button onClick={imprimir} title="Imprimir" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
             <Printer className="w-4 h-4" />
           </button>
-          <button onClick={onDelete} title="Excluir" className="p-1.5 text-gray-400 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
+          <button onClick={onDelete} title="Excluir" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
             <Trash2 className="w-4 h-4" />
           </button>
 
           {/* Menu mais ações */}
           <div className="relative" ref={menuRef}>
-            <button onClick={() => setMenuOpen(!menuOpen)} title="Mais ações" className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
+            <button onClick={() => setMenuOpen(!menuOpen)} title="Mais ações" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
               <ChevronDown className={`w-4 h-4 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
             </button>
             {menuOpen && (
@@ -159,7 +163,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
           </div>
 
           {/* Expandir detalhes */}
-          <button onClick={() => setExpandido(!expandido)} className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
+          <button onClick={() => setExpandido(!expandido)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
             {expandido ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
         </div>
