@@ -5,15 +5,13 @@ import { X, Package, DollarSign, FileText, CheckCircle, ChevronRight, ChevronLef
 const FORMAS_PAGAMENTO = ["Dinheiro", "Cartão de Crédito", "Cartão de Débito", "PIX", "Boleto", "Transferência", "A Prazo"];
 
 function parsearXML(xml) {
-  // Extrai dados básicos do XML da NFe
   const get = (tag) => {
     const m = xml.match(new RegExp(`<${tag}[^>]*>([^<]*)<\/${tag}>`));
     return m ? m[1].trim() : "";
   };
   const getAll = (tag) => {
     const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\/${tag}>`, "g");
-    const results = [];
-    let m;
+    const results = []; let m;
     while ((m = re.exec(xml)) !== null) results.push(m[1]);
     return results;
   };
@@ -23,7 +21,7 @@ function parsearXML(xml) {
   const serie = get("serie");
   const valor = parseFloat(get("vNF") || "0");
   const dataEmissao = get("dhEmi")?.substring(0, 10) || get("dEmi") || "";
-  const emitente = get("xNome"); // fornecedor
+  const emitente = get("xNome");
   const cnpjEmit = get("CNPJ");
 
   // Itens da nota
@@ -37,7 +35,39 @@ function parsearXML(xml) {
     return { descricao: xProd, quantidade: qCom, valor_unitario: vUnCom, valor_total: vProd, codigo: cEAN, dar_entrada_estoque: true };
   });
 
-  return { chave, numero, serie, valor, dataEmissao, emitente, cnpjEmit, itens };
+  // Pagamento — extrai do XML da NFe (tag detPag ou cobr)
+  const pagamentos = [];
+  const detPagNodes = getAll("detPag");
+  for (const dp of detPagNodes) {
+    const tPag = dp.match(/<tPag>([^<]*)<\/tPag>/)?.[1] || "";
+    const vPag = parseFloat(dp.match(/<vPag>([^<]*)<\/vPag>/)?.[1] || "0");
+    pagamentos.push({ tPag, vPag });
+  }
+  // Boletos (duplicatas)
+  const dupNodes = getAll("dup");
+  const boletos = dupNodes.map(dup => ({
+    nDup: dup.match(/<nDup>([^<]*)<\/nDup>/)?.[1] || "",
+    dVenc: dup.match(/<dVenc>([^<]*)<\/dVenc>/)?.[1] || "",
+    vDup: parseFloat(dup.match(/<vDup>([^<]*)<\/vDup>/)?.[1] || "0"),
+  }));
+
+  // Mapear código tPag para forma legível
+  const mapaForma = {
+    "01": "Dinheiro", "02": "Cheque", "03": "Cartão de Crédito", "04": "Cartão de Débito",
+    "05": "Crediário", "10": "Vale Alimentação", "11": "Vale Refeição", "12": "Vale Presente",
+    "13": "Vale Combustível", "15": "Boleto", "90": "Sem Pagamento", "99": "Outros",
+  };
+  let forma_pagamento_detectada = "PIX";
+  let isBoleto = false;
+  if (pagamentos.length > 0) {
+    const tPag = pagamentos[0].tPag;
+    forma_pagamento_detectada = mapaForma[tPag] || "PIX";
+    isBoleto = tPag === "15" || boletos.length > 0;
+  }
+  // PIX pode vir como "99" ou "17" em alguns sistemas
+  if (pagamentos[0]?.tPag === "17") forma_pagamento_detectada = "PIX";
+
+  return { chave, numero, serie, valor, dataEmissao, emitente, cnpjEmit, itens, forma_pagamento_detectada, isBoleto, boletos };
 }
 
 export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {

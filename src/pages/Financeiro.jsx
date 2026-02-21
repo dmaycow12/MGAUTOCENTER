@@ -61,6 +61,7 @@ export default function Financeiro() {
   const alterarStatus = async (item, novoStatus) => {
     const update = { status: novoStatus };
     if (novoStatus === "Pago") update.data_pagamento = new Date().toISOString().split("T")[0];
+    if (novoStatus === "Pendente" || novoStatus === "Atrasado") update.data_pagamento = "";
     await base44.entities.Financeiro.update(item.id, update);
     load();
   };

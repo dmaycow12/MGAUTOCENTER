@@ -127,9 +127,54 @@ export default function NotasFiscais() {
   };
 
   const excluir = async (id) => {
-    if (!confirm("Excluir esta nota fiscal?")) return;
+    if (!confirm("Excluir esta nota fiscal? Isso também removerá os itens do estoque e os lançamentos financeiros vinculados.")) return;
+    const nota = notas.find(n => n.id === id);
+    // 1. Reverter estoque — só para notas importadas
+    if (nota?.status === "Importada" && nota?.xml_content) {
+      try {
+        const estoque = await base44.entities.Estoque.list("-created_date", 500);
+        const xmlItens = parsearItensXML(nota.xml_content);
+        for (const item of xmlItens) {
+          const existente = estoque.find(e =>
+            e.descricao?.toLowerCase() === item.descricao.toLowerCase() ||
+            (item.codigo && item.codigo !== "SEM GTIN" && e.codigo === item.codigo)
+          );
+          if (existente) {
+            const novaQtd = (existente.quantidade || 0) - item.quantidade;
+            await base44.entities.Estoque.update(existente.id, { quantidade: Math.max(0, novaQtd) });
+          }
+        }
+      } catch {}
+    }
+    // 2. Excluir lançamentos financeiros vinculados (pelo número/descrição da NF)
+    if (nota?.numero) {
+      try {
+        const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
+        const vinculados = financeiros.filter(f => f.descricao?.includes(`NF ${nota.numero}`));
+        for (const f of vinculados) {
+          await base44.entities.Financeiro.delete(f.id);
+        }
+      } catch {}
+    }
+    // 3. Excluir a nota
     await base44.entities.NotaFiscal.delete(id);
     load();
+  };
+
+  // Helper para parsear itens do XML salvo
+  const parsearItensXML = (xml) => {
+    const getAll = (tag) => {
+      const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "g");
+      const results = []; let m;
+      while ((m = re.exec(xml)) !== null) results.push(m[1]);
+      return results;
+    };
+    const detNodes = getAll("det");
+    return detNodes.map(det => ({
+      descricao: det.match(/<xProd>([^<]*)<\/xProd>/)?.[1] || "",
+      quantidade: parseFloat(det.match(/<qCom>([^<]*)<\/qCom>/)?.[1] || "0"),
+      codigo: det.match(/<cEAN>([^<]*)<\/cEAN>/)?.[1] || "",
+    }));
   };
 
   const importarXML = async () => {
