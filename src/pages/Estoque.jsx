@@ -206,6 +206,20 @@ export default function Estoque() {
                 <F label="Localização"><input value={form.localizacao} onChange={e => setForm({ ...form, localizacao: e.target.value })} className="input-dark" /></F>
                 <F label="Fornecedor"><input value={form.fornecedor} onChange={e => setForm({ ...form, fornecedor: e.target.value })} className="input-dark" /></F>
               </div>
+
+              {/* Dados Fiscais */}
+              <div className="border-t border-gray-800 pt-4">
+                <p className="text-xs text-gray-500 font-medium mb-3 uppercase tracking-wide">Dados Fiscais</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <F label="NCM">
+                    <input value={form.ncm} onChange={e => setForm({ ...form, ncm: e.target.value })} className="input-dark" placeholder="87089990" maxLength={8} />
+                  </F>
+                  <F label="CFOP">
+                    <input value={form.cfop} onChange={e => setForm({ ...form, cfop: e.target.value })} className="input-dark" placeholder="5405" maxLength={4} />
+                  </F>
+                </div>
+              </div>
+
               <F label="Observações"><textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} className="input-dark" rows={2} /></F>
             </div>
             <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
