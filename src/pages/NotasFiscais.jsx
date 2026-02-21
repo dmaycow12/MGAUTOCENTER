@@ -48,6 +48,9 @@ export default function NotasFiscais() {
   const [notas, setNotas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [filtroTipo, setFiltroTipo] = useState("Todos"); // Todos | Entrada | Saída
+  const [periodoInicio, setPeriodoInicio] = useState("");
+  const [periodoFim, setPeriodoFim] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [xmlTexto, setXmlTexto] = useState("");
