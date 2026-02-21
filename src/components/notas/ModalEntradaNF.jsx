@@ -162,7 +162,12 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
     setSalvando(true);
     setErro("");
     try {
-      // 1. Salvar nota fiscal
+      // 1. Salvar nota fiscal — salvar lista de itens como JSON em xml_content para reversão futura
+      const itensParaSalvar = itens.map(i => ({
+        descricao: i.descricao,
+        quantidade: i.quantidade,
+        codigo: i.codigo,
+      }));
       await base44.entities.NotaFiscal.create({
         tipo: "NFe",
         numero: dados.numero,
@@ -171,7 +176,7 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
         cliente_nome: dados.emitente,
         valor_total: dados.valor,
         chave_acesso: dados.chave,
-        xml_content: xmlTexto.substring(0, 5000),
+        xml_content: JSON.stringify(itensParaSalvar),
         data_emissao: dados.dataEmissao,
         observacoes: `CNPJ Fornecedor: ${dados.cnpjEmit}`,
       });
