@@ -1,12 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
-import { Edit, Trash2, Printer, ChevronDown, ChevronUp, MessageCircle, FileText } from "lucide-react";
+import { Edit, Trash2, Printer, ChevronDown, FileText, MessageCircle } from "lucide-react";
 
 const statusColors = {
   "Em Aberto": "bg-orange-500/10 text-orange-400 border-orange-500/20",
   "Concluída": "bg-green-500/10 text-green-400 border-green-500/20",
   "Cancelada": "bg-red-500/10 text-red-400 border-red-500/20",
-  // legados
   "Orçamento": "bg-gray-500/10 text-gray-400 border-gray-500/20",
   "Aprovado": "bg-blue-500/10 text-blue-400 border-blue-500/20",
   "Em Andamento": "bg-orange-500/10 text-orange-400 border-orange-500/20",
@@ -15,18 +13,31 @@ const statusColors = {
   "Cancelado": "bg-red-500/10 text-red-400 border-red-500/20",
 };
 
+const STATUS_OPTIONS = ["Em Aberto", "Concluída", "Cancelada"];
 const primeiroNome = (nome) => (nome || "").split(" ")[0];
 
 export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
   const [expandido, setExpandido] = useState(false);
   const menuRef = useRef(null);
+  const statusRef = useRef(null);
 
   useEffect(() => {
-    const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    const handler = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+      if (statusRef.current && !statusRef.current.contains(e.target)) setStatusOpen(false);
+    };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const alterarStatus = async (novoStatus) => {
+    const { base44 } = await import("@/api/base44Client");
+    await base44.entities.OrdemServico.update(os.id, { ...os, status: novoStatus });
+    setStatusOpen(false);
+    onRefresh();
+  };
 
   const whatsappOrcamento = () => {
     const tel = (os.cliente_telefone || "").replace(/\D/g, "");
@@ -35,8 +46,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
       `Olá ${primeiroNome(os.cliente_nome)}! 👋\n\n` +
       `Segue o orçamento do seu veículo ${os.veiculo_modelo || ""} (${os.veiculo_placa || ""}):\n\n` +
       (os.servicos || []).map(s => `• ${s.descricao} — R$ ${Number(s.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`).join("\n") + "\n\n" +
-      `💰 *Total: R$ ${Number(os.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}*\n\n` +
-      `Aguardamos sua aprovação. ✅`
+      `💰 *Total: R$ ${Number(os.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}*\n\nAguardamos sua aprovação. ✅`
     );
     window.open(`https://wa.me/55${tel}?text=${msg}`, "_blank");
     setMenuOpen(false);
@@ -46,7 +56,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     const tel = (os.cliente_telefone || "").replace(/\D/g, "");
     const msg = encodeURIComponent(
       `*Oficina Pro* - Olá ${primeiroNome(os.cliente_nome)}! 👋\n` +
-      `Seu veículo ${os.veiculo_modelo || ""} (${os.veiculo_placa || ""}) está pronto para retirada!\n` +
+      `Seu veículo ${os.veiculo_modelo || ""} (${os.veiculo_placa || ""}) está pronto!\n` +
       `OS #${os.numero} — R$ ${Number(os.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
     );
     window.open(`https://wa.me/55${tel}?text=${msg}`, "_blank");
@@ -58,7 +68,8 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     setMenuOpen(false);
   };
 
-  const imprimir = () => {
+  const imprimir = (e) => {
+    e.stopPropagation();
     const conteudo = `
       <html><head><title>OS #${os.numero}</title>
       <style>
@@ -81,16 +92,8 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
       </div>
       ${os.defeito_relatado ? `<h2>Defeito Relatado</h2><p>${os.defeito_relatado}</p>` : ""}
       ${os.diagnostico ? `<h2>Diagnóstico</h2><p>${os.diagnostico}</p>` : ""}
-      ${(os.servicos || []).length > 0 ? `
-        <h2>Serviços</h2>
-        <table><tr><th>Descrição</th><th>Técnico</th><th>Valor</th></tr>
-        ${(os.servicos || []).map(s => `<tr><td>${s.descricao || ""}</td><td>${s.tecnico || ""}</td><td>R$ ${Number(s.valor || 0).toFixed(2)}</td></tr>`).join("")}
-        </table>` : ""}
-      ${(os.pecas || []).length > 0 ? `
-        <h2>Peças</h2>
-        <table><tr><th>Descrição</th><th>Qtd</th><th>Unit.</th><th>Total</th></tr>
-        ${(os.pecas || []).map(p => `<tr><td>${p.descricao || ""}</td><td>${p.quantidade || ""}</td><td>R$ ${Number(p.valor_unitario || 0).toFixed(2)}</td><td>R$ ${Number(p.valor_total || 0).toFixed(2)}</td></tr>`).join("")}
-        </table>` : ""}
+      ${(os.servicos || []).length > 0 ? `<h2>Serviços</h2><table><tr><th>Descrição</th><th>Técnico</th><th>Valor</th></tr>${(os.servicos || []).map(s => `<tr><td>${s.descricao || ""}</td><td>${s.tecnico || ""}</td><td>R$ ${Number(s.valor || 0).toFixed(2)}</td></tr>`).join("")}</table>` : ""}
+      ${(os.pecas || []).length > 0 ? `<h2>Peças</h2><table><tr><th>Descrição</th><th>Qtd</th><th>Unit.</th><th>Total</th></tr>${(os.pecas || []).map(p => `<tr><td>${p.descricao || ""}</td><td>${p.quantidade || ""}</td><td>R$ ${Number(p.valor_unitario || 0).toFixed(2)}</td><td>R$ ${Number(p.valor_total || 0).toFixed(2)}</td></tr>`).join("")}</table>` : ""}
       <div class="total">
         <div>Serviços: R$ ${Number(os.valor_servicos || 0).toFixed(2)}</div>
         <div>Peças: R$ ${Number(os.valor_pecas || 0).toFixed(2)}</div>
@@ -106,70 +109,89 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     win.print();
   };
 
-  const veiculo = [os.veiculo_placa, os.veiculo_modelo].filter(Boolean).join(" — ");
+  const veiculo = [os.veiculo_modelo, os.veiculo_placa].filter(Boolean).join(" • ");
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all">
-      {/* Card principal - layout de 2 colunas: dados | ações */}
-      <div className="flex items-start p-3 gap-3">
-        {/* Coluna dados */}
-        <div className="flex-1 min-w-0 space-y-1">
-          {/* Linha 1: número OS + badge status */}
-          <div className="flex items-center gap-2">
-            <span className="text-white font-bold text-sm">OS #{os.numero}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full border font-medium whitespace-nowrap ${statusColors[os.status] || "bg-gray-500/10 text-gray-400"}`}>
-              {os.status}
-            </span>
-          </div>
-          {/* Linha 2: primeiro nome */}
-          <div className="text-white text-sm font-medium truncate">
-            {primeiroNome(os.cliente_nome) || <span className="text-gray-500">—</span>}
-          </div>
-          {/* Linha 3: veículo + data */}
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            {veiculo && <span className="truncate">{veiculo}</span>}
-            {veiculo && os.data_entrada && <span className="text-gray-600 flex-shrink-0">•</span>}
-            {os.data_entrada && <span className="text-gray-500 flex-shrink-0">{os.data_entrada}</span>}
+      {/* Linha principal — tudo em uma única linha alinhada */}
+      <div
+        className="flex items-center gap-2 px-3 py-3 cursor-pointer select-none"
+        onClick={() => setExpandido(!expandido)}
+      >
+        {/* Número OS */}
+        <span className="text-white font-bold text-sm w-8 flex-shrink-0">{os.numero}</span>
+
+        {/* Dados principais — flex com truncate */}
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-white text-sm font-medium truncate">{primeiroNome(os.cliente_nome)}</span>
+            {os.veiculo_modelo && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-400 text-xs truncate">{os.veiculo_modelo}</span></>}
+            {os.veiculo_placa && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-400 text-xs">{os.veiculo_placa}</span></>}
+            {os.data_entrada && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-500 text-xs whitespace-nowrap">{os.data_entrada}</span></>}
           </div>
         </div>
 
-        {/* Coluna ações - alinhada ao topo, tamanho fixo */}
-        <div className="flex items-center gap-0 flex-shrink-0 mt-0.5">
-          <button onClick={onEdit} title="Editar" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
+        {/* Ações — todos com w-8 h-8 fixo, alinhados */}
+        <div className="flex items-center flex-shrink-0" onClick={e => e.stopPropagation()}>
+          {/* Editar */}
+          <button onClick={(e) => { e.stopPropagation(); onEdit(); }} title="Editar" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
             <Edit className="w-4 h-4" />
           </button>
+
+          {/* Imprimir */}
           <button onClick={imprimir} title="Imprimir" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
             <Printer className="w-4 h-4" />
           </button>
-          <button onClick={onDelete} title="Excluir" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
+
+          {/* Excluir */}
+          <button onClick={(e) => { e.stopPropagation(); onDelete(); }} title="Excluir" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
             <Trash2 className="w-4 h-4" />
           </button>
 
-          {/* Menu mais ações */}
-          <div className="relative" ref={menuRef}>
-            <button onClick={() => setMenuOpen(!menuOpen)} title="Mais ações" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
-              <ChevronDown className={`w-4 h-4 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
+          {/* Status clicável */}
+          <div className="relative" ref={statusRef}>
+            <button
+              onClick={(e) => { e.stopPropagation(); setStatusOpen(!statusOpen); }}
+              className={`h-8 px-2 flex items-center gap-1 rounded-lg border text-xs font-medium transition-all hover:opacity-80 ${statusColors[os.status] || "bg-gray-500/10 text-gray-400 border-gray-500/20"}`}
+            >
+              <span className="whitespace-nowrap">{os.status}</span>
+              <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </button>
-            {menuOpen && (
-              <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-30 w-52 py-1 overflow-hidden">
-                <MenuItem icon="💬" label="Enviar Orçamento WA" onClick={whatsappOrcamento} />
-                <MenuItem icon="📲" label="Chamar no WhatsApp" onClick={whatsappChamar} />
-                <div className="border-t border-gray-700 my-1" />
-                <MenuItem icon={<FileText className="w-3.5 h-3.5" />} label="Emitir NFe" onClick={() => emitirNF("NFe")} />
-                <MenuItem icon={<FileText className="w-3.5 h-3.5" />} label="Emitir NFSe" onClick={() => emitirNF("NFSe")} />
-                <MenuItem icon={<FileText className="w-3.5 h-3.5" />} label="Emitir NFCe" onClick={() => emitirNF("NFCe")} />
+            {statusOpen && (
+              <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-30 w-36 py-1 overflow-hidden">
+                {STATUS_OPTIONS.map(s => (
+                  <button key={s} onClick={() => alterarStatus(s)} className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}>
+                    {s}
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
-          {/* Expandir detalhes */}
-          <button onClick={() => setExpandido(!expandido)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
-            {expandido ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
+          {/* Menu ações extras */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
+              title="Mais ações"
+              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all"
+            >
+              <ChevronDown className={`w-4 h-4 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-30 w-52 py-1 overflow-hidden">
+                <MenuItem icon={<MessageCircle className="w-4 h-4 text-green-400" />} label="Enviar Orçamento" onClick={whatsappOrcamento} />
+                <MenuItem icon={<MessageCircle className="w-4 h-4 text-green-400" />} label="Chamar no WhatsApp" onClick={whatsappChamar} />
+                <div className="border-t border-gray-700 my-1" />
+                <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFe" onClick={() => emitirNF("NFe")} />
+                <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFSe" onClick={() => emitirNF("NFSe")} />
+                <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFCe" onClick={() => emitirNF("NFCe")} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Detalhe expandido */}
+      {/* Detalhe expandido — aparece ao clicar na OS */}
       {expandido && (
         <div className="border-t border-gray-800 p-4 space-y-4 bg-gray-900/50">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
@@ -177,19 +199,13 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
             <div><p className="text-gray-500 text-xs">Pagamento</p><p className="text-white">{os.forma_pagamento || "—"}</p></div>
             <div><p className="text-gray-500 text-xs">Total</p><p className="text-orange-400 font-bold">R$ {Number(os.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></div>
           </div>
-
-          {os.defeito_relatado && (
-            <div><p className="text-xs text-gray-500 mb-1">Defeito Relatado</p><p className="text-gray-300 text-sm">{os.defeito_relatado}</p></div>
-          )}
-          {os.diagnostico && (
-            <div><p className="text-xs text-gray-500 mb-1">Diagnóstico</p><p className="text-gray-300 text-sm">{os.diagnostico}</p></div>
-          )}
-
+          {os.defeito_relatado && <div><p className="text-xs text-gray-500 mb-1">Defeito Relatado</p><p className="text-gray-300 text-sm">{os.defeito_relatado}</p></div>}
+          {os.diagnostico && <div><p className="text-xs text-gray-500 mb-1">Diagnóstico</p><p className="text-gray-300 text-sm">{os.diagnostico}</p></div>}
           {(os.servicos || []).length > 0 && (
             <div>
               <p className="text-xs text-gray-500 font-medium mb-2">Serviços</p>
               <div className="space-y-1">
-                {(os.servicos || []).map((s, i) => (
+                {os.servicos.map((s, i) => (
                   <div key={i} className="flex justify-between text-sm border-b border-gray-800/50 pb-1">
                     <span className="text-white">{s.descricao}</span>
                     <span className="text-gray-300 ml-2 flex-shrink-0">R$ {Number(s.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
@@ -198,12 +214,11 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
               </div>
             </div>
           )}
-
           {(os.pecas || []).length > 0 && (
             <div>
               <p className="text-xs text-gray-500 font-medium mb-2">Peças</p>
               <div className="space-y-1">
-                {(os.pecas || []).map((p, i) => (
+                {os.pecas.map((p, i) => (
                   <div key={i} className="flex justify-between text-sm border-b border-gray-800/50 pb-1">
                     <span className="text-white">{p.descricao} <span className="text-gray-500">x{p.quantidade}</span></span>
                     <span className="text-gray-300 ml-2 flex-shrink-0">R$ {Number(p.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
@@ -212,10 +227,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
               </div>
             </div>
           )}
-
-          {os.observacoes && (
-            <div><p className="text-xs text-gray-500 mb-1">Observações</p><p className="text-gray-400 text-sm">{os.observacoes}</p></div>
-          )}
+          {os.observacoes && <div><p className="text-xs text-gray-500 mb-1">Observações</p><p className="text-gray-400 text-sm">{os.observacoes}</p></div>}
         </div>
       )}
     </div>
@@ -224,11 +236,8 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
 function MenuItem({ icon, label, onClick }) {
   return (
-    <button
-      onClick={onClick}
-      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-all text-left"
-    >
-      <span className="flex-shrink-0 text-base leading-none">{icon}</span>
+    <button onClick={onClick} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-all text-left">
+      <span className="flex-shrink-0">{icon}</span>
       <span>{label}</span>
     </button>
   );
