@@ -140,15 +140,12 @@ export default function NotasFiscais() {
     const serie = xmlTexto.match(/serie[">]*>(\d+)/)?.[1] || "";
     const valor = parseFloat(xmlTexto.match(/vNF[">]*>([\d.]+)/)?.[1] || "0");
     const nomeDest = xmlTexto.match(/<xNome>(.*?)<\/xNome>/)?.[1] || "";
-    await base44.entities.NotaFiscal.create({
-      tipo: "NFe", numero, serie, status: "Importada",
-      cliente_nome: nomeDest, valor_total: valor, chave_acesso: chave,
-      xml_content: xmlTexto.substring(0, 5000), data_emissao: new Date().toISOString().split("T")[0],
-    });
-    setXmlTexto(""); setShowImport(false);
-    feedback("sucesso", "XML importado com sucesso!");
-    load();
+    // Em vez de importar direto, abre o modal de entrada
+    setXmlParaEntrada(xmlTexto);
+    setXmlTexto("");
+    setShowImport(false);
     setImportando(false);
+    setShowEntrada(true);
   };
 
   const feedback = (tipo, msg) => {
