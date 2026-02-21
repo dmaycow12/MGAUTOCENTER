@@ -53,10 +53,11 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const onClienteChange = (clienteId) => {
     const c = clientes.find(c => c.id === clienteId);
+    const primeiroNome = c?.nome ? c.nome.split(" ")[0] : "";
     setForm(f => ({
       ...f,
       cliente_id: clienteId,
-      cliente_nome: c?.nome || "",
+      cliente_nome: primeiroNome,
       cliente_telefone: c?.telefone || "",
       veiculo_id: "",
       veiculo_placa: "",
