@@ -100,32 +100,22 @@ export default function Clientes() {
       ) : (
         <div className="space-y-2">
           {filtrados.map(c => (
-            <div key={c.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between p-4">
+            <div key={c.id} className="bg-gray-900 border border-gray-800 rounded-xl">
+              <div
+                className="flex items-center justify-between p-4 cursor-pointer select-none"
+                onClick={() => setExpandido(expandido === c.id ? null : c.id)}
+              >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 bg-orange-500/10 rounded-full flex items-center justify-center flex-shrink-0">
                     <User className="w-5 h-5 text-orange-400" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-white font-medium truncate">{c.nome}</p>
-                    <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
-                      {c.cpf_cnpj && <span>{c.cpf_cnpj}</span>}
-                      {c.telefone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{c.telefone}</span>}
-                      {c.email && <span className="hidden sm:flex items-center gap-1"><Mail className="w-3 h-3" />{c.email}</span>}
-                    </div>
-                  </div>
+                  <p className="text-white font-medium truncate">{c.nome}</p>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => setExpandido(expandido === c.id ? null : c.id)}
-                    className="p-1.5 text-gray-500 hover:text-white rounded-lg hover:bg-gray-800 transition-all"
-                  >
-                    {expandido === c.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </button>
-                  <button onClick={() => editarCliente(c)} className="p-1.5 text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
+                <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                  <button onClick={() => editarCliente(c)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
                     <Edit className="w-4 h-4" />
                   </button>
-                  <button onClick={() => excluir(c.id)} className="p-1.5 text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
+                  <button onClick={() => excluir(c.id)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
