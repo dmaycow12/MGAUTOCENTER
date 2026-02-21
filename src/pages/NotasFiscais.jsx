@@ -161,17 +161,17 @@ export default function NotasFiscais() {
     load();
   };
 
-  // Helper para parsear itens do XML salvo — remove namespaces antes de parsear
-  const parsearItensXML = (xmlOriginal) => {
-    const xml = xmlOriginal.replace(/<(\/?)[a-zA-Z0-9_]+:([a-zA-Z0-9_]+)/g, "<$1$2");
-    const getAll = (tag) => {
-      const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "g");
-      const results = []; let m;
-      while ((m = re.exec(xml)) !== null) results.push(m[1]);
-      return results;
-    };
-    const detNodes = getAll("det");
-    return detNodes.map(det => ({
+  // Helper para parsear itens — agora armazenados como JSON
+  const parsearItensXML = (xmlContent) => {
+    // Primeiro tenta JSON (novo formato)
+    try {
+      const parsed = JSON.parse(xmlContent);
+      if (Array.isArray(parsed)) return parsed.filter(i => i.descricao);
+    } catch {}
+    // Fallback: tenta parsear XML legado
+    const xml = (xmlContent || "").replace(/<(\/?)[a-zA-Z0-9_]+:([a-zA-Z0-9_]+)/g, "<$1$2");
+    const getAll = (tag) => { const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "g"); const r = []; let m; while((m=re.exec(xml))!==null) r.push(m[1]); return r; };
+    return getAll("det").map(det => ({
       descricao: det.match(/<xProd>([^<]*)<\/xProd>/)?.[1]?.trim() || "",
       quantidade: parseFloat(det.match(/<qCom>([^<]*)<\/qCom>/)?.[1] || "0"),
       codigo: det.match(/<cEAN>([^<]*)<\/cEAN>/)?.[1]?.trim() || "",
