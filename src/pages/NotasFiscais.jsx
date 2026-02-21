@@ -290,29 +290,47 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[["Total", notas.length, "white"], ["Emitidas", notas.filter(n => n.status === "Emitida").length, "green"], ["Rascunhos", notas.filter(n => n.status === "Rascunho").length, "yellow"], ["Importadas", notas.filter(n => n.status === "Importada").length, "blue"]].map(([label, val, c]) => (
-          <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <p className="text-gray-500 text-xs">{label}</p>
-            <p className={`text-2xl font-bold mt-1 text-${c}-400`}>{val}</p>
+      {/* Header / Filtros */}
+      <div className="flex flex-col gap-3">
+        {/* Linha 1: busca + botões */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <input type="text" placeholder="Buscar nota..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
           </div>
-        ))}
-      </div>
-
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <input type="text" placeholder="Buscar nota..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
+          <div className="flex gap-2">
+            <button onClick={() => setShowImport(true)} className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all">
+              <Upload className="w-4 h-4" /> Importar XML
+            </button>
+            <button onClick={() => { setForm(defaultForm()); setAbaForm("cliente"); setShowForm(true); }} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
+              <Plus className="w-4 h-4" /> Emitir Nota
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => setShowImport(true)} className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all">
-            <Upload className="w-4 h-4" /> Importar XML
-          </button>
-          <button onClick={() => { setForm(defaultForm()); setAbaForm("cliente"); setShowForm(true); }} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
-            <Plus className="w-4 h-4" /> Emitir Nota
-          </button>
+
+        {/* Linha 2: filtros de tipo e período */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+          {/* Tipo */}
+          <div className="flex gap-2">
+            {["Todos", "Entrada", "Saída"].map(t => (
+              <button key={t} onClick={() => setFiltroTipo(t)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${filtroTipo === t ? "bg-orange-500 text-white" : "bg-gray-800 text-gray-400 hover:text-white border border-gray-700"}`}>
+                {t}
+              </button>
+            ))}
+          </div>
+          {/* Período */}
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-500 text-xs whitespace-nowrap">Período:</span>
+            <input type="date" value={periodoInicio} onChange={e => setPeriodoInicio(e.target.value)}
+              className="bg-gray-800 border border-gray-700 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-orange-500" />
+            <span className="text-gray-600 text-xs">até</span>
+            <input type="date" value={periodoFim} onChange={e => setPeriodoFim(e.target.value)}
+              className="bg-gray-800 border border-gray-700 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-orange-500" />
+            {(periodoInicio || periodoFim) && (
+              <button onClick={() => { setPeriodoInicio(""); setPeriodoFim(""); }} className="text-gray-500 hover:text-white text-xs">✕</button>
+            )}
+          </div>
         </div>
       </div>
 
