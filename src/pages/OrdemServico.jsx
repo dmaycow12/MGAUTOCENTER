@@ -36,14 +36,16 @@ export default function OrdemServico() {
     load();
   };
 
-  const filtradas = ordens.filter(o => {
-    const matchSearch = !search ||
-      o.numero?.toLowerCase().includes(search.toLowerCase()) ||
-      o.cliente_nome?.toLowerCase().includes(search.toLowerCase()) ||
-      o.veiculo_placa?.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = filtroStatus === "Todos" || o.status === filtroStatus;
-    return matchSearch && matchStatus;
-  });
+  const filtradas = ordens
+    .filter(o => {
+      const matchSearch = !search ||
+        o.numero?.toLowerCase().includes(search.toLowerCase()) ||
+        o.cliente_nome?.toLowerCase().includes(search.toLowerCase()) ||
+        o.veiculo_placa?.toLowerCase().includes(search.toLowerCase());
+      const matchStatus = filtroStatus === "Todos" || o.status === filtroStatus;
+      return matchSearch && matchStatus;
+    })
+    .sort((a, b) => Number(a.numero || 0) - Number(b.numero || 0));
 
   if (loading) return <Loader />;
 
