@@ -49,10 +49,11 @@ export default function Financeiro() {
     load();
   };
 
-  const marcarPago = async (item) => {
+  const toggleStatus = async (item) => {
+    const novoStatus = item.status === "Pago" ? "Pendente" : "Pago";
     await base44.entities.Financeiro.update(item.id, {
-      status: "Pago",
-      data_pagamento: new Date().toISOString().split("T")[0]
+      status: novoStatus,
+      data_pagamento: novoStatus === "Pago" ? new Date().toISOString().split("T")[0] : ""
     });
     load();
   };
