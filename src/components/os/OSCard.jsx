@@ -113,80 +113,126 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
-      {/* Linha principal — tudo em uma única linha alinhada */}
+      {/* Layout Desktop: tudo numa linha | Mobile: info em cima, ações em baixo */}
       <div
-        className="flex items-center gap-2 px-3 py-3 cursor-pointer select-none"
+        className="cursor-pointer select-none"
         onClick={() => setExpandido(!expandido)}
       >
-        {/* Número OS */}
-        <span className="text-white font-bold text-sm w-8 flex-shrink-0">{os.numero}</span>
+        {/* Linha de informações */}
+        <div className="flex items-center gap-2 px-3 pt-3 pb-1 md:pb-3">
+          {/* Número OS */}
+          <span className="text-white font-bold text-sm w-8 flex-shrink-0">{os.numero}</span>
 
-        {/* Dados principais — flex com truncate */}
-        <div className="flex-1 min-w-0 flex flex-col justify-center">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-white text-sm font-medium truncate">{primeiroNome(os.cliente_nome)}</span>
-            {os.veiculo_modelo && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-400 text-xs truncate">{os.veiculo_modelo}</span></>}
-            {os.veiculo_placa && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-400 text-xs">{os.veiculo_placa}</span></>}
-            {os.data_entrada && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-500 text-xs whitespace-nowrap">{os.data_entrada}</span></>}
+          {/* Dados principais */}
+          <div className="flex-1 min-w-0">
+            {/* Desktop: tudo em uma linha */}
+            <div className="hidden md:flex items-center gap-1.5">
+              <span className="text-white text-sm font-medium">{primeiroNome(os.cliente_nome)}</span>
+              {os.veiculo_modelo && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-400 text-xs truncate">{os.veiculo_modelo}</span></>}
+              {os.veiculo_placa && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-400 text-xs">{os.veiculo_placa}</span></>}
+              {os.data_entrada && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-500 text-xs whitespace-nowrap">{os.data_entrada}</span></>}
+            </div>
+            {/* Mobile: dados em linhas */}
+            <div className="flex md:hidden flex-col gap-0.5">
+              <span className="text-white text-sm font-medium">{primeiroNome(os.cliente_nome)}</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                {os.veiculo_modelo && <span className="text-gray-400 text-xs">{os.veiculo_modelo}</span>}
+                {os.veiculo_placa && <span className="text-gray-400 text-xs">{os.veiculo_placa}</span>}
+                {os.data_entrada && <span className="text-gray-500 text-xs">{os.data_entrada}</span>}
+              </div>
+            </div>
+          </div>
+
+          {/* Ações — visíveis apenas no desktop */}
+          <div className="hidden md:flex items-center flex-shrink-0" onClick={e => e.stopPropagation()}>
+            <button onClick={(e) => { e.stopPropagation(); onEdit(); }} title="Editar" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
+              <Edit className="w-4 h-4" />
+            </button>
+            <button onClick={imprimir} title="Imprimir" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
+              <Printer className="w-4 h-4" />
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); onDelete(); }} title="Excluir" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
+              <Trash2 className="w-4 h-4" />
+            </button>
+
+            <div className="relative" ref={statusRef}>
+              <button onClick={(e) => { e.stopPropagation(); setStatusOpen(!statusOpen); }} className={`h-8 px-2 flex items-center gap-1 rounded-lg border text-xs font-medium transition-all hover:opacity-80 ${statusColors[os.status] || "bg-gray-500/10 text-gray-400 border-gray-500/20"}`}>
+                <span className="whitespace-nowrap">{os.status}</span>
+                <ChevronDown className="w-3 h-3 flex-shrink-0" />
+              </button>
+              {statusOpen && (
+                <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-30 w-36 py-1">
+                  {STATUS_OPTIONS.map(s => (
+                    <button key={s} onClick={() => alterarStatus(s)} className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}>{s}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="relative" ref={menuRef}>
+              <button onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
+                <ChevronDown className={`w-4 h-4 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-30 w-52 py-1">
+                  <MenuItem icon={<MessageCircle className="w-4 h-4 text-green-400" />} label="Enviar Orçamento" onClick={whatsappOrcamento} />
+                  <MenuItem icon={<MessageCircle className="w-4 h-4 text-green-400" />} label="Chamar no WhatsApp" onClick={whatsappChamar} />
+                  <div className="border-t border-gray-700 my-1" />
+                  <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFe" onClick={() => emitirNF("NFe")} />
+                  <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFSe" onClick={() => emitirNF("NFSe")} />
+                  <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFCe" onClick={() => emitirNF("NFCe")} />
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Ações — todos com w-8 h-8 fixo, alinhados */}
-        <div className="flex items-center flex-shrink-0" onClick={e => e.stopPropagation()}>
-          {/* Editar */}
-          <button onClick={(e) => { e.stopPropagation(); onEdit(); }} title="Editar" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
-            <Edit className="w-4 h-4" />
-          </button>
-
-          {/* Imprimir */}
-          <button onClick={imprimir} title="Imprimir" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
-            <Printer className="w-4 h-4" />
-          </button>
-
-          {/* Excluir */}
-          <button onClick={(e) => { e.stopPropagation(); onDelete(); }} title="Excluir" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
-            <Trash2 className="w-4 h-4" />
-          </button>
-
-          {/* Status clicável */}
-          <div className="relative" ref={statusRef}>
-            <button
-              onClick={(e) => { e.stopPropagation(); setStatusOpen(!statusOpen); }}
-              className={`h-8 px-2 flex items-center gap-1 rounded-lg border text-xs font-medium transition-all hover:opacity-80 ${statusColors[os.status] || "bg-gray-500/10 text-gray-400 border-gray-500/20"}`}
-            >
-              <span className="whitespace-nowrap">{os.status}</span>
-              <ChevronDown className="w-3 h-3 flex-shrink-0" />
+        {/* Barra de ações — visível apenas no mobile */}
+        <div className="flex md:hidden items-center justify-between px-3 pb-3 pt-1 border-t border-gray-800/50 mt-1" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center gap-1">
+            <button onClick={(e) => { e.stopPropagation(); onEdit(); }} title="Editar" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
+              <Edit className="w-4 h-4" />
             </button>
-            {statusOpen && (
-              <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-30 w-36 py-1 overflow-hidden">
-                {STATUS_OPTIONS.map(s => (
-                  <button key={s} onClick={() => alterarStatus(s)} className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}>
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
+            <button onClick={imprimir} title="Imprimir" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
+              <Printer className="w-4 h-4" />
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); onDelete(); }} title="Excluir" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
 
-          {/* Menu ações extras */}
-          <div className="relative" ref={menuRef}>
-            <button
-              onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
-              title="Mais ações"
-              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all"
-            >
-              <ChevronDown className={`w-4 h-4 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
-            </button>
-            {menuOpen && (
-              <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-30 w-52 py-1 overflow-hidden">
-                <MenuItem icon={<MessageCircle className="w-4 h-4 text-green-400" />} label="Enviar Orçamento" onClick={whatsappOrcamento} />
-                <MenuItem icon={<MessageCircle className="w-4 h-4 text-green-400" />} label="Chamar no WhatsApp" onClick={whatsappChamar} />
-                <div className="border-t border-gray-700 my-1" />
-                <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFe" onClick={() => emitirNF("NFe")} />
-                <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFSe" onClick={() => emitirNF("NFSe")} />
-                <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFCe" onClick={() => emitirNF("NFCe")} />
-              </div>
-            )}
+          <div className="flex items-center gap-1">
+            {/* Status mobile */}
+            <div className="relative" ref={statusRef}>
+              <button onClick={(e) => { e.stopPropagation(); setStatusOpen(!statusOpen); }} className={`h-8 px-2 flex items-center gap-1 rounded-lg border text-xs font-medium transition-all hover:opacity-80 ${statusColors[os.status] || "bg-gray-500/10 text-gray-400 border-gray-500/20"}`}>
+                <span className="whitespace-nowrap">{os.status}</span>
+                <ChevronDown className="w-3 h-3 flex-shrink-0" />
+              </button>
+              {statusOpen && (
+                <div className="absolute right-0 bottom-full mb-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-30 w-36 py-1">
+                  {STATUS_OPTIONS.map(s => (
+                    <button key={s} onClick={() => alterarStatus(s)} className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}>{s}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Menu ações mobile */}
+            <div className="relative" ref={menuRef}>
+              <button onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
+                <ChevronDown className={`w-4 h-4 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 bottom-full mb-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-30 w-52 py-1">
+                  <MenuItem icon={<MessageCircle className="w-4 h-4 text-green-400" />} label="Enviar Orçamento" onClick={whatsappOrcamento} />
+                  <MenuItem icon={<MessageCircle className="w-4 h-4 text-green-400" />} label="Chamar no WhatsApp" onClick={whatsappChamar} />
+                  <div className="border-t border-gray-700 my-1" />
+                  <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFe" onClick={() => emitirNF("NFe")} />
+                  <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFSe" onClick={() => emitirNF("NFSe")} />
+                  <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFCe" onClick={() => emitirNF("NFCe")} />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
