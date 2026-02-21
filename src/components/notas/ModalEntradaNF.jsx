@@ -71,7 +71,7 @@ function parsearXML(xml) {
 }
 
 export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
-  const [aba, setAba] = useState("fiscal"); // fiscal | estoque | financeiro
+  const [aba, setAba] = useState("fiscal");
   const [dados, setDados] = useState(null);
   const [itens, setItens] = useState([]);
   const [financeiro, setFinanceiro] = useState({
@@ -82,6 +82,7 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
     fornecedor: "",
     observacoes: "",
   });
+  const [boletos, setBoletos] = useState([]);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [estoqueExistente, setEstoqueExistente] = useState([]);
@@ -90,10 +91,12 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
     const parsed = parsearXML(xmlTexto);
     setDados(parsed);
     setItens(parsed.itens);
+    setBoletos(parsed.boletos || []);
     setFinanceiro(f => ({
       ...f,
+      forma_pagamento: parsed.forma_pagamento_detectada || "PIX",
       fornecedor: parsed.emitente,
-      data_vencimento: parsed.dataEmissao,
+      data_vencimento: parsed.boletos?.length > 0 ? (parsed.boletos[0].dVenc || parsed.dataEmissao) : parsed.dataEmissao,
     }));
     base44.entities.Estoque.list("-created_date", 500).then(setEstoqueExistente);
   }, []);
