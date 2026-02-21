@@ -111,7 +111,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all">
       {/* Card principal - layout de 2 colunas: dados | ações */}
-      <div className="flex items-center p-3 gap-3">
+      <div className="flex items-start p-3 gap-3">
         {/* Coluna dados */}
         <div className="flex-1 min-w-0 space-y-1">
           {/* Linha 1: número OS + badge status */}
