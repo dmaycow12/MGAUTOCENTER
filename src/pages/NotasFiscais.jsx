@@ -161,8 +161,9 @@ export default function NotasFiscais() {
     load();
   };
 
-  // Helper para parsear itens do XML salvo
-  const parsearItensXML = (xml) => {
+  // Helper para parsear itens do XML salvo — remove namespaces antes de parsear
+  const parsearItensXML = (xmlOriginal) => {
+    const xml = xmlOriginal.replace(/<(\/?)[a-zA-Z0-9_]+:([a-zA-Z0-9_]+)/g, "<$1$2");
     const getAll = (tag) => {
       const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "g");
       const results = []; let m;
@@ -171,10 +172,10 @@ export default function NotasFiscais() {
     };
     const detNodes = getAll("det");
     return detNodes.map(det => ({
-      descricao: det.match(/<xProd>([^<]*)<\/xProd>/)?.[1] || "",
+      descricao: det.match(/<xProd>([^<]*)<\/xProd>/)?.[1]?.trim() || "",
       quantidade: parseFloat(det.match(/<qCom>([^<]*)<\/qCom>/)?.[1] || "0"),
-      codigo: det.match(/<cEAN>([^<]*)<\/cEAN>/)?.[1] || "",
-    }));
+      codigo: det.match(/<cEAN>([^<]*)<\/cEAN>/)?.[1]?.trim() || "",
+    })).filter(i => i.descricao);
   };
 
   const importarXML = async () => {
