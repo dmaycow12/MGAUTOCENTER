@@ -145,7 +145,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
 
         <div className="p-5 space-y-5">
           {/* Header Info */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <Field label="Número OS">
               <input value={form.numero} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} className="input-dark" />
             </Field>
