@@ -17,9 +17,21 @@ function parsearXML(xmlOriginal) {
     return m ? m[1].trim() : "";
   };
   const getAll = (tag) => {
-    const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "g");
-    const results = []; let m;
-    while ((m = re.exec(xml)) !== null) results.push(m[1]);
+    const results = [];
+    const openTag = `<${tag}`;
+    const closeTag = `</${tag}>`;
+    let start = 0;
+    while (true) {
+      const openIdx = xml.indexOf(openTag, start);
+      if (openIdx === -1) break;
+      // encontra o fim da tag de abertura (pode ter atributos)
+      const tagEnd = xml.indexOf(">", openIdx);
+      if (tagEnd === -1) break;
+      const closeIdx = xml.indexOf(closeTag, tagEnd);
+      if (closeIdx === -1) break;
+      results.push(xml.substring(tagEnd + 1, closeIdx));
+      start = closeIdx + closeTag.length;
+    }
     return results;
   };
 
