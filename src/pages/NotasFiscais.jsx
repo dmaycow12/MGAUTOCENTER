@@ -589,9 +589,15 @@ export default function NotasFiscais() {
                           <Printer className="w-4 h-4" />
                         </button>
                         {nota.chave_acesso && (
-                          <button title="Ver chave" onClick={() => alert(`Chave de Acesso:\n${nota.chave_acesso}`)} className="p-1 text-gray-500 hover:text-white transition-all">
+                          <a
+                            href={`https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=completa&tipoConteudo=XbSeqxE8pl8=&nfe=${nota.chave_acesso}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="Consultar/Baixar DANFE na SEFAZ"
+                            className="p-1 text-gray-500 hover:text-green-400 transition-all"
+                          >
                             <Eye className="w-4 h-4" />
-                          </button>
+                          </a>
                         )}
                         <button onClick={() => excluir(nota.id)} className="p-1 text-gray-500 hover:text-red-400 transition-all">
                           <Trash2 className="w-4 h-4" />
