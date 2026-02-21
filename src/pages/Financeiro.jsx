@@ -150,18 +150,15 @@ export default function Financeiro() {
                       </td>
                       <td className="px-4 py-3 text-gray-400 hidden sm:table-cell">{item.data_vencimento || "—"}</td>
                       <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor[item.status] || ""}`}>
+                        <button onClick={() => toggleStatus(item)} className={`text-xs px-2 py-1 rounded-full font-medium transition-all hover:opacity-70 cursor-pointer ${statusColor[item.status] || ""}`}>
                           {item.status}
-                        </span>
+                        </button>
                       </td>
                       <td className={`px-4 py-3 text-right font-bold ${item.tipo === "Receita" ? "text-green-400" : "text-red-400"}`}>
                         R$ {Number(item.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-1">
-                          {item.status !== "Pago" && (
-                            <button onClick={() => marcarPago(item)} className="text-xs px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded transition-all">Pago</button>
-                          )}
                           <button onClick={() => { setForm({ ...defaultForm(), ...item }); setEditando(item); setShowForm(true); }} className="p-1 text-gray-500 hover:text-blue-400 transition-all"><Edit className="w-3 h-3" /></button>
                           <button onClick={() => excluir(item.id)} className="p-1 text-gray-500 hover:text-red-400 transition-all"><Trash2 className="w-3 h-3" /></button>
                         </div>
