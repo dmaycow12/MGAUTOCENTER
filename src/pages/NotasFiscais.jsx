@@ -267,11 +267,17 @@ export default function NotasFiscais() {
     win.document.close();
   };
 
-  const filtradas = notas.filter(n =>
-    !search || n.numero?.includes(search) ||
-    n.cliente_nome?.toLowerCase().includes(search.toLowerCase()) ||
-    n.chave_acesso?.includes(search)
-  );
+  const filtradas = notas.filter(n => {
+    const matchSearch = !search || n.numero?.includes(search) ||
+      n.cliente_nome?.toLowerCase().includes(search.toLowerCase()) ||
+      n.chave_acesso?.includes(search);
+    const matchTipo = filtroTipo === "Todos" ||
+      (filtroTipo === "Entrada" && n.tipo === "NFe" && n.status === "Importada") ||
+      (filtroTipo === "Saída" && n.status !== "Importada");
+    const matchInicio = !periodoInicio || (n.data_emissao && n.data_emissao >= periodoInicio);
+    const matchFim = !periodoFim || (n.data_emissao && n.data_emissao <= periodoFim);
+    return matchSearch && matchTipo && matchInicio && matchFim;
+  });
 
   if (loading) return <Loader />;
 
