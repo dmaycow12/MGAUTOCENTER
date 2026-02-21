@@ -414,17 +414,48 @@ export default function NotasFiscais() {
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
           <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl">
             <div className="flex items-center justify-between p-5 border-b border-gray-800">
-              <h2 className="text-white font-semibold">Importar XML de Nota Fiscal</h2>
+              <div>
+                <h2 className="text-white font-semibold">Importar XML de Nota Fiscal</h2>
+                <p className="text-gray-500 text-xs mt-0.5">Notas de entrada (compras) ou saída emitidas na SEFAZ</p>
+              </div>
               <button onClick={() => setShowImport(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
             </div>
-            <div className="p-5">
+            <div className="p-5 space-y-4">
+              {/* Upload de arquivo */}
+              <div>
+                <label className="block text-xs text-gray-400 mb-2">Selecionar arquivo XML</label>
+                <label className="flex items-center justify-center gap-3 w-full border-2 border-dashed border-gray-700 hover:border-orange-500 rounded-xl p-6 cursor-pointer transition-all group">
+                  <Upload className="w-5 h-5 text-gray-500 group-hover:text-orange-400 transition-all" />
+                  <span className="text-gray-500 group-hover:text-gray-300 text-sm transition-all">Clique para selecionar o arquivo .xml</span>
+                  <input type="file" accept=".xml,text/xml,application/xml" className="hidden" onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = ev => setXmlTexto(ev.target.result);
+                    reader.readAsText(file, "UTF-8");
+                  }} />
+                </label>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-gray-800" />
+                <span className="text-gray-600 text-xs">ou cole o XML abaixo</span>
+                <div className="flex-1 h-px bg-gray-800" />
+              </div>
+
               <textarea value={xmlTexto} onChange={e => setXmlTexto(e.target.value)}
                 className="w-full bg-gray-800 border border-gray-700 text-green-400 font-mono rounded-lg p-3 text-xs focus:outline-none focus:border-orange-500 resize-none"
-                rows={12} placeholder='<?xml version="1.0" encoding="UTF-8"?>&#10;<nfeProc>...</nfeProc>' />
+                rows={8} placeholder='<?xml version="1.0" encoding="UTF-8"?>&#10;<nfeProc>...</nfeProc>' />
+
+              {xmlTexto && (
+                <p className="text-green-400 text-xs flex items-center gap-1">
+                  <CheckCircle className="w-3.5 h-3.5" /> XML carregado ({(xmlTexto.length / 1024).toFixed(1)} KB)
+                </p>
+              )}
             </div>
             <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
-              <button onClick={() => setShowImport(false)} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white">Cancelar</button>
-              <button onClick={importarXML} disabled={importando} className="px-4 py-2 text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium disabled:opacity-50">
+              <button onClick={() => { setShowImport(false); setXmlTexto(""); }} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white">Cancelar</button>
+              <button onClick={importarXML} disabled={importando || !xmlTexto.trim()} className="px-4 py-2 text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium disabled:opacity-50">
                 {importando ? "Importando..." : "Importar XML"}
               </button>
             </div>
