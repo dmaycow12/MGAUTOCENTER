@@ -313,9 +313,29 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
                     <option value="Atrasado">Atrasado</option>
                   </select>
                 </F>
-                <F label="Data de Vencimento">
-                  <input type="date" value={financeiro.data_vencimento} onChange={e => setFinanceiro(f => ({ ...f, data_vencimento: e.target.value }))} className="input-dark" />
-                </F>
+
+                {/* Boletos detectados no XML */}
+                {financeiro.forma_pagamento === "Boleto" && boletos.length > 0 ? (
+                  <div className="md:col-span-2">
+                    <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
+                      <span className="text-orange-400 font-medium">{boletos.length} boleto(s) detectado(s) no XML</span> — cada um será lançado individualmente no financeiro
+                    </p>
+                    <div className="space-y-2">
+                      {boletos.map((bol, i) => (
+                        <div key={i} className="bg-gray-700 rounded-lg px-3 py-2 flex justify-between items-center text-xs">
+                          <span className="text-gray-300">Boleto {bol.nDup || i + 1}</span>
+                          <span className="text-white">Venc: <b>{bol.dVenc || "—"}</b></span>
+                          <span className="text-orange-400 font-bold">R$ {Number(bol.vDup || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <F label="Data de Vencimento">
+                    <input type="date" value={financeiro.data_vencimento} onChange={e => setFinanceiro(f => ({ ...f, data_vencimento: e.target.value }))} className="input-dark" />
+                  </F>
+                )}
+
                 {financeiro.status === "Pago" && (
                   <F label="Data de Pagamento">
                     <input type="date" value={financeiro.data_pagamento} onChange={e => setFinanceiro(f => ({ ...f, data_pagamento: e.target.value }))} className="input-dark" />
