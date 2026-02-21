@@ -4,6 +4,7 @@ import {
   FileText, Plus, Upload, Search, Trash2, Eye, X,
   CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw
 } from "lucide-react";
+import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 
 const STATUS_COLOR = {
   Rascunho: "bg-gray-500/10 text-gray-400",
