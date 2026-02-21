@@ -5,7 +5,7 @@ import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X } from "lucide-re
 const defaultForm = () => ({
   codigo: "", descricao: "", categoria: "", marca: "", unidade: "UN",
   quantidade: 0, estoque_minimo: 0, valor_custo: 0, valor_venda: 0,
-  localizacao: "", fornecedor: "", observacoes: ""
+  localizacao: "", fornecedor: "", ncm: "87089990", cfop: "5405", observacoes: ""
 });
 
 export default function Estoque() {
