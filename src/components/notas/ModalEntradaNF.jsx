@@ -179,15 +179,16 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
       // 2. Dar entrada no estoque (somente itens marcados)
       for (const item of itens) {
         if (!item.dar_entrada_estoque || !item.descricao) continue;
-        // Verifica se já existe item com descrição similar
         const existente = estoqueExistente.find(e =>
           e.descricao?.toLowerCase() === item.descricao.toLowerCase() ||
-          (item.codigo && item.codigo !== "SEM GTIN" && e.codigo === item.codigo)
+          (item.codigo && item.codigo !== "SEM GTIN" && item.codigo !== "" && e.codigo === item.codigo)
         );
         if (existente) {
           await base44.entities.Estoque.update(existente.id, {
             quantidade: (existente.quantidade || 0) + item.quantidade,
             valor_custo: item.valor_unitario,
+            ncm: item.ncm || existente.ncm,
+            cfop: item.cfop || existente.cfop,
           });
         } else {
           await base44.entities.Estoque.create({
@@ -196,8 +197,10 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
             quantidade: item.quantidade,
             valor_custo: item.valor_unitario,
             valor_venda: item.valor_unitario,
-            unidade: "UN",
+            unidade: item.unidade || "UN",
             fornecedor: dados.emitente,
+            ncm: item.ncm || "",
+            cfop: item.cfop || "",
           });
         }
       }
