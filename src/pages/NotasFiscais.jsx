@@ -54,7 +54,9 @@ export default function NotasFiscais() {
   const [periodoFim, setPeriodoFim] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [showEntrada, setShowEntrada] = useState(false);
   const [xmlTexto, setXmlTexto] = useState("");
+  const [xmlParaEntrada, setXmlParaEntrada] = useState("");
   const [importando, setImportando] = useState(false);
   const [clientes, setClientes] = useState([]);
   const [form, setForm] = useState(defaultForm());
