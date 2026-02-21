@@ -4,13 +4,20 @@ import { X, Package, DollarSign, FileText, CheckCircle, ChevronRight, ChevronLef
 
 const FORMAS_PAGAMENTO = ["Dinheiro", "Cartão de Crédito", "Cartão de Débito", "PIX", "Boleto", "Transferência", "A Prazo"];
 
-function parsearXML(xml) {
+function limparNamespaces(xml) {
+  // Remove prefixos de namespace tipo nfe: para facilitar parsing
+  return xml.replace(/<(\/?)[a-zA-Z0-9_]+:([a-zA-Z0-9_]+)/g, "<$1$2");
+}
+
+function parsearXML(xmlOriginal) {
+  const xml = limparNamespaces(xmlOriginal);
+
   const get = (tag) => {
-    const m = xml.match(new RegExp(`<${tag}[^>]*>([^<]*)<\/${tag}>`));
+    const m = xml.match(new RegExp(`<${tag}[^>]*>([^<]*)<\\/${tag}>`));
     return m ? m[1].trim() : "";
   };
   const getAll = (tag) => {
-    const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\/${tag}>`, "g");
+    const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "g");
     const results = []; let m;
     while ((m = re.exec(xml)) !== null) results.push(m[1]);
     return results;
@@ -21,8 +28,28 @@ function parsearXML(xml) {
   const serie = get("serie");
   const valor = parseFloat(get("vNF") || "0");
   const dataEmissao = get("dhEmi")?.substring(0, 10) || get("dEmi") || "";
-  const emitente = get("xNome");
-  const cnpjEmit = get("CNPJ");
+
+  // Emitente — pegar o primeiro xNome (que é o emitente, não o destinatário)
+  const emitentes = [...xml.matchAll(/<xNome>([^<]*)<\/xNome>/g)];
+  const emitente = emitentes[0]?.[1]?.trim() || "";
+  const cnpjEmits = [...xml.matchAll(/<CNPJ>([^<]*)<\/CNPJ>/g)];
+  const cnpjEmit = cnpjEmits[0]?.[1]?.trim() || "";
+
+  // Destinatário (segundo xNome)
+  const dest_nome = emitentes[1]?.[1]?.trim() || "";
+  const dest_cnpj = cnpjEmits[1]?.[1]?.trim() || "";
+
+  // Endereço emitente
+  const emit_logr = get("xLgr");
+  const emit_nro = get("nro");
+  const emit_bairro = get("xBairro");
+  const emit_mun = get("xMun");
+  const emit_uf = get("UF");
+  const emit_cep = get("CEP");
+  const emit_fone = get("fone");
+  const emit_ie = get("IE");
+  const emit_cnae = get("CNAE");
+  const emit_crt = get("CRT");
 
   // Itens da nota
   const detNodes = getAll("det");
@@ -32,10 +59,33 @@ function parsearXML(xml) {
     const vUnCom = parseFloat(det.match(/<vUnCom>([^<]*)<\/vUnCom>/)?.[1] || "0");
     const vProd = parseFloat(det.match(/<vProd>([^<]*)<\/vProd>/)?.[1] || "0");
     const cEAN = det.match(/<cEAN>([^<]*)<\/cEAN>/)?.[1] || "";
-    return { descricao: xProd, quantidade: qCom, valor_unitario: vUnCom, valor_total: vProd, codigo: cEAN, dar_entrada_estoque: true };
+    const NCM = det.match(/<NCM>([^<]*)<\/NCM>/)?.[1] || "";
+    const CFOP = det.match(/<CFOP>([^<]*)<\/CFOP>/)?.[1] || "";
+    const uCom = det.match(/<uCom>([^<]*)<\/uCom>/)?.[1] || "";
+    return { descricao: xProd, quantidade: qCom, valor_unitario: vUnCom, valor_total: vProd, codigo: cEAN, ncm: NCM, cfop: CFOP, unidade: uCom, dar_entrada_estoque: true };
   });
 
-  // Pagamento — extrai do XML da NFe (tag detPag ou cobr)
+  // Totais
+  const vBC = parseFloat(get("vBC") || "0");
+  const vICMS = parseFloat(get("vICMS") || "0");
+  const vIPI = parseFloat(get("vIPI") || "0");
+  const vPIS = parseFloat(get("vPIS") || "0");
+  const vCOFINS = parseFloat(get("vCOFINS") || "0");
+  const vDesc = parseFloat(get("vDesc") || "0");
+  const vFrete = parseFloat(get("vFrete") || "0");
+  const vSeg = parseFloat(get("vSeg") || "0");
+  const vOutro = parseFloat(get("vOutro") || "0");
+  const vProd_total = parseFloat(get("vProd") || "0");
+  const natOp = get("natOp");
+  const infCpl = get("infCpl");
+
+  // Transportadora
+  const xNomeTransp = get("xNomeTransp") || get("xNome");
+  const modFrete_raw = get("modFrete");
+  const modFreteMap = { "0":"Emitente","1":"Destinatário","2":"Terceiros","9":"Sem Frete" };
+  const modFrete = modFreteMap[modFrete_raw] || modFrete_raw;
+
+  // Pagamento — detPag
   const pagamentos = [];
   const detPagNodes = getAll("detPag");
   for (const dp of detPagNodes) {
@@ -43,7 +93,7 @@ function parsearXML(xml) {
     const vPag = parseFloat(dp.match(/<vPag>([^<]*)<\/vPag>/)?.[1] || "0");
     pagamentos.push({ tPag, vPag });
   }
-  // Boletos (duplicatas)
+  // Boletos (duplicatas) — dentro de <cobr>
   const dupNodes = getAll("dup");
   const boletos = dupNodes.map(dup => ({
     nDup: dup.match(/<nDup>([^<]*)<\/nDup>/)?.[1] || "",
@@ -51,23 +101,24 @@ function parsearXML(xml) {
     vDup: parseFloat(dup.match(/<vDup>([^<]*)<\/vDup>/)?.[1] || "0"),
   }));
 
-  // Mapear código tPag para forma legível
   const mapaForma = {
     "01": "Dinheiro", "02": "Cheque", "03": "Cartão de Crédito", "04": "Cartão de Débito",
     "05": "Crediário", "10": "Vale Alimentação", "11": "Vale Refeição", "12": "Vale Presente",
-    "13": "Vale Combustível", "15": "Boleto", "90": "Sem Pagamento", "99": "Outros",
+    "13": "Vale Combustível", "15": "Boleto", "17": "PIX", "90": "Sem Pagamento", "99": "Outros",
   };
-  let forma_pagamento_detectada = "PIX";
-  let isBoleto = false;
+  let forma_pagamento_detectada = boletos.length > 0 ? "Boleto" : "PIX";
   if (pagamentos.length > 0) {
-    const tPag = pagamentos[0].tPag;
-    forma_pagamento_detectada = mapaForma[tPag] || "PIX";
-    isBoleto = tPag === "15" || boletos.length > 0;
+    forma_pagamento_detectada = mapaForma[pagamentos[0].tPag] || forma_pagamento_detectada;
   }
-  // PIX pode vir como "99" ou "17" em alguns sistemas
-  if (pagamentos[0]?.tPag === "17") forma_pagamento_detectada = "PIX";
 
-  return { chave, numero, serie, valor, dataEmissao, emitente, cnpjEmit, itens, forma_pagamento_detectada, isBoleto, boletos };
+  return {
+    chave, numero, serie, valor, dataEmissao, emitente, cnpjEmit,
+    dest_nome, dest_cnpj,
+    emit_logr, emit_nro, emit_bairro, emit_mun, emit_uf, emit_cep, emit_fone, emit_ie, emit_crt,
+    itens, pagamentos, boletos, forma_pagamento_detectada,
+    vBC, vICMS, vIPI, vPIS, vCOFINS, vDesc, vFrete, vSeg, vOutro, vProd_total,
+    natOp, infCpl, modFrete,
+  };
 }
 
 export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
