@@ -129,33 +129,39 @@ export default function NotasFiscais() {
   const excluir = async (id) => {
     if (!confirm("Excluir esta nota fiscal? Isso também removerá os itens do estoque e os lançamentos financeiros vinculados.")) return;
     const nota = notas.find(n => n.id === id);
+
     // 1. Reverter estoque — só para notas importadas
     if (nota?.status === "Importada" && nota?.xml_content) {
-      try {
+      const xmlItens = parsearItensXML(nota.xml_content);
+      if (xmlItens.length > 0) {
+        // Busca o estoque fresco do servidor para ter quantidades atualizadas
         const estoque = await base44.entities.Estoque.list("-created_date", 500);
-        const xmlItens = parsearItensXML(nota.xml_content);
         for (const item of xmlItens) {
-          const existente = estoque.find(e =>
-            e.descricao?.toLowerCase() === item.descricao.toLowerCase() ||
-            (item.codigo && item.codigo !== "SEM GTIN" && e.codigo === item.codigo)
-          );
+          if (!item.descricao) continue;
+          // Tenta encontrar por código primeiro (mais preciso), depois por descrição
+          const existente = estoque.find(e => {
+            if (item.codigo && item.codigo !== "SEM GTIN" && item.codigo !== "" && e.codigo) {
+              return e.codigo === item.codigo;
+            }
+            return e.descricao?.trim().toLowerCase() === item.descricao.trim().toLowerCase();
+          });
           if (existente) {
-            const novaQtd = (existente.quantidade || 0) - item.quantidade;
+            const novaQtd = (Number(existente.quantidade) || 0) - (Number(item.quantidade) || 0);
             await base44.entities.Estoque.update(existente.id, { quantidade: Math.max(0, novaQtd) });
           }
         }
-      } catch {}
+      }
     }
+
     // 2. Excluir lançamentos financeiros vinculados (pelo número/descrição da NF)
     if (nota?.numero) {
-      try {
-        const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
-        const vinculados = financeiros.filter(f => f.descricao?.includes(`NF ${nota.numero}`));
-        for (const f of vinculados) {
-          await base44.entities.Financeiro.delete(f.id);
-        }
-      } catch {}
+      const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
+      const vinculados = financeiros.filter(f => f.descricao?.includes(`NF ${nota.numero}`));
+      for (const f of vinculados) {
+        await base44.entities.Financeiro.delete(f.id);
+      }
     }
+
     // 3. Excluir a nota
     await base44.entities.NotaFiscal.delete(id);
     load();
