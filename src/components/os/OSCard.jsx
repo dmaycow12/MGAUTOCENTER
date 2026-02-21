@@ -133,8 +133,8 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
           </div>
         </div>
 
-        {/* Coluna ações - todos centralizados verticalmente */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        {/* Coluna ações - alinhada ao topo, tamanho fixo */}
+        <div className="flex items-center gap-0 flex-shrink-0 mt-0.5">
           <button onClick={onEdit} title="Editar" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
             <Edit className="w-4 h-4" />
           </button>
