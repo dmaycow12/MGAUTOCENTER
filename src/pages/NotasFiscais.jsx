@@ -843,9 +843,13 @@ export default function NotasFiscais() {
                     <button onClick={() => setAbaForm("itens")} className="text-gray-400 hover:text-white text-sm px-4 py-2 border border-gray-700 rounded-lg transition-all">← Voltar</button>
                     <div className="flex gap-3">
                       <button onClick={salvarRascunho} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Salvar Rascunho</button>
-                      <button onClick={() => emitirNota()} disabled={emitindo} className="px-6 py-2 text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all disabled:opacity-50 flex items-center gap-2">
+                      <button
+                        onClick={() => temSpedy ? emitirNota() : salvarRascunho()}
+                        disabled={emitindo}
+                        className="px-6 py-2 text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all disabled:opacity-50 flex items-center gap-2"
+                      >
                         {emitindo && <RefreshCw className="w-4 h-4 animate-spin" />}
-                        {emitindo ? "Emitindo..." : temSpedy ? "Transmitir Nota" : "Salvar como Rascunho"}
+                        {emitindo ? "Emitindo..." : temSpedy ? "Transmitir Nota" : "Salvar Nota"}
                       </button>
                     </div>
                   </div>
