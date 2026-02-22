@@ -139,19 +139,20 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 hover:border-gray-700 transition-all">
       <div className="flex items-center gap-3">
 
+        {/* Data — desktop: antes do nº | mobile: oculta */}
+        <span className="hidden sm:inline text-white font-bold text-sm flex-shrink-0 whitespace-nowrap">{fmtData(os.data_entrada)}</span>
+
         {/* Nº */}
         <span className="text-white font-bold text-sm flex-shrink-0 w-5 text-center">{os.numero || "—"}</span>
 
-        {/* Data — na frente, só desktop */}
-        <span className="hidden sm:inline text-white font-bold text-sm flex-shrink-0 whitespace-nowrap">{fmtData(os.data_entrada)}</span>
-
-        {/* Cliente + Veículo — desktop: linha única expandida | mobile: empilhado */}
+        {/* Desktop: cliente + modelo + placa espalhados para preencher o espaço | Mobile: empilhado */}
         <div className="flex-1 min-w-0">
-          {/* Desktop: tudo na mesma linha, espalhado */}
-          <div className="hidden sm:flex items-center gap-6 min-w-0">
+          {/* Desktop */}
+          <div className="hidden sm:flex items-center justify-between min-w-0 pr-4">
             <span className="text-white font-bold text-sm whitespace-nowrap">{primeiroNome}</span>
             {os.veiculo_modelo && <span className="text-white font-bold text-sm whitespace-nowrap">{os.veiculo_modelo}</span>}
             {os.veiculo_placa && <span className="text-white font-bold text-sm whitespace-nowrap">{os.veiculo_placa}</span>}
+            {!os.veiculo_modelo && !os.veiculo_placa && <span />}
           </div>
           {/* Mobile: empilhado */}
           <div className="flex flex-col sm:hidden min-w-0">
