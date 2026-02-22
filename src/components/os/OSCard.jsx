@@ -202,7 +202,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
                   <button
                     key={i}
                     onClick={item.action}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${item.danger ? "text-red-400 hover:text-red-300" : "text-gray-300 hover:text-white"}`}
+                    className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${item.danger ? "text-red-400 hover:text-red-300" : item.whatsapp ? "text-green-400 hover:text-green-300" : "text-gray-300 hover:text-white"}`}
                   >
                     <Icon className="w-3.5 h-3.5 flex-shrink-0" />
                     {item.label}
