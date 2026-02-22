@@ -66,7 +66,33 @@ export default function NotasFiscais() {
   const [temSpedy, setTemSpedy] = useState(false);
   const [abaForm, setAbaForm] = useState("cliente"); // 'cliente' | 'itens' | 'pagamento'
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load().then(() => {
+      // Verifica se veio da OS para emitir NF automaticamente
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("emitir") === "1") {
+        const tipo = params.get("tipo") || "NFSe";
+        const os_id = params.get("os_id") || "";
+        const os_numero = params.get("os_numero") || "";
+        const cliente_id = params.get("cliente_id") || "";
+        const cliente_nome = decodeURIComponent(params.get("cliente_nome") || "");
+        const valor = parseFloat(params.get("valor") || "0");
+        setForm({
+          ...defaultForm(),
+          tipo,
+          ordem_servico_id: os_id,
+          cliente_id,
+          cliente_nome,
+          valor_total: valor,
+          items: [{ descricao: `Serviços OS #${os_numero}`, quantidade: 1, valor_unitario: valor, valor_total: valor }],
+        });
+        setAbaForm("cliente");
+        setShowForm(true);
+        // Limpa os parâmetros da URL sem recarregar
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    });
+  }, []);
 
   const load = async () => {
     const [n, c, configs] = await Promise.all([
