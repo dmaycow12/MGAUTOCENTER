@@ -14,7 +14,7 @@ export default function OrdemServico() {
   const [clientes, setClientes] = useState([]);
   const [veiculos, setVeiculos] = useState([]);
 
-  const statusList = ["Todos", "Em Aberto", "Concluída", "Cancelada"];
+  const statusList = ["Todos", "Em Aberto", "Concluído", "Cancelado"];
 
   useEffect(() => { load(); }, []);
 
