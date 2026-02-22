@@ -147,11 +147,11 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
         {/* Desktop: nome | modelo | placa com espaçamento igual entre si | Mobile: empilhado */}
         <div className="flex-1 min-w-0">
-          {/* Desktop — grid de 3 colunas iguais */}
-          <div className="hidden sm:grid grid-cols-3 items-center min-w-0">
+          {/* Desktop — todos os itens com espaçamento igual entre si */}
+          <div className="hidden sm:flex items-center gap-8 min-w-0">
             <span className="text-white font-bold text-sm whitespace-nowrap">{primeiroNome}</span>
-            <span className="text-white font-bold text-sm whitespace-nowrap text-center">{os.veiculo_modelo || "—"}</span>
-            <span className="text-white font-bold text-sm whitespace-nowrap text-center">{os.veiculo_placa || "—"}</span>
+            <span className="text-white font-bold text-sm whitespace-nowrap">{os.veiculo_modelo || "—"}</span>
+            <span className="text-white font-bold text-sm whitespace-nowrap">{os.veiculo_placa || "—"}</span>
           </div>
           {/* Mobile: empilhado */}
           <div className="flex flex-col sm:hidden min-w-0">
