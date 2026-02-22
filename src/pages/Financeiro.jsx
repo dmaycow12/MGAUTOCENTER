@@ -105,27 +105,36 @@ export default function Financeiro() {
 
       {aba === "lancamentos" && (
         <>
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-            <div className="flex gap-2 flex-1 flex-wrap">
-              <div className="relative max-w-xs flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
-              </div>
-              {["Todos","Receita","Despesa"].map(t => (
-                <button key={t} onClick={() => setFiltroTipo(t)} className={`px-3 py-2 rounded-lg text-xs transition-all ${filtroTipo === t ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400"}`}>{t}</button>
-              ))}
-              {["Todos","Pendente","Pago","Atrasado"].map(s => (
-                <button key={s} onClick={() => setFiltroStatus(s)} className={`px-3 py-2 rounded-lg text-xs transition-all ${filtroStatus === s ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400"}`}>{s}</button>
-              ))}
-            </div>
+          {/* Header — grid 5 linhas */}
+          <div className="flex flex-col gap-2">
+            {/* Linha 2: + Receita / + Despesa */}
             <div className="flex gap-2">
-              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Receita" }); setShowForm(true); setEditando(null); }} className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all">
+              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Receita" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl text-sm font-semibold transition-all">
                 <Plus className="w-4 h-4" /> Receita
               </button>
-              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Despesa" }); setShowForm(true); setEditando(null); }} className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all">
+              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Despesa" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl text-sm font-semibold transition-all">
                 <Plus className="w-4 h-4" /> Despesa
               </button>
+            </div>
+
+            {/* Linha 3: filtro tipo — Receita / Despesa / Todos */}
+            <div className="flex gap-2">
+              {["Receita","Despesa","Todos"].map(t => (
+                <button key={t} onClick={() => setFiltroTipo(t)} className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroTipo === t ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{t}</button>
+              ))}
+            </div>
+
+            {/* Linha 4: filtro status — Pendente / Atrasado / Pago / Todos */}
+            <div className="flex gap-2">
+              {["Pendente","Atrasado","Pago","Todos"].map(s => (
+                <button key={s} onClick={() => setFiltroStatus(s)} className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroStatus === s ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{s}</button>
+              ))}
+            </div>
+
+            {/* Linha 5: busca — ocupa linha toda */}
+            <div className="relative w-full">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500" />
             </div>
           </div>
 
