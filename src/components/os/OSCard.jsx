@@ -121,8 +121,8 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   // Primeiro nome do cliente
   const primeiroNome = (os.cliente_nome || "—").split(" ")[0];
-  // Placa • Modelo (sem ano, sem km)
-  const veiculoInfo = [os.veiculo_placa, os.veiculo_modelo].filter(Boolean).join(" • ");
+  // Modelo • Placa
+  const veiculoInfo = [os.veiculo_modelo, os.veiculo_placa].filter(Boolean).join(" • ");
 
   const menuItems = [
     { label: "Editar", icon: Pencil, action: () => { setMenuOpen(false); onEdit?.(); } },
