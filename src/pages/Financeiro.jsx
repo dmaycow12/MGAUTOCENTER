@@ -94,19 +94,18 @@ export default function Financeiro() {
         <KpiCard icon={Filter} label="Pendente/Atrasado" value={pendente + atrasado} color="yellow" />
       </div>
 
-      {/* Abas */}
-      <div className="flex gap-1 bg-gray-800 p-1 rounded-lg w-fit">
-        {["lancamentos", "fluxo"].map(a => (
-          <button key={a} onClick={() => setAba(a)} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${aba === a ? "bg-orange-500 text-white" : "text-gray-400 hover:text-white"}`}>
-            {a === "lancamentos" ? "Lançamentos" : "Fluxo de Caixa"}
-          </button>
-        ))}
-      </div>
-
       {aba === "lancamentos" && (
         <>
           {/* Header — grid 5 linhas */}
           <div className="flex flex-col gap-2">
+            {/* Linha 1: Lançamentos / Fluxo de Caixa */}
+            <div className="flex gap-2">
+              {["lancamentos", "fluxo"].map(a => (
+                <button key={a} onClick={() => setAba(a)} className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${aba === a ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+                  {a === "lancamentos" ? "Lançamentos" : "Fluxo de Caixa"}
+                </button>
+              ))}
+            </div>
             {/* Linha 2: + Receita / + Despesa */}
             <div className="flex gap-2">
               <button onClick={() => { setForm({ ...defaultForm(), tipo: "Receita" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl text-sm font-semibold transition-all">
