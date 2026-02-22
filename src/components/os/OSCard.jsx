@@ -138,11 +138,16 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 hover:border-gray-700 transition-all">
 
-      {/* Linha 1: Nº | Nome | Valor | Status | Menu */}
-      <div className="flex items-center gap-2 w-full">
-        <span className="text-white font-bold text-sm flex-shrink-0 w-6">{os.numero || "—"}</span>
-
+      {/* Linha 1: Nº | Nome | Data */}
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-gray-500 font-bold text-xs flex-shrink-0 w-5">{os.numero || "—"}</span>
         <span className="text-white font-semibold text-sm flex-1 min-w-0 truncate">{primeiroNome}</span>
+        <span className="text-gray-500 text-xs flex-shrink-0">{fmtData(os.data_entrada)}</span>
+      </div>
+
+      {/* Linha 2: Veículo | Valor | Status | Menu */}
+      <div className="flex items-center gap-2">
+        <span className="text-gray-500 text-xs flex-1 min-w-0 truncate">{veiculoInfo || "—"}</span>
 
         <span className="text-orange-400 font-bold text-sm flex-shrink-0 whitespace-nowrap">{fmtValor(os.valor_total)}</span>
 
@@ -189,12 +194,6 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Linha 2: Veículo | Data */}
-      <div className="flex items-center justify-between mt-1 pl-8 gap-2">
-        <span className="text-gray-500 text-xs min-w-0 overflow-hidden" style={{textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{veiculoInfo || "—"}</span>
-        <span className="text-gray-400 text-xs flex-shrink-0 font-medium">{fmtData(os.data_entrada)}</span>
       </div>
 
     </div>
