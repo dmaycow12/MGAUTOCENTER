@@ -141,10 +141,8 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
         {/* Cliente + Veículo + Placa */}
         <div className="flex-1 min-w-0">
-          <p className="text-white font-medium text-sm truncate leading-tight">{os.cliente_nome || "—"}</p>
-          <p className="text-gray-500 text-xs truncate leading-tight">
-            {[os.veiculo_placa, veiculo].filter(Boolean).join(" • ")}
-          </p>
+          <p className="text-white font-medium text-sm truncate leading-tight">{os.cliente_nome?.split(" ")[0] || "—"}</p>
+          <p className="text-gray-500 text-xs truncate leading-tight">{veiculo || "—"}</p>
         </div>
 
         {/* Data */}
