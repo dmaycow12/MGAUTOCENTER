@@ -137,20 +137,13 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 hover:border-gray-700 transition-all">
+
+      {/* Linha 1: Nº | Nome | Valor | Status | Menu */}
       <div className="flex items-center gap-2 w-full">
+        <span className="text-white font-bold text-sm flex-shrink-0 w-6">{os.numero || "—"}</span>
 
-        {/* Número OS */}
-        <span className="text-white font-bold text-sm flex-shrink-0 w-7 text-left">{os.numero || "—"}</span>
+        <span className="text-white font-semibold text-sm flex-1 min-w-0 truncate">{primeiroNome}</span>
 
-        {/* Cliente + Veículo + Data */}
-        <div className="flex-1 min-w-0">
-          <p className="text-white font-semibold text-sm truncate leading-tight">{primeiroNome}</p>
-          <p className="text-gray-500 text-xs truncate leading-tight">
-            {veiculoInfo || "—"} <span className="text-gray-600">·</span> {fmtData(os.data_entrada)}
-          </p>
-        </div>
-
-        {/* Valor */}
         <span className="text-orange-400 font-bold text-sm flex-shrink-0 whitespace-nowrap">{fmtValor(os.valor_total)}</span>
 
         {/* Status dropdown */}
@@ -160,21 +153,14 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
             onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
             className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-full font-medium border whitespace-nowrap hover:opacity-80 transition-all ${colorClass}`}
           >
-            <span className="hidden xs:inline sm:inline">{os.status || "—"}</span>
-            <span className="sm:hidden">{os.status || "—"}</span>
+            {os.status || "—"}
             <ChevronDown className="w-3 h-3 flex-shrink-0" />
           </button>
           {statusOpen && (
-            <div
-              ref={statusRef}
-              className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-36 py-1 z-50"
-            >
+            <div ref={statusRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-36 py-1 z-50">
               {STATUS_OPTIONS.map(s => (
-                <button
-                  key={s}
-                  onClick={() => alterarStatus(s)}
-                  className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}
-                >
+                <button key={s} onClick={() => alterarStatus(s)}
+                  className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}>
                   {s}
                 </button>
               ))}
@@ -184,27 +170,17 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
         {/* Menu de ações */}
         <div className="relative flex-shrink-0">
-          <button
-            ref={menuBtnRef}
-            onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
-            className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800"
-            title="Ações"
-          >
+          <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
+            className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800" title="Ações">
             <ChevronDown className="w-4 h-4" />
           </button>
           {menuOpen && (
-            <div
-              ref={menuRef}
-              className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-50"
-            >
+            <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-50">
               {menuItems.map((item, i) => {
                 const Icon = item.icon;
                 return (
-                  <button
-                    key={i}
-                    onClick={item.action}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium hover:bg-gray-700 transition-all ${item.danger ? "text-red-400 hover:text-red-300" : "text-gray-300 hover:text-white"}`}
-                  >
+                  <button key={i} onClick={item.action}
+                    className={`w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium hover:bg-gray-700 transition-all ${item.danger ? "text-red-400 hover:text-red-300" : item.whatsapp ? "text-green-400 hover:text-green-300" : "text-gray-300 hover:text-white"}`}>
                     <Icon className="w-3.5 h-3.5 flex-shrink-0" />
                     {item.label}
                   </button>
@@ -213,8 +189,14 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
             </div>
           )}
         </div>
-
       </div>
+
+      {/* Linha 2: Veículo | Data */}
+      <div className="flex items-center justify-between mt-1 pl-8">
+        <span className="text-gray-500 text-xs truncate">{veiculoInfo || "—"}</span>
+        <span className="text-gray-600 text-xs flex-shrink-0 ml-2">{fmtData(os.data_entrada)}</span>
+      </div>
+
     </div>
   );
 }
