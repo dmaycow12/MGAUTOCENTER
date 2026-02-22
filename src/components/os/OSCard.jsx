@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { Edit, Trash2, Printer, ChevronDown, FileText, MessageCircle } from "lucide-react";
 
 const statusColors = {
