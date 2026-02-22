@@ -67,8 +67,9 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   };
 
   const emitirNF = (tipo) => {
-    alert(`Emitir ${tipo} para OS #${os.numero}`);
     setMenuOpen(false);
+    // Navega para Notas Fiscais passando dados da OS para pré-preencher o formulário
+    navigate(createPageUrl(`NotasFiscais?emitir=1&tipo=${tipo}&os_id=${os.id}&os_numero=${os.numero}&cliente_id=${os.cliente_id || ""}&cliente_nome=${encodeURIComponent(os.cliente_nome || "")}&valor=${os.valor_total || 0}`));
   };
 
   const imprimir = (e) => {
