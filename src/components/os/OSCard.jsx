@@ -19,6 +19,7 @@ const STATUS_OPTIONS = ["Em Aberto", "Concluída", "Cancelada"];
 const primeiroNome = (nome) => (nome || "").split(" ")[0];
 
 export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
   const [expandido, setExpandido] = useState(false);
