@@ -142,14 +142,13 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         {/* Número OS */}
         <span className="text-white font-bold text-sm flex-shrink-0 w-7 text-left">{os.numero || "—"}</span>
 
-        {/* Cliente + Veículo */}
+        {/* Cliente + Veículo + Data */}
         <div className="flex-1 min-w-0">
           <p className="text-white font-semibold text-sm truncate leading-tight">{primeiroNome}</p>
-          <p className="text-gray-500 text-xs truncate leading-tight">{veiculoInfo || "—"}</p>
+          <p className="text-gray-500 text-xs truncate leading-tight">
+            {veiculoInfo || "—"} <span className="text-gray-600">·</span> {fmtData(os.data_entrada)}
+          </p>
         </div>
-
-        {/* Data — oculta em telas muito pequenas */}
-        <span className="text-gray-500 text-xs flex-shrink-0 hidden sm:block whitespace-nowrap">{fmtData(os.data_entrada)}</span>
 
         {/* Valor */}
         <span className="text-orange-400 font-bold text-sm flex-shrink-0 whitespace-nowrap">{fmtValor(os.valor_total)}</span>
