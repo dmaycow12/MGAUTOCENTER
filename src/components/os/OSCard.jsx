@@ -15,9 +15,9 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
 const STATUS_OPTIONS = ["Em Aberto", "Concluído", "Cancelado"];
 
 const STATUS_COLOR = {
-  "Em Aberto":  "bg-yellow-500/10 text-yellow-400 border-yellow-500/30",
-  "Concluído":  "bg-green-500/10 text-green-400 border-green-500/30",
-  "Cancelado":  "bg-red-500/10 text-red-400 border-red-500/30",
+  "Em Aberto": "bg-yellow-500/10 text-yellow-400 border-yellow-500/30",
+  "Concluído": "bg-green-500/10 text-green-400 border-green-500/30",
+  "Cancelado": "bg-red-500/10 text-red-400 border-red-500/30",
 };
 
 function fmtData(d) {
@@ -101,8 +101,8 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     <style>body{font-family:Arial,sans-serif;padding:20mm;color:#111;max-width:210mm;margin:0 auto}h1{font-size:16pt}table{width:100%;border-collapse:collapse;margin:8px 0}th{background:#f3f4f6;border:1px solid #ddd;padding:4px 8px;text-align:left;font-size:9pt}td{border:1px solid #ddd;padding:4px 8px;font-size:9pt}.total{font-size:14pt;font-weight:bold;color:#f97316}@media print{@page{size:A4;margin:15mm}body{padding:0}}</style>
     </head><body>
     <h1>Ordem de Serviço #${os.numero}</h1>
-    <p><b>Cliente:</b> ${os.cliente_nome || "—"} &nbsp;&nbsp; <b>Placa:</b> ${os.veiculo_placa || "—"} &nbsp;&nbsp; <b>Veículo:</b> ${os.veiculo_modelo || "—"} ${os.veiculo_ano || ""}</p>
-    <p><b>Data:</b> ${fmtData(os.data_entrada)} &nbsp;&nbsp; <b>KM:</b> ${os.quilometragem || "—"} &nbsp;&nbsp; <b>Status:</b> ${os.status || "—"}</p>
+    <p><b>Cliente:</b> ${os.cliente_nome || "—"} &nbsp;&nbsp; <b>Placa:</b> ${os.veiculo_placa || "—"} &nbsp;&nbsp; <b>Veículo:</b> ${os.veiculo_modelo || "—"}</p>
+    <p><b>Data:</b> ${fmtData(os.data_entrada)} &nbsp;&nbsp; <b>Status:</b> ${os.status || "—"}</p>
     ${os.defeito_relatado ? `<p><b>Defeito relatado:</b> ${os.defeito_relatado}</p>` : ""}
     ${os.diagnostico ? `<p><b>Diagnóstico:</b> ${os.diagnostico}</p>` : ""}
     ${servicos ? `<h3>Serviços</h3><table><thead><tr><th>Descrição</th><th>Técnico</th><th>Valor</th></tr></thead><tbody>${servicos}</tbody></table>` : ""}
@@ -119,14 +119,17 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   const colorClass = STATUS_COLOR[os.status] || "bg-gray-500/10 text-gray-400 border-gray-500/30";
 
-  const veiculo = [os.veiculo_placa, os.veiculo_modelo].filter(Boolean).join(" • ");
+  // Primeiro nome do cliente
+  const primeiroNome = (os.cliente_nome || "—").split(" ")[0];
+  // Placa • Modelo (sem ano, sem km)
+  const veiculoInfo = [os.veiculo_placa, os.veiculo_modelo].filter(Boolean).join(" • ");
 
   const menuItems = [
     { label: "Editar", icon: Pencil, action: () => { setMenuOpen(false); onEdit?.(); } },
     { label: "Imprimir", icon: Printer, action: imprimir },
     { label: "Excluir", icon: Trash2, action: () => { setMenuOpen(false); onDelete?.(); }, danger: true },
-    { label: "Enviar orçamento", icon: WhatsAppIcon, action: enviarOrcamento, whatsapp: true },
-    { label: "Chamar no WhatsApp", icon: WhatsAppIcon, action: chamarWhatsApp, whatsapp: true },
+    { label: "Enviar orçamento", icon: WhatsAppIcon, action: enviarOrcamento },
+    { label: "Chamar no WhatsApp", icon: WhatsAppIcon, action: chamarWhatsApp },
     { label: "Emitir NFe", icon: FileText, action: () => emitirNF("NFe") },
     { label: "Emitir NFSe", icon: FileText, action: () => emitirNF("NFSe") },
     { label: "Emitir NFCe", icon: FileText, action: () => emitirNF("NFCe") },
@@ -134,19 +137,19 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 hover:border-gray-700 transition-all">
-      <div className="flex items-center gap-3 w-full min-w-0">
+      <div className="flex items-center gap-2 w-full">
 
         {/* Número OS */}
-        <span className="text-white font-bold text-sm flex-shrink-0 w-8 text-center">{os.numero || "—"}</span>
+        <span className="text-white font-bold text-sm flex-shrink-0 w-7 text-left">{os.numero || "—"}</span>
 
-        {/* Cliente + Veículo + Placa */}
+        {/* Cliente + Veículo */}
         <div className="flex-1 min-w-0">
-          <p className="text-white font-medium text-sm truncate leading-tight">{os.cliente_nome?.split(" ")[0] || "—"}</p>
-          <p className="text-gray-500 text-xs truncate leading-tight">{veiculo || "—"}</p>
+          <p className="text-white font-semibold text-sm truncate leading-tight">{primeiroNome}</p>
+          <p className="text-gray-500 text-xs truncate leading-tight">{veiculoInfo || "—"}</p>
         </div>
 
-        {/* Data */}
-        <span className="text-gray-500 text-xs flex-shrink-0 hidden sm:block">{fmtData(os.data_entrada)}</span>
+        {/* Data — oculta em telas muito pequenas */}
+        <span className="text-gray-500 text-xs flex-shrink-0 hidden sm:block whitespace-nowrap">{fmtData(os.data_entrada)}</span>
 
         {/* Valor */}
         <span className="text-orange-400 font-bold text-sm flex-shrink-0 whitespace-nowrap">{fmtValor(os.valor_total)}</span>
@@ -155,11 +158,12 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         <div className="relative flex-shrink-0">
           <button
             ref={statusBtnRef}
-            onClick={() => setStatusOpen(v => !v)}
+            onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
             className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-full font-medium border whitespace-nowrap hover:opacity-80 transition-all ${colorClass}`}
           >
-            {os.status || "—"}
-            <ChevronDown className="w-3 h-3" />
+            <span className="hidden xs:inline sm:inline">{os.status || "—"}</span>
+            <span className="sm:hidden">{os.status || "—"}</span>
+            <ChevronDown className="w-3 h-3 flex-shrink-0" />
           </button>
           {statusOpen && (
             <div
@@ -183,7 +187,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         <div className="relative flex-shrink-0">
           <button
             ref={menuBtnRef}
-            onClick={() => setMenuOpen(v => !v)}
+            onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
             className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800"
             title="Ações"
           >
@@ -200,7 +204,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
                   <button
                     key={i}
                     onClick={item.action}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${item.danger ? "text-red-400 hover:text-red-300" : item.whatsapp ? "text-green-400 hover:text-green-300" : "text-gray-300 hover:text-white"}`}
+                    className={`w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium hover:bg-gray-700 transition-all ${item.danger ? "text-red-400 hover:text-red-300" : "text-gray-300 hover:text-white"}`}
                   >
                     <Icon className="w-3.5 h-3.5 flex-shrink-0" />
                     {item.label}
@@ -210,6 +214,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
             </div>
           )}
         </div>
+
       </div>
     </div>
   );
