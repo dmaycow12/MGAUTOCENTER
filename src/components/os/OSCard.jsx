@@ -137,32 +137,32 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 hover:border-gray-700 transition-all">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
 
-        {/* Nº + Data (empilhados) */}
-        <div className="flex-shrink-0 flex flex-col items-center w-10">
-          <span className="text-gray-400 font-bold text-sm leading-tight">{os.numero || "—"}</span>
-          <span className="text-gray-600 text-xs leading-tight whitespace-nowrap">{fmtData(os.data_entrada)}</span>
-        </div>
+        {/* Nº */}
+        <span className="text-white font-bold text-sm flex-shrink-0 w-5 text-center">{os.numero || "—"}</span>
 
-        {/* Cliente + Veículo — desktop: linha única | mobile: empilhado */}
+        {/* Data — na frente, só desktop */}
+        <span className="hidden sm:inline text-white font-bold text-sm flex-shrink-0 whitespace-nowrap">{fmtData(os.data_entrada)}</span>
+
+        {/* Cliente + Veículo — desktop: linha única expandida | mobile: empilhado */}
         <div className="flex-1 min-w-0">
-          {/* Desktop: tudo na mesma linha */}
-          <div className="hidden sm:flex items-center gap-1.5 min-w-0">
-            <span className="text-white font-semibold text-sm whitespace-nowrap">{primeiroNome}</span>
-            {os.veiculo_modelo && <span className="text-gray-500 text-xs whitespace-nowrap">{os.veiculo_modelo}</span>}
-            {os.veiculo_placa && <span className="text-orange-300/70 text-xs font-medium whitespace-nowrap">{os.veiculo_placa}</span>}
+          {/* Desktop: tudo na mesma linha, espalhado */}
+          <div className="hidden sm:flex items-center gap-6 min-w-0">
+            <span className="text-white font-bold text-sm whitespace-nowrap">{primeiroNome}</span>
+            {os.veiculo_modelo && <span className="text-white font-bold text-sm whitespace-nowrap">{os.veiculo_modelo}</span>}
+            {os.veiculo_placa && <span className="text-white font-bold text-sm whitespace-nowrap">{os.veiculo_placa}</span>}
           </div>
           {/* Mobile: empilhado */}
           <div className="flex flex-col sm:hidden min-w-0">
-            <p className="text-white font-semibold text-sm leading-tight truncate">{primeiroNome}</p>
-            {os.veiculo_modelo && <p className="text-gray-500 text-xs leading-tight truncate">{os.veiculo_modelo}</p>}
-            {os.veiculo_placa && <p className="text-orange-300/70 text-xs leading-tight font-medium">{os.veiculo_placa}</p>}
+            <p className="text-white font-bold text-sm leading-tight">{primeiroNome}</p>
+            {os.veiculo_modelo && <p className="text-gray-400 text-xs leading-tight truncate">{os.veiculo_modelo}</p>}
+            {os.veiculo_placa && <p className="text-white font-bold text-xs leading-tight">{os.veiculo_placa}</p>}
           </div>
         </div>
 
         {/* Valor */}
-        <span className="text-orange-400 font-bold text-sm flex-shrink-0 whitespace-nowrap">{fmtValor(os.valor_total)}</span>
+        <span className="text-white font-bold text-sm flex-shrink-0 whitespace-nowrap">{fmtValor(os.valor_total)}</span>
 
         {/* Status dropdown */}
         <div className="relative flex-shrink-0">
