@@ -192,9 +192,9 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
       </div>
 
       {/* Linha 2: Veículo | Data */}
-      <div className="flex items-center justify-between mt-1 pl-8">
-        <span className="text-gray-500 text-xs truncate">{veiculoInfo || "—"}</span>
-        <span className="text-gray-600 text-xs flex-shrink-0 ml-2">{fmtData(os.data_entrada)}</span>
+      <div className="flex items-center justify-between mt-1 pl-8 gap-2">
+        <span className="text-gray-500 text-xs min-w-0 overflow-hidden" style={{textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{veiculoInfo || "—"}</span>
+        <span className="text-gray-400 text-xs flex-shrink-0 font-medium">{fmtData(os.data_entrada)}</span>
       </div>
 
     </div>
