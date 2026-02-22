@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Edit, Trash2, Printer, ChevronDown, FileText, MessageCircle } from "lucide-react";
+import { Edit, Trash2, Printer, ChevronDown, FileText, MessageCircle, MoreVertical } from "lucide-react";
 
 const statusColors = {
   "Em Aberto": "bg-orange-500/10 text-orange-400 border-orange-500/20",
@@ -15,7 +15,7 @@ const statusColors = {
   "Cancelado": "bg-red-500/10 text-red-400 border-red-500/20",
 };
 
-const STATUS_OPTIONS = ["Em Aberto", "Concluída", "Cancelada"];
+const STATUS_OPTIONS = ["Orçamento", "Aprovado", "Em Andamento", "Concluído", "Entregue", "Cancelado"];
 const primeiroNome = (nome) => (nome || "").split(" ")[0];
 
 export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
@@ -37,18 +37,20 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   const alterarStatus = async (novoStatus) => {
     const { base44 } = await import("@/api/base44Client");
-    await base44.entities.OrdemServico.update(os.id, { ...os, status: novoStatus });
+    await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
     setStatusOpen(false);
     onRefresh();
   };
 
   const whatsappOrcamento = () => {
     const tel = (os.cliente_telefone || "").replace(/\D/g, "");
+    if (!tel) return alert("Telefone do cliente não cadastrado.");
+    const servicos = (os.servicos || []).map(s => `• ${s.descricao} — R$ ${Number(s.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`).join("\n");
     const msg = encodeURIComponent(
       `*Oficina Pro - Orçamento OS #${os.numero}*\n\n` +
       `Olá ${primeiroNome(os.cliente_nome)}! 👋\n\n` +
       `Segue o orçamento do seu veículo ${os.veiculo_modelo || ""} (${os.veiculo_placa || ""}):\n\n` +
-      (os.servicos || []).map(s => `• ${s.descricao} — R$ ${Number(s.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`).join("\n") + "\n\n" +
+      `${servicos}\n\n` +
       `💰 *Total: R$ ${Number(os.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}*\n\nAguardamos sua aprovação. ✅`
     );
     window.open(`https://wa.me/55${tel}?text=${msg}`, "_blank");
@@ -57,6 +59,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   const whatsappChamar = () => {
     const tel = (os.cliente_telefone || "").replace(/\D/g, "");
+    if (!tel) return alert("Telefone do cliente não cadastrado.");
     const msg = encodeURIComponent(
       `*Oficina Pro* - Olá ${primeiroNome(os.cliente_nome)}! 👋\n` +
       `Seu veículo ${os.veiculo_modelo || ""} (${os.veiculo_placa || ""}) está pronto!\n` +
@@ -68,12 +71,14 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   const emitirNF = (tipo) => {
     setMenuOpen(false);
-    // Navega para Notas Fiscais passando dados da OS para pré-preencher o formulário
-    navigate(createPageUrl(`NotasFiscais?emitir=1&tipo=${tipo}&os_id=${os.id}&os_numero=${os.numero}&cliente_id=${os.cliente_id || ""}&cliente_nome=${encodeURIComponent(os.cliente_nome || "")}&valor=${os.valor_total || 0}`));
+    navigate(createPageUrl(
+      `NotasFiscais?emitir=1&tipo=${tipo}&os_id=${os.id}&os_numero=${encodeURIComponent(os.numero || "")}&cliente_id=${os.cliente_id || ""}&cliente_nome=${encodeURIComponent(os.cliente_nome || "")}&valor=${os.valor_total || 0}`
+    ));
   };
 
   const imprimir = (e) => {
     e.stopPropagation();
+    const fmt = (v) => Number(v || 0).toFixed(2);
     const conteudo = `
       <html><head><title>OS #${os.numero}</title>
       <style>
@@ -96,13 +101,13 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
       </div>
       ${os.defeito_relatado ? `<h2>Defeito Relatado</h2><p>${os.defeito_relatado}</p>` : ""}
       ${os.diagnostico ? `<h2>Diagnóstico</h2><p>${os.diagnostico}</p>` : ""}
-      ${(os.servicos || []).length > 0 ? `<h2>Serviços</h2><table><tr><th>Descrição</th><th>Técnico</th><th>Valor</th></tr>${(os.servicos || []).map(s => `<tr><td>${s.descricao || ""}</td><td>${s.tecnico || ""}</td><td>R$ ${Number(s.valor || 0).toFixed(2)}</td></tr>`).join("")}</table>` : ""}
-      ${(os.pecas || []).length > 0 ? `<h2>Peças</h2><table><tr><th>Descrição</th><th>Qtd</th><th>Unit.</th><th>Total</th></tr>${(os.pecas || []).map(p => `<tr><td>${p.descricao || ""}</td><td>${p.quantidade || ""}</td><td>R$ ${Number(p.valor_unitario || 0).toFixed(2)}</td><td>R$ ${Number(p.valor_total || 0).toFixed(2)}</td></tr>`).join("")}</table>` : ""}
+      ${(os.servicos || []).length > 0 ? `<h2>Serviços</h2><table><tr><th>Descrição</th><th>Técnico</th><th>Valor</th></tr>${(os.servicos || []).map(s => `<tr><td>${s.descricao || ""}</td><td>${s.tecnico || ""}</td><td>R$ ${fmt(s.valor)}</td></tr>`).join("")}</table>` : ""}
+      ${(os.pecas || []).length > 0 ? `<h2>Peças</h2><table><tr><th>Descrição</th><th>Qtd</th><th>Unit.</th><th>Total</th></tr>${(os.pecas || []).map(p => `<tr><td>${p.descricao || ""}</td><td>${p.quantidade || ""}</td><td>R$ ${fmt(p.valor_unitario)}</td><td>R$ ${fmt(p.valor_total)}</td></tr>`).join("")}</table>` : ""}
       <div class="total">
-        <div>Serviços: R$ ${Number(os.valor_servicos || 0).toFixed(2)}</div>
-        <div>Peças: R$ ${Number(os.valor_pecas || 0).toFixed(2)}</div>
-        ${os.desconto ? `<div>Desconto: R$ ${Number(os.desconto || 0).toFixed(2)}</div>` : ""}
-        <div>TOTAL: R$ ${Number(os.valor_total || 0).toFixed(2)}</div>
+        <div>Serviços: R$ ${fmt(os.valor_servicos)}</div>
+        <div>Peças: R$ ${fmt(os.valor_pecas)}</div>
+        ${os.desconto ? `<div>Desconto: R$ ${fmt(os.desconto)}</div>` : ""}
+        <div>TOTAL: R$ ${fmt(os.valor_total)}</div>
       </div>
       ${os.observacoes ? `<h2>Observações</h2><p>${os.observacoes}</p>` : ""}
       </body></html>
@@ -113,21 +118,13 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     win.print();
   };
 
-  const veiculo = [os.veiculo_modelo, os.veiculo_placa].filter(Boolean).join(" • ");
-
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
-      {/* Layout Desktop: tudo numa linha | Mobile: info em cima, ações em baixo */}
-      <div
-        className="cursor-pointer select-none"
-        onClick={() => setExpandido(!expandido)}
-      >
-        {/* Linha de informações */}
-        <div className="flex items-center gap-2 px-3 pt-3 pb-1 md:pb-3">
-          {/* Número OS */}
+      <div className="cursor-pointer select-none" onClick={() => setExpandido(!expandido)}>
+        {/* Linha principal */}
+        <div className="flex items-center gap-2 px-3 py-3">
           <span className="text-white font-bold text-sm w-8 flex-shrink-0">{os.numero}</span>
 
-          {/* Dados principais — tudo em uma linha tanto mobile quanto desktop */}
           <div className="flex-1 min-w-0 flex items-center gap-1.5 flex-wrap">
             <span className="text-white text-sm font-medium whitespace-nowrap">{primeiroNome(os.cliente_nome)}</span>
             {os.veiculo_modelo && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-400 text-xs truncate max-w-[100px] md:max-w-none">{os.veiculo_modelo}</span></>}
@@ -135,93 +132,75 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
             {os.data_entrada && <><span className="text-gray-600 text-xs">•</span><span className="text-gray-500 text-xs whitespace-nowrap">{os.data_entrada}</span></>}
           </div>
 
-          {/* Ações — visíveis apenas no desktop */}
-          <div className="hidden md:flex items-center flex-shrink-0" onClick={e => e.stopPropagation()}>
-            <button onClick={(e) => { e.stopPropagation(); onEdit(); }} title="Editar" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
+          {/* Ações */}
+          <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+            {/* Editar */}
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              title="Editar"
+              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all"
+            >
               <Edit className="w-4 h-4" />
             </button>
-            <button onClick={imprimir} title="Imprimir" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
+
+            {/* Imprimir — só desktop */}
+            <button
+              onClick={imprimir}
+              title="Imprimir"
+              className="hidden md:flex w-8 h-8 items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all"
+            >
               <Printer className="w-4 h-4" />
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onDelete(); }} title="Excluir" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
+
+            {/* Excluir */}
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              title="Excluir"
+              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all"
+            >
               <Trash2 className="w-4 h-4" />
             </button>
 
+            {/* Status dropdown */}
             <div className="relative" ref={statusRef}>
-              <button onClick={(e) => { e.stopPropagation(); setStatusOpen(!statusOpen); }} className={`h-8 px-2 flex items-center gap-1 rounded-lg border text-xs font-medium transition-all hover:opacity-80 ${statusColors[os.status] || "bg-gray-500/10 text-gray-400 border-gray-500/20"}`}>
-                <span className="whitespace-nowrap">{os.status}</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setStatusOpen(v => !v); }}
+                className={`h-8 px-2 flex items-center gap-1 rounded-lg border text-xs font-medium transition-all hover:opacity-80 ${statusColors[os.status] || "bg-gray-500/10 text-gray-400 border-gray-500/20"}`}
+              >
+                <span className="whitespace-nowrap hidden sm:inline">{os.status}</span>
                 <ChevronDown className="w-3 h-3 flex-shrink-0" />
               </button>
               {statusOpen && (
-                <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-30 w-36 py-1">
+                <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-50 w-40 py-1">
                   {STATUS_OPTIONS.map(s => (
-                    <button key={s} onClick={() => alterarStatus(s)} className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}>{s}</button>
+                    <button
+                      key={s}
+                      onClick={(e) => { e.stopPropagation(); alterarStatus(s); }}
+                      className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}
+                    >
+                      {s}
+                    </button>
                   ))}
                 </div>
               )}
             </div>
 
+            {/* Menu ações */}
             <div className="relative" ref={menuRef}>
-              <button onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
-                <ChevronDown className={`w-4 h-4 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
+              <button
+                onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v); }}
+                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all"
+              >
+                <MoreVertical className="w-4 h-4" />
               </button>
               {menuOpen && (
-                <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-30 w-52 py-1">
-                  <MenuItem icon={<MessageCircle className="w-4 h-4 text-green-400" />} label="Enviar Orçamento" onClick={whatsappOrcamento} />
+                <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-50 w-52 py-1">
+                  <MenuItem icon={<MessageCircle className="w-4 h-4 text-green-400" />} label="Enviar Orçamento WA" onClick={whatsappOrcamento} />
                   <MenuItem icon={<MessageCircle className="w-4 h-4 text-green-400" />} label="Chamar no WhatsApp" onClick={whatsappChamar} />
                   <div className="border-t border-gray-700 my-1" />
-                  <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFe" onClick={() => emitirNF("NFe")} />
-                  <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFSe" onClick={() => emitirNF("NFSe")} />
-                  <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFCe" onClick={() => emitirNF("NFCe")} />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Barra de ações — visível apenas no mobile */}
-        <div className="flex md:hidden items-center justify-between px-3 pb-3 pt-1 border-t border-gray-800/50 mt-1" onClick={e => e.stopPropagation()}>
-          <div className="flex items-center gap-1">
-            <button onClick={(e) => { e.stopPropagation(); onEdit(); }} title="Editar" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
-              <Edit className="w-4 h-4" />
-            </button>
-            <button onClick={imprimir} title="Imprimir" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
-              <Printer className="w-4 h-4" />
-            </button>
-            <button onClick={(e) => { e.stopPropagation(); onDelete(); }} title="Excluir" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-1">
-            {/* Status mobile */}
-            <div className="relative" ref={statusRef}>
-              <button onClick={(e) => { e.stopPropagation(); setStatusOpen(!statusOpen); }} className={`h-8 px-2 flex items-center gap-1 rounded-lg border text-xs font-medium transition-all hover:opacity-80 ${statusColors[os.status] || "bg-gray-500/10 text-gray-400 border-gray-500/20"}`}>
-                <span className="whitespace-nowrap">{os.status}</span>
-                <ChevronDown className="w-3 h-3 flex-shrink-0" />
-              </button>
-              {statusOpen && (
-                <div className="absolute right-0 bottom-full mb-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-30 w-36 py-1">
-                  {STATUS_OPTIONS.map(s => (
-                    <button key={s} onClick={() => alterarStatus(s)} className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}>{s}</button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Menu ações mobile */}
-            <div className="relative" ref={menuRef}>
-              <button onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-all">
-                <ChevronDown className={`w-4 h-4 transition-transform ${menuOpen ? "rotate-180" : ""}`} />
-              </button>
-              {menuOpen && (
-                <div className="absolute right-0 bottom-full mb-1 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-30 w-52 py-1">
-                  <MenuItem icon={<MessageCircle className="w-4 h-4 text-green-400" />} label="Enviar Orçamento" onClick={whatsappOrcamento} />
-                  <MenuItem icon={<MessageCircle className="w-4 h-4 text-green-400" />} label="Chamar no WhatsApp" onClick={whatsappChamar} />
-                  <div className="border-t border-gray-700 my-1" />
-                  <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFe" onClick={() => emitirNF("NFe")} />
-                  <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFSe" onClick={() => emitirNF("NFSe")} />
-                  <MenuItem icon={<FileText className="w-4 h-4 text-gray-400" />} label="Emitir NFCe" onClick={() => emitirNF("NFCe")} />
+                  <MenuItem icon={<FileText className="w-4 h-4 text-orange-400" />} label="Emitir NFe" onClick={() => emitirNF("NFe")} />
+                  <MenuItem icon={<FileText className="w-4 h-4 text-orange-400" />} label="Emitir NFSe" onClick={() => emitirNF("NFSe")} />
+                  <MenuItem icon={<FileText className="w-4 h-4 text-orange-400" />} label="Emitir NFCe" onClick={() => emitirNF("NFCe")} />
                 </div>
               )}
             </div>
@@ -229,7 +208,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         </div>
       </div>
 
-      {/* Detalhe expandido — aparece ao clicar na OS */}
+      {/* Detalhe expandido */}
       {expandido && (
         <div className="border-t border-gray-800 p-4 space-y-4 bg-gray-900/50">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
@@ -274,7 +253,10 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
 function MenuItem({ icon, label, onClick }) {
   return (
-    <button onClick={onClick} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-all text-left">
+    <button
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+      className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-all text-left"
+    >
       <span className="flex-shrink-0">{icon}</span>
       <span>{label}</span>
     </button>
