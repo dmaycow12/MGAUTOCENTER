@@ -119,7 +119,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   const colorClass = STATUS_COLOR[os.status] || "bg-gray-500/10 text-gray-400 border-gray-500/30";
 
-  const veiculo = [os.veiculo_modelo, os.veiculo_ano].filter(Boolean).join(" ");
+  const veiculo = [os.veiculo_placa, os.veiculo_modelo].filter(Boolean).join(" • ");
 
   const menuItems = [
     { label: "Editar", icon: Pencil, action: () => { setMenuOpen(false); onEdit?.(); } },
