@@ -148,11 +148,10 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         {/* Desktop: cliente + modelo + placa espalhados para preencher o espaço | Mobile: empilhado */}
         <div className="flex-1 min-w-0">
           {/* Desktop */}
-          <div className="hidden sm:flex items-center justify-between min-w-0 pr-4">
-            <span className="text-white font-bold text-sm whitespace-nowrap">{primeiroNome}</span>
-            {os.veiculo_modelo && <span className="text-white font-bold text-sm whitespace-nowrap">{os.veiculo_modelo}</span>}
-            {os.veiculo_placa && <span className="text-white font-bold text-sm whitespace-nowrap">{os.veiculo_placa}</span>}
-            {!os.veiculo_modelo && !os.veiculo_placa && <span />}
+          <div className="hidden sm:flex items-center min-w-0">
+            <span className="text-white font-bold text-sm whitespace-nowrap flex-1">{primeiroNome}</span>
+            {os.veiculo_modelo && <span className="text-white font-bold text-sm whitespace-nowrap flex-1 text-center">{os.veiculo_modelo}</span>}
+            {os.veiculo_placa && <span className="text-white font-bold text-sm whitespace-nowrap flex-1 text-center">{os.veiculo_placa}</span>}
           </div>
           {/* Mobile: empilhado */}
           <div className="flex flex-col sm:hidden min-w-0">
