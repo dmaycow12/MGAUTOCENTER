@@ -145,8 +145,9 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         {/* Cliente + Veículo (empilhados, flex-1) */}
         <div className="flex-1 min-w-0">
           <p className="text-white font-semibold text-sm leading-tight truncate">{primeiroNome}</p>
-          <p className="text-gray-500 text-xs leading-tight truncate">{os.veiculo_modelo || "—"}</p>
-          {os.veiculo_placa && <p className="text-gray-400 text-xs leading-tight font-medium">{os.veiculo_placa}</p>}
+          {os.veiculo_modelo && <p className="text-gray-500 text-xs leading-tight truncate">{os.veiculo_modelo}</p>}
+          {os.veiculo_placa && <p className="text-orange-300/70 text-xs leading-tight font-medium">{os.veiculo_placa}</p>}
+          {!os.veiculo_modelo && !os.veiculo_placa && <p className="text-gray-600 text-xs leading-tight">—</p>}
         </div>
 
         {/* Data */}
