@@ -137,31 +137,13 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 hover:border-gray-700 transition-all">
-      <div className="flex items-center gap-3">
-
-        {/* Nº */}
-        <span className="text-white font-bold text-sm flex-shrink-0 w-5 text-center">{os.numero || "—"}</span>
-
-        {/* Data — só desktop */}
-        <span className="hidden sm:inline text-white font-bold text-sm flex-shrink-0 whitespace-nowrap">{fmtData(os.data_entrada)}</span>
-
-        {/* Desktop: nome | modelo | placa com espaçamento igual entre si | Mobile: empilhado */}
-        <div className="flex-1 min-w-0">
-          {/* Desktop — todos os itens com espaçamento igual entre si */}
-          <div className="hidden sm:flex items-center gap-8 min-w-0">
-            <span className="text-white font-bold text-sm whitespace-nowrap">{primeiroNome}</span>
-            <span className="text-white font-bold text-sm whitespace-nowrap">{os.veiculo_modelo || "—"}</span>
-            <span className="text-white font-bold text-sm whitespace-nowrap">{os.veiculo_placa || "—"}</span>
-          </div>
-          {/* Mobile: empilhado */}
-          <div className="flex flex-col sm:hidden min-w-0">
-            <p className="text-white font-bold text-sm leading-tight">{primeiroNome}</p>
-            {os.veiculo_modelo && <p className="text-gray-400 text-xs leading-tight truncate">{os.veiculo_modelo}</p>}
-            {os.veiculo_placa && <p className="text-white font-bold text-xs leading-tight">{os.veiculo_placa}</p>}
-          </div>
-        </div>
-
-        {/* Valor */}
+      {/* Desktop */}
+      <div className="hidden sm:flex items-center gap-4">
+        <span className="text-white font-bold text-sm w-6 flex-shrink-0 text-center">{os.numero || "—"}</span>
+        <span className="text-white font-bold text-sm flex-shrink-0 whitespace-nowrap w-16">{fmtData(os.data_entrada)}</span>
+        <span className="text-white font-bold text-sm flex-1 whitespace-nowrap">{primeiroNome}</span>
+        <span className="text-white font-bold text-sm flex-1 whitespace-nowrap">{os.veiculo_modelo || "—"}</span>
+        <span className="text-white font-bold text-sm flex-1 whitespace-nowrap">{os.veiculo_placa || "—"}</span>
         <span className="text-white font-bold text-sm flex-shrink-0 whitespace-nowrap">{fmtValor(os.valor_total)}</span>
 
         {/* Status dropdown */}
