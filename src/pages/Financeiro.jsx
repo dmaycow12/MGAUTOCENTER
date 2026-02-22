@@ -106,25 +106,25 @@ export default function Financeiro() {
       {aba === "lancamentos" && (
         <>
           {/* Header */}
-          <div className="flex flex-col gap-2">
-            {/* Linha 1: busca */}
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-              <input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
-            </div>
-            {/* Linha 2: filtros + ações */}
-            <div className="grid grid-cols-7 gap-2">
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+            <div className="flex gap-2 flex-1 flex-wrap">
+              <div className="relative max-w-xs flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
+              </div>
               {["Todos","Receita","Despesa"].map(t => (
-                <button key={t} onClick={() => setFiltroTipo(t)} className={`py-2 rounded-lg text-xs font-medium transition-all ${filtroTipo === t ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400"}`}>{t}</button>
+                <button key={t} onClick={() => setFiltroTipo(t)} className={`px-3 py-2 rounded-lg text-xs transition-all ${filtroTipo === t ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400"}`}>{t}</button>
               ))}
               {["Todos","Pendente","Pago","Atrasado"].map(s => (
-                <button key={s} onClick={() => setFiltroStatus(s)} className={`py-2 rounded-lg text-xs font-medium transition-all ${filtroStatus === s ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400"}`}>{s}</button>
+                <button key={s} onClick={() => setFiltroStatus(s)} className={`px-3 py-2 rounded-lg text-xs transition-all ${filtroStatus === s ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400"}`}>{s}</button>
               ))}
-              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Receita" }); setShowForm(true); setEditando(null); }} className="flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-xs font-medium transition-all">
-                <Plus className="w-3.5 h-3.5" /> Receita
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Receita" }); setShowForm(true); setEditando(null); }} className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all">
+                <Plus className="w-4 h-4" /> Receita
               </button>
-              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Despesa" }); setShowForm(true); setEditando(null); }} className="flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-xs font-medium transition-all">
-                <Plus className="w-3.5 h-3.5" /> Despesa
+              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Despesa" }); setShowForm(true); setEditando(null); }} className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all">
+                <Plus className="w-4 h-4" /> Despesa
               </button>
             </div>
           </div>
