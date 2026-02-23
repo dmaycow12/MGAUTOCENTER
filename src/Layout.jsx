@@ -148,6 +148,7 @@ export default function Layout({ children, currentPageName }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [autenticado, setAutenticado] = useState(false);
   const [verificando, setVerificando] = useState(true);
+  const [nomeUsuario, setNomeUsuario] = useState("Administrador");
 
   useEffect(() => {
     const auth = sessionStorage.getItem("oficina_auth");
