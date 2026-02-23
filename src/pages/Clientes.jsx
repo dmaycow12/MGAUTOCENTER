@@ -109,7 +109,12 @@ export default function Clientes() {
                   <div className="w-10 h-10 bg-orange-500/10 rounded-full flex items-center justify-center flex-shrink-0">
                     <User className="w-5 h-5 text-orange-400" />
                   </div>
-                  <p className="text-white font-medium truncate">{c.nome}</p>
+                  <div className="min-w-0">
+                    <p className="text-white font-medium truncate">{c.nome}</p>
+                    {(c.telefone || c.email) && (
+                      <p className="text-gray-400 text-xs truncate">{c.telefone || c.email}</p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
                   <button onClick={() => editarCliente(c)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">

@@ -67,7 +67,7 @@ export default function Estoque() {
   return (
     <div className="space-y-4">
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
           <p className="text-gray-500 text-xs">Total de Itens</p>
           <p className="text-2xl font-bold text-white mt-1">{items.length}</p>
@@ -80,6 +80,12 @@ export default function Estoque() {
           <p className="text-gray-500 text-xs">Valor Total (Custo)</p>
           <p className="text-2xl font-bold text-orange-400 mt-1">
             R$ {items.reduce((acc, i) => acc + (i.quantidade * i.valor_custo || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+          </p>
+        </div>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+          <p className="text-gray-500 text-xs">Valor Total (Venda)</p>
+          <p className="text-2xl font-bold text-green-400 mt-1">
+            R$ {items.reduce((acc, i) => acc + (i.quantidade * i.valor_venda || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         </div>
       </div>
@@ -181,11 +187,7 @@ export default function Estoque() {
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <F label="Código"><input value={form.codigo} onChange={e => setForm({ ...form, codigo: e.target.value })} className="input-dark" /></F>
-                <F label="Unidade">
-                  <select value={form.unidade} onChange={e => setForm({ ...form, unidade: e.target.value })} className="input-dark">
-                    {["UN","PC","KG","L","M","CX","PAR"].map(u => <option key={u}>{u}</option>)}
-                  </select>
-                </F>
+                <F label="Unidade"><input value={form.unidade} onChange={e => setForm({ ...form, unidade: e.target.value })} className="input-dark" placeholder="UN" /></F>
                 <F label="Descrição *" className="col-span-2">
                   <input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} className="input-dark" />
                 </F>
