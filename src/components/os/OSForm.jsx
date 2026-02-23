@@ -211,8 +211,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
             </Field>
           </div>
 
-          {/* Serviços */}
-          <Section title="Serviços">
+          {/* Produtos */}
+          <Section title="Produtos">
             {(form.servicos || []).length > 0 && (
               <div className="mb-2">
                 <div className="grid grid-cols-[90px_1fr_70px_90px_80px_32px] gap-2 mb-1 px-1">
