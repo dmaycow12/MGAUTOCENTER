@@ -152,6 +152,10 @@ export default function Layout({ children, currentPageName }) {
 
   useEffect(() => {
     const auth = sessionStorage.getItem("oficina_auth");
+    if (auth) {
+      const parsed = JSON.parse(auth);
+      setNomeUsuario(parsed.nome || "Administrador");
+    }
     setAutenticado(!!auth);
     setVerificando(false);
   }, []);
