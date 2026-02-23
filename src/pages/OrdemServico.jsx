@@ -74,6 +74,8 @@ export default function OrdemServico() {
     load();
   };
 
+  const periodoRange = getPeriodoRangeOS(filtroPeriodo);
+
   const filtradas = ordens
     .filter(o => {
       const matchSearch = !search ||
@@ -81,7 +83,8 @@ export default function OrdemServico() {
         o.cliente_nome?.toLowerCase().includes(search.toLowerCase()) ||
         o.veiculo_placa?.toLowerCase().includes(search.toLowerCase());
       const matchStatus = filtroStatus === "Todos" || o.status === filtroStatus;
-      return matchSearch && matchStatus;
+      const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
+      return matchSearch && matchStatus && matchPeriodo;
     })
     .sort((a, b) => Number(a.numero || 0) - Number(b.numero || 0));
 
