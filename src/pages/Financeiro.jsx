@@ -10,6 +10,39 @@ const defaultForm = () => ({
 
 const statusColor = { "Pendente": "text-yellow-400 bg-yellow-500/10", "Pago": "text-green-400 bg-green-500/10", "Atrasado": "text-red-400 bg-red-500/10", "Cancelado": "text-gray-400 bg-gray-500/10" };
 
+const PERIODOS = [
+  { key: "mes_atual", label: "Mês Atual" },
+  { key: "mes_passado", label: "Mês Passado" },
+  { key: "hoje", label: "Hoje" },
+  { key: "ontem", label: "Ontem" },
+  { key: "ano_atual", label: "Ano Atual" },
+  { key: "ano_passado", label: "Ano Passado" },
+  { key: "tudo", label: "Tudo" },
+];
+
+function getPeriodoRange(key) {
+  const hoje = new Date();
+  const ano = hoje.getFullYear();
+  const mes = hoje.getMonth();
+  const todayStr = hoje.toISOString().split("T")[0];
+  const pad = n => String(n).padStart(2, "0");
+
+  if (key === "hoje") return { inicio: todayStr, fim: todayStr };
+  if (key === "ontem") {
+    const d = new Date(hoje); d.setDate(d.getDate() - 1);
+    const s = d.toISOString().split("T")[0];
+    return { inicio: s, fim: s };
+  }
+  if (key === "mes_atual") return { inicio: `${ano}-${pad(mes + 1)}-01`, fim: `${ano}-${pad(mes + 1)}-31` };
+  if (key === "mes_passado") {
+    const d = new Date(ano, mes - 1, 1);
+    return { inicio: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-01`, fim: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-31` };
+  }
+  if (key === "ano_atual") return { inicio: `${ano}-01-01`, fim: `${ano}-12-31` };
+  if (key === "ano_passado") return { inicio: `${ano - 1}-01-01`, fim: `${ano - 1}-12-31` };
+  return null; // tudo
+}
+
 export default function Financeiro() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +53,12 @@ export default function Financeiro() {
   const [filtroTipo, setFiltroTipo] = useState("Todos");
   const [filtroStatus, setFiltroStatus] = useState("Todos");
   const [aba, setAba] = useState("lancamentos");
+  const [filtroPeriodo, setFiltroPeriodo] = useState(() => localStorage.getItem("fin_periodo") || "mes_atual");
+
+  const setPeriodo = (key) => {
+    setFiltroPeriodo(key);
+    localStorage.setItem("fin_periodo", key);
+  };
 
   useEffect(() => { load(); }, []);
 
