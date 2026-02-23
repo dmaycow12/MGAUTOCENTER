@@ -150,7 +150,7 @@ export default function Layout({ children, currentPageName }) {
 
   useEffect(() => {
     const auth = sessionStorage.getItem("oficina_auth");
-    setAutenticado(auth === "ok");
+    setAutenticado(!!auth);
     setVerificando(false);
   }, []);
 
