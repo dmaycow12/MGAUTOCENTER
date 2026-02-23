@@ -276,8 +276,30 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                 <div className="space-y-2">
                   {(form.pecas || []).map((p, i) => (
                     <div key={i} className="grid grid-cols-[90px_1fr_70px_90px_90px_32px] gap-2 items-center">
-                      <input value={p.codigo || ""} onChange={e => updatePeca(i, "codigo", e.target.value)} className="input-dark" placeholder="Código" />
-                      <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} className="input-dark" placeholder="Nome do produto" />
+                      <div className="relative">
+                        <input value={p.codigo || ""} onChange={e => updatePeca(i, "codigo", e.target.value)} onBlur={() => setTimeout(() => setProdutoSugestoes({ idx: null, lista: [] }), 200)} className="input-dark" placeholder="Código" />
+                        {produtoSugestoes.idx === i && produtoSugestoes.lista.length > 0 && (
+                          <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-64 max-h-48 overflow-y-auto">
+                            {produtoSugestoes.lista.map(item => (
+                              <button key={item.id} onMouseDown={() => selecionarProduto(i, item)} className="w-full text-left px-3 py-2 text-xs text-gray-200 hover:bg-gray-700 border-b border-gray-700 last:border-0">
+                                <span className="text-orange-400 font-mono mr-2">{item.codigo}</span>{item.descricao}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} onBlur={() => setTimeout(() => setProdutoSugestoes({ idx: null, lista: [] }), 200)} className="input-dark" placeholder="Nome do produto" />
+                        {produtoSugestoes.idx === i && produtoSugestoes.lista.length > 0 && (
+                          <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-64 max-h-48 overflow-y-auto">
+                            {produtoSugestoes.lista.map(item => (
+                              <button key={item.id} onMouseDown={() => selecionarProduto(i, item)} className="w-full text-left px-3 py-2 text-xs text-gray-200 hover:bg-gray-700 border-b border-gray-700 last:border-0">
+                                <span className="text-orange-400 font-mono mr-2">{item.codigo}</span>{item.descricao}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       <input type="number" value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" placeholder="Qtd" />
                       <input type="number" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" placeholder="R$ 0,00" />
                       <div className="input-dark text-gray-300 pointer-events-none">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
