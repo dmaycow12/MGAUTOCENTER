@@ -201,7 +201,7 @@ export default function Layout({ children, currentPageName }) {
         className={`hidden md:flex flex-col bg-gray-900 border-r border-gray-800 transition-all duration-300 ${sidebarOpen ? "w-60" : "w-16"}`}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-800 min-h-[64px]">
+        <div className="flex items-center gap-3 px-4 border-b border-gray-800 h-[64px]">
           <div className="flex-shrink-0 w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center">
             <Wrench className="w-5 h-5 text-white" />
           </div>
