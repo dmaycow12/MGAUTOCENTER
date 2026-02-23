@@ -156,7 +156,7 @@ export default function Estoque() {
                     <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{item.categoria || "—"}</td>
                     <td className="px-4 py-3 text-center">
                       <span className={`font-bold ${item.quantidade <= item.estoque_minimo ? "text-red-400" : "text-white"}`}>
-                        {item.quantidade} {item.unidade}
+                        {item.quantidade}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center text-gray-500 hidden sm:table-cell">{item.estoque_minimo}</td>
