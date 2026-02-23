@@ -85,7 +85,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const addServico = () => {
-    const novos = [...(form.servicos || []), { descricao: "", valor: 0, tecnico: "" }];
+    const novos = [...(form.servicos || []), { codigo: "", descricao: "", quantidade: 1, valor: 0 }];
     setForm(f => ({ ...f, servicos: novos, ...recalcular(novos, f.pecas, f.desconto) }));
   };
 
