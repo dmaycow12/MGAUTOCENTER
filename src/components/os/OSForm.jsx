@@ -122,6 +122,28 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
       updated.valor_total = Number(updated.quantidade || 0) * Number(updated.valor_unitario || 0);
       return updated;
     });
+    // Busca sugestões por código ou nome
+    const campo = field === "codigo" || field === "descricao" ? val : null;
+    if (campo && campo.length > 0) {
+      const filtro = estoque.filter(e =>
+        e.codigo?.toLowerCase().includes(campo.toLowerCase()) ||
+        e.descricao?.toLowerCase().includes(campo.toLowerCase())
+      ).slice(0, 6);
+      setProdutoSugestoes({ idx: i, lista: filtro });
+    } else if (campo === "") {
+      setProdutoSugestoes({ idx: null, lista: [] });
+    }
+    setForm(f => ({ ...f, pecas: novos, ...recalcular(f.servicos, novos, f.desconto) }));
+  };
+
+  const selecionarProduto = (i, item) => {
+    const novos = form.pecas.map((p, idx) => {
+      if (idx !== i) return p;
+      const updated = { ...p, codigo: item.codigo || "", descricao: item.descricao || "", valor_unitario: Number(item.valor_venda || 0) };
+      updated.valor_total = Number(updated.quantidade || 1) * Number(updated.valor_unitario || 0);
+      return updated;
+    });
+    setProdutoSugestoes({ idx: null, lista: [] });
     setForm(f => ({ ...f, pecas: novos, ...recalcular(f.servicos, novos, f.desconto) }));
   };
 
