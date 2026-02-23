@@ -112,6 +112,16 @@ export default function OrdemServico() {
         </button>
       </div>
 
+      {/* Filtro de Período */}
+      <div className="flex flex-wrap gap-2">
+        {PERIODOS_OS.map(p => (
+          <button key={p.key} onClick={() => setPeriodo(p.key)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${filtroPeriodo === p.key ? "bg-orange-500 text-white" : "bg-gray-800 text-gray-400 hover:text-white border border-gray-700"}`}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+
       {/* Status Filter */}
       <div className="flex gap-2 flex-wrap">
         {statusList.map(s => (
