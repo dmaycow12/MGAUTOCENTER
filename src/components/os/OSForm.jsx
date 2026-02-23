@@ -212,40 +212,39 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
           </div>
 
           {/* Serviços */}
-          <Section title="Serviços" action={<button onClick={addServico} className="flex items-center gap-1 text-orange-400 hover:text-orange-300 text-xs"><Plus className="w-3 h-3" />Adicionar</button>}>
-            {(form.servicos || []).length === 0 ? (
-              <p className="text-gray-600 text-sm text-center py-3">Nenhum serviço adicionado</p>
-            ) : (
-              <div className="space-y-2">
-                {(form.servicos || []).map((s, i) => (
-                  <div key={i} className="flex gap-2 items-center">
-                    <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark flex-1" placeholder="Descrição do serviço" />
-                    <input value={s.tecnico} onChange={e => updateServico(i, "tecnico", e.target.value)} className="input-dark w-28" placeholder="Técnico" />
-                    <input type="number" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark w-28" placeholder="Valor" />
-                    <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                ))}
-              </div>
-            )}
+          <Section title="Serviços">
+            <div className="space-y-2">
+              {(form.servicos || []).map((s, i) => (
+                <div key={i} className="flex gap-2 items-center">
+                  <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark flex-1" placeholder="Descrição do serviço" />
+                  <input value={s.tecnico} onChange={e => updateServico(i, "tecnico", e.target.value)} className="input-dark w-28" placeholder="Técnico" />
+                  <input type="number" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark w-28" placeholder="Valor" />
+                  <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              ))}
+            </div>
+            <button onClick={addServico} className="mt-3 flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
+              <Plus className="w-4 h-4" /> Adicionar Serviço
+            </button>
           </Section>
 
           {/* Peças */}
-          <Section title="Peças" action={<button onClick={addPeca} className="flex items-center gap-1 text-orange-400 hover:text-orange-300 text-xs"><Plus className="w-3 h-3" />Adicionar</button>}>
-            {(form.pecas || []).length === 0 ? (
-              <p className="text-gray-600 text-sm text-center py-3">Nenhuma peça adicionada</p>
-            ) : (
-              <div className="space-y-2">
-                {(form.pecas || []).map((p, i) => (
-                  <div key={i} className="flex gap-2 items-center">
-                    <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} className="input-dark flex-1" placeholder="Descrição da peça" />
-                    <input type="number" value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark w-20" placeholder="Qtd" />
-                    <input type="number" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark w-28" placeholder="Valor Unit." />
-                    <span className="text-gray-400 text-xs w-24 text-right flex-shrink-0">R$ {Number(p.valor_total || 0).toFixed(2)}</span>
-                    <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                ))}
-              </div>
-            )}
+          <Section title="Peças">
+            <div className="space-y-2">
+              {(form.pecas || []).map((p, i) => (
+                <div key={i} className="flex gap-2 items-center">
+                  <input value={p.codigo || ""} onChange={e => updatePeca(i, "codigo", e.target.value)} className="input-dark w-28 flex-shrink-0" placeholder="Código" />
+                  <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} className="input-dark flex-1" placeholder="Nome da peça" />
+                  <input type="number" value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark w-20 flex-shrink-0" placeholder="Qtd" />
+                  <input type="number" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark w-28 flex-shrink-0" placeholder="Valor" />
+                  <span className="text-gray-400 text-xs w-24 text-right flex-shrink-0">R$ {Number(p.valor_total || 0).toFixed(2)}</span>
+                  <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              ))}
+            </div>
+            <button onClick={addPeca} className="mt-3 flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
+              <Plus className="w-4 h-4" /> Adicionar Peça
+            </button>
           </Section>
 
           {/* Totais e Pagamento */}
