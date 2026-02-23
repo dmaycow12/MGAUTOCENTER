@@ -204,6 +204,31 @@ export default function Configuracoes() {
         {salvando ? "Salvando..." : "Salvar Configurações"}
       </button>
 
+      {/* Alterar senha do Admin */}
+      <Section title="Alterar Senha do Administrador" icon={User}>
+        {feedbackSenha && (
+          <div className={`mb-3 text-sm px-3 py-2 rounded-lg flex items-center gap-2 ${feedbackSenha.tipo === "sucesso" ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
+            {feedbackSenha.tipo === "sucesso" ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+            {feedbackSenha.msg}
+          </div>
+        )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <F label="Senha atual *">
+            <input type="password" value={senhaAdmin.atual} onChange={e => setSenhaAdmin(s => ({ ...s, atual: e.target.value }))} className="input-dark" placeholder="••••••••" />
+          </F>
+          <F label="Nova senha *">
+            <input type="password" value={senhaAdmin.nova} onChange={e => setSenhaAdmin(s => ({ ...s, nova: e.target.value }))} className="input-dark" placeholder="••••••••" />
+          </F>
+          <F label="Confirmar nova senha *">
+            <input type="password" value={senhaAdmin.confirmar} onChange={e => setSenhaAdmin(s => ({ ...s, confirmar: e.target.value }))} className="input-dark" placeholder="••••••••" />
+          </F>
+        </div>
+        <button onClick={alterarSenhaAdmin} disabled={salvandoSenha} className="mt-3 flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50">
+          <Save className="w-4 h-4" />
+          {salvandoSenha ? "Salvando..." : "Alterar Senha"}
+        </button>
+      </Section>
+
       {/* Usuários */}
       <Section title="Gerenciar Usuários" icon={UserPlus}>
         <div className="mb-4 space-y-3">
