@@ -102,6 +102,23 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const updateServico = (i, field, val) => {
     const novos = form.servicos.map((s, idx) => idx === i ? { ...s, [field]: field === "valor" ? Number(val) : val } : s);
+    // Busca sugestões por código ou nome
+    const campo = field === "codigo" || field === "descricao" ? val : null;
+    if (campo && campo.length > 0) {
+      const filtro = servicosCad.filter(s =>
+        s.codigo?.toLowerCase().includes(campo.toLowerCase()) ||
+        s.descricao?.toLowerCase().includes(campo.toLowerCase())
+      ).slice(0, 6);
+      setServicoSugestoes({ idx: i, lista: filtro });
+    } else if (campo === "") {
+      setServicoSugestoes({ idx: null, lista: [] });
+    }
+    setForm(f => ({ ...f, servicos: novos, ...recalcular(novos, f.pecas, f.desconto) }));
+  };
+
+  const selecionarServico = (i, item) => {
+    const novos = form.servicos.map((s, idx) => idx === i ? { ...s, codigo: item.codigo || "", descricao: item.descricao || "", valor: Number(item.valor || 0) } : s);
+    setServicoSugestoes({ idx: null, lista: [] });
     setForm(f => ({ ...f, servicos: novos, ...recalcular(novos, f.pecas, f.desconto) }));
   };
 
