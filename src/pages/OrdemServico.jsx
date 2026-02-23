@@ -4,6 +4,38 @@ import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown } fr
 import OSForm from "@/components/os/OSForm";
 import OSCard from "@/components/os/OSCard";
 
+const PERIODOS_OS = [
+  { key: "mes_atual", label: "Mês Atual" },
+  { key: "mes_passado", label: "Mês Passado" },
+  { key: "hoje", label: "Hoje" },
+  { key: "ontem", label: "Ontem" },
+  { key: "ano_atual", label: "Ano Atual" },
+  { key: "ano_passado", label: "Ano Passado" },
+  { key: "tudo", label: "Tudo" },
+];
+
+function getPeriodoRangeOS(key) {
+  const hoje = new Date();
+  const ano = hoje.getFullYear();
+  const mes = hoje.getMonth();
+  const todayStr = hoje.toISOString().split("T")[0];
+  const pad = n => String(n).padStart(2, "0");
+  if (key === "hoje") return { inicio: todayStr, fim: todayStr };
+  if (key === "ontem") {
+    const d = new Date(hoje); d.setDate(d.getDate() - 1);
+    const s = d.toISOString().split("T")[0];
+    return { inicio: s, fim: s };
+  }
+  if (key === "mes_atual") return { inicio: `${ano}-${pad(mes + 1)}-01`, fim: `${ano}-${pad(mes + 1)}-31` };
+  if (key === "mes_passado") {
+    const d = new Date(ano, mes - 1, 1);
+    return { inicio: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-01`, fim: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-31` };
+  }
+  if (key === "ano_atual") return { inicio: `${ano}-01-01`, fim: `${ano}-12-31` };
+  if (key === "ano_passado") return { inicio: `${ano - 1}-01-01`, fim: `${ano - 1}-12-31` };
+  return null;
+}
+
 export default function OrdemServico() {
   const [ordens, setOrdens] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,6 +45,12 @@ export default function OrdemServico() {
   const [editando, setEditando] = useState(null);
   const [clientes, setClientes] = useState([]);
   const [veiculos, setVeiculos] = useState([]);
+  const [filtroPeriodo, setFiltroPeriodo] = useState(() => localStorage.getItem("os_periodo") || "mes_atual");
+
+  const setPeriodo = (key) => {
+    setFiltroPeriodo(key);
+    localStorage.setItem("os_periodo", key);
+  };
 
   const statusList = ["Todos", "Em Aberto", "Concluído", "Cancelado"];
 
