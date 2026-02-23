@@ -78,7 +78,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const recalcular = (servicos, pecas, desconto) => {
-    const vs = (servicos || []).reduce((acc, s) => acc + Number(s.valor || 0), 0);
+    const vs = (servicos || []).reduce((acc, s) => acc + Number(s.valor || 0) * Number(s.quantidade ?? 1), 0);
     const vp = (pecas || []).reduce((acc, p) => acc + Number(p.valor_total || 0), 0);
     const total = vs + vp - Number(desconto || 0);
     return { valor_servicos: vs, valor_pecas: vp, valor_total: Math.max(0, total) };
