@@ -171,24 +171,25 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 flex">
       <style>{`
-        :root {
-          --orange: #f97316;
-          --orange-dark: #ea6c0a;
-          --bg-dark: #030712;
-          --bg-card: #111827;
-          --bg-hover: #1f2937;
-          --border: #1f2937;
-          --text-muted: #6b7280;
-        }
-        body { background: #030712; }
-        * { box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #111827; }
-        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
-        .nav-active { background: linear-gradient(90deg, rgba(249,115,22,0.15) 0%, rgba(249,115,22,0.05) 100%); border-left: 3px solid #f97316; }
-        .btn-orange { background: #f97316; color: #fff; transition: all 0.2s; }
-        .btn-orange:hover { background: #ea6c0a; }
-      `}</style>
+          :root {
+            --orange: #f97316;
+            --orange-dark: #ea6c0a;
+            --bg-dark: #030712;
+            --bg-card: #111827;
+            --bg-hover: #1f2937;
+            --border: #1f2937;
+            --text-muted: #6b7280;
+          }
+          body { background: #030712; }
+          * { box-sizing: border-box; }
+          ::-webkit-scrollbar { width: 6px; height: 6px; }
+          ::-webkit-scrollbar-track { background: #111827; }
+          ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+          .nav-active { background: linear-gradient(90deg, rgba(249,115,22,0.15) 0%, rgba(249,115,22,0.05) 100%); border-left: 3px solid #f97316; }
+          .btn-orange { background: #f97316; color: #fff; transition: all 0.2s; }
+          .btn-orange:hover { background: #ea6c0a; }
+          aside { flex-shrink: 0; }
+        `}</style>
 
       {/* Sidebar Desktop */}
       <aside
