@@ -213,55 +213,24 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
 
           {/* Produtos */}
           <Section title="Produtos">
-            {(form.servicos || []).length > 0 && (
-              <div className="mb-2">
-                <div className="grid grid-cols-[90px_1fr_70px_90px_80px_32px] gap-2 mb-1 px-1">
-                  <span className="text-xs text-gray-500">Código</span>
-                  <span className="text-xs text-gray-500">Nome do Serviço</span>
-                  <span className="text-xs text-gray-500">Qtd</span>
-                  <span className="text-xs text-gray-500">Valor Unit.</span>
-                  <span className="text-xs text-gray-500 text-right">Total</span>
-                  <span />
-                </div>
-                <div className="space-y-2">
-                  {(form.servicos || []).map((s, i) => (
-                    <div key={i} className="grid grid-cols-[90px_1fr_70px_90px_80px_32px] gap-2 items-center">
-                      <input value={s.codigo || ""} onChange={e => updateServico(i, "codigo", e.target.value)} className="input-dark" placeholder="Código" />
-                      <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" placeholder="Nome do serviço" />
-                      <input type="number" value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" placeholder="Qtd" min="1" />
-                      <input type="number" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" placeholder="R$ 0,00" />
-                      <span className="text-gray-300 text-xs text-right">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</span>
-                      <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 flex items-center justify-center"><Trash2 className="w-4 h-4" /></button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            <button onClick={addServico} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
-              <Plus className="w-4 h-4" /> Adicionar
-            </button>
-          </Section>
-
-          {/* Peças */}
-          <Section title="Peças">
             {(form.pecas || []).length > 0 && (
               <div className="mb-2">
-                <div className="grid grid-cols-[90px_1fr_70px_90px_80px_32px] gap-2 mb-1 px-1">
+                <div className="grid grid-cols-[90px_1fr_70px_90px_90px_32px] gap-2 mb-1 px-1">
                   <span className="text-xs text-gray-500">Código</span>
                   <span className="text-xs text-gray-500">Nome do Produto</span>
                   <span className="text-xs text-gray-500">Qtd</span>
                   <span className="text-xs text-gray-500">Valor Unit.</span>
-                  <span className="text-xs text-gray-500 text-right">Total</span>
+                  <span className="text-xs text-gray-500">Total</span>
                   <span />
                 </div>
                 <div className="space-y-2">
                   {(form.pecas || []).map((p, i) => (
-                    <div key={i} className="grid grid-cols-[90px_1fr_70px_90px_80px_32px] gap-2 items-center">
+                    <div key={i} className="grid grid-cols-[90px_1fr_70px_90px_90px_32px] gap-2 items-center">
                       <input value={p.codigo || ""} onChange={e => updatePeca(i, "codigo", e.target.value)} className="input-dark" placeholder="Código" />
-                      <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} className="input-dark" placeholder="Nome da peça" />
+                      <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} className="input-dark" placeholder="Nome do produto" />
                       <input type="number" value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" placeholder="Qtd" />
                       <input type="number" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" placeholder="R$ 0,00" />
-                      <span className="text-gray-300 text-xs text-right">R$ {Number(p.valor_total || 0).toFixed(2)}</span>
+                      <div className="input-dark text-gray-300 pointer-events-none">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
                       <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 flex items-center justify-center"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   ))}
@@ -269,6 +238,37 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
               </div>
             )}
             <button onClick={addPeca} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
+              <Plus className="w-4 h-4" /> Adicionar
+            </button>
+          </Section>
+
+          {/* Serviços */}
+          <Section title="Serviços">
+            {(form.servicos || []).length > 0 && (
+              <div className="mb-2">
+                <div className="grid grid-cols-[90px_1fr_70px_90px_90px_32px] gap-2 mb-1 px-1">
+                  <span className="text-xs text-gray-500">Código</span>
+                  <span className="text-xs text-gray-500">Nome do Serviço</span>
+                  <span className="text-xs text-gray-500">Qtd</span>
+                  <span className="text-xs text-gray-500">Valor Unit.</span>
+                  <span className="text-xs text-gray-500">Total</span>
+                  <span />
+                </div>
+                <div className="space-y-2">
+                  {(form.servicos || []).map((s, i) => (
+                    <div key={i} className="grid grid-cols-[90px_1fr_70px_90px_90px_32px] gap-2 items-center">
+                      <input value={s.codigo || ""} onChange={e => updateServico(i, "codigo", e.target.value)} className="input-dark" placeholder="Código" />
+                      <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" placeholder="Nome do serviço" />
+                      <input type="number" value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" placeholder="Qtd" min="1" />
+                      <input type="number" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" placeholder="R$ 0,00" />
+                      <div className="input-dark text-gray-300 pointer-events-none">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
+                      <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 flex items-center justify-center"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <button onClick={addServico} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
               <Plus className="w-4 h-4" /> Adicionar
             </button>
           </Section>
