@@ -248,7 +248,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
               <div className="mb-2">
                 <div className="grid grid-cols-[90px_1fr_70px_90px_80px_32px] gap-2 mb-1 px-1">
                   <span className="text-xs text-gray-500">Código</span>
-                  <span className="text-xs text-gray-500">Nome da Peça</span>
+                  <span className="text-xs text-gray-500">Nome do Produto</span>
                   <span className="text-xs text-gray-500">Qtd</span>
                   <span className="text-xs text-gray-500">Valor Unit.</span>
                   <span className="text-xs text-gray-500 text-right">Total</span>
