@@ -187,7 +187,7 @@ export default function Estoque() {
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <F label="Código"><input value={form.codigo} onChange={e => setForm({ ...form, codigo: e.target.value })} className="input-dark" /></F>
-                <F label="Unidade"><input value={form.unidade} onChange={e => setForm({ ...form, unidade: e.target.value })} className="input-dark" placeholder="UN" /></F>
+                <F label="Quantidade"><input type="number" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: Number(e.target.value) })} className="input-dark" /></F>
                 <F label="Descrição *" className="col-span-2">
                   <input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} className="input-dark" />
                 </F>
