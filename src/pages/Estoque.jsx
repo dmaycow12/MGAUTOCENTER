@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X } from "lucide-react";
 
 const defaultForm = () => ({
-  codigo: "", descricao: "", categoria: "", marca: "", unidade: "UN",
+  codigo: "", descricao: "", categoria: "", marca: "",
   quantidade: 0, estoque_minimo: 0, valor_custo: 0, valor_venda: 0,
   localizacao: "", fornecedor: "", ncm: "87089990", cfop: "5405", observacoes: ""
 });
