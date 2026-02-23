@@ -30,10 +30,7 @@ export default function Configuracoes() {
   }, []);
 
   const loadAll = async () => {
-    const [configs, users] = await Promise.all([
-      base44.entities.Configuracao.list("-created_date", 100),
-      base44.entities.Configuracao.filter({ chave: "usuario_extra" }, "-created_date", 50),
-    ]);
+    const configs = await base44.entities.Configuracao.list("-created_date", 200);
 
     const c = { ...config };
     configs.forEach(item => {
@@ -48,6 +45,33 @@ export default function Configuracoes() {
     setUsuarios(usersExtras);
 
     setLoading(false);
+  };
+
+  const alterarSenhaAdmin = async () => {
+    setFeedbackSenha(null);
+    if (!senhaAdmin.atual || !senhaAdmin.nova || !senhaAdmin.confirmar)
+      return setFeedbackSenha({ tipo: "erro", msg: "Preencha todos os campos." });
+    if (senhaAdmin.nova !== senhaAdmin.confirmar)
+      return setFeedbackSenha({ tipo: "erro", msg: "A nova senha e a confirmação não coincidem." });
+    if (senhaAdmin.nova.length < 4)
+      return setFeedbackSenha({ tipo: "erro", msg: "A senha deve ter no mínimo 4 caracteres." });
+
+    // Verifica senha atual
+    const configs = await base44.entities.Configuracao.list("-created_date", 200);
+    const senhaAtualConfig = configs.find(c => c.chave === "admin_senha")?.valor || "admin123";
+    if (senhaAdmin.atual !== senhaAtualConfig)
+      return setFeedbackSenha({ tipo: "erro", msg: "Senha atual incorreta." });
+
+    setSalvandoSenha(true);
+    const existente = configs.find(c => c.chave === "admin_senha");
+    if (existente) {
+      await base44.entities.Configuracao.update(existente.id, { chave: "admin_senha", valor: senhaAdmin.nova });
+    } else {
+      await base44.entities.Configuracao.create({ chave: "admin_senha", valor: senhaAdmin.nova, descricao: "Senha do admin" });
+    }
+    setSenhaAdmin({ atual: "", nova: "", confirmar: "" });
+    setFeedbackSenha({ tipo: "sucesso", msg: "Senha alterada com sucesso!" });
+    setSalvandoSenha(false);
   };
 
   const salvar = async () => {
