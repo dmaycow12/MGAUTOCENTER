@@ -34,22 +34,52 @@ function LoginPage() {
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
 
-  const ADMIN_USER = "admin";
-  const ADMIN_PASS = "admin123";
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setErro("");
     setCarregando(true);
-    setTimeout(() => {
-      if (usuario === ADMIN_USER && senha === ADMIN_PASS) {
-        sessionStorage.setItem("oficina_auth", "ok");
+    try {
+      // Busca configurações do banco para pegar senha do admin e usuários extras
+      const configs = await fetch ? 
+        await (async () => {
+          const { base44 } = await import("@/api/base44Client");
+          return base44.entities.Configuracao.list("-created_date", 200);
+        })() : [];
+
+      // Senha do admin (pode ter sido alterada)
+      const senhaAdminConfig = configs.find(c => c.chave === "admin_senha")?.valor;
+      const senhaAdminValida = senhaAdminConfig || "admin123";
+
+      if (usuario === "admin" && senha === senhaAdminValida) {
+        sessionStorage.setItem("oficina_auth", JSON.stringify({ usuario: "admin", nome: "Administrador", role: "admin" }));
         window.location.reload();
-      } else {
-        setErro("Usuário ou senha incorretos.");
-        setCarregando(false);
+        return;
       }
-    }, 600);
+
+      // Verifica usuários extras
+      const usuariosExtras = configs
+        .filter(c => c.chave === "usuario_extra")
+        .map(c => { try { return JSON.parse(c.valor); } catch { return null; } })
+        .filter(Boolean);
+
+      const encontrado = usuariosExtras.find(u => u.usuario === usuario && u.senha === senha);
+      if (encontrado) {
+        sessionStorage.setItem("oficina_auth", JSON.stringify({ usuario: encontrado.usuario, nome: encontrado.nome, role: "user" }));
+        window.location.reload();
+        return;
+      }
+
+      setErro("Usuário ou senha incorretos.");
+    } catch (err) {
+      // fallback se o banco falhar
+      if (usuario === "admin" && senha === "admin123") {
+        sessionStorage.setItem("oficina_auth", JSON.stringify({ usuario: "admin", nome: "Administrador", role: "admin" }));
+        window.location.reload();
+        return;
+      }
+      setErro("Erro ao verificar credenciais. Tente novamente.");
+    }
+    setCarregando(false);
   };
 
   return (
