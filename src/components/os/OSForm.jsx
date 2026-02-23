@@ -33,6 +33,17 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   const [form, setForm] = useState(os ? { ...defaultForm(), ...os } : defaultForm());
   const [saving, setSaving] = useState(false);
   const [veiculosCliente, setVeiculosCliente] = useState([]);
+  const [estoque, setEstoque] = useState([]);
+  const [servicosCad, setServicosCad] = useState([]);
+  const [produtoSugestoes, setProdutoSugestoes] = useState({ idx: null, lista: [] });
+  const [servicoSugestoes, setServicoSugestoes] = useState({ idx: null, lista: [] });
+
+  useEffect(() => {
+    Promise.all([
+      base44.entities.Estoque.list("-created_date", 500),
+      base44.entities.Servico.list("-created_date", 500),
+    ]).then(([e, s]) => { setEstoque(e); setServicosCad(s); });
+  }, []);
 
   // Auto-number for new OS — sequencial a partir de 1
   useEffect(() => {
