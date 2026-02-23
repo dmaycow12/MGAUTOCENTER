@@ -294,7 +294,7 @@ export default function Layout({ children, currentPageName }) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="bg-gray-900 border-b border-gray-800 px-4 md:px-6 py-4 flex items-center justify-between min-h-[64px]">
+        <header className="bg-gray-900 border-b border-gray-800 px-4 md:px-6 flex items-center justify-between h-[64px] flex-shrink-0">
           <div className="flex items-center gap-3">
             <button
               className="md:hidden p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800"
