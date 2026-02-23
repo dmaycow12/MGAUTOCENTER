@@ -193,9 +193,6 @@ export default function Estoque() {
                 </F>
                 <F label="Categoria"><input value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} className="input-dark" /></F>
                 <F label="Marca"><input value={form.marca} onChange={e => setForm({ ...form, marca: e.target.value })} className="input-dark" /></F>
-                <F label="Quantidade">
-                  <input type="number" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: Number(e.target.value) })} className="input-dark" />
-                </F>
                 <F label="Estoque Mínimo">
                   <input type="number" value={form.estoque_minimo} onChange={e => setForm({ ...form, estoque_minimo: Number(e.target.value) })} className="input-dark" />
                 </F>
