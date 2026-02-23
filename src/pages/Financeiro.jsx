@@ -105,21 +105,29 @@ export default function Financeiro() {
     load();
   };
 
-  const filtrados = items.filter(i => {
+  const periodoRange = getPeriodoRange(filtroPeriodo);
+
+  const itemsNoPeriodo = items.filter(i => {
+    if (!periodoRange) return true;
+    const ref = i.data_vencimento || i.data_pagamento || "";
+    return ref >= periodoRange.inicio && ref <= periodoRange.fim;
+  });
+
+  const filtrados = itemsNoPeriodo.filter(i => {
     const matchSearch = !search || i.descricao?.toLowerCase().includes(search.toLowerCase()) || i.categoria?.toLowerCase().includes(search.toLowerCase());
     const matchTipo = filtroTipo === "Todos" || i.tipo === filtroTipo;
     const matchStatus = filtroStatus === "Todos" || i.status === filtroStatus;
     return matchSearch && matchTipo && matchStatus;
   });
 
-  // Cálculos
-  const receitas = items.filter(i => i.tipo === "Receita");
-  const despesas = items.filter(i => i.tipo === "Despesa");
+  // Cálculos (baseados no período selecionado)
+  const receitas = itemsNoPeriodo.filter(i => i.tipo === "Receita");
+  const despesas = itemsNoPeriodo.filter(i => i.tipo === "Despesa");
   const receitaTotal = receitas.filter(i => i.status === "Pago").reduce((a, i) => a + Number(i.valor || 0), 0);
   const despesaTotal = despesas.filter(i => i.status === "Pago").reduce((a, i) => a + Number(i.valor || 0), 0);
   const saldo = receitaTotal - despesaTotal;
-  const pendente = items.filter(i => i.status === "Pendente").reduce((a, i) => a + Number(i.valor || 0), 0);
-  const atrasado = items.filter(i => i.status === "Atrasado").reduce((a, i) => a + Number(i.valor || 0), 0);
+  const pendente = itemsNoPeriodo.filter(i => i.status === "Pendente").reduce((a, i) => a + Number(i.valor || 0), 0);
+  const atrasado = itemsNoPeriodo.filter(i => i.status === "Atrasado").reduce((a, i) => a + Number(i.valor || 0), 0);
 
   if (loading) return <Loader />;
 
