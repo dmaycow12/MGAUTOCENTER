@@ -49,24 +49,24 @@
  */
 import Clientes from './pages/Clientes';
 import Configuracoes from './pages/Configuracoes';
-import Dashboard from './pages/Dashboard';
 import Estoque from './pages/Estoque';
 import Financeiro from './pages/Financeiro';
 import NotasFiscais from './pages/NotasFiscais';
 import OrdemServico from './pages/OrdemServico';
 import Servicos from './pages/Servicos';
+import Dashboard from './pages/Dashboard';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Clientes": Clientes,
     "Configuracoes": Configuracoes,
-    "Dashboard": Dashboard,
     "Estoque": Estoque,
     "Financeiro": Financeiro,
     "NotasFiscais": NotasFiscais,
     "OrdemServico": OrdemServico,
     "Servicos": Servicos,
+    "Dashboard": Dashboard,
 }
 
 export const pagesConfig = {
