@@ -273,37 +273,43 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                   <span className="text-xs text-gray-500">Total</span>
                   <span />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {(form.pecas || []).map((p, i) => (
-                    <div key={i} className="grid grid-cols-[90px_1fr_70px_90px_90px_32px] gap-2 items-center">
-                      <div className="relative">
-                        <input value={p.codigo || ""} onChange={e => updatePeca(i, "codigo", e.target.value)} onBlur={() => setTimeout(() => setProdutoSugestoes({ idx: null, lista: [] }), 200)} className="input-dark" placeholder="Código" />
-                        {produtoSugestoes.idx === i && produtoSugestoes.lista.length > 0 && (
-                          <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-64 max-h-48 overflow-y-auto">
-                            {produtoSugestoes.lista.map(item => (
-                              <button key={item.id} onMouseDown={() => selecionarProduto(i, item)} className="w-full text-left px-3 py-2 text-xs text-gray-200 hover:bg-gray-700 border-b border-gray-700 last:border-0">
-                                <span className="text-orange-400 font-mono mr-2">{item.codigo}</span>{item.descricao}
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                    <div key={i} className="bg-gray-800/50 rounded-xl p-3 space-y-2">
+                      {/* Linha 1: Código + Nome */}
+                      <div className="flex gap-2">
+                        <div className="relative w-24 flex-shrink-0">
+                          <input value={p.codigo || ""} onChange={e => updatePeca(i, "codigo", e.target.value)} onBlur={() => setTimeout(() => setProdutoSugestoes({ idx: null, lista: [] }), 200)} className="input-dark" placeholder="Código" />
+                          {produtoSugestoes.idx === i && produtoSugestoes.lista.length > 0 && (
+                            <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-64 max-h-48 overflow-y-auto">
+                              {produtoSugestoes.lista.map(item => (
+                                <button key={item.id} onMouseDown={() => selecionarProduto(i, item)} className="w-full text-left px-3 py-2 text-xs text-gray-200 hover:bg-gray-700 border-b border-gray-700 last:border-0">
+                                  <span className="text-orange-400 font-mono mr-2">{item.codigo}</span>{item.descricao}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="relative flex-1">
+                          <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} onBlur={() => setTimeout(() => setProdutoSugestoes({ idx: null, lista: [] }), 200)} className="input-dark" placeholder="Nome do produto" />
+                          {produtoSugestoes.idx === i && produtoSugestoes.lista.length > 0 && (
+                            <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-64 max-h-48 overflow-y-auto">
+                              {produtoSugestoes.lista.map(item => (
+                                <button key={item.id} onMouseDown={() => selecionarProduto(i, item)} className="w-full text-left px-3 py-2 text-xs text-gray-200 hover:bg-gray-700 border-b border-gray-700 last:border-0">
+                                  <span className="text-orange-400 font-mono mr-2">{item.codigo}</span>{item.descricao}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="relative">
-                        <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} onBlur={() => setTimeout(() => setProdutoSugestoes({ idx: null, lista: [] }), 200)} className="input-dark" placeholder="Nome do produto" />
-                        {produtoSugestoes.idx === i && produtoSugestoes.lista.length > 0 && (
-                          <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-64 max-h-48 overflow-y-auto">
-                            {produtoSugestoes.lista.map(item => (
-                              <button key={item.id} onMouseDown={() => selecionarProduto(i, item)} className="w-full text-left px-3 py-2 text-xs text-gray-200 hover:bg-gray-700 border-b border-gray-700 last:border-0">
-                                <span className="text-orange-400 font-mono mr-2">{item.codigo}</span>{item.descricao}
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                      {/* Linha 2: Qtd + Valor Unit + Total + Excluir */}
+                      <div className="flex gap-2 items-center">
+                        <input type="number" value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark w-16 flex-shrink-0" placeholder="Qtd" />
+                        <input type="number" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark flex-1" placeholder="R$ 0,00" />
+                        <div className="input-dark flex-1 text-gray-300 pointer-events-none text-sm">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
+                        <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-1"><Trash2 className="w-4 h-4" /></button>
                       </div>
-                      <input type="number" value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" placeholder="Qtd" />
-                      <input type="number" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" placeholder="R$ 0,00" />
-                      <div className="input-dark text-gray-300 pointer-events-none">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
-                      <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 flex items-center justify-center"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   ))}
                 </div>
