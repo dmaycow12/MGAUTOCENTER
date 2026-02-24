@@ -132,12 +132,22 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
       {/* Cabeçalho: nº + data + menu */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <span className="text-white font-bold text-lg tracking-wide">#{os.numero || "—"}</span>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 text-gray-500 text-xs">
             <Calendar className="w-3.5 h-3.5" />
             <span>{fmtData(os.data_entrada)}</span>
           </div>
-          {/* Menu ações */}
+          {/* Botões rápidos */}
+          <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Editar">
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Imprimir">
+            <Printer className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={() => onDelete?.()} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all" title="Excluir">
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+          {/* Menu ações extras */}
           <div className="relative">
             <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
               className="p-1 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
