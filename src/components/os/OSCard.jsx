@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { ChevronDown, Pencil, Printer, Trash2, FileText } from "lucide-react";
+import { ChevronDown, Pencil, Printer, Trash2, FileText, MoreVertical } from "lucide-react";
 
 function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
   return (
@@ -81,10 +81,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   const emitirNF = (tipo) => {
     setMenuOpen(false);
     const params = new URLSearchParams({
-      emitir: "1",
-      tipo,
-      os_id: os.id,
-      os_numero: os.numero || "",
+      emitir: "1", tipo, os_id: os.id, os_numero: os.numero || "",
       cliente_id: os.cliente_id || "",
       cliente_nome: encodeURIComponent(os.cliente_nome || ""),
       valor: String(os.valor_total || 0),
@@ -118,11 +115,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   };
 
   const colorClass = STATUS_COLOR[os.status] || "bg-gray-500/10 text-gray-400 border-gray-500/30";
-
-  // Primeiro nome do cliente
   const primeiroNome = (os.cliente_nome || "—").split(" ")[0];
-  // Modelo • Placa
-  const veiculoInfo = [os.veiculo_modelo, os.veiculo_placa].filter(Boolean).join(" • ");
 
   const menuItems = [
     { label: "Editar", icon: Pencil, action: () => { setMenuOpen(false); onEdit?.(); } },
@@ -136,165 +129,76 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   ];
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 hover:border-gray-700 transition-all">
-      {/* Desktop */}
-      <div className="hidden sm:flex items-end gap-4">
-        <div className="flex flex-col w-8 flex-shrink-0">
-          <span className="text-gray-500 text-xs mb-1">Nº</span>
-          <span className="text-white font-bold text-sm text-center">{os.numero || "—"}</span>
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 hover:border-gray-700 transition-all">
+      {/* Topo: nº + data + status + menu */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="bg-orange-500/10 text-orange-400 font-bold text-xs px-2.5 py-1 rounded-lg">#{os.numero || "—"}</span>
+          <span className="text-gray-500 text-xs">{fmtData(os.data_entrada)}</span>
         </div>
-        <div className="flex flex-col flex-shrink-0">
-          <span className="text-gray-500 text-xs mb-1">Data</span>
-          <span className="text-white font-bold text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</span>
-        </div>
-        <div className="flex flex-col flex-1">
-          <span className="text-gray-500 text-xs mb-1">Cliente</span>
-          <span className="text-white font-bold text-sm whitespace-nowrap">{primeiroNome}</span>
-        </div>
-        <div className="flex flex-col flex-1">
-          <span className="text-gray-500 text-xs mb-1">Modelo</span>
-          <span className="text-white font-bold text-sm whitespace-nowrap">{os.veiculo_modelo || "—"}</span>
-        </div>
-        <div className="flex flex-col flex-1">
-          <span className="text-gray-500 text-xs mb-1">Placa</span>
-          <span className="text-white font-bold text-sm whitespace-nowrap">{os.veiculo_placa || "—"}</span>
-        </div>
-        <div className="flex flex-col flex-shrink-0">
-          <span className="text-gray-500 text-xs mb-1">Total</span>
-          <span className="text-orange-400 font-bold text-sm whitespace-nowrap">{fmtValor(os.valor_total)}</span>
-        </div>
-
-        {/* Status dropdown */}
-        <div className="relative flex-shrink-0">
-          <button
-            ref={statusBtnRef}
-            onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
-            className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-full font-medium border whitespace-nowrap hover:opacity-80 transition-all ${colorClass}`}
-          >
-            {os.status || "—"}
-            <ChevronDown className="w-3 h-3 flex-shrink-0" />
-          </button>
-          {statusOpen && (
-            <div ref={statusRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-36 py-1 z-50">
-              {STATUS_OPTIONS.map(s => (
-                <button key={s} onClick={() => alterarStatus(s)}
-                  className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}>
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Menu de ações */}
-        <div className="relative flex-shrink-0">
-          <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
-            className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800" title="Ações">
-            <ChevronDown className="w-4 h-4" />
-          </button>
-          {menuOpen && (
-            <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-50">
-              {menuItems.map((item, i) => {
-                const Icon = item.icon;
-                return (
-                  <button key={i} onClick={item.action}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium hover:bg-gray-700 transition-all ${item.danger ? "text-red-400 hover:text-red-300" : item.whatsapp ? "text-green-400 hover:text-green-300" : "text-gray-300 hover:text-white"}`}>
-                    <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                    {item.label}
+        <div className="flex items-center gap-2">
+          {/* Status dropdown */}
+          <div className="relative">
+            <button
+              ref={statusBtnRef}
+              onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
+              className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium border hover:opacity-80 transition-all ${colorClass}`}
+            >
+              {os.status || "—"}
+              <ChevronDown className="w-3 h-3 flex-shrink-0" />
+            </button>
+            {statusOpen && (
+              <div ref={statusRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-36 py-1 z-50">
+                {STATUS_OPTIONS.map(s => (
+                  <button key={s} onClick={() => alterarStatus(s)}
+                    className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}>
+                    {s}
                   </button>
-                );
-              })}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Menu ações */}
+          <div className="relative">
+            <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
+              className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
+              <MoreVertical className="w-4 h-4" />
+            </button>
+            {menuOpen && (
+              <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-50">
+                {menuItems.map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <button key={i} onClick={item.action}
+                      className={`w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium hover:bg-gray-700 transition-all ${item.danger ? "text-red-400 hover:text-red-300" : "text-gray-300 hover:text-white"}`}>
+                      <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Mobile */}
-      <div className="sm:hidden space-y-2">
-        {/* Linha 1: número + data + ações */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <span className="text-gray-500 text-xs">Nº</span>
-              <span className="text-white text-xs font-bold">{os.numero || "—"}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-gray-500 text-xs">Data</span>
-              <span className="text-white text-xs">{fmtData(os.data_entrada)}</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Status dropdown */}
-            <div className="relative">
-              <button
-                ref={statusBtnRef}
-                onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
-                className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium border hover:opacity-80 transition-all ${colorClass}`}
-              >
-                {os.status || "—"}
-                <ChevronDown className="w-3 h-3 flex-shrink-0" />
-              </button>
-              {statusOpen && (
-                <div ref={statusRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-36 py-1 z-50">
-                  {STATUS_OPTIONS.map(s => (
-                    <button key={s} onClick={() => alterarStatus(s)}
-                      className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}>
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            {/* Menu ações */}
-            <div className="relative">
-              <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
-                className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
-                <ChevronDown className="w-4 h-4" />
-              </button>
-              {menuOpen && (
-                <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-50">
-                  {menuItems.map((item, i) => {
-                    const Icon = item.icon;
-                    return (
-                      <button key={i} onClick={item.action}
-                        className={`w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium hover:bg-gray-700 transition-all ${item.danger ? "text-red-400 hover:text-red-300" : "text-gray-300 hover:text-white"}`}>
-                        <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
+      {/* Corpo do card: grid de informações */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div>
+          <p className="text-gray-500 text-xs mb-0.5">Cliente</p>
+          <p className="text-white font-semibold text-sm truncate">{primeiroNome}</p>
         </div>
-
-        {/* Linha 2: cliente */}
-        <div className="flex items-center gap-2">
-          <span className="text-gray-500 text-xs w-16 flex-shrink-0">Cliente</span>
-          <span className="text-white text-sm font-semibold">{primeiroNome}</span>
+        <div>
+          <p className="text-gray-500 text-xs mb-0.5">Modelo</p>
+          <p className="text-white text-sm truncate">{os.veiculo_modelo || "—"}</p>
         </div>
-
-        {/* Linha 3: modelo */}
-        {os.veiculo_modelo && (
-          <div className="flex items-center gap-2">
-            <span className="text-gray-500 text-xs w-16 flex-shrink-0">Modelo</span>
-            <span className="text-white text-sm">{os.veiculo_modelo}</span>
-          </div>
-        )}
-
-        {/* Linha 4: placa */}
-        {os.veiculo_placa && (
-          <div className="flex items-center gap-2">
-            <span className="text-gray-500 text-xs w-16 flex-shrink-0">Placa</span>
-            <span className="text-white text-sm font-mono">{os.veiculo_placa}</span>
-          </div>
-        )}
-
-        {/* Linha 5: valor */}
-        <div className="flex items-center gap-2">
-          <span className="text-gray-500 text-xs w-16 flex-shrink-0">Total</span>
-          <span className="text-orange-400 text-sm font-bold">{fmtValor(os.valor_total)}</span>
+        <div>
+          <p className="text-gray-500 text-xs mb-0.5">Placa</p>
+          <p className="text-white text-sm font-mono">{os.veiculo_placa || "—"}</p>
+        </div>
+        <div>
+          <p className="text-gray-500 text-xs mb-0.5">Total</p>
+          <p className="text-orange-400 font-bold text-sm">{fmtValor(os.valor_total)}</p>
         </div>
       </div>
     </div>
