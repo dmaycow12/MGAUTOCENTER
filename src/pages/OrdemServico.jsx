@@ -94,7 +94,7 @@ export default function OrdemServico() {
     <div className="space-y-4">
       {/* Controles — mesmo padrão do Financeiro */}
       <div className="flex flex-col gap-2">
-        {/* Linha 1: Nova OS (botão full-width) */}
+        {/* Linha 1: Nova OS — ocupa linha toda */}
         <button
           onClick={() => { setShowForm(true); setEditando(null); }}
           className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl text-sm font-semibold transition-all"
@@ -102,7 +102,7 @@ export default function OrdemServico() {
           <Plus className="w-4 h-4" /> Nova OS
         </button>
 
-        {/* Linha 2: Filtro de Status */}
+        {/* Linha 2: filtro status */}
         <div className="flex gap-2">
           {statusList.map(s => (
             <button key={s} onClick={() => setFiltroStatus(s)}
@@ -112,17 +112,17 @@ export default function OrdemServico() {
           ))}
         </div>
 
-        {/* Linha 3: Filtro de Período */}
-        <div className="flex flex-wrap gap-2">
+        {/* Linha 3: filtro período */}
+        <div className="flex gap-2 flex-wrap">
           {PERIODOS_OS.map(p => (
             <button key={p.key} onClick={() => setPeriodo(p.key)}
-              className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all ${filtroPeriodo === p.key ? "bg-orange-500 text-white" : "bg-gray-800 text-gray-400 hover:text-white border border-gray-700"}`}>
+              className={`flex-1 py-3 rounded-xl text-xs font-medium transition-all ${filtroPeriodo === p.key ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {p.label}
             </button>
           ))}
         </div>
 
-        {/* Linha 4: Busca */}
+        {/* Linha 4: busca */}
         <div className="relative w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
