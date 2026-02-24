@@ -259,20 +259,20 @@ export default function Estoque() {
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <F label="Código"><input value={form.codigo} onChange={e => setForm({ ...form, codigo: e.target.value })} className="input-dark" /></F>
-                <F label="Quantidade"><input type="number" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: Number(e.target.value) })} className="input-dark" /></F>
+                <F label="Quantidade"><input inputMode="decimal" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: e.target.value })} className="input-dark no-arrows" placeholder="0" /></F>
                 <F label="Descrição *" className="col-span-2">
                   <input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} className="input-dark" />
                 </F>
                 <F label="Categoria"><input value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} className="input-dark" /></F>
                 <F label="Marca"><input value={form.marca} onChange={e => setForm({ ...form, marca: e.target.value })} className="input-dark" /></F>
                 <F label="Estoque Mínimo">
-                  <input type="number" value={form.estoque_minimo} onChange={e => setForm({ ...form, estoque_minimo: Number(e.target.value) })} className="input-dark" />
+                  <input inputMode="decimal" value={form.estoque_minimo} onChange={e => setForm({ ...form, estoque_minimo: e.target.value })} className="input-dark no-arrows" placeholder="0" />
                 </F>
                 <F label="Valor de Custo (R$)">
-                  <input type="number" step="0.01" value={form.valor_custo} onChange={e => setForm({ ...form, valor_custo: Number(e.target.value) })} className="input-dark" />
+                  <input inputMode="decimal" value={form.valor_custo} onChange={e => setForm({ ...form, valor_custo: e.target.value })} className="input-dark no-arrows" placeholder="0,00" />
                 </F>
                 <F label="Valor de Venda (R$)">
-                  <input type="number" step="0.01" value={form.valor_venda} onChange={e => setForm({ ...form, valor_venda: Number(e.target.value) })} className="input-dark" />
+                  <input inputMode="decimal" value={form.valor_venda} onChange={e => setForm({ ...form, valor_venda: e.target.value })} className="input-dark no-arrows" placeholder="0,00" />
                 </F>
                 <F label="Localização"><input value={form.localizacao} onChange={e => setForm({ ...form, localizacao: e.target.value })} className="input-dark" /></F>
                 <F label="Fornecedor"><input value={form.fornecedor} onChange={e => setForm({ ...form, fornecedor: e.target.value })} className="input-dark" /></F>
