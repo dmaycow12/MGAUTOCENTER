@@ -56,14 +56,6 @@ export default function Dashboard() {
 
 
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={ClipboardList} label="OS Abertas" value={osAbertas.length} color="orange" link="OrdemServico" />
-        <StatCard icon={CheckCircle} label="OS Concluídas" value={osConcluidas.length} color="green" link="OrdemServico" />
-        <StatCard icon={Users} label="Clientes" value={stats.clientes.length} color="blue" link="Clientes" />
-        <StatCard icon={AlertTriangle} label="Estoque Baixo" value={estoqueBaixo.length} color="red" link="Estoque" />
-      </div>
-
       {/* Finance Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
@@ -89,6 +81,13 @@ export default function Dashboard() {
             R$ {(receitasMes - despesasMes).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-3 gap-4">
+        <StatCard icon={ClipboardList} label="OS Abertas" value={osAbertas.length} color="orange" link="OrdemServico" />
+        <StatCard icon={Users} label="Clientes" value={stats.clientes.length} color="blue" link="Clientes" />
+        <StatCard icon={AlertTriangle} label="Estoque Baixo" value={estoqueBaixo.length} color="red" link="Estoque" />
       </div>
 
     </div>
