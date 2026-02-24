@@ -187,36 +187,27 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         </div>
       </div>
 
-      {/* Grade de informações */}
-      <div className="border-t border-gray-800">
-        {/* Linha 1: Cliente (2 colunas) */}
-        <div className="px-3 py-2.5 border-b border-gray-800">
+      {/* Grade 2x2: Cliente | Data / Veículo | Valor */}
+      <div className="grid grid-cols-2 border-t border-gray-800">
+        {/* Cliente */}
+        <div className="px-3 py-2.5 border-r border-gray-800">
           <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Cliente</p>
           <p className="text-white text-sm font-medium truncate">{os.cliente_nome || "—"}</p>
         </div>
-        
-        {/* Linha 2: Veículo | Placa */}
-        <div className="grid grid-cols-2 border-b border-gray-800">
-          <div className="px-3 py-2.5 border-r border-gray-800">
-            <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Veículo</p>
-            <p className="text-white text-sm font-medium truncate">{os.veiculo_modelo || "—"}</p>
-          </div>
-          <div className="px-3 py-2.5">
-            <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Placa</p>
-            <p className="text-white text-sm font-medium">{os.veiculo_placa || "—"}</p>
-          </div>
+        {/* Data */}
+        <div className="px-3 py-2.5">
+          <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Data</p>
+          <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
         </div>
-        
-        {/* Linha 3: Data | Valor */}
-        <div className="grid grid-cols-2">
-          <div className="px-3 py-2.5 border-r border-gray-800">
-            <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Data</p>
-            <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
-          </div>
-          <div className="px-3 py-2.5">
-            <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Valor</p>
-            <p className="text-white text-sm font-bold">{fmtValor(os.valor_total)}</p>
-          </div>
+        {/* Veículo */}
+        <div className="px-3 py-2.5 border-t border-r border-gray-800">
+          <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Veículo</p>
+          <p className="text-white text-sm font-medium truncate">{veiculoInfo || "—"}</p>
+        </div>
+        {/* Valor */}
+        <div className="px-3 py-2.5 border-t border-gray-800">
+          <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Valor</p>
+          <p className={`text-sm font-bold ${style.value}`}>{fmtValor(os.valor_total)}</p>
         </div>
       </div>
     </div>
