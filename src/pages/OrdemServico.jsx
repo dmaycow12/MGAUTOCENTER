@@ -48,7 +48,7 @@ export default function OrdemServico() {
     localStorage.setItem("os_periodo", key);
   };
 
-  const statusList = ["Todos", "Em Aberto", "Concluído", "Cancelado"];
+  const statusList = ["Todos", "Aberta", "Concluída", "Cancelada"];
 
   useEffect(() => { load(); }, []);
 
