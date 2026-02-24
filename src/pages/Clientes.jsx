@@ -106,12 +106,10 @@ export default function Clientes() {
                 onClick={() => setExpandido(expandido === c.id ? null : c.id)}
               >
                 <div className="flex-1 min-w-0">
-                  <div className="flex flex-col md:flex-row md:items-center md:gap-3">
-                    <p className="text-white text-xs font-bold leading-snug">{c.nome}</p>
-                    {(c.telefone || c.email) && (
-                      <p className="text-gray-400 text-xs font-bold mt-0.5 md:mt-0">{c.telefone || c.email}</p>
-                    )}
-                  </div>
+                  <p className="text-white text-xs font-bold leading-snug">{c.nome}</p>
+                  {(c.telefone || c.email) && (
+                    <p className="text-white text-xs font-bold mt-0.5">{c.telefone || c.email}</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
                   <button onClick={() => editarCliente(c)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
