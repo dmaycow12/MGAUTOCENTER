@@ -356,15 +356,15 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                             </div>
                           )}
                         </div>
-                        <div className="w-16 flex-shrink-0">
+                        <div className="w-12 flex-shrink-0">
                           <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
                           <input type="number" value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" placeholder="Qtd" min="1" />
                         </div>
-                        <div className="w-24 flex-shrink-0">
+                        <div className="flex-1 min-w-[70px]">
                           <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
                           <input type="number" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" placeholder="0,00" />
                         </div>
-                        <div className="w-24 flex-shrink-0">
+                        <div className="flex-1 min-w-[70px]">
                           <label className="text-xs text-gray-500 mb-1 block">Total</label>
                           <div className="input-dark text-gray-300 pointer-events-none text-sm">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
                         </div>
