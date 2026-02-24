@@ -202,7 +202,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
             </Field>
             <Field label="Status">
               <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="input-dark">
-                {["Em Aberto","Concluída","Cancelada"].map(s => <option key={s}>{s}</option>)}
+                {["Orçamento","Aprovado","Em Andamento","Aguardando Peças","Concluído","Entregue","Cancelado"].map(s => <option key={s}>{s}</option>)}
               </select>
             </Field>
             <Field label="Data Entrada">
