@@ -265,14 +265,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
           <Section title="Produtos">
             {(form.pecas || []).length > 0 && (
               <div className="mb-2">
-                <div className="grid grid-cols-[90px_1fr_70px_90px_90px_32px] gap-2 mb-1 px-1">
-                  <span className="text-xs text-gray-500">Código</span>
-                  <span className="text-xs text-gray-500">Nome do Produto</span>
-                  <span className="text-xs text-gray-500">Qtd</span>
-                  <span className="text-xs text-gray-500">Valor Unit.</span>
-                  <span className="text-xs text-gray-500">Total</span>
-                  <span />
-                </div>
+
                 <div className="space-y-3">
                   {(form.pecas || []).map((p, i) => (
                     <div key={i} className="bg-gray-800/50 rounded-xl p-3 space-y-2">
