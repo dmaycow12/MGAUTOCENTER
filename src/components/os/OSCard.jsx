@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { ChevronDown, Pencil, Printer, Trash2, FileText, MoreVertical } from "lucide-react";
+import { ChevronDown, Pencil, Printer, Trash2, FileText, MoreVertical, Car, Calendar } from "lucide-react";
 
 function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
   return (
@@ -14,10 +14,14 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
 
 const STATUS_OPTIONS = ["Em Aberto", "Concluído", "Cancelado"];
 
-const STATUS_COLOR = {
-  "Em Aberto": "bg-yellow-500/10 text-yellow-400 border-yellow-500/30",
-  "Concluído": "bg-green-500/10 text-green-400 border-green-500/30",
-  "Cancelado": "bg-red-500/10 text-red-400 border-red-500/30",
+const STATUS_STYLE = {
+  "Em Aberto":  { badge: "bg-yellow-600 text-white",      value: "text-yellow-400" },
+  "Concluído":  { badge: "bg-green-600 text-white",       value: "text-green-400"  },
+  "Cancelado":  { badge: "bg-red-600 text-white",         value: "text-red-400"    },
+  "Em Andamento":     { badge: "bg-blue-600 text-white",  value: "text-blue-400"   },
+  "Aguardando Peças": { badge: "bg-orange-600 text-white",value: "text-orange-400" },
+  "Orçamento":        { badge: "bg-gray-600 text-white",  value: "text-gray-300"   },
+  "Entregue":         { badge: "bg-teal-600 text-white",  value: "text-teal-400"   },
 };
 
 function fmtData(d) {
@@ -62,9 +66,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     const msg = encodeURIComponent(
       `Olá ${os.cliente_nome || ""}! Segue o orçamento da OS #${os.numero}:\n` +
       `Veículo: ${os.veiculo_placa || ""} ${os.veiculo_modelo || ""}\n` +
-      `Serviços: ${fmtValor(os.valor_servicos)}\n` +
-      `Peças: ${fmtValor(os.valor_pecas)}\n` +
-      `Total: ${fmtValor(os.valor_total)}`
+      `Serviços: ${fmtValor(os.valor_servicos)}\nPeças: ${fmtValor(os.valor_pecas)}\nTotal: ${fmtValor(os.valor_total)}`
     );
     const fone = telefone.startsWith("55") ? telefone : `55${telefone}`;
     window.open(`https://wa.me/${fone}?text=${msg}`, "_blank");
@@ -114,8 +116,8 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     win.document.close();
   };
 
-  const colorClass = STATUS_COLOR[os.status] || "bg-gray-500/10 text-gray-400 border-gray-500/30";
-  const primeiroNome = (os.cliente_nome || "—").split(" ")[0];
+  const style = STATUS_STYLE[os.status] || { badge: "bg-gray-600 text-white", value: "text-gray-300" };
+  const veiculoInfo = [os.veiculo_modelo, os.veiculo_placa].filter(Boolean).join(" - ").toUpperCase();
 
   const menuItems = [
     { label: "Editar", icon: Pencil, action: () => { setMenuOpen(false); onEdit?.(); } },
@@ -129,39 +131,19 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   ];
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 hover:border-gray-700 transition-all">
-      {/* Topo: nº + data + status + menu */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className="bg-orange-500/10 text-orange-400 font-bold text-xs px-2.5 py-1 rounded-lg">#{os.numero || "—"}</span>
-          <span className="text-gray-500 text-xs">{fmtData(os.data_entrada)}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Status dropdown */}
-          <div className="relative">
-            <button
-              ref={statusBtnRef}
-              onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
-              className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium border hover:opacity-80 transition-all ${colorClass}`}
-            >
-              {os.status || "—"}
-              <ChevronDown className="w-3 h-3 flex-shrink-0" />
-            </button>
-            {statusOpen && (
-              <div ref={statusRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-36 py-1 z-50">
-                {STATUS_OPTIONS.map(s => (
-                  <button key={s} onClick={() => alterarStatus(s)}
-                    className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}>
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-gray-700 transition-all">
+      {/* Cabeçalho: nº + data + menu */}
+      <div className="flex items-center justify-between px-4 pt-4 pb-2">
+        <span className="text-white font-bold text-lg tracking-wide">#{os.numero || "—"}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-gray-500 text-xs">
+            <Calendar className="w-3.5 h-3.5" />
+            <span>{fmtData(os.data_entrada)}</span>
           </div>
           {/* Menu ações */}
           <div className="relative">
             <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
-              className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
+              className="p-1 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
               <MoreVertical className="w-4 h-4" />
             </button>
             {menuOpen && (
@@ -182,24 +164,57 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         </div>
       </div>
 
-      {/* Corpo do card: grid de informações */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div>
-          <p className="text-gray-500 text-xs mb-0.5">Cliente</p>
-          <p className="text-white font-semibold text-sm truncate">{primeiroNome}</p>
+      {/* Divider */}
+      <div className="h-px bg-gray-800 mx-4" />
+
+      {/* Corpo */}
+      <div className="px-4 py-3 space-y-3">
+        {/* Veículo */}
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-gray-500 text-xs uppercase tracking-wider mb-0.5">Veículo</p>
+            <p className="text-white font-semibold text-sm">{veiculoInfo || "—"}</p>
+          </div>
+          <div className="w-9 h-9 bg-gray-800 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Car className="w-5 h-5 text-gray-400" />
+          </div>
         </div>
+
+        {/* Cliente */}
         <div>
-          <p className="text-gray-500 text-xs mb-0.5">Modelo</p>
-          <p className="text-white text-sm truncate">{os.veiculo_modelo || "—"}</p>
+          <p className="text-gray-500 text-xs uppercase tracking-wider mb-0.5">Cliente</p>
+          <p className="text-white text-sm">{os.cliente_nome || "—"}</p>
         </div>
-        <div>
-          <p className="text-gray-500 text-xs mb-0.5">Placa</p>
-          <p className="text-white text-sm font-mono">{os.veiculo_placa || "—"}</p>
+      </div>
+
+      {/* Rodapé: status + valor */}
+      <div className="flex items-center justify-between px-4 pb-4 pt-1">
+        {/* Status clicável */}
+        <div className="relative">
+          <button
+            ref={statusBtnRef}
+            onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
+            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold hover:opacity-90 transition-all ${style.badge}`}
+          >
+            {os.status || "—"}
+            <ChevronDown className="w-3 h-3 flex-shrink-0" />
+          </button>
+          {statusOpen && (
+            <div ref={statusRef} className="absolute left-0 bottom-full mb-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-40 py-1 z-50">
+              {STATUS_OPTIONS.map(s => (
+                <button key={s} onClick={() => alterarStatus(s)}
+                  className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}>
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-        <div>
-          <p className="text-gray-500 text-xs mb-0.5">Total</p>
-          <p className="text-orange-400 font-bold text-sm">{fmtValor(os.valor_total)}</p>
-        </div>
+
+        {/* Valor */}
+        <span className={`font-bold text-base ${style.value}`}>
+          {fmtValor(os.valor_total)}
+        </span>
       </div>
     </div>
   );
