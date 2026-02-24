@@ -32,10 +32,17 @@ export default function Estoque() {
 
   const salvar = async () => {
     if (!form.descricao) return alert("Informe a descrição.");
+    const dados = {
+      ...form,
+      quantidade: Number(form.quantidade) || 0,
+      estoque_minimo: Number(form.estoque_minimo) || 0,
+      valor_custo: Number(form.valor_custo) || 0,
+      valor_venda: Number(form.valor_venda) || 0,
+    };
     if (editando) {
-      await base44.entities.Estoque.update(editando.id, form);
+      await base44.entities.Estoque.update(editando.id, dados);
     } else {
-      await base44.entities.Estoque.create(form);
+      await base44.entities.Estoque.create(dados);
     }
     setShowForm(false);
     setEditando(null);
