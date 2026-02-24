@@ -92,51 +92,47 @@ export default function OrdemServico() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+      {/* Controles — mesmo padrão do Financeiro */}
+      <div className="flex flex-col gap-2">
+        {/* Linha 1: Nova OS (botão full-width) */}
+        <button
+          onClick={() => { setShowForm(true); setEditando(null); }}
+          className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl text-sm font-semibold transition-all"
+        >
+          <Plus className="w-4 h-4" /> Nova OS
+        </button>
+
+        {/* Linha 2: Filtro de Status */}
+        <div className="flex gap-2">
+          {statusList.map(s => (
+            <button key={s} onClick={() => setFiltroStatus(s)}
+              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroStatus === s ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              {s}
+            </button>
+          ))}
+        </div>
+
+        {/* Linha 3: Filtro de Período */}
+        <div className="flex flex-wrap gap-2">
+          {PERIODOS_OS.map(p => (
+            <button key={p.key} onClick={() => setPeriodo(p.key)}
+              className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all ${filtroPeriodo === p.key ? "bg-orange-500 text-white" : "bg-gray-800 text-gray-400 hover:text-white border border-gray-700"}`}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Linha 4: Busca */}
+        <div className="relative w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
             placeholder="Buscar por OS, cliente, placa..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-orange-500"
+            className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500"
           />
         </div>
-        <button
-          onClick={() => { setShowForm(true); setEditando(null); }}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
-        >
-          <Plus className="w-4 h-4" /> Nova OS
-        </button>
-      </div>
-
-      {/* Filtro de Período */}
-      <div className="flex flex-wrap gap-2">
-        {PERIODOS_OS.map(p => (
-          <button key={p.key} onClick={() => setPeriodo(p.key)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${filtroPeriodo === p.key ? "bg-orange-500 text-white" : "bg-gray-800 text-gray-400 hover:text-white border border-gray-700"}`}>
-            {p.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Status Filter */}
-      <div className="flex gap-2 flex-wrap">
-        {statusList.map(s => (
-          <button
-            key={s}
-            onClick={() => setFiltroStatus(s)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-              filtroStatus === s
-                ? "bg-orange-500 text-white"
-                : "bg-gray-800 text-gray-400 hover:text-white border border-gray-700"
-            }`}
-          >
-            {s}
-          </button>
-        ))}
       </div>
 
       {/* Lista */}
