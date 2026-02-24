@@ -4,7 +4,7 @@ import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp } fro
 
 const defaultForm = () => ({
   codigo: "", descricao: "", categoria: "", marca: "",
-  quantidade: "", estoque_minimo: "", valor_custo: "", valor_venda: "",
+  quantidade: 0, estoque_minimo: 0, valor_custo: 0, valor_venda: 0,
   localizacao: "", fornecedor: "", ncm: "87089990", cfop: "5405", observacoes: ""
 });
 
@@ -32,17 +32,10 @@ export default function Estoque() {
 
   const salvar = async () => {
     if (!form.descricao) return alert("Informe a descrição.");
-    const dados = {
-      ...form,
-      quantidade: Number(form.quantidade) || 0,
-      estoque_minimo: Number(form.estoque_minimo) || 0,
-      valor_custo: Number(form.valor_custo) || 0,
-      valor_venda: Number(form.valor_venda) || 0,
-    };
     if (editando) {
-      await base44.entities.Estoque.update(editando.id, dados);
+      await base44.entities.Estoque.update(editando.id, form);
     } else {
-      await base44.entities.Estoque.create(dados);
+      await base44.entities.Estoque.create(form);
     }
     setShowForm(false);
     setEditando(null);
@@ -266,20 +259,20 @@ export default function Estoque() {
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <F label="Código"><input value={form.codigo} onChange={e => setForm({ ...form, codigo: e.target.value })} className="input-dark" /></F>
-                <F label="Quantidade"><input inputMode="decimal" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: e.target.value })} className="input-dark no-arrows" placeholder="0" /></F>
+                <F label="Quantidade"><input type="number" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: Number(e.target.value) })} className="input-dark" /></F>
                 <F label="Descrição *" className="col-span-2">
                   <input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} className="input-dark" />
                 </F>
                 <F label="Categoria"><input value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} className="input-dark" /></F>
                 <F label="Marca"><input value={form.marca} onChange={e => setForm({ ...form, marca: e.target.value })} className="input-dark" /></F>
                 <F label="Estoque Mínimo">
-                  <input inputMode="decimal" value={form.estoque_minimo} onChange={e => setForm({ ...form, estoque_minimo: e.target.value })} className="input-dark no-arrows" placeholder="0" />
+                  <input type="number" value={form.estoque_minimo} onChange={e => setForm({ ...form, estoque_minimo: Number(e.target.value) })} className="input-dark" />
                 </F>
                 <F label="Valor de Custo (R$)">
-                  <input inputMode="decimal" value={form.valor_custo} onChange={e => setForm({ ...form, valor_custo: e.target.value })} className="input-dark no-arrows" placeholder="0,00" />
+                  <input type="number" step="0.01" value={form.valor_custo} onChange={e => setForm({ ...form, valor_custo: Number(e.target.value) })} className="input-dark" />
                 </F>
                 <F label="Valor de Venda (R$)">
-                  <input inputMode="decimal" value={form.valor_venda} onChange={e => setForm({ ...form, valor_venda: e.target.value })} className="input-dark no-arrows" placeholder="0,00" />
+                  <input type="number" step="0.01" value={form.valor_venda} onChange={e => setForm({ ...form, valor_venda: Number(e.target.value) })} className="input-dark" />
                 </F>
                 <F label="Localização"><input value={form.localizacao} onChange={e => setForm({ ...form, localizacao: e.target.value })} className="input-dark" /></F>
                 <F label="Fornecedor"><input value={form.fornecedor} onChange={e => setForm({ ...form, fornecedor: e.target.value })} className="input-dark" /></F>
@@ -310,7 +303,7 @@ export default function Estoque() {
         </div>
       )}
 
-      <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#f97316; } .input-dark::placeholder { color:#6b7280; } .no-arrows::-webkit-outer-spin-button, .no-arrows::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; } .no-arrows { -moz-appearance: textfield; }`}</style>
+      <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#f97316; } .input-dark::placeholder { color:#6b7280; }`}</style>
     </div>
   );
 }
