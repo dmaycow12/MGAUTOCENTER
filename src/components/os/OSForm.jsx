@@ -268,10 +268,11 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
 
                 <div className="space-y-3">
                   {(form.pecas || []).map((p, i) => (
-                    <div key={i} className="bg-gray-800/50 rounded-xl p-3 space-y-2">
-                      {/* Linha 1: Código + Nome */}
-                      <div className="flex gap-2">
+                    <div key={i} className="bg-gray-800/50 rounded-xl p-3">
+                      {/* Desktop: tudo em uma linha | Mobile: 2 linhas */}
+                      <div className="flex flex-wrap md:flex-nowrap gap-2 items-end">
                         <div className="relative w-24 flex-shrink-0">
+                          <label className="text-xs text-gray-500 mb-1 block">Código</label>
                           <input value={p.codigo || ""} onChange={e => updatePeca(i, "codigo", e.target.value)} onBlur={() => setTimeout(() => setProdutoSugestoes({ idx: null, lista: [] }), 200)} className="input-dark" placeholder="Código" />
                           {produtoSugestoes.idx === i && produtoSugestoes.lista.length > 0 && (
                             <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-64 max-h-48 overflow-y-auto">
@@ -283,7 +284,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                             </div>
                           )}
                         </div>
-                        <div className="relative flex-1">
+                        <div className="relative flex-1 min-w-[140px]">
+                          <label className="text-xs text-gray-500 mb-1 block">Nome do Produto</label>
                           <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} onBlur={() => setTimeout(() => setProdutoSugestoes({ idx: null, lista: [] }), 200)} className="input-dark" placeholder="Nome do produto" />
                           {produtoSugestoes.idx === i && produtoSugestoes.lista.length > 0 && (
                             <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-64 max-h-48 overflow-y-auto">
@@ -295,24 +297,19 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                             </div>
                           )}
                         </div>
-                      </div>
-                      {/* Linha 2: Qtd + Valor Unit + Total */}
-                      <div className="grid grid-cols-3 gap-2">
-                        <div>
+                        <div className="w-16 flex-shrink-0">
                           <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
                           <input type="number" value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" placeholder="Qtd" />
                         </div>
-                        <div>
+                        <div className="w-24 flex-shrink-0">
                           <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
                           <input type="number" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" placeholder="0,00" />
                         </div>
-                        <div>
+                        <div className="w-24 flex-shrink-0">
                           <label className="text-xs text-gray-500 mb-1 block">Total</label>
                           <div className="input-dark text-gray-300 pointer-events-none text-sm">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
                         </div>
-                      </div>
-                      <div className="flex justify-end">
-                        <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex items-center gap-1 text-xs py-1"><Trash2 className="w-3.5 h-3.5" /> Remover</button>
+                        <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2 mb-0.5"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
                   ))}
