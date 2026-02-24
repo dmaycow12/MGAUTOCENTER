@@ -106,13 +106,10 @@ export default function Clientes() {
                 onClick={() => setExpandido(expandido === c.id ? null : c.id)}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 bg-orange-500/10 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-5 h-5 text-orange-400" />
-                  </div>
                   <div className="min-w-0">
-                    <p className="text-white font-medium truncate">{c.nome}</p>
+                    <p className="text-white font-medium text-sm break-words leading-snug">{c.nome}</p>
                     {(c.telefone || c.email) && (
-                      <p className="text-gray-400 text-xs truncate">{c.telefone || c.email}</p>
+                      <p className="text-gray-400 text-xs">{c.telefone || c.email}</p>
                     )}
                   </div>
                 </div>
