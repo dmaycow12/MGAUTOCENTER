@@ -61,21 +61,27 @@ export default function Dashboard() {
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-gray-400 text-sm">Receitas</span>
-            <TrendingUp className="w-4 h-4 text-green-400" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-green-500/10">
+              <TrendingUp className="w-4 h-4 text-green-400" />
+            </div>
           </div>
           <p className="text-2xl font-bold text-green-400">R$ {receitasMes.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-gray-400 text-sm">Despesas</span>
-            <TrendingDown className="w-4 h-4 text-red-400" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-500/10">
+              <TrendingDown className="w-4 h-4 text-red-400" />
+            </div>
           </div>
           <p className="text-2xl font-bold text-red-400">R$ {despesasMes.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-gray-400 text-sm">Saldo</span>
-            <DollarSign className="w-4 h-4 text-orange-400" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-orange-500/10">
+              <DollarSign className="w-4 h-4 text-orange-400" />
+            </div>
           </div>
           <p className={`text-2xl font-bold ${receitasMes - despesasMes >= 0 ? "text-orange-400" : "text-red-400"}`}>
             R$ {(receitasMes - despesasMes).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
