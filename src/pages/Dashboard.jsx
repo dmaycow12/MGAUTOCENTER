@@ -8,6 +8,7 @@ import {
   CheckCircle, Plus, ArrowRight
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import FluxoMes from "../components/dashboard/FluxoMes";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ os: [], clientes: [], estoque: [], financeiro: [] });
