@@ -120,9 +120,6 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   const veiculoInfo = [os.veiculo_modelo, os.veiculo_placa].filter(Boolean).join(" - ").toUpperCase();
 
   const menuItems = [
-    { label: "Editar", icon: Pencil, action: () => { setMenuOpen(false); onEdit?.(); } },
-    { label: "Imprimir", icon: Printer, action: imprimir },
-    { label: "Excluir", icon: Trash2, action: () => { setMenuOpen(false); onDelete?.(); }, danger: true },
     { label: "Enviar orçamento", icon: WhatsAppIcon, action: enviarOrcamento },
     { label: "Chamar no WhatsApp", icon: WhatsAppIcon, action: chamarWhatsApp },
     { label: "Emitir NFe", icon: FileText, action: () => emitirNF("NFe") },
