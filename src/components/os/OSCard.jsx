@@ -138,13 +138,31 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 hover:border-gray-700 transition-all">
       {/* Desktop */}
-      <div className="hidden sm:flex items-center gap-4">
-        <span className="text-white font-bold text-sm w-6 flex-shrink-0 text-center">{os.numero || "—"}</span>
-        <span className="text-white font-bold text-sm flex-shrink-0 whitespace-nowrap w-16">{fmtData(os.data_entrada)}</span>
-        <span className="text-white font-bold text-sm flex-1 whitespace-nowrap">{primeiroNome}</span>
-        <span className="text-white font-bold text-sm flex-1 whitespace-nowrap">{os.veiculo_modelo || "—"}</span>
-        <span className="text-white font-bold text-sm flex-1 whitespace-nowrap">{os.veiculo_placa || "—"}</span>
-        <span className="text-white font-bold text-sm flex-shrink-0 whitespace-nowrap">{fmtValor(os.valor_total)}</span>
+      <div className="hidden sm:flex items-end gap-4">
+        <div className="flex flex-col w-8 flex-shrink-0">
+          <span className="text-gray-500 text-xs mb-1">Nº</span>
+          <span className="text-white font-bold text-sm text-center">{os.numero || "—"}</span>
+        </div>
+        <div className="flex flex-col flex-shrink-0">
+          <span className="text-gray-500 text-xs mb-1">Data</span>
+          <span className="text-white font-bold text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</span>
+        </div>
+        <div className="flex flex-col flex-1">
+          <span className="text-gray-500 text-xs mb-1">Cliente</span>
+          <span className="text-white font-bold text-sm whitespace-nowrap">{primeiroNome}</span>
+        </div>
+        <div className="flex flex-col flex-1">
+          <span className="text-gray-500 text-xs mb-1">Modelo</span>
+          <span className="text-white font-bold text-sm whitespace-nowrap">{os.veiculo_modelo || "—"}</span>
+        </div>
+        <div className="flex flex-col flex-1">
+          <span className="text-gray-500 text-xs mb-1">Placa</span>
+          <span className="text-white font-bold text-sm whitespace-nowrap">{os.veiculo_placa || "—"}</span>
+        </div>
+        <div className="flex flex-col flex-shrink-0">
+          <span className="text-gray-500 text-xs mb-1">Total</span>
+          <span className="text-orange-400 font-bold text-sm whitespace-nowrap">{fmtValor(os.valor_total)}</span>
+        </div>
 
         {/* Status dropdown */}
         <div className="relative flex-shrink-0">
