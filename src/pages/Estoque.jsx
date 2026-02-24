@@ -66,6 +66,24 @@ export default function Estoque() {
   });
 
   const estoqueBaixo = items.filter(i => i.quantidade <= i.estoque_minimo).length;
+  const grupos = ["Todos", ...Array.from(new Set(items.map(i => i.categoria).filter(Boolean)))];
+
+  const aplicarReajuste = async () => {
+    if (!reajusteValor || Number(reajusteValor) <= 0) return alert("Informe um valor válido.");
+    const alvo = reajusteGrupo === "Todos" ? items : items.filter(i => i.categoria === reajusteGrupo);
+    if (!confirm(`Reajustar preço de venda de ${alvo.length} produto(s)?`)) return;
+    setAplicando(true);
+    for (const item of alvo) {
+      const novoPreco = reajusteTipo === "percentual"
+        ? Number(item.valor_venda || 0) * (1 + Number(reajusteValor) / 100)
+        : Number(item.valor_venda || 0) + Number(reajusteValor);
+      await base44.entities.Estoque.update(item.id, { valor_venda: Math.max(0, parseFloat(novoPreco.toFixed(2))) });
+    }
+    setAplicando(false);
+    setShowReajuste(false);
+    setReajusteValor("");
+    load();
+  };
 
   if (loading) return <Loader />;
 
