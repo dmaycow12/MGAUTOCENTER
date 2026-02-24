@@ -16,21 +16,19 @@ function getPeriodoRangeOS(key) {
   const hoje = new Date();
   const ano = hoje.getFullYear();
   const mes = hoje.getMonth();
+  const dia = hoje.getDate();
   const todayStr = hoje.toISOString().split("T")[0];
   const pad = n => String(n).padStart(2, "0");
   if (key === "hoje") return { inicio: todayStr, fim: todayStr };
-  if (key === "ontem") {
-    const d = new Date(hoje); d.setDate(d.getDate() - 1);
-    const s = d.toISOString().split("T")[0];
-    return { inicio: s, fim: s };
+  if (key === "semana") {
+    const primeiro = new Date(hoje);
+    primeiro.setDate(dia - hoje.getDay());
+    const ultimo = new Date(primeiro);
+    ultimo.setDate(primeiro.getDate() + 6);
+    return { inicio: primeiro.toISOString().split("T")[0], fim: ultimo.toISOString().split("T")[0] };
   }
   if (key === "mes_atual") return { inicio: `${ano}-${pad(mes + 1)}-01`, fim: `${ano}-${pad(mes + 1)}-31` };
-  if (key === "mes_passado") {
-    const d = new Date(ano, mes - 1, 1);
-    return { inicio: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-01`, fim: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-31` };
-  }
   if (key === "ano_atual") return { inicio: `${ano}-01-01`, fim: `${ano}-12-31` };
-  if (key === "ano_passado") return { inicio: `${ano - 1}-01-01`, fim: `${ano - 1}-12-31` };
   return null;
 }
 
