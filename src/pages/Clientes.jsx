@@ -105,7 +105,7 @@ export default function Clientes() {
                 className="flex items-start justify-between gap-2 p-4 cursor-pointer select-none"
                 onClick={() => setExpandido(expandido === c.id ? null : c.id)}
               >
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 flex flex-col">
                   <p className="text-white text-xs font-bold leading-snug">{c.nome}</p>
                   {(c.telefone || c.email) && (
                     <p className="text-white text-xs font-bold mt-0.5">{c.telefone || c.email}</p>
