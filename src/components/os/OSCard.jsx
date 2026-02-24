@@ -15,13 +15,9 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
 const STATUS_OPTIONS = ["Aberta", "Concluída", "Cancelada"];
 
 const STATUS_STYLE = {
-  "Em Aberto":  { badge: "bg-yellow-600 text-white",      value: "text-yellow-400" },
-  "Concluído":  { badge: "bg-green-600 text-white",       value: "text-green-400"  },
-  "Cancelado":  { badge: "bg-red-600 text-white",         value: "text-red-400"    },
-  "Em Andamento":     { badge: "bg-blue-600 text-white",  value: "text-blue-400"   },
-  "Aguardando Peças": { badge: "bg-orange-600 text-white",value: "text-orange-400" },
-  "Orçamento":        { badge: "bg-gray-600 text-white",  value: "text-gray-300"   },
-  "Entregue":         { badge: "bg-teal-600 text-white",  value: "text-teal-400"   },
+  "Aberta":     { badge: "bg-yellow-600 text-white",      value: "text-yellow-400" },
+  "Concluída":  { badge: "bg-green-600 text-white",       value: "text-green-400"  },
+  "Cancelada":  { badge: "bg-red-600 text-white",         value: "text-red-400"    },
 };
 
 function fmtData(d) {
