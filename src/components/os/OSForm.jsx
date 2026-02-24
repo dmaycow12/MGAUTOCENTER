@@ -297,20 +297,11 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                         </div>
                       </div>
                       {/* Linha 2: Qtd + Valor Unit + Total + Excluir */}
-                      <div className="flex gap-2 items-end">
-                        <div className="w-16 flex-shrink-0">
-                          <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
-                          <input type="number" value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" placeholder="Qtd" />
-                        </div>
-                        <div className="flex-1">
-                          <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                          <input type="number" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" placeholder="R$ 0,00" />
-                        </div>
-                        <div className="flex-1">
-                          <label className="text-xs text-gray-500 mb-1 block">Total</label>
-                          <div className="input-dark text-orange-400 font-semibold pointer-events-none">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
-                        </div>
-                        <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 p-2 mb-0.5 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
+                      <div className="flex gap-2 items-center">
+                        <input type="number" value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark w-16 flex-shrink-0" placeholder="Qtd" />
+                        <input type="number" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark flex-1" placeholder="R$ 0,00" />
+                        <div className="input-dark flex-1 text-gray-300 pointer-events-none text-sm">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
+                        <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-1"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
                   ))}
@@ -357,20 +348,11 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                         </div>
                       </div>
                       {/* Linha 2: Qtd + Valor Unit + Total + Excluir */}
-                      <div className="flex gap-2 items-end">
-                        <div className="w-16 flex-shrink-0">
-                          <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
-                          <input type="number" value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" placeholder="Qtd" min="1" />
-                        </div>
-                        <div className="flex-1">
-                          <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                          <input type="number" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" placeholder="R$ 0,00" />
-                        </div>
-                        <div className="flex-1">
-                          <label className="text-xs text-gray-500 mb-1 block">Total</label>
-                          <div className="input-dark text-orange-400 font-semibold pointer-events-none">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
-                        </div>
-                        <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 p-2 mb-0.5 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
+                      <div className="flex gap-2 items-center">
+                        <input type="number" value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark w-16 flex-shrink-0" placeholder="Qtd" min="1" />
+                        <input type="number" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark flex-1" placeholder="R$ 0,00" />
+                        <div className="input-dark flex-1 text-gray-300 pointer-events-none text-sm">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
+                        <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-1"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
                   ))}
