@@ -107,7 +107,7 @@ export default function Clientes() {
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="min-w-0">
-                    <p className="text-white font-medium text-sm break-words leading-snug">{c.nome}</p>
+                    <p className="text-white text-sm break-words leading-snug">{c.nome}</p>
                     {(c.telefone || c.email) && (
                       <p className="text-gray-400 text-xs">{c.telefone || c.email}</p>
                     )}
