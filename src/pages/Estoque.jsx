@@ -4,7 +4,7 @@ import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp } fro
 
 const defaultForm = () => ({
   codigo: "", descricao: "", categoria: "", marca: "",
-  quantidade: 0, estoque_minimo: 0, valor_custo: 0, valor_venda: 0,
+  quantidade: "", estoque_minimo: "", valor_custo: "", valor_venda: "",
   localizacao: "", fornecedor: "", ncm: "87089990", cfop: "5405", observacoes: ""
 });
 
