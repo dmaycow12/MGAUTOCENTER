@@ -101,13 +101,21 @@ function StatCard({ icon: Icon, label, value, color, link }) {
     blue: "text-blue-400 bg-blue-500/10",
     red: "text-red-400 bg-red-500/10",
   };
+  const iconColor = {
+    orange: "text-orange-400",
+    green: "text-green-400",
+    blue: "text-blue-400",
+    red: "text-red-400",
+  };
   return (
     <Link to={createPageUrl(link)} className="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition-all block">
-      <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${colors[color]}`}>
-        <Icon className="w-5 h-5" />
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-gray-400 text-sm">{label}</span>
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${colors[color]}`}>
+          <Icon className={`w-4 h-4 ${iconColor[color]}`} />
+        </div>
       </div>
-      <p className="text-2xl font-bold text-white">{value}</p>
-      <p className="text-gray-500 text-sm mt-1">{label}</p>
+      <p className={`text-2xl font-bold ${iconColor[color]}`}>{value}</p>
     </Link>
   );
 }
