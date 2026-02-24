@@ -78,7 +78,7 @@ export default function OrdemServico() {
         o.numero?.toLowerCase().includes(search.toLowerCase()) ||
         o.cliente_nome?.toLowerCase().includes(search.toLowerCase()) ||
         o.veiculo_placa?.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = filtroStatus === "Todos" || o.status === filtroStatus;
+      const matchStatus = filtroStatus === "Tudo" || o.status === filtroStatus;
       const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
       return matchSearch && matchStatus && matchPeriodo;
     })
