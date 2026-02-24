@@ -51,6 +51,9 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Fluxo do Mês */}
+      <FluxoMes financeiro={stats.financeiro} />
+
       {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Link to={createPageUrl("OrdemServico")} className="bg-orange-500 hover:bg-orange-600 rounded-xl p-4 flex items-center gap-3 transition-all">
