@@ -102,16 +102,14 @@ export default function Clientes() {
           {filtrados.map(c => (
             <div key={c.id} className="bg-gray-900 border border-gray-800 rounded-xl">
               <div
-                className="flex items-center justify-between p-4 cursor-pointer select-none"
+                className="flex items-start justify-between gap-2 p-4 cursor-pointer select-none"
                 onClick={() => setExpandido(expandido === c.id ? null : c.id)}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="min-w-0">
-                    <p className="text-white text-sm break-words leading-snug">{c.nome}</p>
-                    {(c.telefone || c.email) && (
-                      <p className="text-gray-400 text-xs">{c.telefone || c.email}</p>
-                    )}
-                  </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm leading-snug">{c.nome}</p>
+                  {(c.telefone || c.email) && (
+                    <p className="text-gray-400 text-xs mt-0.5">{c.telefone || c.email}</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
                   <button onClick={() => editarCliente(c)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
