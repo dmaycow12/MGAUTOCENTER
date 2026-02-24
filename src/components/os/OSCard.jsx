@@ -128,86 +128,23 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   ];
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-gray-700 transition-all">
-      {/* Cabeçalho: nº + data + menu */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <span className="text-white font-bold text-lg tracking-wide">#{os.numero || "—"}</span>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 text-gray-500 text-xs">
-            <Calendar className="w-3.5 h-3.5" />
-            <span>{fmtData(os.data_entrada)}</span>
-          </div>
-          {/* Botões rápidos */}
-          <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Editar">
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-          <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Imprimir">
-            <Printer className="w-3.5 h-3.5" />
-          </button>
-          <button onClick={() => onDelete?.()} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all" title="Excluir">
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-          {/* Menu ações extras */}
-          <div className="relative">
-            <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
-              className="p-1 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
-              <MoreVertical className="w-4 h-4" />
-            </button>
-            {menuOpen && (
-              <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-50">
-                {menuItems.map((item, i) => {
-                  const Icon = item.icon;
-                  return (
-                    <button key={i} onClick={item.action}
-                      className={`w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium hover:bg-gray-700 transition-all ${item.danger ? "text-red-400 hover:text-red-300" : "text-gray-300 hover:text-white"}`}>
-                      <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                      {item.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all">
+      {/* Linha 1: # + status + ícones */}
+      <div className="flex items-center gap-2 px-3 py-2.5">
+        <span className="text-white font-bold text-sm tracking-wide flex-shrink-0">#{os.numero || "—"}</span>
 
-      {/* Divider */}
-      <div className="h-px bg-gray-800 mx-4" />
-
-      {/* Corpo */}
-      <div className="px-4 py-3 space-y-3">
-        {/* Veículo */}
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <p className="text-gray-500 text-xs uppercase tracking-wider mb-0.5">Veículo</p>
-            <p className="text-white font-semibold text-sm">{veiculoInfo || "—"}</p>
-          </div>
-          <div className="w-9 h-9 bg-gray-800 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Car className="w-5 h-5 text-gray-400" />
-          </div>
-        </div>
-
-        {/* Cliente */}
-        <div>
-          <p className="text-gray-500 text-xs uppercase tracking-wider mb-0.5">Cliente</p>
-          <p className="text-white text-sm">{os.cliente_nome || "—"}</p>
-        </div>
-      </div>
-
-      {/* Rodapé: status + valor */}
-      <div className="flex items-center justify-between px-4 pb-4 pt-1">
-        {/* Status clicável */}
+        {/* Status dropdown */}
         <div className="relative">
           <button
             ref={statusBtnRef}
             onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
-            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold hover:opacity-90 transition-all ${style.badge}`}
+            className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-md font-semibold hover:opacity-90 transition-all ${style.badge}`}
           >
             {os.status || "—"}
             <ChevronDown className="w-3 h-3 flex-shrink-0" />
           </button>
           {statusOpen && (
-            <div ref={statusRef} className="absolute left-0 bottom-full mb-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-40 py-1 z-50">
+            <div ref={statusRef} className="absolute left-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-40 py-1 z-50">
               {STATUS_OPTIONS.map(s => (
                 <button key={s} onClick={() => alterarStatus(s)}
                   className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}>
@@ -218,10 +155,64 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
           )}
         </div>
 
+        {/* Espaçador */}
+        <div className="flex-1" />
+
+        {/* Botões */}
+        <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Editar">
+          <Pencil className="w-3.5 h-3.5" />
+        </button>
+        <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Imprimir">
+          <Printer className="w-3.5 h-3.5" />
+        </button>
+        <button onClick={() => onDelete?.()} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all" title="Excluir">
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+        {/* Menu extras */}
+        <div className="relative">
+          <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
+            className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
+            <MoreVertical className="w-3.5 h-3.5" />
+          </button>
+          {menuOpen && (
+            <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-50">
+              {menuItems.map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <button key={i} onClick={item.action}
+                    className="w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-700 transition-all">
+                    <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Grade 2x2: Cliente | Data / Veículo | Valor */}
+      <div className="grid grid-cols-2 border-t border-gray-800">
+        {/* Cliente */}
+        <div className="px-3 py-2.5 border-r border-gray-800">
+          <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Cliente</p>
+          <p className="text-white text-sm font-medium truncate">{os.cliente_nome || "—"}</p>
+        </div>
+        {/* Data */}
+        <div className="px-3 py-2.5">
+          <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Data</p>
+          <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
+        </div>
+        {/* Veículo */}
+        <div className="px-3 py-2.5 border-t border-r border-gray-800">
+          <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Veículo</p>
+          <p className="text-white text-sm font-medium truncate">{veiculoInfo || "—"}</p>
+        </div>
         {/* Valor */}
-        <span className={`font-bold text-base ${style.value}`}>
-          {fmtValor(os.valor_total)}
-        </span>
+        <div className="px-3 py-2.5 border-t border-gray-800">
+          <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Valor</p>
+          <p className={`text-sm font-bold ${style.value}`}>{fmtValor(os.valor_total)}</p>
+        </div>
       </div>
     </div>
   );
