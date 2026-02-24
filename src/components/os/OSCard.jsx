@@ -12,7 +12,7 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
   );
 }
 
-const STATUS_OPTIONS = ["Em Aberto", "Concluído", "Cancelado"];
+const STATUS_OPTIONS = ["Aberta", "Concluída", "Cancelada"];
 
 const STATUS_STYLE = {
   "Em Aberto":  { badge: "bg-yellow-600 text-white",      value: "text-yellow-400" },
