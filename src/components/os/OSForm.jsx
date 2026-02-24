@@ -296,12 +296,23 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                           )}
                         </div>
                       </div>
-                      {/* Linha 2: Qtd + Valor Unit + Total + Excluir */}
-                      <div className="flex gap-2 items-center">
-                        <input type="number" value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark w-16 flex-shrink-0" placeholder="Qtd" />
-                        <input type="number" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark flex-1" placeholder="R$ 0,00" />
-                        <div className="input-dark flex-1 text-gray-300 pointer-events-none text-sm">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
-                        <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-1"><Trash2 className="w-4 h-4" /></button>
+                      {/* Linha 2: Qtd + Valor Unit + Total */}
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
+                          <input type="number" value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" placeholder="Qtd" />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
+                          <input type="number" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" placeholder="0,00" />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">Total</label>
+                          <div className="input-dark text-gray-300 pointer-events-none text-sm">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
+                        </div>
+                      </div>
+                      <div className="flex justify-end">
+                        <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex items-center gap-1 text-xs py-1"><Trash2 className="w-3.5 h-3.5" /> Remover</button>
                       </div>
                     </div>
                   ))}
