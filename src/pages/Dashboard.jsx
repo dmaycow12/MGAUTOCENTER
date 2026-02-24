@@ -54,25 +54,7 @@ export default function Dashboard() {
       {/* Fluxo do Mês */}
       <FluxoMes financeiro={stats.financeiro} />
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Link to={createPageUrl("OrdemServico")} className="bg-orange-500 hover:bg-orange-600 rounded-xl p-4 flex items-center gap-3 transition-all">
-          <Plus className="w-5 h-5 text-white" />
-          <span className="text-white font-medium text-sm">Nova OS</span>
-        </Link>
-        <Link to={createPageUrl("Clientes")} className="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl p-4 flex items-center gap-3 transition-all">
-          <Users className="w-5 h-5 text-orange-400" />
-          <span className="text-white font-medium text-sm">Novo Cliente</span>
-        </Link>
-        <Link to={createPageUrl("Estoque")} className="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl p-4 flex items-center gap-3 transition-all">
-          <Package className="w-5 h-5 text-orange-400" />
-          <span className="text-white font-medium text-sm">Estoque</span>
-        </Link>
-        <Link to={createPageUrl("Financeiro")} className="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl p-4 flex items-center gap-3 transition-all">
-          <DollarSign className="w-5 h-5 text-orange-400" />
-          <span className="text-white font-medium text-sm">Financeiro</span>
-        </Link>
-      </div>
+
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
