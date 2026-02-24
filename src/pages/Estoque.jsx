@@ -133,13 +133,62 @@ export default function Estoque() {
             <AlertTriangle className="w-4 h-4" /> Baixo
           </button>
         </div>
-        <button
-          onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
-        >
-          <Plus className="w-4 h-4" /> Novo Item
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowReajuste(true)}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+          >
+            <TrendingUp className="w-4 h-4" /> Reajustar Preços
+          </button>
+          <button
+            onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
+            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+          >
+            <Plus className="w-4 h-4" /> Novo Item
+          </button>
+        </div>
       </div>
+
+      {/* Modal Reajuste */}
+      {showReajuste && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-gray-800">
+              <h2 className="text-white font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-blue-400" /> Reajustar Preço de Venda</h2>
+              <button onClick={() => setShowReajuste(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              <F label="Grupo / Categoria">
+                <select value={reajusteGrupo} onChange={e => setReajusteGrupo(e.target.value)} className="input-dark">
+                  {grupos.map(g => <option key={g}>{g}</option>)}
+                </select>
+              </F>
+              <F label="Tipo de reajuste">
+                <div className="flex gap-2">
+                  <button onClick={() => setReajusteTipo("percentual")} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${reajusteTipo === "percentual" ? "bg-blue-600 text-white" : "bg-gray-800 border border-gray-700 text-gray-400"}`}>
+                    % Percentual
+                  </button>
+                  <button onClick={() => setReajusteTipo("fixo")} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${reajusteTipo === "fixo" ? "bg-blue-600 text-white" : "bg-gray-800 border border-gray-700 text-gray-400"}`}>
+                    R$ Valor Fixo
+                  </button>
+                </div>
+              </F>
+              <F label={reajusteTipo === "percentual" ? "Percentual de aumento (%)" : "Valor a acrescentar (R$)"}>
+                <input type="number" step="0.01" min="0" value={reajusteValor} onChange={e => setReajusteValor(e.target.value)} className="input-dark" placeholder={reajusteTipo === "percentual" ? "Ex: 10" : "Ex: 5.00"} />
+              </F>
+              <p className="text-xs text-gray-500">
+                Serão reajustados: <span className="text-white font-medium">{reajusteGrupo === "Todos" ? items.length : items.filter(i => i.categoria === reajusteGrupo).length} produto(s)</span>
+              </p>
+            </div>
+            <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
+              <button onClick={() => setShowReajuste(false)} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Cancelar</button>
+              <button onClick={aplicarReajuste} disabled={aplicando} className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all disabled:opacity-50">
+                {aplicando ? "Aplicando..." : "Aplicar Reajuste"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       {filtrados.length === 0 ? (
