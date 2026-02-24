@@ -213,9 +213,15 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
       <div className="sm:hidden space-y-2">
         {/* Linha 1: número + data + ações */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-gray-500 text-xs font-mono w-5 text-center">{os.numero || "—"}</span>
-            <span className="text-gray-400 text-xs">{fmtData(os.data_entrada)}</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <span className="text-gray-500 text-xs">Nº</span>
+              <span className="text-white text-xs font-bold">{os.numero || "—"}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-gray-500 text-xs">Data</span>
+              <span className="text-white text-xs">{fmtData(os.data_entrada)}</span>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {/* Status dropdown */}
