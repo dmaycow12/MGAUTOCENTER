@@ -192,42 +192,85 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
       </div>
 
       {/* Mobile */}
-      <div className="flex sm:hidden items-center gap-3">
-        <span className="text-white font-bold text-sm flex-shrink-0 w-5 text-center">{os.numero || "—"}</span>
-        <div className="flex-1 min-w-0">
-          <p className="text-white font-bold text-sm leading-tight">{primeiroNome}</p>
-          <p className="text-gray-400 text-xs leading-tight">{fmtData(os.data_entrada)}{os.veiculo_modelo ? ` • ${os.veiculo_modelo}` : ""}{os.veiculo_placa ? ` • ${os.veiculo_placa}` : ""}</p>
-        </div>
-        <span className="text-white font-bold text-sm flex-shrink-0 whitespace-nowrap">{fmtValor(os.valor_total)}</span>
-        <div className="relative flex-shrink-0">
-          <button
-            ref={statusBtnRef}
-            onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
-            className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium border whitespace-nowrap hover:opacity-80 transition-all ${colorClass}`}
-          >
-            {os.status || "—"}
-            <ChevronDown className="w-3 h-3 flex-shrink-0" />
-          </button>
-        </div>
-        <div className="relative flex-shrink-0">
-          <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
-            className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800" title="Ações">
-            <ChevronDown className="w-4 h-4" />
-          </button>
-          {menuOpen && (
-            <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-50">
-              {menuItems.map((item, i) => {
-                const Icon = item.icon;
-                return (
-                  <button key={i} onClick={item.action}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium hover:bg-gray-700 transition-all ${item.danger ? "text-red-400 hover:text-red-300" : "text-gray-300 hover:text-white"}`}>
-                    <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                    {item.label}
-                  </button>
-                );
-              })}
+      <div className="sm:hidden space-y-2">
+        {/* Linha 1: número + data + ações */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-500 text-xs font-mono w-5 text-center">{os.numero || "—"}</span>
+            <span className="text-gray-400 text-xs">{fmtData(os.data_entrada)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Status dropdown */}
+            <div className="relative">
+              <button
+                ref={statusBtnRef}
+                onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
+                className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium border hover:opacity-80 transition-all ${colorClass}`}
+              >
+                {os.status || "—"}
+                <ChevronDown className="w-3 h-3 flex-shrink-0" />
+              </button>
+              {statusOpen && (
+                <div ref={statusRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-36 py-1 z-50">
+                  {STATUS_OPTIONS.map(s => (
+                    <button key={s} onClick={() => alterarStatus(s)}
+                      className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${os.status === s ? "text-orange-400" : "text-gray-300"}`}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+            {/* Menu ações */}
+            <div className="relative">
+              <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
+                className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
+                <ChevronDown className="w-4 h-4" />
+              </button>
+              {menuOpen && (
+                <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-50">
+                  {menuItems.map((item, i) => {
+                    const Icon = item.icon;
+                    return (
+                      <button key={i} onClick={item.action}
+                        className={`w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium hover:bg-gray-700 transition-all ${item.danger ? "text-red-400 hover:text-red-300" : "text-gray-300 hover:text-white"}`}>
+                        <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Linha 2: cliente */}
+        <div className="flex items-center gap-2">
+          <span className="text-gray-500 text-xs w-16 flex-shrink-0">Cliente</span>
+          <span className="text-white text-sm font-semibold">{primeiroNome}</span>
+        </div>
+
+        {/* Linha 3: modelo */}
+        {os.veiculo_modelo && (
+          <div className="flex items-center gap-2">
+            <span className="text-gray-500 text-xs w-16 flex-shrink-0">Modelo</span>
+            <span className="text-white text-sm">{os.veiculo_modelo}</span>
+          </div>
+        )}
+
+        {/* Linha 4: placa */}
+        {os.veiculo_placa && (
+          <div className="flex items-center gap-2">
+            <span className="text-gray-500 text-xs w-16 flex-shrink-0">Placa</span>
+            <span className="text-white text-sm font-mono">{os.veiculo_placa}</span>
+          </div>
+        )}
+
+        {/* Linha 5: valor */}
+        <div className="flex items-center gap-2">
+          <span className="text-gray-500 text-xs w-16 flex-shrink-0">Total</span>
+          <span className="text-orange-400 text-sm font-bold">{fmtValor(os.valor_total)}</span>
         </div>
       </div>
     </div>
