@@ -356,24 +356,21 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                           )}
                         </div>
                       </div>
-                      {/* Linha 2: Qtd + Valor Unit */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
+                      {/* Linha 2: Qtd + Valor Unit + Total + Excluir */}
+                      <div className="flex gap-2 items-end">
+                        <div className="w-16 flex-shrink-0">
                           <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
                           <input type="number" value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" placeholder="Qtd" min="1" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
                           <input type="number" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" placeholder="R$ 0,00" />
                         </div>
-                      </div>
-                      {/* Linha 3: Total + Excluir */}
-                      <div className="flex items-center justify-between">
-                        <div>
+                        <div className="flex-1">
                           <label className="text-xs text-gray-500 mb-1 block">Total</label>
                           <div className="input-dark text-orange-400 font-semibold pointer-events-none">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
                         </div>
-                        <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 p-2 mt-4"><Trash2 className="w-4 h-4" /></button>
+                        <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 p-2 mb-0.5 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
                   ))}
