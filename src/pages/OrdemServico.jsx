@@ -36,7 +36,7 @@ export default function OrdemServico() {
   const [ordens, setOrdens] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filtroStatus, setFiltroStatus] = useState("Todos");
+  const [filtroStatus, setFiltroStatus] = useState("Tudo");
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
   const [clientes, setClientes] = useState([]);
