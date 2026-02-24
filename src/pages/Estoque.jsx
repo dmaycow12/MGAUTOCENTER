@@ -16,6 +16,11 @@ export default function Estoque() {
   const [editando, setEditando] = useState(null);
   const [form, setForm] = useState(defaultForm());
   const [filtro, setFiltro] = useState("Todos");
+  const [showReajuste, setShowReajuste] = useState(false);
+  const [reajusteGrupo, setReajusteGrupo] = useState("Todos");
+  const [reajusteTipo, setReajusteTipo] = useState("percentual");
+  const [reajusteValor, setReajusteValor] = useState("");
+  const [aplicando, setAplicando] = useState(false);
 
   useEffect(() => { load(); }, []);
 
