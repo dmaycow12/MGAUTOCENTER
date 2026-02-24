@@ -4,7 +4,7 @@ import { X, Plus, Trash2 } from "lucide-react";
 
 const defaultForm = () => ({
   numero: "",
-  status: "Em Aberto",
+  status: "Orçamento",
   cliente_id: "",
   cliente_nome: "",
   cliente_telefone: "",
