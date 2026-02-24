@@ -9,10 +9,12 @@ import {
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import FluxoMes from "../components/dashboard/FluxoMes";
+import PeriodFilter from "../components/dashboard/PeriodFilter";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ os: [], clientes: [], estoque: [], financeiro: [] });
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState("month");
 
   useEffect(() => {
     const load = async () => {
@@ -51,6 +53,9 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Filtro de Período */}
+      <PeriodFilter period={period} setPeriod={setPeriod} />
+
       {/* Fluxo do Mês */}
       <FluxoMes financeiro={stats.financeiro} />
 
