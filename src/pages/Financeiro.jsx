@@ -27,12 +27,9 @@ export default function Financeiro() {
   const [filtroTipo, setFiltroTipo] = useState("Todos");
   const [filtroStatus, setFiltroStatus] = useState("Todos");
   const [aba, setAba] = useState("lancamentos");
-  const [filtroPeriodo, setFiltroPeriodo] = useState(() => localStorage.getItem("fin_periodo") || "mes_atual");
-
-  const setPeriodo = (key) => {
-    setFiltroPeriodo(key);
-    localStorage.setItem("fin_periodo", key);
-  };
+  const hoje = new Date();
+  const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
+  const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
 
   useEffect(() => { load(); }, []);
 
