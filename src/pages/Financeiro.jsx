@@ -119,6 +119,14 @@ export default function Financeiro() {
         </div>
       </div>
 
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard icon={TrendingUp} label="Receitas Pagas" value={receitaTotal} color="green" />
+        <KpiCard icon={TrendingDown} label="Despesas Pagas" value={despesaTotal} color="red" />
+        <KpiCard icon={DollarSign} label="Saldo" value={saldo} color={saldo >= 0 ? "orange" : "red"} />
+        <KpiCard icon={Filter} label="Pendente/Atrasado" value={pendente + atrasado} color="yellow" />
+      </div>
+
       {aba === "lancamentos" && (
         <>
           {/* Header — grid 5 linhas */}
