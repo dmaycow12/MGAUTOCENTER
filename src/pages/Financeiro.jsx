@@ -26,7 +26,7 @@ export default function Financeiro() {
   const [form, setForm] = useState(defaultForm());
   const [filtroTipo, setFiltroTipo] = useState("Todos");
   const [filtroStatus, setFiltroStatus] = useState("Todos");
-  const [aba, setAba] = useState("lancamentos");
+
   const hoje = new Date();
   const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
   const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
