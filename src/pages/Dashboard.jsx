@@ -127,6 +127,51 @@ function StatCard({ icon: Icon, label, value, color, link }) {
   );
 }
 
+function FluxoCaixa({ items }) {
+  const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  const ano = new Date().getFullYear();
+
+  const dados = meses.map((mes, i) => {
+    const mesNum = String(i + 1).padStart(2, "0");
+    const prefixo = `${ano}-${mesNum}`;
+    const r = items.filter(x => x.tipo === "Receita" && x.status === "Pago" && x.data_pagamento?.startsWith(prefixo)).reduce((a, x) => a + Number(x.valor || 0), 0);
+    const d = items.filter(x => x.tipo === "Despesa" && x.status === "Pago" && x.data_pagamento?.startsWith(prefixo)).reduce((a, x) => a + Number(x.valor || 0), 0);
+    return { mes, receitas: r, despesas: d, saldo: r - d };
+  });
+
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+      <div className="p-4 border-b border-gray-800">
+        <h3 className="text-white font-semibold">Fluxo de Caixa — {ano}</h3>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-xs text-gray-500 border-b border-gray-800">
+              <th className="px-4 py-3 text-left">Mês</th>
+              <th className="px-4 py-3 text-right text-green-400">Receitas</th>
+              <th className="px-4 py-3 text-right text-red-400">Despesas</th>
+              <th className="px-4 py-3 text-right">Saldo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {dados.map((d, i) => (
+              <tr key={i} className="border-b border-gray-800 hover:bg-gray-800/30">
+                <td className="px-4 py-3 text-white">{d.mes}</td>
+                <td className="px-4 py-3 text-right text-green-400">R$ {d.receitas.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+                <td className="px-4 py-3 text-right text-red-400">R$ {d.despesas.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+                <td className={`px-4 py-3 text-right font-bold ${d.saldo >= 0 ? "text-orange-400" : "text-red-400"}`}>
+                  R$ {d.saldo.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function StatusBadge({ status }) {
   const map = {
     "Orçamento": "bg-gray-500/10 text-gray-400",
