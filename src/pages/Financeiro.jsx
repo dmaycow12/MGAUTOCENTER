@@ -207,22 +207,10 @@ export default function Financeiro() {
               </table>
             </div>
           </div>
-        </>
-      )}
+      </>
 
-      {aba === "fluxo" && (
-        <div className="flex flex-col gap-2">
-          {/* Linha 1: Lançamentos / Fluxo de Caixa */}
-          <div className="flex gap-2">
-            {["lancamentos", "fluxo"].map(a => (
-              <button key={a} onClick={() => setAba(a)} className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${aba === a ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
-                {a === "lancamentos" ? "Lançamentos" : "Fluxo de Caixa"}
-              </button>
-            ))}
-          </div>
-          <FluxoCaixa items={items} />
-        </div>
-      )}
+      {/* Fluxo de Caixa */}
+      <FluxoCaixa items={items} />
 
       {/* Modal Form */}
       {showForm && (
