@@ -111,14 +111,20 @@ export default function Financeiro() {
         <KpiCard icon={Filter} label="Pendente/Atrasado" value={pendente + atrasado} color="yellow" />
       </div>
 
-      {/* Filtro de Período */}
-      <div className="flex flex-wrap gap-2">
-        {PERIODOS.map(p => (
-          <button key={p.key} onClick={() => setPeriodo(p.key)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${filtroPeriodo === p.key ? "bg-orange-500 text-white" : "bg-gray-800 text-gray-400 hover:text-white border border-gray-700"}`}>
-            {p.label}
-          </button>
-        ))}
+      {/* Filtro de Período — Mês e Ano */}
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <label className="block text-xs text-gray-400 mb-1">Mês</label>
+          <select value={filtroMes} onChange={e => setFiltroMes(Number(e.target.value))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500">
+            {MESES.map((m, i) => <option key={i+1} value={i+1}>{m}</option>)}
+          </select>
+        </div>
+        <div className="w-32">
+          <label className="block text-xs text-gray-400 mb-1">Ano</label>
+          <select value={filtroAno} onChange={e => setFiltroAno(Number(e.target.value))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500">
+            {[hoje.getFullYear() - 2, hoje.getFullYear() - 1, hoje.getFullYear(), hoje.getFullYear() + 1].map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
       </div>
 
       {aba === "lancamentos" && (
