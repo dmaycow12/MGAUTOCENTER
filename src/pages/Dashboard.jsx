@@ -94,6 +94,9 @@ export default function Dashboard() {
         <StatCard icon={AlertTriangle} label="Estoque Baixo" value={estoqueBaixo.length} color="red" link="Estoque" />
       </div>
 
+      {/* Fluxo de Caixa Anual */}
+      <FluxoCaixa items={stats.financeiro} />
+
     </div>
   );
 }
