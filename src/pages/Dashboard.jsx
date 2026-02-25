@@ -4,10 +4,8 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import {
   ClipboardList, Users, Package, DollarSign,
-  TrendingUp, TrendingDown, AlertTriangle, Clock,
-  CheckCircle, Plus, ArrowRight
+  TrendingUp, TrendingDown, AlertTriangle
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import FluxoMes from "../components/dashboard/FluxoMes";
 
 export default function Dashboard() {
