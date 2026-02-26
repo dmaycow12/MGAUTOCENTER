@@ -317,6 +317,74 @@ export default function Estoque() {
         </div>
       )}
 
+      {/* Modal Importar */}
+      {showImport && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-gray-800">
+              <h2 className="text-white font-semibold flex items-center gap-2">
+                <FileSpreadsheet className="w-4 h-4 text-green-400" /> Importar Produtos via Excel
+              </h2>
+              <button onClick={() => { setShowImport(false); setImportResult(null); }}>
+                <X className="w-5 h-5 text-gray-400 hover:text-white" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-gray-400 text-sm">
+                Selecione um arquivo Excel (.xlsx) ou CSV com os produtos. As colunas reconhecidas são:
+              </p>
+              <div className="bg-gray-800 rounded-lg p-3 text-xs text-gray-400 font-mono space-y-1">
+                <p><span className="text-orange-400">codigo</span>, <span className="text-orange-400">descricao</span>, <span className="text-orange-400">categoria</span>, <span className="text-orange-400">marca</span></p>
+                <p><span className="text-orange-400">quantidade</span>, <span className="text-orange-400">estoque_minimo</span></p>
+                <p><span className="text-orange-400">valor_custo</span>, <span className="text-orange-400">valor_venda</span></p>
+                <p><span className="text-orange-400">localizacao</span>, <span className="text-orange-400">fornecedor</span>, <span className="text-orange-400">ncm</span>, <span className="text-orange-400">cfop</span></p>
+              </div>
+
+              {!importResult && !importando && (
+                <label className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-gray-700 hover:border-green-500 rounded-xl p-8 cursor-pointer transition-all group">
+                  <Upload className="w-8 h-8 text-gray-500 group-hover:text-green-400 transition-all" />
+                  <span className="text-gray-400 text-sm group-hover:text-white transition-all">Clique para selecionar o arquivo</span>
+                  <span className="text-gray-600 text-xs">.xlsx, .xls ou .csv</span>
+                  <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleImport} className="hidden" />
+                </label>
+              )}
+
+              {importando && (
+                <div className="flex flex-col items-center gap-3 py-6">
+                  <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-gray-400 text-sm">Processando arquivo...</p>
+                </div>
+              )}
+
+              {importResult && (
+                <div className="space-y-3">
+                  {importResult.erro ? (
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400 text-sm">{importResult.erro}</div>
+                  ) : (
+                    <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 space-y-2">
+                      <div className="flex items-center gap-2 text-green-400 font-semibold">
+                        <CheckCircle2 className="w-4 h-4" /> Importação concluída!
+                      </div>
+                      <p className="text-sm text-gray-300">✅ <span className="text-green-400 font-bold">{importResult.sucesso}</span> produto(s) importado(s)</p>
+                      {importResult.falha > 0 && <p className="text-sm text-gray-300">⚠️ <span className="text-yellow-400 font-bold">{importResult.falha}</span> linha(s) ignorada(s) (sem descrição)</p>}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => setImportResult(null)}
+                    className="w-full py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all"
+                  >
+                    Importar mais
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end p-5 border-t border-gray-800">
+              <button onClick={() => { setShowImport(false); setImportResult(null); }} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Fechar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal Form */}
       {showForm && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
