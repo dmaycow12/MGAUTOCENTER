@@ -89,6 +89,65 @@ export default function Estoque() {
     load();
   };
 
+  const handleImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImportando(true);
+    setImportResult(null);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+        file_url,
+        json_schema: {
+          type: "object",
+          properties: {
+            items: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  codigo: { type: "string" },
+                  descricao: { type: "string" },
+                  categoria: { type: "string" },
+                  marca: { type: "string" },
+                  quantidade: { type: "number" },
+                  estoque_minimo: { type: "number" },
+                  valor_custo: { type: "number" },
+                  valor_venda: { type: "number" },
+                  localizacao: { type: "string" },
+                  fornecedor: { type: "string" },
+                  ncm: { type: "string" },
+                  cfop: { type: "string" },
+                }
+              }
+            }
+          }
+        }
+      });
+      if (result.status !== "success" || !result.output?.items?.length) {
+        setImportResult({ sucesso: 0, falha: 0, erro: "Nenhum produto encontrado no arquivo." });
+        setImportando(false);
+        return;
+      }
+      const produtos = result.output.items;
+      let sucesso = 0, falha = 0;
+      for (const p of produtos) {
+        if (!p.descricao) { falha++; continue; }
+        await base44.entities.Estoque.create({
+          ...defaultForm(),
+          ...Object.fromEntries(Object.entries(p).map(([k, v]) => [k, v ?? (typeof defaultForm()[k] === "number" ? 0 : "")])),
+        });
+        sucesso++;
+      }
+      setImportResult({ sucesso, falha });
+      load();
+    } catch (err) {
+      setImportResult({ sucesso: 0, falha: 0, erro: err.message });
+    }
+    setImportando(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   if (loading) return <Loader />;
 
   return (
