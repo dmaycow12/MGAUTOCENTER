@@ -204,6 +204,12 @@ export default function Estoque() {
             <TrendingUp className="w-4 h-4" /> Reajustar Preços
           </button>
           <button
+            onClick={() => { setShowImport(true); setImportResult(null); }}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+          >
+            <Upload className="w-4 h-4" /> Importar Excel
+          </button>
+          <button
             onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
             className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
           >
