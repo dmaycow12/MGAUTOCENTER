@@ -273,7 +273,7 @@ export default function Financeiro() {
                           <span className="text-white font-medium">{item.descricao}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">
+                      <td className="px-4 py-3 text-gray-400 text-xs">
                         {item.data_vencimento ? item.data_vencimento.split("-").reverse().join("/").replace(/(\d{4})$/, s => s.slice(2)) : "—"}
                       </td>
                       <td className={`px-4 py-3 text-right font-bold ${item.tipo === "Receita" ? "text-green-400" : "text-red-400"}`}>
