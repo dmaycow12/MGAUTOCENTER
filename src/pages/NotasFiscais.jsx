@@ -517,8 +517,8 @@ export default function NotasFiscais() {
     const matchTipo = filtroTipo === "Todos" ||
       (filtroTipo === "Entrada" && n.tipo === "NFe" && n.status === "Importada") ||
       (filtroTipo === "Saída" && n.status !== "Importada");
-    const matchInicio = !periodoInicio || (n.data_emissao && n.data_emissao >= periodoInicio);
-    const matchFim = !periodoFim || (n.data_emissao && n.data_emissao <= periodoFim);
+    const matchInicio = !periodoRange || (n.data_emissao && n.data_emissao >= periodoRange.inicio);
+    const matchFim = !periodoRange || (n.data_emissao && n.data_emissao <= periodoRange.fim);
     return matchSearch && matchTipo && matchInicio && matchFim;
   });
 
