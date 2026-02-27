@@ -534,46 +534,81 @@ export default function NotasFiscais() {
       )}
 
       {/* Header / Filtros */}
-      <div className="flex flex-col gap-3">
-        {/* Linha 1: busca + botões */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <input type="text" placeholder="Buscar nota..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => setShowImport(true)} className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all">
-              <Upload className="w-4 h-4" /> Importar XML
+      <div className="flex flex-col gap-2">
+        {/* Linha 1: Importar XML + Emitir Nota */}
+        <div className="flex gap-2">
+          <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white py-3 rounded-xl text-sm font-semibold transition-all">
+            <Upload className="w-4 h-4" /> Importar XML
+          </button>
+          <button onClick={() => { setForm(defaultForm()); setAbaForm("cliente"); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl text-sm font-semibold transition-all">
+            <Plus className="w-4 h-4" /> Emitir Nota
+          </button>
+        </div>
+
+        {/* Linha 2: filtro tipo */}
+        <div className="flex gap-2">
+          {["Tudo", "Entrada", "Saída"].map(t => (
+            <button key={t} onClick={() => setFiltroTipo(t === "Tudo" ? "Todos" : t)}
+              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${(t === "Tudo" ? filtroTipo === "Todos" : filtroTipo === t) ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              {t}
             </button>
-            <button onClick={() => { setForm(defaultForm()); setAbaForm("cliente"); setShowForm(true); }} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
-              <Plus className="w-4 h-4" /> Emitir Nota
+          ))}
+        </div>
+
+        {/* Linha 3: filtro período */}
+        <div className="flex gap-2 items-stretch relative">
+          <button onClick={() => { setFiltroPeriodo("mes_atual"); setCustomRange(null); }}
+            className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroPeriodo === "mes_atual" ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+            Mês
+          </button>
+
+          {/* Outro Período */}
+          <div className="relative" ref={outroPeriodoRef}>
+            <button
+              onClick={() => setOutroPeriodoOpen(v => !v)}
+              className={`flex items-center gap-1 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${filtroPeriodo === "outro" ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}
+            >
+              {filtroPeriodo === "outro" && customRange
+                ? `${customRange.inicio.slice(5).replace("-","/")} - ${customRange.fim.slice(5).replace("-","/")}` 
+                : "Outro período"}
+              <ChevronDown className={`w-3 h-3 transition-transform ${outroPeriodoOpen ? "rotate-180" : ""}`} />
             </button>
+
+            {outroPeriodoOpen && (
+              <div className="absolute right-0 top-full mt-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
+                <p className="text-xs text-gray-400 font-medium">Selecione o período</p>
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">De</label>
+                    <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Até</label>
+                    <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setOutroPeriodoOpen(false)}
+                    className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
+                    Cancelar
+                  </button>
+                  <button onClick={aplicarOutroPeriodo}
+                    className="flex-1 py-2 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
+                    Aplicar
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Linha 2: filtros de tipo e período */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-          {/* Tipo */}
-          <div className="flex gap-2">
-            {["Todos", "Entrada", "Saída"].map(t => (
-              <button key={t} onClick={() => setFiltroTipo(t)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${filtroTipo === t ? "bg-orange-500 text-white" : "bg-gray-800 text-gray-400 hover:text-white border border-gray-700"}`}>
-                {t}
-              </button>
-            ))}
-          </div>
-          {/* Período */}
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-500 text-xs whitespace-nowrap">Período:</span>
-            <input type="date" value={periodoInicio} onChange={e => setPeriodoInicio(e.target.value)}
-              className="bg-gray-800 border border-gray-700 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-orange-500" />
-            <span className="text-gray-600 text-xs">até</span>
-            <input type="date" value={periodoFim} onChange={e => setPeriodoFim(e.target.value)}
-              className="bg-gray-800 border border-gray-700 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-orange-500" />
-            {(periodoInicio || periodoFim) && (
-              <button onClick={() => { setPeriodoInicio(""); setPeriodoFim(""); }} className="text-gray-500 hover:text-white text-xs">✕</button>
-            )}
-          </div>
+        {/* Linha 4: busca */}
+        <div className="relative w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <input type="text" placeholder="Buscar nota..." value={search} onChange={e => setSearch(e.target.value)}
+            className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500" />
         </div>
       </div>
 
