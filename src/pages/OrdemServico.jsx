@@ -42,10 +42,23 @@ export default function OrdemServico() {
   const [clientes, setClientes] = useState([]);
   const [veiculos, setVeiculos] = useState([]);
   const [filtroPeriodo, setFiltroPeriodo] = useState(() => localStorage.getItem("os_periodo") || "mes_atual");
+  const [outroPeriodoOpen, setOutroPeriodoOpen] = useState(false);
+  const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
+  const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
+  const [customRange, setCustomRange] = useState(null);
+  const outroPeriodoRef = useRef(null);
 
   const setPeriodo = (key) => {
     setFiltroPeriodo(key);
+    setCustomRange(null);
     localStorage.setItem("os_periodo", key);
+  };
+
+  const aplicarOutroPeriodo = () => {
+    if (!outroPeriodoInicio || !outroPeriodoFim) return;
+    setCustomRange({ inicio: outroPeriodoInicio, fim: outroPeriodoFim });
+    setFiltroPeriodo("outro");
+    setOutroPeriodoOpen(false);
   };
 
   const statusList = ["Aberta", "Concluída", "Cancelada", "Tudo"];
