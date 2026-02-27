@@ -149,19 +149,50 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [estoqueExistente, setEstoqueExistente] = useState([]);
+  const [fornecedorJaCadastrado, setFornecedorJaCadastrado] = useState(false);
+  const [cadastrarFornecedor, setCadastrarFornecedor] = useState(false);
+  const [nomeFornecedor, setNomeFornecedor] = useState("");
+  const [erroDuplicada, setErroDuplicada] = useState("");
 
   useEffect(() => {
     const parsed = parsearXML(xmlTexto);
     setDados(parsed);
     setItens(parsed.itens);
     setBoletos(parsed.boletos || []);
+    setNomeFornecedor(parsed.emitente || "");
     setFinanceiro(f => ({
       ...f,
       forma_pagamento: parsed.forma_pagamento_detectada || "PIX",
       fornecedor: parsed.emitente,
       data_vencimento: parsed.boletos?.length > 0 ? (parsed.boletos[0].dVenc || parsed.dataEmissao) : parsed.dataEmissao,
     }));
-    base44.entities.Estoque.list("-created_date", 500).then(setEstoqueExistente);
+
+    // Verificar NF duplicada por chave de acesso
+    Promise.all([
+      base44.entities.Estoque.list("-created_date", 500),
+      base44.entities.NotaFiscal.list("-created_date", 500),
+      base44.entities.Cliente.list("-created_date", 500),
+    ]).then(([est, nfs, clientes]) => {
+      setEstoqueExistente(est);
+
+      // Checa chave duplicada
+      const chave = parsed.chave;
+      if (chave) {
+        const dup = nfs.find(n => n.chave_acesso === chave);
+        if (dup) setErroDuplicada(`Esta nota fiscal já foi importada (NF ${dup.numero} em ${dup.data_emissao || "—"}).`);
+      }
+
+      // Verifica se fornecedor já está cadastrado pelo CNPJ
+      const cnpjLimpo = parsed.cnpjEmit?.replace(/\D/g, "");
+      if (cnpjLimpo) {
+        const jaExiste = clientes.find(c => c.cpf_cnpj?.replace(/\D/g, "") === cnpjLimpo);
+        setFornecedorJaCadastrado(!!jaExiste);
+        if (!jaExiste) setCadastrarFornecedor(true);
+      } else {
+        setFornecedorJaCadastrado(false);
+        setCadastrarFornecedor(true);
+      }
+    });
   }, []);
 
   const abasConfig = [
