@@ -244,43 +244,45 @@ export default function Financeiro() {
             </div>
           </div>
 
-          {/* Lista de lançamentos */}
+          {/* Table */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-            {filtrados.length === 0 ? (
-              <p className="px-4 py-12 text-center text-gray-500">Nenhum lançamento encontrado</p>
-            ) : (
-              <div className="divide-y divide-gray-800">
-                {filtrados.map(item => (
-                  <div key={item.id}
-                    className="flex items-center gap-2 px-3 py-3 hover:bg-gray-800/50 transition-all cursor-pointer select-none"
-                    onDoubleClick={() => alterarStatus(item, item.status === "Pago" ? "Pendente" : "Pago")}
-                  >
-                    {/* Descrição + vencimento */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-xs font-medium leading-tight truncate">{item.descricao}</p>
-                      {item.data_vencimento && (
-                        <p className="text-gray-500 text-[10px] mt-0.5">
-                          {item.data_vencimento.split("-").reverse().join("/").replace(/(\d{4})$/, s => s.slice(2))}
-                        </p>
-                      )}
-                    </div>
-                    {/* Valor */}
-                    <span className={`text-xs font-bold whitespace-nowrap flex-shrink-0 ${item.tipo === "Receita" ? "text-green-400" : "text-red-400"}`}>
-                      {Number(item.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                    </span>
-                    {/* Status */}
-                    <div className="flex-shrink-0">
-                      <StatusDropdown item={item} onAlterarStatus={alterarStatus} />
-                    </div>
-                    {/* Ações */}
-                    <div className="flex items-center gap-0.5 flex-shrink-0">
-                      <button onClick={e => { e.stopPropagation(); setForm({ ...defaultForm(), ...item }); setEditando(item); setShowForm(true); }} className="p-1 text-gray-500 hover:text-blue-400 transition-all"><Edit className="w-3 h-3" /></button>
-                      <button onClick={e => { e.stopPropagation(); excluir(item.id); }} className="p-1 text-gray-500 hover:text-red-400 transition-all"><Trash2 className="w-3 h-3" /></button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
+                    <th className="px-4 py-3">Descrição</th>
+                    <th className="px-4 py-3 hidden sm:table-cell">Vencimento</th>
+                    <th className="px-4 py-3 text-right">Valor</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 text-center">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtrados.length === 0 ? (
+                    <tr><td colSpan={5} className="px-4 py-12 text-center text-gray-500">Nenhum lançamento encontrado</td></tr>
+                  ) : filtrados.map(item => (
+                    <tr key={item.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-all">
+                      <td className="px-4 py-3 text-white font-medium">{item.descricao}</td>
+                      <td className="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">
+                        {item.data_vencimento ? item.data_vencimento.split("-").reverse().join("/").replace(/(\d{4})$/, s => s.slice(2)) : "—"}
+                      </td>
+                      <td className={`px-4 py-3 text-right font-bold ${item.tipo === "Receita" ? "text-green-400" : "text-red-400"}`}>
+                        {Number(item.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusDropdown item={item} onAlterarStatus={alterarStatus} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-1">
+                          <button onClick={() => { setForm({ ...defaultForm(), ...item }); setEditando(item); setShowForm(true); }} className="p-1 text-gray-500 hover:text-blue-400 transition-all"><Edit className="w-3 h-3" /></button>
+                          <button onClick={() => excluir(item.id)} className="p-1 text-gray-500 hover:text-red-400 transition-all"><Trash2 className="w-3 h-3" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
       </>
 
@@ -369,18 +371,18 @@ function StatusDropdown({ item, onAlterarStatus }) {
   return (
     <div ref={ref} className="relative inline-block">
       <button
-        onClick={e => { e.stopPropagation(); setOpen(v => !v); }}
-        className={`flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium border cursor-pointer hover:opacity-80 transition-all ${cores[item.status] || ""}`}
+        onClick={() => setOpen(v => !v)}
+        className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium border cursor-pointer hover:opacity-80 transition-all ${cores[item.status] || ""}`}
       >
         {item.status}
-        <ChevronDown className="w-2.5 h-2.5" />
+        <ChevronDown className="w-3 h-3" />
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-50 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-24 py-1">
+        <div className="absolute left-0 top-full mt-1 z-50 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-28 py-1">
           {opcoes.map(s => (
             <button
               key={s}
-              onClick={e => { e.stopPropagation(); onAlterarStatus(item, s); setOpen(false); }}
+              onClick={() => { onAlterarStatus(item, s); setOpen(false); }}
               className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${item.status === s ? "text-orange-400" : "text-gray-300"}`}
             >
               {s}
