@@ -83,7 +83,7 @@ export default function OrdemServico() {
     load();
   };
 
-  const periodoRange = getPeriodoRangeOS(filtroPeriodo);
+  const periodoRange = filtroPeriodo === "outro" ? customRange : getPeriodoRangeOS(filtroPeriodo);
 
   const filtradas = ordens
     .filter(o => {
