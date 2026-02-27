@@ -373,11 +373,11 @@ function StatusDropdown({ item, onAlterarStatus }) {
   return (
     <div ref={ref} className="relative inline-block">
       <button
-        onClick={() => setOpen(v => !v)}
-        className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium border cursor-pointer hover:opacity-80 transition-all ${cores[item.status] || ""}`}
+        onClick={e => { e.stopPropagation(); setOpen(v => !v); }}
+        className={`flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium border cursor-pointer hover:opacity-80 transition-all ${cores[item.status] || ""}`}
       >
         {item.status}
-        <ChevronDown className="w-3 h-3" />
+        <ChevronDown className="w-2.5 h-2.5" />
       </button>
       {open && (
         <div className="absolute left-0 top-full mt-1 z-50 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-28 py-1">
