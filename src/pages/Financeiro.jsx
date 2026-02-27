@@ -252,7 +252,6 @@ export default function Financeiro() {
                   <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
                     <th className="px-4 py-3">Descrição</th>
                     <th className="px-4 py-3 hidden md:table-cell">Categoria</th>
-                    <th className="px-4 py-3">Tipo</th>
                     <th className="px-4 py-3 hidden sm:table-cell">Vencimento</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3 text-right">Valor</th>
