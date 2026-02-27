@@ -94,7 +94,9 @@ export default function Financeiro() {
     load();
   };
 
-  const periodoRange = getPeriodoRange(filtroMes, filtroAno);
+  const periodoRange = usandoOutroPeriodo && customRange
+    ? customRange
+    : getPeriodoRange(filtroMes, filtroAno);
 
   const itemsNoPeriodo = items.filter(i => {
     const ref = i.data_vencimento || i.data_pagamento || "";
