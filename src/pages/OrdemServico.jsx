@@ -5,11 +5,11 @@ import OSForm from "@/components/os/OSForm";
 import OSCard from "@/components/os/OSCard";
 
 const PERIODOS_OS = [
+  { key: "tudo", label: "Tudo" },
   { key: "hoje", label: "Hoje" },
   { key: "semana", label: "Semana" },
   { key: "mes_atual", label: "Mês" },
   { key: "ano_atual", label: "Ano" },
-  { key: "tudo", label: "Tudo" },
 ];
 
 function getPeriodoRangeOS(key) {
