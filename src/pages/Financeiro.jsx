@@ -358,24 +358,14 @@ export default function Financeiro() {
 
 function StatusDropdown({ item, onAlterarStatus }) {
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
   const ref = useRef(null);
-  const btnRef = useRef(null);
   const opcoes = ["Pendente", "Atrasado", "Pago"];
 
   useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target) && btnRef.current && !btnRef.current.contains(e.target)) setOpen(false); };
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-
-  const handleOpen = () => {
-    if (!open && btnRef.current) {
-      const rect = btnRef.current.getBoundingClientRect();
-      setPos({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX });
-    }
-    setOpen(!open);
-  };
 
   const cores = {
     "Pendente": "text-yellow-400 bg-yellow-500/10 border-yellow-500/30",
@@ -385,21 +375,16 @@ function StatusDropdown({ item, onAlterarStatus }) {
   };
 
   return (
-    <>
+    <div ref={ref} className="relative inline-block">
       <button
-        ref={btnRef}
-        onClick={handleOpen}
+        onClick={() => setOpen(v => !v)}
         className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium border cursor-pointer hover:opacity-80 transition-all ${cores[item.status] || ""}`}
       >
         {item.status}
         <ChevronDown className="w-3 h-3" />
       </button>
       {open && (
-        <div
-          ref={ref}
-          style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999 }}
-          className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-28 py-1"
-        >
+        <div className="absolute left-0 top-full mt-1 z-50 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-28 py-1">
           {opcoes.map(s => (
             <button
               key={s}
@@ -411,7 +396,7 @@ function StatusDropdown({ item, onAlterarStatus }) {
           ))}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
