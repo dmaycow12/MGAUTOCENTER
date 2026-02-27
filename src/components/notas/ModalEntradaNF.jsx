@@ -202,9 +202,31 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
   ];
 
   const finalizarImportacao = async () => {
+    if (erroDuplicada) return setErro(erroDuplicada);
     setSalvando(true);
     setErro("");
     try {
+      // 0. Cadastrar fornecedor se necessário
+      if (cadastrarFornecedor && !fornecedorJaCadastrado && nomeFornecedor) {
+        const clientesAtuais = await base44.entities.Cliente.list("-created_date", 500);
+        const cnpjLimpo = dados.cnpjEmit?.replace(/\D/g, "");
+        const jaExiste = cnpjLimpo && clientesAtuais.find(c => c.cpf_cnpj?.replace(/\D/g, "") === cnpjLimpo);
+        if (!jaExiste) {
+          await base44.entities.Cliente.create({
+            nome: nomeFornecedor,
+            tipo: "Pessoa Jurídica",
+            cpf_cnpj: dados.cnpjEmit || "",
+            endereco: dados.emit_logr || "",
+            numero: dados.emit_nro || "",
+            bairro: dados.emit_bairro || "",
+            cidade: dados.emit_mun || "",
+            estado: dados.emit_uf || "",
+            cep: dados.emit_cep || "",
+            observacoes: "Fornecedor cadastrado automaticamente via importação de NF",
+          });
+        }
+      }
+
       // 1. Salvar nota fiscal — salvar lista de itens como JSON em xml_content para reversão futura
       const itensParaSalvar = itens.map(i => ({
         descricao: i.descricao,
