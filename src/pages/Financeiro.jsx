@@ -30,6 +30,24 @@ export default function Financeiro() {
   const hoje = new Date();
   const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
   const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
+  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(false);
+  const [outroPeriodoOpen, setOutroPeriodoOpen] = useState(false);
+  const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
+  const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
+  const [customRange, setCustomRange] = useState(null);
+  const outroPeriodoRef = useRef(null);
+
+  const aplicarOutroPeriodo = () => {
+    if (!outroPeriodoInicio || !outroPeriodoFim) return;
+    setCustomRange({ inicio: outroPeriodoInicio, fim: outroPeriodoFim });
+    setUsandoOutroPeriodo(true);
+    setOutroPeriodoOpen(false);
+  };
+
+  const voltarParaMes = () => {
+    setUsandoOutroPeriodo(false);
+    setCustomRange(null);
+  };
 
   useEffect(() => { load(); }, []);
 
