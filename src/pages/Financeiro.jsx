@@ -261,7 +261,9 @@ export default function Financeiro() {
                   {filtrados.length === 0 ? (
                     <tr><td colSpan={5} className="px-4 py-12 text-center text-gray-500">Nenhum lançamento encontrado</td></tr>
                   ) : filtrados.map(item => (
-                    <tr key={item.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-all">
+                    <tr key={item.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-all cursor-pointer select-none"
+                      onDoubleClick={() => alterarStatus(item, item.status === "Pago" ? "Pendente" : "Pago")}
+                    >
                       <td className="px-4 py-3 text-white font-medium">{item.descricao}</td>
                       <td className="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">
                         {item.data_vencimento ? item.data_vencimento.split("-").reverse().join("/").replace(/(\d{4})$/, s => s.slice(2)) : "—"}
@@ -274,8 +276,8 @@ export default function Financeiro() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-1">
-                          <button onClick={() => { setForm({ ...defaultForm(), ...item }); setEditando(item); setShowForm(true); }} className="p-1 text-gray-500 hover:text-blue-400 transition-all"><Edit className="w-3 h-3" /></button>
-                          <button onClick={() => excluir(item.id)} className="p-1 text-gray-500 hover:text-red-400 transition-all"><Trash2 className="w-3 h-3" /></button>
+                          <button onClick={e => { e.stopPropagation(); setForm({ ...defaultForm(), ...item }); setEditando(item); setShowForm(true); }} className="p-1 text-gray-500 hover:text-blue-400 transition-all"><Edit className="w-3 h-3" /></button>
+                          <button onClick={e => { e.stopPropagation(); excluir(item.id); }} className="p-1 text-gray-500 hover:text-red-400 transition-all"><Trash2 className="w-3 h-3" /></button>
                         </div>
                       </td>
                     </tr>
