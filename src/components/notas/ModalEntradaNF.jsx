@@ -376,6 +376,52 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
                   <p className="text-xs text-gray-300 font-mono break-all">{dados.chave}</p>
                 </div>
               )}
+              {/* Alerta de NF duplicada */}
+              {erroDuplicada && (
+                <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  {erroDuplicada}
+                </p>
+              )}
+
+              {/* Cadastro de Fornecedor */}
+              {!fornecedorJaCadastrado ? (
+                <div className="bg-orange-500/5 border border-orange-500/20 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-orange-400 font-medium flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      Fornecedor não encontrado no cadastro
+                    </p>
+                    <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                      <input type="checkbox" checked={cadastrarFornecedor} onChange={e => setCadastrarFornecedor(e.target.checked)} className="accent-orange-500" />
+                      Cadastrar agora
+                    </label>
+                  </div>
+                  {cadastrarFornecedor && (
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Nome do Fornecedor *</label>
+                      <input
+                        value={nomeFornecedor}
+                        onChange={e => { setNomeFornecedor(e.target.value); setFinanceiro(f => ({ ...f, fornecedor: e.target.value })); }}
+                        className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
+                        placeholder="Nome / Razão Social do fornecedor"
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Nome do Fornecedor</label>
+                  <input
+                    value={nomeFornecedor}
+                    onChange={e => { setNomeFornecedor(e.target.value); setFinanceiro(f => ({ ...f, fornecedor: e.target.value })); }}
+                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
+                    placeholder="Nome do fornecedor"
+                  />
+                  <p className="text-xs text-green-400 mt-1">✓ Fornecedor já cadastrado</p>
+                </div>
+              )}
+
               <p className="text-xs text-gray-500 bg-blue-500/5 border border-blue-500/20 rounded-xl p-3 flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
                 Confira os dados acima e avance para configurar a entrada no estoque e o lançamento financeiro.
