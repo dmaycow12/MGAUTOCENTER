@@ -305,10 +305,9 @@ export default function Financeiro() {
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <F label="Tipo">
-                  <select value={form.tipo} onChange={e => setForm({ ...form, tipo: e.target.value })} className="input-dark">
-                    <option>Receita</option>
-                    <option>Despesa</option>
-                  </select>
+                  <div className={`input-dark flex items-center ${form.tipo === "Receita" ? "text-green-400" : "text-red-400"}`}>
+                    {form.tipo}
+                  </div>
                 </F>
                 <F label="Status">
                   <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} className="input-dark">
