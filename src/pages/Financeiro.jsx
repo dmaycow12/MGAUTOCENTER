@@ -380,11 +380,11 @@ function StatusDropdown({ item, onAlterarStatus }) {
         <ChevronDown className="w-2.5 h-2.5" />
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-50 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-28 py-1">
+        <div className="absolute left-0 top-full mt-1 z-50 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-24 py-1">
           {opcoes.map(s => (
             <button
               key={s}
-              onClick={() => { onAlterarStatus(item, s); setOpen(false); }}
+              onClick={e => { e.stopPropagation(); onAlterarStatus(item, s); setOpen(false); }}
               className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${item.status === s ? "text-orange-400" : "text-gray-300"}`}
             >
               {s}
