@@ -304,7 +304,7 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
           await base44.entities.Financeiro.create({
             tipo: "Despesa",
             categoria: "Compra de Peças / Materiais",
-            descricao: `NF ${dados.numero} — ${dados.emitente}${bol.nDup ? ` (Bol. ${bol.nDup})` : ""}`,
+            descricao: `NF ${dados.numero} — ${nomeFornecedor || dados.emitente}${bol.nDup ? ` (Bol. ${bol.nDup})` : ""}`,
             valor: bol.vDup,
             forma_pagamento: "Boleto",
             data_vencimento: bol.dVenc || financeiro.data_vencimento,
@@ -317,7 +317,7 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
         await base44.entities.Financeiro.create({
           tipo: "Despesa",
           categoria: "Compra de Peças / Materiais",
-          descricao: `NF ${dados.numero} — ${dados.emitente}`,
+          descricao: `NF ${dados.numero} — ${nomeFornecedor || dados.emitente}`,
           valor: dados.valor,
           forma_pagamento: financeiro.forma_pagamento,
           data_vencimento: financeiro.data_vencimento,
