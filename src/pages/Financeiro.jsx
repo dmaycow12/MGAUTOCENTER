@@ -263,13 +263,13 @@ export default function Financeiro() {
                     <tr><td colSpan={7} className="px-4 py-12 text-center text-gray-500">Nenhum lançamento encontrado</td></tr>
                   ) : filtrados.map(item => (
                     <tr key={item.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-all">
-                      <td className="px-4 py-3 text-white font-medium">{item.descricao}</td>
-                      <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{item.categoria || "—"}</td>
-                      <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-1 rounded-full ${item.tipo === "Receita" ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
+                      <td className="px-4 py-3 text-white font-medium">
+                        <div>{item.descricao}</div>
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${item.tipo === "Receita" ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
                           {item.tipo}
                         </span>
                       </td>
+                      <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{item.categoria || "—"}</td>
                       <td className="px-4 py-3 text-gray-400 hidden sm:table-cell">{item.data_vencimento || "—"}</td>
                       <td className="px-4 py-3">
                         <StatusDropdown item={item} onAlterarStatus={alterarStatus} />
