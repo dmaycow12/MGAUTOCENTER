@@ -32,6 +32,14 @@ export default function Clientes() {
 
   const salvar = async () => {
     if (!form.nome) return alert("Informe o nome do cliente.");
+    // Validar CPF/CNPJ duplicado
+    if (form.cpf_cnpj) {
+      const cpfLimpo = form.cpf_cnpj.replace(/\D/g, "");
+      const duplicado = clientes.find(c =>
+        c.cpf_cnpj?.replace(/\D/g, "") === cpfLimpo && c.id !== editando?.id
+      );
+      if (duplicado) return alert(`Já existe um cadastro com este CPF/CNPJ: ${duplicado.nome}`);
+    }
     if (editando) {
       await base44.entities.Cliente.update(editando.id, form);
     } else {
@@ -84,7 +92,7 @@ export default function Clientes() {
           onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
           className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
         >
-          <Plus className="w-4 h-4" /> Novo Cliente
+          <Plus className="w-4 h-4" /> Novo Cadastro
         </button>
       </div>
 
@@ -92,9 +100,9 @@ export default function Clientes() {
       {filtrados.length === 0 ? (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
           <User className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-          <p className="text-gray-400">Nenhum cliente encontrado</p>
+          <p className="text-gray-400">Nenhum cadastro encontrado</p>
           <button onClick={() => setShowForm(true)} className="mt-4 text-orange-400 text-sm hover:text-orange-300">
-            Cadastrar primeiro cliente
+            Criar primeiro cadastro
           </button>
         </div>
       ) : (
@@ -159,7 +167,7 @@ export default function Clientes() {
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
           <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-5 border-b border-gray-800">
-              <h2 className="text-white font-semibold">{editando ? "Editar Cliente" : "Novo Cliente"}</h2>
+              <h2 className="text-white font-semibold">{editando ? "Editar Cadastro" : "Novo Cadastro"}</h2>
               <button onClick={() => { setShowForm(false); setEditando(null); }} className="text-gray-500 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
@@ -218,7 +226,7 @@ export default function Clientes() {
                 Cancelar
               </button>
               <button onClick={salvar} className="px-4 py-2 text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
-                {editando ? "Salvar Alterações" : "Cadastrar Cliente"}
+                {editando ? "Salvar Alterações" : "Cadastrar"}
               </button>
             </div>
           </div>

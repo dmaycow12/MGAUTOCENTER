@@ -21,7 +21,7 @@ import {
 const navItems = [
   { name: "Dashboard", page: "Dashboard", icon: LayoutDashboard },
   { name: "Ordens de Serviço", page: "OrdemServico", icon: ClipboardList },
-  { name: "Clientes", page: "Clientes", icon: Users },
+  { name: "Cadastro", page: "Clientes", icon: Users },
   { name: "Produtos", page: "Estoque", icon: Package },
   { name: "Serviços", page: "Servicos", icon: Wrench },
   { name: "Notas Fiscais", page: "NotasFiscais", icon: FileText },
