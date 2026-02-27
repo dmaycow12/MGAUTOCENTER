@@ -260,7 +260,7 @@ export default function Financeiro() {
                 </thead>
                 <tbody>
                   {filtrados.length === 0 ? (
-                    <tr><td colSpan={7} className="px-4 py-12 text-center text-gray-500">Nenhum lançamento encontrado</td></tr>
+                    <tr><td colSpan={6} className="px-4 py-12 text-center text-gray-500">Nenhum lançamento encontrado</td></tr>
                   ) : filtrados.map(item => (
                     <tr key={item.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-all">
                       <td className="px-4 py-3 text-white font-medium">
