@@ -255,7 +255,7 @@ export default function Financeiro() {
                     <th className="px-4 py-3 hidden sm:table-cell">Vencimento</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3 text-right">Valor</th>
-                    <th className="px-4 py-3 text-right">Ações</th>
+                    <th className="px-4 py-3 text-center">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -263,21 +263,24 @@ export default function Financeiro() {
                     <tr><td colSpan={6} className="px-4 py-12 text-center text-gray-500">Nenhum lançamento encontrado</td></tr>
                   ) : filtrados.map(item => (
                     <tr key={item.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-all">
-                      <td className="px-4 py-3 text-white font-medium text-sm">{item.descricao}</td>
-                      <td className="px-4 py-3 text-gray-400 text-xs hidden md:table-cell">{item.categoria || "—"}</td>
-                      <td className="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">
-                        {item.data_vencimento ? item.data_vencimento.split("-").reverse().join("/").replace(/^(\d{2})\/(\d{2})\/(\d{4})$/, "$1/$2/$3").slice(0,8) : "—"}
+                      <td className="px-4 py-3 text-white font-medium">
+                        <div>{item.descricao}</div>
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${item.tipo === "Receita" ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
+                          {item.tipo}
+                        </span>
                       </td>
+                      <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{item.categoria || "—"}</td>
+                      <td className="px-4 py-3 text-gray-400 hidden sm:table-cell">{item.data_vencimento || "—"}</td>
                       <td className="px-4 py-3">
                         <StatusDropdown item={item} onAlterarStatus={alterarStatus} />
                       </td>
-                      <td className={`px-4 py-3 text-right font-bold text-sm ${item.tipo === "Receita" ? "text-green-400" : "text-red-400"}`}>
-                        {Number(item.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      <td className={`px-4 py-3 text-right font-bold ${item.tipo === "Receita" ? "text-green-400" : "text-red-400"}`}>
+                        R$ {Number(item.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => { setForm({ ...defaultForm(), ...item }); setEditando(item); setShowForm(true); }} className="p-1.5 text-gray-500 hover:text-blue-400 transition-all rounded-lg hover:bg-gray-800"><Edit className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => excluir(item.id)} className="p-1.5 text-gray-500 hover:text-red-400 transition-all rounded-lg hover:bg-gray-800"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <div className="flex items-center justify-center gap-1">
+                          <button onClick={() => { setForm({ ...defaultForm(), ...item }); setEditando(item); setShowForm(true); }} className="p-1 text-gray-500 hover:text-blue-400 transition-all"><Edit className="w-3 h-3" /></button>
+                          <button onClick={() => excluir(item.id)} className="p-1 text-gray-500 hover:text-red-400 transition-all"><Trash2 className="w-3 h-3" /></button>
                         </div>
                       </td>
                     </tr>
