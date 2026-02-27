@@ -50,8 +50,28 @@ export default function NotasFiscais() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("Todos"); // Todos | Entrada | Saída
-  const [periodoInicio, setPeriodoInicio] = useState("");
-  const [periodoFim, setPeriodoFim] = useState("");
+
+  // Período — Mês atual por padrão
+  const hoje = new Date();
+  const anoAtual = hoje.getFullYear();
+  const mesAtual = String(hoje.getMonth() + 1).padStart(2, "0");
+  const [filtroPeriodo, setFiltroPeriodo] = useState("mes_atual");
+  const [outroPeriodoOpen, setOutroPeriodoOpen] = useState(false);
+  const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
+  const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
+  const [customRange, setCustomRange] = useState(null);
+  const outroPeriodoRef = useRef(null);
+
+  const periodoRange = filtroPeriodo === "mes_atual"
+    ? { inicio: `${anoAtual}-${mesAtual}-01`, fim: `${anoAtual}-${mesAtual}-31` }
+    : filtroPeriodo === "outro" ? customRange : null;
+
+  const aplicarOutroPeriodo = () => {
+    if (!outroPeriodoInicio || !outroPeriodoFim) return;
+    setCustomRange({ inicio: outroPeriodoInicio, fim: outroPeriodoFim });
+    setFiltroPeriodo("outro");
+    setOutroPeriodoOpen(false);
+  };
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showEntrada, setShowEntrada] = useState(false);
