@@ -358,10 +358,10 @@ export default function Financeiro() {
   );
 }
 
-function StatusDropdown({ item, onAlterarStatus }) {
+function StatusIconButton({ item, onAlterarStatus }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-  const opcoes = ["Pendente", "Atrasado", "Pago"];
+  const opcoes = ["Pendente", "Atrasado", "Pago", "Cancelado"];
 
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
@@ -369,21 +369,21 @@ function StatusDropdown({ item, onAlterarStatus }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const cores = {
-    "Pendente": "text-yellow-400 bg-yellow-500/10 border-yellow-500/30",
-    "Pago": "text-green-400 bg-green-500/10 border-green-500/30",
-    "Atrasado": "text-red-400 bg-red-500/10 border-red-500/30",
-    "Cancelado": "text-gray-400 bg-gray-500/10 border-gray-500/30",
+  const iconColor = {
+    "Pendente": "text-yellow-400 hover:text-yellow-300",
+    "Pago": "text-green-400 hover:text-green-300",
+    "Atrasado": "text-red-400 hover:text-red-300",
+    "Cancelado": "text-gray-400 hover:text-gray-300",
   };
 
   return (
     <div ref={ref} className="relative inline-block">
       <button
         onClick={() => setOpen(v => !v)}
-        className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium border cursor-pointer hover:opacity-80 transition-all ${cores[item.status] || ""}`}
+        title={`Status: ${item.status}`}
+        className={`p-1 transition-all ${iconColor[item.status] || "text-gray-400"}`}
       >
-        {item.status}
-        <ChevronDown className="w-3 h-3" />
+        <CircleDollarSign className="w-3 h-3" />
       </button>
       {open && (
         <div className="absolute left-0 top-full mt-1 z-50 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-28 py-1">
