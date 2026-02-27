@@ -124,12 +124,41 @@ export default function Financeiro() {
   return (
     <div className="space-y-4">
       {/* Filtro de Período — botão Mês + Outro Período */}
-      <div className="flex gap-2 items-stretch">
+      <div className="flex gap-2 items-stretch flex-wrap">
+        {/* Mês Anterior */}
+        <button
+          onClick={() => {
+            const d = new Date(filtroAno, filtroMes - 2, 1);
+            setFiltroMes(d.getMonth() + 1);
+            setFiltroAno(d.getFullYear());
+            setUsandoOutroPeriodo(false);
+            setCustomRange(null);
+          }}
+          className={`flex-1 py-3 rounded-xl text-xs font-medium transition-all bg-gray-800 border border-gray-700 text-gray-400 hover:text-white`}
+        >
+          {MESES[(filtroMes - 2 + 12) % 12]}
+        </button>
+
+        {/* Mês Atual */}
         <button
           onClick={voltarParaMes}
           className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${!usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}
         >
           {MESES[filtroMes - 1]} {filtroAno}
+        </button>
+
+        {/* Próximo Mês */}
+        <button
+          onClick={() => {
+            const d = new Date(filtroAno, filtroMes, 1);
+            setFiltroMes(d.getMonth() + 1);
+            setFiltroAno(d.getFullYear());
+            setUsandoOutroPeriodo(false);
+            setCustomRange(null);
+          }}
+          className={`flex-1 py-3 rounded-xl text-xs font-medium transition-all bg-gray-800 border border-gray-700 text-gray-400 hover:text-white`}
+        >
+          {MESES[filtroMes % 12]}
         </button>
 
         <div className="relative" ref={outroPeriodoRef}>
