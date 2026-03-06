@@ -411,7 +411,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   };
 
   const style = STATUS_STYLE[os.status] || { badge: "bg-gray-600 text-white", value: "text-gray-300" };
-  const veiculoModelo = [os.veiculo_marca, os.veiculo_modelo].filter(Boolean).join(" ").toUpperCase() || "—";
+  const veiculoNome = os.veiculo_modelo || "—";
   const veiculoPlaca = os.veiculo_placa?.toUpperCase() || "—";
 
   const menuItems = [
