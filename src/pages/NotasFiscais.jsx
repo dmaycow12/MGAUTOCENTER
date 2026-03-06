@@ -490,7 +490,11 @@ export default function NotasFiscais() {
       ${dadosXML.dups.length > 0 ? `
       <div class="section-title">Dados das Duplicatas / Cobranças</div>
       <div class="dup-grid">
-        ${dadosXML.dups.map(d => `<div class="box"><div class="lbl">Bol. ${d.nDup}</div><div class="val" style="font-size:7pt">Venc: ${d.dVenc}</div><div class="val">R$ ${fmt(d.vDup)}</div></div>`).join("")}
+      ${dadosXML.dups.map(d => {
+        const [ano, mes, dia] = (d.dVenc || "").split("-");
+        const dataFormatada = ano && mes && dia ? `${dia}/${mes}/${ano.slice(-2)}` : d.dVenc;
+        return `<div class="box"><div class="lbl">Bol. ${d.nDup}</div><div class="val" style="font-size:7pt">Venc: ${dataFormatada}</div><div class="val">R$ ${fmt(d.vDup)}</div></div>`;
+      }).join("")}
       </div>` : ""}
 
       ${dadosXML.infCpl ? `<div class="section-title">Informações Complementares</div><div class="box" style="font-size:7pt">${dadosXML.infCpl}</div>` : ""}
