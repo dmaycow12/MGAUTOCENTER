@@ -136,6 +136,9 @@ export default function Financeiro() {
 
   return (
     <div className="space-y-4">
+      {/* Fluxo do Mês — Gráficos no topo */}
+      <FluxoMes recRealizado={receitaTotal} recPrevisto={receitas.reduce((a, i) => a + Number(i.valor || 0), 0)} pagRealizado={despesaTotal} pagPrevisto={despesas.reduce((a, i) => a + Number(i.valor || 0), 0)} />
+
       {/* Filtro de Período */}
       <div className="flex gap-2 items-center">
         {/* Botão Mês/Ano com dropdown */}
@@ -259,10 +262,10 @@ export default function Financeiro() {
               ))}
             </div>
           )}
-      </>
+          </>
 
-      {/* Fluxo de Caixa */}
-      <FluxoCaixa items={items} />
+          {/* Fluxo de Caixa — No final */}
+          <FluxoCaixa items={items} />
 
       {/* Modal Form */}
       {showForm && (
