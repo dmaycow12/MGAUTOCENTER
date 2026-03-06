@@ -125,12 +125,9 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   .page { max-width: 210mm; margin: 0 auto; padding: 10mm 12mm; }
   
   /* Cabeçalho */
-  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #c00; padding-bottom: 8px; margin-bottom: 8px; }
-  .logo-area { display: flex; align-items: center; gap: 10px; }
-
-  .company-name { font-size: 13pt; font-weight: bold; color: #c00; }
-  .company-info { font-size: 7.5pt; color: #555; line-height: 1.5; margin-top: 2px; }
-  .header-right { text-align: right; font-size: 7.5pt; color: #555; line-height: 1.6; }
+  .header { text-align: center; border-bottom: 2px solid #c00; padding-bottom: 10px; margin-bottom: 8px; }
+  .company-name { font-size: 16pt; font-weight: bold; color: #c00; margin: 4px 0 2px; }
+  .company-info { font-size: 8.5pt; color: #444; line-height: 1.7; }
 
   /* Título OS */
   .os-title { display: flex; justify-content: space-between; align-items: center; background: #222; color: #fff; padding: 5px 10px; margin: 8px 0; border-radius: 2px; }
