@@ -127,8 +127,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   /* Cabeçalho */
   .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #c00; padding-bottom: 8px; margin-bottom: 8px; }
   .logo-area { display: flex; align-items: center; gap: 10px; }
-  .logo-box { width: 48px; height: 48px; background: #c00; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
-  .logo-box span { color: #fff; font-size: 18pt; font-weight: 900; line-height: 1; }
+
   .company-name { font-size: 13pt; font-weight: bold; color: #c00; }
   .company-info { font-size: 7.5pt; color: #555; line-height: 1.5; margin-top: 2px; }
   .header-right { text-align: right; font-size: 7.5pt; color: #555; line-height: 1.6; }
