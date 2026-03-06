@@ -338,6 +338,18 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                   <Field label="CPF / CNPJ">
                     <input value={form.cliente_cpf_cnpj} onChange={e => setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value }))} className="input-dark" placeholder="000.000.000-00" />
                   </Field>
+                  <Field label="Endereço">
+                    <input value={form.cliente_endereco || ""} onChange={e => setForm(f => ({ ...f, cliente_endereco: e.target.value }))} className="input-dark" placeholder="Rua, número" />
+                  </Field>
+                  <Field label="Bairro">
+                    <input value={form.cliente_bairro || ""} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} className="input-dark" placeholder="Bairro" />
+                  </Field>
+                  <Field label="Cidade">
+                    <input value={form.cliente_cidade || ""} onChange={e => setForm(f => ({ ...f, cliente_cidade: e.target.value }))} className="input-dark" placeholder="Cidade" />
+                  </Field>
+                  <Field label="Estado">
+                    <input value={form.cliente_estado || ""} onChange={e => setForm(f => ({ ...f, cliente_estado: e.target.value }))} className="input-dark" placeholder="UF" />
+                  </Field>
                 </div>
               </Section>
 
