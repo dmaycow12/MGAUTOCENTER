@@ -29,12 +29,12 @@ function fmt(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function Card({ title, realizado, previsto, color, bg }) {
+function Card({ title, realizado, previsto, color, bg, bgColor }) {
   const falta = Math.max(previsto - realizado, 0);
   const percent = previsto > 0 ? (realizado / previsto) * 100 : 0;
 
   return (
-    <div className={`flex-1 ${bg} rounded-xl p-4 flex items-center gap-4`}>
+    <div className={`flex-1 ${bg} rounded-xl p-4 flex items-center gap-4`} style={bgColor ? { background: bgColor } : {}}>
       <CircleProgress percent={percent} color={color} />
       <div className="space-y-0.5">
         <p className="text-white text-sm font-bold mb-1">{title}</p>
