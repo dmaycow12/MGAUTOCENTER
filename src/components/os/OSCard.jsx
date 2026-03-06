@@ -303,17 +303,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     win.document.close();
   };
 
-  const _imprimir_REMOVIDO = () => {
-    const fmt = (v) => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
-    const hoje = new Date().toLocaleDateString("pt-BR");
-
-    const servicosRows = (os.servicos || []).map((s, i) => `
-      <tr>
-        <td style="text-align:center">${i + 1}</td>
-        <td>${s.descricao || ""}</td>
-        <td style="text-align:right">R$ ${fmt(s.valor)}</td>
-        <td style="text-align:right">R$ ${fmt(s.valor)}</td>
-      </tr>`).join("");
+  const _placeholder = () => {
 
     const pecasRows = (os.pecas || []).map((p, i) => `
       <tr>
