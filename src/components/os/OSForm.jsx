@@ -72,6 +72,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
       cliente_id: clienteId,
       cliente_nome: primeiroNome,
       cliente_telefone: c?.telefone || "",
+      cliente_email: c?.email || "",
+      cliente_cpf_cnpj: c?.cpf_cnpj || "",
       veiculo_id: "",
       veiculo_placa: "",
       veiculo_modelo: "",
