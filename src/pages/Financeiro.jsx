@@ -138,7 +138,7 @@ export default function Financeiro() {
   return (
     <div className="space-y-4">
       {/* Fluxo do Mês — Gráficos no topo */}
-      <FluxoMes recRealizado={receitaTotal} recPrevisto={receitas.reduce((a, i) => a + Number(i.valor || 0), 0)} pagRealizado={despesaTotal} pagPrevisto={despesas.reduce((a, i) => a + Number(i.valor || 0), 0)} />
+      <FluxoMes financeiro={items} />
 
       {/* Filtro de Período */}
       <div className="flex gap-2 items-center">
