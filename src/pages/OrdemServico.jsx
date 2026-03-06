@@ -106,7 +106,10 @@ export default function OrdemServico() {
         {/* Linha 1: Nova OS — ocupa linha toda */}
         <button
           onClick={() => { setShowForm(true); setEditando(null); }}
-          className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl text-sm font-semibold transition-all"
+          className="w-full flex items-center justify-center gap-2 text-white py-3 rounded-xl text-sm font-semibold transition-all"
+          style={{background: "#cc0000"}}
+          onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
+          onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}
         >
           <Plus className="w-4 h-4" /> Nova OS
         </button>
@@ -163,7 +166,10 @@ export default function OrdemServico() {
                     Cancelar
                   </button>
                   <button onClick={aplicarOutroPeriodo}
-                    className="flex-1 py-2 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
+                    className="flex-1 py-2 text-xs text-white rounded-lg font-medium transition-all"
+                    style={{background: "#cc0000"}}
+                    onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
+                    onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                     Aplicar
                   </button>
                 </div>
@@ -192,7 +198,7 @@ export default function OrdemServico() {
             <Plus className="w-6 h-6 text-orange-400" />
           </div>
           <p className="text-gray-400 mb-4">Nenhuma Ordem de Serviço encontrada</p>
-          <button onClick={() => setShowForm(true)} className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
+          <button onClick={() => setShowForm(true)} className="text-white px-4 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
             Criar primeira OS
           </button>
         </div>
