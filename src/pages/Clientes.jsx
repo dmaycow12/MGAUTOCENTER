@@ -135,13 +135,14 @@ export default function Clientes() {
               {expandido === c.id && (
                 <div className="border-t border-gray-800 p-4 bg-gray-900/50">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-4">
-                    {c.endereco && <Info label="Endereço" value={`${c.endereco}, ${c.numero}`} />}
-                    {c.bairro && <Info label="Bairro" value={c.bairro} />}
-                    {c.cidade && <Info label="Cidade" value={`${c.cidade}/${c.estado}`} />}
-                    {c.tipo && <Info label="Tipo" value={c.tipo} />}
-                    {c.email && <Info label="E-mail" value={c.email} />}
-                    {c.observacoes && <Info label="Observações" value={c.observacoes} />}
-                  </div>
+                     {c.endereco && <Info label="Endereço" value={`${c.endereco}, ${c.numero}`} />}
+                     {c.bairro && <Info label="Bairro" value={c.bairro} />}
+                     {c.cidade && <Info label="Cidade" value={`${c.cidade}/${c.estado}`} />}
+                     {c.tipo && <Info label="Tipo" value={c.tipo} />}
+                     {c.email && <Info label="E-mail" value={c.email} />}
+                     {c.telefone && <Info label="Contato" value={c.telefone} />}
+                     {c.observacoes && <Info label="Observações" value={c.observacoes} />}
+                   </div>
                   <div>
                     <p className="text-xs text-gray-500 font-medium mb-2 flex items-center gap-1">
                       <Car className="w-3 h-3" /> Veículos
