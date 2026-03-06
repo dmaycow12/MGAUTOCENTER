@@ -188,37 +188,32 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         </div>
       </div>
 
-      {/* Grade 2x2 */}
+      {/* Grade */}
       <div className="grid grid-cols-2 border-t border-gray-800">
-        {/* Cliente */}
-        <div className="px-3 py-2.5 border-r border-gray-800">
+        {/* Cliente — ocupa 2 colunas */}
+        <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
           <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Cliente</p>
           <p className="text-white text-sm font-medium truncate">{os.cliente_nome || "—"}</p>
         </div>
-        {/* Veículo (modelo) */}
-        <div className="px-3 py-2.5">
+        {/* Veículo */}
+        <div className="px-3 py-2.5 border-r border-gray-800">
           <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Veículo</p>
           <p className="text-white text-sm font-medium truncate">{veiculoModelo}</p>
         </div>
         {/* Placa */}
-        <div className="px-3 py-2.5 border-t border-r border-gray-800">
+        <div className="px-3 py-2.5">
           <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Placa</p>
           <p className="text-white text-sm font-medium">{veiculoPlaca}</p>
         </div>
         {/* Data */}
-        <div className="px-3 py-2.5 border-t border-gray-800">
+        <div className="px-3 py-2.5 border-t border-r border-gray-800">
           <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Data</p>
           <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
         </div>
         {/* Valor */}
-        <div className="px-3 py-2.5 border-t border-r border-gray-800">
-          <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Valor</p>
-          <p className={`text-sm font-bold ${style.value}`}>{fmtValor(os.valor_total)}</p>
-        </div>
-        {/* Forma Pagamento (espaço em branco para completar o grid) */}
         <div className="px-3 py-2.5 border-t border-gray-800">
-          <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Pagamento</p>
-          <p className="text-white text-sm font-medium truncate">{os.forma_pagamento || "—"}</p>
+          <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Valor</p>
+          <p className="text-white text-sm font-bold">{fmtValor(os.valor_total)}</p>
         </div>
       </div>
     </div>
