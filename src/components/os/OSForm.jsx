@@ -326,7 +326,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                       {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
                     </select>
                   </Field>
-                  <Field label="Nome Cliente / Nome Fantasia">
+                  <Field label="Nome Social / Nome Fantasia">
                     <input value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} className="input-dark" placeholder="Ou digite manualmente" />
                   </Field>
                   <Field label="Telefone / WhatsApp">
