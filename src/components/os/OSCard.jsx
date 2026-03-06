@@ -259,26 +259,8 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
           <div class="value">${os.veiculo_modelo || "—"}</div>
         </div>
         <div class="info-cell" style="flex:2">
-          <div class="label">Marca</div>
-          <div class="value">${os.veiculo_marca || "—"}</div>
-        </div>
-        <div class="info-cell" style="flex:2">
-          <div class="label">Modelo</div>
-          <div class="value">${os.veiculo_modelo || "—"}</div>
-        </div>
-      </div>
-      <div class="info-row">
-        <div class="info-cell" style="flex:2">
           <div class="label">Placa</div>
           <div class="value">${os.veiculo_placa || "—"}</div>
-        </div>
-        <div class="info-cell" style="flex:1">
-          <div class="label">Ano</div>
-          <div class="value">${os.veiculo_ano || "—"}</div>
-        </div>
-        <div class="info-cell" style="flex:1">
-          <div class="label">Cor</div>
-          <div class="value">${os.veiculo_cor || "—"}</div>
         </div>
         <div class="info-cell" style="flex:2">
           <div class="label">Quilometragem</div>
