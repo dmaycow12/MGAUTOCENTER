@@ -90,7 +90,10 @@ export default function Clientes() {
         </div>
         <button
           onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+          className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+          style={{background: "#cc0000"}}
+          onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
+          onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}
         >
           <Plus className="w-4 h-4" /> Novo Cadastro
         </button>
@@ -225,7 +228,7 @@ export default function Clientes() {
               <button onClick={() => { setShowForm(false); setEditando(null); }} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-all">
                 Cancelar
               </button>
-              <button onClick={salvar} className="px-4 py-2 text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
+              <button onClick={salvar} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                 {editando ? "Salvar Alterações" : "Cadastrar"}
               </button>
             </div>

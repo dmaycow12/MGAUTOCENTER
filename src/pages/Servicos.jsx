@@ -68,7 +68,10 @@ export default function Servicos() {
         </div>
         <button
           onClick={abrirNovo}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+          className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+          style={{background: "#cc0000"}}
+          onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
+          onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}
         >
           <Plus className="w-4 h-4" /> Novo Serviço
         </button>
@@ -89,7 +92,7 @@ export default function Servicos() {
             <Plus className="w-6 h-6 text-orange-400" />
           </div>
           <p className="text-gray-400 mb-4">Nenhum serviço encontrado</p>
-          <button onClick={abrirNovo} className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
+          <button onClick={abrirNovo} className="text-white px-4 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
             Cadastrar primeiro serviço
           </button>
         </div>
@@ -144,7 +147,7 @@ export default function Servicos() {
             </div>
             <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
               <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-all">Cancelar</button>
-              <button onClick={salvar} disabled={saving} className="px-4 py-2 text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all disabled:opacity-50">
+              <button onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50" style={{background: "#cc0000"}} onMouseEnter={e => !saving && (e.currentTarget.style.background = "#aa0000")} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                 {saving ? "Salvando..." : editando ? "Salvar Alterações" : "Cadastrar"}
               </button>
             </div>

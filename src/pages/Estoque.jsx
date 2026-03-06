@@ -199,19 +199,28 @@ export default function Estoque() {
         <div className="flex gap-2">
           <button
             onClick={() => setShowReajuste(true)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            style={{background: "#cc0000"}}
+            onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
+            onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}
           >
             <TrendingUp className="w-4 h-4" /> Reajustar Preços
           </button>
           <button
             onClick={() => { setShowImport(true); setImportResult(null); }}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            style={{background: "#cc0000"}}
+            onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
+            onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}
           >
             <Upload className="w-4 h-4" /> Importar Excel
           </button>
           <button
             onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            style={{background: "#cc0000"}}
+            onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
+            onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}
           >
             <Plus className="w-4 h-4" /> Novo Item
           </button>
@@ -251,7 +260,7 @@ export default function Estoque() {
             </div>
             <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
               <button onClick={() => setShowReajuste(false)} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Cancelar</button>
-              <button onClick={aplicarReajuste} disabled={aplicando} className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all disabled:opacity-50">
+              <button onClick={aplicarReajuste} disabled={aplicando} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50" style={{background: "#cc0000"}} onMouseEnter={e => !aplicando && (e.currentTarget.style.background = "#aa0000")} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                 {aplicando ? "Aplicando..." : "Aplicar Reajuste"}
               </button>
             </div>
@@ -432,7 +441,7 @@ export default function Estoque() {
             </div>
             <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
               <button onClick={() => { setShowForm(false); setEditando(null); }} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Cancelar</button>
-              <button onClick={salvar} className="px-4 py-2 text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
+              <button onClick={salvar} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                 {editando ? "Salvar" : "Adicionar"}
               </button>
             </div>
