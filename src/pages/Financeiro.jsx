@@ -243,54 +243,22 @@ export default function Financeiro() {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
-                    <th className="px-4 py-3">Descrição</th>
-                    <th className="px-4 py-3">Venc.</th>
-                    <th className="px-4 py-3 text-right">Valor</th>
-                    <th className="px-4 py-3 text-center">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtrados.length === 0 ? (
-                    <tr><td colSpan={4} className="px-4 py-12 text-center text-gray-500">Nenhum lançamento encontrado</td></tr>
-                  ) : filtrados.map(item => (
-                    <tr key={item.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-all"
-                      onDoubleClick={() => {
-                        const novo = item.status === "Pago" ? "Pendente" : "Pago";
-                        alterarStatus(item, novo);
-                      }}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${item.status === "Pago" ? "bg-green-400" : item.status === "Atrasado" ? "bg-red-400" : item.status === "Cancelado" ? "bg-gray-500" : "bg-yellow-400"}`} />
-                          <span className="text-white font-medium">{item.descricao}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-gray-400 text-xs">
-                        {item.data_vencimento ? item.data_vencimento.split("-").reverse().join("/").replace(/(\d{4})$/, s => s.slice(2)) : "—"}
-                      </td>
-                      <td className={`px-4 py-3 text-right font-bold ${item.tipo === "Receita" ? "text-green-400" : "text-red-400"}`}>
-                        {Number(item.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-1" onClick={e => e.stopPropagation()}>
-                          <StatusIconButton item={item} onAlterarStatus={alterarStatus} />
-                          <button onClick={() => { setForm({ ...defaultForm(), ...item }); setEditando(item); setShowForm(true); }} className="p-1 text-gray-500 hover:text-blue-400 transition-all"><Edit className="w-3 h-3" /></button>
-                          <button onClick={() => excluir(item.id)} className="p-1 text-gray-500 hover:text-red-400 transition-all"><Trash2 className="w-3 h-3" /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          {/* Cards */}
+          {filtrados.length === 0 ? (
+            <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-12 text-center text-gray-500">Nenhum lançamento encontrado</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filtrados.map(item => (
+                <FinanceiroCard
+                  key={item.id}
+                  item={item}
+                  onEdit={(i) => { setForm({ ...defaultForm(), ...i }); setEditando(i); setShowForm(true); }}
+                  onDelete={excluir}
+                  onAlterarStatus={alterarStatus}
+                />
+              ))}
             </div>
-          </div>
+          )}
       </>
 
       {/* Fluxo de Caixa */}
