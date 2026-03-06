@@ -325,49 +325,7 @@ export default function Financeiro() {
   );
 }
 
-function StatusIconButton({ item, onAlterarStatus }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  const opcoes = ["Pendente", "Atrasado", "Pago", "Cancelado"];
 
-  useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const iconColor = {
-    "Pendente": "text-yellow-400 hover:text-yellow-300",
-    "Pago": "text-green-400 hover:text-green-300",
-    "Atrasado": "text-red-400 hover:text-red-300",
-    "Cancelado": "text-gray-400 hover:text-gray-300",
-  };
-
-  return (
-    <div ref={ref} className="relative inline-block">
-      <button
-        onClick={() => setOpen(v => !v)}
-        title={`Status: ${item.status}`}
-        className={`p-1 transition-all ${iconColor[item.status] || "text-gray-400"}`}
-      >
-        <CircleDollarSign className="w-3 h-3" />
-      </button>
-      {open && (
-        <div className="absolute left-0 top-full mt-1 z-50 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-28 py-1">
-          {opcoes.map(s => (
-            <button
-              key={s}
-              onClick={() => { onAlterarStatus(item, s); setOpen(false); }}
-              className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${item.status === s ? "text-orange-400" : "text-gray-300"}`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function FluxoCaixa({ items }) {
   const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
