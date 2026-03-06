@@ -124,12 +124,12 @@ export default function Financeiro() {
   return (
     <div className="space-y-4">
       {/* Filtro de Período */}
-      <div className="flex gap-2 items-stretch flex-wrap">
-        {/* Mês (select) */}
+      <div className="flex gap-2 items-center flex-wrap">
+        {/* Mês (select) - tamanho fixo */}
         <select
           value={filtroMes}
           onChange={e => { setFiltroMes(Number(e.target.value)); setUsandoOutroPeriodo(false); setCustomRange(null); }}
-          className="flex-1 py-3 px-3 rounded-xl text-sm font-medium bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-orange-500"
+          className="w-36 py-3 px-3 rounded-xl text-sm font-medium bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-orange-500"
         >
           {MESES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
         </select>
@@ -143,46 +143,36 @@ export default function Financeiro() {
           min={2020} max={2099}
         />
 
-        {/* Outro Período */}
-        <div className="relative" ref={outroPeriodoRef}>
-          <button
-            onClick={() => setOutroPeriodoOpen(v => !v)}
-            className={`flex items-center gap-1 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}
-          >
-            {usandoOutroPeriodo && customRange
-              ? `${customRange.inicio.slice(8)}/${customRange.inicio.slice(5,7)} - ${customRange.fim.slice(8)}/${customRange.fim.slice(5,7)}`
-              : "Período"}
-            <ChevronDown className={`w-3 h-3 transition-transform ${outroPeriodoOpen ? "rotate-180" : ""}`} />
-          </button>
+        {/* Separador */}
+        <span className="text-gray-500 text-sm">ou</span>
 
-          {outroPeriodoOpen && (
-            <div className="absolute right-0 top-full mt-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
-              <p className="text-xs text-gray-400 font-medium">Selecione o período</p>
-              <div className="space-y-2">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">De</label>
-                  <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Até</label>
-                  <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => setOutroPeriodoOpen(false)}
-                  className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
-                  Cancelar
-                </button>
-                <button onClick={aplicarOutroPeriodo}
-                  className="flex-1 py-2 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
-                  Aplicar
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* De */}
+        <input
+          type="date"
+          value={outroPeriodoInicio}
+          onChange={e => setOutroPeriodoInicio(e.target.value)}
+          className="py-3 px-3 rounded-xl text-sm font-medium bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-orange-500"
+          placeholder="DD/MM/AA"
+        />
+
+        <span className="text-gray-500 text-sm">a</span>
+
+        {/* Até */}
+        <input
+          type="date"
+          value={outroPeriodoFim}
+          onChange={e => setOutroPeriodoFim(e.target.value)}
+          className="py-3 px-3 rounded-xl text-sm font-medium bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-orange-500"
+          placeholder="DD/MM/AA"
+        />
+
+        {/* Botão Buscar */}
+        <button
+          onClick={aplicarOutroPeriodo}
+          className="px-4 py-3 rounded-xl text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white transition-all whitespace-nowrap"
+        >
+          Buscar
+        </button>
       </div>
 
       {/* KPI Cards */}
