@@ -36,8 +36,8 @@ function Card({ title, realizado, previsto, color, bg, bgColor }) {
   return (
     <div className={`flex-1 ${bg} rounded-xl p-4 flex items-center gap-4`} style={bgColor ? { background: bgColor } : {}}>
       <CircleProgress percent={percent} color={color} />
-      <div className="space-y-0.5">
-        <p className="text-white text-sm font-bold mb-1">{title}</p>
+      <div className="space-y-1">
+        <p className="text-white text-sm font-bold">{title}</p>
         <p className="text-white text-sm font-bold">Realizado: {fmt(realizado)}</p>
         <p className="text-white text-sm font-bold">Falta: {fmt(falta)}</p>
       </div>
