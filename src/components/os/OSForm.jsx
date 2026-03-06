@@ -4,7 +4,7 @@ import { X, Plus, Trash2, RefreshCw, AlertTriangle } from "lucide-react";
 
 const defaultForm = () => ({
   numero: "",
-  status: "Aberta",
+  status: "Aberto",
   cliente_id: "",
   cliente_nome: "",
   cliente_telefone: "",
@@ -52,7 +52,7 @@ function gerarParcelas(total, qtd, formaPagamento, dataBase) {
 }
 
 export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
-  const isConcluida = os?.status === "Concluída";
+  const isConcluida = os?.status === "Concluído";
   const [form, setForm] = useState(os ? { ...defaultForm(), ...os } : defaultForm());
   const [saving, setSaving] = useState(false);
   const [veiculosCliente, setVeiculosCliente] = useState([]);
@@ -213,8 +213,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const onStatusChange = (novoStatus) => {
-    // Se está tentando sair de Concluída para outra coisa, mostrar aviso
-    if (form.status === "Concluída" && novoStatus !== "Concluída") {
+    // Se está tentando sair de Concluído para outra coisa, mostrar aviso
+    if (form.status === "Concluído" && novoStatus !== "Concluído") {
       setStatusPendente(novoStatus);
       setShowAvisoReabrir(true);
       return;
@@ -260,8 +260,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     if (!form.cliente_nome && !form.cliente_id) return alert("Selecione ou informe o cliente.");
     setSaving(true);
 
-    const eraAberta = os?.status !== "Concluída";
-    const ficouConcluida = form.status === "Concluída";
+    const eraAberta = os?.status !== "Concluído";
+    const ficouConcluida = form.status === "Concluído";
 
     let savedId = os?.id;
 
@@ -291,13 +291,13 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
           <button onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
         </div>
 
-        {/* Aviso OS Concluída — só pode mudar status */}
-        {isConcluida && (
-          <div className="mx-5 mt-4 flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-3 text-yellow-400 text-sm">
-            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-            <span>OS Concluída — apenas o status pode ser alterado. Para editar, mude o status para <b>Aberta</b>.</span>
-          </div>
-        )}
+        {/* Aviso OS Concluído — só pode mudar status */}
+         {isConcluida && (
+           <div className="mx-5 mt-4 flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-3 text-yellow-400 text-sm">
+             <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+             <span>OS Concluído — apenas o status pode ser alterado. Para editar, mude o status para <b>Aberto</b>.</span>
+           </div>
+         )}
 
         <div className="p-5 space-y-5">
           {/* Header Info */}
@@ -307,7 +307,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
             </Field>
             <Field label="Status">
               <select value={form.status} onChange={e => onStatusChange(e.target.value)} className="input-dark">
-                {["Aberta", "Concluída", "Cancelada"].map(s => <option key={s}>{s}</option>)}
+                {["Aberto", "Orçamento", "Concluído"].map(s => <option key={s}>{s}</option>)}
               </select>
             </Field>
             <Field label="Data Entrada">
@@ -551,7 +551,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
               <h3 className="text-lg font-bold">Atenção!</h3>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">
-              Ao reabrir esta OS, <strong className="text-red-400">todos os lançamentos financeiros</strong> gerados quando ela foi concluída serão <strong className="text-red-400">excluídos automaticamente</strong>.
+              Ao reabrir esta OS, <strong className="text-red-400">todos os lançamentos financeiros</strong> gerados quando ela foi concluído serão <strong className="text-red-400">excluídos automaticamente</strong>.
             </p>
             <p className="text-gray-400 text-sm">Deseja continuar?</p>
             <div className="flex gap-3 justify-end">
