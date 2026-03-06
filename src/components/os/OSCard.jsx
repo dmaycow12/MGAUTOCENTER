@@ -199,9 +199,9 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   <!-- Cabeçalho -->
   <div class="header">
     <div class="logo-area">
-      <div class="logo-box"><span>O</span></div>
+      <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" alt="MG Autocenter" style="width:48px;height:48px;object-fit:contain;" />
       <div>
-        <div class="company-name">OFICINA PRO</div>
+        <div class="company-name">MG AUTOCENTER</div>
         <div class="company-info">ERP Automotivo</div>
       </div>
     </div>
