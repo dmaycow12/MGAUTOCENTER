@@ -183,13 +183,63 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   /* Rodapé */
   .rodape { text-align: center; font-size: 7pt; color: #999; margin-top: 8px; border-top: 1px solid #eee; padding-top: 6px; }
 
+  /* Toolbar */
+  .toolbar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #1e1e1e; color: #fff; display: flex; align-items: center; padding: 0 16px; gap: 12px; z-index: 999; box-shadow: 0 2px 8px rgba(0,0,0,0.4); font-family: Arial, sans-serif; }
+  .toolbar .tb-title { font-size: 13pt; font-weight: bold; letter-spacing: 1px; margin-right: 24px; }
+  .toolbar .tb-sep { width: 1px; height: 24px; background: #444; }
+  .toolbar .tb-btn { background: none; border: none; color: #ccc; cursor: pointer; padding: 6px 10px; border-radius: 4px; font-size: 10pt; display: flex; align-items: center; gap: 6px; transition: background 0.15s; }
+  .toolbar .tb-btn:hover { background: #333; color: #fff; }
+  .toolbar .tb-btn svg { width: 16px; height: 16px; }
+  .toolbar .tb-zoom { display: flex; align-items: center; gap: 4px; }
+  .toolbar .tb-zoom span { font-size: 10pt; color: #ccc; min-width: 42px; text-align: center; }
+  .toolbar .tb-spacer { flex: 1; }
+  body { padding-top: 56px; }
+
   @media print {
     @page { size: A4; margin: 8mm; }
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; padding-top: 0; }
+    .toolbar { display: none; }
   }
 </style>
 </head>
 <body>
+
+<!-- Barra de Ferramentas -->
+<div class="toolbar">
+  <span class="tb-title">IMPRESSÃO</span>
+  <div class="tb-sep"></div>
+  <div class="tb-zoom">
+    <button class="tb-btn" onclick="zoomOut()" title="Diminuir zoom">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <span id="zoom-label">100%</span>
+    <button class="tb-btn" onclick="zoomIn()" title="Aumentar zoom">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-spacer"></div>
+  <button class="tb-btn" onclick="window.print()" title="Imprimir">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Imprimir
+  </button>
+  <button class="tb-btn" onclick="window.close()" title="Fechar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    Fechar
+  </button>
+</div>
+
+<script>
+  var currentZoom = 1;
+  function applyZoom() {
+    document.querySelector('.page').style.transform = 'scale(' + currentZoom + ')';
+    document.querySelector('.page').style.transformOrigin = 'top center';
+    document.getElementById('zoom-label').textContent = Math.round(currentZoom * 100) + '%';
+  }
+  function zoomIn() { if (currentZoom < 2) { currentZoom = Math.round((currentZoom + 0.1) * 10) / 10; applyZoom(); } }
+  function zoomOut() { if (currentZoom > 0.5) { currentZoom = Math.round((currentZoom - 0.1) * 10) / 10; applyZoom(); } }
+</script>
+
 <div class="page">
 
   <!-- Cabeçalho -->
