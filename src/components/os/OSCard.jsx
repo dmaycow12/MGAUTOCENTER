@@ -242,6 +242,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   }
   function zoomIn() { if (currentZoom < 2) { currentZoom = Math.round((currentZoom + 0.1) * 10) / 10; applyZoom(); } }
   function zoomOut() { if (currentZoom > 0.5) { currentZoom = Math.round((currentZoom - 0.1) * 10) / 10; applyZoom(); } }
+  function savePDF() { window.print(); }
 </script>
 
 <div class="page">
