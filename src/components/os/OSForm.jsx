@@ -92,7 +92,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     setForm(f => ({
       ...f,
       cliente_id: clienteId,
-      cliente_nome: c?.nome_fantasia || c?.nome || "",
+      cliente_nome: c?.nome || "",
       cliente_telefone: c?.telefone || "",
       cliente_email: c?.email || "",
       cliente_cpf_cnpj: c?.cpf_cnpj || "",
