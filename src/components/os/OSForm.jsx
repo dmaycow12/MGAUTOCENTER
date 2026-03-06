@@ -508,7 +508,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
               </Section>
 
               <Field label="Observações">
-                <textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} className="input-dark" rows={2} />
+                <textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} className="input-dark" rows={4} />
               </Field>
             </>
           )}
