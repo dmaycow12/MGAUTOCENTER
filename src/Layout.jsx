@@ -254,12 +254,12 @@ export default function Layout({ children, currentPageName }) {
           <aside className="relative w-64 bg-gray-900 flex flex-col">
             <div className="flex items-center justify-between px-4 py-5 border-b border-gray-800">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg overflow-hidden bg-white flex items-center justify-center">
-                  <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/091954d07_LOGO.png" alt="MG Autocenter" className="w-full h-full object-contain" />
+                <div className="w-9 h-9 flex items-center justify-center">
+                  <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" alt="MG Autocenter" className="w-full h-full object-contain" />
                 </div>
                 <div>
-                  <p className="font-bold text-white text-sm">MG Autocenter</p>
-                  <p className="text-orange-400 text-xs">ERP Automotivo</p>
+                  <p className="font-bold text-sm uppercase" style={{color:"#c00"}}>MG AUTOCENTER</p>
+                  <p className="text-gray-400 text-xs">ERP Automotivo</p>
                 </div>
               </div>
               <button onClick={() => setMobileOpen(false)}>
