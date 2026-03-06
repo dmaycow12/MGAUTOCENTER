@@ -43,23 +43,15 @@ function FluxoCard({ title, realizado, previsto, bgClass, accentColor }) {
 }
 
 function KpiCard({ icon: Icon, label, value, color, link, prefix = "", suffix = "" }) {
-  const palettes = {
-    green:  { text: "text-green-400",  bg: "bg-green-500/10",  border: "border-green-500/20" },
-    red:    { text: "text-red-400",    bg: "bg-red-500/10",    border: "border-red-500/20" },
-    orange: { text: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20" },
-    blue:   { text: "text-blue-400",   bg: "bg-blue-500/10",   border: "border-blue-500/20" },
-    yellow: { text: "text-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-500/20" },
-  };
-  const p = palettes[color] || palettes.orange;
   const inner = (
-    <div className={`bg-gray-900 border ${p.border} rounded-2xl p-5 hover:border-opacity-60 transition-all h-full`}>
+    <div className="bg-gray-900 border border-white rounded-2xl p-5 hover:border-opacity-80 transition-all h-full">
       <div className="flex items-center justify-between mb-4">
-        <span className="text-gray-400 text-xs font-medium uppercase tracking-wider">{label}</span>
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${p.bg}`}>
-          <Icon className={`w-4 h-4 ${p.text}`} />
+        <span className="text-white text-xs font-medium uppercase tracking-wider">{label}</span>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center">
+          <Icon className="w-4 h-4 text-white" />
         </div>
       </div>
-      <p className={`text-2xl font-bold ${p.text}`}>{prefix}{value}{suffix}</p>
+      <p className="text-2xl font-bold text-white">{prefix}{value}{suffix}</p>
     </div>
   );
   return link ? <Link to={createPageUrl(link)} className="block">{inner}</Link> : <div>{inner}</div>;
