@@ -181,7 +181,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   .assinaturas { display: flex; justify-content: space-between; margin-top: 16px; gap: 20px; }
   .assinatura { flex: 1; text-align: center; }
   .assinatura .linha { border-top: 1px solid #999; margin-bottom: 4px; }
-  .assinatura .nome { font-size: 7.5pt; color: #555; }
+  .assinatura .nome { font-size: 10pt; color: #111; font-weight: bold; }
 
   /* Rodapé */
   .rodape { text-align: center; font-size: 7pt; color: #999; margin-top: 8px; border-top: 1px solid #eee; padding-top: 6px; }
