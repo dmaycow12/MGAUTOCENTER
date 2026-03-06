@@ -35,7 +35,6 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [confirmStatus, setConfirmStatus] = useState(null); // { novoStatus, mensagem }
   const statusRef = useRef(null);
   const statusBtnRef = useRef(null);
   const menuRef = useRef(null);
@@ -50,76 +49,10 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const excluirLancamentos = async () => {
-    const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
-    const vinculados = financeiros.filter(f => f.ordem_servico_id === os.id);
-    for (const f of vinculados) {
-      await base44.entities.Financeiro.delete(f.id);
-    }
-  };
-
-  const gerarLancamentos = async () => {
-    const gerarParcelas = (total, qtd, formaPagamento, dataBase) => {
-      const valorParcela = total / Math.max(1, qtd);
-      const base = dataBase ? new Date(dataBase + "T00:00:00") : new Date();
-      return Array.from({ length: qtd }, (_, i) => {
-        const d = new Date(base);
-        d.setMonth(d.getMonth() + i);
-        return {
-          numero: i + 1,
-          valor: parseFloat(valorParcela.toFixed(2)),
-          vencimento: d.toISOString().split("T")[0],
-          forma_pagamento: formaPagamento || "Dinheiro",
-        };
-      });
-    };
-    const parcelas = os.parcelas_detalhes && os.parcelas_detalhes.length > 0
-      ? os.parcelas_detalhes
-      : gerarParcelas(os.valor_total, Number(os.parcelas) || 1, os.forma_pagamento, os.data_entrada);
-    for (const p of parcelas) {
-      await base44.entities.Financeiro.create({
-        tipo: "Receita",
-        categoria: "Ordem de Serviço",
-        descricao: `OS #${os.numero} — ${os.cliente_nome || ""} — Parcela ${p.numero}/${parcelas.length}`,
-        valor: p.valor,
-        data_vencimento: p.vencimento,
-        status: "Pendente",
-        forma_pagamento: p.forma_pagamento || os.forma_pagamento || "Dinheiro",
-        ordem_servico_id: os.id,
-        cliente_id: os.cliente_id || "",
-      });
-    }
-  };
-
-  const pedirConfirmacaoStatus = (novoStatus) => {
+  const alterarStatus = async (novoStatus) => {
     setStatusOpen(false);
-    if (novoStatus === os.status) return;
-
-    if (novoStatus === "Concluída") {
-      setConfirmStatus({ novoStatus, mensagem: "Ao concluir esta OS, serão gerados lançamentos financeiros automaticamente. Deseja continuar?" });
-    } else if (os.status === "Concluída") {
-      setConfirmStatus({ novoStatus, mensagem: "Ao reabrir/cancelar esta OS, todos os lançamentos financeiros vinculados serão excluídos. Deseja continuar?" });
-    } else {
-      executarMudancaStatus(novoStatus);
-    }
-  };
-
-  const executarMudancaStatus = async (novoStatus) => {
-    setConfirmStatus(null);
-    if (novoStatus === "Concluída" && os.status !== "Concluída") {
-      await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
-      await gerarLancamentos();
-    } else if (os.status === "Concluída" && novoStatus !== "Concluída") {
-      await excluirLancamentos();
-      await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
-    } else {
-      await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
-    }
+    await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
     onRefresh?.();
-  };
-
-  const alterarStatus = (novoStatus) => {
-    pedirConfirmacaoStatus(novoStatus);
   };
 
   const enviarOrcamento = () => {
@@ -316,7 +249,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   <!-- Cabeçalho -->
   <div class="header">
-    <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" style="width:140px;height:140px;object-fit:contain;" alt="MG Autocenter" />
+    <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" style="width:90px;height:90px;object-fit:contain;" alt="MG Autocenter" />
     <div class="company-info" style="margin-top:4px;">
       Rua Rui Barbosa, 1355 — Santa Terezinha — Patos de Minas/MG<br/>
       CNPJ: 54.043.647/0001-20 &nbsp;|&nbsp;
@@ -543,29 +476,6 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   ];
 
   return (
-    <>
-    {/* Modal de confirmação de status */}
-    {confirmStatus && (
-      <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
-        <div className="bg-gray-900 border border-yellow-500/30 rounded-2xl w-full max-w-md p-6 space-y-4">
-          <div className="flex items-center gap-3 text-yellow-400">
-            <svg className="w-7 h-7 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-            <h3 className="text-lg font-bold">Atenção!</h3>
-          </div>
-          <p className="text-gray-300 text-sm leading-relaxed">{confirmStatus.mensagem}</p>
-          <div className="flex gap-3 justify-end">
-            <button onClick={() => setConfirmStatus(null)}
-              className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
-              Cancelar
-            </button>
-            <button onClick={() => executarMudancaStatus(confirmStatus.novoStatus)}
-              className="px-4 py-2 text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
-              Confirmar
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
     <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all">
       {/* Linha 1: # + status + ícones */}
       <div className="flex items-center gap-2 px-3 py-2.5">
@@ -658,6 +568,5 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         </div>
       </div>
     </div>
-    </>
   );
 }

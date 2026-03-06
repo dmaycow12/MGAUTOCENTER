@@ -1,12 +1,36 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown } from "lucide-react";
 import OSForm from "@/components/os/OSForm";
 import OSCard from "@/components/os/OSCard";
 
-const MESES_PT = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const PERIODOS_OS = [
+  { key: "tudo", label: "Tudo" },
+  { key: "hoje", label: "Hoje" },
+  { key: "semana", label: "Semana" },
+  { key: "mes_atual", label: "Mês" },
+  { key: "ano_atual", label: "Ano" },
+];
 
-const hoje = new Date();
+function getPeriodoRangeOS(key) {
+  const hoje = new Date();
+  const ano = hoje.getFullYear();
+  const mes = hoje.getMonth();
+  const dia = hoje.getDate();
+  const todayStr = hoje.toISOString().split("T")[0];
+  const pad = n => String(n).padStart(2, "0");
+  if (key === "hoje") return { inicio: todayStr, fim: todayStr };
+  if (key === "semana") {
+    const primeiro = new Date(hoje);
+    primeiro.setDate(dia - hoje.getDay());
+    const ultimo = new Date(primeiro);
+    ultimo.setDate(primeiro.getDate() + 6);
+    return { inicio: primeiro.toISOString().split("T")[0], fim: ultimo.toISOString().split("T")[0] };
+  }
+  if (key === "mes_atual") return { inicio: `${ano}-${pad(mes + 1)}-01`, fim: `${ano}-${pad(mes + 1)}-31` };
+  if (key === "ano_atual") return { inicio: `${ano}-01-01`, fim: `${ano}-12-31` };
+  return null;
+}
 
 export default function OrdemServico() {
   const [ordens, setOrdens] = useState([]);
@@ -17,20 +41,27 @@ export default function OrdemServico() {
   const [editando, setEditando] = useState(null);
   const [clientes, setClientes] = useState([]);
   const [veiculos, setVeiculos] = useState([]);
-  const [mesSel, setMesSel] = useState(hoje.getMonth()); // 0-11
-  const [anoSel, setAnoSel] = useState(hoje.getFullYear());
-  const [verTudo, setVerTudo] = useState(false);
+  const [filtroPeriodo, setFiltroPeriodo] = useState(() => localStorage.getItem("os_periodo") || "mes_atual");
+  const [outroPeriodoOpen, setOutroPeriodoOpen] = useState(false);
+  const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
+  const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
+  const [customRange, setCustomRange] = useState(null);
+  const outroPeriodoRef = useRef(null);
 
-  const mesAnterior = () => {
-    if (mesSel === 0) { setMesSel(11); setAnoSel(a => a - 1); }
-    else setMesSel(m => m - 1);
-    setVerTudo(false);
+  const setPeriodo = (key) => {
+    setFiltroPeriodo(key);
+    setCustomRange(null);
+    localStorage.setItem("os_periodo", key);
   };
-  const mesSeguinte = () => {
-    if (mesSel === 11) { setMesSel(0); setAnoSel(a => a + 1); }
-    else setMesSel(m => m + 1);
-    setVerTudo(false);
+
+  const aplicarOutroPeriodo = () => {
+    if (!outroPeriodoInicio || !outroPeriodoFim) return;
+    setCustomRange({ inicio: outroPeriodoInicio, fim: outroPeriodoFim });
+    setFiltroPeriodo("outro");
+    setOutroPeriodoOpen(false);
   };
+
+  const statusList = ["Aberta", "Concluída", "Cancelada", "Tudo"];
 
   useEffect(() => { load(); }, []);
 
@@ -52,11 +83,7 @@ export default function OrdemServico() {
     load();
   };
 
-  const pad = n => String(n).padStart(2, "0");
-  const periodoRange = verTudo ? null : {
-    inicio: `${anoSel}-${pad(mesSel + 1)}-01`,
-    fim: `${anoSel}-${pad(mesSel + 1)}-31`,
-  };
+  const periodoRange = filtroPeriodo === "outro" ? customRange : getPeriodoRangeOS(filtroPeriodo);
 
   const filtradas = ordens
     .filter(o => {
@@ -94,23 +121,55 @@ export default function OrdemServico() {
           ))}
         </div>
 
-        {/* Linha 3: navegação mês/ano com setas */}
-        <div className="flex items-center gap-2">
-          <button onClick={mesAnterior}
-            className="p-2.5 bg-gray-800 border border-gray-700 text-gray-400 hover:text-white rounded-xl transition-all flex-shrink-0">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <div className="flex-1 py-3 rounded-xl bg-orange-500 text-white text-sm font-semibold text-center">
-            {MESES_PT[mesSel]} {anoSel}
+        {/* Linha 3: filtro período + Outro período */}
+        <div className="flex gap-2 flex-wrap items-stretch relative">
+          {PERIODOS_OS.map(p => (
+            <button key={p.key} onClick={() => setPeriodo(p.key)}
+              className={`flex-1 py-3 rounded-xl text-xs font-medium transition-all ${filtroPeriodo === p.key ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              {p.label}
+            </button>
+          ))}
+
+          {/* Outro Período */}
+          <div className="relative" ref={outroPeriodoRef}>
+            <button
+              onClick={() => setOutroPeriodoOpen(v => !v)}
+              className={`flex items-center gap-1 px-3 py-3 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${filtroPeriodo === "outro" ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}
+            >
+              {filtroPeriodo === "outro" && customRange
+                ? `${customRange.inicio.slice(5).replace("-","/")} - ${customRange.fim.slice(5).replace("-","/")}` 
+                : "Outro período"}
+              <ChevronDown className={`w-3 h-3 transition-transform ${outroPeriodoOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {outroPeriodoOpen && (
+              <div className="absolute right-0 top-full mt-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
+                <p className="text-xs text-gray-400 font-medium">Selecione o período</p>
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">De</label>
+                    <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Até</label>
+                    <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setOutroPeriodoOpen(false)}
+                    className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
+                    Cancelar
+                  </button>
+                  <button onClick={aplicarOutroPeriodo}
+                    className="flex-1 py-2 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
+                    Aplicar
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-          <button onClick={mesSeguinte}
-            className="p-2.5 bg-gray-800 border border-gray-700 text-gray-400 hover:text-white rounded-xl transition-all flex-shrink-0">
-            <ChevronRight className="w-4 h-4" />
-          </button>
-          <button onClick={() => setVerTudo(v => !v)}
-            className={`px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${verTudo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
-            Tudo
-          </button>
         </div>
 
         {/* Linha 4: busca */}

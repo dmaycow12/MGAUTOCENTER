@@ -201,6 +201,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
           {sidebarOpen && (
             <div className="overflow-hidden">
+              <p className="font-bold text-sm leading-tight uppercase" style={{color: RED}}>MG AUTOCENTER</p>
             </div>
           )}
         </div>
@@ -259,7 +260,9 @@ export default function Layout({ children, currentPageName }) {
                 <div className="w-9 h-9 flex items-center justify-center">
                   <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" alt="MG Autocenter" className="w-full h-full object-contain" />
                 </div>
-                <div></div>
+                <div>
+                  <p className="font-bold text-sm uppercase" style={{color: RED}}>MG AUTOCENTER</p>
+                </div>
               </div>
               <button onClick={() => setMobileOpen(false)}>
                 <X className="w-5 h-5 text-gray-400" />
