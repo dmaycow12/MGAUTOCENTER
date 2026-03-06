@@ -85,10 +85,9 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center p-4" style={{background:"#000"}}>
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 flex items-center justify-center mb-4">
+          <div className="w-32 h-32 flex items-center justify-center mb-4">
             <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" alt="MG Autocenter" className="w-full h-full object-contain" />
           </div>
-          <h1 className="font-bold text-2xl uppercase" style={{color: RED}}>MG AUTOCENTER</h1>
           <p className="text-gray-500 text-sm mt-1">Acesso Restrito</p>
         </div>
 
