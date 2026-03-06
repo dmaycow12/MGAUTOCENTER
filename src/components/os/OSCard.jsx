@@ -35,6 +35,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmStatus, setConfirmStatus] = useState(null); // { novoStatus, mensagem }
   const statusRef = useRef(null);
   const statusBtnRef = useRef(null);
   const menuRef = useRef(null);
@@ -49,10 +50,76 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const alterarStatus = async (novoStatus) => {
+  const excluirLancamentos = async () => {
+    const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
+    const vinculados = financeiros.filter(f => f.ordem_servico_id === os.id);
+    for (const f of vinculados) {
+      await base44.entities.Financeiro.delete(f.id);
+    }
+  };
+
+  const gerarLancamentos = async () => {
+    const gerarParcelas = (total, qtd, formaPagamento, dataBase) => {
+      const valorParcela = total / Math.max(1, qtd);
+      const base = dataBase ? new Date(dataBase + "T00:00:00") : new Date();
+      return Array.from({ length: qtd }, (_, i) => {
+        const d = new Date(base);
+        d.setMonth(d.getMonth() + i);
+        return {
+          numero: i + 1,
+          valor: parseFloat(valorParcela.toFixed(2)),
+          vencimento: d.toISOString().split("T")[0],
+          forma_pagamento: formaPagamento || "Dinheiro",
+        };
+      });
+    };
+    const parcelas = os.parcelas_detalhes && os.parcelas_detalhes.length > 0
+      ? os.parcelas_detalhes
+      : gerarParcelas(os.valor_total, Number(os.parcelas) || 1, os.forma_pagamento, os.data_entrada);
+    for (const p of parcelas) {
+      await base44.entities.Financeiro.create({
+        tipo: "Receita",
+        categoria: "Ordem de Serviço",
+        descricao: `OS #${os.numero} — ${os.cliente_nome || ""} — Parcela ${p.numero}/${parcelas.length}`,
+        valor: p.valor,
+        data_vencimento: p.vencimento,
+        status: "Pendente",
+        forma_pagamento: p.forma_pagamento || os.forma_pagamento || "Dinheiro",
+        ordem_servico_id: os.id,
+        cliente_id: os.cliente_id || "",
+      });
+    }
+  };
+
+  const pedirConfirmacaoStatus = (novoStatus) => {
     setStatusOpen(false);
-    await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
+    if (novoStatus === os.status) return;
+
+    if (novoStatus === "Concluída") {
+      setConfirmStatus({ novoStatus, mensagem: "Ao concluir esta OS, serão gerados lançamentos financeiros automaticamente. Deseja continuar?" });
+    } else if (os.status === "Concluída") {
+      setConfirmStatus({ novoStatus, mensagem: "Ao reabrir/cancelar esta OS, todos os lançamentos financeiros vinculados serão excluídos. Deseja continuar?" });
+    } else {
+      executarMudancaStatus(novoStatus);
+    }
+  };
+
+  const executarMudancaStatus = async (novoStatus) => {
+    setConfirmStatus(null);
+    if (novoStatus === "Concluída" && os.status !== "Concluída") {
+      await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
+      await gerarLancamentos();
+    } else if (os.status === "Concluída" && novoStatus !== "Concluída") {
+      await excluirLancamentos();
+      await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
+    } else {
+      await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
+    }
     onRefresh?.();
+  };
+
+  const alterarStatus = (novoStatus) => {
+    pedirConfirmacaoStatus(novoStatus);
   };
 
   const enviarOrcamento = () => {
@@ -249,7 +316,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   <!-- Cabeçalho -->
   <div class="header">
-    <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" style="width:90px;height:90px;object-fit:contain;" alt="MG Autocenter" />
+    <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" style="width:140px;height:140px;object-fit:contain;" alt="MG Autocenter" />
     <div class="company-info" style="margin-top:4px;">
       Rua Rui Barbosa, 1355 — Santa Terezinha — Patos de Minas/MG<br/>
       CNPJ: 54.043.647/0001-20 &nbsp;|&nbsp;
