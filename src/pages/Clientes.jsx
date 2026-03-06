@@ -113,10 +113,10 @@ export default function Clientes() {
           {filtrados.map(c => (
             <div key={c.id} className="bg-gray-900 border border-gray-800 rounded-xl">
               <div
-                className="flex items-start justify-between gap-2 p-4 cursor-pointer select-none"
+                className="flex items-center justify-between gap-2 p-4 cursor-pointer select-none"
                 onClick={() => setExpandido(expandido === c.id ? null : c.id)}
               >
-                <div className="flex-1 min-w-0 flex flex-col">
+                <div className="flex-1 min-w-0">
                    <p className="text-white text-xs font-bold leading-snug">{c.nome}</p>
                  </div>
                 <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
