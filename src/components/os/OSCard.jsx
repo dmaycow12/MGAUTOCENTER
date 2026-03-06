@@ -661,5 +661,6 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         </div>
       </div>
     </div>
+    </>
   );
 }
