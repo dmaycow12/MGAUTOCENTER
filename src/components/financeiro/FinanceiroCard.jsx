@@ -84,32 +84,32 @@ export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus
       <div className="grid grid-cols-2 border-t border-gray-800">
         {/* Descrição — ocupa 2 colunas */}
         <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
-          <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Descrição</p>
-          <p className="text-white text-sm font-medium truncate">{item.descricao || "—"}</p>
+          <p className="text-white text-xs font-medium uppercase tracking-wider mb-1">Descrição</p>
+          <p className="text-white text-xs font-medium truncate">{item.descricao || "—"}</p>
         </div>
 
         {/* Categoria */}
         <div className="px-3 py-2.5 border-r border-gray-800">
-          <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Categoria</p>
-          <p className="text-white text-sm truncate">{item.categoria || "—"}</p>
+          <p className="text-white text-xs font-medium uppercase tracking-wider mb-1">Categoria</p>
+          <p className="text-white text-xs font-medium truncate">{item.categoria || "—"}</p>
         </div>
 
         {/* Forma Pagamento */}
         <div className="px-3 py-2.5">
-          <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Pagamento</p>
-          <p className="text-white text-sm truncate">{item.forma_pagamento || "—"}</p>
+          <p className="text-white text-xs font-medium uppercase tracking-wider mb-1">Pagamento</p>
+          <p className="text-white text-xs font-medium truncate">{item.forma_pagamento || "—"}</p>
         </div>
 
         {/* Vencimento */}
         <div className="px-3 py-2.5 border-t border-r border-gray-800">
-          <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Vencimento</p>
-          <p className="text-white text-sm">{fmtData(item.data_vencimento)}</p>
+          <p className="text-white text-xs font-medium uppercase tracking-wider mb-1">Vencimento</p>
+          <p className="text-white text-xs font-medium">{fmtData(item.data_vencimento)}</p>
         </div>
 
         {/* Valor */}
         <div className="px-3 py-2.5 border-t border-gray-800">
-          <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Valor</p>
-          <p className={`text-sm font-bold ${isReceita ? "text-green-400" : "text-red-400"}`}>
+          <p className="text-white text-xs font-medium uppercase tracking-wider mb-1">Valor</p>
+          <p className="text-white text-xs font-medium">
             {fmtValor(item.valor)}
           </p>
         </div>
