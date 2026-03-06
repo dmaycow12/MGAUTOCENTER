@@ -303,11 +303,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     win.document.close();
   };
 
-  const _placeholder_start = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8"/>
-<title>placeholder</title>
+  const _placeholder_start = "removed";
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; font-size: 9pt; color: #111; background: #fff; }
