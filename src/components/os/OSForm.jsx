@@ -219,7 +219,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                 </select>
               </Field>
               <Field label="Nome do Cliente">
-                <input value={form.cliente_nome ? form.cliente_nome.split(" ")[0] : ""} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} className="input-dark" placeholder="Ou digite manualmente" />
+                <input value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} className="input-dark" placeholder="Ou digite manualmente" />
               </Field>
               <Field label="Telefone / WhatsApp">
                 <input value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} className="input-dark" placeholder="(XX) XXXXX-XXXX" />
