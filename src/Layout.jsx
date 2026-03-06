@@ -202,12 +202,12 @@ export default function Layout({ children, currentPageName }) {
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 border-b border-gray-800 h-[64px]">
-          <div className="flex-shrink-0 w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center">
-            <Wrench className="w-5 h-5 text-white" />
+          <div className="flex-shrink-0 w-9 h-9 rounded-lg overflow-hidden flex items-center justify-center bg-white">
+            <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/091954d07_LOGO.png" alt="MG Autocenter" className="w-full h-full object-contain" />
           </div>
           {sidebarOpen && (
             <div className="overflow-hidden">
-              <p className="font-bold text-white text-sm leading-tight">Oficina Pro</p>
+              <p className="font-bold text-white text-sm leading-tight">MG Autocenter</p>
               <p className="text-orange-400 text-xs">ERP Automotivo</p>
             </div>
           )}
