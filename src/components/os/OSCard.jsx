@@ -198,14 +198,8 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   <!-- Cabeçalho -->
   <div class="header">
     <div class="logo-area">
-      <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" style="width:52px;height:52px;object-fit:contain;" alt="MG Autocenter" />
-      <div>
-        <div class="company-name">MG AUTOCENTER</div>
-        <div class="company-info">ERP Automotivo</div>
-      </div>
-    </div>
-    <div class="header-right">
-      Emitido em: ${hoje}
+      <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" style="width:60px;height:60px;object-fit:contain;" alt="MG Autocenter" />
+      <div class="company-name" style="font-size:18pt;line-height:60px;margin:0;">MG AUTOCENTER</div>
     </div>
   </div>
 
