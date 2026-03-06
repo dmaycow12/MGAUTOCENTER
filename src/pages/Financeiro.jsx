@@ -141,6 +141,9 @@ export default function Financeiro() {
       {/* Fluxo do Mês — Gráficos no topo */}
       <FluxoMes financeiro={items} />
 
+      {/* Segundo Gráfico com cores exatas */}
+      <GraficoRecebPag financeiro={items} />
+
       {/* Filtro de Período */}
       <div className="flex gap-2 items-center">
         {/* Botão Mês/Ano com dropdown */}
