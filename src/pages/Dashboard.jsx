@@ -153,9 +153,9 @@ export default function Dashboard() {
 
       {/* KPIs Operacionais */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KpiCard icon={ClipboardList} label="OS Abertas" value={osAbertas.length} color="orange" link="OrdemServico" />
-        <KpiCard icon={Users} label="Clientes" value={stats.clientes.length} color="blue" link="Clientes" />
-        <KpiCard icon={AlertTriangle} label="Est. Baixo" value={estoqueBaixo.length} color="yellow" link="Estoque" />
+        <KpiCard icon={ClipboardList} label="OS Abertas" value={osAbertas.length} link="OrdemServico" />
+        <KpiCard icon={Users} label="Clientes" value={stats.clientes.length} link="Clientes" />
+        <KpiCard icon={AlertTriangle} label="Est. Baixo" value={estoqueBaixo.length} link="Estoque" />
       </div>
 
       {/* Tabela resumo mensal */}
