@@ -214,10 +214,10 @@ export default function Financeiro() {
           <div className="flex flex-col gap-2">
             {/* Linha 1: + Receita / + Despesa */}
             <div className="flex gap-2">
-              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Receita" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl text-sm font-semibold transition-all">
+              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Receita" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 text-white py-3 rounded-xl text-sm font-semibold transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                 <Plus className="w-4 h-4" /> Receita
               </button>
-              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Despesa" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl text-sm font-semibold transition-all">
+              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Despesa" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 text-white py-3 rounded-xl text-sm font-semibold transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                 <Plus className="w-4 h-4" /> Despesa
               </button>
             </div>
@@ -312,7 +312,7 @@ export default function Financeiro() {
             </div>
             <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
               <button onClick={() => { setShowForm(false); setEditando(null); }} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Cancelar</button>
-              <button onClick={salvar} className="px-4 py-2 text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
+              <button onClick={salvar} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                 {editando ? "Salvar" : "Lançar"}
               </button>
             </div>

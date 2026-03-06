@@ -555,10 +555,10 @@ export default function NotasFiscais() {
       <div className="flex flex-col gap-2">
         {/* Linha 1: Importar XML + Emitir Nota */}
         <div className="flex gap-2">
-          <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white py-3 rounded-xl text-sm font-semibold transition-all">
+          <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 text-white py-3 rounded-xl text-sm font-semibold transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
             <Upload className="w-4 h-4" /> Importar XML
           </button>
-          <button onClick={() => { setForm(defaultForm()); setAbaForm("cliente"); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl text-sm font-semibold transition-all">
+          <button onClick={() => { setForm(defaultForm()); setAbaForm("cliente"); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 text-white py-3 rounded-xl text-sm font-semibold transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
             <Plus className="w-4 h-4" /> Emitir Nota
           </button>
         </div>
@@ -629,7 +629,10 @@ export default function NotasFiscais() {
                     Cancelar
                   </button>
                   <button onClick={aplicarOutroPeriodo}
-                    className="flex-1 py-2 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
+                    className="flex-1 py-2 text-xs text-white rounded-lg font-medium transition-all"
+                    style={{background: "#cc0000"}}
+                    onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
+                    onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                     Aplicar
                   </button>
                 </div>
@@ -773,7 +776,7 @@ export default function NotasFiscais() {
             </div>
             <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
               <button onClick={() => { setShowImport(false); setXmlTexto(""); }} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white">Cancelar</button>
-              <button onClick={importarXML} disabled={importando || !xmlTexto.trim()} className="px-4 py-2 text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium disabled:opacity-50">
+              <button onClick={importarXML} disabled={importando || !xmlTexto.trim()} className="px-4 py-2 text-sm text-white rounded-lg font-medium disabled:opacity-50" style={{background: "#cc0000"}} onMouseEnter={e => !importando && (e.currentTarget.style.background = "#aa0000")} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                 {importando ? "Importando..." : "Importar XML"}
               </button>
             </div>
@@ -864,7 +867,7 @@ export default function NotasFiscais() {
                     </F>
                   </div>
                   <div className="flex justify-end">
-                    <button onClick={() => setAbaForm("itens")} className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg text-sm font-medium transition-all">
+                    <button onClick={() => setAbaForm("itens")} className="text-white px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                       Próximo: Itens →
                     </button>
                   </div>
@@ -920,7 +923,7 @@ export default function NotasFiscais() {
                   </F>
                   <div className="flex justify-between">
                     <button onClick={() => setAbaForm("cliente")} className="text-gray-400 hover:text-white text-sm px-4 py-2 border border-gray-700 rounded-lg transition-all">← Voltar</button>
-                    <button onClick={() => setAbaForm("pagamento")} className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg text-sm font-medium transition-all">Próximo: Pagamento →</button>
+                    <button onClick={() => setAbaForm("pagamento")} className="text-white px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>Próximo: Pagamento →</button>
                   </div>
                 </div>
               )}
@@ -961,7 +964,10 @@ export default function NotasFiscais() {
                       <button
                         onClick={() => temSpedy ? emitirNota() : salvarRascunho()}
                         disabled={emitindo}
-                        className="px-6 py-2 text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all disabled:opacity-50 flex items-center gap-2"
+                        className="px-6 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50 flex items-center gap-2"
+                        style={{background: "#cc0000"}}
+                        onMouseEnter={e => !emitindo && (e.currentTarget.style.background = "#aa0000")}
+                        onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}
                       >
                         {emitindo && <RefreshCw className="w-4 h-4 animate-spin" />}
                         {emitindo ? "Emitindo..." : temSpedy ? "Transmitir Nota" : "Salvar Nota"}
