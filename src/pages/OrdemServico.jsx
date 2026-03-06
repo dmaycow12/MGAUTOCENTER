@@ -1,36 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown } from "lucide-react";
+import { Plus, Search, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import OSForm from "@/components/os/OSForm";
 import OSCard from "@/components/os/OSCard";
 
-const PERIODOS_OS = [
-  { key: "tudo", label: "Tudo" },
-  { key: "hoje", label: "Hoje" },
-  { key: "semana", label: "Semana" },
-  { key: "mes_atual", label: "Mês" },
-  { key: "ano_atual", label: "Ano" },
-];
+const MESES_PT = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
-function getPeriodoRangeOS(key) {
-  const hoje = new Date();
-  const ano = hoje.getFullYear();
-  const mes = hoje.getMonth();
-  const dia = hoje.getDate();
-  const todayStr = hoje.toISOString().split("T")[0];
-  const pad = n => String(n).padStart(2, "0");
-  if (key === "hoje") return { inicio: todayStr, fim: todayStr };
-  if (key === "semana") {
-    const primeiro = new Date(hoje);
-    primeiro.setDate(dia - hoje.getDay());
-    const ultimo = new Date(primeiro);
-    ultimo.setDate(primeiro.getDate() + 6);
-    return { inicio: primeiro.toISOString().split("T")[0], fim: ultimo.toISOString().split("T")[0] };
-  }
-  if (key === "mes_atual") return { inicio: `${ano}-${pad(mes + 1)}-01`, fim: `${ano}-${pad(mes + 1)}-31` };
-  if (key === "ano_atual") return { inicio: `${ano}-01-01`, fim: `${ano}-12-31` };
-  return null;
-}
+const hoje = new Date();
 
 export default function OrdemServico() {
   const [ordens, setOrdens] = useState([]);
@@ -41,27 +17,20 @@ export default function OrdemServico() {
   const [editando, setEditando] = useState(null);
   const [clientes, setClientes] = useState([]);
   const [veiculos, setVeiculos] = useState([]);
-  const [filtroPeriodo, setFiltroPeriodo] = useState(() => localStorage.getItem("os_periodo") || "mes_atual");
-  const [outroPeriodoOpen, setOutroPeriodoOpen] = useState(false);
-  const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
-  const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
-  const [customRange, setCustomRange] = useState(null);
-  const outroPeriodoRef = useRef(null);
+  const [mesSel, setMesSel] = useState(hoje.getMonth()); // 0-11
+  const [anoSel, setAnoSel] = useState(hoje.getFullYear());
+  const [verTudo, setVerTudo] = useState(false);
 
-  const setPeriodo = (key) => {
-    setFiltroPeriodo(key);
-    setCustomRange(null);
-    localStorage.setItem("os_periodo", key);
+  const mesAnterior = () => {
+    if (mesSel === 0) { setMesSel(11); setAnoSel(a => a - 1); }
+    else setMesSel(m => m - 1);
+    setVerTudo(false);
   };
-
-  const aplicarOutroPeriodo = () => {
-    if (!outroPeriodoInicio || !outroPeriodoFim) return;
-    setCustomRange({ inicio: outroPeriodoInicio, fim: outroPeriodoFim });
-    setFiltroPeriodo("outro");
-    setOutroPeriodoOpen(false);
+  const mesSeguinte = () => {
+    if (mesSel === 11) { setMesSel(0); setAnoSel(a => a + 1); }
+    else setMesSel(m => m + 1);
+    setVerTudo(false);
   };
-
-  const statusList = ["Aberta", "Concluída", "Cancelada", "Tudo"];
 
   useEffect(() => { load(); }, []);
 
