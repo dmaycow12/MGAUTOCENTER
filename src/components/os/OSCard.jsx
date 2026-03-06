@@ -96,7 +96,6 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
       <tr>
         <td style="text-align:center">${i + 1}</td>
         <td>${s.descricao || ""}</td>
-        <td style="text-align:center">${s.tecnico || "—"}</td>
         <td style="text-align:right">R$ ${fmt(s.valor)}</td>
         <td style="text-align:right">R$ ${fmt(s.valor)}</td>
       </tr>`).join("");
