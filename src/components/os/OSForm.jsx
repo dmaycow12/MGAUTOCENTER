@@ -459,8 +459,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                   </Field>
                   <Field label="Forma de Pagamento">
                     <select value={form.forma_pagamento} onChange={e => setForm(f => ({ ...f, forma_pagamento: e.target.value }))} className="input-dark">
-                      <option value="">—</option>
-                      {["Dinheiro","Cartão de Crédito","Cartão de Débito","PIX","Boleto","Transferência","A Prazo"].map(s => <option key={s}>{s}</option>)}
+                      {["A Combinar","Dinheiro","Cartão de Crédito","Cartão de Débito","PIX","Boleto","Transferência","A Prazo"].map(s => <option key={s}>{s}</option>)}
                     </select>
                   </Field>
                   <Field label="Nº de Parcelas">
