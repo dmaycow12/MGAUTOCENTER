@@ -358,12 +358,16 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
             </button>
             {statusOpen && (
               <div ref={statusRef} className="absolute left-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-40 py-1 z-50">
-                {STATUS_OPTIONS.map(s => (
-                  <button key={s} onClick={() => alterarStatus(s)}
-                    className={"w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all " + (os.status === s ? "text-orange-400" : "text-gray-300")}>
-                    {s}
-                  </button>
-                ))}
+                {STATUS_OPTIONS.map(s => {
+                  const statusStyle = STATUS_STYLE[s];
+                  return (
+                    <button key={s} onClick={() => alterarStatus(s)}
+                      className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all"
+                      style={{ color: statusStyle.style.color || statusStyle.style.background }}>
+                      {s}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
