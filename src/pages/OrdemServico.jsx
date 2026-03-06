@@ -52,7 +52,11 @@ export default function OrdemServico() {
     load();
   };
 
-  const periodoRange = filtroPeriodo === "outro" ? customRange : getPeriodoRangeOS(filtroPeriodo);
+  const pad = n => String(n).padStart(2, "0");
+  const periodoRange = verTudo ? null : {
+    inicio: `${anoSel}-${pad(mesSel + 1)}-01`,
+    fim: `${anoSel}-${pad(mesSel + 1)}-31`,
+  };
 
   const filtradas = ordens
     .filter(o => {
