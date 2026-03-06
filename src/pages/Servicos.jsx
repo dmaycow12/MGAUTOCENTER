@@ -139,7 +139,7 @@ export default function Servicos() {
               <style>{`.inp { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .inp:focus { border-color:#f97316; } .inp::placeholder { color:#6b7280; }`}</style>
               <F label="Código"><input value={form.codigo} onChange={e => setForm(f => ({ ...f, codigo: e.target.value }))} className="inp" placeholder="Ex: SRV001" /></F>
               <F label="Descrição *"><input value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} className="inp" placeholder="Nome do serviço" /></F>
-              <F label="Categoria"><input value={form.categoria} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))} className="inp" placeholder="Ex: Mecânica, Elétrica..." /></F>
+              <F label="Descrição"><input value={form.categoria} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))} className="inp" placeholder="Ex: Mecânica, Elétrica..." /></F>
               <F label="Valor (R$)"><input type="number" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} className="inp" placeholder="0,00" /></F>
               <F label="Observações"><textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} className="inp" rows={2} /></F>
             </div>
