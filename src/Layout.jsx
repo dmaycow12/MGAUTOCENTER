@@ -201,7 +201,6 @@ export default function Layout({ children, currentPageName }) {
           </div>
           {sidebarOpen && (
             <div className="overflow-hidden">
-              <p className="font-bold text-sm leading-tight uppercase" style={{color: RED}}>MG AUTOCENTER</p>
             </div>
           )}
         </div>

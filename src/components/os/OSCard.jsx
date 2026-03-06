@@ -543,6 +543,29 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   ];
 
   return (
+    <>
+    {/* Modal de confirmação de status */}
+    {confirmStatus && (
+      <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
+        <div className="bg-gray-900 border border-yellow-500/30 rounded-2xl w-full max-w-md p-6 space-y-4">
+          <div className="flex items-center gap-3 text-yellow-400">
+            <svg className="w-7 h-7 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+            <h3 className="text-lg font-bold">Atenção!</h3>
+          </div>
+          <p className="text-gray-300 text-sm leading-relaxed">{confirmStatus.mensagem}</p>
+          <div className="flex gap-3 justify-end">
+            <button onClick={() => setConfirmStatus(null)}
+              className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
+              Cancelar
+            </button>
+            <button onClick={() => executarMudancaStatus(confirmStatus.novoStatus)}
+              className="px-4 py-2 text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
+              Confirmar
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all">
       {/* Linha 1: # + status + ícones */}
       <div className="flex items-center gap-2 px-3 py-2.5">
@@ -635,5 +658,6 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         </div>
       </div>
     </div>
+    </>
   );
 }
