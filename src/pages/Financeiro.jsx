@@ -381,12 +381,12 @@ function KpiCard({ icon: Icon, label, value, color }) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-gray-400 text-xs">{label}</span>
+        <span className="text-white text-sm font-bold">{label}</span>
         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${colors[color]}`}>
           <Icon className="w-4 h-4" />
         </div>
       </div>
-      <p className={`text-xl font-bold ${colors[color].split(" ")[0]}`}>
+      <p className="text-white text-sm font-bold">
         R$ {Number(value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
       </p>
     </div>
