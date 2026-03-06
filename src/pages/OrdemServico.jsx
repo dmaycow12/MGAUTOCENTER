@@ -61,7 +61,7 @@ export default function OrdemServico() {
     setOutroPeriodoOpen(false);
   };
 
-  const statusList = ["Aberta", "Concluída", "Cancelada", "Tudo"];
+  const statusList = ["Aberto", "Orçamento", "Concluído", "Tudo"];
 
   useEffect(() => { load(); }, []);
 
@@ -116,7 +116,7 @@ export default function OrdemServico() {
 
         {/* Linha 2: filtro status — Tudo primeiro */}
         <div className="flex gap-2">
-          {["Tudo", "Aberta", "Concluída", "Cancelada"].map(s => (
+          {["Tudo", "Aberto", "Orçamento", "Concluído"].map(s => (
             <button key={s} onClick={() => setFiltroStatus(s)}
               className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroStatus === s ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {s}
