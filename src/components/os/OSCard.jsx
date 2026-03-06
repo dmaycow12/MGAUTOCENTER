@@ -113,7 +113,8 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   };
 
   const style = STATUS_STYLE[os.status] || { badge: "bg-gray-600 text-white", value: "text-gray-300" };
-  const veiculoInfo = [os.veiculo_modelo, os.veiculo_placa].filter(Boolean).join(" - ").toUpperCase();
+  const veiculoModelo = [os.veiculo_marca, os.veiculo_modelo].filter(Boolean).join(" ").toUpperCase() || "—";
+  const veiculoPlaca = os.veiculo_placa?.toUpperCase() || "—";
 
   const menuItems = [
     { label: "Enviar orçamento", icon: WhatsAppIcon, action: enviarOrcamento },
