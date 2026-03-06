@@ -8,6 +8,8 @@ const defaultForm = () => ({
   cliente_id: "",
   cliente_nome: "",
   cliente_telefone: "",
+  cliente_email: "",
+  cliente_cpf_cnpj: "",
   veiculo_id: "",
   veiculo_placa: "",
   veiculo_modelo: "",
