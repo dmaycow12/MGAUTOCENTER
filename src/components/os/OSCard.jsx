@@ -239,6 +239,13 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
           <div class="value">${os.cliente_email || ""}</div>
         </div>
       </div>
+      ${(os.cliente_endereco || os.cliente_bairro || os.cliente_cidade) ? `
+      <div class="info-row">
+        <div class="info-cell" style="flex:1">
+          <div class="label">Endereço</div>
+          <div class="value">${[os.cliente_endereco, os.cliente_bairro, os.cliente_cidade, os.cliente_estado].filter(Boolean).join(" — ")}</div>
+        </div>
+      </div>` : ""}
     </div>
   </div>
 
