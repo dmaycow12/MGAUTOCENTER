@@ -136,55 +136,68 @@ export default function Financeiro() {
   return (
     <div className="space-y-4">
       {/* Filtro de Período */}
-      <div className="flex gap-2 items-center flex-wrap">
-        {/* Mês (select) - tamanho fixo */}
-        <select
-          value={filtroMes}
-          onChange={e => { setFiltroMes(Number(e.target.value)); setUsandoOutroPeriodo(false); setCustomRange(null); }}
-          className="w-36 py-3 px-3 rounded-xl text-sm font-medium bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-orange-500"
-        >
-          {MESES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-        </select>
+      <div className="flex gap-2 items-center">
+        {/* Botão Mês/Ano com dropdown */}
+        <div className="relative flex-1" ref={mesDropRef}>
+          <button
+            onClick={() => { setMesDropOpen(v => !v); setPeriodoDropOpen(false); }}
+            className={`w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${!usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
+          >
+            <span>{MESES[filtroMes - 1]}/{filtroAno}</span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${mesDropOpen ? "rotate-180" : ""}`} />
+          </button>
+          {mesDropOpen && (
+            <div className="absolute left-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full py-1 max-h-64 overflow-y-auto">
+              {ultimos12Meses.map(({ mes, ano }) => (
+                <button
+                  key={`${ano}-${mes}`}
+                  onClick={() => { setFiltroMes(mes); setFiltroAno(ano); setUsandoOutroPeriodo(false); setCustomRange(null); setMesDropOpen(false); }}
+                  className={`w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-gray-800 transition-all ${filtroMes === mes && filtroAno === ano && !usandoOutroPeriodo ? "text-orange-400" : "text-gray-300"}`}
+                >
+                  {MESES[mes - 1]}/{ano}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
-        {/* Ano (input number) */}
-        <input
-          type="number"
-          value={filtroAno}
-          onChange={e => { setFiltroAno(Number(e.target.value)); setUsandoOutroPeriodo(false); setCustomRange(null); }}
-          className="w-24 py-3 px-3 rounded-xl text-sm font-medium bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-orange-500"
-          min={2020} max={2099}
-        />
-
-        {/* Separador */}
-        <span className="text-gray-500 text-sm">ou</span>
-
-        {/* De */}
-        <input
-          type="date"
-          value={outroPeriodoInicio}
-          onChange={e => setOutroPeriodoInicio(e.target.value)}
-          className="py-3 px-3 rounded-xl text-sm font-medium bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-orange-500"
-          placeholder="DD/MM/AA"
-        />
-
-        <span className="text-gray-500 text-sm">a</span>
-
-        {/* Até */}
-        <input
-          type="date"
-          value={outroPeriodoFim}
-          onChange={e => setOutroPeriodoFim(e.target.value)}
-          className="py-3 px-3 rounded-xl text-sm font-medium bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-orange-500"
-          placeholder="DD/MM/AA"
-        />
-
-        {/* Botão Buscar */}
-        <button
-          onClick={aplicarOutroPeriodo}
-          className="px-4 py-3 rounded-xl text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white transition-all whitespace-nowrap"
-        >
-          Buscar
-        </button>
+        {/* Botão Período customizado */}
+        <div className="relative" ref={periodoDropRef}>
+          <button
+            onClick={() => { setPeriodoDropOpen(v => !v); setMesDropOpen(false); }}
+            className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
+          >
+            {usandoOutroPeriodo && customRange
+              ? `${customRange.inicio.split("-").reverse().join("/")} - ${customRange.fim.split("-").reverse().join("/")}`
+              : "Período"}
+            <ChevronDown className={`w-4 h-4 transition-transform ${periodoDropOpen ? "rotate-180" : ""}`} />
+          </button>
+          {periodoDropOpen && (
+            <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
+              <p className="text-xs text-gray-400 font-medium">Selecione o período</p>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">De</label>
+                <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Até</label>
+                <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setPeriodoDropOpen(false)}
+                  className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
+                  Cancelar
+                </button>
+                <button onClick={aplicarOutroPeriodo}
+                  className="flex-1 py-2 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
+                  Aplicar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* KPI Cards */}
