@@ -13,7 +13,7 @@ export default function Clientes() {
   const [form, setForm] = useState(defaultForm());
 
   function defaultForm() {
-    return { nome: "", tipo: "Pessoa Física", cpf_cnpj: "", rg_ie: "", telefone: "", email: "", cep: "", endereco: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", observacoes: "" };
+    return { nome: "", nome_fantasia: "", tipo: "Pessoa Física", cpf_cnpj: "", rg_ie: "", telefone: "", email: "", cep: "", endereco: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", observacoes: "" };
   }
 
   useEffect(() => {
@@ -184,9 +184,12 @@ export default function Clientes() {
                   </select>
                 </FormGroup>
                 <FormGroup label="Nome / Razão Social *">
-                  <input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} className="input-dark" placeholder="Nome completo" />
-                </FormGroup>
-                <FormGroup label="CPF / CNPJ">
+                    <input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} className="input-dark" placeholder="Nome completo" />
+                  </FormGroup>
+                  <FormGroup label="Nome Social / Nome Fantasia">
+                    <input value={form.nome_fantasia} onChange={e => setForm({ ...form, nome_fantasia: e.target.value })} className="input-dark" placeholder="Nome fantasia" />
+                  </FormGroup>
+                  <FormGroup label="CPF / CNPJ">
                   <input value={form.cpf_cnpj} onChange={e => setForm({ ...form, cpf_cnpj: e.target.value })} className="input-dark" placeholder="000.000.000-00" />
                 </FormGroup>
                 <FormGroup label="RG / IE">
