@@ -219,7 +219,6 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   <!-- Período -->
   <div class="periodo">
     <span>Entrada: <b>${fmtData(os.data_entrada)}</b></span>
-    <span>Previsão: <b>${fmtData(os.data_previsao) || "—"}</b></span>
     <span>Status: <b>${os.status || "—"}</b></span>
   </div>
 
