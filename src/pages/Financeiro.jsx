@@ -123,52 +123,35 @@ export default function Financeiro() {
 
   return (
     <div className="space-y-4">
-      {/* Filtro de Período — botão Mês + Outro Período */}
+      {/* Filtro de Período */}
       <div className="flex gap-2 items-stretch flex-wrap">
-        {/* Mês Anterior */}
-        <button
-          onClick={() => {
-            const d = new Date(filtroAno, filtroMes - 2, 1);
-            setFiltroMes(d.getMonth() + 1);
-            setFiltroAno(d.getFullYear());
-            setUsandoOutroPeriodo(false);
-            setCustomRange(null);
-          }}
-          className={`flex-1 py-3 rounded-xl text-xs font-medium transition-all bg-gray-800 border border-gray-700 text-gray-400 hover:text-white`}
+        {/* Mês (select) */}
+        <select
+          value={filtroMes}
+          onChange={e => { setFiltroMes(Number(e.target.value)); setUsandoOutroPeriodo(false); setCustomRange(null); }}
+          className="flex-1 py-3 px-3 rounded-xl text-sm font-medium bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-orange-500"
         >
-          {MESES[(filtroMes - 2 + 12) % 12]}
-        </button>
+          {MESES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+        </select>
 
-        {/* Mês Atual */}
-        <button
-          onClick={voltarParaMes}
-          className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${!usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}
-        >
-          {MESES[filtroMes - 1]} {filtroAno}
-        </button>
+        {/* Ano (input number) */}
+        <input
+          type="number"
+          value={filtroAno}
+          onChange={e => { setFiltroAno(Number(e.target.value)); setUsandoOutroPeriodo(false); setCustomRange(null); }}
+          className="w-24 py-3 px-3 rounded-xl text-sm font-medium bg-gray-800 border border-gray-700 text-white focus:outline-none focus:border-orange-500"
+          min={2020} max={2099}
+        />
 
-        {/* Próximo Mês */}
-        <button
-          onClick={() => {
-            const d = new Date(filtroAno, filtroMes, 1);
-            setFiltroMes(d.getMonth() + 1);
-            setFiltroAno(d.getFullYear());
-            setUsandoOutroPeriodo(false);
-            setCustomRange(null);
-          }}
-          className={`flex-1 py-3 rounded-xl text-xs font-medium transition-all bg-gray-800 border border-gray-700 text-gray-400 hover:text-white`}
-        >
-          {MESES[filtroMes % 12]}
-        </button>
-
+        {/* Outro Período */}
         <div className="relative" ref={outroPeriodoRef}>
           <button
             onClick={() => setOutroPeriodoOpen(v => !v)}
             className={`flex items-center gap-1 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}
           >
             {usandoOutroPeriodo && customRange
-              ? `${customRange.inicio.slice(8).replace("-","/")}/${customRange.inicio.slice(5,7)} - ${customRange.fim.slice(8).replace("-","/")}/${customRange.fim.slice(5,7)}`
-              : "Outro período"}
+              ? `${customRange.inicio.slice(8)}/${customRange.inicio.slice(5,7)} - ${customRange.fim.slice(8)}/${customRange.fim.slice(5,7)}`
+              : "Período"}
             <ChevronDown className={`w-3 h-3 transition-transform ${outroPeriodoOpen ? "rotate-180" : ""}`} />
           </button>
 
