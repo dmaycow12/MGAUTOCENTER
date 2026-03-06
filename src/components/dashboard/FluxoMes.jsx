@@ -34,10 +34,10 @@ function Card({ title, realizado, previsto, color, bg, bgColor }) {
   const percent = previsto > 0 ? (realizado / previsto) * 100 : 0;
 
   return (
-    <div className={`flex-1 ${bg} rounded-xl p-4 flex items-center gap-4`} style={bgColor ? { background: bgColor } : {}}>
+    <div className={`flex-1 ${bg} rounded-xl px-6 py-5 flex items-center gap-5`} style={bgColor ? { background: bgColor } : {}}>
       <CircleProgress percent={percent} color={color} />
-      <div className="space-y-0.5">
-        <p className="text-white text-sm font-bold mb-1">{title}</p>
+      <div className="space-y-1">
+        <p className="text-white text-base font-bold">{title}</p>
         <p className="text-white text-sm font-bold">Realizado: {fmt(realizado)}</p>
         <p className="text-white text-sm font-bold">Falta: {fmt(falta)}</p>
       </div>
