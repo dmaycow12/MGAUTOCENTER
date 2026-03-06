@@ -496,7 +496,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         {/* Veículo */}
         <div className="px-3 py-2.5 border-r border-gray-800">
           <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Veículo</p>
-          <p className="text-white text-sm font-medium truncate">{veiculoModelo}</p>
+          <p className="text-white text-sm font-medium truncate">{veiculoNome}</p>
         </div>
         {/* Placa */}
         <div className="px-3 py-2.5">
