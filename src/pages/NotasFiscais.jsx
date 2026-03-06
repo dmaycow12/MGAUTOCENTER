@@ -53,25 +53,43 @@ export default function NotasFiscais() {
 
   // Período — Mês atual por padrão
   const hoje = new Date();
-  const anoAtual = hoje.getFullYear();
-  const mesAtual = String(hoje.getMonth() + 1).padStart(2, "0");
-  const [filtroPeriodo, setFiltroPeriodo] = useState("mes_atual");
-  const [outroPeriodoOpen, setOutroPeriodoOpen] = useState(false);
+  const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
+  const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
+  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(false);
+  const [mesDropOpen, setMesDropOpen] = useState(false);
+  const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
   const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
   const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
   const [customRange, setCustomRange] = useState(null);
-  const outroPeriodoRef = useRef(null);
+  const mesDropRef = useRef(null);
+  const periodoDropRef = useRef(null);
 
-  const periodoRange = filtroPeriodo === "mes_atual"
-    ? { inicio: `${anoAtual}-${mesAtual}-01`, fim: `${anoAtual}-${mesAtual}-31` }
-    : filtroPeriodo === "outro" ? customRange : null;
+  const ultimos12Meses = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+    return { mes: d.getMonth() + 1, ano: d.getFullYear() };
+  });
+
+  const pad = n => String(n).padStart(2, "0");
+  const periodoRange = usandoOutroPeriodo && customRange
+    ? customRange
+    : { inicio: `${filtroAno}-${pad(filtroMes)}-01`, fim: `${filtroAno}-${pad(filtroMes)}-31` };
 
   const aplicarOutroPeriodo = () => {
     if (!outroPeriodoInicio || !outroPeriodoFim) return;
     setCustomRange({ inicio: outroPeriodoInicio, fim: outroPeriodoFim });
-    setFiltroPeriodo("outro");
-    setOutroPeriodoOpen(false);
+    setUsandoOutroPeriodo(true);
+    setPeriodoDropOpen(false);
   };
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (mesDropRef.current && !mesDropRef.current.contains(e.target)) setMesDropOpen(false);
+      if (periodoDropRef.current && !periodoDropRef.current.contains(e.target)) setPeriodoDropOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showEntrada, setShowEntrada] = useState(false);
