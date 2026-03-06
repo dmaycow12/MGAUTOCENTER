@@ -287,15 +287,14 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         <tr>
           <th class="col-num">Item</th>
           <th>Nome</th>
-          <th>Técnico</th>
           <th class="col-val">Vl. Unit.</th>
           <th class="col-sub">Subtotal</th>
         </tr>
       </thead>
       <tbody>
-        ${servicosRows || `<tr><td colspan="5" style="text-align:center;color:#999">Nenhum serviço</td></tr>`}
+        ${servicosRows || `<tr><td colspan="4" style="text-align:center;color:#999">Nenhum serviço</td></tr>`}
         <tr style="font-weight:bold;background:#f0f0f0">
-          <td colspan="4" style="text-align:right">TOTAL</td>
+          <td colspan="3" style="text-align:right">TOTAL</td>
           <td style="text-align:right">R$ ${fmt(os.valor_servicos)}</td>
         </tr>
       </tbody>
