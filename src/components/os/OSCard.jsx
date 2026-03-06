@@ -342,25 +342,44 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     <table class="pag-table">
       <thead>
         <tr>
+          <th>Parcela</th>
           <th>Vencimento</th>
           <th>Valor</th>
           <th>Forma de Pagamento</th>
-          <th>Observação</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>${fmtData(os.data_entrada)}</td>
-          <td>R$ ${fmt(totalGeral)}</td>
-          <td>${os.forma_pagamento || "—"}${os.parcelas > 1 ? ` (${os.parcelas}x)` : ""}</td>
-          <td>${os.observacoes || ""}</td>
-        </tr>
+        ${(() => {
+          const parcelas = os.parcelas_detalhes && os.parcelas_detalhes.length > 0
+            ? os.parcelas_detalhes
+            : [{ numero: 1, vencimento: os.data_entrada, valor: totalGeral, forma_pagamento: os.forma_pagamento || "Dinheiro" }];
+          return parcelas.map(p => `
+            <tr>
+              <td style="text-align:center">${p.numero}/${parcelas.length}</td>
+              <td>${fmtData(p.vencimento)}</td>
+              <td>R$ ${fmt(p.valor)}</td>
+              <td>${p.forma_pagamento || os.forma_pagamento || "—"}</td>
+            </tr>`).join("");
+        })()}
       </tbody>
     </table>
   </div>
 
+  <!-- Observações -->
+  ${os.observacoes ? `
+  <div class="section" style="margin-top:8px">
+    <div class="section-title">Observações</div>
+    <div class="info-grid">
+      <div class="info-row">
+        <div class="info-cell" style="min-height:50px">
+          <div class="value" style="font-weight:normal;font-size:9pt;white-space:pre-wrap">${os.observacoes}</div>
+        </div>
+      </div>
+    </div>
+  </div>` : ""}
+
   <!-- Assinaturas -->
-  <div class="assinaturas">
+  <div class="assinaturas" style="margin-top:40px">
     <div class="assinatura">
       <div class="linha"></div>
       <div class="nome">Assinatura do cliente</div>
