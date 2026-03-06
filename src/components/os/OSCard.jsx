@@ -304,8 +304,6 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   };
 
   // html generation moved to gerarHTMLImpressao()
-  const _x = "";
-  {/*
   .page { max-width: 210mm; margin: 0 auto; padding: 10mm 12mm; }
   
   /* Cabeçalho */
