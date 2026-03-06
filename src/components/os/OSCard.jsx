@@ -355,7 +355,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
       </thead>
       <tbody>
         <tr>
-          <td>${fmtData(os.data_previsao) || fmtData(os.data_entrada)}</td>
+          <td>${fmtData(os.data_entrada)}</td>
           <td>R$ ${fmt(totalGeral)}</td>
           <td>${os.forma_pagamento || "—"}${os.parcelas > 1 ? ` (${os.parcelas}x)` : ""}</td>
           <td>${os.observacoes || ""}</td>
