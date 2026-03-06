@@ -94,55 +94,23 @@ export default function OrdemServico() {
           ))}
         </div>
 
-        {/* Linha 3: filtro período + Outro período */}
-        <div className="flex gap-2 flex-wrap items-stretch relative">
-          {PERIODOS_OS.map(p => (
-            <button key={p.key} onClick={() => setPeriodo(p.key)}
-              className={`flex-1 py-3 rounded-xl text-xs font-medium transition-all ${filtroPeriodo === p.key ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
-              {p.label}
-            </button>
-          ))}
-
-          {/* Outro Período */}
-          <div className="relative" ref={outroPeriodoRef}>
-            <button
-              onClick={() => setOutroPeriodoOpen(v => !v)}
-              className={`flex items-center gap-1 px-3 py-3 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${filtroPeriodo === "outro" ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}
-            >
-              {filtroPeriodo === "outro" && customRange
-                ? `${customRange.inicio.slice(5).replace("-","/")} - ${customRange.fim.slice(5).replace("-","/")}` 
-                : "Outro período"}
-              <ChevronDown className={`w-3 h-3 transition-transform ${outroPeriodoOpen ? "rotate-180" : ""}`} />
-            </button>
-
-            {outroPeriodoOpen && (
-              <div className="absolute right-0 top-full mt-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
-                <p className="text-xs text-gray-400 font-medium">Selecione o período</p>
-                <div className="space-y-2">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">De</label>
-                    <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Até</label>
-                    <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setOutroPeriodoOpen(false)}
-                    className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
-                    Cancelar
-                  </button>
-                  <button onClick={aplicarOutroPeriodo}
-                    className="flex-1 py-2 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
-                    Aplicar
-                  </button>
-                </div>
-              </div>
-            )}
+        {/* Linha 3: navegação mês/ano com setas */}
+        <div className="flex items-center gap-2">
+          <button onClick={mesAnterior}
+            className="p-2.5 bg-gray-800 border border-gray-700 text-gray-400 hover:text-white rounded-xl transition-all flex-shrink-0">
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <div className="flex-1 py-3 rounded-xl bg-orange-500 text-white text-sm font-semibold text-center">
+            {MESES_PT[mesSel]} {anoSel}
           </div>
+          <button onClick={mesSeguinte}
+            className="p-2.5 bg-gray-800 border border-gray-700 text-gray-400 hover:text-white rounded-xl transition-all flex-shrink-0">
+            <ChevronRight className="w-4 h-4" />
+          </button>
+          <button onClick={() => setVerTudo(v => !v)}
+            className={`px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${verTudo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+            Tudo
+          </button>
         </div>
 
         {/* Linha 4: busca */}
