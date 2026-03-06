@@ -3,7 +3,6 @@ import { base44 } from "@/api/base44Client";
 import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown } from "lucide-react";
 import FinanceiroCard from "@/components/financeiro/FinanceiroCard";
 import FluxoMes from "@/components/dashboard/FluxoMes";
-import GraficoRecebPag from "@/components/dashboard/GraficoRecebPag";
 
 const defaultForm = () => ({
   tipo: "Receita", categoria: "", descricao: "", valor: 0,
@@ -140,9 +139,6 @@ export default function Financeiro() {
     <div className="space-y-4">
       {/* Fluxo do Mês — Gráficos no topo */}
       <FluxoMes financeiro={items} />
-
-      {/* Segundo Gráfico com cores exatas */}
-      <GraficoRecebPag financeiro={items} />
 
       {/* Filtro de Período */}
       <div className="flex gap-2 items-center">
