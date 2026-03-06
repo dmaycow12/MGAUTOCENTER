@@ -303,10 +303,9 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     win.document.close();
   };
 
-  const _placeholder_start = "removed";
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Arial, sans-serif; font-size: 9pt; color: #111; background: #fff; }
+  // html generation moved to gerarHTMLImpressao()
+  const _x = "";
+  {/*
   .page { max-width: 210mm; margin: 0 auto; padding: 10mm 12mm; }
   
   /* Cabeçalho */
