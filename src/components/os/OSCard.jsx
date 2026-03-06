@@ -12,12 +12,12 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
   );
 }
 
-const STATUS_OPTIONS = ["Aberta", "Orçamento", "Concluída"];
+const STATUS_OPTIONS = ["Aberto", "Orçamento", "Concluído"];
 
 const STATUS_STYLE = {
-  "Aberta":     { badge: "text-white", style: { background: "#062C9B" } },
-  "Orçamento":  { badge: "text-white", style: { background: "#FFCC00", color: "#000" } },
-  "Concluída":  { badge: "text-white", style: { background: "#00C957" } },
+  "Aberto":     { badge: "text-white", style: { background: "#062C9B", color: "#fff" } },
+  "Orçamento":  { badge: "text-white", style: { background: "#FFCC00", color: "#fff" } },
+  "Concluído":  { badge: "text-white", style: { background: "#00C957", color: "#fff" } },
 };
 
 function fmtData(d) {
