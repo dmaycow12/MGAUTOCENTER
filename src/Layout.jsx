@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import {
-  LayoutDashboard,
   ClipboardList,
   Users,
   Package,
@@ -19,7 +18,6 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { name: "Dashboard", page: "Dashboard", icon: LayoutDashboard },
   { name: "Ordens de Serviço", page: "OrdemServico", icon: ClipboardList },
   { name: "Cadastro", page: "Clientes", icon: Users },
   { name: "Produtos", page: "Estoque", icon: Package },
