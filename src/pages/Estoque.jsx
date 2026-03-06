@@ -155,22 +155,22 @@ export default function Estoque() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <p className="text-gray-500 text-xs">Total de Itens</p>
-          <p className="text-2xl font-bold text-white mt-1">{items.length}</p>
+          <p className="text-white text-sm font-medium mb-2">Total de Itens</p>
+          <p className="text-white text-sm font-medium">{items.length}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <p className="text-gray-500 text-xs">Estoque Baixo</p>
-          <p className={`text-2xl font-bold mt-1 ${estoqueBaixo > 0 ? "text-red-400" : "text-green-400"}`}>{estoqueBaixo}</p>
+          <p className="text-white text-sm font-medium mb-2">Estoque Baixo</p>
+          <p className="text-white text-sm font-medium">{estoqueBaixo}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <p className="text-gray-500 text-xs">Valor Total (Custo)</p>
-          <p className="text-2xl font-bold text-orange-400 mt-1">
+          <p className="text-white text-sm font-medium mb-2">Valor Total (Custo)</p>
+          <p className="text-white text-sm font-medium">
             R$ {items.reduce((acc, i) => acc + (i.quantidade * i.valor_custo || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <p className="text-gray-500 text-xs">Valor Total (Venda)</p>
-          <p className="text-2xl font-bold text-green-400 mt-1">
+          <p className="text-white text-sm font-medium mb-2">Valor Total (Venda)</p>
+          <p className="text-white text-sm font-medium">
             R$ {items.reduce((acc, i) => acc + (i.quantidade * i.valor_venda || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         </div>
