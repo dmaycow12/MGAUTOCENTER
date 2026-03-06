@@ -303,27 +303,11 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     win.document.close();
   };
 
-  const _placeholder = () => {
-
-    const pecasRows = (os.pecas || []).map((p, i) => `
-      <tr>
-        <td style="text-align:center">${i + 1}</td>
-        <td>${p.descricao || ""}</td>
-        <td style="text-align:center">${p.quantidade || 1}</td>
-        <td style="text-align:right">R$ ${fmt(p.valor_unitario)}</td>
-        <td style="text-align:right">R$ ${fmt(p.valor_total)}</td>
-      </tr>`).join("");
-
-    const totalProdutos = Number(os.valor_pecas || 0);
-    const totalServicos = Number(os.valor_servicos || 0);
-    const desconto = Number(os.desconto || 0);
-    const totalGeral = Number(os.valor_total || 0);
-
-    const html = `<!DOCTYPE html>
+  const _placeholder_start = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
-<title>OS #${os.numero}</title>
+<title>placeholder</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; font-size: 9pt; color: #111; background: #fff; }
