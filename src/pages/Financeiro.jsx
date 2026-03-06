@@ -379,15 +379,15 @@ function FluxoCaixa({ items }) {
 function KpiCard({ icon: Icon, label, value, color }) {
   const colors = { green: "text-green-400 bg-green-500/10", red: "text-red-400 bg-red-500/10", orange: "text-orange-400 bg-orange-500/10", yellow: "text-yellow-400 bg-yellow-500/10" };
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-white text-sm font-bold">{label}</span>
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${colors[color]}`}>
-          <Icon className="w-4 h-4" />
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col justify-between h-24">
+      <div className="flex items-center justify-between">
+        <span className="text-white text-xs font-bold flex-1">{label}</span>
+        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${colors[color]}`}>
+          <Icon className="w-3 h-3" />
         </div>
       </div>
-      <p className="text-white text-sm font-bold">
-        R$ {Number(value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+      <p className="text-white text-base font-bold">
+        {Number(value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
       </p>
     </div>
   );
