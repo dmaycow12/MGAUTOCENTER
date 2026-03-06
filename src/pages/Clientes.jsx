@@ -183,15 +183,15 @@ export default function Clientes() {
                     <option>Pessoa Jurídica</option>
                   </select>
                 </FormGroup>
+                <FormGroup label="CPF / CNPJ">
+                   <input value={form.cpf_cnpj} onChange={e => setForm({ ...form, cpf_cnpj: e.target.value })} className="input-dark" placeholder="000.000.000-00" />
+                 </FormGroup>
                 <FormGroup label="Nome / Razão Social *">
-                    <input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} className="input-dark" placeholder="Nome completo" />
-                  </FormGroup>
-                  <FormGroup label="Nome Social / Nome Fantasia">
-                    <input value={form.nome_fantasia} onChange={e => setForm({ ...form, nome_fantasia: e.target.value })} className="input-dark" placeholder="Nome fantasia" />
-                  </FormGroup>
-                  <FormGroup label="CPF / CNPJ">
-                  <input value={form.cpf_cnpj} onChange={e => setForm({ ...form, cpf_cnpj: e.target.value })} className="input-dark" placeholder="000.000.000-00" />
-                </FormGroup>
+                   <input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} className="input-dark" placeholder="Nome completo" />
+                 </FormGroup>
+                 <FormGroup label="Nome Social / Nome Fantasia">
+                   <input value={form.nome_fantasia} onChange={e => setForm({ ...form, nome_fantasia: e.target.value })} className="input-dark" placeholder="Nome fantasia" />
+                 </FormGroup>
                 <FormGroup label="RG / IE">
                   <input value={form.rg_ie} onChange={e => setForm({ ...form, rg_ie: e.target.value })} className="input-dark" />
                 </FormGroup>
