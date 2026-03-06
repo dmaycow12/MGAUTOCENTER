@@ -408,23 +408,23 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         {/* Grade */}
         <div className="grid grid-cols-2 border-t border-gray-800">
           <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
-            <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Cliente</p>
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
             <p className="text-white text-sm font-medium truncate">{os.cliente_nome || "—"}</p>
           </div>
           <div className="px-3 py-2.5 border-r border-gray-800">
-            <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Veículo</p>
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Veículo</p>
             <p className="text-white text-sm font-medium truncate">{veiculoNome}</p>
           </div>
           <div className="px-3 py-2.5">
-            <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Placa</p>
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Placa</p>
             <p className="text-white text-sm font-medium">{veiculoPlaca}</p>
           </div>
           <div className="px-3 py-2.5 border-t border-r border-gray-800">
-            <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Data</p>
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Data</p>
             <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
           </div>
           <div className="px-3 py-2.5 border-t border-gray-800">
-            <p className="text-orange-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Valor</p>
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>
             <p className="text-white text-sm font-bold">{fmtValor(os.valor_total)}</p>
           </div>
         </div>
