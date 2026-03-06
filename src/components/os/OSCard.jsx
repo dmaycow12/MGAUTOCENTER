@@ -90,23 +90,321 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   const imprimir = () => {
     setMenuOpen(false);
     const fmt = (v) => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
-    const servicos = (os.servicos || []).map(s => `<tr><td>${s.descricao || ""}</td><td>${s.tecnico || "—"}</td><td style="text-align:right">R$ ${fmt(s.valor)}</td></tr>`).join("");
-    const pecas = (os.pecas || []).map(p => `<tr><td>${p.descricao || ""}</td><td style="text-align:center">${p.quantidade || 1}</td><td style="text-align:right">R$ ${fmt(p.valor_unitario)}</td><td style="text-align:right">R$ ${fmt(p.valor_total)}</td></tr>`).join("");
-    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><title>OS #${os.numero}</title>
-    <style>body{font-family:Arial,sans-serif;padding:20mm;color:#111;max-width:210mm;margin:0 auto}h1{font-size:16pt}table{width:100%;border-collapse:collapse;margin:8px 0}th{background:#f3f4f6;border:1px solid #ddd;padding:4px 8px;text-align:left;font-size:9pt}td{border:1px solid #ddd;padding:4px 8px;font-size:9pt}.total{font-size:14pt;font-weight:bold;color:#f97316}@media print{@page{size:A4;margin:15mm}body{padding:0}}</style>
-    </head><body>
-    <h1>Ordem de Serviço #${os.numero}</h1>
-    <p><b>Cliente:</b> ${os.cliente_nome || "—"} &nbsp;&nbsp; <b>Placa:</b> ${os.veiculo_placa || "—"} &nbsp;&nbsp; <b>Veículo:</b> ${os.veiculo_modelo || "—"}</p>
-    <p><b>Data:</b> ${fmtData(os.data_entrada)} &nbsp;&nbsp; <b>Status:</b> ${os.status || "—"}</p>
-    ${os.defeito_relatado ? `<p><b>Defeito relatado:</b> ${os.defeito_relatado}</p>` : ""}
-    ${os.diagnostico ? `<p><b>Diagnóstico:</b> ${os.diagnostico}</p>` : ""}
-    ${servicos ? `<h3>Serviços</h3><table><thead><tr><th>Descrição</th><th>Técnico</th><th>Valor</th></tr></thead><tbody>${servicos}</tbody></table>` : ""}
-    ${pecas ? `<h3>Peças</h3><table><thead><tr><th>Descrição</th><th>Qtd</th><th>Unitário</th><th>Total</th></tr></thead><tbody>${pecas}</tbody></table>` : ""}
-    <p style="margin-top:16px"><b>Serviços:</b> R$ ${fmt(os.valor_servicos)} &nbsp;&nbsp; <b>Peças:</b> R$ ${fmt(os.valor_pecas)} &nbsp;&nbsp; <b>Desconto:</b> R$ ${fmt(os.desconto)}</p>
-    <p class="total">Total: R$ ${fmt(os.valor_total)}</p>
-    ${os.forma_pagamento ? `<p><b>Pagamento:</b> ${os.forma_pagamento}${os.parcelas > 1 ? ` (${os.parcelas}x)` : ""}</p>` : ""}
-    ${os.observacoes ? `<p><b>Obs:</b> ${os.observacoes}</p>` : ""}
-    <script>window.onload=function(){window.print()}</script></body></html>`;
+    const hoje = new Date().toLocaleDateString("pt-BR");
+
+    const servicosRows = (os.servicos || []).map((s, i) => `
+      <tr>
+        <td style="text-align:center">${i + 1}</td>
+        <td>${s.descricao || ""}</td>
+        <td style="text-align:center">${s.tecnico || "—"}</td>
+        <td style="text-align:right">R$ ${fmt(s.valor)}</td>
+        <td style="text-align:right">R$ ${fmt(s.valor)}</td>
+      </tr>`).join("");
+
+    const pecasRows = (os.pecas || []).map((p, i) => `
+      <tr>
+        <td style="text-align:center">${i + 1}</td>
+        <td>${p.descricao || ""}</td>
+        <td style="text-align:center">${p.quantidade || 1}</td>
+        <td style="text-align:right">R$ ${fmt(p.valor_unitario)}</td>
+        <td style="text-align:right">R$ ${fmt(p.valor_total)}</td>
+      </tr>`).join("");
+
+    const totalProdutos = Number(os.valor_pecas || 0);
+    const totalServicos = Number(os.valor_servicos || 0);
+    const desconto = Number(os.desconto || 0);
+    const totalGeral = Number(os.valor_total || 0);
+
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<title>OS #${os.numero}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 9pt; color: #111; background: #fff; }
+  .page { max-width: 210mm; margin: 0 auto; padding: 10mm 12mm; }
+  
+  /* Cabeçalho */
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #c00; padding-bottom: 8px; margin-bottom: 8px; }
+  .logo-area { display: flex; align-items: center; gap: 10px; }
+  .logo-box { width: 48px; height: 48px; background: #c00; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+  .logo-box span { color: #fff; font-size: 18pt; font-weight: 900; line-height: 1; }
+  .company-name { font-size: 13pt; font-weight: bold; color: #c00; }
+  .company-info { font-size: 7.5pt; color: #555; line-height: 1.5; margin-top: 2px; }
+  .header-right { text-align: right; font-size: 7.5pt; color: #555; line-height: 1.6; }
+
+  /* Título OS */
+  .os-title { display: flex; justify-content: space-between; align-items: center; background: #222; color: #fff; padding: 5px 10px; margin: 8px 0; border-radius: 2px; }
+  .os-title .title { font-size: 11pt; font-weight: bold; letter-spacing: 1px; }
+  .os-title .date { font-size: 9pt; }
+
+  /* Período */
+  .periodo { display: flex; gap: 20px; font-size: 8pt; padding: 4px 0 8px; border-bottom: 1px solid #ddd; margin-bottom: 6px; }
+  .periodo span { color: #555; }
+  .periodo b { color: #111; }
+
+  /* Seções */
+  .section { margin-bottom: 8px; }
+  .section-title { background: #555; color: #fff; padding: 3px 8px; font-size: 8pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0; }
+  
+  /* Grid info */
+  .info-grid { display: grid; border: 1px solid #ddd; border-top: none; }
+  .info-row { display: flex; border-bottom: 1px solid #ddd; }
+  .info-row:last-child { border-bottom: none; }
+  .info-cell { flex: 1; padding: 3px 6px; border-right: 1px solid #ddd; }
+  .info-cell:last-child { border-right: none; }
+  .info-cell .label { font-size: 7pt; color: #888; text-transform: uppercase; }
+  .info-cell .value { font-size: 8.5pt; font-weight: bold; color: #111; min-height: 14px; }
+
+  /* Tabelas */
+  table { width: 100%; border-collapse: collapse; font-size: 8pt; }
+  table th { background: #f0f0f0; border: 1px solid #ccc; padding: 3px 6px; text-align: left; font-size: 7.5pt; font-weight: bold; text-transform: uppercase; }
+  table td { border: 1px solid #ddd; padding: 3px 6px; }
+  table tr:nth-child(even) td { background: #fafafa; }
+  .col-num { width: 30px; text-align: center; }
+  .col-qty { width: 40px; text-align: center; }
+  .col-val { width: 80px; text-align: right; }
+  .col-sub { width: 80px; text-align: right; }
+
+  /* Totais */
+  .totals-row { display: flex; justify-content: flex-end; gap: 0; margin-top: 4px; }
+  .total-item { border: 1px solid #ddd; padding: 4px 10px; text-align: right; min-width: 160px; }
+  .total-item .tl { font-size: 7.5pt; color: #666; }
+  .total-item .tv { font-size: 9pt; font-weight: bold; }
+  .total-geral { background: #222; color: #fff; border-color: #222; }
+  .total-geral .tl { color: #ccc; }
+  .total-geral .tv { font-size: 11pt; color: #fff; }
+
+  /* Pagamento */
+  .pag-table th, .pag-table td { font-size: 8pt; }
+
+  /* Assinaturas */
+  .assinaturas { display: flex; justify-content: space-between; margin-top: 16px; gap: 20px; }
+  .assinatura { flex: 1; text-align: center; }
+  .assinatura .linha { border-top: 1px solid #999; margin-bottom: 4px; }
+  .assinatura .nome { font-size: 7.5pt; color: #555; }
+
+  /* Rodapé */
+  .rodape { text-align: center; font-size: 7pt; color: #999; margin-top: 8px; border-top: 1px solid #eee; padding-top: 6px; }
+
+  @media print {
+    @page { size: A4; margin: 8mm; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Cabeçalho -->
+  <div class="header">
+    <div class="logo-area">
+      <div class="logo-box"><span>O</span></div>
+      <div>
+        <div class="company-name">OFICINA PRO</div>
+        <div class="company-info">ERP Automotivo</div>
+      </div>
+    </div>
+    <div class="header-right">
+      Emitido em: ${hoje}
+    </div>
+  </div>
+
+  <!-- Título -->
+  <div class="os-title">
+    <span class="title">ORDEM DE SERVIÇO Nº ${os.numero || "—"}</span>
+    <span class="date">${hoje}</span>
+  </div>
+
+  <!-- Período -->
+  <div class="periodo">
+    <span>Entrada: <b>${fmtData(os.data_entrada)}</b></span>
+    <span>Previsão: <b>${fmtData(os.data_previsao) || "—"}</b></span>
+    <span>Status: <b>${os.status || "—"}</b></span>
+  </div>
+
+  <!-- Dados do Cliente -->
+  <div class="section">
+    <div class="section-title">Dados do Cliente</div>
+    <div class="info-grid">
+      <div class="info-row">
+        <div class="info-cell" style="flex:3">
+          <div class="label">Cliente</div>
+          <div class="value">${os.cliente_nome || "—"}</div>
+        </div>
+        <div class="info-cell" style="flex:2">
+          <div class="label">CPF/CNPJ</div>
+          <div class="value">${os.cliente_cpf_cnpj || ""}</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-cell" style="flex:2">
+          <div class="label">Telefone</div>
+          <div class="value">${os.cliente_telefone || "—"}</div>
+        </div>
+        <div class="info-cell" style="flex:3">
+          <div class="label">E-mail</div>
+          <div class="value">${os.cliente_email || ""}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Veículo -->
+  <div class="section">
+    <div class="section-title">Veículo</div>
+    <div class="info-grid">
+      <div class="info-row">
+        <div class="info-cell" style="flex:3">
+          <div class="label">Veículo</div>
+          <div class="value">${os.veiculo_modelo || "—"}</div>
+        </div>
+        <div class="info-cell" style="flex:2">
+          <div class="label">Marca</div>
+          <div class="value">${os.veiculo_marca || "—"}</div>
+        </div>
+        <div class="info-cell" style="flex:2">
+          <div class="label">Modelo</div>
+          <div class="value">${os.veiculo_modelo || "—"}</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-cell" style="flex:2">
+          <div class="label">Placa</div>
+          <div class="value">${os.veiculo_placa || "—"}</div>
+        </div>
+        <div class="info-cell" style="flex:1">
+          <div class="label">Ano</div>
+          <div class="value">${os.veiculo_ano || "—"}</div>
+        </div>
+        <div class="info-cell" style="flex:1">
+          <div class="label">Cor</div>
+          <div class="value">${os.veiculo_cor || "—"}</div>
+        </div>
+        <div class="info-cell" style="flex:2">
+          <div class="label">Quilometragem</div>
+          <div class="value">${os.quilometragem ? Number(os.quilometragem).toLocaleString("pt-BR") + " km" : "—"}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  ${os.defeito_relatado || os.diagnostico ? `
+  <div class="section">
+    <div class="section-title">Observações Técnicas</div>
+    <div class="info-grid">
+      ${os.defeito_relatado ? `<div class="info-row"><div class="info-cell"><div class="label">Defeito Relatado</div><div class="value">${os.defeito_relatado}</div></div></div>` : ""}
+      ${os.diagnostico ? `<div class="info-row"><div class="info-cell"><div class="label">Diagnóstico</div><div class="value">${os.diagnostico}</div></div></div>` : ""}
+    </div>
+  </div>` : ""}
+
+  <!-- Serviços -->
+  <div class="section">
+    <div class="section-title">Serviços</div>
+    <table>
+      <thead>
+        <tr>
+          <th class="col-num">Item</th>
+          <th>Nome</th>
+          <th>Técnico</th>
+          <th class="col-val">Vl. Unit.</th>
+          <th class="col-sub">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${servicosRows || `<tr><td colspan="5" style="text-align:center;color:#999">Nenhum serviço</td></tr>`}
+        <tr style="font-weight:bold;background:#f0f0f0">
+          <td colspan="4" style="text-align:right">TOTAL</td>
+          <td style="text-align:right">R$ ${fmt(os.valor_servicos)}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Peças -->
+  <div class="section">
+    <div class="section-title">Peças / Produtos</div>
+    <table>
+      <thead>
+        <tr>
+          <th class="col-num">Item</th>
+          <th>Nome</th>
+          <th class="col-qty">Qtd.</th>
+          <th class="col-val">Vl. Unit.</th>
+          <th class="col-sub">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${pecasRows || `<tr><td colspan="5" style="text-align:center;color:#999">Nenhuma peça</td></tr>`}
+        <tr style="font-weight:bold;background:#f0f0f0">
+          <td colspan="4" style="text-align:right">TOTAL</td>
+          <td style="text-align:right">R$ ${fmt(os.valor_pecas)}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Totais -->
+  <div class="totals-row">
+    <div class="total-item">
+      <div class="tl">Produtos</div>
+      <div class="tv">R$ ${fmt(totalProdutos)}</div>
+    </div>
+    <div class="total-item">
+      <div class="tl">Serviços</div>
+      <div class="tv">R$ ${fmt(totalServicos)}</div>
+    </div>
+    ${desconto > 0 ? `<div class="total-item"><div class="tl">Desconto</div><div class="tv">- R$ ${fmt(desconto)}</div></div>` : ""}
+    <div class="total-item total-geral">
+      <div class="tl">TOTAL GERAL</div>
+      <div class="tv">R$ ${fmt(totalGeral)}</div>
+    </div>
+  </div>
+
+  <!-- Pagamento -->
+  <div class="section" style="margin-top:10px">
+    <div class="section-title">Dados do Pagamento</div>
+    <table class="pag-table">
+      <thead>
+        <tr>
+          <th>Vencimento</th>
+          <th>Valor</th>
+          <th>Forma de Pagamento</th>
+          <th>Observação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>${fmtData(os.data_previsao) || fmtData(os.data_entrada)}</td>
+          <td>R$ ${fmt(totalGeral)}</td>
+          <td>${os.forma_pagamento || "—"}${os.parcelas > 1 ? ` (${os.parcelas}x)` : ""}</td>
+          <td>${os.observacoes || ""}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Assinaturas -->
+  <div class="assinaturas">
+    <div class="assinatura">
+      <div class="linha"></div>
+      <div class="nome">Assinatura do cliente</div>
+    </div>
+    <div class="assinatura">
+      <div class="linha"></div>
+      <div class="nome">Assinatura do técnico</div>
+    </div>
+  </div>
+
+  <!-- Rodapé -->
+  <div class="rodape">Ordem de serviço emitida pelo sistema Oficina Pro</div>
+
+</div>
+<script>window.onload=function(){window.print()}</script>
+</body>
+</html>`;
+
     const win = window.open("", "_blank");
     win.document.write(html);
     win.document.close();
