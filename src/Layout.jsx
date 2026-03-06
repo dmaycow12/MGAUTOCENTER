@@ -90,7 +90,7 @@ function LoginPage() {
           <div className="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-orange-500/20">
             <Wrench className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-white font-bold text-2xl">Oficina Pro</h1>
+          <h1 className="text-white font-bold text-2xl">MG Autocenter</h1>
           <p className="text-gray-500 text-sm mt-1">ERP Automotivo — Acesso Restrito</p>
         </div>
 
