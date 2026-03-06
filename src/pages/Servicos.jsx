@@ -98,34 +98,32 @@ export default function Servicos() {
         </div>
       ) : (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-          <div className="hidden sm:grid grid-cols-[100px_1fr_140px_120px_80px] gap-4 px-4 py-2 border-b border-gray-800 text-xs text-gray-500 font-medium">
+          <div className="hidden sm:grid grid-cols-[100px_1fr_120px_80px] gap-4 px-4 py-2 border-b border-gray-800 text-xs text-gray-500 font-medium">
             <span>Código</span>
             <span>Descrição</span>
-            <span>Categoria</span>
             <span>Valor</span>
             <span className="text-right">Ações</span>
           </div>
-          {filtrados.map(item => (
-            <div key={item.id} className="grid grid-cols-1 sm:grid-cols-[100px_1fr_140px_120px_80px] gap-2 sm:gap-4 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/50 transition-all items-center">
-              <span className="text-orange-400 font-mono text-sm">{item.codigo || "—"}</span>
-              <div>
-                <p className="text-white text-sm font-medium">{item.descricao}</p>
-                {item.observacoes && <p className="text-gray-500 text-xs mt-0.5 truncate">{item.observacoes}</p>}
-              </div>
-              <span className="text-gray-400 text-sm">{item.categoria || "—"}</span>
-              <span className="text-green-400 text-sm font-medium">
-                {Number(item.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-              </span>
-              <div className="flex items-center gap-2 sm:justify-end">
-                <button onClick={() => abrirEditar(item)} className="p-1.5 text-gray-400 hover:text-orange-400 hover:bg-gray-700 rounded-lg transition-all">
-                  <Pencil className="w-4 h-4" />
-                </button>
-                <button onClick={() => excluir(item.id)} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-all">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
+           {filtrados.map(item => (
+             <div key={item.id} className="grid grid-cols-1 sm:grid-cols-[100px_1fr_120px_80px] gap-2 sm:gap-4 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/50 transition-all items-center">
+               <span className="text-orange-400 font-mono text-sm">{item.codigo || "—"}</span>
+               <div>
+                 <p className="text-white text-sm font-medium">{item.descricao}</p>
+                 {item.observacoes && <p className="text-gray-500 text-xs mt-0.5 truncate">{item.observacoes}</p>}
+               </div>
+               <span className="text-green-400 text-sm font-medium">
+                 {Number(item.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+               </span>
+               <div className="flex items-center gap-2 sm:justify-end">
+                 <button onClick={() => abrirEditar(item)} className="p-1.5 text-gray-400 hover:text-orange-400 hover:bg-gray-700 rounded-lg transition-all">
+                   <Pencil className="w-4 h-4" />
+                 </button>
+                 <button onClick={() => excluir(item.id)} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-all">
+                   <Trash2 className="w-4 h-4" />
+                 </button>
+               </div>
+             </div>
+           ))}
         </div>
       )}
 
