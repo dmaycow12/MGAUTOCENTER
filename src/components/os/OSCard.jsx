@@ -449,7 +449,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
 
 </div>
-<script>window.onload=function(){window.print()}</script>
+<script>window.onload=function(){ /* auto-print removido para usar botão */ }</script>
 </body>
 </html>`;
 
