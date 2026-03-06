@@ -49,9 +49,77 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const [showAvisoStatus, setShowAvisoStatus] = useState(false);
+  const [statusPendenteCard, setStatusPendenteCard] = useState(null);
+
+  const gerarLancamentosFinanceiros = async (osData) => {
+    const gerarParcelas = (total, qtd, formaPagamento, dataBase) => {
+      const valorParcela = total / Math.max(1, qtd);
+      const base = dataBase ? new Date(dataBase + "T00:00:00") : new Date();
+      return Array.from({ length: qtd }, (_, i) => {
+        const d = new Date(base);
+        d.setMonth(d.getMonth() + i);
+        return {
+          numero: i + 1,
+          valor: parseFloat(valorParcela.toFixed(2)),
+          vencimento: d.toISOString().split("T")[0],
+          forma_pagamento: formaPagamento || "Dinheiro",
+        };
+      });
+    };
+    const parcelas = osData.parcelas_detalhes && osData.parcelas_detalhes.length > 0
+      ? osData.parcelas_detalhes
+      : gerarParcelas(osData.valor_total, Number(osData.parcelas) || 1, osData.forma_pagamento, osData.data_entrada);
+    for (const p of parcelas) {
+      await base44.entities.Financeiro.create({
+        tipo: "Receita",
+        categoria: "Ordem de Serviço",
+        descricao: `OS #${osData.numero} — ${osData.cliente_nome || ""} — Parcela ${p.numero}/${parcelas.length}`,
+        valor: p.valor,
+        data_vencimento: p.vencimento,
+        status: "Pendente",
+        forma_pagamento: p.forma_pagamento || osData.forma_pagamento || "Dinheiro",
+        ordem_servico_id: osData.id || "",
+        cliente_id: osData.cliente_id || "",
+      });
+    }
+  };
+
+  const excluirLancamentos = async () => {
+    const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
+    const vinculados = financeiros.filter(f => f.ordem_servico_id === os.id);
+    for (const f of vinculados) {
+      await base44.entities.Financeiro.delete(f.id);
+    }
+  };
+
   const alterarStatus = async (novoStatus) => {
     setStatusOpen(false);
+    const eraConcluida = os.status === "Concluída";
+    const ficaConcluida = novoStatus === "Concluída";
+
+    // Se vai sair de Concluída, mostrar aviso
+    if (eraConcluida && !ficaConcluida) {
+      setStatusPendenteCard(novoStatus);
+      setShowAvisoStatus(true);
+      return;
+    }
+
     await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
+
+    // Se mudou para Concluída, gerar lançamentos
+    if (!eraConcluida && ficaConcluida) {
+      await gerarLancamentosFinanceiros(os);
+    }
+
+    onRefresh?.();
+  };
+
+  const confirmarMudancaStatus = async () => {
+    await excluirLancamentos();
+    await base44.entities.OrdemServico.update(os.id, { status: statusPendenteCard });
+    setShowAvisoStatus(false);
+    setStatusPendenteCard(null);
     onRefresh?.();
   };
 
