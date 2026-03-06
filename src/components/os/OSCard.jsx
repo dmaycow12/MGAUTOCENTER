@@ -297,6 +297,13 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   const imprimir = () => {
     setMenuOpen(false);
+    const html = gerarHTMLImpressao(os);
+    const win = window.open("", "_blank");
+    win.document.write(html);
+    win.document.close();
+  };
+
+  const _imprimir_REMOVIDO = () => {
     const fmt = (v) => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
     const hoje = new Date().toLocaleDateString("pt-BR");
 
