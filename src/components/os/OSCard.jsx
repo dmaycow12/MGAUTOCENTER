@@ -369,8 +369,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     </div>
   </div>
 
-  <!-- Rodapé -->
-  <div class="rodape">Ordem de serviço emitida pelo sistema MG Autocenter</div>
+
 
 </div>
 <script>window.onload=function(){window.print()}</script>
