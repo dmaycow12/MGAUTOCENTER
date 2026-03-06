@@ -152,35 +152,10 @@ export default function Dashboard() {
       </div>
 
       {/* KPIs Operacionais */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KpiCard icon={ClipboardList} label="OS Abertas" value={osAbertas.length} color="orange" link="OrdemServico" />
         <KpiCard icon={Users} label="Clientes" value={stats.clientes.length} color="blue" link="Clientes" />
         <KpiCard icon={AlertTriangle} label="Est. Baixo" value={estoqueBaixo.length} color="yellow" link="Estoque" />
-      </div>
-
-      {/* Gráfico Fluxo de Caixa Anual */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
-          <h3 className="text-white font-semibold text-sm">Fluxo de Caixa — {ano}</h3>
-          <span className="text-gray-500 text-xs">Receitas vs Despesas</span>
-        </div>
-        <div className="p-4">
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={fluxoAnual} barGap={4} barCategoryGap="30%">
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
-              <XAxis dataKey="mes" tick={{ fill: "#6b7280", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false}
-                tickFormatter={v => v === 0 ? "0" : `${(v / 1000).toFixed(0)}k`} width={36} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-              <Bar dataKey="Receitas" fill="#22c55e" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Despesas" fill="#ef4444" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-          <div className="flex items-center justify-center gap-6 mt-1">
-            <span className="flex items-center gap-1.5 text-xs text-gray-400"><span className="w-3 h-3 rounded-sm bg-green-500 inline-block" /> Receitas</span>
-            <span className="flex items-center gap-1.5 text-xs text-gray-400"><span className="w-3 h-3 rounded-sm bg-red-500 inline-block" /> Despesas</span>
-          </div>
-        </div>
       </div>
 
       {/* Tabela resumo mensal */}
