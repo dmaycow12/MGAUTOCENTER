@@ -88,6 +88,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const onClienteChange = (clienteId) => {
     const c = clientes.find(c => c.id === clienteId);
+    const end = [c?.endereco, c?.numero].filter(Boolean).join(", ");
     setForm(f => ({
       ...f,
       cliente_id: clienteId,
@@ -95,6 +96,10 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
       cliente_telefone: c?.telefone || "",
       cliente_email: c?.email || "",
       cliente_cpf_cnpj: c?.cpf_cnpj || "",
+      cliente_endereco: end,
+      cliente_bairro: c?.bairro || "",
+      cliente_cidade: c?.cidade || "",
+      cliente_estado: c?.estado || "",
     }));
   };
 
