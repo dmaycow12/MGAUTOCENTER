@@ -12,12 +12,12 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
   );
 }
 
-const STATUS_OPTIONS = ["Aberta", "Concluída", "Cancelada"];
+const STATUS_OPTIONS = ["Aberta", "Orçamento", "Concluída"];
 
 const STATUS_STYLE = {
-  "Aberta":     { badge: "bg-yellow-600 text-white" },
-  "Concluída":  { badge: "bg-green-600 text-white" },
-  "Cancelada":  { badge: "bg-red-600 text-white" },
+  "Aberta":     { badge: "text-white", style: { background: "#062C9B" } },
+  "Orçamento":  { badge: "text-white", style: { background: "#FFCC00", color: "#000" } },
+  "Concluída":  { badge: "text-white", style: { background: "#00C957" } },
 };
 
 function fmtData(d) {
@@ -351,6 +351,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
               ref={statusBtnRef}
               onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
               className={"flex items-center gap-1 text-xs px-2.5 py-1 rounded-md font-semibold hover:opacity-90 transition-all " + style.badge}
+              style={style.style}
             >
               {os.status || "—"}
               <ChevronDown className="w-3 h-3 flex-shrink-0" />
