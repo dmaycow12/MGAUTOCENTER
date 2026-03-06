@@ -579,9 +579,9 @@ export default function NotasFiscais() {
           <div className="relative flex-1" ref={mesDropRef}>
             <button
               onClick={() => { setMesDropOpen(v => !v); setPeriodoDropOpen(false); }}
-              className={`w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${!usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${!usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
             >
-              <span>{MESES[filtroMes - 1]}/{filtroAno}</span>
+              <span>{MESES[filtroMes - 1]} - {filtroAno}</span>
               <ChevronDown className={`w-4 h-4 transition-transform ${mesDropOpen ? "rotate-180" : ""}`} />
             </button>
             {mesDropOpen && (
