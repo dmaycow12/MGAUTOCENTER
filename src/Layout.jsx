@@ -18,10 +18,12 @@ import {
 } from "lucide-react";
 
 const navItems = [
+  { name: "Dashboard", page: "Dashboard", icon: TrendingUp },
   { name: "Ordens de Serviço", page: "OrdemServico", icon: ClipboardList },
   { name: "Cadastro", page: "Clientes", icon: Users },
   { name: "Produtos", page: "Estoque", icon: Package },
   { name: "Serviços", page: "Servicos", icon: Wrench },
+  { name: "Ativos", page: "Ativos", icon: Box },
   { name: "Notas Fiscais", page: "NotasFiscais", icon: FileText },
   { name: "Financeiro", page: "Financeiro", icon: DollarSign },
   { name: "Configurações", page: "Configuracoes", icon: Settings },
