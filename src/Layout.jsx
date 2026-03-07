@@ -69,7 +69,7 @@ function LoginPage() {
       const encontrado = usuariosExtras.find(u => u.usuario === usuario && u.senha === senha);
       if (encontrado) {
         sessionStorage.setItem("oficina_auth", JSON.stringify({ usuario: encontrado.usuario, nome: encontrado.nome, role: "user" }));
-        window.location.reload();
+        window.location.href = "/Dashboard";
         return;
       }
 
