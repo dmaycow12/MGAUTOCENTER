@@ -14,7 +14,9 @@ import {
   Wrench,
   ChevronRight,
   LogOut,
-  Lock
+  Lock,
+  TrendingUp,
+  Box
 } from "lucide-react";
 
 const navItems = [
