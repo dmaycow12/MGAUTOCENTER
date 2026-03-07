@@ -435,13 +435,9 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => cameraInputRef.current?.click()}
-                    className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 hover:text-white rounded-lg text-xs transition-all">
-                    <Camera className="w-4 h-4" /> Câmera
-                  </button>
                   <button type="button" onClick={() => fileInputRef.current?.click()}
                     className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 hover:text-white rounded-lg text-xs transition-all">
-                    <Image className="w-4 h-4" /> Galeria
+                    <Camera className="w-4 h-4" /> Câmera / Galeria
                   </button>
                 </div>
                 <input ref={cameraInputRef} type="file" accept="image/*" capture="user" className="hidden"
