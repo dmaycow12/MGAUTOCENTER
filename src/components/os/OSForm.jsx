@@ -2,6 +2,18 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { X, Plus, Trash2, AlertTriangle, Camera, Image } from "lucide-react";
 
+const handleFotoUpload = async (file) => {
+  if (!file) return;
+  setUploadingFoto(true);
+  const { file_url } = await base44.integrations.Core.UploadFile({ file });
+  setForm(f => ({ ...f, fotos: [...(f.fotos || []), file_url] }));
+  setUploadingFoto(false);
+};
+
+const removerFoto = (idx) => {
+  setForm(f => ({ ...f, fotos: f.fotos.filter((_, i) => i !== idx) }));
+};
+
 const defaultForm = () => ({
   numero: "",
   status: "Aberto",
