@@ -45,6 +45,7 @@ const defaultForm = () => ({
   forma_pagamento: "A Combinar",
   parcelas: 1,
   parcelas_detalhes: [],
+  fotos: [],
   observacoes: "",
 });
 
