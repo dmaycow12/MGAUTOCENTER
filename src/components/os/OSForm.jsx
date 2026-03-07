@@ -198,11 +198,6 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     setForm(f => ({ ...f, desconto: d, ...recalcular(f.servicos, f.pecas, d) }));
   };
 
-  const handleGerarParcelas = () => {
-    const detalhes = gerarParcelas(form.valor_total, Number(form.parcelas) || 1, form.forma_pagamento, form.data_entrada);
-    setForm(f => ({ ...f, parcelas_detalhes: detalhes }));
-  };
-
   const updateParcela = (i, field, val) => {
     setForm(f => {
       const novos = f.parcelas_detalhes.map((p, idx) =>
