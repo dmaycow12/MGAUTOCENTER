@@ -297,6 +297,13 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
       texto += `\n\n📋 *Observações:*\n${os.observacoes}`;
     }
 
+    if (os.fotos && os.fotos.length > 0) {
+      texto += `\n\n📸 *Fotos:*`;
+      os.fotos.forEach((url, i) => {
+        texto += `\n${i + 1}. ${url}`;
+      });
+    }
+
     const fone = telefone.startsWith("55") ? telefone : "55" + telefone;
     window.open("https://wa.me/" + fone + "?text=" + encodeURIComponent(texto), "_blank");
   };
