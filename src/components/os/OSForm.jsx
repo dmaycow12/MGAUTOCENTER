@@ -59,6 +59,18 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const [saving, setSaving] = useState(false);
+
+  const handleFotoUpload = async (file) => {
+    if (!file) return;
+    setUploadingFoto(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setForm(f => ({ ...f, fotos: [...(f.fotos || []), file_url] }));
+    setUploadingFoto(false);
+  };
+
+  const removerFoto = (idx) => {
+    setForm(f => ({ ...f, fotos: f.fotos.filter((_, i) => i !== idx) }));
+  };
   const [veiculosCliente, setVeiculosCliente] = useState([]);
   const [estoque, setEstoque] = useState([]);
   const [servicosCad, setServicosCad] = useState([]);
