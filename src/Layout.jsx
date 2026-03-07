@@ -177,7 +177,7 @@ export default function Layout({ children, currentPageName }) {
     </div>
   );
 
-  if (!autenticado) return <LoginPage />;
+  if (!autenticado && currentPageName !== "OrcamentoPublico") return <LoginPage />;
 
   return (
     <div className="min-h-screen text-gray-100 flex" style={{background:"#000"}}>
