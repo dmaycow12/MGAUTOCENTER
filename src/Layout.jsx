@@ -57,7 +57,7 @@ function LoginPage() {
 
       if (usuario === "admin" && senha === senhaAdminValida) {
         sessionStorage.setItem("oficina_auth", JSON.stringify({ usuario: "admin", nome: "Administrador", role: "admin" }));
-        window.location.reload();
+        window.location.href = "/Dashboard";
         return;
       }
 
