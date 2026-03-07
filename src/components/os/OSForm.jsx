@@ -444,7 +444,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                     <Image className="w-4 h-4" /> Galeria
                   </button>
                 </div>
-                <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden"
+                <input ref={cameraInputRef} type="file" accept="image/*" capture className="hidden"
                   onChange={e => { if (e.target.files?.[0]) handleFotoUpload(e.target.files[0]); e.target.value = ""; }} />
                 <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden"
                   onChange={e => { Array.from(e.target.files || []).forEach(f => handleFotoUpload(f)); e.target.value = ""; }} />
