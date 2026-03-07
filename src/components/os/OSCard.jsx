@@ -266,13 +266,34 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     setMenuOpen(false);
     const telefone = os.cliente_telefone?.replace(/\D/g, "");
     if (!telefone) return alert("Telefone do cliente não cadastrado.");
-    const msg = encodeURIComponent(
-      "Olá " + (os.cliente_nome||"") + "! Segue o orçamento da OS #" + os.numero + ":\n" +
-      "Veículo: " + (os.veiculo_placa||"") + " " + (os.veiculo_modelo||"") + "\n" +
-      "Serviços: " + fmtValor(os.valor_servicos) + "\nPeças: " + fmtValor(os.valor_pecas) + "\nTotal: " + fmtValor(os.valor_total)
-    );
+
+    const servicosList = (os.servicos || []).map((s, i) =>
+      `  ${i+1}. ${s.descricao || "Serviço"} — ${fmtValor(s.valor)}`
+    ).join("\n");
+
+    const pecasList = (os.pecas || []).map((p, i) =>
+      `  ${i+1}. ${p.descricao || "Peça"} (x${p.quantidade || 1}) — ${fmtValor(p.valor_total)}`
+    ).join("\n");
+
+    let texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da OS #${os.numero}:\n`;
+    texto += `Veículo: ${os.veiculo_placa || ""} ${os.veiculo_modelo || ""}\n\n`;
+
+    if (servicosList) {
+      texto += `🔧 *Serviços:*\n${servicosList}\nSubtotal: ${fmtValor(os.valor_servicos)}\n\n`;
+    }
+
+    if (pecasList) {
+      texto += `🔩 *Peças:*\n${pecasList}\nSubtotal: ${fmtValor(os.valor_pecas)}\n\n`;
+    }
+
+    if (os.desconto > 0) {
+      texto += `Desconto: -${fmtValor(os.desconto)}\n`;
+    }
+
+    texto += `💰 *Total: ${fmtValor(os.valor_total)}*`;
+
     const fone = telefone.startsWith("55") ? telefone : "55" + telefone;
-    window.open("https://wa.me/" + fone + "?text=" + msg, "_blank");
+    window.open("https://wa.me/" + fone + "?text=" + encodeURIComponent(texto), "_blank");
   };
 
   const chamarWhatsApp = () => {
