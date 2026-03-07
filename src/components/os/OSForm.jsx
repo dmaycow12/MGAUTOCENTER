@@ -53,7 +53,10 @@ function gerarParcelas(total, qtd, formaPagamento, dataBase) {
 
 export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   const isConcluida = os?.status === "Concluído";
-  const [form, setForm] = useState(os ? { ...defaultForm(), ...os } : defaultForm());
+  const [form, setForm] = useState(os ? { ...defaultForm(), ...os, fotos: os.fotos || [] } : defaultForm());
+  const [uploadingFoto, setUploadingFoto] = useState(false);
+  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
   const [saving, setSaving] = useState(false);
   const [veiculosCliente, setVeiculosCliente] = useState([]);
   const [estoque, setEstoque] = useState([]);
