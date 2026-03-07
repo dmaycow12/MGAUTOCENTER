@@ -267,42 +267,12 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     const telefone = os.cliente_telefone?.replace(/\D/g, "");
     if (!telefone) return alert("Telefone do cliente não cadastrado.");
 
-    const servicosList = (os.servicos || []).map((s, i) =>
-      `  ${i+1}. ${s.descricao || "Serviço"} — ${fmtValor(s.valor)}`
-    ).join("\n");
+    const linkOrcamento = `${window.location.origin}/OrcamentoPublico?id=${os.id}`;
 
-    const pecasList = (os.pecas || []).map((p, i) =>
-      `  ${i+1}. ${p.descricao || "Peça"} (x${p.quantidade || 1}) — ${fmtValor(p.valor_total)}`
-    ).join("\n");
-
-    let texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da OS #${os.numero}:\n`;
-    texto += `Veículo: ${os.veiculo_modelo || ""}\n`;
-    texto += `Placa: ${os.veiculo_placa || ""}\n\n`;
-
-    if (pecasList) {
-      texto += `🔩 *Peças:*\n${pecasList}\nSubtotal: ${fmtValor(os.valor_pecas)}\n\n`;
-    }
-
-    if (servicosList) {
-      texto += `🔧 *Serviços:*\n${servicosList}\nSubtotal: ${fmtValor(os.valor_servicos)}\n\n`;
-    }
-
-    if (os.desconto > 0) {
-      texto += `Desconto: -${fmtValor(os.desconto)}\n`;
-    }
-
-    texto += `💰 *Total: ${fmtValor(os.valor_total)}*`;
-
-    if (os.observacoes) {
-      texto += `\n\n📋 *Observações:*\n${os.observacoes}`;
-    }
-
-    if (os.fotos && os.fotos.length > 0) {
-      texto += `\n\n📸 *Fotos:*`;
-      os.fotos.forEach((url, i) => {
-        texto += `\n${i + 1}. ${url}`;
-      });
-    }
+    let texto = `Olá ${os.cliente_nome || ""}! 👋\n`;
+    texto += `Segue o orçamento da OS #${os.numero} para o seu veículo *${os.veiculo_modelo || ""}* (${os.veiculo_placa || ""}).\n\n`;
+    texto += `💰 *Total: ${fmtValor(os.valor_total)}*\n\n`;
+    texto += `📋 Acesse o orçamento completo com fotos pelo link:\n${linkOrcamento}`;
 
     const fone = telefone.startsWith("55") ? telefone : "55" + telefone;
     window.open("https://wa.me/" + fone + "?text=" + encodeURIComponent(texto), "_blank");
