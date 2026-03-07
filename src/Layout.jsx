@@ -77,7 +77,7 @@ function LoginPage() {
     } catch (err) {
       if (usuario === "admin" && senha === "admin123") {
         sessionStorage.setItem("oficina_auth", JSON.stringify({ usuario: "admin", nome: "Administrador", role: "admin" }));
-        window.location.reload();
+        window.location.href = "/Dashboard";
         return;
       }
       setErro("Erro ao verificar credenciais. Tente novamente.");
