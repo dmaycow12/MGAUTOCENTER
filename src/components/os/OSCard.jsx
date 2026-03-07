@@ -276,14 +276,15 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     ).join("\n");
 
     let texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da OS #${os.numero}:\n`;
-    texto += `Veículo: ${os.veiculo_placa || ""} ${os.veiculo_modelo || ""}\n\n`;
-
-    if (servicosList) {
-      texto += `🔧 *Serviços:*\n${servicosList}\nSubtotal: ${fmtValor(os.valor_servicos)}\n\n`;
-    }
+    texto += `Veículo: ${os.veiculo_modelo || ""}\n`;
+    texto += `Placa: ${os.veiculo_placa || ""}\n\n`;
 
     if (pecasList) {
       texto += `🔩 *Peças:*\n${pecasList}\nSubtotal: ${fmtValor(os.valor_pecas)}\n\n`;
+    }
+
+    if (servicosList) {
+      texto += `🔧 *Serviços:*\n${servicosList}\nSubtotal: ${fmtValor(os.valor_servicos)}\n\n`;
     }
 
     if (os.desconto > 0) {
@@ -291,6 +292,10 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     }
 
     texto += `💰 *Total: ${fmtValor(os.valor_total)}*`;
+
+    if (os.observacoes) {
+      texto += `\n\n📋 *Observações:*\n${os.observacoes}`;
+    }
 
     const fone = telefone.startsWith("55") ? telefone : "55" + telefone;
     window.open("https://wa.me/" + fone + "?text=" + encodeURIComponent(texto), "_blank");
