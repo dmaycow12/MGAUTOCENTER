@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { X, Plus, Trash2, RefreshCw, AlertTriangle } from "lucide-react";
+import { X, Plus, Trash2, AlertTriangle } from "lucide-react";
 
 const defaultForm = () => ({
   numero: "",
