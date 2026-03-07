@@ -171,6 +171,8 @@ export default function Layout({ children, currentPageName }) {
     window.location.reload();
   };
 
+  if (currentPageName === "OrcamentoPublico") return <>{children}</>;
+
   if (verificando) return (
     <div className="min-h-screen flex items-center justify-center" style={{background:"#000"}}>
       <div className="w-8 h-8 border-t-transparent rounded-full animate-spin" style={{border:`2px solid ${RED}`, borderTopColor:"transparent"}} />
