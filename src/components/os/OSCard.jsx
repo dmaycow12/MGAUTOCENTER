@@ -236,10 +236,10 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   const alterarStatus = async (novoStatus) => {
     setStatusOpen(false);
-    const eraConcluida = os.status === "Concluída";
-    const ficaConcluida = novoStatus === "Concluída";
+    const eraConcluido = os.status === "Concluído";
+    const ficaConcluido = novoStatus === "Concluído";
 
-    if (eraConcluida && !ficaConcluida) {
+    if (eraConcluido && !ficaConcluido) {
       setStatusPendenteCard(novoStatus);
       setShowAvisoStatus(true);
       return;
@@ -247,7 +247,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
     await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
 
-    if (!eraConcluida && ficaConcluida) {
+    if (!eraConcluido && ficaConcluido) {
       await gerarLancamentosFinanceiros(os);
     }
 
