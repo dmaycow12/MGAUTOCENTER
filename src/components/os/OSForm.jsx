@@ -507,15 +507,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                   </Field>
                 </div>
 
-                {/* Botão Gerar Parcelas */}
-                <button
-                  onClick={handleGerarParcelas}
-                  className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all mb-4"
-                >
-                  <RefreshCw className="w-4 h-4" /> Gerar Parcelas
-                </button>
-
-                {/* Tabela de Parcelas editável */}
+                {/* Tabela de Parcelas */}
                 {form.parcelas_detalhes && form.parcelas_detalhes.length > 0 && (
                   <div className="border border-gray-700 rounded-xl overflow-hidden">
                     <div className="bg-gray-800 px-3 py-2 text-xs text-gray-400 font-semibold uppercase tracking-wider grid grid-cols-4 gap-2">
