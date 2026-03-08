@@ -12,20 +12,50 @@ function fmtData(d) {
   return parts[2] + "/" + parts[1] + "/" + String(parts[0]).slice(2);
 }
 
+const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png";
+
+function setMeta(property, content) {
+  let el = document.querySelector(`meta[property="${property}"]`) || document.querySelector(`meta[name="${property}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute(property.startsWith("og:") ? "property" : "name", property);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
+}
+
 export default function OrcamentoPublico() {
   const [os, setOs] = useState(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
 
   useEffect(() => {
+    // Set default OG tags immediately
+    document.title = "Mg Autocenter";
+    setMeta("og:title", "Mg Autocenter");
+    setMeta("og:description", "Sistema Mg Autocenter");
+    setMeta("og:image", LOGO_URL);
+    setMeta("og:type", "website");
+    setMeta("description", "Sistema Mg Autocenter");
+
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
     if (!id) { setErro("Link inválido."); setLoading(false); return; }
 
     base44.entities.OrdemServico.filter({ id })
       .then(res => {
-        if (res && res.length > 0) setOs(res[0]);
-        else setErro("Orçamento não encontrado.");
+        if (res && res.length > 0) {
+          const data = res[0];
+          setOs(data);
+          // Update OG tags with OS info
+          const title = `Orçamento #${data.numero || ""} — Mg Autocenter`;
+          const desc = `${data.cliente_nome || ""} | ${data.veiculo_modelo || ""} | Total: ${Number(data.valor_total || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`;
+          document.title = title;
+          setMeta("og:title", title);
+          setMeta("og:description", desc);
+          setMeta("og:image", LOGO_URL);
+          setMeta("description", desc);
+        } else setErro("Orçamento não encontrado.");
         setLoading(false);
       })
       .catch(() => { setErro("Erro ao carregar orçamento."); setLoading(false); });
