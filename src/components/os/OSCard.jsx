@@ -269,10 +269,37 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
     const linkOrcamento = `${window.location.origin}/OrcamentoPublico?id=${os.id}`;
 
-    let texto = `Olá ${os.cliente_nome || ""}! 👋\n`;
-    texto += `Segue o orçamento da OS #${os.numero} para o seu veículo *${os.veiculo_modelo || ""}* (${os.veiculo_placa || ""}).\n\n`;
-    texto += `💰 *Total: ${fmtValor(os.valor_total)}*\n\n`;
-    texto += `📋 Acesse o orçamento completo com fotos pelo link:\n${linkOrcamento}`;
+    const servicosList = (os.servicos || []).map((s, i) =>
+      `  ${i+1}. ${s.descricao || "Serviço"} (x${s.quantidade || 1}) — ${fmtValor(Number(s.valor||0)*Number(s.quantidade||1))}`
+    ).join("\n");
+
+    const pecasList = (os.pecas || []).map((p, i) =>
+      `  ${i+1}. ${p.descricao || "Peça"} (x${p.quantidade || 1}) — ${fmtValor(p.valor_total)}`
+    ).join("\n");
+
+    let texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da OS #${os.numero}:\n`;
+    texto += `Veículo: ${os.veiculo_modelo || ""}\n`;
+    texto += `Placa: ${os.veiculo_placa || ""}\n`;
+
+    if (pecasList) {
+      texto += `\n⚙️ *Peças:*\n${pecasList}\nSubtotal: ${fmtValor(os.valor_pecas)}\n`;
+    }
+
+    if (servicosList) {
+      texto += `\n🔧 *Serviços:*\n${servicosList}\nSubtotal: ${fmtValor(os.valor_servicos)}\n`;
+    }
+
+    if (os.desconto > 0) {
+      texto += `\nDesconto: -${fmtValor(os.desconto)}\n`;
+    }
+
+    texto += `\n💰 *Total: ${fmtValor(os.valor_total)}*`;
+
+    if (os.observacoes) {
+      texto += `\n\n📋 *Observações:*\n${os.observacoes}`;
+    }
+
+    texto += `\n\n🔗 Acesse o orçamento completo com fotos:\n${linkOrcamento}`;
 
     const fone = telefone.startsWith("55") ? telefone : "55" + telefone;
     window.open("https://wa.me/" + fone + "?text=" + encodeURIComponent(texto), "_blank");
