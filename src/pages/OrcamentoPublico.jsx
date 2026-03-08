@@ -98,7 +98,7 @@ export default function OrcamentoPublico() {
         {os.pecas && os.pecas.length > 0 && (
           <div className="rounded-xl overflow-hidden border border-gray-800">
             <div className="px-4 py-2.5" style={{ background: "#1a1a1a" }}>
-              <p className="text-gray-300 font-semibold text-sm">🔩 Peças / Produtos</p>
+              <p className="text-gray-300 font-semibold text-sm">⚙️ Peças / Produtos</p>
             </div>
             <div style={{ background: "#111" }}>
               {os.pecas.map((p, i) => (

@@ -54,9 +54,9 @@ import Dashboard from './pages/Dashboard';
 import Estoque from './pages/Estoque';
 import Financeiro from './pages/Financeiro';
 import NotasFiscais from './pages/NotasFiscais';
+import OrcamentoPublico from './pages/OrcamentoPublico';
 import OrdemServico from './pages/OrdemServico';
 import Servicos from './pages/Servicos';
-import OrcamentoPublico from './pages/OrcamentoPublico';
 import __Layout from './Layout.jsx';
 
 
@@ -68,9 +68,9 @@ export const PAGES = {
     "Estoque": Estoque,
     "Financeiro": Financeiro,
     "NotasFiscais": NotasFiscais,
+    "OrcamentoPublico": OrcamentoPublico,
     "OrdemServico": OrdemServico,
     "Servicos": Servicos,
-    "OrcamentoPublico": OrcamentoPublico,
 }
 
 export const pagesConfig = {
