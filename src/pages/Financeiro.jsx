@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown } from "lucide-react";
+import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import FinanceiroCard from "@/components/financeiro/FinanceiroCard";
 import FluxoMes from "@/components/dashboard/FluxoMes";
 
