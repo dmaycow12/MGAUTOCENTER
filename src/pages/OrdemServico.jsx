@@ -118,7 +118,7 @@ export default function OrdemServico() {
         <div className="flex gap-2">
           {["Tudo", "Aberto", "Orçamento", "Concluído"].map(s => (
             <button key={s} onClick={() => setFiltroStatus(s)}
-              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroStatus === s ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroStatus === s ? "bg-cyan-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {s}
             </button>
           ))}
@@ -128,7 +128,7 @@ export default function OrdemServico() {
         <div className="flex gap-2 flex-wrap items-stretch relative">
           {PERIODOS_OS.map(p => (
             <button key={p.key} onClick={() => setPeriodo(p.key)}
-              className={`flex-1 py-3 rounded-xl text-xs font-medium transition-all ${filtroPeriodo === p.key ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              className={`flex-1 py-3 rounded-xl text-xs font-medium transition-all ${filtroPeriodo === p.key ? "bg-cyan-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {p.label}
             </button>
           ))}
@@ -137,7 +137,7 @@ export default function OrdemServico() {
           <div className="relative" ref={outroPeriodoRef}>
             <button
               onClick={() => setOutroPeriodoOpen(v => !v)}
-              className={`flex items-center gap-1 px-3 py-3 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${filtroPeriodo === "outro" ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}
+              className={`flex items-center gap-1 px-3 py-3 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${filtroPeriodo === "outro" ? "bg-cyan-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}
             >
               {filtroPeriodo === "outro" && customRange
                 ? `${customRange.inicio.slice(5).replace("-","/")} - ${customRange.fim.slice(5).replace("-","/")}` 
