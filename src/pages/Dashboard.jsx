@@ -177,21 +177,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* KPIs principais */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard icon={ClipboardList} label="OS do Mês" value={osMes} sub={`${osAbertas} abertas`} color={RED} />
-        <KpiCard icon={DollarSign} label="Receita do Mês" value={fmt(receitaMes)} sub={`Recebido: ${fmt(receitaPaga)}`} color={GREEN} />
-        <KpiCard icon={Users} label="Clientes" value={clientes.length} sub="cadastrados" color={BLUE} />
-        <KpiCard icon={Package} label="Estoque Crítico" value={estoqueCritico} sub="itens abaixo do mínimo" color={estoqueCritico > 0 ? RED : GREEN} />
-      </div>
 
-      {/* KPIs financeiros */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard icon={TrendingUp} label="Despesa do Mês" value={fmt(despesaMes)} color={ORANGE} />
-        <KpiCard icon={CheckCircle} label="OS Concluídas" value={osConcluidas} sub="no total" color={GREEN} />
-        <KpiCard icon={Clock} label="Pendentes" value={pendentes} sub="lançamentos" color={YELLOW} />
-        <KpiCard icon={AlertCircle} label="Atrasados" value={atrasados} sub="lançamentos" color={atrasados > 0 ? RED : GREEN} />
-      </div>
 
       {/* Gráficos linha 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
