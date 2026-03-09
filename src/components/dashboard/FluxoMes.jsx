@@ -1,13 +1,13 @@
 import React from "react";
 
-function CircleProgress({ percent, color }) {
+function CircleProgress({ percent, color, textColor = "white", trackColor = "#1f2937" }) {
   const r = 28;
   const circ = 2 * Math.PI * r;
   const dash = Math.min(Math.max(percent, 0), 100) / 100 * circ;
 
   return (
     <svg width="72" height="72" viewBox="0 0 72 72">
-      <circle cx="36" cy="36" r={r} fill="none" stroke="#1f2937" strokeWidth="7" />
+      <circle cx="36" cy="36" r={r} fill="none" stroke={trackColor} strokeWidth="7" />
       <circle
         cx="36" cy="36" r={r}
         fill="none"
@@ -18,7 +18,7 @@ function CircleProgress({ percent, color }) {
         transform="rotate(-90 36 36)"
         style={{ transition: "stroke-dasharray 0.6s ease" }}
       />
-      <text x="36" y="41" textAnchor="middle" fontSize="11" fontWeight="bold" fill="white">
+      <text x="36" y="41" textAnchor="middle" fontSize="11" fontWeight="bold" fill={textColor}>
         {Math.round(percent)}%
       </text>
     </svg>
