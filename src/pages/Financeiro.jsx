@@ -225,7 +225,7 @@ export default function Financeiro() {
             {/* Linha 4: filtro status — Pendente / Atrasado / Pago / Todos */}
             <div className="flex gap-2">
               {["Pendente","Atrasado","Pago","Todos"].map(s => (
-                <button key={s} onClick={() => setFiltroStatus(s)} className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroStatus === s ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{s}</button>
+                <button key={s} onClick={() => setFiltroStatus(s)} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroStatus === s ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{s}</button>
               ))}
             </div>
 
