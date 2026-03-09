@@ -574,7 +574,7 @@ export default function NotasFiscais() {
         <div className="flex gap-2">
           {["Tudo", "Entrada", "Saída"].map(t => (
             <button key={t} onClick={() => setFiltroTipo(t === "Tudo" ? "Todos" : t)}
-              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${(t === "Tudo" ? filtroTipo === "Todos" : filtroTipo === t) ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${(t === "Tudo" ? filtroTipo === "Todos" : filtroTipo === t) ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {t}
             </button>
           ))}
