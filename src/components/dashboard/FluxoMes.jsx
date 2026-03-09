@@ -35,7 +35,7 @@ function Card({ title, realizado, previsto, color, bg, bgColor }) {
 
   return (
     <div className={`flex-1 ${bg} rounded-xl px-6 py-5 flex items-center gap-5`} style={bgColor ? { background: bgColor } : {}}>
-      <CircleProgress percent={percent} color={color} />
+      <CircleProgress percent={percent} color={color} textColor={bgColor === "#00ff00" ? "#000" : "white"} trackColor={bgColor === "#00ff00" ? "rgba(0,0,0,0.2)" : "#1f2937"} />
       <div className="space-y-1">
         <p className="text-base font-bold" style={{ color: bgColor === "#00ff00" ? "#000" : "#fff" }}>{title}</p>
         <p className="text-sm font-bold" style={{ color: bgColor === "#00ff00" ? "#000" : "#fff" }}>Realizado: {fmt(realizado)}</p>
