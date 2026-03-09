@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Pencil, Trash2, Camera, X, Image, ChevronDown, Check } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Camera, X, Image, ChevronDown, Check, LayoutGrid, List, Tag } from "lucide-react";
 
 const DEFAULT_CATEGORIAS = ["Equipamento", "Ferramenta", "Veículo", "Imóvel", "Mobiliário", "Eletrônico", "Outro"];
 
@@ -35,6 +35,9 @@ export default function Ativos() {
   const [editando, setEditando] = useState(null);
   const [detalhando, setDetalhando] = useState(null);
   const [categorias, setCategorias] = useState(getCategorias());
+  const [showCatManager, setShowCatManager] = useState(false);
+  const [novaCategoria, setNovaCategoria] = useState("");
+  const [viewMode, setViewMode] = useState("cards"); // "cards" | "list"
   const dropdownRef = useRef(null);
 
   useEffect(() => { load(); }, []);
@@ -61,9 +64,26 @@ export default function Ativos() {
     load();
   };
 
+  const atualizarCategorias = (cats) => {
+    setCategorias(cats);
+    saveCategorias(cats);
+  };
+
+  const adicionarCategoria = () => {
+    const nova = novaCategoria.trim();
+    if (!nova || categorias.includes(nova)) return;
+    atualizarCategorias([...categorias, nova]);
+    setNovaCategoria("");
+  };
+
+  const excluirCategoria = (cat) => {
+    if (categorias.length <= 1) return alert("Deve haver ao menos uma categoria.");
+    atualizarCategorias(categorias.filter(c => c !== cat));
+    if (filtroCategoria === cat) setFiltroCategoria("Todas");
+  };
+
   const filtrados = ativos.filter(a => {
-    const matchSearch = !search ||
-      a.nome?.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = !search || a.nome?.toLowerCase().includes(search.toLowerCase());
     const matchCat = filtroCategoria === "Todas" || a.categoria === filtroCategoria;
     return matchSearch && matchCat;
   });
@@ -122,23 +142,87 @@ export default function Ativos() {
         )}
       </div>
 
-      {/* Busca */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-        <input
-          type="text"
-          placeholder="Buscar ativo..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500"
-        />
+      {/* Gerenciar Categorias */}
+      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <button
+          onClick={() => setShowCatManager(!showCatManager)}
+          className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-400 hover:text-white transition-all"
+        >
+          <div className="flex items-center gap-2">
+            <Tag className="w-4 h-4" />
+            <span>Gerenciar Categorias</span>
+          </div>
+          <ChevronDown className={`w-4 h-4 transition-transform ${showCatManager ? "rotate-180" : ""}`} />
+        </button>
+
+        {showCatManager && (
+          <div className="border-t border-gray-800 p-4 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {categorias.map(cat => (
+                <span key={cat} className="flex items-center gap-1 bg-gray-800 border border-gray-700 text-gray-200 text-xs px-3 py-1.5 rounded-lg">
+                  {cat}
+                  <button onClick={() => excluirCategoria(cat)} className="text-gray-500 hover:text-red-400 transition-all ml-1">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                value={novaCategoria}
+                onChange={e => setNovaCategoria(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && adicionarCategoria()}
+                placeholder="Nova categoria..."
+                className="flex-1 bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
+              />
+              <button onClick={adicionarCategoria}
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                style={{ background: "#00ff00", color: "#000" }}>
+                + Adicionar
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Busca + Toggle de visualização */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <input
+            type="text"
+            placeholder="Buscar ativo..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500"
+          />
+        </div>
+        {/* Toggle cards/lista */}
+        <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+          <button
+            onClick={() => setViewMode("cards")}
+            className="px-3 py-2 transition-all"
+            style={{ background: viewMode === "cards" ? "#062C9B" : "transparent", color: viewMode === "cards" ? "#fff" : "#6b7280" }}
+            title="Cards"
+          >
+            <LayoutGrid className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className="px-3 py-2 transition-all"
+            style={{ background: viewMode === "list" ? "#062C9B" : "transparent", color: viewMode === "list" ? "#fff" : "#6b7280" }}
+            title="Lista"
+          >
+            <List className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Resumo */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
           <p className="text-gray-400 text-xs">Ativos</p>
-          <p className="text-green-400 font-bold text-lg">{filtrados.filter(a => a.status === "Ativo").length}</p>
+          <p className="text-green-400 font-bold text-lg">{filtrados.length}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
           <p className="text-gray-400 text-xs">Valor de Compra</p>
@@ -155,10 +239,22 @@ export default function Ativos() {
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
           <p className="text-gray-400">Nenhum ativo cadastrado</p>
         </div>
-      ) : (
+      ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtrados.map(ativo => (
             <AtivoCard
+              key={ativo.id}
+              ativo={ativo}
+              onEdit={() => { setEditando(ativo); setShowForm(true); }}
+              onDelete={() => excluir(ativo.id)}
+              onDetalhe={() => setDetalhando(ativo)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtrados.map(ativo => (
+            <AtivoRow
               key={ativo.id}
               ativo={ativo}
               onEdit={() => { setEditando(ativo); setShowForm(true); }}
@@ -173,7 +269,6 @@ export default function Ativos() {
         <AtivoForm
           ativo={editando}
           categorias={categorias}
-          setCategorias={(cats) => { setCategorias(cats); saveCategorias(cats); }}
           onClose={() => { setShowForm(false); setEditando(null); }}
           onSave={() => { setShowForm(false); setEditando(null); load(); }}
         />
@@ -188,7 +283,6 @@ export default function Ativos() {
 
 function AtivoCard({ ativo, onEdit, onDelete, onDetalhe }) {
   const foto = ativo.fotos?.[0];
-
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all cursor-pointer" onClick={onDetalhe}>
       <div className="h-36 bg-gray-800 flex items-center justify-center overflow-hidden">
@@ -201,13 +295,11 @@ function AtivoCard({ ativo, onEdit, onDelete, onDetalhe }) {
           </div>
         )}
       </div>
-
       <div className="p-3 space-y-2">
         <div className="min-w-0">
           <p className="text-white font-semibold text-sm truncate">{ativo.nome || "—"}</p>
           <span className="text-gray-500 text-xs bg-gray-800 px-2 py-0.5 rounded">{ativo.categoria || "—"}</span>
         </div>
-
         <div className="flex items-center justify-between">
           <div>
             <p className="text-gray-500 text-xs">Valor Atual</p>
@@ -218,7 +310,6 @@ function AtivoCard({ ativo, onEdit, onDelete, onDetalhe }) {
             <span className="text-gray-300 text-sm">{fmt(ativo.valor_aquisicao)}</span>
           </div>
         </div>
-
         <div className="flex gap-2 pt-1" onClick={e => e.stopPropagation()}>
           <button onClick={onEdit} className="flex-1 py-1.5 text-xs text-gray-400 hover:text-white border border-gray-700 rounded-lg flex items-center justify-center gap-1 transition-all hover:bg-gray-800">
             <Pencil className="w-3 h-3" /> Editar
@@ -232,10 +323,36 @@ function AtivoCard({ ativo, onEdit, onDelete, onDetalhe }) {
   );
 }
 
+function AtivoRow({ ativo, onEdit, onDelete, onDetalhe }) {
+  const foto = ativo.fotos?.[0];
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-xl flex items-center gap-3 px-4 py-3 hover:border-gray-700 transition-all cursor-pointer" onClick={onDetalhe}>
+      <div className="w-12 h-12 rounded-lg bg-gray-800 flex-shrink-0 overflow-hidden flex items-center justify-center">
+        {foto ? <img src={foto} alt="" className="w-full h-full object-cover" /> : <Image className="w-5 h-5 text-gray-600" />}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-white font-semibold text-sm truncate">{ativo.nome || "—"}</p>
+        <p className="text-gray-500 text-xs">{ativo.categoria || "—"} {ativo.data_aquisicao ? `• ${fmtData(ativo.data_aquisicao)}` : ""}</p>
+      </div>
+      <div className="text-right flex-shrink-0">
+        <p className="text-orange-400 font-bold text-sm">{fmt(ativo.valor_atual)}</p>
+        <p className="text-gray-500 text-xs">{fmt(ativo.valor_aquisicao)}</p>
+      </div>
+      <div className="flex gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+        <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
+          <Pencil className="w-4 h-4" />
+        </button>
+        <button onClick={onDelete} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AtivoDetalhe({ ativo, onClose, onEdit }) {
   const [fotoIdx, setFotoIdx] = useState(0);
   const fotos = ativo.fotos || [];
-
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-start justify-center p-4 overflow-y-auto">
       <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-lg my-4">
@@ -243,38 +360,32 @@ function AtivoDetalhe({ ativo, onClose, onEdit }) {
           <h2 className="text-white font-semibold">{ativo.nome}</h2>
           <button onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
         </div>
-
         {fotos.length > 0 && (
           <div className="relative">
             <img src={fotos[fotoIdx]} alt="" className="w-full h-56 object-cover" />
             {fotos.length > 1 && (
               <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
                 {fotos.map((_, i) => (
-                  <button key={i} onClick={() => setFotoIdx(i)}
-                    className="w-2 h-2 rounded-full transition-all"
+                  <button key={i} onClick={() => setFotoIdx(i)} className="w-2 h-2 rounded-full transition-all"
                     style={{ background: i === fotoIdx ? "#f97316" : "#6b7280" }} />
                 ))}
               </div>
             )}
           </div>
         )}
-
         <div className="p-5 space-y-3">
           <span className="text-gray-500 text-xs">{ativo.categoria}</span>
-
           <div className="grid grid-cols-2 gap-3">
             {ativo.data_aquisicao && <Info label="Aquisição" value={fmtData(ativo.data_aquisicao)} />}
             {ativo.valor_aquisicao > 0 && <Info label="Valor de Compra" value={fmt(ativo.valor_aquisicao)} />}
             {ativo.valor_atual > 0 && <Info label="Valor Atual" value={fmt(ativo.valor_atual)} />}
           </div>
-
           {ativo.observacoes && (
             <div>
               <p className="text-xs text-gray-500 mb-1">Observações</p>
               <p className="text-gray-300 text-sm">{ativo.observacoes}</p>
             </div>
           )}
-
           <button onClick={onEdit} className="w-full py-2.5 text-sm text-white rounded-xl font-medium transition-all" style={{ background: "#cc0000" }}
             onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
             onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
@@ -295,12 +406,11 @@ function Info({ label, value }) {
   );
 }
 
-function AtivoForm({ ativo, categorias, setCategorias, onClose, onSave }) {
+function AtivoForm({ ativo, categorias, onClose, onSave }) {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const [saving, setSaving] = useState(false);
   const [uploadingFoto, setUploadingFoto] = useState(false);
-  const [novaCategoria, setNovaCategoria] = useState("");
   const [form, setForm] = useState(ativo ? { ...ativo } : {
     nome: "",
     categoria: categorias[0] || "Equipamento",
@@ -323,19 +433,6 @@ function AtivoForm({ ativo, categorias, setCategorias, onClose, onSave }) {
     setForm(f => ({ ...f, fotos: f.fotos.filter((_, i) => i !== idx) }));
   };
 
-  const adicionarCategoria = () => {
-    const nova = novaCategoria.trim();
-    if (!nova || categorias.includes(nova)) return;
-    setCategorias([...categorias, nova]);
-    setNovaCategoria("");
-  };
-
-  const excluirCategoria = (cat) => {
-    if (categorias.length <= 1) return alert("Deve haver ao menos uma categoria.");
-    setCategorias(categorias.filter(c => c !== cat));
-    if (form.categoria === cat) setForm(f => ({ ...f, categoria: categorias.filter(c => c !== cat)[0] }));
-  };
-
   const salvar = async () => {
     if (!form.nome) return alert("Informe o nome do ativo.");
     setSaving(true);
@@ -355,7 +452,6 @@ function AtivoForm({ ativo, categorias, setCategorias, onClose, onSave }) {
           <h2 className="text-white font-semibold">{ativo ? "Editar Ativo" : "Novo Ativo"}</h2>
           <button onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
         </div>
-
         <div className="p-5 space-y-4">
           {/* Fotos */}
           <div>
@@ -392,47 +488,15 @@ function AtivoForm({ ativo, categorias, setCategorias, onClose, onSave }) {
               onChange={e => handleFotoUpload(e.target.files[0])} />
           </div>
 
-          {/* Nome */}
           <F label="Nome do Ativo *">
             <input value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} className="input-dark" placeholder="Ex: Moto Bros 160" />
           </F>
 
-          {/* Categoria com gerenciamento */}
-          <div>
-            <label className="block text-xs text-gray-400 mb-2">Categoria</label>
-            <select value={form.categoria} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))} className="input-dark mb-3">
+          <F label="Categoria">
+            <select value={form.categoria} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))} className="input-dark">
               {categorias.map(c => <option key={c}>{c}</option>)}
             </select>
-
-            {/* Gerenciar categorias */}
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-3 space-y-2">
-              <p className="text-xs text-gray-400 font-medium">Gerenciar categorias</p>
-              <div className="flex flex-wrap gap-2">
-                {categorias.map(cat => (
-                  <span key={cat} className="flex items-center gap-1 bg-gray-700 text-gray-200 text-xs px-2 py-1 rounded-lg">
-                    {cat}
-                    <button onClick={() => excluirCategoria(cat)} className="text-gray-400 hover:text-red-400 transition-all">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <input
-                  value={novaCategoria}
-                  onChange={e => setNovaCategoria(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && adicionarCategoria()}
-                  placeholder="Nova categoria..."
-                  className="input-dark flex-1 py-1.5 text-xs"
-                />
-                <button onClick={adicionarCategoria}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                  style={{ background: "#00ff00", color: "#000" }}>
-                  + Adicionar
-                </button>
-              </div>
-            </div>
-          </div>
+          </F>
 
           <div className="grid grid-cols-2 gap-3">
             <F label="Data de Aquisição">
@@ -451,7 +515,6 @@ function AtivoForm({ ativo, categorias, setCategorias, onClose, onSave }) {
             <textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} className="input-dark" rows={3} />
           </F>
         </div>
-
         <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
           <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-all">Cancelar</button>
           <button onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50"
@@ -474,4 +537,10 @@ function F({ label, children }) {
       {children}
     </div>
   );
+}
+
+function fmtData(d) {
+  if (!d) return "—";
+  const p = d.split("-");
+  return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d;
 }
