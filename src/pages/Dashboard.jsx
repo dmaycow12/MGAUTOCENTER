@@ -8,7 +8,7 @@ import {
 import {
   ClipboardList, DollarSign, Users, Package,
   TrendingUp, TrendingDown, Clock, CheckCircle,
-  AlertCircle, Wrench, ArrowRight
+  AlertCircle
 } from "lucide-react";
 
 const RED = "#cc0000";
