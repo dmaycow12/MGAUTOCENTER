@@ -1,16 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Pencil, Trash2, Camera, X, Image, Tag, MapPin, User, Calendar } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Camera, X, Image, ChevronDown, Check } from "lucide-react";
 
-const STATUS_COLOR = {
-  "Ativo": "#00C957",
-  "Em Manutenção": "#FFCC00",
-  "Inativo": "#6b7280",
-  "Vendido": "#cc0000",
-};
+const DEFAULT_CATEGORIAS = ["Equipamento", "Ferramenta", "Veículo", "Imóvel", "Mobiliário", "Eletrônico", "Outro"];
 
-const CATEGORIAS = ["Equipamento", "Ferramenta", "Veículo", "Imóvel", "Mobiliário", "Eletrônico", "Outro"];
-const STATUS_OPTS = ["Ativo", "Em Manutenção", "Inativo", "Vendido"];
+function getCategorias() {
+  try {
+    const s = localStorage.getItem("ativos_categorias");
+    return s ? JSON.parse(s) : DEFAULT_CATEGORIAS;
+  } catch { return DEFAULT_CATEGORIAS; }
+}
+
+function saveCategorias(cats) {
+  localStorage.setItem("ativos_categorias", JSON.stringify(cats));
+}
 
 function fmt(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -26,12 +29,25 @@ export default function Ativos() {
   const [ativos, setAtivos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filtroStatus, setFiltroStatus] = useState("Todos");
+  const [filtroCategoria, setFiltroCategoria] = useState("Todas");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
   const [detalhando, setDetalhando] = useState(null);
+  const [categorias, setCategorias] = useState(getCategorias());
+  const dropdownRef = useRef(null);
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const load = async () => {
     const data = await base44.entities.Ativo.list("-created_date", 500);
@@ -47,11 +63,9 @@ export default function Ativos() {
 
   const filtrados = ativos.filter(a => {
     const matchSearch = !search ||
-      a.nome?.toLowerCase().includes(search.toLowerCase()) ||
-      a.marca?.toLowerCase().includes(search.toLowerCase()) ||
-      a.modelo?.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = filtroStatus === "Todos" || a.status === filtroStatus;
-    return matchSearch && matchStatus;
+      a.nome?.toLowerCase().includes(search.toLowerCase());
+    const matchCat = filtroCategoria === "Todas" || a.categoria === filtroCategoria;
+    return matchSearch && matchCat;
   });
 
   const totalValorAtual = filtrados.reduce((acc, a) => acc + Number(a.valor_atual || 0), 0);
@@ -76,14 +90,36 @@ export default function Ativos() {
         <Plus className="w-4 h-4" /> Novo Ativo
       </button>
 
-      {/* Filtros status */}
-      <div className="flex gap-2 flex-wrap">
-        {["Todos", ...STATUS_OPTS].map(s => (
-          <button key={s} onClick={() => setFiltroStatus(s)}
-            className={`flex-1 min-w-[70px] py-2.5 rounded-xl text-xs font-medium transition-all ${filtroStatus === s ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
-            {s}
-          </button>
-        ))}
+      {/* Filtro Categoria - botão grande dropdown */}
+      <div ref={dropdownRef} className="relative">
+        <button
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          className="w-full flex items-center justify-between px-5 py-4 rounded-xl text-base font-semibold transition-all border"
+          style={{
+            background: filtroCategoria !== "Todas" ? "#062C9B" : "#1f2937",
+            color: "#fff",
+            borderColor: filtroCategoria !== "Todas" ? "#062C9B" : "#374151"
+          }}
+        >
+          <span>{filtroCategoria === "Todas" ? "Todas as Categorias" : filtroCategoria}</span>
+          <ChevronDown className={`w-5 h-5 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+        </button>
+
+        {dropdownOpen && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-700 rounded-xl z-20 overflow-hidden shadow-xl">
+            {["Todas", ...categorias].map(cat => (
+              <button
+                key={cat}
+                onClick={() => { setFiltroCategoria(cat); setDropdownOpen(false); }}
+                className="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-gray-800 transition-all text-left"
+                style={{ color: filtroCategoria === cat ? "#00ff00" : "#d1d5db" }}
+              >
+                <span>{cat === "Todas" ? "Todas as Categorias" : cat}</span>
+                {filtroCategoria === cat && <Check className="w-4 h-4" />}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Busca */}
@@ -136,6 +172,8 @@ export default function Ativos() {
       {showForm && (
         <AtivoForm
           ativo={editando}
+          categorias={categorias}
+          setCategorias={(cats) => { setCategorias(cats); saveCategorias(cats); }}
           onClose={() => { setShowForm(false); setEditando(null); }}
           onSave={() => { setShowForm(false); setEditando(null); load(); }}
         />
@@ -149,12 +187,10 @@ export default function Ativos() {
 }
 
 function AtivoCard({ ativo, onEdit, onDelete, onDetalhe }) {
-  const statusColor = STATUS_COLOR[ativo.status] || "#6b7280";
   const foto = ativo.fotos?.[0];
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all cursor-pointer" onClick={onDetalhe}>
-      {/* Foto ou placeholder */}
       <div className="h-36 bg-gray-800 flex items-center justify-center overflow-hidden">
         {foto ? (
           <img src={foto} alt={ativo.nome} className="w-full h-full object-cover" />
@@ -167,19 +203,20 @@ function AtivoCard({ ativo, onEdit, onDelete, onDetalhe }) {
       </div>
 
       <div className="p-3 space-y-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-white font-semibold text-sm truncate">{ativo.nome || "—"}</p>
-            <p className="text-gray-400 text-xs truncate">{ativo.marca} {ativo.modelo}</p>
-          </div>
-          <span className="text-xs font-bold flex-shrink-0 px-2 py-0.5 rounded-md" style={{ background: statusColor + "22", color: statusColor }}>
-            {ativo.status || "—"}
-          </span>
+        <div className="min-w-0">
+          <p className="text-white font-semibold text-sm truncate">{ativo.nome || "—"}</p>
+          <span className="text-gray-500 text-xs bg-gray-800 px-2 py-0.5 rounded">{ativo.categoria || "—"}</span>
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-orange-400 font-bold text-sm">{fmt(ativo.valor_atual)}</span>
-          <span className="text-gray-500 text-xs bg-gray-800 px-2 py-0.5 rounded">{ativo.categoria || "—"}</span>
+          <div>
+            <p className="text-gray-500 text-xs">Valor Atual</p>
+            <span className="text-orange-400 font-bold text-sm">{fmt(ativo.valor_atual)}</span>
+          </div>
+          <div className="text-right">
+            <p className="text-gray-500 text-xs">Valor de Compra</p>
+            <span className="text-gray-300 text-sm">{fmt(ativo.valor_aquisicao)}</span>
+          </div>
         </div>
 
         <div className="flex gap-2 pt-1" onClick={e => e.stopPropagation()}>
@@ -196,7 +233,6 @@ function AtivoCard({ ativo, onEdit, onDelete, onDetalhe }) {
 }
 
 function AtivoDetalhe({ ativo, onClose, onEdit }) {
-  const statusColor = STATUS_COLOR[ativo.status] || "#6b7280";
   const [fotoIdx, setFotoIdx] = useState(0);
   const fotos = ativo.fotos || [];
 
@@ -208,7 +244,6 @@ function AtivoDetalhe({ ativo, onClose, onEdit }) {
           <button onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
         </div>
 
-        {/* Fotos */}
         {fotos.length > 0 && (
           <div className="relative">
             <img src={fotos[fotoIdx]} alt="" className="w-full h-56 object-cover" />
@@ -225,20 +260,12 @@ function AtivoDetalhe({ ativo, onClose, onEdit }) {
         )}
 
         <div className="p-5 space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold px-2 py-0.5 rounded-md" style={{ background: statusColor + "22", color: statusColor }}>{ativo.status}</span>
-            <span className="text-gray-500 text-xs">{ativo.categoria}</span>
-          </div>
+          <span className="text-gray-500 text-xs">{ativo.categoria}</span>
 
           <div className="grid grid-cols-2 gap-3">
-            {ativo.marca && <Info label="Marca" value={ativo.marca} />}
-            {ativo.modelo && <Info label="Modelo" value={ativo.modelo} />}
-            {ativo.numero_serie && <Info label="Nº Série" value={ativo.numero_serie} />}
             {ativo.data_aquisicao && <Info label="Aquisição" value={fmtData(ativo.data_aquisicao)} />}
             {ativo.valor_aquisicao > 0 && <Info label="Valor de Compra" value={fmt(ativo.valor_aquisicao)} />}
             {ativo.valor_atual > 0 && <Info label="Valor Atual" value={fmt(ativo.valor_atual)} />}
-            {ativo.localizacao && <Info label="Localização" value={ativo.localizacao} />}
-            {ativo.responsavel && <Info label="Responsável" value={ativo.responsavel} />}
           </div>
 
           {ativo.observacoes && (
@@ -268,23 +295,18 @@ function Info({ label, value }) {
   );
 }
 
-function AtivoForm({ ativo, onClose, onSave }) {
+function AtivoForm({ ativo, categorias, setCategorias, onClose, onSave }) {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const [saving, setSaving] = useState(false);
   const [uploadingFoto, setUploadingFoto] = useState(false);
+  const [novaCategoria, setNovaCategoria] = useState("");
   const [form, setForm] = useState(ativo ? { ...ativo } : {
     nome: "",
-    categoria: "Equipamento",
-    marca: "",
-    modelo: "",
-    numero_serie: "",
+    categoria: categorias[0] || "Equipamento",
     data_aquisicao: "",
     valor_aquisicao: 0,
     valor_atual: 0,
-    status: "Ativo",
-    localizacao: "",
-    responsavel: "",
     fotos: [],
     observacoes: "",
   });
@@ -299,6 +321,19 @@ function AtivoForm({ ativo, onClose, onSave }) {
 
   const removerFoto = (idx) => {
     setForm(f => ({ ...f, fotos: f.fotos.filter((_, i) => i !== idx) }));
+  };
+
+  const adicionarCategoria = () => {
+    const nova = novaCategoria.trim();
+    if (!nova || categorias.includes(nova)) return;
+    setCategorias([...categorias, nova]);
+    setNovaCategoria("");
+  };
+
+  const excluirCategoria = (cat) => {
+    if (categorias.length <= 1) return alert("Deve haver ao menos uma categoria.");
+    setCategorias(categorias.filter(c => c !== cat));
+    if (form.categoria === cat) setForm(f => ({ ...f, categoria: categorias.filter(c => c !== cat)[0] }));
   };
 
   const salvar = async () => {
@@ -342,73 +377,73 @@ function AtivoForm({ ativo, onClose, onSave }) {
               )}
             </div>
             <div className="flex gap-2">
-              {/* Câmera */}
-              <button
-                type="button"
-                onClick={() => cameraInputRef.current?.click()}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 hover:text-white rounded-lg text-xs transition-all"
-              >
+              <button type="button" onClick={() => cameraInputRef.current?.click()}
+                className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 hover:text-white rounded-lg text-xs transition-all">
                 <Camera className="w-4 h-4" /> Câmera
               </button>
-              {/* Galeria */}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 hover:text-white rounded-lg text-xs transition-all"
-              >
+              <button type="button" onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 hover:text-white rounded-lg text-xs transition-all">
                 <Image className="w-4 h-4" /> Galeria
               </button>
             </div>
-            {/* Input câmera (capture) */}
             <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden"
               onChange={e => handleFotoUpload(e.target.files[0])} />
-            {/* Input galeria */}
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
               onChange={e => handleFotoUpload(e.target.files[0])} />
           </div>
 
-          {/* Campos */}
+          {/* Nome */}
           <F label="Nome do Ativo *">
-            <input value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} className="input-dark" placeholder="Ex: Compressor de Ar" />
+            <input value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} className="input-dark" placeholder="Ex: Moto Bros 160" />
           </F>
 
+          {/* Categoria com gerenciamento */}
+          <div>
+            <label className="block text-xs text-gray-400 mb-2">Categoria</label>
+            <select value={form.categoria} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))} className="input-dark mb-3">
+              {categorias.map(c => <option key={c}>{c}</option>)}
+            </select>
+
+            {/* Gerenciar categorias */}
+            <div className="bg-gray-800 border border-gray-700 rounded-xl p-3 space-y-2">
+              <p className="text-xs text-gray-400 font-medium">Gerenciar categorias</p>
+              <div className="flex flex-wrap gap-2">
+                {categorias.map(cat => (
+                  <span key={cat} className="flex items-center gap-1 bg-gray-700 text-gray-200 text-xs px-2 py-1 rounded-lg">
+                    {cat}
+                    <button onClick={() => excluirCategoria(cat)} className="text-gray-400 hover:text-red-400 transition-all">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  value={novaCategoria}
+                  onChange={e => setNovaCategoria(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && adicionarCategoria()}
+                  placeholder="Nova categoria..."
+                  className="input-dark flex-1 py-1.5 text-xs"
+                />
+                <button onClick={adicionarCategoria}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={{ background: "#00ff00", color: "#000" }}>
+                  + Adicionar
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
-            <F label="Categoria">
-              <select value={form.categoria} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))} className="input-dark">
-                {CATEGORIAS.map(c => <option key={c}>{c}</option>)}
-              </select>
-            </F>
-            <F label="Status">
-              <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="input-dark">
-                {STATUS_OPTS.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </F>
-            <F label="Marca">
-              <input value={form.marca} onChange={e => setForm(f => ({ ...f, marca: e.target.value }))} className="input-dark" placeholder="Ex: Schulz" />
-            </F>
-            <F label="Modelo">
-              <input value={form.modelo} onChange={e => setForm(f => ({ ...f, modelo: e.target.value }))} className="input-dark" placeholder="Ex: MSV 6/25" />
-            </F>
-            <F label="Nº de Série">
-              <input value={form.numero_serie} onChange={e => setForm(f => ({ ...f, numero_serie: e.target.value }))} className="input-dark" />
-            </F>
             <F label="Data de Aquisição">
               <input type="date" value={form.data_aquisicao} onChange={e => setForm(f => ({ ...f, data_aquisicao: e.target.value }))} className="input-dark" />
             </F>
+            <div />
             <F label="Valor de Compra (R$)">
               <input type="number" value={form.valor_aquisicao} onChange={e => setForm(f => ({ ...f, valor_aquisicao: Number(e.target.value) }))} className="input-dark" />
             </F>
             <F label="Valor Atual (R$)">
               <input type="number" value={form.valor_atual} onChange={e => setForm(f => ({ ...f, valor_atual: Number(e.target.value) }))} className="input-dark" />
-            </F>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <F label="Localização">
-              <input value={form.localizacao} onChange={e => setForm(f => ({ ...f, localizacao: e.target.value }))} className="input-dark" placeholder="Ex: Galpão 1" />
-            </F>
-            <F label="Responsável">
-              <input value={form.responsavel} onChange={e => setForm(f => ({ ...f, responsavel: e.target.value }))} className="input-dark" placeholder="Nome" />
             </F>
           </div>
 
