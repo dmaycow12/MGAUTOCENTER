@@ -574,7 +574,7 @@ export default function NotasFiscais() {
         <div className="flex gap-2">
           {["Tudo", "Entrada", "Saída"].map(t => (
             <button key={t} onClick={() => setFiltroTipo(t === "Tudo" ? "Todos" : t)}
-              className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${(t === "Tudo" ? filtroTipo === "Todos" : filtroTipo === t) ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${(t === "Tudo" ? filtroTipo === "Todos" : filtroTipo === t) ? "bg-cyan-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {t}
             </button>
           ))}
@@ -583,7 +583,7 @@ export default function NotasFiscais() {
         {/* Linha 3: filtro período */}
         <div className="flex gap-2 items-center">
           {/* Botão Mês com setas internas */}
-          <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
+          <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-cyan-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
             <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-3 hover:bg-black/10 transition-all flex-shrink-0">
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -597,7 +597,7 @@ export default function NotasFiscais() {
           <div className="relative flex-1" ref={periodoDropRef}>
             <button
               onClick={() => setPeriodoDropOpen(v => !v)}
-              className={`w-full flex items-center justify-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
+              className={`w-full flex items-center justify-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-cyan-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
             >
               {usandoOutroPeriodo && customRange ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}` : "Período"}
               <ChevronDown className={`w-4 h-4 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
