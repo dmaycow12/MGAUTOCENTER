@@ -89,15 +89,21 @@ export default function Clientes() {
             className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-orange-500"
           />
         </div>
-        <button
-          onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-          style={{background: "#00ff00", color: "#000"}}
-          onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
-          onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
-        >
-          <Plus className="w-4 h-4" /> Novo Cadastro
-        </button>
+        <div className="flex gap-2">
+          <div className="flex bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+            <button onClick={() => setViewMode("list")} className="px-3 py-2 transition-all" style={{background:viewMode==="list"?"#062C9B":"transparent",color:viewMode==="list"?"#fff":"#6b7280"}}><List className="w-4 h-4"/></button>
+            <button onClick={() => setViewMode("cards")} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-4 h-4"/></button>
+          </div>
+          <button
+            onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            style={{background: "#00ff00", color: "#000"}}
+            onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
+            onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
+          >
+            <Plus className="w-4 h-4" /> Novo Cadastro
+          </button>
+        </div>
       </div>
 
       {/* Lista */}
@@ -108,6 +114,23 @@ export default function Clientes() {
           <button onClick={() => setShowForm(true)} className="mt-4 text-orange-400 text-sm hover:text-orange-300">
             Criar primeiro cadastro
           </button>
+        </div>
+      ) : viewMode === "cards" ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {filtrados.map(c => (
+            <div key={c.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col gap-2 hover:border-gray-700 transition-all">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-white font-bold text-sm leading-snug">{c.nome}</p>
+                <div className="flex gap-1 flex-shrink-0">
+                  <button onClick={() => editarCliente(c)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all"><Edit className="w-3.5 h-3.5"/></button>
+                  <button onClick={() => excluir(c.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
+                </div>
+              </div>
+              {c.telefone && <p className="text-gray-400 text-xs">{c.telefone}</p>}
+              {c.email && <p className="text-gray-500 text-xs truncate">{c.email}</p>}
+              {c.cidade && <p className="text-gray-500 text-xs">{c.cidade}/{c.estado}</p>}
+            </div>
+          ))}
         </div>
       ) : (
         <div className="space-y-2">
