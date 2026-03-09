@@ -201,7 +201,6 @@ export default function Financeiro() {
         <KpiCard icon={Filter} label="Pendente/Atrasado" value={pendente + atrasado} color="yellow" />
       </div>
 
-      <>
           {/* Header */}
           <div className="flex flex-col gap-2">
             {/* Linha 1: + Receita / + Despesa */}
