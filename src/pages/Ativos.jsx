@@ -19,12 +19,6 @@ function fmt(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function fmtData(d) {
-  if (!d) return "—";
-  const p = d.split("-");
-  return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d;
-}
-
 export default function Ativos() {
   const [ativos, setAtivos] = useState([]);
   const [loading, setLoading] = useState(true);
