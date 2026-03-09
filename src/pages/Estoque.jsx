@@ -21,6 +21,7 @@ export default function Estoque() {
   const [reajusteTipo, setReajusteTipo] = useState("percentual");
   const [reajusteValor, setReajusteValor] = useState("");
   const [aplicando, setAplicando] = useState(false);
+  const [viewMode, setViewMode] = useState("table");
   const [showImport, setShowImport] = useState(false);
   const [importando, setImportando] = useState(false);
   const [importResult, setImportResult] = useState(null);

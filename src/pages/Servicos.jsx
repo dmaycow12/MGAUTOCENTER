@@ -12,6 +12,7 @@ export default function Servicos() {
   const [editando, setEditando] = useState(null);
   const [form, setForm] = useState(defaultForm());
   const [saving, setSaving] = useState(false);
+  const [viewMode, setViewMode] = useState("list");
 
   useEffect(() => { load(); }, []);
 

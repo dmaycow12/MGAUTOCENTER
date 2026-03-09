@@ -10,6 +10,7 @@ export default function Clientes() {
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
   const [expandido, setExpandido] = useState(null);
+  const [viewMode, setViewMode] = useState("list");
   const [form, setForm] = useState(defaultForm());
 
   function defaultForm() {

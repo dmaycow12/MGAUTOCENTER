@@ -41,6 +41,7 @@ export default function OrdemServico() {
   const [editando, setEditando] = useState(null);
   const [clientes, setClientes] = useState([]);
   const [veiculos, setVeiculos] = useState([]);
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem("os_viewmode") || "cards");
   const [filtroPeriodo, setFiltroPeriodo] = useState(() => localStorage.getItem("os_periodo") || "mes_atual");
   const [outroPeriodoOpen, setOutroPeriodoOpen] = useState(false);
   const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
