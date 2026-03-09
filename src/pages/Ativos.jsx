@@ -201,49 +201,6 @@ export default function Ativos() {
         )}
       </div>
 
-      {/* Gerenciar Categorias */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-        <button
-          onClick={() => setShowCatManager(!showCatManager)}
-          className="w-full flex items-center justify-between px-4 py-3 text-sm text-gray-400 hover:text-white transition-all"
-        >
-          <div className="flex items-center gap-2">
-            <Tag className="w-4 h-4" />
-            <span>Gerenciar Categorias</span>
-          </div>
-          <ChevronDown className={`w-4 h-4 transition-transform ${showCatManager ? "rotate-180" : ""}`} />
-        </button>
-
-        {showCatManager && (
-          <div className="border-t border-gray-800 p-4 space-y-3">
-            <div className="flex flex-wrap gap-2">
-              {categorias.map(cat => (
-                <span key={cat} className="flex items-center gap-1 bg-gray-800 border border-gray-700 text-gray-200 text-xs px-3 py-1.5 rounded-lg">
-                  {cat}
-                  <button onClick={() => excluirCategoria(cat)} className="text-gray-500 hover:text-red-400 transition-all ml-1">
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <input
-                value={novaCategoria}
-                onChange={e => setNovaCategoria(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && adicionarCategoria()}
-                placeholder="Nova categoria..."
-                className="flex-1 bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
-              />
-              <button onClick={adicionarCategoria}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
-                style={{ background: "#00ff00", color: "#000" }}>
-                + Adicionar
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* Busca + Toggle de visualização */}
       <div className="flex gap-2">
         <div className="relative flex-1">
