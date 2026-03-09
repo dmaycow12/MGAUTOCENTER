@@ -144,27 +144,25 @@ export default function Financeiro() {
 
       {/* Filtro de Período */}
       <div className="flex gap-2 items-center">
-        {/* Navegação por setas */}
-        <button onClick={() => navegarMes(-1)} className="flex items-center justify-center w-11 h-11 rounded-xl bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 transition-all flex-shrink-0">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <div className={`flex-1 flex items-center justify-center h-11 rounded-xl text-sm font-semibold ${!usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
-          {usandoOutroPeriodo && customRange
-            ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}`
-            : `${MESES[filtroMes - 1]} - ${filtroAno}`}
+        {/* Botão Mês com setas internas */}
+        <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
+          <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-3 hover:bg-black/10 transition-all flex-shrink-0">
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
+          <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-3 hover:bg-black/10 transition-all flex-shrink-0">
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
-        <button onClick={() => navegarMes(1)} className="flex items-center justify-center w-11 h-11 rounded-xl bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 transition-all flex-shrink-0">
-          <ChevronRight className="w-5 h-5" />
-        </button>
 
         {/* Botão Período customizado */}
-        <div className="relative flex-shrink-0" ref={periodoDropRef}>
+        <div className="relative flex-1" ref={periodoDropRef}>
           <button
             onClick={() => setPeriodoDropOpen(v => !v)}
-            className={`flex items-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
+            className={`w-full flex items-center justify-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
           >
-            Período
-            <ChevronDown className={`w-4 h-4 transition-transform ${periodoDropOpen ? "rotate-180" : ""}`} />
+            {usandoOutroPeriodo && customRange ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}` : "Período"}
+            <ChevronDown className={`w-4 h-4 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
           </button>
           {periodoDropOpen && (
             <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
