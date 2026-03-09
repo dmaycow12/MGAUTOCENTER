@@ -134,23 +134,27 @@ export default function Dashboard() {
     return { mes: MESES[m], receita, despesa, lucro: receita - despesa };
   });
 
-  // Pizza status OS
+  // Pizza status OS (sem Orçamento)
   const statusData = [
     { name: "Aberto", value: osAbertas, color: BLUE },
-    { name: "Orçamento", value: osOrcamento, color: YELLOW },
     { name: "Concluído", value: osConcluidas, color: GREEN },
   ].filter(d => d.value > 0);
 
-  // Pizza pagamento
-  const pagData = (() => {
-    const mapa = {};
-    financeiro.filter(f => f.tipo === "Receita").forEach(f => {
-      const fp = f.forma_pagamento || "Outros";
-      mapa[fp] = (mapa[fp] || 0) + Number(f.valor || 0);
-    });
-    const cores = [RED, ORANGE, GREEN, BLUE, YELLOW, "#9333ea", "#06b6d4"];
-    return Object.entries(mapa).map(([name, value], i) => ({ name, value, color: cores[i % cores.length] }));
-  })();
+  // OS Pagas: status Concluído E todas as parcelas do financeiro pagas
+  const osPagasPorMes = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(anoAtual, mesAtual - 5 + i, 1);
+    const m = d.getMonth();
+    const a = d.getFullYear();
+    const key = `${a}-${String(m + 1).padStart(2, "0")}`;
+    const count = ordens.filter(o => {
+      if (o.status !== "Concluído") return false;
+      if (!o.data_conclusao?.startsWith(key) && !o.data_entrada?.startsWith(key)) return false;
+      const parcelas = financeiro.filter(f => f.ordem_servico_id === o.id);
+      if (parcelas.length === 0) return false;
+      return parcelas.every(p => p.status === "Pago");
+    }).length;
+    return { mes: MESES[m], pagas: count };
+  });
 
   // Últimas OS
   const ultimasOS = ordens.slice(0, 5);
