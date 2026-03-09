@@ -67,15 +67,21 @@ export default function Servicos() {
             className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-orange-500"
           />
         </div>
-        <button
-          onClick={abrirNovo}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-          style={{background: "#00ff00", color: "#000"}}
-          onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
-          onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
-        >
-          <Plus className="w-4 h-4" /> Novo Serviço
-        </button>
+        <div className="flex gap-2">
+          <div className="flex bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+            <button onClick={() => setViewMode("list")} className="px-3 py-2 transition-all" style={{background:viewMode==="list"?"#062C9B":"transparent",color:viewMode==="list"?"#fff":"#6b7280"}}><List className="w-4 h-4"/></button>
+            <button onClick={() => setViewMode("cards")} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-4 h-4"/></button>
+          </div>
+          <button
+            onClick={abrirNovo}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            style={{background: "#00ff00", color: "#000"}}
+            onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
+            onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
+          >
+            <Plus className="w-4 h-4" /> Novo Serviço
+          </button>
+        </div>
       </div>
 
       {/* Resumo */}
@@ -97,34 +103,44 @@ export default function Servicos() {
             Cadastrar primeiro serviço
           </button>
         </div>
+      ) : viewMode === "cards" ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {filtrados.map(item => (
+            <div key={item.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-2 hover:border-gray-700 transition-all">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-white font-semibold text-sm">{item.descricao}</p>
+                  {item.codigo && <p className="text-orange-400 font-mono text-xs">{item.codigo}</p>}
+                </div>
+                <div className="flex gap-1 flex-shrink-0">
+                  <button onClick={() => abrirEditar(item)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>
+                  <button onClick={() => excluir(item.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
+                </div>
+              </div>
+              <p className="text-green-400 font-bold text-sm">{Number(item.valor||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}</p>
+              {item.observacoes && <p className="text-gray-500 text-xs truncate">{item.observacoes}</p>}
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
           <div className="hidden sm:grid grid-cols-[100px_1fr_120px_80px] gap-4 px-4 py-2 border-b border-gray-800 text-xs text-gray-500 font-medium">
-            <span>Código</span>
-            <span>Descrição</span>
-            <span>Valor</span>
-            <span className="text-right">Ações</span>
+            <span>Código</span><span>Descrição</span><span>Valor</span><span className="text-right">Ações</span>
           </div>
-           {filtrados.map(item => (
-             <div key={item.id} className="grid grid-cols-1 sm:grid-cols-[100px_1fr_120px_80px] gap-2 sm:gap-4 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/50 transition-all items-center">
-               <span className="text-orange-400 font-mono text-sm">{item.codigo || "—"}</span>
-               <div>
-                 <p className="text-white text-sm font-medium">{item.descricao}</p>
-                 {item.observacoes && <p className="text-gray-500 text-xs mt-0.5 truncate">{item.observacoes}</p>}
-               </div>
-               <span className="text-green-400 text-sm font-medium">
-                 {Number(item.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-               </span>
-               <div className="flex items-center gap-2 sm:justify-end">
-                 <button onClick={() => abrirEditar(item)} className="p-1.5 text-gray-400 hover:text-orange-400 hover:bg-gray-700 rounded-lg transition-all">
-                   <Pencil className="w-4 h-4" />
-                 </button>
-                 <button onClick={() => excluir(item.id)} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-all">
-                   <Trash2 className="w-4 h-4" />
-                 </button>
-               </div>
-             </div>
-           ))}
+          {filtrados.map(item => (
+            <div key={item.id} className="grid grid-cols-1 sm:grid-cols-[100px_1fr_120px_80px] gap-2 sm:gap-4 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/50 transition-all items-center">
+              <span className="text-orange-400 font-mono text-sm">{item.codigo || "—"}</span>
+              <div>
+                <p className="text-white text-sm font-medium">{item.descricao}</p>
+                {item.observacoes && <p className="text-gray-500 text-xs mt-0.5 truncate">{item.observacoes}</p>}
+              </div>
+              <span className="text-green-400 text-sm font-medium">{Number(item.valor||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}</span>
+              <div className="flex items-center gap-2 sm:justify-end">
+                <button onClick={() => abrirEditar(item)} className="p-1.5 text-gray-400 hover:text-orange-400 hover:bg-gray-700 rounded-lg transition-all"><Pencil className="w-4 h-4"/></button>
+                <button onClick={() => excluir(item.id)} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded-lg transition-all"><Trash2 className="w-4 h-4"/></button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
