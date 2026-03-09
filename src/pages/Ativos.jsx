@@ -101,16 +101,16 @@ export default function Ativos() {
       {/* Resumo */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-          <p className="text-gray-400 text-xs">Total Ativos</p>
-          <p className="text-white font-bold text-lg">{filtrados.length}</p>
-        </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
           <p className="text-gray-400 text-xs">Ativos</p>
           <p className="text-green-400 font-bold text-lg">{filtrados.filter(a => a.status === "Ativo").length}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-          <p className="text-gray-400 text-xs">Valor Total</p>
-          <p className="text-orange-400 font-bold text-sm">{fmt(totalValor)}</p>
+          <p className="text-gray-400 text-xs">Valor de Compra</p>
+          <p className="text-orange-400 font-bold text-sm">{fmt(totalValorCompra)}</p>
+        </div>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+          <p className="text-gray-400 text-xs">Valor Atual</p>
+          <p className="text-orange-400 font-bold text-sm">{fmt(totalValorAtual)}</p>
         </div>
       </div>
 
