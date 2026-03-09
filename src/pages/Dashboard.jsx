@@ -217,8 +217,7 @@ export default function Dashboard() {
             <BarChart data={fluxoPorMes} barGap={4}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
               <XAxis dataKey="mes" tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `R$${(v/1000).toFixed(0)}k`} />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<CustomTooltip />} />
               <Legend wrapperStyle={{ fontSize: 11, color: "#9ca3af" }} />
               <Bar dataKey="receita" name="Receita" fill={GREEN} radius={[4, 4, 0, 0]} />
               <Bar dataKey="despesa" name="Despesa" fill={RED} radius={[4, 4, 0, 0]} />
