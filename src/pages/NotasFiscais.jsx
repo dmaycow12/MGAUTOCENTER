@@ -582,39 +582,25 @@ export default function NotasFiscais() {
 
         {/* Linha 3: filtro período */}
         <div className="flex gap-2 items-center">
-          {/* Botão Mês/Ano com dropdown */}
-          <div className="relative flex-1" ref={mesDropRef}>
-            <button
-              onClick={() => { setMesDropOpen(v => !v); setPeriodoDropOpen(false); }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${!usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
-            >
-              <span>{MESES[filtroMes - 1]} - {filtroAno}</span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${mesDropOpen ? "rotate-180" : ""}`} />
-            </button>
-            {mesDropOpen && (
-              <div className="absolute left-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full py-1 max-h-64 overflow-y-auto">
-                {ultimos12Meses.map(({ mes, ano }) => (
-                  <button
-                    key={`${ano}-${mes}`}
-                    onClick={() => { setFiltroMes(mes); setFiltroAno(ano); setUsandoOutroPeriodo(false); setCustomRange(null); setMesDropOpen(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-gray-800 transition-all ${filtroMes === mes && filtroAno === ano && !usandoOutroPeriodo ? "text-orange-400" : "text-gray-300"}`}
-                  >
-                    {MESES[mes - 1]}/{ano}
-                  </button>
-                ))}
-              </div>
-            )}
+          <button onClick={() => navegarMes(-1)} className="flex items-center justify-center w-11 h-11 rounded-xl bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 transition-all flex-shrink-0">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div className={`flex-1 flex items-center justify-center h-11 rounded-xl text-sm font-semibold ${!usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
+            {usandoOutroPeriodo && customRange
+              ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}`
+              : `${MESES[filtroMes - 1]} - ${filtroAno}`}
           </div>
+          <button onClick={() => navegarMes(1)} className="flex items-center justify-center w-11 h-11 rounded-xl bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 transition-all flex-shrink-0">
+            <ChevronRight className="w-5 h-5" />
+          </button>
 
           {/* Botão Período customizado */}
-          <div className="relative" ref={periodoDropRef}>
+          <div className="relative flex-shrink-0" ref={periodoDropRef}>
             <button
-              onClick={() => { setPeriodoDropOpen(v => !v); setMesDropOpen(false); }}
-              className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
+              onClick={() => setPeriodoDropOpen(v => !v)}
+              className={`flex items-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
             >
-              {usandoOutroPeriodo && customRange
-                ? `${customRange.inicio.split("-").reverse().join("/")} - ${customRange.fim.split("-").reverse().join("/")}`
-                : "Período"}
+              Período
               <ChevronDown className={`w-4 h-4 transition-transform ${periodoDropOpen ? "rotate-180" : ""}`} />
             </button>
             {periodoDropOpen && (
