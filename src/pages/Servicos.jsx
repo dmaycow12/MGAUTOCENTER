@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, X, LayoutGrid, List } from "lucide-react";
 
 const defaultForm = () => ({ codigo: "", descricao: "", categoria: "", valor: 0, observacoes: "" });
 

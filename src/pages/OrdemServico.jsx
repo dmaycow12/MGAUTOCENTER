@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown } from "lucide-react";
+import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, LayoutGrid, List } from "lucide-react";
 import OSForm from "@/components/os/OSForm";
 import OSCard from "@/components/os/OSCard";
 
