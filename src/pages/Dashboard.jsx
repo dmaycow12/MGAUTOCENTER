@@ -273,89 +273,18 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Formas de pagamento */}
+        {/* OS Pagas por mês */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <SectionTitle>Receitas por Forma de Pagamento</SectionTitle>
-          {pagData.length > 0 ? (
-            <div className="flex items-center gap-4">
-              <ResponsiveContainer width={160} height={160}>
-                <PieChart>
-                  <Pie data={pagData} cx="50%" cy="50%" innerRadius={45} outerRadius={72} dataKey="value">
-                    {pagData.map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-2 flex-1 overflow-hidden">
-                {pagData.map((d, i) => (
-                  <div key={i} className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: d.color }} />
-                      <span className="text-gray-400 text-xs truncate">{d.name}</span>
-                    </div>
-                    <span className="text-white font-semibold text-xs flex-shrink-0">{fmt(d.value)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-500 text-sm text-center py-8">Sem dados</p>
-          )}
-        </div>
-      </div>
-
-      {/* Tabelas lado a lado */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Últimas OS */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <SectionTitle>Últimas Ordens de Serviço</SectionTitle>
-            <Link to={createPageUrl("OrdemServico")} className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1">
-              Ver todas <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-          <div className="space-y-2">
-            {ultimasOS.length === 0 && <p className="text-gray-500 text-sm">Nenhuma OS</p>}
-            {ultimasOS.map(os => {
-              const statusColor = { "Aberto": BLUE, "Orçamento": YELLOW, "Concluído": GREEN }[os.status] || "#6b7280";
-              return (
-                <div key={os.id} className="flex items-center justify-between py-2 border-b border-gray-800 last:border-0">
-                  <div className="min-w-0">
-                    <p className="text-white text-sm font-medium truncate">#{os.numero} — {os.cliente_nome || "—"}</p>
-                    <p className="text-gray-500 text-xs truncate">{os.veiculo_modelo || "—"} {os.veiculo_placa ? `· ${os.veiculo_placa}` : ""}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-2">
-                    <span className="text-xs font-bold" style={{ color: statusColor }}>{os.status}</span>
-                    <span className="text-white text-xs font-semibold">{fmt(os.valor_total)}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Top clientes */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <SectionTitle>Top Clientes por Nº de OS</SectionTitle>
-          <div className="space-y-3">
-            {topClientes.length === 0 && <p className="text-gray-500 text-sm">Nenhum dado</p>}
-            {topClientes.map((c, i) => {
-              const pct = topClientes[0]?.total > 0 ? (c.total / topClientes[0].total) * 100 : 0;
-              return (
-                <div key={i}>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-gray-300 text-sm truncate max-w-[75%]">{c.nome}</span>
-                    <span className="text-white text-sm font-semibold">{c.total} OS</span>
-                  </div>
-                  <div className="h-1.5 bg-gray-800 rounded-full">
-                    <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, background: ORANGE }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <SectionTitle>OS Pagas (todas parcelas pagas)</SectionTitle>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={osPagasPorMes} barGap={4}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+              <XAxis dataKey="mes" tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="pagas" name="OS Pagas" fill={GREEN} radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
