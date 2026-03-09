@@ -71,10 +71,12 @@ export default function Ativos() {
     setNovaCategoria("");
   };
 
-  const excluirCategoria = (cat) => {
-    if (categorias.length <= 1) return alert("Deve haver ao menos uma categoria.");
-    atualizarCategorias(categorias.filter(c => c !== cat));
-    if (filtroCategoria === cat) setFiltroCategoria("Todas");
+  const renomearCategoria = (catAntiga, novoNome) => {
+    const novo = novoNome.trim();
+    if (!novo || categorias.includes(novo)) return;
+    atualizarCategorias(categorias.map(c => c === catAntiga ? novo : c));
+    if (filtroCategoria === catAntiga) setFiltroCategoria(novo);
+    setEditandoCategoria(null);
   };
 
   const filtrados = ativos.filter(a => {
