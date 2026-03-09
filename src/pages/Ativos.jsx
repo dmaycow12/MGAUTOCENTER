@@ -29,8 +29,9 @@ export default function Ativos() {
   const [editando, setEditando] = useState(null);
   const [detalhando, setDetalhando] = useState(null);
   const [categorias, setCategorias] = useState(getCategorias());
-  const [showCatManager, setShowCatManager] = useState(false);
   const [novaCategoria, setNovaCategoria] = useState("");
+  const [editandoCategoria, setEditandoCategoria] = useState(null);
+  const [editNomeCategoria, setEditNomeCategoria] = useState("");
   const [viewMode, setViewMode] = useState("cards"); // "cards" | "list"
   const dropdownRef = useRef(null);
 
