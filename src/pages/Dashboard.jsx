@@ -276,18 +276,36 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* OS Pagas por mês */}
+        {/* OS Pagas pelo Financeiro */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <SectionTitle>OS Pagas (todas parcelas pagas)</SectionTitle>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={osPagasPorMes} barGap={4}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-              <XAxis dataKey="mes" tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="pagas" name="OS Pagas" fill={GREEN} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <SectionTitle>OS por Status Financeiro</SectionTitle>
+          {osPagasData.length > 0 ? (
+            <div className="flex items-center gap-4">
+              <ResponsiveContainer width={160} height={160}>
+                <PieChart>
+                  <Pie data={osPagasData} cx="50%" cy="50%" innerRadius={45} outerRadius={72} dataKey="value">
+                    {osPagasData.map((entry, index) => (
+                      <Cell key={index} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="space-y-2 flex-1">
+                {osPagasData.map((d, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ background: d.color }} />
+                      <span className="text-gray-400 text-sm">{d.name}</span>
+                    </div>
+                    <span className="text-white font-semibold text-sm">{d.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm text-center py-8">Sem dados</p>
+          )}
         </div>
       </div>
 
