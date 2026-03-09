@@ -268,8 +268,7 @@ export default function Financeiro() {
                 </div>
               ))}
             </div>
-          )
-          </>
+          )}
 
           {/* Fluxo de Caixa — No final */}
           <FluxoCaixa items={items} />
