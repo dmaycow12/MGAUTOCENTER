@@ -156,18 +156,7 @@ export default function Dashboard() {
     return { mes: MESES[m], pagas: count };
   });
 
-  // Últimas OS
-  const ultimasOS = ordens.slice(0, 5);
 
-  // Clientes com mais OS
-  const clientesMap = {};
-  ordens.forEach(o => {
-    if (o.cliente_nome) clientesMap[o.cliente_nome] = (clientesMap[o.cliente_nome] || 0) + 1;
-  });
-  const topClientes = Object.entries(clientesMap)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([nome, total]) => ({ nome, total }));
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
