@@ -228,29 +228,47 @@ export default function Financeiro() {
               ))}
             </div>
 
-            {/* Linha 5: busca — ocupa linha toda */}
-            <div className="relative w-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-              <input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500" />
+            {/* Linha 5: busca + toggle */}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500" />
+              </div>
+              <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+                <button onClick={() => setViewMode("cards")} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-5 h-5"/></button>
+                <button onClick={() => setViewMode("list")} className="px-3 py-2 transition-all" style={{background:viewMode==="list"?"#062C9B":"transparent",color:viewMode==="list"?"#fff":"#6b7280"}}><List className="w-5 h-5"/></button>
+              </div>
             </div>
           </div>
 
-          {/* Cards */}
+          {/* Cards/Lista */}
           {filtrados.length === 0 ? (
             <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-12 text-center text-gray-500">Nenhum lançamento encontrado</div>
-          ) : (
+          ) : viewMode === "cards" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {filtrados.map(item => (
-                <FinanceiroCard
-                  key={item.id}
-                  item={item}
-                  onEdit={(i) => { setForm({ ...defaultForm(), ...i }); setEditando(i); setShowForm(true); }}
-                  onDelete={excluir}
-                  onAlterarStatus={alterarStatus}
-                />
+                <FinanceiroCard key={item.id} item={item} onEdit={(i) => { setForm({ ...defaultForm(), ...i }); setEditando(i); setShowForm(true); }} onDelete={excluir} onAlterarStatus={alterarStatus} />
               ))}
             </div>
-          )}
+          ) : (
+            <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+              {filtrados.map(item => (
+                <div key={item.id} className="flex items-center gap-3 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/50 transition-all">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-semibold text-sm truncate">{item.descricao}</p>
+                    <p className="text-gray-500 text-xs">{item.categoria || "—"} • {item.data_vencimento || "—"}</p>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo}</span>
+                  <span className={`text-xs px-2 py-1 rounded-full ${item.status==="Pago"?"bg-green-500/10 text-green-400":item.status==="Atrasado"?"bg-red-500/10 text-red-400":"bg-yellow-500/10 text-yellow-400"}`}>{item.status}</span>
+                  <span className={`font-bold text-sm ${item.tipo==="Receita"?"text-green-400":"text-red-400"}`}>R$ {Number(item.valor||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</span>
+                  <div className="flex gap-1">
+                    <button onClick={() => { setForm({...defaultForm(),...item}); setEditando(item); setShowForm(true); }} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all"><Search className="w-3.5 h-3.5"/></button>
+                    <button onClick={() => excluir(item.id)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all"><X className="w-3.5 h-3.5"/></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
           </>
 
           {/* Fluxo de Caixa — No final */}
