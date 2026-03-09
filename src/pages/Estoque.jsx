@@ -216,6 +216,10 @@ export default function Estoque() {
           >
             <Upload className="w-4 h-4" /> Importar Excel
           </button>
+          <div className="flex bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+            <button onClick={() => setViewMode("table")} className="px-3 py-2 transition-all" style={{background:viewMode==="table"?"#062C9B":"transparent",color:viewMode==="table"?"#fff":"#6b7280"}}><List className="w-4 h-4"/></button>
+            <button onClick={() => setViewMode("cards")} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-4 h-4"/></button>
+          </div>
           <button
             onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
             className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
@@ -269,11 +273,33 @@ export default function Estoque() {
         </div>
       )}
 
-      {/* Table */}
+      {/* Table/Cards */}
       {filtrados.length === 0 ? (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
           <Package className="w-12 h-12 text-gray-600 mx-auto mb-3" />
           <p className="text-gray-400">Nenhum item encontrado</p>
+        </div>
+      ) : viewMode === "cards" ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {filtrados.map(item => (
+            <div key={item.id} className={`bg-gray-900 border rounded-xl p-4 space-y-2 ${item.quantidade <= item.estoque_minimo ? "border-red-500/30" : "border-gray-800"}`}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-white font-semibold text-sm truncate">{item.descricao}</p>
+                  {item.marca && <p className="text-gray-500 text-xs">{item.marca}</p>}
+                </div>
+                <div className="flex gap-1 flex-shrink-0">
+                  <button onClick={() => editar(item)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Edit className="w-3.5 h-3.5"/></button>
+                  <button onClick={() => excluir(item.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className={`font-bold ${item.quantidade <= item.estoque_minimo ? "text-red-400" : "text-white"}`}>{item.quantidade} {item.quantidade <= item.estoque_minimo && <AlertTriangle className="w-3 h-3 inline ml-1"/>}</span>
+                <span className="text-orange-400 font-bold">R$ {Number(item.valor_venda||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</span>
+              </div>
+              {item.categoria && <span className="text-gray-500 text-xs bg-gray-800 px-2 py-0.5 rounded">{item.categoria}</span>}
+            </div>
+          ))}
         </div>
       ) : (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
@@ -305,18 +331,14 @@ export default function Estoque() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{item.categoria || "—"}</td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`font-bold ${item.quantidade <= item.estoque_minimo ? "text-red-400" : "text-white"}`}>
-                        {item.quantidade}
-                      </span>
-                    </td>
+                    <td className="px-4 py-3 text-center"><span className={`font-bold ${item.quantidade <= item.estoque_minimo ? "text-red-400" : "text-white"}`}>{item.quantidade}</span></td>
                     <td className="px-4 py-3 text-center text-gray-500 hidden sm:table-cell">{item.estoque_minimo}</td>
-                    <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">R$ {Number(item.valor_custo || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
-                    <td className="px-4 py-3 text-right text-orange-400 font-medium">R$ {Number(item.valor_venda || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+                    <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">R$ {Number(item.valor_custo||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</td>
+                    <td className="px-4 py-3 text-right text-orange-400 font-medium">R$ {Number(item.valor_venda||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => editar(item)} className="p-1 text-gray-500 hover:text-blue-400 transition-all"><Edit className="w-4 h-4" /></button>
-                        <button onClick={() => excluir(item.id)} className="p-1 text-gray-500 hover:text-red-400 transition-all"><Trash2 className="w-4 h-4" /></button>
+                        <button onClick={() => editar(item)} className="p-1 text-gray-500 hover:text-blue-400 transition-all"><Edit className="w-4 h-4"/></button>
+                        <button onClick={() => excluir(item.id)} className="p-1 text-gray-500 hover:text-red-400 transition-all"><Trash2 className="w-4 h-4"/></button>
                       </div>
                     </td>
                   </tr>
