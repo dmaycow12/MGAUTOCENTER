@@ -207,10 +207,10 @@ export default function Financeiro() {
           <div className="flex flex-col gap-2">
             {/* Linha 1: + Receita / + Despesa */}
             <div className="flex gap-2">
-              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Receita" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 text-white py-3 rounded-xl text-sm font-semibold transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
+              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Receita" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 text-white h-11 rounded-xl text-sm font-semibold transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                 <Plus className="w-4 h-4" /> Receita
               </button>
-              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Despesa" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 text-white py-3 rounded-xl text-sm font-semibold transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
+              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Despesa" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 text-white h-11 rounded-xl text-sm font-semibold transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                 <Plus className="w-4 h-4" /> Despesa
               </button>
             </div>
@@ -218,7 +218,7 @@ export default function Financeiro() {
             {/* Linha 3: filtro tipo — Receita / Despesa / Todos */}
             <div className="flex gap-2">
               {["Receita","Despesa","Todos"].map(t => (
-                <button key={t} onClick={() => setFiltroTipo(t)} className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroTipo === t ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{t}</button>
+                <button key={t} onClick={() => setFiltroTipo(t)} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroTipo === t ? "bg-orange-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{t}</button>
               ))}
             </div>
 
