@@ -67,10 +67,10 @@ export default function Ativos() {
       {/* Botão novo */}
       <button
         onClick={() => { setEditando(null); setShowForm(true); }}
-        className="w-full flex items-center justify-center gap-2 text-white py-3 rounded-xl text-sm font-semibold transition-all"
-        style={{ background: "#cc0000" }}
-        onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
-        onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
+        style={{ background: "#00ff00", color: "#000" }}
+        onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
+        onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
       >
         <Plus className="w-4 h-4" /> Novo Ativo
       </button>

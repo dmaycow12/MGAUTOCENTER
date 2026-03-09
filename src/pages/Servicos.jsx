@@ -68,10 +68,10 @@ export default function Servicos() {
         </div>
         <button
           onClick={abrirNovo}
-          className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
-          style={{background: "#cc0000"}}
-          onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
-          onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+          style={{background: "#00ff00", color: "#000"}}
+          onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
+          onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
         >
           <Plus className="w-4 h-4" /> Novo Serviço
         </button>
