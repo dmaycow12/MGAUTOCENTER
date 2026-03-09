@@ -33,28 +33,30 @@ export default function Financeiro() {
   const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
   const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
   const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(false);
-  const [mesDropOpen, setMesDropOpen] = useState(false);
   const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
   const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
   const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
   const [customRange, setCustomRange] = useState(null);
-  const mesDropRef = useRef(null);
   const periodoDropRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
-      if (mesDropRef.current && !mesDropRef.current.contains(e.target)) setMesDropOpen(false);
       if (periodoDropRef.current && !periodoDropRef.current.contains(e.target)) setPeriodoDropOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Gera lista dos últimos 12 meses (incluindo o atual)
-  const ultimos12Meses = Array.from({ length: 12 }, (_, i) => {
-    const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-    return { mes: d.getMonth() + 1, ano: d.getFullYear() };
-  });
+  const navegarMes = (direcao) => {
+    setUsandoOutroPeriodo(false);
+    setCustomRange(null);
+    let novoMes = filtroMes + direcao;
+    let novoAno = filtroAno;
+    if (novoMes > 12) { novoMes = 1; novoAno++; }
+    if (novoMes < 1) { novoMes = 12; novoAno--; }
+    setFiltroMes(novoMes);
+    setFiltroAno(novoAno);
+  };
 
   const aplicarOutroPeriodo = () => {
     if (!outroPeriodoInicio || !outroPeriodoFim) return;
