@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Pencil, Trash2, Camera, X, Image, ChevronDown, Check, LayoutGrid, List, Tag } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Camera, X, Image, ChevronDown, Check, LayoutGrid, List } from "lucide-react";
 
 const DEFAULT_CATEGORIAS = ["Equipamento", "Ferramenta", "Veículo", "Imóvel", "Mobiliário", "Eletrônico", "Outro"];
 
