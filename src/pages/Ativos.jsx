@@ -166,20 +166,19 @@ function AtivoCard({ ativo, onEdit, onDelete, onDetalhe }) {
       </div>
 
       <div className="p-3 space-y-2">
-        <div className="min-w-0">
-          <p className="text-white font-semibold text-sm truncate">{ativo.nome || "—"}</p>
-          <p className="text-gray-400 text-xs truncate">{ativo.marca} {ativo.modelo}</p>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-white font-semibold text-sm truncate">{ativo.nome || "—"}</p>
+            <p className="text-gray-400 text-xs truncate">{ativo.marca} {ativo.modelo}</p>
+          </div>
+          <span className="text-xs font-bold flex-shrink-0 px-2 py-0.5 rounded-md" style={{ background: statusColor + "22", color: statusColor }}>
+            {ativo.status || "—"}
+          </span>
         </div>
 
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-gray-500 text-xs">Valor de Compra</p>
-            <p className="text-gray-300 font-medium text-sm">{fmt(ativo.valor_aquisicao)}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-gray-500 text-xs">Valor Atual</p>
-            <p className="text-orange-400 font-bold text-sm">{fmt(ativo.valor_atual)}</p>
-          </div>
+          <span className="text-orange-400 font-bold text-sm">{fmt(ativo.valor_atual)}</span>
+          <span className="text-gray-500 text-xs bg-gray-800 px-2 py-0.5 rounded">{ativo.categoria || "—"}</span>
         </div>
 
         <div className="flex gap-2 pt-1" onClick={e => e.stopPropagation()}>
