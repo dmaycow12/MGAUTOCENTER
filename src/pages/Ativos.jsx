@@ -538,9 +538,3 @@ function F({ label, children }) {
     </div>
   );
 }
-
-function fmtData(d) {
-  if (!d) return "—";
-  const p = d.split("-");
-  return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d;
-}
