@@ -107,9 +107,9 @@ export default function OrdemServico() {
         <button
           onClick={() => { setShowForm(true); setEditando(null); }}
           className="w-full flex items-center justify-center gap-2 text-white py-3 rounded-xl text-sm font-semibold transition-all"
-          style={{background: "#cc0000"}}
-          onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
-          onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}
+          style={{background: "#00cc44"}}
+          onMouseEnter={e => e.currentTarget.style.background = "#00aa33"}
+          onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}
         >
           <Plus className="w-4 h-4" /> Nova OS
         </button>
