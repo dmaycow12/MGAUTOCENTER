@@ -2,6 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, CheckSquare, ChevronUp, ChevronDown } from "lucide-react";
 
+const arredondarVendaParaCincoOuZero = (valor) => {
+  const centavos = Math.round((valor % 1) * 100);
+  const inteiros = Math.floor(valor);
+  if (centavos <= 4) return inteiros + 0.5;
+  if (centavos >= 5) return inteiros + 1;
+  return inteiros;
+};
+
 const defaultForm = () => ({
   codigo: "", descricao: "", categoria: "", marca: "",
   quantidade: 0, estoque_minimo: 0, valor_custo: 0, valor_venda: 0,
@@ -100,9 +108,12 @@ export default function Estoque() {
 
   const salvarEdicaoCell = async (item) => {
     if (!editandoCell) return;
-    const val = ["quantidade", "estoque_minimo", "valor_custo", "valor_venda"].includes(editandoCell.field)
+    let val = ["quantidade", "estoque_minimo", "valor_custo", "valor_venda"].includes(editandoCell.field)
       ? Number(editandoValor)
       : editandoValor;
+    if (editandoCell.field === "valor_venda") {
+      val = arredondarVendaParaCincoOuZero(val);
+    }
     await base44.entities.Estoque.update(item.id, { [editandoCell.field]: val });
     setEditandoCell(null);
     setEditandoValor("");
@@ -196,10 +207,11 @@ export default function Estoque() {
     if (!confirm(`Reajustar preço de venda de ${alvo.length} produto(s)?`)) return;
     setAplicando(true);
     for (const item of alvo) {
-      const novoPreco = reajusteTipo === "percentual"
+      let novoPreco = reajusteTipo === "percentual"
         ? Number(item.valor_venda || 0) * (1 + Number(reajusteValor) / 100)
         : Number(item.valor_venda || 0) + Number(reajusteValor);
-      await base44.entities.Estoque.update(item.id, { valor_venda: Math.max(0, parseFloat(novoPreco.toFixed(2))) });
+      novoPreco = arredondarVendaParaCincoOuZero(Math.max(0, novoPreco));
+      await base44.entities.Estoque.update(item.id, { valor_venda: novoPreco });
     }
     setAplicando(false);
     setShowReajuste(false);
@@ -644,8 +656,11 @@ export default function Estoque() {
                   <input type="text" step="0.01" value={form.valor_custo} onChange={e => setForm({ ...form, valor_custo: Number(e.target.value.replace(/[^0-9.]/g, "") || 0) })} className="input-dark" />
                 </F>
                 <F label="Valor de Venda (R$)">
-                  <input type="text" step="0.01" value={form.valor_venda} onChange={e => setForm({ ...form, valor_venda: Number(e.target.value.replace(/[^0-9.]/g, "") || 0) })} className="input-dark" />
-                </F>
+                   <input type="text" step="0.01" value={form.valor_venda} onChange={e => {
+                     const val = Number(e.target.value.replace(/[^0-9.]/g, "") || 0);
+                     setForm({ ...form, valor_venda: arredondarVendaParaCincoOuZero(val) });
+                   }} className="input-dark" />
+                 </F>
                 <F label="Localização"><input value={form.localizacao} onChange={e => setForm({ ...form, localizacao: e.target.value })} className="input-dark" /></F>
                 <F label="Fornecedor"><input value={form.fornecedor} onChange={e => setForm({ ...form, fornecedor: e.target.value })} className="input-dark" /></F>
               </div>
