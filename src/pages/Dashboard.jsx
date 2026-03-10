@@ -163,16 +163,26 @@ export default function Dashboard() {
     return { mes: MESES[m], receita, despesa, lucro: receita - despesa };
   });
 
-  // Pizza status OS
+  // Ordens filtradas pelo período do topo
+  const ordensPeriodo = ordens.filter(o => {
+    const ref = o.data_entrada || "";
+    return ref >= periodoRange.inicio && ref <= periodoRange.fim;
+  });
+
+  // Pizza status OS (filtrada pelo período)
+  const osAbertasPeriodo = ordensPeriodo.filter(o => o.status === "Aberto").length;
+  const osOrcamentoPeriodo = ordensPeriodo.filter(o => o.status === "Orçamento").length;
+  const osConcluidasPeriodo = ordensPeriodo.filter(o => o.status === "Concluído").length;
+
   const statusData = [
-    { name: "Aberto", value: osAbertas, color: BLUE },
-    { name: "Orçamento", value: osOrcamento, color: YELLOW },
-    { name: "Concluído", value: osConcluidas, color: GREEN },
+    { name: "Aberto", value: osAbertasPeriodo, color: BLUE },
+    { name: "Orçamento", value: osOrcamentoPeriodo, color: YELLOW },
+    { name: "Concluído", value: osConcluidasPeriodo, color: GREEN },
   ].filter(d => d.value > 0);
 
-  // Pizza OS Pagas pelo Financeiro
+  // Pizza OS Pagas pelo Financeiro (filtrada pelo período)
   const osPagasData = (() => {
-    const osSemOrcamento = ordens.filter(o => o.status !== "Orçamento");
+    const osSemOrcamento = ordensPeriodo.filter(o => o.status !== "Orçamento");
     let pagas = 0, pendentes = 0, atrasadas = 0, semLancamento = 0;
     osSemOrcamento.forEach(o => {
       const parcelas = financeiro.filter(f => f.ordem_servico_id === o.id);
