@@ -325,6 +325,7 @@ export default function Estoque() {
               {/* Cabeçalho do card */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
                 <div className="flex items-center gap-2 min-w-0">
+                  <input type="checkbox" checked={selecionados.includes(item.id)} onChange={() => toggleSelecionado(item.id)} className="accent-red-500 cursor-pointer w-4 h-4 flex-shrink-0" />
                   {item.codigo && <span className="text-orange-400 font-mono text-xs font-bold flex-shrink-0">#{item.codigo}</span>}
                   {item.quantidade <= item.estoque_minimo && (
                     <span className="flex items-center gap-1 bg-red-500/10 text-red-400 text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0">
