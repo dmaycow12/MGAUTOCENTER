@@ -59,8 +59,8 @@ Deno.serve(async (req) => {
 
     // 4. Se ainda houver muitos, remove os mais antigos até ficar com 322
     const totalUnicos = Object.keys(mapa).length;
-    if (totalUnicos > 322) {
-      const excess = totalUnicos - 322;
+    const excess = totalUnicos - 322;
+    if (excess > 0) {
       // Remove os primeiros (mais antigos)
       const todasAsList = todos.filter(item => {
         const chave = (item.descricao || '') + '|' + (item.codigo || '');
