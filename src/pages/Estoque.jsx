@@ -284,22 +284,54 @@ export default function Estoque() {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtrados.map(item => (
-            <div key={item.id} className={`bg-gray-900 border rounded-xl p-4 space-y-2 ${item.quantidade <= item.estoque_minimo ? "border-red-500/30" : "border-gray-800"}`}>
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-white font-semibold text-sm truncate">{item.descricao}</p>
-                  {item.marca && <p className="text-gray-500 text-xs">{item.marca}</p>}
+            <div key={item.id} className={`bg-gray-900 border rounded-2xl overflow-hidden ${item.quantidade <= item.estoque_minimo ? "border-red-500/40" : "border-gray-800"}`}>
+              {/* Cabeçalho do card */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+                <div className="flex items-center gap-2 min-w-0">
+                  {item.codigo && <span className="text-orange-400 font-mono text-xs font-bold flex-shrink-0">#{item.codigo}</span>}
+                  {item.quantidade <= item.estoque_minimo && (
+                    <span className="flex items-center gap-1 bg-red-500/10 text-red-400 text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0">
+                      <AlertTriangle className="w-3 h-3" /> Baixo
+                    </span>
+                  )}
                 </div>
                 <div className="flex gap-1 flex-shrink-0">
-                  <button onClick={() => editar(item)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Edit className="w-3.5 h-3.5"/></button>
-                  <button onClick={() => excluir(item.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
+                  <button onClick={() => editar(item)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Edit className="w-4 h-4"/></button>
+                  <button onClick={() => excluir(item.id)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Trash2 className="w-4 h-4"/></button>
                 </div>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className={`font-bold ${item.quantidade <= item.estoque_minimo ? "text-red-400" : "text-white"}`}>{item.quantidade} {item.quantidade <= item.estoque_minimo && <AlertTriangle className="w-3 h-3 inline ml-1"/>}</span>
-                <span className="text-orange-400 font-bold">R$ {Number(item.valor_venda||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</span>
+              {/* Descrição */}
+              <div className="px-4 py-3 border-b border-gray-800">
+                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Produto</p>
+                <p className="text-white font-bold text-sm leading-tight">{item.descricao}</p>
+                {item.marca && <p className="text-gray-500 text-xs mt-0.5">{item.marca}</p>}
               </div>
-              {item.categoria && <span className="text-gray-500 text-xs bg-gray-800 px-2 py-0.5 rounded">{item.categoria}</span>}
+              {/* Detalhes em grade */}
+              <div className="grid grid-cols-2 border-b border-gray-800">
+                <div className="px-4 py-3 border-r border-gray-800">
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Quantidade</p>
+                  <p className={`font-bold text-sm ${item.quantidade <= item.estoque_minimo ? "text-red-400" : "text-white"}`}>{item.quantidade} {item.unidade || "UN"}</p>
+                </div>
+                <div className="px-4 py-3">
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Mín. Estoque</p>
+                  <p className="text-white font-bold text-sm">{item.estoque_minimo}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2">
+                <div className="px-4 py-3 border-r border-gray-800">
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Custo</p>
+                  <p className="text-gray-300 font-bold text-sm">R$ {Number(item.valor_custo||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</p>
+                </div>
+                <div className="px-4 py-3">
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Venda</p>
+                  <p className="text-orange-400 font-bold text-sm">R$ {Number(item.valor_venda||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</p>
+                </div>
+              </div>
+              {item.categoria && (
+                <div className="px-4 pb-3">
+                  <span className="text-gray-500 text-xs bg-gray-800 px-2 py-0.5 rounded-full">{item.categoria}</span>
+                </div>
+              )}
             </div>
           ))}
         </div>
