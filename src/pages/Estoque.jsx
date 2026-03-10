@@ -95,7 +95,7 @@ export default function Estoque() {
 
   const iniciarEdicaoCell = (item, field) => {
     setEditandoCell({ id: item.id, field });
-    setEditandoValor(item[field] ?? "");
+    setEditandoValor("");
   };
 
   const salvarEdicaoCell = async (item) => {
@@ -120,7 +120,6 @@ export default function Estoque() {
       return (
         <input
           autoFocus
-          onFocus={e => e.target.select()}
           type={["quantidade", "estoque_minimo", "valor_custo", "valor_venda"].includes(field) ? "text" : type}
           step={type === "number" ? "0.01" : undefined}
           value={editandoValor}
