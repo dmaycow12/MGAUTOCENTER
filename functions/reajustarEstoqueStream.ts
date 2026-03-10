@@ -6,6 +6,16 @@ const arredondarVendaParaCinco = (valor) => {
   return Math.ceil(num / 5) * 5;
 };
 
+const processarComLimite = async (items, fn, limit = 10) => {
+  const resultados = [];
+  for (let i = 0; i < items.length; i += limit) {
+    const chunk = items.slice(i, i + limit);
+    const batch = await Promise.all(chunk.map(fn));
+    resultados.push(...batch);
+  }
+  return resultados;
+};
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -21,25 +31,19 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Nenhum item fornecido' }, { status: 400 });
     }
 
-    let sucessos = 0;
-    let falhas = 0;
-    const errosDetalhados = [];
+    const ajuste = Number(reajusteValor || 0);
+    if (isNaN(ajuste)) {
+      return Response.json({ error: 'Valor de reajuste inválido' }, { status: 400 });
+    }
 
-    for (const item of items) {
+    // Processa com limite de 10 requisições paralelas
+    const resultados = await processarComLimite(items, async (item) => {
       try {
         const valorCusto = Number(item.valor_custo || 0);
         const valorVendaAtual = Number(item.valor_venda || 0);
-        const ajuste = Number(reajusteValor || 0);
         
-        // Validação de entrada
-        if (isNaN(valorCusto) || isNaN(valorVendaAtual) || isNaN(ajuste)) {
-          falhas++;
-          errosDetalhados.push({
-            id: item.id,
-            descricao: item.descricao,
-            erro: 'Valores inválidos'
-          });
-          continue;
+        if (isNaN(valorCusto) || isNaN(valorVendaAtual)) {
+          return { sucesso: false, id: item.id };
         }
 
         let novoPreco;
@@ -49,43 +53,29 @@ Deno.serve(async (req) => {
           novoPreco = valorVendaAtual + ajuste;
         }
         
-        // Garantir que é um número válido
-        novoPreco = arredondarVendaParaCinco(novoPreco);
+        novoPreco = arredondarVendaParaCinco(Math.max(0, novoPreco));
         
         if (isNaN(novoPreco) || !isFinite(novoPreco)) {
-          falhas++;
-          errosDetalhados.push({
-            id: item.id,
-            descricao: item.descricao,
-            erro: 'Cálculo resultou em valor inválido'
-          });
-          continue;
-        }
-        
-        // Garantir que não é negativo
-        if (novoPreco < 0) {
-          novoPreco = 0;
+          return { sucesso: false, id: item.id };
         }
 
         await base44.entities.Estoque.update(item.id, { 
           valor_venda: parseFloat(novoPreco.toFixed(2))
         });
-        sucessos++;
+        
+        return { sucesso: true, id: item.id };
       } catch (err) {
-        falhas++;
-        errosDetalhados.push({
-          id: item.id,
-          descricao: item.descricao,
-          erro: err?.message || 'Erro desconhecido'
-        });
+        return { sucesso: false, id: item.id, erro: err?.message };
       }
-    }
+    }, 10);
+
+    const sucessos = resultados.filter(r => r.sucesso).length;
+    const falhas = resultados.filter(r => !r.sucesso).length;
 
     return Response.json({ 
       sucesso: sucessos,
       falhas: falhas,
-      total: items.length,
-      erros: errosDetalhados.slice(0, 10)
+      total: items.length
     });
   } catch (error) {
     console.error('Erro:', error);
