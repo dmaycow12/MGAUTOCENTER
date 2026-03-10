@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, CheckSquare } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, CheckSquare, ChevronUp, ChevronDown } from "lucide-react";
 
 const defaultForm = () => ({
   codigo: "", descricao: "", categoria: "", marca: "",
@@ -138,6 +138,14 @@ export default function Estoque() {
     );
   };
 
+  const handleSort = (campo) => {
+    if (ordenacao.campo === campo) {
+      setOrdenacao({ campo, direcao: ordenacao.direcao === "asc" ? "desc" : "asc" });
+    } else {
+      setOrdenacao({ campo, direcao: "asc" });
+    }
+  };
+
   let filtrados = items.filter(i => {
     const matchSearch = !search ||
       i.descricao?.toLowerCase().includes(search.toLowerCase()) ||
@@ -148,44 +156,25 @@ export default function Estoque() {
     return matchSearch && matchFiltro;
   });
 
+  // Aplicar ordenação
   if (ordenacao.campo) {
     filtrados = [...filtrados].sort((a, b) => {
-      let valA = a[ordenacao.campo];
-      let valB = b[ordenacao.campo];
+      let aVal = a[ordenacao.campo];
+      let bVal = b[ordenacao.campo];
       
-      if (typeof valA === "number" || typeof valB === "number") {
-        valA = Number(valA || 0);
-        valB = Number(valB || 0);
-        return ordenacao.direcao === "asc" ? valA - valB : valB - valA;
+      // Tratar números
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return ordenacao.direcao === "asc" ? aVal - bVal : bVal - aVal;
       }
       
-      valA = (valA || "").toString().toLowerCase();
-      valB = (valB || "").toString().toLowerCase();
-      return ordenacao.direcao === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      // Tratar strings
+      aVal = String(aVal || "").toLowerCase();
+      bVal = String(bVal || "").toLowerCase();
+      return ordenacao.direcao === "asc" 
+        ? aVal.localeCompare(bVal, "pt-BR")
+        : bVal.localeCompare(aVal, "pt-BR");
     });
   }
-
-  const alterarOrdenacao = (campo) => {
-    if (ordenacao.campo === campo) {
-      setOrdenacao({ campo, direcao: ordenacao.direcao === "asc" ? "desc" : "asc" });
-    } else {
-      setOrdenacao({ campo, direcao: "asc" });
-    }
-  };
-
-  const HeaderButton = ({ campo, label }) => {
-    const isAtivo = ordenacao.campo === campo;
-    return (
-      <button
-        onClick={() => alterarOrdenacao(campo)}
-        className={`flex items-center gap-1.5 transition-all ${isAtivo ? "text-orange-400 font-semibold" : "text-gray-500 hover:text-gray-300"}`}
-        title={`Ordenar por ${label}`}
-      >
-        {label}
-        {isAtivo && <span className="text-xs">{ordenacao.direcao === "asc" ? "↑" : "↓"}</span>}
-      </button>
-    );
-  };
 
   const estoqueBaixo = items.filter(i => i.quantidade <= i.estoque_minimo).length;
   const grupos = ["Todos", ...Array.from(new Set(items.map(i => i.categoria).filter(Boolean)))];
@@ -476,14 +465,14 @@ export default function Estoque() {
                   <th className="px-4 py-3 w-8">
                     <input type="checkbox" checked={filtrados.length > 0 && selecionados.length === filtrados.length} onChange={toggleTodos} className="accent-red-500 cursor-pointer w-4 h-4" />
                   </th>
-                  <th className="px-4 py-3"><HeaderButton campo="codigo" label="Código" /></th>
-                  <th className="px-4 py-3"><HeaderButton campo="descricao" label="Descrição" /></th>
-                  <th className="px-4 py-3 hidden md:table-cell"><HeaderButton campo="categoria" label="Categoria" /></th>
-                  <th className="px-4 py-3 hidden lg:table-cell"><HeaderButton campo="marca" label="Marca" /></th>
-                  <th className="px-4 py-3 text-center"><HeaderButton campo="quantidade" label="Qtd" /></th>
-                  <th className="px-4 py-3 text-center hidden sm:table-cell"><HeaderButton campo="estoque_minimo" label="Mín." /></th>
-                  <th className="px-4 py-3 text-right hidden md:table-cell"><HeaderButton campo="valor_custo" label="Custo" /></th>
-                  <th className="px-4 py-3 text-right"><HeaderButton campo="valor_venda" label="Venda" /></th>
+                  <th className="px-4 py-3">Código</th>
+                  <th className="px-4 py-3">Descrição</th>
+                  <th className="px-4 py-3 hidden md:table-cell">Categoria</th>
+                  <th className="px-4 py-3 hidden lg:table-cell">Marca</th>
+                  <th className="px-4 py-3 text-center">Qtd</th>
+                  <th className="px-4 py-3 text-center hidden sm:table-cell">Mín.</th>
+                  <th className="px-4 py-3 text-right hidden md:table-cell">Custo</th>
+                  <th className="px-4 py-3 text-right">Venda</th>
                   <th className="px-4 py-3 text-center">Ações</th>
                 </tr>
               </thead>
