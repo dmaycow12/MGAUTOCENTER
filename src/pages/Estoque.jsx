@@ -203,17 +203,14 @@ export default function Estoque() {
     if (!confirm(`Reajustar preço de venda de ${alvo.length} produto(s)?`)) return;
     setAplicando(true);
     try {
-      const batchSize = 3;
-      for (let i = 0; i < alvo.length; i += batchSize) {
-        const chunk = alvo.slice(i, i + batchSize);
-        await Promise.all(chunk.map(item => {
-          let novoPreco = reajusteTipo === "percentual"
-            ? Number(item.valor_custo || 0) * (1 + Number(reajusteValor) / 100)
-            : Number(item.valor_venda || 0) + Number(reajusteValor);
-          novoPreco = arredondarVendaParaCinco(Math.max(0, novoPreco));
-          return base44.entities.Estoque.update(item.id, { valor_venda: novoPreco });
-        }));
-        if (i + batchSize < alvo.length) await new Promise(r => setTimeout(r, 500));
+      for (let i = 0; i < alvo.length; i++) {
+        const item = alvo[i];
+        let novoPreco = reajusteTipo === "percentual"
+          ? Number(item.valor_custo || 0) * (1 + Number(reajusteValor) / 100)
+          : Number(item.valor_venda || 0) + Number(reajusteValor);
+        novoPreco = arredondarVendaParaCinco(Math.max(0, novoPreco));
+        await base44.entities.Estoque.update(item.id, { valor_venda: novoPreco });
+        if (i < alvo.length - 1) await new Promise(r => setTimeout(r, 200));
       }
     } finally {
       setAplicando(false);
