@@ -156,12 +156,12 @@ export default function Financeiro() {
         {/* Filtro de Período */}
         <div className="flex gap-2 items-center">
           <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
-            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-4 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
-              <ChevronLeft className="w-3.5 h-3.5" />
+            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
+              <ChevronLeft className="w-3 h-3" />
             </button>
             <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
-            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-4 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
-              <ChevronRight className="w-3.5 h-3.5" />
+            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
+              <ChevronRight className="w-3 h-3" />
             </button>
           </div>
           <div className="relative flex-1" ref={periodoDropRef}>
