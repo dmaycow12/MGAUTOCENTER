@@ -9,8 +9,22 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Busca todos os produtos
-    const todos = await base44.entities.Estoque.list("-created_date", 1000);
+    // Busca todos os produtos com retry
+    let todos;
+    let tentativas = 0;
+    while (tentativas < 3) {
+      try {
+        todos = await base44.entities.Estoque.list("-created_date", 1000);
+        break;
+      } catch (e) {
+        if (e.message.includes('Rate limit') && tentativas < 2) {
+          await new Promise(r => setTimeout(r, 5000));
+          tentativas++;
+        } else {
+          throw e;
+        }
+      }
+    }
 
     // Agrupa por descrição + código (para identificar duplicatas)
     const mapa = {};
