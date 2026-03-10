@@ -225,7 +225,7 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
         let encontrado = null;
         if (item.codigo) encontrado = est.find(e => e.codigo === item.codigo);
         if (!encontrado) encontrado = est.find(e => e.descricao?.trim().toLowerCase() === item.descricao.trim().toLowerCase());
-        return encontrado ? { ...item, estoqueVinculado: { id: encontrado.id, descricao: encontrado.descricao } } : item;
+        return encontrado ? { ...item, estoqueVinculado: { id: encontrado.id, descricao: encontrado.descricao }, marca: item.marca || encontrado.marca || "", categoria: item.categoria || encontrado.categoria || "" } : item;
       }));
 
       const chave = parsed.chave;
