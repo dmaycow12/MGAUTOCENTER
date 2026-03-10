@@ -10,33 +10,51 @@ export default function OrdemServico() {
   const [ordens, setOrdens] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filtroStatus, setFiltroStatus] = useState("Tudo");
+  const [filtroStatus, setFiltroStatus] = useState([]); // multi-select
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
   const [clientes, setClientes] = useState([]);
   const [veiculos, setVeiculos] = useState([]);
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("os_viewmode") || "cards");
-  const [filtroPeriodo, setFiltroPeriodo] = useState(() => localStorage.getItem("os_periodo") || "mes_atual");
-  const [outroPeriodoOpen, setOutroPeriodoOpen] = useState(false);
+
+  const hoje = new Date();
+  const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
+  const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
+  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(false);
+  const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
   const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
   const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
   const [customRange, setCustomRange] = useState(null);
-  const outroPeriodoRef = useRef(null);
+  const periodoDropRef = useRef(null);
 
-  const setPeriodo = (key) => {
-    setFiltroPeriodo(key);
+  useEffect(() => {
+    const handler = (e) => {
+      if (periodoDropRef.current && !periodoDropRef.current.contains(e.target)) setPeriodoDropOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const navegarMes = (dir) => {
+    setUsandoOutroPeriodo(false);
     setCustomRange(null);
-    localStorage.setItem("os_periodo", key);
+    let m = filtroMes + dir, a = filtroAno;
+    if (m > 12) { m = 1; a++; }
+    if (m < 1) { m = 12; a--; }
+    setFiltroMes(m);
+    setFiltroAno(a);
   };
 
   const aplicarOutroPeriodo = () => {
     if (!outroPeriodoInicio || !outroPeriodoFim) return;
     setCustomRange({ inicio: outroPeriodoInicio, fim: outroPeriodoFim });
-    setFiltroPeriodo("outro");
-    setOutroPeriodoOpen(false);
+    setUsandoOutroPeriodo(true);
+    setPeriodoDropOpen(false);
   };
 
-  const statusList = ["Aberto", "Orçamento", "Concluído", "Tudo"];
+  const toggleStatus = (s) => {
+    setFiltroStatus(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+  };
 
   useEffect(() => { load(); }, []);
 
