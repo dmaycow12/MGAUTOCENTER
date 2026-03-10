@@ -210,15 +210,6 @@ export default function Estoque() {
         {/* Linha 2: ações */}
         <div className="flex gap-2">
           <button
-            onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
-            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
-            style={{background: "#00ff00", color: "#000"}}
-            onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
-            onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
-          >
-            <Plus className="w-4 h-4" /> Novo Item
-          </button>
-          <button
             onClick={() => setShowReajuste(true)}
             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
             style={{background: "#00ff00", color: "#000"}}
