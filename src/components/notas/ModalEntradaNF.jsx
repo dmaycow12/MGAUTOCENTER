@@ -317,6 +317,8 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
             valor_custo: item.valor_unitario, valor_venda: item.valor_unitario,
             unidade: item.unidade || "UN", fornecedor: dados.emitente,
             ncm: item.ncm || "", cfop: item.cfop || "",
+            marca: item.marca || "",
+            categoria: item.categoria || "",
           });
           if (criado?.id) {
             idsUsados.add(criado.id);
