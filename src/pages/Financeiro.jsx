@@ -191,7 +191,7 @@ export default function Financeiro() {
                     Cancelar
                   </button>
                   <button onClick={aplicarOutroPeriodo}
-                    className="flex-1 py-2 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
+                    className="flex-1 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all">
                     Aplicar
                   </button>
                 </div>
