@@ -60,6 +60,8 @@ export default function Dashboard() {
   const [periodoMeses, setPeriodoMeses] = useState(6);
 
   const hoje = new Date();
+  const anoAtual = hoje.getFullYear();
+  const mesAtual = hoje.getMonth();
   const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
   const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
   const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(false);
