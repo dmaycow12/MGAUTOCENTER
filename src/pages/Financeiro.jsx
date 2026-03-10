@@ -154,48 +154,46 @@ export default function Financeiro() {
             </div>
 
         {/* Filtro de Período */}
-        <div className="flex gap-2 items-center">
-          <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
-            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-3 hover:bg-black/10 transition-all flex-shrink-0">
-              <ChevronLeft className="w-4 h-4" />
+        <div className="flex flex-col gap-2">
+          {/* Botão Mês com setas destacadas */}
+          <div className={`flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
+            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full w-11 flex-shrink-0 transition-all" style={{background:"rgba(0,0,0,0.25)"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(0,0,0,0.45)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(0,0,0,0.25)"}>
+              <ChevronLeft className="w-5 h-5" />
             </button>
-            <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
-            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-3 hover:bg-black/10 transition-all flex-shrink-0">
-              <ChevronRight className="w-4 h-4" />
+            <span className="flex-1 text-center truncate font-bold">{MESES[filtroMes - 1]} {filtroAno}</span>
+            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full w-11 flex-shrink-0 transition-all" style={{background:"rgba(0,0,0,0.25)"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(0,0,0,0.45)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(0,0,0,0.25)"}>
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
-          <div className="relative flex-1" ref={periodoDropRef}>
+
+          {/* Período customizado — inline */}
+          <div className={`flex items-center gap-2 h-11 rounded-xl px-3 border transition-all ${usandoOutroPeriodo ? "border-[#062C9B] bg-[#062C9B]/10" : "border-gray-700 bg-gray-800"}`}>
+            <input
+              type="date"
+              value={outroPeriodoInicio}
+              onChange={e => setOutroPeriodoInicio(e.target.value)}
+              className="bg-transparent text-white text-xs focus:outline-none flex-1 min-w-0"
+            />
+            <span className="text-gray-500 text-xs flex-shrink-0">a</span>
+            <input
+              type="date"
+              value={outroPeriodoFim}
+              onChange={e => setOutroPeriodoFim(e.target.value)}
+              className="bg-transparent text-white text-xs focus:outline-none flex-1 min-w-0"
+            />
             <button
-              onClick={() => setPeriodoDropOpen(v => !v)}
-              className={`w-full flex items-center justify-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
+              onClick={aplicarOutroPeriodo}
+              className="flex-shrink-0 px-3 h-7 text-xs text-white rounded-lg font-semibold transition-all"
+              style={{background:"#cc0000"}}
+              onMouseEnter={e=>e.currentTarget.style.background="#aa0000"}
+              onMouseLeave={e=>e.currentTarget.style.background="#cc0000"}
             >
-              {usandoOutroPeriodo && customRange ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}` : "Período"}
-              <ChevronDown className={`w-4 h-4 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
+              Aplicar
             </button>
-            {periodoDropOpen && (
-              <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
-                <p className="text-xs text-gray-400 font-medium">Selecione o período</p>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">De</label>
-                  <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Até</label>
-                  <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setPeriodoDropOpen(false)}
-                    className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
-                    Cancelar
-                  </button>
-                  <button onClick={aplicarOutroPeriodo}
-                    className="flex-1 py-2 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
-                    Aplicar
-                  </button>
-                </div>
-              </div>
+            {usandoOutroPeriodo && (
+              <button onClick={() => { setUsandoOutroPeriodo(false); setCustomRange(null); setOutroPeriodoInicio(""); setOutroPeriodoFim(""); }} className="text-gray-500 hover:text-white transition-all flex-shrink-0">
+                <X className="w-3.5 h-3.5" />
+              </button>
             )}
           </div>
         </div>
