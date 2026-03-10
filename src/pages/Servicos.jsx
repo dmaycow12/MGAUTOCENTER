@@ -75,7 +75,7 @@ export default function Servicos() {
           <button
             onClick={abrirNovo}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-            style={{background: "#00ff00", color: "#000"}}
+            style={{background: "#00ff00", color: "#fff"}}
             onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
             onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
           >

@@ -100,7 +100,7 @@ export default function Ativos() {
       <button
         onClick={() => { setEditando(null); setShowForm(true); }}
         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
-        style={{ background: "#00ff00", color: "#000" }}
+        style={{ background: "#00ff00", color: "#fff" }}
         onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
         onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
       >
@@ -153,7 +153,7 @@ export default function Ativos() {
                     <button
                       onClick={e => { e.stopPropagation(); renomearCategoria(cat, editNomeCategoria); }}
                       className="text-xs px-2 py-1 rounded-lg font-medium"
-                      style={{ background: "#00ff00", color: "#000" }}
+                      style={{ background: "#00ff00", color: "#fff" }}
                     >OK</button>
                     <button onClick={e => { e.stopPropagation(); setEditandoCategoria(null); }} className="text-gray-400 hover:text-white">
                       <X className="w-4 h-4" />
@@ -194,7 +194,7 @@ export default function Ativos() {
               <button
                 onClick={e => { e.stopPropagation(); adicionarCategoria(); }}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium"
-                style={{ background: "#00ff00", color: "#000" }}
+                style={{ background: "#00ff00", color: "#fff" }}
               >+ Adicionar</button>
             </div>
           </div>

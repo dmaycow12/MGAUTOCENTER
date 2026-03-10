@@ -32,9 +32,8 @@ function fmt(v) {
 function Card({ title, pago, previsto, color, bg, bgColor }) {
   const falta = Math.max(previsto - pago, 0);
   const percent = previsto > 0 ? (pago / previsto) * 100 : 0;
-  const isDark = bgColor !== "#00ff00";
-  const textColor = isDark ? "#fff" : "#000";
-  const trackColor = isDark ? "#1f2937" : "rgba(0,0,0,0.2)";
+  const textColor = "#fff";
+  const trackColor = "#1f2937";
 
   return (
     <div className={`flex-1 ${bg} rounded-xl px-6 py-5 flex items-center gap-5`} style={{ background: bgColor }}>

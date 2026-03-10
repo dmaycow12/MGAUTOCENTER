@@ -83,7 +83,7 @@ export default function Clientes() {
         <button
           onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
-          style={{background: "#00ff00", color: "#000"}}
+          style={{background: "#00ff00", color: "#fff"}}
           onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
           onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
         >
