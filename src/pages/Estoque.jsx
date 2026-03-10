@@ -215,12 +215,16 @@ export default function Estoque() {
         reajusteValor: Number(reajusteValor)
       });
       
+      const mensagemErro = response.data.falhas > 0 
+        ? `${response.data.falhas} produto(s) falharam. Verifique a conexão e tente novamente.`
+        : null;
+      
       setProgressoReajuste(prev => ({
         ...prev,
         progresso: response.data.sucesso,
-        status: 'sucesso',
+        status: response.data.falhas > 0 ? 'aviso' : 'sucesso',
         sucessos: response.data.sucesso,
-        erro: response.data.falhas ? `${response.data.falhas} produtos tiveram erro` : null
+        erro: mensagemErro
       }));
       
       await new Promise(r => setTimeout(r, 2000));
@@ -229,7 +233,7 @@ export default function Estoque() {
       setProgressoReajuste(prev => ({
         ...prev,
         status: 'erro',
-        erro: err.message
+        erro: String(err.message || 'Erro ao processar reajuste')
       }));
     } finally {
       setAplicando(false);
