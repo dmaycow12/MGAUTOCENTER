@@ -201,7 +201,7 @@ export default function Financeiro() {
         </div>
 
         {/* Gráficos */}
-        <FluxoMes financeiro={items} />
+        <FluxoMes financeiro={itemsNoPeriodo} />
 
         {/* Linha 3: filtro tipo — Receita / Despesa / Todos */}
             <div className="flex gap-2">
