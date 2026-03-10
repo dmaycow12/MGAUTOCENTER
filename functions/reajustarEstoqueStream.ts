@@ -1,7 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const arredondarVendaParaCinco = (valor) => {
-  return Math.ceil(valor / 5) * 5;
+  const num = Number(valor);
+  if (isNaN(num) || !isFinite(num)) return 0;
+  return Math.ceil(num / 5) * 5;
 };
 
 Deno.serve(async (req) => {
@@ -21,29 +23,72 @@ Deno.serve(async (req) => {
 
     let sucessos = 0;
     let falhas = 0;
+    const errosDetalhados = [];
 
     for (const item of items) {
       try {
-        let novoPreco = reajusteTipo === "percentual"
-          ? Number(item.valor_custo || 0) * (1 + Number(reajusteValor) / 100)
-          : Number(item.valor_venda || 0) + Number(reajusteValor);
-        novoPreco = arredondarVendaParaCinco(Math.max(0, novoPreco));
+        const valorCusto = Number(item.valor_custo || 0);
+        const valorVendaAtual = Number(item.valor_venda || 0);
+        const ajuste = Number(reajusteValor || 0);
         
-        await base44.entities.Estoque.update(item.id, { valor_venda: novoPreco });
+        // Validação de entrada
+        if (isNaN(valorCusto) || isNaN(valorVendaAtual) || isNaN(ajuste)) {
+          falhas++;
+          errosDetalhados.push({
+            id: item.id,
+            descricao: item.descricao,
+            erro: 'Valores inválidos'
+          });
+          continue;
+        }
+
+        let novoPreco;
+        if (reajusteTipo === "percentual") {
+          novoPreco = valorCusto * (1 + ajuste / 100);
+        } else {
+          novoPreco = valorVendaAtual + ajuste;
+        }
+        
+        // Garantir que é um número válido
+        novoPreco = arredondarVendaParaCinco(novoPreco);
+        
+        if (isNaN(novoPreco) || !isFinite(novoPreco)) {
+          falhas++;
+          errosDetalhados.push({
+            id: item.id,
+            descricao: item.descricao,
+            erro: 'Cálculo resultou em valor inválido'
+          });
+          continue;
+        }
+        
+        // Garantir que não é negativo
+        if (novoPreco < 0) {
+          novoPreco = 0;
+        }
+
+        await base44.entities.Estoque.update(item.id, { 
+          valor_venda: parseFloat(novoPreco.toFixed(2))
+        });
         sucessos++;
       } catch (err) {
         falhas++;
-        console.error(`Erro ao atualizar ${item.id}:`, err.message);
+        errosDetalhados.push({
+          id: item.id,
+          descricao: item.descricao,
+          erro: err?.message || 'Erro desconhecido'
+        });
       }
     }
 
     return Response.json({ 
       sucesso: sucessos,
       falhas: falhas,
-      total: items.length
+      total: items.length,
+      erros: errosDetalhados.slice(0, 10)
     });
   } catch (error) {
-    console.error('Erro:', error.message);
-    return Response.json({ error: String(error.message) }, { status: 500 });
+    console.error('Erro:', error);
+    return Response.json({ error: String(error?.message || 'Erro desconhecido') }, { status: 500 });
   }
 });
