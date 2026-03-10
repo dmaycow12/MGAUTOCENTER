@@ -203,21 +203,37 @@ export default function Estoque() {
     if (!reajusteValor || Number(reajusteValor) <= 0) return alert("Informe um valor válido.");
     const alvo = reajusteGrupo === "Todos" ? items : items.filter(i => i.categoria === reajusteGrupo);
     if (!confirm(`Reajustar preço de venda de ${alvo.length} produto(s)?`)) return;
+    
     setAplicando(true);
+    setProgressoReajuste({ isOpen: true, progresso: 0, status: 'processando', sucessos: 0, erro: null });
+    setShowReajuste(false);
+    
     try {
-      const response = await base44.functions.invoke('reajustarEstoque', {
+      const response = await base44.functions.invoke('reajustarEstoqueStream', {
         items: alvo,
         reajusteTipo,
         reajusteValor: Number(reajusteValor)
       });
-      alert(`Reajuste concluído: ${response.data.sucesso}/${response.data.total} produtos atualizados`);
+      
+      setProgressoReajuste(prev => ({
+        ...prev,
+        progresso: response.data.sucesso,
+        status: 'sucesso',
+        sucessos: response.data.sucesso,
+        erro: response.data.falhas ? `${response.data.falhas} produtos tiveram erro` : null
+      }));
+      
+      await new Promise(r => setTimeout(r, 2000));
+      load();
     } catch (err) {
-      alert(`Erro ao reajustar: ${err.message}`);
+      setProgressoReajuste(prev => ({
+        ...prev,
+        status: 'erro',
+        erro: err.message
+      }));
     } finally {
       setAplicando(false);
-      setShowReajuste(false);
       setReajusteValor("");
-      load();
     }
   };
 
