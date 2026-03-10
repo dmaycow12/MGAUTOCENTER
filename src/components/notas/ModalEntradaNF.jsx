@@ -490,52 +490,42 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
 
                           {item.dar_entrada_estoque && (
                             <div className="mt-2 space-y-2">
-                              {/* Descrição editável */}
-                              <input
-                                value={item.descricao}
-                                onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, descricao: e.target.value } : it))}
-                                className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
-                                placeholder="Descrição para o estoque"
-                              />
-                              {/* Código editável */}
-                              <div className="flex gap-2 items-center">
-                                <span className="text-xs text-gray-500 flex-shrink-0">Código:</span>
-                                <input
-                                  value={item.codigo}
-                                  onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, codigo: e.target.value } : it))}
-                                  className="flex-1 bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
-                                  placeholder="Código / EAN (editável)"
-                                />
-                              </div>
-                              {/* Busca produto existente */}
-                              <BuscaProduto
+                              {/* Campo principal: descrição + busca integrada */}
+                              <CampoDescricaoBusca
                                 estoqueExistente={estoqueExistente}
-                                value={item.estoqueVinculado}
-                                onChange={vinculado => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, estoqueVinculado: vinculado } : it))}
+                                item={item}
+                                onChange={changes => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, ...changes } : it))}
                               />
-                              {!item.estoqueVinculado && (
-                                <>
-                                  <p className="text-xs text-gray-500">Nenhum vínculo — será criado como novo produto no estoque</p>
-                                  <div className="flex gap-2">
-                                    <div className="flex-1">
-                                      <input
-                                        value={item.marca || ""}
-                                        onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, marca: e.target.value } : it))}
-                                        className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
-                                        placeholder="Marca (ex: Bosch, Cofap...)"
-                                      />
-                                    </div>
-                                    <div className="flex-1">
-                                      <input
-                                        value={item.categoria || ""}
-                                        onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, categoria: e.target.value } : it))}
-                                        className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
-                                        placeholder="Categoria (ex: Freios, Filtros...)"
-                                      />
-                                    </div>
-                                  </div>
-                                </>
-                              )}
+                              {/* Código, Marca e Categoria — sempre visíveis */}
+                              <div className="grid grid-cols-3 gap-2">
+                                <div>
+                                  <p className="text-xs text-gray-500 mb-1">Código</p>
+                                  <input
+                                    value={item.codigo || ""}
+                                    onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, codigo: e.target.value } : it))}
+                                    className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
+                                    placeholder="Código"
+                                  />
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-500 mb-1">Marca</p>
+                                  <input
+                                    value={item.marca || ""}
+                                    onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, marca: e.target.value } : it))}
+                                    className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
+                                    placeholder="Ex: Bosch"
+                                  />
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-500 mb-1">Categoria</p>
+                                  <input
+                                    value={item.categoria || ""}
+                                    onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, categoria: e.target.value } : it))}
+                                    className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
+                                    placeholder="Ex: Freios"
+                                  />
+                                </div>
+                              </div>
                             </div>
                           )}
                         </div>
