@@ -59,6 +59,47 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [periodoMeses, setPeriodoMeses] = useState(6);
 
+  const hoje = new Date();
+  const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
+  const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
+  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(false);
+  const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
+  const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
+  const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
+  const [customRange, setCustomRange] = useState(null);
+  const periodoDropRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (periodoDropRef.current && !periodoDropRef.current.contains(e.target)) setPeriodoDropOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const navegarMes = (dir) => {
+    setUsandoOutroPeriodo(false); setCustomRange(null);
+    let m = filtroMes + dir, a = filtroAno;
+    if (m > 12) { m = 1; a++; } if (m < 1) { m = 12; a--; }
+    setFiltroMes(m); setFiltroAno(a);
+  };
+
+  const aplicarOutroPeriodo = () => {
+    if (!outroPeriodoInicio || !outroPeriodoFim) return;
+    setCustomRange({ inicio: outroPeriodoInicio, fim: outroPeriodoFim });
+    setUsandoOutroPeriodo(true); setPeriodoDropOpen(false);
+  };
+
+  const pad = n => String(n).padStart(2, "0");
+  const periodoRange = usandoOutroPeriodo && customRange
+    ? customRange
+    : { inicio: `${filtroAno}-${pad(filtroMes)}-01`, fim: `${filtroAno}-${pad(filtroMes)}-31` };
+
+  const financeiroPeriodo = financeiro.filter(i => {
+    const ref = i.data_vencimento || i.data_pagamento || "";
+    return ref >= periodoRange.inicio && ref <= periodoRange.fim;
+  });
+
   useEffect(() => {
     Promise.all([
       base44.entities.OrdemServico.list("-created_date", 500),
