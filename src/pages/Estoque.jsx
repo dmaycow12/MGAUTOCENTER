@@ -36,6 +36,7 @@ export default function Estoque() {
   const [editandoValor, setEditandoValor] = useState("");
   const [ordenacao, setOrdenacao] = useState({ campo: null, direcao: "asc" });
   const [deletando, setDeletando] = useState(false);
+  const [progressoReajuste, setProgressoReajuste] = useState({ isOpen: false, progresso: 0, status: 'processando', sucessos: 0, erro: null });
 
   useEffect(() => { load(); }, []);
 
