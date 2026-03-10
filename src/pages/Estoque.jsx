@@ -199,10 +199,13 @@ export default function Estoque() {
         {/* Linha 2: ações */}
         <div className="flex gap-2">
           <button
-            onClick={() => setFiltro(filtro === "Estoque Baixo" ? "Todos" : "Estoque Baixo")}
-            className={`flex items-center gap-1 px-3 h-11 rounded-xl text-sm font-medium transition-all flex-shrink-0 ${filtro === "Estoque Baixo" ? "bg-red-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}
+            onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
+            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
+            style={{background: "#00ff00", color: "#000"}}
+            onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
+            onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
           >
-            <AlertTriangle className="w-4 h-4" /> Baixo
+            <Plus className="w-4 h-4" /> Novo Item
           </button>
           <button
             onClick={() => setShowReajuste(true)}
@@ -223,13 +226,10 @@ export default function Estoque() {
             <Upload className="w-4 h-4" /> Importar
           </button>
           <button
-            onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
-            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
-            style={{background: "#00ff00", color: "#000"}}
-            onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
-            onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
+            onClick={() => setFiltro(filtro === "Estoque Baixo" ? "Todos" : "Estoque Baixo")}
+            className={`flex items-center gap-1 px-3 h-11 rounded-xl text-sm font-medium transition-all flex-shrink-0 ${filtro === "Estoque Baixo" ? "bg-red-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}
           >
-            <Plus className="w-4 h-4" /> Novo Item
+            <AlertTriangle className="w-4 h-4" /> Baixo
           </button>
         </div>
       </div>
