@@ -105,9 +105,8 @@ function parsearXML(xmlOriginal) {
   };
 }
 
-// Componente de busca de produto do estoque
-function BuscaProduto({ estoqueExistente, value, onChange }) {
-  const [query, setQuery] = useState("");
+// Campo unificado: descrição + busca de produto existente
+function CampoDescricaoBusca({ estoqueExistente, item, onChange }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -117,53 +116,61 @@ function BuscaProduto({ estoqueExistente, value, onChange }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const filtrados = query.length >= 2
+  const filtrados = item.descricao?.length >= 2
     ? estoqueExistente.filter(e =>
-        e.descricao?.toLowerCase().includes(query.toLowerCase()) ||
-        e.codigo?.toLowerCase().includes(query.toLowerCase())
+        e.descricao?.toLowerCase().includes(item.descricao.toLowerCase()) ||
+        e.codigo?.toLowerCase().includes(item.descricao.toLowerCase())
       ).slice(0, 8)
     : [];
 
-  const selecionar = (item) => {
-    onChange(item);
-    setQuery(item.descricao);
+  const selecionar = (prod) => {
+    onChange({ estoqueVinculado: { id: prod.id, descricao: prod.descricao }, descricao: prod.descricao, codigo: prod.codigo || item.codigo, marca: prod.marca || item.marca || "", categoria: prod.categoria || item.categoria || "" });
     setOpen(false);
   };
 
-  const limpar = () => { onChange(null); setQuery(""); };
+  const limpar = () => {
+    onChange({ estoqueVinculado: null });
+    setOpen(true);
+  };
 
   return (
     <div ref={ref} className="relative">
-      <div className="flex gap-1">
-        <div className="relative flex-1">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500" />
-          <input
-            value={value ? value.descricao : query}
-            onChange={e => { setQuery(e.target.value); setOpen(true); if (value) onChange(null); }}
-            onFocus={() => setOpen(true)}
-            className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg pl-7 pr-2 py-1.5 text-xs focus:outline-none"
-            style={{ borderColor: value ? GREEN : undefined }}
-            placeholder="Buscar produto cadastrado..."
-          />
-        </div>
-        {value && (
-          <button onClick={limpar} className="text-gray-400 hover:text-white px-1">
-            <X className="w-3 h-3" />
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+        <input
+          value={item.descricao}
+          onChange={e => { onChange({ descricao: e.target.value, estoqueVinculado: null }); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          className="w-full bg-gray-700 border text-white rounded-lg pl-8 pr-8 py-2 text-sm focus:outline-none"
+          style={{ borderColor: item.estoqueVinculado ? GREEN : "#4b5563" }}
+          placeholder="Descrição / buscar produto cadastrado..."
+        />
+        {item.estoqueVinculado && (
+          <button onClick={limpar} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+            <X className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
+      {item.estoqueVinculado && (
+        <p className="text-xs mt-1" style={{ color: GREEN }}>✓ Vinculado: {item.estoqueVinculado.descricao}</p>
+      )}
+      {!item.estoqueVinculado && !item.descricao && (
+        <p className="text-xs mt-1 text-gray-500">Nenhum vínculo — será criado como novo produto no estoque</p>
+      )}
       {open && filtrados.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg z-10 shadow-xl max-h-40 overflow-y-auto">
-          {filtrados.map(item => (
-            <button key={item.id} onClick={() => selecionar(item)}
+        <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg z-20 shadow-xl max-h-44 overflow-y-auto">
+          {filtrados.map(prod => (
+            <button key={prod.id} onClick={() => selecionar(prod)}
               className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700 hover:text-white transition-all flex justify-between gap-2">
-              <span className="truncate">{item.descricao}</span>
-              <span className="text-gray-500 flex-shrink-0">{item.codigo || "—"}</span>
+              <div className="truncate">
+                <span className="font-medium">{prod.descricao}</span>
+                {prod.marca && <span className="text-gray-500 ml-1">· {prod.marca}</span>}
+              </div>
+              <span className="text-gray-500 flex-shrink-0">{prod.codigo || "—"}</span>
             </button>
           ))}
         </div>
       )}
-      {value && <p className="text-xs mt-1" style={{ color: GREEN }}>✓ Vinculado: {value.descricao}</p>}
     </div>
   );
 }
