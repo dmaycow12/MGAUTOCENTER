@@ -353,8 +353,8 @@ export default function Estoque() {
           <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2.5">
             <span className="text-red-400 text-sm font-medium flex-1">{selecionados.length} item(s) selecionado(s)</span>
             <button onClick={() => setSelecionados([])} className="text-gray-400 hover:text-white text-xs px-3 py-1.5 border border-gray-700 rounded-lg transition-all">Cancelar</button>
-            <button onClick={excluirSelecionados} className="flex items-center gap-2 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition-all" style={{background:"#cc0000"}} onMouseEnter={e=>e.currentTarget.style.background="#aa0000"} onMouseLeave={e=>e.currentTarget.style.background="#cc0000"}>
-              <Trash2 className="w-3.5 h-3.5" /> Excluir Selecionados
+            <button onClick={excluirSelecionados} disabled={deletando} className="flex items-center gap-2 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition-all disabled:opacity-50" style={{background:"#cc0000"}} onMouseEnter={e=>!deletando && (e.currentTarget.style.background="#aa0000")} onMouseLeave={e=>e.currentTarget.style.background="#cc0000"}>
+              <Trash2 className="w-3.5 h-3.5" /> {deletando ? "Deletando..." : "Excluir Selecionados"}
             </button>
           </div>
         )}
