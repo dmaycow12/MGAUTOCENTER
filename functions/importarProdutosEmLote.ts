@@ -56,8 +56,8 @@ Deno.serve(async (req) => {
       return isNaN(Number(str)) ? 0 : Number(str);
     };
 
-    const BATCH_SIZE = 3;
-    const BATCH_DELAY = 3000;
+    const BATCH_SIZE = 20;
+    const BATCH_DELAY = 1500;
 
     for (let i = 0; i < items.length; i += BATCH_SIZE) {
       const batch = items.slice(i, i + BATCH_SIZE);
