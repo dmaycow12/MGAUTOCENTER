@@ -123,9 +123,6 @@ export default function Dashboard() {
     </div>
   );
 
-  const anoAtual = hoje.getFullYear();
-  const mesAtual = hoje.getMonth();
-
   // KPIs OS
   const osAbertas = ordens.filter(o => o.status === "Aberto").length;
   const osOrcamento = ordens.filter(o => o.status === "Orçamento").length;
