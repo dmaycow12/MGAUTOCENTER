@@ -209,21 +209,42 @@ export default function Estoque() {
     setShowReajuste(false);
     
     try {
-      const response = await base44.functions.invoke('reajustarEstoqueStream', {
-        items: alvo,
-        reajusteTipo,
-        reajusteValor: Number(reajusteValor)
-      });
+      let sucessosTotal = 0;
+      let falhasTotal = 0;
+      const batchSize = 50;
       
-      const mensagemErro = response.data.falhas > 0 
-        ? `${response.data.falhas} produto(s) falharam. Verifique a conexão e tente novamente.`
+      // Processa em lotes pequenos para atualizar barra em tempo real
+      for (let i = 0; i < alvo.length; i += batchSize) {
+        const batch = alvo.slice(i, i + batchSize);
+        
+        const response = await base44.functions.invoke('reajustarEstoqueStream', {
+          items: batch,
+          reajusteTipo,
+          reajusteValor: Number(reajusteValor)
+        });
+        
+        sucessosTotal += response.data.sucesso;
+        falhasTotal += response.data.falhas;
+        
+        // Atualiza progresso em tempo real
+        setProgressoReajuste(prev => ({
+          ...prev,
+          progresso: sucessosTotal + falhasTotal,
+          sucessos: sucessosTotal,
+          status: 'processando'
+        }));
+        
+        // Pequena pausa entre lotes
+        await new Promise(r => setTimeout(r, 100));
+      }
+      
+      const mensagemErro = falhasTotal > 0 
+        ? `${falhasTotal} produto(s) falharam. Verifique a conexão e tente novamente.`
         : null;
       
       setProgressoReajuste(prev => ({
         ...prev,
-        progresso: response.data.sucesso,
-        status: response.data.falhas > 0 ? 'aviso' : 'sucesso',
-        sucessos: response.data.sucesso,
+        status: falhasTotal > 0 ? 'aviso' : 'sucesso',
         erro: mensagemErro
       }));
       
