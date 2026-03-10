@@ -226,7 +226,7 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
         if (item.estoqueVinculado) return item; // já tem mapeamento
         let encontrado = null;
         if (item.codigo) encontrado = est.find(e => e.codigo === item.codigo);
-        if (!encontrado) encontrado = est.find(e => e.descricao?.trim().toLowerCase() === item.descricao.trim().toLowerCase());
+        // Só vincula automaticamente se o código bater exatamente — sem fallback por descrição
         return encontrado ? { ...item, estoqueVinculado: { id: encontrado.id, descricao: encontrado.descricao }, marca: item.marca || encontrado.marca || "", categoria: item.categoria || encontrado.categoria || "" } : item;
       }));
 
