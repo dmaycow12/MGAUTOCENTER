@@ -29,6 +29,7 @@ export default function Estoque() {
   const [selecionados, setSelecionados] = useState([]);
   const [editandoCell, setEditandoCell] = useState(null); // { id, field }
   const [editandoValor, setEditandoValor] = useState("");
+  const [ordenacao, setOrdenacao] = useState({ campo: null, direcao: "asc" });
 
   useEffect(() => { load(); }, []);
 
