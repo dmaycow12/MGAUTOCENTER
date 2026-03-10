@@ -121,7 +121,6 @@ export default function Dashboard() {
     </div>
   );
 
-  const hoje = new Date();
   const anoAtual = hoje.getFullYear();
   const mesAtual = hoje.getMonth();
 
