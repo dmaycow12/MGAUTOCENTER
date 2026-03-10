@@ -120,6 +120,7 @@ export default function Estoque() {
       return (
         <input
           autoFocus
+          onFocus={e => e.target.select()}
           type={["quantidade", "estoque_minimo", "valor_custo", "valor_venda"].includes(field) ? "text" : type}
           step={type === "number" ? "0.01" : undefined}
           value={editandoValor}
