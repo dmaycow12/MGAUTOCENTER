@@ -102,7 +102,6 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
 
   const imprimir = () => {
     setMenuOpen(false);
-    const { gerarHTMLImpressao } = require("@/components/os/osImpressao");
     const win = window.open("", "_blank");
     win.document.write(gerarHTMLImpressao(os));
     win.document.close();
