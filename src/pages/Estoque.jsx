@@ -438,6 +438,7 @@ export default function Estoque() {
                   <th className="px-4 py-3">Código</th>
                   <th className="px-4 py-3">Descrição</th>
                   <th className="px-4 py-3 hidden md:table-cell">Categoria</th>
+                  <th className="px-4 py-3 hidden lg:table-cell">Marca</th>
                   <th className="px-4 py-3 text-center">Qtd</th>
                   <th className="px-4 py-3 text-center hidden sm:table-cell">Mín.</th>
                   <th className="px-4 py-3 text-right hidden md:table-cell">Custo</th>
