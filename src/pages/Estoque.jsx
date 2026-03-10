@@ -52,7 +52,30 @@ export default function Estoque() {
   const excluir = async (id) => {
     if (!confirm("Excluir este item?")) return;
     await base44.entities.Estoque.delete(id);
+    setSelecionados(prev => prev.filter(s => s !== id));
     load();
+  };
+
+  const excluirSelecionados = async () => {
+    if (selecionados.length === 0) return;
+    if (!confirm(`Excluir ${selecionados.length} item(s) selecionado(s)?`)) return;
+    for (const id of selecionados) {
+      await base44.entities.Estoque.delete(id);
+    }
+    setSelecionados([]);
+    load();
+  };
+
+  const toggleSelecionado = (id) => {
+    setSelecionados(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
+  };
+
+  const toggleTodos = () => {
+    if (selecionados.length === filtrados.length) {
+      setSelecionados([]);
+    } else {
+      setSelecionados(filtrados.map(i => i.id));
+    }
   };
 
   const editar = (item) => {
