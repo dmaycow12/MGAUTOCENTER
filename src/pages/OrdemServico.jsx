@@ -208,18 +208,13 @@ export default function OrdemServico() {
       ) : (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
           {filtradas.map(os => (
-            <div key={os.id} className="flex items-center gap-3 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/50 transition-all">
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-semibold text-sm">OS #{os.numero} — {os.cliente_nome || "—"}</p>
-                <p className="text-gray-500 text-xs">{os.veiculo_placa || "—"} {os.veiculo_modelo ? `• ${os.veiculo_modelo}` : ""} {os.data_entrada ? `• ${os.data_entrada}` : ""}</p>
-              </div>
-              <span className={`text-xs px-2 py-1 rounded-full font-medium ${os.status==="Concluído"?"bg-green-500/10 text-green-400":os.status==="Orçamento"?"bg-yellow-500/10 text-yellow-400":"bg-blue-500/10 text-blue-400"}`}>{os.status}</span>
-              <span className="text-orange-400 font-bold text-sm">R$ {Number(os.valor_total||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</span>
-              <div className="flex gap-1">
-                <button onClick={() => { setEditando(os); setShowForm(true); }} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all"><Edit className="w-4 h-4"/></button>
-                <button onClick={() => excluir(os.id)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all"><Trash2 className="w-4 h-4"/></button>
-              </div>
-            </div>
+            <OSListRow
+              key={os.id}
+              os={os}
+              onEdit={() => { setEditando(os); setShowForm(true); }}
+              onDelete={() => excluir(os.id)}
+              onRefresh={load}
+            />
           ))}
         </div>
       )}
