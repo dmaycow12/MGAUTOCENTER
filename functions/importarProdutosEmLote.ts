@@ -19,60 +19,62 @@ Deno.serve(async (req) => {
     const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
       file_url,
       json_schema: {
-        type: "object",
-        properties: {
-          items: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                col_0: { type: "string" },
-                col_1: { type: "string" },
-                col_2: { type: "string" },
-                col_3: { type: "number" },
-                col_4: { type: "number" },
-                col_5: { type: "number" },
-                col_6: { type: "number" },
-                col_7: { type: "string" },
-                col_8: { type: "string" },
-                col_9: { type: "string" }
-              }
-            }
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            "Cód. interno": { type: "string" },
+            "Nome": { type: "string" },
+            "Unidade": { type: "string" },
+            "Estoque": { type: ["number", "string"] },
+            "Estoque min.": { type: ["number", "string"] },
+            "Custo unit.": { type: ["number", "string"] },
+            "Valor venda": { type: ["number", "string"] },
+            "CPOP": { type: ["number", "string"] },
+            "NCM": { type: ["number", "string"] },
+            "CEST": { type: ["number", "string"] }
           }
         }
       }
     });
 
-    if (result.status !== "success" || !result.output?.items) {
+    if (result.status !== "success" || !Array.isArray(result.output)) {
       return Response.json({ 
         error: 'Erro ao processar arquivo', 
         details: result.details 
       }, { status: 400 });
     }
 
-    const items = result.output.items;
+    const items = result.output;
     let sucesso = 0;
     let falha = 0;
     const erros = [];
 
     for (const row of items) {
-      if (!row.col_1 || !row.col_1.trim()) {
+      const nome = (row["Nome"] || row.col_1 || '').toString().trim();
+      if (!nome) {
         falha++;
         continue;
       }
 
       try {
+        const parseNum = (val) => {
+          if (!val) return 0;
+          const str = val.toString().replace(',', '.');
+          return isNaN(Number(str)) ? 0 : Number(str);
+        };
+
         await base44.entities.Estoque.create({
-          codigo: (row.col_0 || '').toString().trim(),
-          descricao: (row.col_1 || '').trim(),
-          unidade: (row.col_2 || 'UN').trim(),
-          quantidade: Number(row.col_3) || 0,
-          estoque_minimo: Number(row.col_4) || 0,
-          valor_custo: Number(row.col_5) || 0,
-          valor_venda: Number(row.col_6) || 0,
-          cfop: (row.col_7 || '5405').toString().trim(),
-          ncm: (row.col_8 || '87089990').toString().trim(),
-          cest: (row.col_9 || '').toString().trim(),
+          codigo: (row["Cód. interno"] || row.col_0 || '').toString().trim(),
+          descricao: nome,
+          unidade: (row["Unidade"] || row.col_2 || 'UN').toString().trim(),
+          quantidade: parseNum(row["Estoque"] || row.col_3),
+          estoque_minimo: parseNum(row["Estoque min."] || row.col_4),
+          valor_custo: parseNum(row["Custo unit."] || row.col_5),
+          valor_venda: parseNum(row["Valor venda"] || row.col_6),
+          cfop: (row["CPOP"] || row.col_7 || '5405').toString().trim(),
+          ncm: (row["NCM"] || row.col_8 || '87089990').toString().trim(),
+          cest: (row["CEST"] || row.col_9 || '').toString().trim(),
           categoria: '',
           marca: '',
           localizacao: '',
@@ -84,7 +86,7 @@ Deno.serve(async (req) => {
         falha++;
         erros.push({
           linha: sucesso + falha + 1,
-          produto: row.col_1,
+          produto: nome,
           erro: e.message
         });
       }
