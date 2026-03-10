@@ -29,46 +29,38 @@ function fmt(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function Card({ title, realizado, previsto, color, bg, bgColor }) {
-  const falta = Math.max(previsto - realizado, 0);
-  const percent = previsto > 0 ? (realizado / previsto) * 100 : 0;
+function Card({ title, pago, previsto, color, bg, bgColor }) {
+  const falta = Math.max(previsto - pago, 0);
+  const percent = previsto > 0 ? (pago / previsto) * 100 : 0;
+  const isDark = bgColor !== "#00ff00";
+  const textColor = isDark ? "#fff" : "#000";
+  const trackColor = isDark ? "#1f2937" : "rgba(0,0,0,0.2)";
 
   return (
-    <div className={`flex-1 ${bg} rounded-xl px-6 py-5 flex items-center gap-5`} style={bgColor ? { background: bgColor } : {}}>
-      <CircleProgress percent={percent} color={color} textColor={bgColor === "#00ff00" ? "#000" : "white"} trackColor={bgColor === "#00ff00" ? "rgba(0,0,0,0.2)" : "#1f2937"} />
+    <div className={`flex-1 ${bg} rounded-xl px-6 py-5 flex items-center gap-5`} style={{ background: bgColor }}>
+      <CircleProgress percent={percent} color={color} textColor={textColor} trackColor={trackColor} />
       <div className="space-y-1">
-        <p className="text-base font-bold" style={{ color: bgColor === "#00ff00" ? "#000" : "#fff" }}>{title}</p>
-        <p className="text-sm font-bold" style={{ color: bgColor === "#00ff00" ? "#000" : "#fff" }}>Realizado: {fmt(realizado)}</p>
-        <p className="text-sm font-bold" style={{ color: bgColor === "#00ff00" ? "#000" : "#fff" }}>Falta: {fmt(falta)}</p>
+        <p className="text-base font-bold" style={{ color: textColor }}>{title}</p>
+        <p className="text-sm font-bold" style={{ color: textColor }}>Pago: {fmt(pago)}</p>
+        <p className="text-sm font-bold" style={{ color: textColor }}>Falta: {fmt(falta)}</p>
       </div>
     </div>
   );
 }
 
 export default function FluxoMes({ financeiro }) {
-  const now = new Date();
-  const mes = now.getMonth();
-  const ano = now.getFullYear();
+  const items = financeiro || [];
 
-  const doMes = (financeiro || []).filter(f => {
-    const ref = f.data_vencimento || f.data_pagamento || f.created_date;
-    if (!ref) return false;
-    const d = new Date(ref);
-    return d.getMonth() === mes && d.getFullYear() === ano;
-  });
+  const recPrevisto = items.filter(f => f.tipo === "Receita").reduce((a, f) => a + (f.valor || 0), 0);
+  const recPago = items.filter(f => f.tipo === "Receita" && f.status === "Pago").reduce((a, f) => a + (f.valor || 0), 0);
 
-  // Recebimentos
-  const recPrevisto = doMes.filter(f => f.tipo === "Receita").reduce((a, f) => a + (f.valor || 0), 0);
-  const recRealizado = doMes.filter(f => f.tipo === "Receita" && f.status === "Pago").reduce((a, f) => a + (f.valor || 0), 0);
-
-  // Pagamentos
-  const pagPrevisto = doMes.filter(f => f.tipo === "Despesa").reduce((a, f) => a + (f.valor || 0), 0);
-  const pagRealizado = doMes.filter(f => f.tipo === "Despesa" && f.status === "Pago").reduce((a, f) => a + (f.valor || 0), 0);
+  const pagPrevisto = items.filter(f => f.tipo === "Despesa").reduce((a, f) => a + (f.valor || 0), 0);
+  const pagPago = items.filter(f => f.tipo === "Despesa" && f.status === "Pago").reduce((a, f) => a + (f.valor || 0), 0);
 
   return (
     <div className="flex flex-col sm:flex-row gap-3">
-      <Card title="Recebimentos do mês" realizado={recRealizado} previsto={recPrevisto} color="#000000" bg="border border-green-400/40" bgColor="#00ff00" />
-      <Card title="Pagamentos do mês" realizado={pagRealizado} previsto={pagPrevisto} color="#ffffff" bg="border border-red-600/40" bgColor="#cc0000" />
+      <Card title="Receita" pago={recPago} previsto={recPrevisto} color="#000000" bg="" bgColor="#00ff00" />
+      <Card title="Despesa" pago={pagPago} previsto={pagPrevisto} color="#ffffff" bg="" bgColor="#cc0000" />
     </div>
   );
 }
