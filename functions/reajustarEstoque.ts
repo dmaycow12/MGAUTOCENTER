@@ -28,14 +28,22 @@ Deno.serve(async (req) => {
       return { id: item.id, valor_venda: novoPreco };
     });
 
-    const results = [];
-    for (const update of updates) {
-      const result = await base44.entities.Estoque.update(update.id, { valor_venda: update.valor_venda });
-      results.push(result);
+    const batchSize = 50;
+    let sucessos = 0;
+    
+    for (let i = 0; i < updates.length; i += batchSize) {
+      const batch = updates.slice(i, i + batchSize);
+      const promises = batch.map(update => 
+        base44.entities.Estoque.update(update.id, { valor_venda: update.valor_venda })
+          .then(() => { sucessos++; return true; })
+          .catch(() => false)
+      );
+      
+      await Promise.all(promises);
     }
 
     return Response.json({ 
-      sucesso: results.length,
+      sucesso: sucessos,
       total: items.length
     });
   } catch (error) {
