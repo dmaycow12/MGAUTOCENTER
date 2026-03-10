@@ -711,6 +711,16 @@ export default function Estoque() {
         </div>
       )}
 
+      <ProgressoReajuste
+        isOpen={progressoReajuste.isOpen}
+        onClose={() => setProgressoReajuste(prev => ({ ...prev, isOpen: false }))}
+        total={items.length > 0 ? (reajusteGrupo === "Todos" ? items.length : items.filter(i => i.categoria === reajusteGrupo).length) : 0}
+        progresso={progressoReajuste.progresso}
+        status={progressoReajuste.status}
+        erro={progressoReajuste.erro}
+        sucessos={progressoReajuste.sucessos}
+      />
+
       <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#f97316; } .input-dark::placeholder { color:#6b7280; }`}</style>
     </div>
   );
