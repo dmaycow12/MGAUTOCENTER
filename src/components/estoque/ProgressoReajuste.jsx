@@ -38,14 +38,16 @@ export default function ProgressoReajuste({ isOpen, onClose, total, progresso, s
               ? 'bg-blue-500/10 border-blue-500/30'
               : status === 'sucesso'
               ? 'bg-green-500/10 border-green-500/30'
+              : status === 'aviso'
+              ? 'bg-yellow-500/10 border-yellow-500/30'
               : 'bg-red-500/10 border-red-500/30'
           }`}>
             <div className="flex items-center gap-3">
               {status === 'processando' && (
                 <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
               )}
-              {status === 'sucesso' && (
-                <CheckCircle2 className="w-5 h-5 text-green-500" />
+              {(status === 'sucesso' || status === 'aviso') && (
+                <CheckCircle2 className={`w-5 h-5 ${status === 'sucesso' ? 'text-green-500' : 'text-yellow-500'}`} />
               )}
               {status === 'erro' && (
                 <AlertCircle className="w-5 h-5 text-red-500" />
@@ -53,10 +55,12 @@ export default function ProgressoReajuste({ isOpen, onClose, total, progresso, s
               <span className={`text-sm font-medium ${
                 status === 'processando' ? 'text-blue-400' :
                 status === 'sucesso' ? 'text-green-400' :
+                status === 'aviso' ? 'text-yellow-400' :
                 'text-red-400'
               }`}>
                 {status === 'processando' ? 'Processando...' :
-                 status === 'sucesso' ? 'Concluído!' :
+                 status === 'sucesso' ? 'Concluído com sucesso!' :
+                 status === 'aviso' ? 'Concluído com falhas' :
                  'Erro no processamento'}
               </span>
             </div>
