@@ -104,10 +104,10 @@ export default function Dashboard() {
 
   useEffect(() => {
     Promise.all([
-      base44.entities.OrdemServico.list("-created_date", 500),
-      base44.entities.Financeiro.list("-created_date", 500),
-      base44.entities.Cliente.list("-created_date", 500),
-      base44.entities.Estoque.list("-created_date", 500),
+      base44.entities.OrdemServico.list("-created_date", 2000),
+      base44.entities.Financeiro.list("-created_date", 2000),
+      base44.entities.Cliente.list("-created_date", 2000),
+      base44.entities.Estoque.list("-created_date", 2000),
     ]).then(([o, f, c, e]) => {
       setOrdens(o);
       setFinanceiro(f);
