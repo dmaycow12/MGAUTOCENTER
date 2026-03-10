@@ -60,12 +60,15 @@ function parsearXML(xmlOriginal) {
     const qCom = parseFloat(det.match(/<qCom>([^<]*)<\/qCom>/)?.[1] || "0");
     const vUnCom = parseFloat(det.match(/<vUnCom>([^<]*)<\/vUnCom>/)?.[1] || "0");
     const vProd = parseFloat(det.match(/<vProd>([^<]*)<\/vProd>/)?.[1] || "0");
+    const cProd = det.match(/<cProd>([^<]*)<\/cProd>/)?.[1] || "";
     const cEAN = det.match(/<cEAN>([^<]*)<\/cEAN>/)?.[1] || "";
     const NCM = det.match(/<NCM>([^<]*)<\/NCM>/)?.[1] || "";
     const CFOP = det.match(/<CFOP>([^<]*)<\/CFOP>/)?.[1] || "";
     const uCom = det.match(/<uCom>([^<]*)<\/uCom>/)?.[1] || "";
-    const codigoLimpo = (cEAN && cEAN !== "SEM GTIN") ? cEAN : "";
-    return { descricao: xProd, quantidade: qCom, valor_unitario: vUnCom, valor_total: vProd, codigo: codigoLimpo, ncm: NCM, cfop: CFOP, unidade: uCom, dar_entrada_estoque: true, estoqueVinculado: null };
+    // Usa cProd (código interno do fornecedor) como código principal; EAN como fallback se disponível
+    const codigoLimpo = cProd || ((cEAN && cEAN !== "SEM GTIN") ? cEAN : "");
+    const eanLimpo = (cEAN && cEAN !== "SEM GTIN") ? cEAN : "";
+    return { descricao: xProd, quantidade: qCom, valor_unitario: vUnCom, valor_total: vProd, codigo: codigoLimpo, ean: eanLimpo, ncm: NCM, cfop: CFOP, unidade: uCom, dar_entrada_estoque: true, estoqueVinculado: null };
   });
 
   const vBC = parseFloat(get("vBC") || "0"); const vICMS = parseFloat(get("vICMS") || "0");
