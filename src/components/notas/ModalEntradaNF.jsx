@@ -66,8 +66,10 @@ function parsearXML(xmlOriginal) {
     const CFOP = det.match(/<CFOP>([^<]*)<\/CFOP>/)?.[1] || "";
     const uCom = det.match(/<uCom>([^<]*)<\/uCom>/)?.[1] || "";
     // Usa cProd (código interno do fornecedor) como código principal; EAN como fallback se disponível
-    const codigoLimpo = cProd || ((cEAN && cEAN !== "SEM GTIN") ? cEAN : "");
-    const eanLimpo = (cEAN && cEAN !== "SEM GTIN") ? cEAN : "";
+    // Remove caracteres especiais . / - do código
+    const limparCodigo = (str) => str ? str.replace(/[.\-/]/g, "") : "";
+    const codigoLimpo = limparCodigo(cProd) || ((cEAN && cEAN !== "SEM GTIN") ? limparCodigo(cEAN) : "");
+    const eanLimpo = (cEAN && cEAN !== "SEM GTIN") ? limparCodigo(cEAN) : "";
     return { descricao: xProd, quantidade: qCom, valor_unitario: vUnCom, valor_total: vProd, codigo: codigoLimpo, ean: eanLimpo, ncm: NCM, cfop: CFOP, unidade: uCom, dar_entrada_estoque: true, estoqueVinculado: null };
   });
 
