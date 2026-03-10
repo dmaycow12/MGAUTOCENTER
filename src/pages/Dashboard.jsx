@@ -346,28 +346,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Resumo financeiro mês */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-        <SectionTitle>Resumo Financeiro do Mês</SectionTitle>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <p className="text-gray-400 text-xs mb-1">Receita Prevista</p>
-            <p className="text-green-400 font-bold text-lg">{fmt(receitaMes)}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-gray-400 text-xs mb-1">Receita Recebida</p>
-            <p className="text-green-300 font-bold text-lg">{fmt(receitaPaga)}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-gray-400 text-xs mb-1">Despesas</p>
-            <p className="text-red-400 font-bold text-lg">{fmt(despesaMes)}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-gray-400 text-xs mb-1">Saldo Previsto</p>
-            <p className={`font-bold text-lg ${receitaMes - despesaMes >= 0 ? "text-orange-400" : "text-red-400"}`}>{fmt(receitaMes - despesaMes)}</p>
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 }
