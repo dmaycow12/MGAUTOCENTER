@@ -169,50 +169,34 @@ export default function Dashboard() {
     <div className="space-y-6">
 
 
-      {/* Gráficos linha 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* OS por mês */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <SectionTitle>Ordens de Serviço — Últimos 6 Meses</SectionTitle>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={osPorMes} barGap={4}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-              <XAxis dataKey="mes" tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ fontSize: 11, color: "#9ca3af" }} />
-              <Bar dataKey="total" name="Total" fill={ORANGE} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="concluidas" name="Concluídas" fill={GREEN} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Receita x Despesa */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <SectionTitle>Receita x Despesa — Últimos 6 Meses</SectionTitle>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={fluxoPorMes} barGap={4}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-              <XAxis dataKey="mes" tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ fontSize: 11, color: "#9ca3af" }} />
-              <Bar dataKey="receita" name="Receita" fill={GREEN} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="despesa" name="Despesa" fill={RED} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Lucro líquido linha */}
+      {/* Gráfico Receita x Despesa x Lucro */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-        <SectionTitle>Lucro Líquido — Últimos 6 Meses</SectionTitle>
-        <ResponsiveContainer width="100%" height={180}>
-          <LineChart data={fluxoPorMes}>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-white font-semibold text-base">Receita x Despesa x Lucro</h2>
+          <div className="flex gap-1">
+            {[3, 6, 12].map(m => (
+              <button
+                key={m}
+                onClick={() => setPeriodoMeses(m)}
+                className="px-3 py-1 rounded-lg text-xs font-medium transition-all"
+                style={periodoMeses === m ? { background: "#062C9B", color: "#fff" } : { background: "#1f2937", color: "#6b7280", border: "1px solid #374151" }}
+              >
+                {m === 12 ? "1 ano" : `${m}m`}
+              </button>
+            ))}
+          </div>
+        </div>
+        <ResponsiveContainer width="100%" height={260}>
+          <BarChart data={fluxoPorMes} barGap={4}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
             <XAxis dataKey="mes" tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fill: "#9ca3af", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `R$${(v/1000).toFixed(0)}k`} />
-            <Tooltip content={<CustomTooltip />} />
-            <Line type="monotone" dataKey="lucro" name="Lucro" stroke={ORANGE} strokeWidth={2} dot={{ fill: ORANGE, r: 4 }} activeDot={{ r: 6 }} />
-          </LineChart>
+            <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<CustomTooltip />} />
+            <Legend wrapperStyle={{ fontSize: 11, color: "#9ca3af" }} />
+            <Bar dataKey="receita" name="Receita" fill={GREEN} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="despesa" name="Despesa" fill={RED} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="lucro" name="Lucro" fill={ORANGE} radius={[4, 4, 0, 0]} />
+          </BarChart>
         </ResponsiveContainer>
       </div>
 
