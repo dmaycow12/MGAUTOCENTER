@@ -303,12 +303,7 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
         if (!existente && item.codigo) {
           existente = estoqueAtual.find(e => e.codigo === item.codigo && !idsUsados.has(e.id));
         }
-        // Prioridade 3: descrição
-        if (!existente) {
-          existente = estoqueAtual.find(e =>
-            e.descricao?.trim().toLowerCase() === item.descricao.trim().toLowerCase() && !idsUsados.has(e.id)
-          );
-        }
+        // Prioridade 3: descrição removida — só vincula por código ou vínculo manual
 
         if (existente) {
           idsUsados.add(existente.id);
