@@ -50,7 +50,8 @@ Deno.serve(async (req) => {
     let falha = 0;
     const erros = [];
 
-    for (const row of items) {
+    for (let i = 0; i < items.length; i++) {
+      const row = items[i];
       const nome = (row["Nome"] || row.col_1 || '').toString().trim();
       if (!nome) {
         falha++;
@@ -82,13 +83,23 @@ Deno.serve(async (req) => {
           observacoes: ''
         });
         sucesso++;
+        
+        // Delay progressivo para evitar rate limit
+        if ((i + 1) % 50 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
       } catch (e) {
         falha++;
         erros.push({
-          linha: sucesso + falha + 1,
+          linha: i + 2,
           produto: nome,
           erro: e.message
         });
+        
+        // Se rate limit, aguarda mais tempo
+        if (e.message.includes('Rate limit')) {
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
       }
     }
 
