@@ -16,9 +16,9 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
 const STATUS_OPTIONS = ["Aberto", "Orçamento", "Concluído"];
 
 const STATUS_STYLE = {
-  "Aberto":     { badge: "text-white", style: { background: "#062C9B", color: "#fff" } },
-  "Orçamento":  { badge: "text-white", style: { background: "#FFCC00", color: "#fff" } },
-  "Concluído":  { badge: "text-white", style: { background: "#00C957", color: "#fff" } },
+  "Aberto":    { badge: "text-white", style: { background: "#062C9B", color: "#fff" } },
+  "Orçamento": { badge: "text-white", style: { background: "#FFCC00", color: "#fff" } },
+  "Concluído": { badge: "text-white", style: { background: "#00C957", color: "#fff" } },
 };
 
 function fmtData(d) {
@@ -31,8 +31,6 @@ function fmtData(d) {
 function fmtValor(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
-
-
 
 export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   const navigate = useNavigate();
@@ -62,12 +60,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
       return Array.from({ length: qtd }, (_, i) => {
         const d = new Date(base);
         d.setMonth(d.getMonth() + i);
-        return {
-          numero: i + 1,
-          valor: parseFloat(valorParcela.toFixed(2)),
-          vencimento: d.toISOString().split("T")[0],
-          forma_pagamento: formaPagamento || "Dinheiro",
-        };
+        return { numero: i + 1, valor: parseFloat(valorParcela.toFixed(2)), vencimento: d.toISOString().split("T")[0], forma_pagamento: formaPagamento || "Dinheiro" };
       });
     };
     const parcelas = osData.parcelas_detalhes && osData.parcelas_detalhes.length > 0
@@ -75,15 +68,11 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
       : gerarParcelas(osData.valor_total, Number(osData.parcelas) || 1, osData.forma_pagamento, osData.data_entrada);
     for (const p of parcelas) {
       await base44.entities.Financeiro.create({
-        tipo: "Receita",
-        categoria: "Ordem de Serviço",
+        tipo: "Receita", categoria: "Ordem de Serviço",
         descricao: "OS #" + osData.numero + " — " + (osData.cliente_nome || "") + " — Parcela " + p.numero + "/" + parcelas.length,
-        valor: p.valor,
-        data_vencimento: p.vencimento,
-        status: "Pendente",
+        valor: p.valor, data_vencimento: p.vencimento, status: "Pendente",
         forma_pagamento: p.forma_pagamento || osData.forma_pagamento || "Dinheiro",
-        ordem_servico_id: osData.id || "",
-        cliente_id: osData.cliente_id || "",
+        ordem_servico_id: osData.id || "", cliente_id: osData.cliente_id || "",
       });
     }
   };
@@ -91,28 +80,16 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   const excluirLancamentos = async () => {
     const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
     const vinculados = financeiros.filter(f => f.ordem_servico_id === os.id);
-    for (const f of vinculados) {
-      await base44.entities.Financeiro.delete(f.id);
-    }
+    for (const f of vinculados) await base44.entities.Financeiro.delete(f.id);
   };
 
   const alterarStatus = async (novoStatus) => {
     setStatusOpen(false);
     const eraConcluido = os.status === "Concluído";
     const ficaConcluido = novoStatus === "Concluído";
-
-    if (eraConcluido && !ficaConcluido) {
-      setStatusPendenteCard(novoStatus);
-      setShowAvisoStatus(true);
-      return;
-    }
-
+    if (eraConcluido && !ficaConcluido) { setStatusPendenteCard(novoStatus); setShowAvisoStatus(true); return; }
     await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
-
-    if (!eraConcluido && ficaConcluido) {
-      await gerarLancamentosFinanceiros(os);
-    }
-
+    if (!eraConcluido && ficaConcluido) await gerarLancamentosFinanceiros(os);
     onRefresh?.();
   };
 
@@ -128,41 +105,16 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
     setMenuOpen(false);
     const telefone = os.cliente_telefone?.replace(/\D/g, "");
     if (!telefone) return alert("Telefone do cliente não cadastrado.");
-
     const linkOrcamento = `${window.location.origin}/OrcamentoPublico?id=${os.id}`;
-
-    const servicosList = (os.servicos || []).map((s, i) =>
-      `  ${i+1}. ${s.descricao || "Serviço"} (x${s.quantidade || 1}) — ${fmtValor(Number(s.valor||0)*Number(s.quantidade||1))}`
-    ).join("\n");
-
-    const pecasList = (os.pecas || []).map((p, i) =>
-      `  ${i+1}. ${p.descricao || "Peça"} (x${p.quantidade || 1}) — ${fmtValor(p.valor_total)}`
-    ).join("\n");
-
-    let texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da OS #${os.numero}:\n`;
-    texto += `Veículo: ${os.veiculo_modelo || ""}\n`;
-    texto += `Placa: ${os.veiculo_placa || ""}\n`;
-
-    if (pecasList) {
-      texto += `\n⚙️ *Peças:*\n${pecasList}\nSubtotal: ${fmtValor(os.valor_pecas)}\n`;
-    }
-
-    if (servicosList) {
-      texto += `\n🔧 *Serviços:*\n${servicosList}\nSubtotal: ${fmtValor(os.valor_servicos)}\n`;
-    }
-
-    if (os.desconto > 0) {
-      texto += `\nDesconto: -${fmtValor(os.desconto)}\n`;
-    }
-
+    const servicosList = (os.servicos || []).map((s, i) => `  ${i+1}. ${s.descricao || "Serviço"} (x${s.quantidade || 1}) — ${fmtValor(Number(s.valor||0)*Number(s.quantidade||1))}`).join("\n");
+    const pecasList = (os.pecas || []).map((p, i) => `  ${i+1}. ${p.descricao || "Peça"} (x${p.quantidade || 1}) — ${fmtValor(p.valor_total)}`).join("\n");
+    let texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da OS #${os.numero}:\nVeículo: ${os.veiculo_modelo || ""}\nPlaca: ${os.veiculo_placa || ""}\n`;
+    if (pecasList) texto += `\n⚙️ *Peças:*\n${pecasList}\nSubtotal: ${fmtValor(os.valor_pecas)}\n`;
+    if (servicosList) texto += `\n🔧 *Serviços:*\n${servicosList}\nSubtotal: ${fmtValor(os.valor_servicos)}\n`;
+    if (os.desconto > 0) texto += `\nDesconto: -${fmtValor(os.desconto)}\n`;
     texto += `\n💰 *Total: ${fmtValor(os.valor_total)}*`;
-
-    if (os.observacoes) {
-      texto += `\n\n📋 *Observações:*\n${os.observacoes}`;
-    }
-
+    if (os.observacoes) texto += `\n\n📋 *Observações:*\n${os.observacoes}`;
     texto += `\n\n🔗 Acesse o orçamento completo com fotos:\n${linkOrcamento}`;
-
     const fone = telefone.startsWith("55") ? telefone : "55" + telefone;
     window.open("https://wa.me/" + fone + "?text=" + encodeURIComponent(texto), "_blank");
   };
@@ -177,24 +129,18 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   const emitirNF = (tipo) => {
     setMenuOpen(false);
-    const params = new URLSearchParams({
-      emitir: "1", tipo, os_id: os.id, os_numero: os.numero || "",
-      cliente_id: os.cliente_id || "",
-      cliente_nome: encodeURIComponent(os.cliente_nome || ""),
-      valor: String(os.valor_total || 0),
-    });
+    const params = new URLSearchParams({ emitir: "1", tipo, os_id: os.id, os_numero: os.numero || "", cliente_id: os.cliente_id || "", cliente_nome: encodeURIComponent(os.cliente_nome || ""), valor: String(os.valor_total || 0) });
     navigate(createPageUrl("NotasFiscais") + "?" + params.toString());
   };
 
   const imprimir = () => {
     setMenuOpen(false);
-    const html = gerarHTMLImpressao(os);
     const win = window.open("", "_blank");
-    win.document.write(html);
+    win.document.write(gerarHTMLImpressao(os));
     win.document.close();
   };
 
-  const style = STATUS_STYLE[os.status] || { badge: "bg-gray-600 text-white" };
+  const style = STATUS_STYLE[os.status] || { badge: "bg-gray-600 text-white", style: { background: "#374151", color: "#fff" } };
   const veiculoNome = os.veiculo_modelo || "—";
   const veiculoPlaca = os.veiculo_placa?.toUpperCase() || "—";
 
@@ -220,61 +166,42 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
             </p>
             <p className="text-gray-400 text-sm">Deseja continuar?</p>
             <div className="flex gap-3 justify-end">
-              <button onClick={() => { setShowAvisoStatus(false); setStatusPendenteCard(null); }}
-                className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
-                Cancelar
-              </button>
-              <button onClick={confirmarMudancaStatus}
-                className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all">
-                Sim, confirmar
-              </button>
+              <button onClick={() => { setShowAvisoStatus(false); setStatusPendenteCard(null); }} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Cancelar</button>
+              <button onClick={confirmarMudancaStatus} className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all">Sim, confirmar</button>
             </div>
           </div>
         </div>
       )}
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all">
-        {/* Linha 1: # + status + ícones */}
         <div className="flex items-center gap-2 px-3 py-2.5">
           <span className="text-white font-bold text-sm tracking-wide flex-shrink-0">#{os.numero || "—"}</span>
 
-          {/* Status dropdown */}
           <div className="relative">
-            <button
-              ref={statusBtnRef}
-              onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
+            <button ref={statusBtnRef} onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
               className={"flex items-center gap-1 text-xs px-2.5 py-1 rounded-md font-semibold hover:opacity-90 transition-all " + style.badge}
-              style={style.style}
-            >
+              style={style.style}>
               {os.status || "—"}
               <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </button>
             {statusOpen && (
               <div ref={statusRef} className="absolute left-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-40 py-1 z-50">
-                {STATUS_OPTIONS.map(s => {
-                  const statusStyle = STATUS_STYLE[s];
-                  return (
-                    <button key={s} onClick={() => alterarStatus(s)}
-                      className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all"
-                      style={{ color: statusStyle.style.color || statusStyle.style.background }}>
-                      {s}
-                    </button>
-                  );
-                })}
+                {STATUS_OPTIONS.map(s => (
+                  <button key={s} onClick={() => alterarStatus(s)}
+                    className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all"
+                    style={{ color: STATUS_STYLE[s].style.background }}>
+                    {s}
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
           <div className="flex-1" />
 
-          <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Editar">
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-          <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Imprimir">
-            <Printer className="w-3.5 h-3.5" />
-          </button>
-          <button onClick={() => onDelete?.()} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all" title="Excluir">
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Editar"><Pencil className="w-3.5 h-3.5" /></button>
+          <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Imprimir"><Printer className="w-3.5 h-3.5" /></button>
+          <button onClick={() => onDelete?.()} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all" title="Excluir"><Trash2 className="w-3.5 h-3.5" /></button>
+
           <div className="relative">
             <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
               className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
@@ -297,7 +224,6 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
           </div>
         </div>
 
-        {/* Grade */}
         <div className="grid grid-cols-2 border-t border-gray-800">
           <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
