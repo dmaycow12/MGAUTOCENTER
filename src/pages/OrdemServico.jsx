@@ -4,33 +4,7 @@ import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, Che
 import OSForm from "@/components/os/OSForm";
 import OSCard from "@/components/os/OSCard";
 
-const PERIODOS_OS = [
-  { key: "tudo", label: "Tudo" },
-  { key: "hoje", label: "Hoje" },
-  { key: "semana", label: "Semana" },
-  { key: "mes_atual", label: "Mês" },
-  { key: "ano_atual", label: "Ano" },
-];
-
-function getPeriodoRangeOS(key) {
-  const hoje = new Date();
-  const ano = hoje.getFullYear();
-  const mes = hoje.getMonth();
-  const dia = hoje.getDate();
-  const todayStr = hoje.toISOString().split("T")[0];
-  const pad = n => String(n).padStart(2, "0");
-  if (key === "hoje") return { inicio: todayStr, fim: todayStr };
-  if (key === "semana") {
-    const primeiro = new Date(hoje);
-    primeiro.setDate(dia - hoje.getDay());
-    const ultimo = new Date(primeiro);
-    ultimo.setDate(primeiro.getDate() + 6);
-    return { inicio: primeiro.toISOString().split("T")[0], fim: ultimo.toISOString().split("T")[0] };
-  }
-  if (key === "mes_atual") return { inicio: `${ano}-${pad(mes + 1)}-01`, fim: `${ano}-${pad(mes + 1)}-31` };
-  if (key === "ano_atual") return { inicio: `${ano}-01-01`, fim: `${ano}-12-31` };
-  return null;
-}
+const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
 export default function OrdemServico() {
   const [ordens, setOrdens] = useState([]);
