@@ -100,11 +100,10 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
   };
 
   const imprimir = () => {
-    // Import and use the same gerarHTMLImpressao from OSCard
     setMenuOpen(false);
-    // Build a minimal print window with OS data
+    const { gerarHTMLImpressao } = require("@/components/os/osImpressao");
     const win = window.open("", "_blank");
-    win.document.write("<html><body><script>window.onload=function(){window.print()}<\/script><pre>" + JSON.stringify(os, null, 2) + "</pre></body></html>");
+    win.document.write(gerarHTMLImpressao(os));
     win.document.close();
   };
 
