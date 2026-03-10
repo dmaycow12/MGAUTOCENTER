@@ -207,15 +207,32 @@ export default function OrdemServico() {
         </div>
       ) : (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-          {filtradas.map(os => (
-            <OSListRow
-              key={os.id}
-              os={os}
-              onEdit={() => { setEditando(os); setShowForm(true); }}
-              onDelete={() => excluir(os.id)}
-              onRefresh={load}
-            />
-          ))}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px]">
+              <thead>
+                <tr className="border-b border-gray-800">
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">OS</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Cliente</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Placa</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-24">Data</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Status</th>
+                  <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Valor</th>
+                  <th className="px-4 py-2.5 w-36"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtradas.map(os => (
+                  <OSListRow
+                    key={os.id}
+                    os={os}
+                    onEdit={() => { setEditando(os); setShowForm(true); }}
+                    onDelete={() => excluir(os.id)}
+                    onRefresh={load}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
