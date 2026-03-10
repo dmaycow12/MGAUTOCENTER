@@ -378,6 +378,9 @@ export default function Estoque() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-gray-500 border-b border-gray-800 bg-gray-900/80">
+                  <th className="px-4 py-3 w-8">
+                    <input type="checkbox" checked={filtrados.length > 0 && selecionados.length === filtrados.length} onChange={toggleTodos} className="accent-red-500 cursor-pointer w-4 h-4" />
+                  </th>
                   <th className="px-4 py-3">Código</th>
                   <th className="px-4 py-3">Descrição</th>
                   <th className="px-4 py-3 hidden md:table-cell">Categoria</th>
@@ -390,7 +393,10 @@ export default function Estoque() {
               </thead>
               <tbody>
                 {filtrados.map(item => (
-                  <tr key={item.id} className={`border-b border-gray-800 hover:bg-gray-800/50 transition-all ${item.quantidade <= item.estoque_minimo ? "bg-red-500/5" : ""}`}>
+                  <tr key={item.id} className={`border-b border-gray-800 hover:bg-gray-800/50 transition-all ${selecionados.includes(item.id) ? "bg-red-500/5" : item.quantidade <= item.estoque_minimo ? "bg-red-500/5" : ""}`}>
+                    <td className="px-4 py-3">
+                      <input type="checkbox" checked={selecionados.includes(item.id)} onChange={() => toggleSelecionado(item.id)} className="accent-red-500 cursor-pointer w-4 h-4" />
+                    </td>
                     <td className="px-4 py-3 text-gray-400 font-mono text-xs">{item.codigo || "—"}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
