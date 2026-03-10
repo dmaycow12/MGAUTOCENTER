@@ -27,6 +27,8 @@ export default function Estoque() {
   const [importResult, setImportResult] = useState(null);
   const fileInputRef = useRef(null);
   const [selecionados, setSelecionados] = useState([]);
+  const [editandoCell, setEditandoCell] = useState(null); // { id, field }
+  const [editandoValor, setEditandoValor] = useState("");
 
   useEffect(() => { load(); }, []);
 
