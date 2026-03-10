@@ -165,75 +165,86 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
         </div>
       )}
 
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/50 transition-all">
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <p className="text-white font-semibold text-sm">OS #{os.numero} — {os.cliente_nome || "—"}</p>
-          <p className="text-gray-500 text-xs">{os.veiculo_placa || "—"} {os.veiculo_modelo ? `• ${os.veiculo_modelo}` : ""} {os.data_entrada ? `• ${fmtData(os.data_entrada)}` : ""}</p>
-        </div>
+      <tr className="border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
+        {/* OS # */}
+        <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">#{os.numero || "—"}</td>
+
+        {/* Cliente */}
+        <td className="px-4 py-3">
+          <p className="text-white text-sm font-medium truncate max-w-[200px]">{os.cliente_nome || "—"}</p>
+          {os.veiculo_modelo && <p className="text-gray-500 text-xs truncate max-w-[200px]">{os.veiculo_modelo}</p>}
+        </td>
+
+        {/* Placa */}
+        <td className="px-4 py-3 text-gray-300 text-sm font-mono whitespace-nowrap">{os.veiculo_placa?.toUpperCase() || "—"}</td>
+
+        {/* Data */}
+        <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>
 
         {/* Status dropdown */}
-        <div className="relative flex-shrink-0">
-          <button
-            ref={statusBtnRef}
-            onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
-            className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-md font-semibold hover:opacity-90 transition-all"
-            style={style.style}
-          >
-            {os.status || "—"}
-            <ChevronDown className="w-3 h-3 flex-shrink-0" />
-          </button>
-          {statusOpen && (
-            <div ref={statusRef} className="absolute left-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-36 py-1 z-50">
-              {STATUS_OPTIONS.map(s => (
-                <button key={s} onClick={() => alterarStatus(s)}
-                  className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all"
-                  style={{ color: STATUS_STYLE[s].style.background }}>
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Valor */}
-        <span className="text-green-400 font-bold text-sm flex-shrink-0">{fmtValor(os.valor_total)}</span>
-
-        {/* Ações */}
-        <div className="flex gap-1 flex-shrink-0">
-          <button onClick={() => onEdit?.()} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all" title="Editar">
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button onClick={imprimir} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white rounded-lg hover:bg-gray-700 transition-all" title="Imprimir">
-            <Printer className="w-4 h-4" />
-          </button>
-          <button onClick={() => onDelete?.()} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all" title="Excluir">
-            <Trash2 className="w-4 h-4" />
-          </button>
-
-          {/* Menu ações */}
-          <div className="relative">
-            <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
-              className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white rounded-lg hover:bg-gray-700 transition-all">
-              <MoreVertical className="w-4 h-4" />
+        <td className="px-4 py-3">
+          <div className="relative inline-block">
+            <button
+              ref={statusBtnRef}
+              onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
+              className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-md font-semibold hover:opacity-90 transition-all whitespace-nowrap"
+              style={style.style}
+            >
+              {os.status || "—"}
+              <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </button>
-            {menuOpen && (
-              <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-50">
-                {menuItems.map((item, i) => {
-                  const Icon = item.icon;
-                  return (
-                    <button key={i} onClick={item.action}
-                      className="w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-700 transition-all">
-                      <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                      {item.label}
-                    </button>
-                  );
-                })}
+            {statusOpen && (
+              <div ref={statusRef} className="absolute left-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-36 py-1 z-50">
+                {STATUS_OPTIONS.map(s => (
+                  <button key={s} onClick={() => alterarStatus(s)}
+                    className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all"
+                    style={{ color: STATUS_STYLE[s].style.background }}>
+                    {s}
+                  </button>
+                ))}
               </div>
             )}
           </div>
-        </div>
-      </div>
+        </td>
+
+        {/* Valor */}
+        <td className="px-4 py-3 text-right text-green-400 font-bold text-sm whitespace-nowrap">{fmtValor(os.valor_total)}</td>
+
+        {/* Ações */}
+        <td className="px-4 py-3">
+          <div className="flex gap-1 justify-end">
+            <button onClick={() => onEdit?.()} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all" title="Editar">
+              <Pencil className="w-4 h-4" />
+            </button>
+            <button onClick={imprimir} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white rounded-lg hover:bg-gray-700 transition-all" title="Imprimir">
+              <Printer className="w-4 h-4" />
+            </button>
+            <button onClick={() => onDelete?.()} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all" title="Excluir">
+              <Trash2 className="w-4 h-4" />
+            </button>
+            <div className="relative">
+              <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
+                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white rounded-lg hover:bg-gray-700 transition-all">
+                <MoreVertical className="w-4 h-4" />
+              </button>
+              {menuOpen && (
+                <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-50">
+                  {menuItems.map((item, i) => {
+                    const Icon = item.icon;
+                    return (
+                      <button key={i} onClick={item.action}
+                        className="w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-700 transition-all">
+                        <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </td>
+      </tr>
     </>
   );
 }
