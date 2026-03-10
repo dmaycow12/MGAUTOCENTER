@@ -68,7 +68,7 @@ export default function ProgressoReajuste({ isOpen, onClose, total, progresso, s
 
           {/* Resultado */}
           {status !== 'processando' && (
-            <div className="bg-gray-800/50 rounded-lg p-4 text-sm space-y-2 text-gray-300">
+            <div className="bg-gray-800/50 rounded-lg p-4 text-sm space-y-2 text-gray-300 max-h-32 overflow-y-auto">
               <p>✅ <span className="text-green-400 font-bold">{sucessos}</span> produtos atualizados</p>
               {total - sucessos > 0 && (
                 <p>⚠️ <span className="text-yellow-400 font-bold">{total - sucessos}</span> produtos falharam</p>
