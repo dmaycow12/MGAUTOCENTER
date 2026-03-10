@@ -2,19 +2,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const arredondarVendaParaCinco = (valor) => {
   const num = Number(valor);
-  if (isNaN(num) || !isFinite(num)) return 0;
   return Math.ceil(num / 5) * 5;
 };
 
-const processarComLimite = async (items, fn, limit = 10) => {
-  const resultados = [];
-  for (let i = 0; i < items.length; i += limit) {
-    const chunk = items.slice(i, i + limit);
-    const batch = await Promise.all(chunk.map(fn));
-    resultados.push(...batch);
-  }
-  return resultados;
-};
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 Deno.serve(async (req) => {
   try {
@@ -28,57 +19,84 @@ Deno.serve(async (req) => {
     const { items, reajusteTipo, reajusteValor } = await req.json();
     
     if (!items || items.length === 0) {
-      return Response.json({ error: 'Nenhum item fornecido' }, { status: 400 });
+      return Response.json({ error: 'Nenhum item' }, { status: 400 });
     }
 
-    const ajuste = Number(reajusteValor || 0);
-    if (isNaN(ajuste)) {
-      return Response.json({ error: 'Valor de reajuste inválido' }, { status: 400 });
-    }
+    const ajuste = Number(reajusteValor);
+    const atualizacoes = [];
+    const naoProcessaveis = [];
 
-    // Processa com limite de 10 requisições paralelas
-    const resultados = await processarComLimite(items, async (item) => {
-      try {
-        const valorCusto = Number(item.valor_custo || 0);
-        const valorVendaAtual = Number(item.valor_venda || 0);
-        
-        if (isNaN(valorCusto) || isNaN(valorVendaAtual)) {
-          return { sucesso: false, id: item.id };
-        }
-
-        let novoPreco;
-        if (reajusteTipo === "percentual") {
-          novoPreco = valorCusto * (1 + ajuste / 100);
-        } else {
-          novoPreco = valorVendaAtual + ajuste;
-        }
-        
-        novoPreco = arredondarVendaParaCinco(Math.max(0, novoPreco));
-        
-        if (isNaN(novoPreco) || !isFinite(novoPreco)) {
-          return { sucesso: false, id: item.id };
-        }
-
-        await base44.entities.Estoque.update(item.id, { 
-          valor_venda: parseFloat(novoPreco.toFixed(2))
+    // Validação e preparação dos dados
+    for (const item of items) {
+      const custo = Number(item.valor_custo || 0);
+      const venda = Number(item.valor_venda || 0);
+      
+      if (!item.id || isNaN(custo) || isNaN(venda) || isNaN(ajuste)) {
+        naoProcessaveis.push({
+          id: item.id,
+          descricao: item.descricao,
+          motivo: 'Dados inválidos'
         });
-        
-        return { sucesso: true, id: item.id };
-      } catch (err) {
-        return { sucesso: false, id: item.id, erro: err?.message };
+        continue;
       }
-    }, 10);
 
-    const sucessos = resultados.filter(r => r.sucesso).length;
-    const falhas = resultados.filter(r => !r.sucesso).length;
+      let preco = reajusteTipo === "percentual" 
+        ? custo * (1 + ajuste / 100)
+        : venda + ajuste;
+      
+      preco = Math.max(0, arredondarVendaParaCinco(preco));
+      
+      atualizacoes.push({
+        id: item.id,
+        preco: parseFloat(preco.toFixed(2))
+      });
+    }
 
-    return Response.json({ 
+    // Processa em lote com retry
+    let sucessos = 0;
+    let falhas = 0;
+    const falhasDetalhadas = [];
+    const batchSize = 20;
+    let tentativa = 0;
+    const maxTentativas = 3;
+
+    while (atualizacoes.length > 0 && tentativa < maxTentativas) {
+      tentativa++;
+      const lote = atualizacoes.splice(0, batchSize);
+      
+      for (const upd of lote) {
+        try {
+          await base44.entities.Estoque.update(upd.id, { valor_venda: upd.preco });
+          sucessos++;
+        } catch (err) {
+          falhas++;
+          falhasDetalhadas.push({
+            id: upd.id,
+            erro: err?.message || 'Erro ao atualizar'
+          });
+          // Readiciona para retry
+          if (tentativa < maxTentativas) {
+            atualizacoes.push(upd);
+          }
+        }
+      }
+      
+      if (atualizacoes.length > 0) {
+        await sleep(500); // Espera entre lotes
+      }
+    }
+
+    return Response.json({
       sucesso: sucessos,
-      falhas: falhas,
-      total: items.length
+      falhas: falhas + naoProcessaveis.length,
+      total: items.length,
+      naoProcessaveis: naoProcessaveis.length,
+      detalhesFalhas: falhasDetalhadas.slice(0, 5)
     });
   } catch (error) {
-    console.error('Erro:', error);
-    return Response.json({ error: String(error?.message || 'Erro desconhecido') }, { status: 500 });
+    return Response.json({ 
+      error: error?.message || 'Erro',
+      tipo: 'erro_servidor'
+    }, { status: 500 });
   }
 });
