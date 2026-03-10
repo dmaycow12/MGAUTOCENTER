@@ -76,7 +76,10 @@ export default function OrdemServico() {
     load();
   };
 
-  const periodoRange = filtroPeriodo === "outro" ? customRange : getPeriodoRangeOS(filtroPeriodo);
+  const pad = n => String(n).padStart(2, "0");
+  const periodoRange = usandoOutroPeriodo && customRange
+    ? customRange
+    : { inicio: `${filtroAno}-${pad(filtroMes)}-01`, fim: `${filtroAno}-${pad(filtroMes)}-31` };
 
   const filtradas = ordens
     .filter(o => {
@@ -84,7 +87,7 @@ export default function OrdemServico() {
         o.numero?.toLowerCase().includes(search.toLowerCase()) ||
         o.cliente_nome?.toLowerCase().includes(search.toLowerCase()) ||
         o.veiculo_placa?.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = filtroStatus === "Tudo" || o.status === filtroStatus;
+      const matchStatus = filtroStatus.length === 0 || filtroStatus.includes(o.status);
       const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
       return matchSearch && matchStatus && matchPeriodo;
     })
