@@ -2,12 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, CheckSquare, ChevronUp, ChevronDown } from "lucide-react";
 
-const arredondarVendaParaCincoOuZero = (valor) => {
-  const centavos = Math.round((valor % 1) * 100);
-  const inteiros = Math.floor(valor);
-  if (centavos <= 4) return inteiros + 0.5;
-  if (centavos >= 5) return inteiros + 1;
-  return inteiros;
+const arredondarVendaParaCinco = (valor) => {
+  return Math.ceil(valor / 5) * 5;
 };
 
 const defaultForm = () => ({
@@ -112,7 +108,7 @@ export default function Estoque() {
       ? Number(editandoValor)
       : editandoValor;
     if (editandoCell.field === "valor_venda") {
-      val = arredondarVendaParaCincoOuZero(val);
+      val = arredondarVendaParaCinco(val);
     }
     await base44.entities.Estoque.update(item.id, { [editandoCell.field]: val });
     setEditandoCell(null);
@@ -210,7 +206,7 @@ export default function Estoque() {
       let novoPreco = reajusteTipo === "percentual"
         ? Number(item.valor_venda || 0) * (1 + Number(reajusteValor) / 100)
         : Number(item.valor_venda || 0) + Number(reajusteValor);
-      novoPreco = arredondarVendaParaCincoOuZero(Math.max(0, novoPreco));
+      novoPreco = arredondarVendaParaCinco(Math.max(0, novoPreco));
       await base44.entities.Estoque.update(item.id, { valor_venda: novoPreco });
     }
     setAplicando(false);
@@ -658,7 +654,7 @@ export default function Estoque() {
                 <F label="Valor de Venda (R$)">
                    <input type="text" step="0.01" value={form.valor_venda} onChange={e => {
                      const val = Number(e.target.value.replace(/[^0-9.]/g, "") || 0);
-                     setForm({ ...form, valor_venda: arredondarVendaParaCincoOuZero(val) });
+                     setForm({ ...form, valor_venda: arredondarVendaParaCinco(val) });
                    }} className="input-dark" />
                  </F>
                 <F label="Localização"><input value={form.localizacao} onChange={e => setForm({ ...form, localizacao: e.target.value })} className="input-dark" /></F>
