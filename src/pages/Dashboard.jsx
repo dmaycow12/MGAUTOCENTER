@@ -56,6 +56,7 @@ export default function Dashboard() {
   const [clientes, setClientes] = useState([]);
   const [estoque, setEstoque] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [periodoMeses, setPeriodoMeses] = useState(6);
 
   useEffect(() => {
     Promise.all([
