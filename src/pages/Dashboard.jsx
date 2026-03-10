@@ -108,20 +108,9 @@ export default function Dashboard() {
   // Estoque critico
   const estoqueCritico = estoque.filter(e => Number(e.quantidade || 0) <= Number(e.estoque_minimo || 0)).length;
 
-  // Gráfico OS por mês (últimos 6 meses)
-  const osPorMes = Array.from({ length: 6 }, (_, i) => {
-    const d = new Date(anoAtual, mesAtual - 5 + i, 1);
-    const m = d.getMonth();
-    const a = d.getFullYear();
-    const key = `${a}-${String(m + 1).padStart(2, "0")}`;
-    const total = ordens.filter(o => o.data_entrada?.startsWith(key)).length;
-    const concluidas = ordens.filter(o => o.data_entrada?.startsWith(key) && o.status === "Concluído").length;
-    return { mes: MESES[m], total, concluidas };
-  });
-
-  // Gráfico Receita x Despesa por mês (últimos 6 meses)
-  const fluxoPorMes = Array.from({ length: 6 }, (_, i) => {
-    const d = new Date(anoAtual, mesAtual - 5 + i, 1);
+  // Gráfico Receita x Despesa x Lucro por mês (período selecionável)
+  const fluxoPorMes = Array.from({ length: periodoMeses }, (_, i) => {
+    const d = new Date(anoAtual, mesAtual - (periodoMeses - 1) + i, 1);
     const m = d.getMonth();
     const a = d.getFullYear();
     const key = `${a}-${String(m + 1).padStart(2, "0")}`;
