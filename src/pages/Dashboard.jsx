@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 
 import {
@@ -8,8 +8,9 @@ import {
 import {
   ClipboardList, DollarSign, Users, Package,
   TrendingUp, TrendingDown, Clock, CheckCircle,
-  AlertCircle
+  AlertCircle, ChevronLeft, ChevronRight, ChevronDown
 } from "lucide-react";
+import FluxoMes from "@/components/dashboard/FluxoMes";
 
 const RED = "#cc0000";
 const ORANGE = "#f97316";
