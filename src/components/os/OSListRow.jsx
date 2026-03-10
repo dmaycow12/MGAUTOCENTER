@@ -172,8 +172,10 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
         {/* Cliente */}
         <td className="px-4 py-3">
           <p className="text-white text-sm font-medium truncate max-w-[200px]">{os.cliente_nome || "—"}</p>
-          {os.veiculo_modelo && <p className="text-gray-500 text-xs truncate max-w-[200px]">{os.veiculo_modelo}</p>}
         </td>
+
+        {/* Veículo */}
+        <td className="px-4 py-3 text-gray-300 text-sm truncate max-w-[140px] whitespace-nowrap">{os.veiculo_modelo || "—"}</td>
 
         {/* Placa */}
         <td className="px-4 py-3 text-gray-300 text-sm font-mono whitespace-nowrap">{os.veiculo_placa?.toUpperCase() || "—"}</td>
