@@ -465,14 +465,30 @@ export default function Estoque() {
                   <th className="px-4 py-3 w-8">
                     <input type="checkbox" checked={filtrados.length > 0 && selecionados.length === filtrados.length} onChange={toggleTodos} className="accent-red-500 cursor-pointer w-4 h-4" />
                   </th>
-                  <th className="px-4 py-3">Código</th>
-                  <th className="px-4 py-3">Descrição</th>
-                  <th className="px-4 py-3 hidden md:table-cell">Categoria</th>
-                  <th className="px-4 py-3 hidden lg:table-cell">Marca</th>
-                  <th className="px-4 py-3 text-center">Qtd</th>
-                  <th className="px-4 py-3 text-center hidden sm:table-cell">Mín.</th>
-                  <th className="px-4 py-3 text-right hidden md:table-cell">Custo</th>
-                  <th className="px-4 py-3 text-right">Venda</th>
+                  <th className="px-4 py-3 cursor-pointer hover:text-white transition-all" onClick={() => handleSort("codigo")}>
+                    <div className="flex items-center gap-1">Código {ordenacao.campo === "codigo" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
+                  </th>
+                  <th className="px-4 py-3 cursor-pointer hover:text-white transition-all" onClick={() => handleSort("descricao")}>
+                    <div className="flex items-center gap-1">Descrição {ordenacao.campo === "descricao" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
+                  </th>
+                  <th className="px-4 py-3 hidden md:table-cell cursor-pointer hover:text-white transition-all" onClick={() => handleSort("categoria")}>
+                    <div className="flex items-center gap-1">Categoria {ordenacao.campo === "categoria" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
+                  </th>
+                  <th className="px-4 py-3 hidden lg:table-cell cursor-pointer hover:text-white transition-all" onClick={() => handleSort("marca")}>
+                    <div className="flex items-center gap-1">Marca {ordenacao.campo === "marca" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
+                  </th>
+                  <th className="px-4 py-3 text-center cursor-pointer hover:text-white transition-all" onClick={() => handleSort("quantidade")}>
+                    <div className="flex items-center justify-center gap-1">Qtd {ordenacao.campo === "quantidade" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
+                  </th>
+                  <th className="px-4 py-3 text-center hidden sm:table-cell cursor-pointer hover:text-white transition-all" onClick={() => handleSort("estoque_minimo")}>
+                    <div className="flex items-center justify-center gap-1">Mín. {ordenacao.campo === "estoque_minimo" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
+                  </th>
+                  <th className="px-4 py-3 text-right hidden md:table-cell cursor-pointer hover:text-white transition-all" onClick={() => handleSort("valor_custo")}>
+                    <div className="flex items-center justify-end gap-1">Custo {ordenacao.campo === "valor_custo" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
+                  </th>
+                  <th className="px-4 py-3 text-right cursor-pointer hover:text-white transition-all" onClick={() => handleSort("valor_venda")}>
+                    <div className="flex items-center justify-end gap-1">Venda {ordenacao.campo === "valor_venda" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
+                  </th>
                   <th className="px-4 py-3 text-center">Ações</th>
                 </tr>
               </thead>
