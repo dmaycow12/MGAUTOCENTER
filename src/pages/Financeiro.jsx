@@ -140,63 +140,11 @@ export default function Financeiro() {
 
   return (
     <div className="space-y-4">
-      {/* Fluxo do Mês — Gráficos no topo */}
-      <FluxoMes financeiro={items} />
 
-      {/* Filtro de Período */}
-      <div className="flex gap-2 items-center">
-        {/* Botão Mês com setas internas */}
-        <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
-          <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-3 hover:bg-black/10 transition-all flex-shrink-0">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
-          <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-3 hover:bg-black/10 transition-all flex-shrink-0">
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Botão Período customizado */}
-        <div className="relative flex-1" ref={periodoDropRef}>
-          <button
-            onClick={() => setPeriodoDropOpen(v => !v)}
-            className={`w-full flex items-center justify-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
-          >
-            {usandoOutroPeriodo && customRange ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}` : "Período"}
-            <ChevronDown className={`w-4 h-4 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
-          </button>
-          {periodoDropOpen && (
-            <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
-              <p className="text-xs text-gray-400 font-medium">Selecione o período</p>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">De</label>
-                <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Até</label>
-                <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => setPeriodoDropOpen(false)}
-                  className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
-                  Cancelar
-                </button>
-                <button onClick={aplicarOutroPeriodo}
-                  className="flex-1 py-2 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
-                  Aplicar
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-          {/* Header */}
-          <div className="flex flex-col gap-2">
-            {/* Linha 1: + Receita / + Despesa */}
-            <div className="flex gap-2">
+      {/* Header — Botões no topo */}
+      <div className="flex flex-col gap-2">
+        {/* Linha 1: + Receita / + Despesa */}
+        <div className="flex gap-2">
               <button onClick={() => { setForm({ ...defaultForm(), tipo: "Receita" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
                 <Plus className="w-4 h-4" /> Receita
               </button>
