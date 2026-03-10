@@ -455,7 +455,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
           </div>
           <div className="px-3 py-2.5 border-t border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>
-            <p className="text-white text-sm font-bold">{fmtValor(os.valor_total)}</p>
+            <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
           </div>
         </div>
       </div>
