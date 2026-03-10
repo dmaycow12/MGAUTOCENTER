@@ -178,54 +178,56 @@ export default function Estoque() {
       </div>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <div className="flex gap-2 flex-1">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+      <div className="flex flex-col gap-2">
+        {/* Linha 1: busca + toggle */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
               type="text"
               placeholder="Buscar item..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-orange-500"
+              className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500"
             />
           </div>
+          <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+            <button onClick={() => setViewMode("table")} className="px-3 py-2 transition-all" style={{background:viewMode==="table"?"#062C9B":"transparent",color:viewMode==="table"?"#fff":"#6b7280"}}><List className="w-5 h-5"/></button>
+            <button onClick={() => setViewMode("cards")} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-5 h-5"/></button>
+          </div>
+        </div>
+        {/* Linha 2: ações */}
+        <div className="flex gap-2">
           <button
             onClick={() => setFiltro(filtro === "Estoque Baixo" ? "Todos" : "Estoque Baixo")}
-            className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm transition-all ${filtro === "Estoque Baixo" ? "bg-red-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400"}`}
+            className={`flex items-center gap-1 px-3 h-11 rounded-xl text-sm font-medium transition-all flex-shrink-0 ${filtro === "Estoque Baixo" ? "bg-red-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}
           >
             <AlertTriangle className="w-4 h-4" /> Baixo
           </button>
-        </div>
-        <div className="flex gap-2">
           <button
             onClick={() => setShowReajuste(true)}
-            className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
-            style={{background: "#cc0000"}}
-            onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
-            onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}
+            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
+            style={{background: "#00ff00", color: "#000"}}
+            onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
+            onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
           >
-            <TrendingUp className="w-4 h-4" /> Reajustar Preços
+            <TrendingUp className="w-4 h-4" /> Reajustar
           </button>
           <button
             onClick={() => { setShowImport(true); setImportResult(null); }}
-            className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
-            style={{background: "#cc0000"}}
-            onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
-            onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}
+            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
+            style={{background: "#00ff00", color: "#000"}}
+            onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
+            onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
           >
-            <Upload className="w-4 h-4" /> Importar Excel
+            <Upload className="w-4 h-4" /> Importar
           </button>
-          <div className="flex bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-            <button onClick={() => setViewMode("table")} className="px-3 py-2 transition-all" style={{background:viewMode==="table"?"#062C9B":"transparent",color:viewMode==="table"?"#fff":"#6b7280"}}><List className="w-4 h-4"/></button>
-            <button onClick={() => setViewMode("cards")} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-4 h-4"/></button>
-          </div>
           <button
             onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
-            className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
-            style={{background: "#cc0000"}}
-            onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
-            onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}
+            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
+            style={{background: "#00ff00", color: "#000"}}
+            onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
+            onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
           >
             <Plus className="w-4 h-4" /> Novo Item
           </button>
