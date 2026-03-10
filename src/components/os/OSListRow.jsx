@@ -171,7 +171,7 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
 
         {/* Cliente */}
         <td className="px-4 py-3">
-          <p className="text-white text-sm font-medium truncate max-w-[200px]">{os.cliente_nome || "—"}</p>
+          <p className="text-white text-sm font-medium">{os.cliente_nome || "—"}</p>
         </td>
 
         {/* Veículo */}
