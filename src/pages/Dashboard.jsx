@@ -352,11 +352,7 @@ export default function Dashboard() {
             />
             <Bar dataKey="receita" name="Receita" fill={GREEN} radius={[4, 4, 0, 0]} />
             <Bar dataKey="despesa" name="Despesa" fill={RED} radius={[4, 4, 0, 0]} />
-            <Bar dataKey="lucro" name="Lucro" radius={[4, 4, 0, 0]}>
-              {fluxoPorMes.map((entry, index) => (
-                <Cell key={index} fill={entry.lucro >= 0 ? BLUE : RED} />
-              ))}
-            </Bar>
+            <Bar dataKey="lucro" name="Lucro" fill={BLUE} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
