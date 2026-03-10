@@ -50,56 +50,58 @@ Deno.serve(async (req) => {
     let falha = 0;
     const erros = [];
 
-    for (let i = 0; i < items.length; i++) {
-      const row = items[i];
-      const nome = (row["Nome"] || row.col_1 || '').toString().trim();
-      if (!nome) {
-        falha++;
-        continue;
-      }
+    const parseNum = (val) => {
+      if (!val) return 0;
+      const str = val.toString().replace(',', '.');
+      return isNaN(Number(str)) ? 0 : Number(str);
+    };
 
-      try {
-        const parseNum = (val) => {
-          if (!val) return 0;
-          const str = val.toString().replace(',', '.');
-          return isNaN(Number(str)) ? 0 : Number(str);
-        };
+    const BATCH_SIZE = 3;
+    const BATCH_DELAY = 3000;
 
-        await base44.entities.Estoque.create({
-          codigo: (row["Cód. interno"] || row.col_0 || '').toString().trim(),
-          descricao: nome,
-          unidade: (row["Unidade"] || row.col_2 || 'UN').toString().trim(),
-          quantidade: parseNum(row["Estoque"] || row.col_3),
-          estoque_minimo: parseNum(row["Estoque min."] || row.col_4),
-          valor_custo: parseNum(row["Custo unit."] || row.col_5),
-          valor_venda: parseNum(row["Valor venda"] || row.col_6),
-          cfop: (row["CPOP"] || row.col_7 || '5405').toString().trim(),
-          ncm: (row["NCM"] || row.col_8 || '87089990').toString().trim(),
-          cest: (row["CEST"] || row.col_9 || '').toString().trim(),
-          categoria: '',
-          marca: '',
-          localizacao: '',
-          fornecedor: '',
-          observacoes: ''
-        });
-        sucesso++;
-        
-        // Delay progressivo para evitar rate limit
-        if ((i + 1) % 50 === 0) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
+    for (let i = 0; i < items.length; i += BATCH_SIZE) {
+      const batch = items.slice(i, i + BATCH_SIZE);
+      
+      const promises = batch.map(async (row, idx) => {
+        const nome = (row["Nome"] || row.col_1 || '').toString().trim();
+        if (!nome) {
+          falha++;
+          return;
         }
-      } catch (e) {
-        falha++;
-        erros.push({
-          linha: i + 2,
-          produto: nome,
-          erro: e.message
-        });
-        
-        // Se rate limit, aguarda mais tempo
-        if (e.message.includes('Rate limit')) {
-          await new Promise(resolve => setTimeout(resolve, 5000));
+
+        try {
+          await base44.entities.Estoque.create({
+            codigo: (row["Cód. interno"] || row.col_0 || '').toString().trim(),
+            descricao: nome,
+            unidade: (row["Unidade"] || row.col_8 || 'UN').toString().trim(),
+            quantidade: parseNum(row["Estoque"] || row.col_4),
+            estoque_minimo: parseNum(row["Estoque min."] || row.col_5),
+            valor_custo: parseNum(row["Custo unit."] || row.col_6),
+            valor_venda: parseNum(row["Valor venda"] || row.col_7),
+            cfop: (row["CPOP"] || row.col_9 || '5405').toString().trim(),
+            ncm: (row["NCM"] || row.col_10 || '87089990').toString().trim(),
+            cest: (row["CEST"] || row.col_11 || '').toString().trim(),
+            categoria: '',
+            marca: '',
+            localizacao: '',
+            fornecedor: '',
+            observacoes: ''
+          });
+          sucesso++;
+        } catch (e) {
+          falha++;
+          erros.push({
+            linha: i + idx + 2,
+            produto: nome,
+            erro: e.message
+          });
         }
+      });
+
+      await Promise.all(promises);
+      
+      if (i + BATCH_SIZE < items.length) {
+        await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
       }
     }
 
