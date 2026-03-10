@@ -282,10 +282,17 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
 
     let savedId = os?.id;
 
+    const formToSave = {
+      ...form,
+      quilometragem: form.quilometragem === "" || form.quilometragem === null || form.quilometragem === undefined
+        ? null
+        : Number(form.quilometragem),
+    };
+
     if (os) {
-      await base44.entities.OrdemServico.update(os.id, form);
+      await base44.entities.OrdemServico.update(os.id, formToSave);
     } else {
-      const criada = await base44.entities.OrdemServico.create(form);
+      const criada = await base44.entities.OrdemServico.create(formToSave);
       savedId = criada.id;
       
       // Auto-registra veículo se for nova OS
