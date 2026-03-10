@@ -585,12 +585,12 @@ export default function NotasFiscais() {
         <div className="flex gap-2 items-center">
           {/* Botão Mês com setas internas */}
           <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
-            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-4 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
-              <ChevronLeft className="w-5 h-5" />
+            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-3 hover:bg-black/10 transition-all flex-shrink-0">
+              <ChevronLeft className="w-4 h-4" />
             </button>
             <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
-            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-4 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
-              <ChevronRight className="w-5 h-5" />
+            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-3 hover:bg-black/10 transition-all flex-shrink-0">
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
@@ -622,7 +622,10 @@ export default function NotasFiscais() {
                     Cancelar
                   </button>
                   <button onClick={aplicarOutroPeriodo}
-                    className="flex-1 py-2 text-xs text-white rounded-lg font-medium transition-all bg-blue-600 hover:bg-blue-700">
+                    className="flex-1 py-2 text-xs text-white rounded-lg font-medium transition-all"
+                    style={{background: "#cc0000"}}
+                    onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
+                    onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                     Aplicar
                   </button>
                 </div>

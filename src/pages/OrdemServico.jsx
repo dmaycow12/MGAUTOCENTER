@@ -1,60 +1,68 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List } from "lucide-react";
+import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, LayoutGrid, List } from "lucide-react";
 import OSForm from "@/components/os/OSForm";
 import OSCard from "@/components/os/OSCard";
 
-const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const PERIODOS_OS = [
+  { key: "tudo", label: "Tudo" },
+  { key: "hoje", label: "Hoje" },
+  { key: "semana", label: "Semana" },
+  { key: "mes_atual", label: "Mês" },
+  { key: "ano_atual", label: "Ano" },
+];
+
+function getPeriodoRangeOS(key) {
+  const hoje = new Date();
+  const ano = hoje.getFullYear();
+  const mes = hoje.getMonth();
+  const dia = hoje.getDate();
+  const todayStr = hoje.toISOString().split("T")[0];
+  const pad = n => String(n).padStart(2, "0");
+  if (key === "hoje") return { inicio: todayStr, fim: todayStr };
+  if (key === "semana") {
+    const primeiro = new Date(hoje);
+    primeiro.setDate(dia - hoje.getDay());
+    const ultimo = new Date(primeiro);
+    ultimo.setDate(primeiro.getDate() + 6);
+    return { inicio: primeiro.toISOString().split("T")[0], fim: ultimo.toISOString().split("T")[0] };
+  }
+  if (key === "mes_atual") return { inicio: `${ano}-${pad(mes + 1)}-01`, fim: `${ano}-${pad(mes + 1)}-31` };
+  if (key === "ano_atual") return { inicio: `${ano}-01-01`, fim: `${ano}-12-31` };
+  return null;
+}
 
 export default function OrdemServico() {
   const [ordens, setOrdens] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filtroStatus, setFiltroStatus] = useState([]); // multi-select
+  const [filtroStatus, setFiltroStatus] = useState("Tudo");
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
   const [clientes, setClientes] = useState([]);
   const [veiculos, setVeiculos] = useState([]);
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("os_viewmode") || "cards");
-
-  const hoje = new Date();
-  const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
-  const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
-  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(false);
-  const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
+  const [filtroPeriodo, setFiltroPeriodo] = useState(() => localStorage.getItem("os_periodo") || "mes_atual");
+  const [outroPeriodoOpen, setOutroPeriodoOpen] = useState(false);
   const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
   const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
   const [customRange, setCustomRange] = useState(null);
-  const periodoDropRef = useRef(null);
+  const outroPeriodoRef = useRef(null);
 
-  useEffect(() => {
-    const handler = (e) => {
-      if (periodoDropRef.current && !periodoDropRef.current.contains(e.target)) setPeriodoDropOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const navegarMes = (dir) => {
-    setUsandoOutroPeriodo(false);
+  const setPeriodo = (key) => {
+    setFiltroPeriodo(key);
     setCustomRange(null);
-    let m = filtroMes + dir, a = filtroAno;
-    if (m > 12) { m = 1; a++; }
-    if (m < 1) { m = 12; a--; }
-    setFiltroMes(m);
-    setFiltroAno(a);
+    localStorage.setItem("os_periodo", key);
   };
 
   const aplicarOutroPeriodo = () => {
     if (!outroPeriodoInicio || !outroPeriodoFim) return;
     setCustomRange({ inicio: outroPeriodoInicio, fim: outroPeriodoFim });
-    setUsandoOutroPeriodo(true);
-    setPeriodoDropOpen(false);
+    setFiltroPeriodo("outro");
+    setOutroPeriodoOpen(false);
   };
 
-  const toggleStatus = (s) => {
-    setFiltroStatus(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
-  };
+  const statusList = ["Aberto", "Orçamento", "Concluído", "Tudo"];
 
   useEffect(() => { load(); }, []);
 
@@ -76,10 +84,7 @@ export default function OrdemServico() {
     load();
   };
 
-  const pad = n => String(n).padStart(2, "0");
-  const periodoRange = usandoOutroPeriodo && customRange
-    ? customRange
-    : { inicio: `${filtroAno}-${pad(filtroMes)}-01`, fim: `${filtroAno}-${pad(filtroMes)}-31` };
+  const periodoRange = filtroPeriodo === "outro" ? customRange : getPeriodoRangeOS(filtroPeriodo);
 
   const filtradas = ordens
     .filter(o => {
@@ -87,7 +92,7 @@ export default function OrdemServico() {
         o.numero?.toLowerCase().includes(search.toLowerCase()) ||
         o.cliente_nome?.toLowerCase().includes(search.toLowerCase()) ||
         o.veiculo_placa?.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = filtroStatus.length === 0 || filtroStatus.includes(o.status);
+      const matchStatus = filtroStatus === "Tudo" || o.status === filtroStatus;
       const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
       return matchSearch && matchStatus && matchPeriodo;
     })
@@ -110,56 +115,62 @@ export default function OrdemServico() {
           <Plus className="w-4 h-4" /> Nova OS
         </button>
 
-        {/* Linha 2: filtro status — multi-select */}
+        {/* Linha 2: filtro status — Tudo primeiro */}
         <div className="flex gap-2">
-          {["Aberto", "Orçamento", "Concluído"].map(s => (
-            <button key={s} onClick={() => toggleStatus(s)}
-              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroStatus.includes(s) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+          {["Tudo", "Aberto", "Orçamento", "Concluído"].map(s => (
+            <button key={s} onClick={() => setFiltroStatus(s)}
+              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroStatus === s ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {s}
             </button>
           ))}
         </div>
 
-        {/* Linha 3: filtro período — mesmo padrão do Financeiro */}
-        <div className="flex gap-2 items-center">
-          <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
-            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-4 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
-              <ChevronLeft className="w-5 h-5" />
+        {/* Linha 3: filtro período + Outro período */}
+        <div className="flex gap-2 flex-wrap items-stretch relative">
+          {PERIODOS_OS.map(p => (
+            <button key={p.key} onClick={() => setPeriodo(p.key)}
+              className={`flex-1 py-3 rounded-xl text-xs font-medium transition-all ${filtroPeriodo === p.key ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              {p.label}
             </button>
-            <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
-            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-4 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+          ))}
 
-          <div className="relative flex-1" ref={periodoDropRef}>
+          {/* Outro Período */}
+          <div className="relative" ref={outroPeriodoRef}>
             <button
-              onClick={() => setPeriodoDropOpen(v => !v)}
-              className={`w-full flex items-center justify-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
+              onClick={() => setOutroPeriodoOpen(v => !v)}
+              className={`flex items-center gap-1 px-3 py-3 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${filtroPeriodo === "outro" ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}
             >
-              {usandoOutroPeriodo && customRange ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}` : "Período"}
-              <ChevronDown className={`w-4 h-4 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
+              {filtroPeriodo === "outro" && customRange
+                ? `${customRange.inicio.slice(5).replace("-","/")} - ${customRange.fim.slice(5).replace("-","/")}` 
+                : "Outro período"}
+              <ChevronDown className={`w-3 h-3 transition-transform ${outroPeriodoOpen ? "rotate-180" : ""}`} />
             </button>
-            {periodoDropOpen && (
-              <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
+
+            {outroPeriodoOpen && (
+              <div className="absolute right-0 top-full mt-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
                 <p className="text-xs text-gray-400 font-medium">Selecione o período</p>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">De</label>
-                  <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none" />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Até</label>
-                  <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none" />
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">De</label>
+                    <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Até</label>
+                    <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
+                  </div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setPeriodoDropOpen(false)}
+                  <button onClick={() => setOutroPeriodoOpen(false)}
                     className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
                     Cancelar
                   </button>
                   <button onClick={aplicarOutroPeriodo}
-                    className="flex-1 py-2 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-all">
+                    className="flex-1 py-2 text-xs text-white rounded-lg font-medium transition-all"
+                    style={{background: "#cc0000"}}
+                    onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
+                    onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                     Aplicar
                   </button>
                 </div>
