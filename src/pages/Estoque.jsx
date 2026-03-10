@@ -205,7 +205,7 @@ export default function Estoque() {
     for (let i = 0; i < alvo.length; i++) {
       const item = alvo[i];
       let novoPreco = reajusteTipo === "percentual"
-        ? Number(item.valor_venda || 0) * (1 + Number(reajusteValor) / 100)
+        ? Number(item.valor_custo || 0) * (1 + Number(reajusteValor) / 100)
         : Number(item.valor_venda || 0) + Number(reajusteValor);
       novoPreco = arredondarVendaParaCinco(Math.max(0, novoPreco));
       await base44.entities.Estoque.update(item.id, { valor_venda: novoPreco });
@@ -408,7 +408,7 @@ export default function Estoque() {
             </div>
             <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
               <button onClick={() => setShowReajuste(false)} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Cancelar</button>
-              <button onClick={aplicarReajuste} disabled={aplicando} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50" style={{background: "#cc0000"}} onMouseEnter={e => !aplicando && (e.currentTarget.style.background = "#aa0000")} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
+              <button onClick={aplicarReajuste} disabled={aplicando} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => !aplicando && (e.currentTarget.style.background = "#00dd00")} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
                 {aplicando ? "Aplicando..." : "Aplicar Reajuste"}
               </button>
             </div>
