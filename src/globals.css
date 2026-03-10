@@ -75,6 +75,17 @@
   }
 }
 
+/* REMOVE TODAS AS SETAS DOS INPUTS NUMBER */
+input[type="number"] {
+  -moz-appearance: textfield !important;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  display: none !important;
+  -webkit-appearance: none !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -82,19 +93,5 @@
 
   body {
     @apply bg-background text-foreground;
-  }
-
-  /* Remove spinner dos inputs number em TODOS os campos */
-  input[type="number"] {
-    -moz-appearance: textfield !important;
-  }
-
-  input[type="number"]::-webkit-outer-spin-button,
-  input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none !important;
-    margin: 0 !important;
-    height: 0 !important;
-    opacity: 0 !important;
-    display: none !important;
   }
 }
