@@ -171,7 +171,7 @@ export default function Estoque() {
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
           <p className="text-white text-sm font-medium mb-2">Valor Total (Venda)</p>
-          <p className="text-white text-sm font-medium">
+          <p className="text-green-400 text-sm font-bold">
             R$ {items.reduce((acc, i) => acc + (i.quantidade * i.valor_venda || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         </div>
