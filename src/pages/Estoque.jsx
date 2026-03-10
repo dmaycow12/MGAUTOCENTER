@@ -153,6 +153,17 @@ export default function Estoque() {
 
   return (
     <div className="space-y-4">
+      {/* Botão Principal */}
+      <button
+        onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
+        className="w-full flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-bold transition-all"
+        style={{background: "#00ff00", color: "#000"}}
+        onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
+        onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
+      >
+        <Plus className="w-5 h-5" /> Novo Item
+      </button>
+
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
