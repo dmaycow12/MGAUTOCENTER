@@ -207,7 +207,42 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Filtro de mês + gráficos FluxoMes */}
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-2 items-center">
+          <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
+            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-4 hover:bg-white/20 transition-all" style={{borderRight:"1px solid rgba(255,255,255,0.15)"}}>
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <span className="flex-1 text-center">{MESES[filtroMes - 1]} - {filtroAno}</span>
+            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-4 hover:bg-white/20 transition-all" style={{borderLeft:"1px solid rgba(255,255,255,0.15)"}}>
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="relative flex-1" ref={periodoDropRef}>
+            <button onClick={() => setPeriodoDropOpen(v => !v)}
+              className={`w-full flex items-center justify-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}>
+              {usandoOutroPeriodo && customRange ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}` : "Período"}
+              <ChevronDown className={`w-4 h-4 transition-transform ${periodoDropOpen ? "rotate-180" : ""}`} />
+            </button>
+            {periodoDropOpen && (
+              <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
+                <p className="text-xs text-gray-400 font-medium">Selecione o período</p>
+                <div><label className="block text-xs text-gray-500 mb-1">De</label>
+                  <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none" /></div>
+                <div><label className="block text-xs text-gray-500 mb-1">Até</label>
+                  <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none" /></div>
+                <div className="flex gap-2">
+                  <button onClick={() => setPeriodoDropOpen(false)} className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white">Cancelar</button>
+                  <button onClick={aplicarOutroPeriodo} className="flex-1 py-2 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium">Aplicar</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        <FluxoMes financeiro={financeiroPeriodo} />
+      </div>
 
 
       {/* Gráfico Receita x Despesa x Lucro */}
