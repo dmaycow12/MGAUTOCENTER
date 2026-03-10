@@ -84,14 +84,14 @@
     @apply bg-background text-foreground;
   }
 
-  /* Remove spinner dos inputs number */
+  /* Remove spinner dos inputs number em TODOS os campos */
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+    -webkit-appearance: none !important;
+    margin: 0 !important;
   }
   
   input[type="number"] {
-    -moz-appearance: textfield;
+    -moz-appearance: textfield !important;
   }
 }
