@@ -5,7 +5,7 @@ import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Uplo
 const defaultForm = () => ({
   codigo: "", descricao: "", categoria: "", marca: "",
   quantidade: 0, estoque_minimo: 0, valor_custo: 0, valor_venda: 0,
-  localizacao: "", fornecedor: "", ncm: "87089990", cfop: "5405", observacoes: ""
+  localizacao: "", fornecedor: "", ncm: "87089990", cfop: "5405", cest: "", observacoes: ""
 });
 
 export default function Estoque() {
@@ -196,7 +196,8 @@ export default function Estoque() {
                   fornecedor: { type: "string" },
                   ncm: { type: "string" },
                   cfop: { type: "string" },
-                }
+                  cest: { type: "string" },
+                  }
               }
             }
           }
@@ -602,6 +603,9 @@ export default function Estoque() {
                   </F>
                   <F label="CFOP">
                     <input value={form.cfop} onChange={e => setForm({ ...form, cfop: e.target.value })} className="input-dark" placeholder="5405" maxLength={4} />
+                  </F>
+                  <F label="CEST" className="col-span-2">
+                    <input value={form.cest} onChange={e => setForm({ ...form, cest: e.target.value })} className="input-dark" placeholder="Ex: 0100100" />
                   </F>
                 </div>
               </div>
