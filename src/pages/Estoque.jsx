@@ -138,6 +138,14 @@ export default function Estoque() {
     );
   };
 
+  const handleSort = (campo) => {
+    if (ordenacao.campo === campo) {
+      setOrdenacao({ campo, direcao: ordenacao.direcao === "asc" ? "desc" : "asc" });
+    } else {
+      setOrdenacao({ campo, direcao: "asc" });
+    }
+  };
+
   let filtrados = items.filter(i => {
     const matchSearch = !search ||
       i.descricao?.toLowerCase().includes(search.toLowerCase()) ||
@@ -148,44 +156,25 @@ export default function Estoque() {
     return matchSearch && matchFiltro;
   });
 
+  // Aplicar ordenação
   if (ordenacao.campo) {
     filtrados = [...filtrados].sort((a, b) => {
-      let valA = a[ordenacao.campo];
-      let valB = b[ordenacao.campo];
+      let aVal = a[ordenacao.campo];
+      let bVal = b[ordenacao.campo];
       
-      if (typeof valA === "number" || typeof valB === "number") {
-        valA = Number(valA || 0);
-        valB = Number(valB || 0);
-        return ordenacao.direcao === "asc" ? valA - valB : valB - valA;
+      // Tratar números
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return ordenacao.direcao === "asc" ? aVal - bVal : bVal - aVal;
       }
       
-      valA = (valA || "").toString().toLowerCase();
-      valB = (valB || "").toString().toLowerCase();
-      return ordenacao.direcao === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      // Tratar strings
+      aVal = String(aVal || "").toLowerCase();
+      bVal = String(bVal || "").toLowerCase();
+      return ordenacao.direcao === "asc" 
+        ? aVal.localeCompare(bVal, "pt-BR")
+        : bVal.localeCompare(aVal, "pt-BR");
     });
   }
-
-  const alterarOrdenacao = (campo) => {
-    if (ordenacao.campo === campo) {
-      setOrdenacao({ campo, direcao: ordenacao.direcao === "asc" ? "desc" : "asc" });
-    } else {
-      setOrdenacao({ campo, direcao: "asc" });
-    }
-  };
-
-  const HeaderButton = ({ campo, label }) => {
-    const isAtivo = ordenacao.campo === campo;
-    return (
-      <button
-        onClick={() => alterarOrdenacao(campo)}
-        className={`flex items-center gap-1.5 transition-all ${isAtivo ? "text-orange-400 font-semibold" : "text-gray-500 hover:text-gray-300"}`}
-        title={`Ordenar por ${label}`}
-      >
-        {label}
-        {isAtivo && <span className="text-xs">{ordenacao.direcao === "asc" ? "↑" : "↓"}</span>}
-      </button>
-    );
-  };
 
   const estoqueBaixo = items.filter(i => i.quantidade <= i.estoque_minimo).length;
   const grupos = ["Todos", ...Array.from(new Set(items.map(i => i.categoria).filter(Boolean)))];
