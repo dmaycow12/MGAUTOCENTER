@@ -153,7 +153,57 @@ export default function Financeiro() {
               </button>
             </div>
 
-            {/* Linha 3: filtro tipo — Receita / Despesa / Todos */}
+        {/* Filtro de Período */}
+        <div className="flex gap-2 items-center">
+          <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
+            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-3 hover:bg-black/10 transition-all flex-shrink-0">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
+            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-3 hover:bg-black/10 transition-all flex-shrink-0">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="relative flex-1" ref={periodoDropRef}>
+            <button
+              onClick={() => setPeriodoDropOpen(v => !v)}
+              className={`w-full flex items-center justify-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
+            >
+              {usandoOutroPeriodo && customRange ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}` : "Período"}
+              <ChevronDown className={`w-4 h-4 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
+            </button>
+            {periodoDropOpen && (
+              <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
+                <p className="text-xs text-gray-400 font-medium">Selecione o período</p>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">De</label>
+                  <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)}
+                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Até</label>
+                  <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)}
+                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setPeriodoDropOpen(false)}
+                    className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
+                    Cancelar
+                  </button>
+                  <button onClick={aplicarOutroPeriodo}
+                    className="flex-1 py-2 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all">
+                    Aplicar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Gráficos */}
+        <FluxoMes financeiro={items} />
+
+        {/* Linha 3: filtro tipo — Receita / Despesa / Todos */}
             <div className="flex gap-2">
               {["Receita","Despesa","Todos"].map(t => (
                 <button key={t} onClick={() => setFiltroTipo(t)} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroTipo === t ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{t}</button>
