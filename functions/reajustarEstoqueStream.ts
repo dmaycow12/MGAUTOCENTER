@@ -4,6 +4,8 @@ const arredondarVendaParaCinco = (valor) => {
   return Math.ceil(valor / 5) * 5;
 };
 
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -19,48 +21,59 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Nenhum item fornecido' }, { status: 400 });
     }
 
-    const updates = items.map(item => {
+    let sucessos = 0;
+    let falhas = 0;
+    const erros = [];
+
+    // Processa sequencialmente com retry
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
       let novoPreco = reajusteTipo === "percentual"
         ? Number(item.valor_custo || 0) * (1 + Number(reajusteValor) / 100)
         : Number(item.valor_venda || 0) + Number(reajusteValor);
       novoPreco = arredondarVendaParaCinco(Math.max(0, novoPreco));
       
-      return { id: item.id, valor_venda: novoPreco };
-    });
-
-    const resultados = [];
-    const batchSize = 10;
-    
-    for (let i = 0; i < updates.length; i += batchSize) {
-      const batch = updates.slice(i, i + batchSize);
+      let retentativas = 3;
+      let atualizado = false;
+      let ultimoErro = null;
       
-      const batchResults = await Promise.allSettled(
-        batch.map(update => 
-          base44.entities.Estoque.update(update.id, { valor_venda: update.valor_venda })
-        )
-      );
+      while (retentativas > 0 && !atualizado) {
+        try {
+          await base44.entities.Estoque.update(item.id, { valor_venda: novoPreco });
+          sucessos++;
+          atualizado = true;
+        } catch (err) {
+          ultimoErro = err?.message || 'Erro desconhecido';
+          retentativas--;
+          if (retentativas > 0) {
+            await sleep(200);
+          }
+        }
+      }
       
-      for (let j = 0; j < batchResults.length; j++) {
-        const result = batchResults[j];
-        resultados.push({
-          id: batch[j].id,
-          sucesso: result.status === 'fulfilled',
-          erro: result.status === 'rejected' ? result.reason?.message : null
+      if (!atualizado) {
+        falhas++;
+        erros.push({
+          id: item.id,
+          descricao: item.descricao,
+          erro: ultimoErro
         });
       }
+      
+      // Pausa a cada 10 items para evitar rate limit
+      if ((i + 1) % 10 === 0) {
+        await sleep(300);
+      }
     }
-
-    const sucessos = resultados.filter(r => r.sucesso).length;
-    const falhas = resultados.filter(r => !r.sucesso);
 
     return Response.json({ 
       sucesso: sucessos,
       total: items.length,
-      falhas: falhas.length > 0 ? falhas : null,
-      detalhes: resultados
+      falhas: falhas,
+      erros: erros.length > 0 ? erros.slice(0, 5) : null
     });
   } catch (error) {
-    console.error('Erro em reajustarEstoqueStream:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('Erro em reajustarEstoqueStream:', error.message);
+    return Response.json({ error: String(error.message) }, { status: 500 });
   }
 });
