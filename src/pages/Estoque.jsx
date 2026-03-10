@@ -368,7 +368,7 @@ export default function Estoque() {
                     <td className="px-4 py-3 text-center"><span className={`font-bold ${item.quantidade <= item.estoque_minimo ? "text-red-400" : "text-white"}`}>{item.quantidade}</span></td>
                     <td className="px-4 py-3 text-center text-gray-500 hidden sm:table-cell">{item.estoque_minimo}</td>
                     <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">R$ {Number(item.valor_custo||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</td>
-                    <td className="px-4 py-3 text-right text-orange-400 font-medium">R$ {Number(item.valor_venda||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</td>
+                    <td className="px-4 py-3 text-right text-green-400 font-medium">R$ {Number(item.valor_venda||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
                         <button onClick={() => editar(item)} className="p-1 text-gray-500 hover:text-blue-400 transition-all"><Edit className="w-4 h-4"/></button>
