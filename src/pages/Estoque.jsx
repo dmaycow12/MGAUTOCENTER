@@ -63,10 +63,15 @@ export default function Estoque() {
   const excluirSelecionados = async () => {
     if (selecionados.length === 0) return;
     if (!confirm(`Excluir ${selecionados.length} item(s) selecionado(s)?`)) return;
-    for (const id of selecionados) {
-      await base44.entities.Estoque.delete(id);
+    setDeletando(true);
+    const batch = 10;
+    for (let i = 0; i < selecionados.length; i += batch) {
+      const chunk = selecionados.slice(i, i + batch);
+      await Promise.all(chunk.map(id => base44.entities.Estoque.delete(id)));
+      await new Promise(r => setTimeout(r, 100));
     }
     setSelecionados([]);
+    setDeletando(false);
     load();
   };
 
