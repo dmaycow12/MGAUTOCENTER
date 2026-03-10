@@ -390,7 +390,7 @@ export default function Estoque() {
                 </div>
               </F>
               <F label={reajusteTipo === "percentual" ? "Percentual de aumento (%)" : "Valor a acrescentar (R$)"}>
-                <input type="number" step="0.01" min="0" value={reajusteValor} onChange={e => setReajusteValor(e.target.value)} className="input-dark" placeholder={reajusteTipo === "percentual" ? "Ex: 10" : "Ex: 5.00"} />
+                <input type="text" step="0.01" min="0" value={reajusteValor} onChange={e => setReajusteValor(e.target.value.replace(/[^0-9.]/g, ""))} className="input-dark" placeholder={reajusteTipo === "percentual" ? "Ex: 10" : "Ex: 5.00"} />
               </F>
               <p className="text-xs text-gray-500">
                 Serão reajustados: <span className="text-white font-medium">{reajusteGrupo === "Todos" ? items.length : items.filter(i => i.categoria === reajusteGrupo).length} produto(s)</span>
@@ -631,20 +631,20 @@ export default function Estoque() {
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <F label="Código"><input value={form.codigo} onChange={e => setForm({ ...form, codigo: e.target.value })} className="input-dark" /></F>
-                <F label="Quantidade"><input type="number" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: Number(e.target.value) })} className="input-dark" /></F>
+                <F label="Quantidade"><input type="text" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: Number(e.target.value.replace(/[^0-9.]/g, "") || 0) })} className="input-dark" /></F>
                 <F label="Descrição *" className="col-span-2">
                   <input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} className="input-dark" />
                 </F>
                 <F label="Categoria"><input value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} className="input-dark" /></F>
                 <F label="Marca"><input value={form.marca} onChange={e => setForm({ ...form, marca: e.target.value })} className="input-dark" /></F>
                 <F label="Estoque Mínimo">
-                  <input type="number" value={form.estoque_minimo} onChange={e => setForm({ ...form, estoque_minimo: Number(e.target.value) })} className="input-dark" />
+                  <input type="text" value={form.estoque_minimo} onChange={e => setForm({ ...form, estoque_minimo: Number(e.target.value.replace(/[^0-9.]/g, "") || 0) })} className="input-dark" />
                 </F>
                 <F label="Valor de Custo (R$)">
-                  <input type="number" step="0.01" value={form.valor_custo} onChange={e => setForm({ ...form, valor_custo: Number(e.target.value) })} className="input-dark" />
+                  <input type="text" step="0.01" value={form.valor_custo} onChange={e => setForm({ ...form, valor_custo: Number(e.target.value.replace(/[^0-9.]/g, "") || 0) })} className="input-dark" />
                 </F>
                 <F label="Valor de Venda (R$)">
-                  <input type="number" step="0.01" value={form.valor_venda} onChange={e => setForm({ ...form, valor_venda: Number(e.target.value) })} className="input-dark" />
+                  <input type="text" step="0.01" value={form.valor_venda} onChange={e => setForm({ ...form, valor_venda: Number(e.target.value.replace(/[^0-9.]/g, "") || 0) })} className="input-dark" />
                 </F>
                 <F label="Localização"><input value={form.localizacao} onChange={e => setForm({ ...form, localizacao: e.target.value })} className="input-dark" /></F>
                 <F label="Fornecedor"><input value={form.fornecedor} onChange={e => setForm({ ...form, fornecedor: e.target.value })} className="input-dark" /></F>
