@@ -210,7 +210,7 @@ export default function Estoque() {
           : Number(item.valor_venda || 0) + Number(reajusteValor);
         novoPreco = arredondarVendaParaCinco(Math.max(0, novoPreco));
         await base44.entities.Estoque.update(item.id, { valor_venda: novoPreco });
-        if (i < alvo.length - 1) await new Promise(r => setTimeout(r, 200));
+        if (i < alvo.length - 1) await new Promise(r => setTimeout(r, 1000));
       }
     } finally {
       setAplicando(false);
