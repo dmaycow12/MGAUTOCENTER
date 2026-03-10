@@ -505,7 +505,27 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
                                 onChange={vinculado => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, estoqueVinculado: vinculado } : it))}
                               />
                               {!item.estoqueVinculado && (
-                                <p className="text-xs text-gray-500">Nenhum vínculo — será criado como novo produto no estoque</p>
+                                <>
+                                  <p className="text-xs text-gray-500">Nenhum vínculo — será criado como novo produto no estoque</p>
+                                  <div className="flex gap-2">
+                                    <div className="flex-1">
+                                      <input
+                                        value={item.marca || ""}
+                                        onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, marca: e.target.value } : it))}
+                                        className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
+                                        placeholder="Marca (ex: Bosch, Cofap...)"
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <input
+                                        value={item.categoria || ""}
+                                        onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, categoria: e.target.value } : it))}
+                                        className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
+                                        placeholder="Categoria (ex: Freios, Filtros...)"
+                                      />
+                                    </div>
+                                  </div>
+                                </>
                               )}
                             </div>
                           )}
