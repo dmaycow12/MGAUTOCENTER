@@ -26,6 +26,7 @@ export default function Estoque() {
   const [importando, setImportando] = useState(false);
   const [importResult, setImportResult] = useState(null);
   const fileInputRef = useRef(null);
+  const [selecionados, setSelecionados] = useState([]);
 
   useEffect(() => { load(); }, []);
 
