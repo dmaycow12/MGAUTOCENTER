@@ -120,10 +120,15 @@ export default function Estoque() {
       return (
         <input
           autoFocus
-          type={type}
+          type={["quantidade", "estoque_minimo", "valor_custo", "valor_venda"].includes(field) ? "text" : type}
           step={type === "number" ? "0.01" : undefined}
           value={editandoValor}
-          onChange={e => setEditandoValor(e.target.value)}
+          onChange={e => {
+            const val = ["quantidade", "estoque_minimo", "valor_custo", "valor_venda"].includes(field) 
+              ? e.target.value.replace(/[^0-9.]/g, "") 
+              : e.target.value;
+            setEditandoValor(val);
+          }}
           onBlur={() => salvarEdicaoCell(item)}
           onKeyDown={e => { if (e.key === "Enter") salvarEdicaoCell(item); if (e.key === "Escape") cancelarEdicaoCell(); }}
           className={`bg-gray-700 border border-green-500 text-white rounded px-2 py-0.5 text-sm focus:outline-none w-full ${className}`}
