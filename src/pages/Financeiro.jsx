@@ -205,8 +205,8 @@ export default function Financeiro() {
 
         {/* Linha 3: filtro tipo — Receita / Despesa / Todos */}
             <div className="flex gap-2">
-              {["Receita","Despesa","Todos"].map(t => (
-                <button key={t} onClick={() => setFiltroTipo(t)} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroTipo === t ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{t}</button>
+              {["Todos","Receita","Despesa"].map(t => (
+                <button key={t} onClick={() => setFiltroTipo(t)} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroTipo === t ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{t === "Todos" ? "Tudo" : t}</button>
               ))}
             </div>
 
