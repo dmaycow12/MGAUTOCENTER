@@ -110,62 +110,56 @@ export default function OrdemServico() {
           <Plus className="w-4 h-4" /> Nova OS
         </button>
 
-        {/* Linha 2: filtro status — Tudo primeiro */}
+        {/* Linha 2: filtro status — multi-select */}
         <div className="flex gap-2">
-          {["Tudo", "Aberto", "Orçamento", "Concluído"].map(s => (
-            <button key={s} onClick={() => setFiltroStatus(s)}
-              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroStatus === s ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+          {["Aberto", "Orçamento", "Concluído"].map(s => (
+            <button key={s} onClick={() => toggleStatus(s)}
+              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroStatus.includes(s) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {s}
             </button>
           ))}
         </div>
 
-        {/* Linha 3: filtro período + Outro período */}
-        <div className="flex gap-2 flex-wrap items-stretch relative">
-          {PERIODOS_OS.map(p => (
-            <button key={p.key} onClick={() => setPeriodo(p.key)}
-              className={`flex-1 py-3 rounded-xl text-xs font-medium transition-all ${filtroPeriodo === p.key ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
-              {p.label}
+        {/* Linha 3: filtro período — mesmo padrão do Financeiro */}
+        <div className="flex gap-2 items-center">
+          <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
+            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-4 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
+              <ChevronLeft className="w-5 h-5" />
             </button>
-          ))}
+            <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
+            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-4 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
 
-          {/* Outro Período */}
-          <div className="relative" ref={outroPeriodoRef}>
+          <div className="relative flex-1" ref={periodoDropRef}>
             <button
-              onClick={() => setOutroPeriodoOpen(v => !v)}
-              className={`flex items-center gap-1 px-3 py-3 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${filtroPeriodo === "outro" ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}
+              onClick={() => setPeriodoDropOpen(v => !v)}
+              className={`w-full flex items-center justify-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
             >
-              {filtroPeriodo === "outro" && customRange
-                ? `${customRange.inicio.slice(5).replace("-","/")} - ${customRange.fim.slice(5).replace("-","/")}` 
-                : "Outro período"}
-              <ChevronDown className={`w-3 h-3 transition-transform ${outroPeriodoOpen ? "rotate-180" : ""}`} />
+              {usandoOutroPeriodo && customRange ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}` : "Período"}
+              <ChevronDown className={`w-4 h-4 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
             </button>
-
-            {outroPeriodoOpen && (
-              <div className="absolute right-0 top-full mt-2 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
+            {periodoDropOpen && (
+              <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
                 <p className="text-xs text-gray-400 font-medium">Selecione o período</p>
-                <div className="space-y-2">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">De</label>
-                    <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Até</label>
-                    <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
-                  </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">De</label>
+                  <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)}
+                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Até</label>
+                  <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)}
+                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none" />
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setOutroPeriodoOpen(false)}
+                  <button onClick={() => setPeriodoDropOpen(false)}
                     className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
                     Cancelar
                   </button>
                   <button onClick={aplicarOutroPeriodo}
-                    className="flex-1 py-2 text-xs text-white rounded-lg font-medium transition-all"
-                    style={{background: "#cc0000"}}
-                    onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
-                    onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
+                    className="flex-1 py-2 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-all">
                     Aplicar
                   </button>
                 </div>
