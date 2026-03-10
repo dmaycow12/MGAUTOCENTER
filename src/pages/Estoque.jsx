@@ -86,6 +86,57 @@ export default function Estoque() {
     setShowForm(true);
   };
 
+  const iniciarEdicaoCell = (item, field) => {
+    setEditandoCell({ id: item.id, field });
+    setEditandoValor(item[field] ?? "");
+  };
+
+  const salvarEdicaoCell = async (item) => {
+    if (!editandoCell) return;
+    const val = ["quantidade", "estoque_minimo", "valor_custo", "valor_venda"].includes(editandoCell.field)
+      ? Number(editandoValor)
+      : editandoValor;
+    await base44.entities.Estoque.update(item.id, { [editandoCell.field]: val });
+    setEditandoCell(null);
+    setEditandoValor("");
+    load();
+  };
+
+  const cancelarEdicaoCell = () => {
+    setEditandoCell(null);
+    setEditandoValor("");
+  };
+
+  const CellEdit = ({ item, field, type = "text", className = "" }) => {
+    const isEditing = editandoCell?.id === item.id && editandoCell?.field === field;
+    if (isEditing) {
+      return (
+        <input
+          autoFocus
+          type={type}
+          step={type === "number" ? "0.01" : undefined}
+          value={editandoValor}
+          onChange={e => setEditandoValor(e.target.value)}
+          onBlur={() => salvarEdicaoCell(item)}
+          onKeyDown={e => { if (e.key === "Enter") salvarEdicaoCell(item); if (e.key === "Escape") cancelarEdicaoCell(); }}
+          className={`bg-gray-700 border border-green-500 text-white rounded px-2 py-0.5 text-sm focus:outline-none w-full ${className}`}
+        />
+      );
+    }
+    const display = ["valor_custo", "valor_venda"].includes(field)
+      ? `R$ ${Number(item[field] || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+      : (item[field] || "—");
+    return (
+      <span
+        onClick={() => iniciarEdicaoCell(item, field)}
+        className={`cursor-pointer hover:underline hover:text-white transition-all rounded px-1 -mx-1 ${className}`}
+        title="Clique para editar"
+      >
+        {display}
+      </span>
+    );
+  };
+
   const filtrados = items.filter(i => {
     const matchSearch = !search ||
       i.descricao?.toLowerCase().includes(search.toLowerCase()) ||
