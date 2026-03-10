@@ -58,7 +58,7 @@ export default function FluxoMes({ financeiro }) {
 
   return (
     <div className="flex flex-col sm:flex-row gap-3">
-      <Card title="Receita" pago={recPago} previsto={recPrevisto} color="#000000" bg="" bgColor="#00ff00" />
+      <Card title="Receita" pago={recPago} previsto={recPrevisto} color="#ffffff" bg="" bgColor="#00ff00" />
       <Card title="Despesa" pago={pagPago} previsto={pagPrevisto} color="#ffffff" bg="" bgColor="#cc0000" />
     </div>
   );
