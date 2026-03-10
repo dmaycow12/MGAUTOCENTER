@@ -324,7 +324,7 @@ export default function Estoque() {
                 </div>
                 <div className="px-4 py-3">
                   <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Venda</p>
-                  <p className="text-orange-400 font-bold text-sm">R$ {Number(item.valor_venda||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</p>
+                  <p className="text-green-400 font-bold text-sm">R$ {Number(item.valor_venda||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</p>
                 </div>
               </div>
               {item.categoria && (
