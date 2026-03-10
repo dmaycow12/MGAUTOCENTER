@@ -622,10 +622,7 @@ export default function NotasFiscais() {
                     Cancelar
                   </button>
                   <button onClick={aplicarOutroPeriodo}
-                    className="flex-1 py-2 text-xs text-white rounded-lg font-medium transition-all"
-                    style={{background: "#cc0000"}}
-                    onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
-                    onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
+                    className="flex-1 py-2 text-xs text-white rounded-lg font-medium transition-all bg-blue-600 hover:bg-blue-700">
                     Aplicar
                   </button>
                 </div>
