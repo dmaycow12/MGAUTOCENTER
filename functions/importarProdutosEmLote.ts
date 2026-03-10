@@ -56,52 +56,59 @@ Deno.serve(async (req) => {
       return isNaN(Number(str)) ? 0 : Number(str);
     };
 
-    const BATCH_SIZE = 20;
-    const BATCH_DELAY = 1500;
-
-    for (let i = 0; i < items.length; i += BATCH_SIZE) {
-      const batch = items.slice(i, i + BATCH_SIZE);
-      
-      const promises = batch.map(async (row, idx) => {
-        const nome = (row["Nome"] || row.col_1 || '').toString().trim();
-        if (!nome) {
-          falha++;
-          return;
-        }
-
+    const createWithRetry = async (data, maxRetries = 3) => {
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-          await base44.entities.Estoque.create({
-            codigo: (row["Cód. interno"] || row.col_0 || '').toString().trim(),
-            descricao: nome,
-            unidade: (row["Unidade"] || row.col_8 || 'UN').toString().trim(),
-            quantidade: parseNum(row["Estoque"] || row.col_4),
-            estoque_minimo: parseNum(row["Estoque min."] || row.col_5),
-            valor_custo: parseNum(row["Custo unit."] || row.col_6),
-            valor_venda: parseNum(row["Valor venda"] || row.col_7),
-            cfop: (row["CPOP"] || row.col_9 || '5405').toString().trim(),
-            ncm: (row["NCM"] || row.col_10 || '87089990').toString().trim(),
-            cest: (row["CEST"] || row.col_11 || '').toString().trim(),
-            categoria: '',
-            marca: '',
-            localizacao: '',
-            fornecedor: '',
-            observacoes: ''
-          });
-          sucesso++;
+          await base44.entities.Estoque.create(data);
+          return true;
         } catch (e) {
-          falha++;
-          erros.push({
-            linha: i + idx + 2,
-            produto: nome,
-            erro: e.message
-          });
+          if (e.message.includes('Rate limit') && attempt < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, 4000 * (attempt + 1)));
+            continue;
+          }
+          throw e;
         }
-      });
+      }
+    };
 
-      await Promise.all(promises);
-      
-      if (i + BATCH_SIZE < items.length) {
-        await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
+    for (let i = 0; i < items.length; i++) {
+      const row = items[i];
+      const nome = (row["Nome"] || row.col_1 || '').toString().trim();
+      if (!nome) {
+        falha++;
+        continue;
+      }
+
+      try {
+        await createWithRetry({
+          codigo: (row["Cód. interno"] || row.col_0 || '').toString().trim(),
+          descricao: nome,
+          unidade: (row["Unidade"] || row.col_8 || 'UN').toString().trim(),
+          quantidade: parseNum(row["Estoque"] || row.col_4),
+          estoque_minimo: parseNum(row["Estoque min."] || row.col_5),
+          valor_custo: parseNum(row["Custo unit."] || row.col_6),
+          valor_venda: parseNum(row["Valor venda"] || row.col_7),
+          cfop: (row["CPOP"] || row.col_9 || '5405').toString().trim(),
+          ncm: (row["NCM"] || row.col_10 || '87089990').toString().trim(),
+          cest: (row["CEST"] || row.col_11 || '').toString().trim(),
+          categoria: '',
+          marca: '',
+          localizacao: '',
+          fornecedor: '',
+          observacoes: ''
+        });
+        sucesso++;
+        
+        if ((i + 1) % 30 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      } catch (e) {
+        falha++;
+        erros.push({
+          linha: i + 2,
+          produto: nome,
+          erro: e.message
+        });
       }
     }
 
