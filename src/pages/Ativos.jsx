@@ -246,7 +246,7 @@ export default function Ativos() {
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
           <p className="text-gray-400 text-xs">Valor Atual</p>
-          <p className="text-orange-400 font-bold text-sm">{fmt(totalValorAtual)}</p>
+          <p className="text-green-400 font-bold text-sm">{fmt(totalValorAtual)}</p>
         </div>
       </div>
 
