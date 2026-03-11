@@ -102,7 +102,7 @@ export default function Ativos() {
       </button>
 
       {/* Filtro Categoria - Dropdown */}
-      <div ref={useRef(null)} className="relative">
+      <div ref={dropdownRef} className="relative">
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
           className="w-full flex items-center justify-between px-5 py-3 rounded-xl text-sm font-semibold transition-all border"
