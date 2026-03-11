@@ -222,10 +222,8 @@ export default function Layout({ children, currentPageName }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto px-0 md:px-0 pt-4 md:pt-24 pb-24 md:pb-6" style={{background:"#000"}}>
-          <div className="px-4 md:px-6 h-full">
-            {children}
-          </div>
+        <main className="flex-1 overflow-auto p-4 md:p-6 md:pt-24 pb-24 md:pb-6" style={{background:"#000"}}>
+          {children}
         </main>
 
         {/* Bottom Menu - Mobile */}
