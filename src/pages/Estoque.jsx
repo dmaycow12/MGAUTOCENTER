@@ -528,7 +528,7 @@ export default function Estoque() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {item.quantidade <= item.estoque_minimo && <AlertTriangle className="w-3 h-3 text-red-400 flex-shrink-0" />}
-                        <CellEdit item={item} field="descricao" className="text-white font-medium" editandoCell={editandoCell} editandoValor={editandoValor} setEditandoValor={setEditandoValor} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
+                        <CellEdit item={item} field="descricao" className="text-white font-medium" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
                       </div>
                     </td>
                     <td className="px-4 py-3 text-gray-400 hidden md:table-cell">
