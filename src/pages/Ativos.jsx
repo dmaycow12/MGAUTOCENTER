@@ -112,7 +112,7 @@ export default function Ativos() {
           }}
         >
           <span>{filtroCategoria === "Todas" ? "Todas as Categorias" : filtroCategoria}</span>
-          <Check className={`w-4 h-4 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} style={{ transform: dropdownOpen ? "rotate(180deg)" : "none" }} />
+          <ChevronDown className={`w-4 h-4 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
         </button>
 
         {dropdownOpen && (
