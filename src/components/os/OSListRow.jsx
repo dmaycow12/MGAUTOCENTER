@@ -189,7 +189,9 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
               <h3 className="text-lg font-bold">Atenção!</h3>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">
-              Ao alterar o status desta OS, <strong className="text-red-400">todos os lançamentos financeiros</strong> gerados serão <strong className="text-red-400">excluídos automaticamente</strong>.
+              Ao alterar o status desta OS:<br />
+              • <strong className="text-red-400">Lançamentos financeiros</strong> serão excluídos<br />
+              • <strong className="text-yellow-400">Peças usadas</strong> serão devolvidas ao estoque
             </p>
             <p className="text-gray-400 text-sm">Deseja continuar?</p>
             <div className="flex gap-3 justify-end">
