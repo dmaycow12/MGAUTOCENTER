@@ -241,13 +241,9 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const confirmarReabrir = async () => {
-    // Exclui lançamentos financeiros vinculados a esta OS
     if (os?.id) {
-      const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
-      const vinculados = financeiros.filter(f => f.ordem_servico_id === os.id);
-      for (const f of vinculados) {
-        await base44.entities.Financeiro.delete(f.id);
-      }
+      await excluirLancamentosOS(os.id);
+      await restaurarEstoque(os.pecas);
     }
     setForm(f => ({ ...f, status: statusPendente }));
     setShowAvisoReabrir(false);
