@@ -171,6 +171,26 @@ export default function Estoque() {
   }
 
   const estoqueBaixo = items.filter(i => i.quantidade <= i.estoque_minimo).length;
+
+  const exportarSelecionados = () => {
+    const lista = selecionados.length > 0
+      ? filtrados.filter(i => selecionados.includes(i.id))
+      : filtrados;
+    if (lista.length === 0) return alert("Nenhum item para exportar.");
+    const header = ["Código", "Descrição", "Categoria", "Marca", "Quantidade", "Estoque Mínimo", "Valor Custo", "Valor Venda", "Localização", "Fornecedor"];
+    const rows = lista.map(i => [
+      i.codigo || "", i.descricao || "", i.categoria || "", i.marca || "",
+      i.quantidade || 0, i.estoque_minimo || 0,
+      Number(i.valor_custo || 0).toFixed(2), Number(i.valor_venda || 0).toFixed(2),
+      i.localizacao || "", i.fornecedor || ""
+    ]);
+    const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "estoque.csv"; a.click();
+    URL.revokeObjectURL(url);
+  };
   const grupos = ["Todos", ...Array.from(new Set(items.map(i => i.categoria).filter(Boolean)))];
 
   const aplicarReajuste = async () => {
