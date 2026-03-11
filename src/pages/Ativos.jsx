@@ -112,99 +112,88 @@ export default function Ativos() {
         <Plus className="w-4 h-4" /> Novo Ativo
       </button>
 
-      {/* Filtro Categoria - botão grande dropdown */}
-      <div ref={dropdownRef} className="relative">
-        <button
-          onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="w-full flex items-center justify-between px-5 py-4 rounded-xl text-base font-semibold transition-all border"
-          style={{
-            background: filtroCategoria !== "Todas" ? "#062C9B" : "#1f2937",
-            color: "#fff",
-            borderColor: filtroCategoria !== "Todas" ? "#062C9B" : "#374151"
-          }}
-        >
-          <span>{filtroCategoria === "Todas" ? "Todas as Categorias" : filtroCategoria}</span>
-          <ChevronDown className={`w-5 h-5 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
-        </button>
-
-        {dropdownOpen && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-700 rounded-xl z-20 shadow-xl overflow-hidden">
-            {/* Opção "Todas" */}
-            <button
-              onClick={() => { setFiltroCategoria("Todas"); setDropdownOpen(false); }}
-              className="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-gray-800 transition-all text-left"
-              style={{ color: filtroCategoria === "Todas" ? "#00ff00" : "#d1d5db" }}
-            >
-              <span>Todas as Categorias</span>
-              {filtroCategoria === "Todas" && <Check className="w-4 h-4" />}
-            </button>
-
-            {/* Categorias com edição inline */}
-            {categorias.map(cat => (
-              <div key={cat} className="flex items-center hover:bg-gray-800 transition-all">
-                {editandoCategoria === cat ? (
-                  <div className="flex-1 flex items-center gap-2 px-4 py-2">
-                    <input
-                      autoFocus
-                      value={editNomeCategoria}
-                      onChange={e => setEditNomeCategoria(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === "Enter") renomearCategoria(cat, editNomeCategoria);
-                        if (e.key === "Escape") setEditandoCategoria(null);
+      {/* Filtro Categoria - chips horizontais */}
+      {(() => {
+        // Mescla categorias salvas + categorias dos ativos (para nunca sumir)
+        const catsAtivos = [...new Set(ativos.map(a => a.categoria).filter(Boolean))];
+        const todasCats = [...new Set([...categorias, ...catsAtivos])];
+        return (
+          <div className="space-y-2">
+            <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+              <button
+                onClick={() => setFiltroCategoria("Todas")}
+                className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all border"
+                style={{
+                  background: filtroCategoria === "Todas" ? "#062C9B" : "#1f2937",
+                  color: "#fff",
+                  borderColor: filtroCategoria === "Todas" ? "#1a5ce6" : "#374151"
+                }}
+              >
+                Todas
+              </button>
+              {todasCats.map(cat => (
+                <div key={cat} className="flex-shrink-0 flex items-center gap-1">
+                  {editandoCategoria === cat ? (
+                    <div className="flex items-center gap-1 bg-gray-800 border border-orange-500 rounded-full px-2 py-1">
+                      <input
+                        autoFocus
+                        value={editNomeCategoria}
+                        onChange={e => setEditNomeCategoria(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") renomearCategoria(cat, editNomeCategoria);
+                          if (e.key === "Escape") setEditandoCategoria(null);
+                        }}
+                        className="bg-transparent text-white text-sm focus:outline-none w-28"
+                      />
+                      <button onClick={() => renomearCategoria(cat, editNomeCategoria)} className="text-green-400 hover:text-green-300">
+                        <Check className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => setEditandoCategoria(null)} className="text-gray-400 hover:text-white">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      className="flex items-center gap-1 px-3 py-2 rounded-full text-sm font-semibold border transition-all"
+                      style={{
+                        background: filtroCategoria === cat ? "#062C9B" : "#1f2937",
+                        color: "#fff",
+                        borderColor: filtroCategoria === cat ? "#1a5ce6" : "#374151"
                       }}
-                      className="flex-1 bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-orange-500"
-                      onClick={e => e.stopPropagation()}
-                    />
-                    <button
-                      onClick={e => { e.stopPropagation(); renomearCategoria(cat, editNomeCategoria); }}
-                      className="text-xs px-2 py-1 rounded-lg font-medium"
-                      style={{ background: "#00ff00", color: "#fff" }}
-                    >OK</button>
-                    <button onClick={e => { e.stopPropagation(); setEditandoCategoria(null); }} className="text-gray-400 hover:text-white">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <button
-                      className="flex-1 flex items-center justify-between px-4 py-3 text-sm text-left"
-                      style={{ color: filtroCategoria === cat ? "#00ff00" : "#d1d5db" }}
-                      onClick={() => { setFiltroCategoria(cat); setDropdownOpen(false); }}
                     >
-                      <span>{cat}</span>
-                      {filtroCategoria === cat && <Check className="w-4 h-4" />}
-                    </button>
-                    <button
-                      className="pr-4 text-gray-600 hover:text-gray-300 transition-all"
-                      onClick={e => { e.stopPropagation(); setEditandoCategoria(cat); setEditNomeCategoria(cat); }}
-                      title="Renomear"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  </>
-                )}
-              </div>
-            ))}
-
-            {/* Acrescentar nova categoria */}
-            <div className="border-t border-gray-700 px-4 py-3 flex gap-2">
+                      <button onClick={() => setFiltroCategoria(cat)}>{cat}</button>
+                      <button
+                        onClick={() => { setEditandoCategoria(cat); setEditNomeCategoria(cat); }}
+                        className="text-gray-500 hover:text-gray-200 transition-all ml-1"
+                        title="Renomear"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {/* Adicionar nova categoria */}
+            <div className="flex gap-2">
               <input
                 value={novaCategoria}
                 onChange={e => setNovaCategoria(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && adicionarCategoria()}
-                placeholder="Nova categoria..."
-                className="flex-1 bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-orange-500"
-                onClick={e => e.stopPropagation()}
+                placeholder="+ Nova categoria..."
+                className="flex-1 bg-gray-800 border border-gray-700 text-white placeholder-gray-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
               />
               <button
-                onClick={e => { e.stopPropagation(); adicionarCategoria(); }}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium"
-                style={{ background: "#00ff00", color: "#fff" }}
-              >+ Adicionar</button>
+                onClick={adicionarCategoria}
+                className="px-4 py-2 rounded-xl text-xs font-medium text-white transition-all"
+                style={{ background: "#374151" }}
+                onMouseEnter={e => e.currentTarget.style.background = "#4b5563"}
+                onMouseLeave={e => e.currentTarget.style.background = "#374151"}
+              >Adicionar</button>
             </div>
           </div>
-        )}
-      </div>
+        );
+      })()}
 
       {/* Busca + Toggle de visualização */}
       <div className="flex gap-2">
