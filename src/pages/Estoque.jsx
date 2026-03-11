@@ -718,6 +718,49 @@ export default function Estoque() {
   );
 }
 
+const CAMPOS_NUMERICOS = ["quantidade", "estoque_minimo", "valor_custo", "valor_venda"];
+
+function CellEdit({ item, field, type = "text", className = "", editandoCell, editandoValor, setEditandoValor, onIniciar, onSalvar, onCancelar }) {
+  const isEditing = editandoCell?.id === item.id && editandoCell?.field === field;
+
+  if (isEditing) {
+    return (
+      <input
+        autoFocus
+        type="text"
+        value={editandoValor}
+        onChange={e => {
+          const val = CAMPOS_NUMERICOS.includes(field)
+            ? e.target.value.replace(/[^0-9.]/g, "")
+            : e.target.value.toUpperCase();
+          setEditandoValor(val);
+        }}
+        onBlur={() => onSalvar(item)}
+        onKeyDown={e => {
+          if (e.key === "Enter") onSalvar(item);
+          if (e.key === "Escape") onCancelar();
+        }}
+        className={`bg-gray-700 border border-green-500 text-white rounded px-2 py-0.5 text-sm focus:outline-none w-full ${className}`}
+        style={{textTransform: CAMPOS_NUMERICOS.includes(field) ? "none" : "uppercase"}}
+      />
+    );
+  }
+
+  const display = ["valor_custo", "valor_venda"].includes(field)
+    ? `R$ ${Number(item[field] || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+    : (item[field] || "—");
+
+  return (
+    <span
+      onClick={() => onIniciar(item, field)}
+      className={`cursor-pointer hover:underline hover:text-white transition-all rounded px-1 -mx-1 ${className}`}
+      title="Clique para editar"
+    >
+      {display}
+    </span>
+  );
+}
+
 function F({ label, children, className = "" }) {
   return (
     <div className={className}>
