@@ -192,108 +192,10 @@ export default function Layout({ children, currentPageName }) {
           aside { flex-shrink: 0; }
         `}</style>
 
-      {/* Sidebar Desktop */}
-      <aside
-        className={`hidden md:flex flex-col transition-all duration-300 ${sidebarOpen ? "w-60" : "w-16"}`}
-        style={{background:"#111", borderRight:"1px solid #222"}}
-      >
-        {/* Logo */}
-        <div className="flex items-center justify-between px-4 h-[64px]" style={{borderBottom:"1px solid #222"}}>
-          <div className={`flex items-center justify-center transition-all duration-300 ${sidebarOpen ? "w-36 h-14" : "w-10 h-10"}`}>
-            <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" alt="MG Autocenter" className="w-full h-full object-contain" />
-          </div>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-1.5 text-gray-500 hover:text-white rounded-lg transition-all"
-          >
-            <ChevronRight className={`w-5 h-5 transition-transform ${sidebarOpen ? "rotate-180" : ""}`} />
-          </button>
-        </div>
 
-        {/* Nav */}
-        <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentPageName === item.page;
-            return (
-              <Link
-                key={item.page}
-                to={createPageUrl(item.page)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group`}
-                style={isActive ? {
-                  background: "rgba(204,0,0,0.12)",
-                  color: RED,
-                  borderLeft: `2px solid ${RED}`,
-                  paddingLeft: "10px"
-                } : {}}
-              >
-                <Icon
-                  className={`w-5 h-5 flex-shrink-0`}
-                  style={isActive ? {color: RED} : {color:"#6b7280"}}
-                />
-                {sidebarOpen && (
-                  <span className={isActive ? "" : "text-gray-400 group-hover:text-white"}>
-                    {item.name}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
-
-      </aside>
-
-      {/* Mobile Sidebar Overlay */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden">
-          <div className="fixed inset-0 bg-black/70" onClick={() => setMobileOpen(false)} />
-          <aside className="relative w-64 flex flex-col" style={{background:"#111"}}>
-            <div className="flex items-center justify-center px-4 py-5 relative" style={{borderBottom:"1px solid #222"}}>
-              <div className="w-9 h-9 flex items-center justify-center">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" alt="MG Autocenter" className="w-full h-full object-contain" />
-              </div>
-              <button onClick={() => setMobileOpen(false)} className="absolute right-4">
-                <X className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-            <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = currentPageName === item.page;
-                return (
-                  <Link
-                    key={item.page}
-                    to={createPageUrl(item.page)}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
-                    style={isActive ? {
-                      background: "rgba(204,0,0,0.12)",
-                      color: RED,
-                      borderLeft: `2px solid ${RED}`,
-                      paddingLeft: "10px"
-                    } : {color:"#9ca3af"}}
-                  >
-                    <Icon className="w-5 h-5 flex-shrink-0" style={isActive ? {color: RED} : {}} />
-                    <span>{item.name}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-            <div className="p-3" style={{borderTop:"1px solid #222"}}>
-              <button
-                onClick={() => setMobileOpen(false)}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-gray-500 hover:text-white rounded-lg transition-all text-sm"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </aside>
-        </div>
-      )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="w-full flex flex-col min-w-0">
         {/* Top Bar */}
         <header className="px-4 md:px-6 flex items-center h-[64px] flex-shrink-0 overflow-x-auto" style={{background:"#111", borderBottom:"1px solid #222"}}>
           <nav className="flex items-center gap-2 md:gap-4">
