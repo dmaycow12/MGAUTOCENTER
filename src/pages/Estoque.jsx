@@ -43,6 +43,16 @@ export default function Estoque() {
 
   useEffect(() => { load(); }, []);
 
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (filtroDropdownRef.current && !filtroDropdownRef.current.contains(e.target)) {
+        setShowFiltroDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
   const load = async () => {
     const data = await base44.entities.Estoque.list("-created_date", 500);
     setItems(data);
