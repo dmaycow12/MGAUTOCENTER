@@ -106,16 +106,20 @@ export default function Estoque() {
 
   const salvarEdicaoCell = async (item) => {
     if (!editandoCell) return;
-    let val = ["quantidade", "estoque_minimo", "valor_custo", "valor_venda"].includes(editandoCell.field)
+    const { id: itemId, field } = editandoCell;
+    let val = ["quantidade", "estoque_minimo", "valor_custo", "valor_venda"].includes(field)
       ? Number(editandoValor)
       : editandoValor;
-    if (editandoCell.field === "valor_venda") {
+    if (field === "valor_venda") {
       val = arredondarVendaParaCinco(val);
     }
-    await base44.entities.Estoque.update(item.id, { [editandoCell.field]: val });
+    // Fecha edição imediatamente, antes do await, para evitar onBlur duplo
     setEditandoCell(null);
     setEditandoValor("");
-    load();
+    // Atualiza estado local otimisticamente (sem load() para não perder o foco/loop)
+    setItems(prev => prev.map(i => i.id === itemId ? { ...i, [field]: val } : i));
+    // Persiste no backend em background
+    await base44.entities.Estoque.update(itemId, { [field]: val });
   };
 
   const cancelarEdicaoCell = () => {
