@@ -297,10 +297,52 @@ export default function Ativos() {
   );
 }
 
-function AtivoCard({ ativo, onEdit, onDelete, onDetalhe }) {
+function InlineValue({ value, color, onSave }) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState(String(value || 0));
+  const inputRef = useRef(null);
+
+  const commit = () => {
+    const n = parseFloat(val.replace(",", "."));
+    if (!isNaN(n)) onSave(n);
+    setEditing(false);
+  };
+
+  useEffect(() => {
+    if (editing) inputRef.current?.select();
+  }, [editing]);
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="text"
+        value={val}
+        onChange={e => setVal(e.target.value)}
+        onBlur={commit}
+        onKeyDown={e => { if (e.key === "Enter") commit(); if (e.key === "Escape") setEditing(false); }}
+        className="w-24 bg-gray-800 border border-orange-500 rounded-lg px-2 py-0.5 text-sm font-bold text-right focus:outline-none"
+        style={{ color, MozAppearance: "textfield" }}
+      />
+    );
+  }
+
+  return (
+    <span
+      className="font-black text-base cursor-text hover:opacity-80 transition-all border-b border-dashed border-transparent hover:border-current"
+      style={{ color }}
+      onClick={e => { e.stopPropagation(); setEditing(true); setVal(String(value || 0)); }}
+      title="Clique para editar"
+    >
+      {fmt(value)}
+    </span>
+  );
+}
+
+function AtivoCard({ ativo, onEdit, onDelete, onUpdate }) {
   const foto = ativo.fotos?.[0];
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all cursor-pointer" onClick={onDetalhe}>
+    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all">
       <div className="h-36 bg-gray-800 flex items-center justify-center overflow-hidden">
         {foto ? (
           <img src={foto} alt={ativo.nome} className="w-full h-full object-cover" />
@@ -319,14 +361,14 @@ function AtivoCard({ ativo, onEdit, onDelete, onDetalhe }) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-gray-500 text-xs">Valor de Compra</p>
-            <span className="text-red-400 font-black text-base">{fmt(ativo.valor_aquisicao)}</span>
+            <InlineValue value={ativo.valor_aquisicao} color="#f87171" onSave={v => onUpdate(ativo.id, { valor_aquisicao: v })} />
           </div>
           <div className="text-right">
             <p className="text-gray-500 text-xs">Valor Atual</p>
-            <span className="text-green-400 font-black text-base">{fmt(ativo.valor_atual)}</span>
+            <InlineValue value={ativo.valor_atual} color="#4ade80" onSave={v => onUpdate(ativo.id, { valor_atual: v })} />
           </div>
         </div>
-        <div className="flex gap-2 pt-1" onClick={e => e.stopPropagation()}>
+        <div className="flex gap-2 pt-1">
           <button onClick={onEdit} className="flex-1 py-1.5 text-xs text-gray-400 hover:text-white border border-gray-700 rounded-lg flex items-center justify-center gap-1 transition-all hover:bg-gray-800">
             <Pencil className="w-3 h-3" /> Editar
           </button>
@@ -339,10 +381,10 @@ function AtivoCard({ ativo, onEdit, onDelete, onDetalhe }) {
   );
 }
 
-function AtivoRow({ ativo, onEdit, onDelete, onDetalhe }) {
+function AtivoRow({ ativo, onEdit, onDelete, onUpdate }) {
   const foto = ativo.fotos?.[0];
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl flex items-center gap-3 px-4 py-3 hover:border-gray-700 transition-all cursor-pointer" onClick={onDetalhe}>
+    <div className="bg-gray-900 border border-gray-800 rounded-xl flex items-center gap-3 px-4 py-3 hover:border-gray-700 transition-all">
       <div className="w-12 h-12 rounded-lg bg-gray-800 flex-shrink-0 overflow-hidden flex items-center justify-center">
         {foto ? <img src={foto} alt="" className="w-full h-full object-cover" /> : <Image className="w-5 h-5 text-gray-600" />}
       </div>
@@ -350,11 +392,17 @@ function AtivoRow({ ativo, onEdit, onDelete, onDetalhe }) {
         <p className="text-white font-semibold text-sm truncate">{ativo.nome || "—"}</p>
         <p className="text-gray-500 text-xs">{ativo.categoria || "—"} {ativo.data_aquisicao ? `• ${fmtData(ativo.data_aquisicao)}` : ""}</p>
       </div>
-      <div className="text-right flex-shrink-0">
-        <p className="text-red-400 font-black text-sm">{fmt(ativo.valor_aquisicao)}</p>
-        <p className="text-green-400 font-black text-sm">{fmt(ativo.valor_atual)}</p>
+      <div className="flex items-center gap-6 flex-shrink-0">
+        <div className="text-center">
+          <p className="text-gray-500 text-xs mb-0.5">Custo</p>
+          <InlineValue value={ativo.valor_aquisicao} color="#f87171" onSave={v => onUpdate(ativo.id, { valor_aquisicao: v })} />
+        </div>
+        <div className="text-center">
+          <p className="text-gray-500 text-xs mb-0.5">Valor Atual</p>
+          <InlineValue value={ativo.valor_atual} color="#4ade80" onSave={v => onUpdate(ativo.id, { valor_atual: v })} />
+        </div>
       </div>
-      <div className="flex gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+      <div className="flex gap-1 flex-shrink-0">
         <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
           <Pencil className="w-4 h-4" />
         </button>
