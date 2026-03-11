@@ -78,28 +78,41 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
     }
   };
 
-  const excluirLancamentos = async () => {
-    const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
-    const vinculados = financeiros.filter(f => f.ordem_servico_id === os.id);
-    for (const f of vinculados) await base44.entities.Financeiro.delete(f.id);
-  };
-
   const alterarStatus = async (novoStatus) => {
     setStatusOpen(false);
     const eraConcluido = os.status === "Concluído";
     const ficaConcluido = novoStatus === "Concluído";
     if (eraConcluido && !ficaConcluido) { setStatusPendente(novoStatus); setShowAviso(true); return; }
     await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
-    if (!eraConcluido && ficaConcluido) await gerarLancamentosFinanceiros(os);
+    if (!eraConcluido && ficaConcluido) {
+      await gerarLancamentosFinanceiros(os);
+      await reduzirEstoque(os.pecas);
+    }
     onRefresh?.();
   };
 
   const confirmarMudancaStatus = async () => {
-    await excluirLancamentos();
+    await excluirLancamentosOS(os.id);
+    await restaurarEstoque(os.pecas);
     await base44.entities.OrdemServico.update(os.id, { status: statusPendente });
     setShowAviso(false);
     setStatusPendente(null);
     onRefresh?.();
+  };
+
+  const confirmarExcluir = async () => {
+    if (os.status === "Concluído") {
+      await excluirLancamentosOS(os.id);
+      await restaurarEstoque(os.pecas);
+    }
+    await base44.entities.OrdemServico.delete(os.id);
+    setShowAvisoExcluir(false);
+    onRefresh?.();
+  };
+
+  const handleExcluir = () => {
+    if (os.status === "Concluído") { setShowAvisoExcluir(true); return; }
+    onDelete?.();
   };
 
   const imprimir = () => {
