@@ -206,13 +206,14 @@ export default function Layout({ children, currentPageName }) {
                 <Link
                   key={item.page}
                   to={createPageUrl(item.page)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex-shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex-shrink-0"
                   style={{
-                    background: "#062C9B",
-                    color: isActive ? "#fff" : "#6b7280"
+                    background: isActive ? "#062C9B" : "transparent",
+                    color: "#fff",
+                    border: isActive ? "none" : "1px solid #374151"
                   }}
                 >
-                  <Icon className="w-3.5 h-3.5" style={{color: isActive ? "#fff" : "#6b7280"}} />
+                  <Icon className="w-4 h-4" />
                   <span>{item.name}</span>
                 </Link>
               );
