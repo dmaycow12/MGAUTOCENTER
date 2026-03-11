@@ -333,7 +333,7 @@ export default function Dashboard() {
         const valorVenda = estoque.reduce((acc, e) => acc + Number(e.valor_venda || 0) * Number(e.quantidade || 0), 0);
         const totalAtivos = ativos.length;
         const valorCompraAtivos = ativos.reduce((acc, a) => acc + Number(a.valor_aquisicao || 0) * Number(a.quantidade || 1), 0);
-        const valorAtualAtivos = ativos.reduce((acc, a) => acc + Number(a.valor_atual || 0) * Number(a.quantidade || 1), 0);
+        const valorAtualAtivos = ativos.reduce((acc, a) => acc + Number(a.valor_atual || 0), 0);
         return (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
