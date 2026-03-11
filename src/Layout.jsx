@@ -226,7 +226,7 @@ export default function Layout({ children, currentPageName }) {
         </main>
 
         {/* Bottom Menu - Mobile */}
-        <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-center gap-2 px-3 py-3 rounded-full overflow-x-auto z-40" style={{background:"rgba(17,17,17,0.8)", backdropFilter:"blur(10px)", maxWidth:"calc(100% - 32px)"}}>
+        <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 px-2 py-2 rounded-2xl overflow-x-auto z-40" style={{background:"rgba(17,17,17,0.9)", backdropFilter:"blur(10px)", border:"1px solid rgba(34,34,34,0.8)", maxWidth:"calc(100% - 16px)"}}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPageName === item.page;
@@ -234,14 +234,14 @@ export default function Layout({ children, currentPageName }) {
               <Link
                 key={item.page}
                 to={createPageUrl(item.page)}
-                className="flex items-center justify-center p-2 rounded-lg transition-all flex-shrink-0"
+                className="flex items-center justify-center p-1.5 rounded-lg transition-all flex-shrink-0"
                 title={item.name}
                 style={isActive ? {
                   background: "rgba(204,0,0,0.12)",
                   color: RED,
                 } : {color:"#6b7280"}}
               >
-                <Icon className="w-5 h-5" style={isActive ? {color: RED} : {}} />
+                <Icon className="w-4 h-4" style={isActive ? {color: RED} : {}} />
               </Link>
             );
           })}
