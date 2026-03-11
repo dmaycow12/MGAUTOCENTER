@@ -482,7 +482,6 @@ function AtivoForm({ ativo, categorias, onClose, onSave }) {
     data_aquisicao: "",
     valor_aquisicao: 0,
     valor_atual: 0,
-    quantidade: 1,
     fotos: [],
     observacoes: "",
   });
@@ -568,13 +567,10 @@ function AtivoForm({ ativo, categorias, onClose, onSave }) {
             <F label="Data de Aquisição">
               <input type="date" value={form.data_aquisicao} onChange={e => setForm(f => ({ ...f, data_aquisicao: e.target.value }))} className="input-dark" />
             </F>
-            <F label="Quantidade">
-              <input type="number" value={form.quantidade} onChange={e => setForm(f => ({ ...f, quantidade: Number(e.target.value) || 1 }))} className="input-dark" min="1" />
-            </F>
             <F label="Valor de Compra (R$)">
               <input type="text" value={form.valor_aquisicao} onChange={e => setForm(f => ({ ...f, valor_aquisicao: Number(e.target.value.replace(/\D/g, '')) || 0 }))} className="input-dark" placeholder="0" />
             </F>
-            <F label="Valor Atual Unitário (R$)">
+            <F label="Valor Atual (R$)">
               <input type="text" value={form.valor_atual} onChange={e => setForm(f => ({ ...f, valor_atual: Number(e.target.value.replace(/\D/g, '')) || 0 }))} className="input-dark" placeholder="0" />
             </F>
           </div>
