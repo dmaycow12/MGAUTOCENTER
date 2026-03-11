@@ -20,13 +20,21 @@ function encontrarItemEstoque(estoqueList, peca) {
 }
 
 export async function reduzirEstoque(pecas) {
-  if (!pecas || pecas.length === 0) return;
+  console.log("[ESTOQUE] reduzirEstoque chamado com pecas:", JSON.stringify(pecas));
+  if (!pecas || pecas.length === 0) {
+    console.log("[ESTOQUE] Nenhuma peça para baixar.");
+    return;
+  }
   const estoqueList = await base44.entities.Estoque.list("-created_date", 1000);
+  console.log("[ESTOQUE] Total de itens no estoque:", estoqueList.length);
   for (const peca of pecas) {
-    if (!peca.quantidade) continue;
+    console.log("[ESTOQUE] Processando peça:", JSON.stringify(peca));
+    if (!peca.quantidade) { console.log("[ESTOQUE] Peça sem quantidade, pulando."); continue; }
     const item = encontrarItemEstoque(estoqueList, peca);
+    console.log("[ESTOQUE] Item encontrado no estoque:", item ? `${item.descricao} (${item.id}) qtd atual: ${item.quantidade}` : "NÃO ENCONTRADO");
     if (item) {
       const novaQtd = Math.max(0, (item.quantidade || 0) - (peca.quantidade || 0));
+      console.log("[ESTOQUE] Atualizando para qtd:", novaQtd);
       await base44.entities.Estoque.update(item.id, { quantidade: novaQtd });
     }
   }
