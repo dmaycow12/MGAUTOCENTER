@@ -196,8 +196,8 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Main Content */}
       <div className="w-full flex flex-col min-w-0">
-        {/* Top Bar - Desktop */}
-        <header className="hidden md:flex px-4 md:px-6 items-center justify-center h-[64px] flex-shrink-0 overflow-x-auto" style={{background:"#111", borderBottom:"1px solid #222"}}>
+        {/* Top Bar - Desktop Flutuante */}
+        <header className="hidden md:flex fixed top-4 left-1/2 -translate-x-1/2 px-4 md:px-6 items-center justify-center h-[64px] flex-shrink-0 overflow-x-auto rounded-2xl z-40" style={{background:"#111", border:"1px solid #222", backdropFilter:"blur(10px)", maxWidth:"calc(100% - 32px)"}}>
           <nav className="flex items-center gap-2 md:gap-4">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -221,12 +221,12 @@ export default function Layout({ children, currentPageName }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4 md:p-6 pb-24 md:pb-6" style={{background:"#000"}}>
+        <main className="flex-1 overflow-auto p-4 md:p-6 md:pt-24 pb-24 md:pb-6" style={{background:"#000"}}>
           {children}
         </main>
 
         {/* Bottom Menu - Mobile */}
-        <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 px-4 py-2 rounded-2xl overflow-x-auto" style={{background:"#111", border:"1px solid #222", maxWidth:"calc(100% - 32px)"}}>
+        <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-center gap-2 px-3 py-3 rounded-full overflow-x-auto z-40" style={{background:"rgba(17,17,17,0.8)", backdropFilter:"blur(10px)", maxWidth:"calc(100% - 32px)"}}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPageName === item.page;
