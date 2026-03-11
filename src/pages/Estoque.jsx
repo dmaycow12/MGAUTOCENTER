@@ -374,7 +374,65 @@ export default function Estoque() {
             <button onClick={() => setViewMode("cards")} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-5 h-5"/></button>
           </div>
         </div>
-        {/* Linha 2: ações */}
+
+        {/* Linha 2: filtros azuis flexíveis */}
+        <div className="flex gap-2">
+          {/* Filtro Marca/Categoria */}
+          <div ref={filtroDropdownRef} className="relative flex-1">
+            <button
+              onClick={() => setShowFiltroDropdown(!showFiltroDropdown)}
+              className="w-full flex items-center justify-between gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all"
+              style={{background: (filtroMarca || filtroCategoriaSel) ? "#0a4fd4" : "#062C9B", color: "#fff", border: "1px solid #1a5ce6"}}
+            >
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4" />
+                <span>{filtroCategoriaSel ? filtroCategoriaSel : filtroMarca ? `Marca: ${filtroMarca}` : "Filtrar por Marca / Categoria"}</span>
+              </div>
+              {(filtroMarca || filtroCategoriaSel) && (
+                <X className="w-4 h-4 opacity-70 hover:opacity-100" onClick={e => { e.stopPropagation(); setFiltroMarca(""); setFiltroCategoriaSel(""); }} />
+              )}
+            </button>
+            {showFiltroDropdown && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-700 rounded-xl z-20 shadow-xl p-3 space-y-3">
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Buscar por Marca</label>
+                  <input
+                    value={filtroMarca}
+                    onChange={e => { setFiltroMarca(e.target.value); setFiltroCategoriaSel(""); }}
+                    placeholder="Digite a marca..."
+                    className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Filtrar por Categoria</label>
+                  <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
+                    {Array.from(new Set(items.map(i => i.categoria).filter(Boolean))).sort().map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => { setFiltroCategoriaSel(filtroCategoriaSel === cat ? "" : cat); setFiltroMarca(""); setShowFiltroDropdown(false); }}
+                        className="px-3 py-1 rounded-full text-xs font-medium transition-all"
+                        style={{background: filtroCategoriaSel === cat ? "#062C9B" : "#1f2937", color: filtroCategoriaSel === cat ? "#fff" : "#9ca3af", border: "1px solid #374151"}}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Filtro Estoque Baixo */}
+          <button
+            onClick={() => setFiltro(filtro === "Estoque Baixo" ? "Todos" : "Estoque Baixo")}
+            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
+            style={{background: filtro === "Estoque Baixo" ? "#dc2626" : "#062C9B", color: "#fff", border: `1px solid ${filtro === "Estoque Baixo" ? "#ef4444" : "#1a5ce6"}`}}
+          >
+            <AlertTriangle className="w-4 h-4" /> Estoque Baixo {filtro === "Estoque Baixo" && `(${filtrados.length})`}
+          </button>
+        </div>
+
+        {/* Linha 3: ações */}
         <div className="flex gap-2">
           <button
             onClick={() => setShowReajuste(true)}
@@ -386,19 +444,13 @@ export default function Estoque() {
             <TrendingUp className="w-4 h-4" /> Reajustar
           </button>
           <button
-            onClick={() => { setShowImport(true); setImportResult(null); }}
+            onClick={exportarSelecionados}
             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
             style={{background: "#00ff00", color: "#fff"}}
             onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
             onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
           >
-            <Upload className="w-4 h-4" /> Importar
-          </button>
-          <button
-            onClick={() => setFiltro(filtro === "Estoque Baixo" ? "Todos" : "Estoque Baixo")}
-            className={`flex items-center gap-1 px-3 h-11 rounded-xl text-sm font-medium transition-all flex-shrink-0 ${filtro === "Estoque Baixo" ? "bg-red-500 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}
-          >
-            <AlertTriangle className="w-4 h-4" /> Baixo
+            <Download className="w-4 h-4" /> {selecionados.length > 0 ? `Exportar (${selecionados.length})` : "Exportar"}
           </button>
         </div>
 
