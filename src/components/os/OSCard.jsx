@@ -39,6 +39,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showAvisoStatus, setShowAvisoStatus] = useState(false);
   const [statusPendenteCard, setStatusPendenteCard] = useState(null);
+  const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
 
   const statusRef = useRef(null);
   const statusBtnRef = useRef(null);

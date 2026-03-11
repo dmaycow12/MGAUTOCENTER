@@ -38,6 +38,7 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showAviso, setShowAviso] = useState(false);
   const [statusPendente, setStatusPendente] = useState(null);
+  const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
 
   const statusRef = useRef(null);
   const statusBtnRef = useRef(null);
