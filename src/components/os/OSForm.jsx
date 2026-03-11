@@ -197,7 +197,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   const selecionarProduto = (i, item) => {
     const novos = form.pecas.map((p, idx) => {
       if (idx !== i) return p;
-      const updated = { ...p, codigo: item.codigo || "", descricao: item.descricao || "", valor_unitario: Number(item.valor_venda || 0) };
+      const updated = { ...p, estoque_id: item.id, codigo: item.codigo || "", descricao: item.descricao || "", valor_unitario: Number(item.valor_venda || 0) };
       updated.valor_total = Number(updated.quantidade || 1) * Number(updated.valor_unitario || 0);
       return updated;
     });
