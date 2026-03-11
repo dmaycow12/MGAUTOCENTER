@@ -711,24 +711,29 @@ export default function Estoque() {
 
 const CAMPOS_NUMERICOS = ["quantidade", "estoque_minimo", "valor_custo", "valor_venda"];
 
-function CellEdit({ item, field, type = "text", className = "", editandoCell, editandoValor, setEditandoValor, onIniciar, onSalvar, onCancelar }) {
+function CellEdit({ item, field, className = "", editandoCell, onIniciar, onSalvar, onCancelar }) {
   const isEditing = editandoCell?.id === item.id && editandoCell?.field === field;
+  const [localVal, setLocalVal] = React.useState("");
+
+  React.useEffect(() => {
+    if (isEditing) setLocalVal(editandoCell.valorInicial || "");
+  }, [isEditing]);
 
   if (isEditing) {
     return (
       <input
         autoFocus
         type="text"
-        value={editandoValor}
+        value={localVal}
         onChange={e => {
-          const val = CAMPOS_NUMERICOS.includes(field)
+          const v = CAMPOS_NUMERICOS.includes(field)
             ? e.target.value.replace(/[^0-9.]/g, "")
             : e.target.value.toUpperCase();
-          setEditandoValor(val);
+          setLocalVal(v);
         }}
-        onBlur={() => onSalvar(item)}
+        onBlur={() => onSalvar(item.id, field, localVal)}
         onKeyDown={e => {
-          if (e.key === "Enter") onSalvar(item);
+          if (e.key === "Enter") onSalvar(item.id, field, localVal);
           if (e.key === "Escape") onCancelar();
         }}
         className={`bg-gray-700 border border-green-500 text-white rounded px-2 py-0.5 text-sm focus:outline-none w-full ${className}`}
