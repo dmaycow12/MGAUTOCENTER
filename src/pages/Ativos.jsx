@@ -4,6 +4,10 @@ import { Plus, Search, Pencil, Trash2, Camera, X, Image, Check, LayoutGrid, List
 
 const DEFAULT_CATEGORIAS = ["COZINHA", "ELÉTRICO", "EQUIPAMENTO", "ESCRITÓRIO", "ESTOQUE", "EXTINTOR", "FERRAMENTA", "OUTROS", "PNEUMÁTICO", "SEGURANÇA", "VEÍCULO"];
 
+function normalizarCategoria(cat) {
+  return (cat || "").toUpperCase().trim().replace(/EUIPAMENTO/g, "EQUIPAMENTO").replace(/ESCRIT\u00d3RIO/g, "ESCRITÓRIO").replace(/SEGURAN\u00c7A/g, "SEGURANÇA").replace(/VE\u00cdCULO/g, "VEÍCULO").replace(/PNEUM\u00c1TICO/g, "PNEUMÁTICO").replace(/EL\u00c9TRICO/g, "ELÉTRICO");
+}
+
 function getCategorias() {
   try {
     const s = localStorage.getItem("ativos_categorias");
@@ -40,12 +44,22 @@ export default function Ativos() {
 
   const load = async () => {
     const data = await base44.entities.Ativo.list("-created_date", 500);
-    setAtivos(data);
-    // Sincroniza categorias dos ativos com a lista de categorias
-    const catsAtivos = [...new Set(data.map(a => a.categoria).filter(Boolean))];
+    // Normaliza categorias dos ativos
+    const dataNormalizada = data.map(a => ({
+      ...a,
+      categoria: normalizarCategoria(a.categoria)
+    }));
+    // Atualiza no banco se teve mudanças
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].categoria !== dataNormalizada[i].categoria) {
+        await base44.entities.Ativo.update(data[i].id, { categoria: dataNormalizada[i].categoria });
+      }
+    }
+    setAtivos(dataNormalizada);
+    const catsAtivos = [...new Set(dataNormalizada.map(a => a.categoria).filter(Boolean))];
     const catsSalvas = getCategorias();
-    const catsMerged = [...new Set([...catsSalvas, ...catsAtivos])];
-    if (catsMerged.length > catsSalvas.length) {
+    const catsMerged = [...new Set([...catsSalvas, ...catsAtivos])].sort();
+    if (JSON.stringify(catsMerged) !== JSON.stringify(catsSalvas)) {
       saveCategorias(catsMerged);
       setCategorias(catsMerged);
     }
@@ -64,17 +78,19 @@ export default function Ativos() {
   };
 
   const adicionarCategoria = () => {
-    const nova = novaCategoria.trim();
+    const nova = novaCategoria.trim().toUpperCase();
     if (!nova || categorias.includes(nova)) return;
-    atualizarCategorias([...categorias, nova]);
+    const novasCats = [...categorias, nova].sort();
+    atualizarCategorias(novasCats);
     setNovaCategoria("");
   };
 
   const renomearCategoria = async (catAntiga, novoNome) => {
-    const novo = novoNome.trim();
+    const novo = novoNome.trim().toUpperCase();
     if (!novo || novo === catAntiga) { setEditandoCategoria(null); return; }
-    // Atualiza localStorage
-    atualizarCategorias(categorias.map(c => c === catAntiga ? novo : c));
+    // Atualiza localStorage com ordem alfabética
+    const novasCats = categorias.map(c => c === catAntiga ? novo : c).sort();
+    atualizarCategorias(novasCats);
     if (filtroCategoria === catAntiga) setFiltroCategoria(novo);
     setEditandoCategoria(null);
     // Atualiza todos os ativos com a categoria antiga
