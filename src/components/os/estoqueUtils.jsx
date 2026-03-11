@@ -1,13 +1,30 @@
 import { base44 } from "@/api/base44Client";
 
+function encontrarItemEstoque(estoqueList, peca) {
+  // Primeiro tenta por ID exato (mais confiável)
+  if (peca.estoque_id) {
+    const porId = estoqueList.find(e => e.id === peca.estoque_id);
+    if (porId) return porId;
+  }
+  // Fallback: por código exato
+  if (peca.codigo) {
+    const porCodigo = estoqueList.find(e => e.codigo && e.codigo.trim() === peca.codigo.trim());
+    if (porCodigo) return porCodigo;
+  }
+  // Fallback: por descrição case-insensitive
+  if (peca.descricao) {
+    const desc = peca.descricao.toLowerCase().trim();
+    return estoqueList.find(e => e.descricao?.toLowerCase().trim() === desc);
+  }
+  return null;
+}
+
 export async function reduzirEstoque(pecas) {
   if (!pecas || pecas.length === 0) return;
   const estoqueList = await base44.entities.Estoque.list("-created_date", 1000);
   for (const peca of pecas) {
-    if (!peca.descricao || !peca.quantidade) continue;
-    const item = estoqueList.find(e =>
-      e.descricao?.toLowerCase() === peca.descricao?.toLowerCase()
-    );
+    if (!peca.quantidade) continue;
+    const item = encontrarItemEstoque(estoqueList, peca);
     if (item) {
       const novaQtd = Math.max(0, (item.quantidade || 0) - (peca.quantidade || 0));
       await base44.entities.Estoque.update(item.id, { quantidade: novaQtd });
@@ -19,10 +36,8 @@ export async function restaurarEstoque(pecas) {
   if (!pecas || pecas.length === 0) return;
   const estoqueList = await base44.entities.Estoque.list("-created_date", 1000);
   for (const peca of pecas) {
-    if (!peca.descricao || !peca.quantidade) continue;
-    const item = estoqueList.find(e =>
-      e.descricao?.toLowerCase() === peca.descricao?.toLowerCase()
-    );
+    if (!peca.quantidade) continue;
+    const item = encontrarItemEstoque(estoqueList, peca);
     if (item) {
       const novaQtd = (item.quantidade || 0) + (peca.quantidade || 0);
       await base44.entities.Estoque.update(item.id, { quantidade: novaQtd });
