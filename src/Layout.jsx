@@ -198,10 +198,16 @@ export default function Layout({ children, currentPageName }) {
         style={{background:"#111", borderRight:"1px solid #222"}}
       >
         {/* Logo */}
-        <div className="flex items-center justify-center px-4 h-[64px]" style={{borderBottom:"1px solid #222"}}>
+        <div className="flex items-center justify-between px-4 h-[64px]" style={{borderBottom:"1px solid #222"}}>
           <div className={`flex items-center justify-center transition-all duration-300 ${sidebarOpen ? "w-36 h-14" : "w-10 h-10"}`}>
             <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" alt="MG Autocenter" className="w-full h-full object-contain" />
           </div>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-1.5 text-gray-500 hover:text-white rounded-lg transition-all"
+          >
+            <ChevronRight className={`w-5 h-5 transition-transform ${sidebarOpen ? "rotate-180" : ""}`} />
+          </button>
         </div>
 
         {/* Nav */}
@@ -235,16 +241,7 @@ export default function Layout({ children, currentPageName }) {
           })}
         </nav>
 
-        {/* Toggle Sidebar */}
-        <div className="p-3" style={{borderTop:"1px solid #222"}}>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-gray-500 hover:text-white rounded-lg transition-all text-sm"
-            style={{":hover":{background:"#1a1a1a"}}}
-          >
-            <ChevronRight className={`w-4 h-4 transition-transform ${sidebarOpen ? "rotate-180" : ""}`} />
-          </button>
-        </div>
+
       </aside>
 
       {/* Mobile Sidebar Overlay */}
