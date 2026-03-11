@@ -431,7 +431,8 @@ export default function Estoque() {
             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
             style={{background: filtro === "Estoque Baixo" ? "#dc2626" : "#062C9B", color: "#fff", border: `1px solid ${filtro === "Estoque Baixo" ? "#ef4444" : "#1a5ce6"}`}}
           >
-            <AlertTriangle className="w-4 h-4" /> Estoque Baixo {filtro === "Estoque Baixo" && `(${filtrados.length})`}
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            <span>Estoque Baixo{filtro === "Estoque Baixo" ? ` (${filtrados.length})` : ` (${estoqueBaixo})`}</span>
           </button>
         </div>
 
