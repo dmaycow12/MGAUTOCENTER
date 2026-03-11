@@ -98,9 +98,14 @@ input[type="number"]::-webkit-inner-spin-button {
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    text-transform: uppercase;
   }
 
   body {
     @apply bg-background text-foreground;
+  }
+  
+  input, textarea, code, pre {
+    text-transform: none;
   }
 }
