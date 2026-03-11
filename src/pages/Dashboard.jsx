@@ -258,7 +258,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Status OS */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <SectionTitle>Status das OS</SectionTitle>
+          <SectionTitle>Vendas Status</SectionTitle>
           {statusData.length > 0 ? (
             <div className="flex items-center gap-4">
               <ResponsiveContainer width={160} height={160}>
@@ -290,7 +290,7 @@ export default function Dashboard() {
 
         {/* OS Pagas pelo Financeiro */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <SectionTitle>OS por Status Financeiro</SectionTitle>
+          <SectionTitle>Vendas Financeiro</SectionTitle>
           {osPagasData.length > 0 ? (
             <div className="flex items-center gap-4">
               <ResponsiveContainer width={160} height={160}>

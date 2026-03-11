@@ -108,7 +108,7 @@ export default function OrdemServico() {
           onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
           onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
         >
-          <Plus className="w-4 h-4" /> Nova OS
+          <Plus className="w-4 h-4" /> Nova Ordem de Venda
         </button>
 
         {/* Linha 2: filtro status — multi-select */}
@@ -191,13 +191,10 @@ export default function OrdemServico() {
       {/* Lista */}
       {filtradas.length === 0 ? (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
-          <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Plus className="w-6 h-6 text-orange-400" />
+          <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Plus className="w-6 h-6 text-green-400" />
           </div>
-          <p className="text-gray-400 mb-4">Nenhuma Ordem de Serviço encontrada</p>
-          <button onClick={() => setShowForm(true)} className="text-white px-4 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
-            Criar primeira OS
-          </button>
+          <p className="text-gray-400">Nenhuma Ordem de Venda encontrada</p>
         </div>
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
