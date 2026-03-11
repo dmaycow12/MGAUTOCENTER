@@ -1,40 +1,43 @@
 import { base44 } from "@/api/base44Client";
 
+function normalize(str) {
+  return String(str || "").toUpperCase().trim();
+}
+
 function encontrarItemEstoque(estoqueList, peca) {
-  // Primeiro tenta por ID exato (mais confiável)
+  // 1. Por estoque_id (mais confiável)
   if (peca.estoque_id) {
-    const porId = estoqueList.find(e => e.id === peca.estoque_id);
-    if (porId) return porId;
+    const item = estoqueList.find(e => e.id === peca.estoque_id);
+    if (item) return item;
   }
-  // Fallback: por código exato
+  // 2. Por código
   if (peca.codigo) {
-    const porCodigo = estoqueList.find(e => e.codigo && e.codigo.trim() === peca.codigo.trim());
-    if (porCodigo) return porCodigo;
+    const cod = normalize(peca.codigo);
+    const item = estoqueList.find(e => e.codigo && normalize(e.codigo) === cod);
+    if (item) return item;
   }
-  // Fallback: por descrição case-insensitive
+  // 3. Por descrição (exato, depois parcial)
   if (peca.descricao) {
-    const desc = peca.descricao.toLowerCase().trim();
-    return estoqueList.find(e => e.descricao?.toLowerCase().trim() === desc);
+    const desc = normalize(peca.descricao);
+    const exato = estoqueList.find(e => normalize(e.descricao) === desc);
+    if (exato) return exato;
+    const parcial = estoqueList.find(e =>
+      normalize(e.descricao).includes(desc) || desc.includes(normalize(e.descricao))
+    );
+    if (parcial) return parcial;
   }
   return null;
 }
 
 export async function reduzirEstoque(pecas) {
-  console.log("[ESTOQUE] reduzirEstoque chamado com pecas:", JSON.stringify(pecas));
-  if (!pecas || pecas.length === 0) {
-    console.log("[ESTOQUE] Nenhuma peça para baixar.");
-    return;
-  }
+  if (!pecas || pecas.length === 0) return;
   const estoqueList = await base44.entities.Estoque.list("-created_date", 1000);
-  console.log("[ESTOQUE] Total de itens no estoque:", estoqueList.length);
   for (const peca of pecas) {
-    console.log("[ESTOQUE] Processando peça:", JSON.stringify(peca));
-    if (!peca.quantidade) { console.log("[ESTOQUE] Peça sem quantidade, pulando."); continue; }
+    const qtd = Number(peca.quantidade);
+    if (!qtd || qtd <= 0) continue;
     const item = encontrarItemEstoque(estoqueList, peca);
-    console.log("[ESTOQUE] Item encontrado no estoque:", item ? `${item.descricao} (${item.id}) qtd atual: ${item.quantidade}` : "NÃO ENCONTRADO");
     if (item) {
-      const novaQtd = Math.max(0, (item.quantidade || 0) - (peca.quantidade || 0));
-      console.log("[ESTOQUE] Atualizando para qtd:", novaQtd);
+      const novaQtd = Math.max(0, Number(item.quantidade || 0) - qtd);
       await base44.entities.Estoque.update(item.id, { quantidade: novaQtd });
     }
   }
@@ -44,10 +47,11 @@ export async function restaurarEstoque(pecas) {
   if (!pecas || pecas.length === 0) return;
   const estoqueList = await base44.entities.Estoque.list("-created_date", 1000);
   for (const peca of pecas) {
-    if (!peca.quantidade) continue;
+    const qtd = Number(peca.quantidade);
+    if (!qtd || qtd <= 0) continue;
     const item = encontrarItemEstoque(estoqueList, peca);
     if (item) {
-      const novaQtd = Number(item.quantidade || 0) + Number(peca.quantidade || 0);
+      const novaQtd = Number(item.quantidade || 0) + qtd;
       await base44.entities.Estoque.update(item.id, { quantidade: novaQtd });
     }
   }
