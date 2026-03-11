@@ -325,6 +325,53 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Cards Produtos e Ativos */}
+      {(() => {
+        const totalItens = estoque.length;
+        const estoqueBaixo = estoque.filter(e => Number(e.quantidade || 0) <= Number(e.estoque_minimo || 0)).length;
+        const valorCusto = estoque.reduce((acc, e) => acc + Number(e.valor_custo || 0) * Number(e.quantidade || 0), 0);
+        const valorVenda = estoque.reduce((acc, e) => acc + Number(e.valor_venda || 0) * Number(e.quantidade || 0), 0);
+        const totalAtivos = ativos.length;
+        const valorCompraAtivos = ativos.reduce((acc, a) => acc + Number(a.valor_aquisicao || 0) * Number(a.quantidade || 1), 0);
+        const valorAtualAtivos = ativos.reduce((acc, a) => acc + Number(a.valor_atual || 0) * Number(a.quantidade || 1), 0);
+        return (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                <p className="text-gray-400 text-xs">Total de Itens</p>
+                <p className="text-white font-bold text-lg">{totalItens}</p>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                <p className="text-gray-400 text-xs">Estoque Baixo</p>
+                <p className="text-white font-bold text-lg">{estoqueBaixo}</p>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                <p className="text-gray-400 text-xs">Valor Total (Custo)</p>
+                <p className="text-white font-bold text-sm">{fmt(valorCusto)}</p>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                <p className="text-gray-400 text-xs">Valor Total (Venda)</p>
+                <p className="text-green-400 font-bold text-sm">{fmt(valorVenda)}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                <p className="text-gray-400 text-xs">Ativos</p>
+                <p className="text-green-400 font-bold text-lg">{totalAtivos}</p>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                <p className="text-gray-400 text-xs">Valor de Compra</p>
+                <p className="text-red-400 font-bold text-sm">{fmt(valorCompraAtivos)}</p>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                <p className="text-gray-400 text-xs">Valor Atual</p>
+                <p className="text-green-400 font-bold text-sm">{fmt(valorAtualAtivos)}</p>
+              </div>
+            </div>
+          </>
+        );
+      })()}
+
       {/* Gráfico Receita x Despesa x Lucro */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
