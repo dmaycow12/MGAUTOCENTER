@@ -71,12 +71,17 @@ export default function Ativos() {
     setNovaCategoria("");
   };
 
-  const renomearCategoria = (catAntiga, novoNome) => {
+  const renomearCategoria = async (catAntiga, novoNome) => {
     const novo = novoNome.trim();
-    if (!novo || categorias.includes(novo)) return;
+    if (!novo || novo === catAntiga) { setEditandoCategoria(null); return; }
+    // Atualiza localStorage
     atualizarCategorias(categorias.map(c => c === catAntiga ? novo : c));
     if (filtroCategoria === catAntiga) setFiltroCategoria(novo);
     setEditandoCategoria(null);
+    // Atualiza todos os ativos com a categoria antiga
+    const paraAtualizar = ativos.filter(a => a.categoria === catAntiga);
+    await Promise.all(paraAtualizar.map(a => base44.entities.Ativo.update(a.id, { categoria: novo })));
+    load();
   };
 
   const filtrados = ativos.filter(a => {
