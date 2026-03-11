@@ -39,6 +39,14 @@ export default function Ativos() {
   const load = async () => {
     const data = await base44.entities.Ativo.list("-created_date", 500);
     setAtivos(data);
+    // Sincroniza categorias dos ativos com a lista de categorias
+    const catsAtivos = [...new Set(data.map(a => a.categoria).filter(Boolean))];
+    const catsSalvas = loadCategorias();
+    const catsMerged = [...new Set([...catsSalvas, ...catsAtivos])];
+    if (catsMerged.length > catsSalvas.length) {
+      saveCategorias(catsMerged);
+      setCategorias(catsMerged);
+    }
     setLoading(false);
   };
 
