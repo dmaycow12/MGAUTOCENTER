@@ -102,17 +102,21 @@ export default function Dashboard() {
     return ref >= periodoRange.inicio && ref <= periodoRange.fim;
   });
 
+  const [ativos, setAtivos] = useState([]);
+
   useEffect(() => {
     Promise.all([
       base44.entities.OrdemServico.list("-created_date", 2000),
       base44.entities.Financeiro.list("-created_date", 2000),
       base44.entities.Cliente.list("-created_date", 2000),
       base44.entities.Estoque.list("-created_date", 2000),
-    ]).then(([o, f, c, e]) => {
+      base44.entities.Ativo.list("-created_date", 2000),
+    ]).then(([o, f, c, e, a]) => {
       setOrdens(o);
       setFinanceiro(f);
       setClientes(c);
       setEstoque(e);
+      setAtivos(a);
       setLoading(false);
     });
   }, []);
