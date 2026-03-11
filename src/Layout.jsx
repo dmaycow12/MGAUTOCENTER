@@ -236,9 +236,8 @@ export default function Layout({ children, currentPageName }) {
                 to={createPageUrl(item.page)}
                 className="flex items-center justify-center p-1.5 rounded-lg transition-all flex-shrink-0"
                 title={item.name}
-                style={{color: isActive ? "#fff" : "#6b7280"}}
               >
-                <Icon className="w-4 h-4" style={{color: isActive ? "#062C9B" : "#6b7280"}} />
+                <Icon className="w-4 h-4" style={{color: isActive ? RED : "#6b7280"}} />
               </Link>
             );
           })}
