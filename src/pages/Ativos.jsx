@@ -2,23 +2,23 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Pencil, Trash2, Camera, X, Image, Check, LayoutGrid, List, ChevronDown } from "lucide-react";
 
-const DEFAULT_CATEGORIAS = ["COZINHA", "ELÉTRICO", "EQUIPAMENTO", "ESCRITÓRIO", "ESTOQUE", "EXTINTOR", "FERRAMENTA", "OUTROS", "PNEUMÁTICO", "SEGURANÇA", "VEÍCULO"];
+const CATEGORIAS_AUTORIZADAS = ["COZINHA", "ELÉTRICO", "EQUIPAMENTO", "ESCRITÓRIO", "ESTOQUE", "EXTINTOR", "FERRAMENTA", "OUTROS", "PNEUMÁTICO", "SEGURANÇA", "VEÍCULO"];
 
 function normalizarCategoria(cat) {
-  return (cat || "").toUpperCase().trim().replace(/EUIPAMENTO/g, "EQUIPAMENTO").replace(/ESCRIT\u00d3RIO/g, "ESCRITÓRIO").replace(/SEGURAN\u00c7A/g, "SEGURANÇA").replace(/VE\u00cdCULO/g, "VEÍCULO").replace(/PNEUM\u00c1TICO/g, "PNEUMÁTICO").replace(/EL\u00c9TRICO/g, "ELÉTRICO");
+  const normalizado = (cat || "").toUpperCase().trim().replace(/EUIPAMENTO/g, "EQUIPAMENTO").replace(/ESCRIT\u00d3RIO/g, "ESCRITÓRIO").replace(/SEGURAN\u00c7A/g, "SEGURANÇA").replace(/VE\u00cdCULO/g, "VEÍCULO").replace(/PNEUM\u00c1TICO/g, "PNEUMÁTICO").replace(/EL\u00c9TRICO/g, "ELÉTRICO");
+  // Se a categoria normalizada não está na lista autorizada, retorna "OUTROS"
+  return CATEGORIAS_AUTORIZADAS.includes(normalizado) ? normalizado : "OUTROS";
 }
 
 function getCategorias() {
   try {
     const s = localStorage.getItem("ativos_categorias");
-    return s ? JSON.parse(s) : DEFAULT_CATEGORIAS;
-  } catch { return DEFAULT_CATEGORIAS; }
+    return CATEGORIAS_AUTORIZADAS; // Sempre retorna as 11 autorizadas
+  } catch { return CATEGORIAS_AUTORIZADAS; }
 }
 
-
-
 function saveCategorias(cats) {
-  localStorage.setItem("ativos_categorias", JSON.stringify(cats));
+  localStorage.setItem("ativos_categorias", JSON.stringify(CATEGORIAS_AUTORIZADAS));
 }
 
 function fmt(v) {
@@ -35,7 +35,7 @@ export default function Ativos() {
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
   const [detalhando, setDetalhando] = useState(null);
-  const [categorias, setCategorias] = useState(getCategorias());
+  const [categorias, setCategorias] = useState(CATEGORIAS_AUTORIZADAS);
   const [novaCategoria, setNovaCategoria] = useState("");
   const [editandoCategoria, setEditandoCategoria] = useState(null);
   const [editNomeCategoria, setEditNomeCategoria] = useState("");
@@ -56,13 +56,7 @@ export default function Ativos() {
       }
     }
     setAtivos(dataNormalizada);
-    const catsAtivos = [...new Set(dataNormalizada.map(a => a.categoria).filter(Boolean))];
-    const catsSalvas = getCategorias();
-    const catsMerged = [...new Set([...catsSalvas, ...catsAtivos])].sort();
-    if (JSON.stringify(catsMerged) !== JSON.stringify(catsSalvas)) {
-      saveCategorias(catsMerged);
-      setCategorias(catsMerged);
-    }
+    setCategorias(CATEGORIAS_AUTORIZADAS);
     setLoading(false);
   };
 
@@ -73,16 +67,14 @@ export default function Ativos() {
   };
 
   const atualizarCategorias = (cats) => {
-    setCategorias(cats);
-    saveCategorias(cats);
+    setCategorias(CATEGORIAS_AUTORIZADAS);
+    saveCategorias(CATEGORIAS_AUTORIZADAS);
   };
 
   const adicionarCategoria = () => {
-    const nova = novaCategoria.trim().toUpperCase();
-    if (!nova || categorias.includes(nova)) return;
-    const novasCats = [...categorias, nova].sort();
-    atualizarCategorias(novasCats);
+    // Não permite adicionar novas categorias - apenas as 11 autorizadas
     setNovaCategoria("");
+    alert("Use apenas as 11 categorias disponíveis");
   };
 
   const renomearCategoria = async (catAntiga, novoNome) => {
