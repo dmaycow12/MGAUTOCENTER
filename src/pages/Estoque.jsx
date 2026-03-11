@@ -525,7 +525,7 @@ export default function Estoque() {
       ) : (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm whitespace-nowrap">
               <thead>
                 <tr className="text-left text-xs text-gray-500 border-b border-gray-800 bg-gray-900/80">
                   <th className="px-4 py-3 w-8">
