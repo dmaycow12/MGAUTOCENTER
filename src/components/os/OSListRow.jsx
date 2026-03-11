@@ -256,7 +256,7 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
             <button onClick={imprimir} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white rounded-lg hover:bg-gray-700 transition-all" title="Imprimir">
               <Printer className="w-4 h-4" />
             </button>
-            <button onClick={() => onDelete?.()} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all" title="Excluir">
+            <button onClick={handleExcluir} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all" title="Excluir">
               <Trash2 className="w-4 h-4" />
             </button>
             <div className="relative">
