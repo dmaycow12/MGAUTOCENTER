@@ -197,8 +197,8 @@ export default function Layout({ children, currentPageName }) {
       {/* Main Content */}
       <div className="w-full flex flex-col min-w-0">
         {/* Top Bar - Desktop Flutuante */}
-        <header className="hidden lg:flex fixed top-4 left-1/2 -translate-x-1/2 px-4 items-center justify-center h-auto flex-shrink-0 z-40" style={{maxWidth:"calc(100% - 32px)"}}>
-          <nav className="flex items-center gap-2 flex-wrap justify-center">
+        <header className="hidden lg:flex fixed top-4 left-1/2 -translate-x-1/2 px-4 items-center justify-center z-40" style={{maxWidth:"calc(100% - 32px)"}}>
+          <nav className="flex items-center gap-1 justify-center" style={{flexWrap:"nowrap", minWidth:"0"}}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPageName === item.page;
@@ -206,13 +206,13 @@ export default function Layout({ children, currentPageName }) {
                 <Link
                   key={item.page}
                   to={createPageUrl(item.page)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex-shrink-0"
                   style={isActive ? {
                     background: "rgba(204,0,0,0.12)",
                     color: RED,
                   } : {color:"#6b7280"}}
                 >
-                  <Icon className="w-4 h-4" style={isActive ? {color: RED} : {}} />
+                  <Icon className="w-3.5 h-3.5" style={isActive ? {color: RED} : {}} />
                   <span>{item.name}</span>
                 </Link>
               );
