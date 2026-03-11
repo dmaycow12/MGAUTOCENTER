@@ -543,7 +543,7 @@ export default function Estoque() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center text-gray-500 hidden sm:table-cell">
-                      <CellEdit item={item} field="estoque_minimo" className="text-gray-500" editandoCell={editandoCell} editandoValor={editandoValor} setEditandoValor={setEditandoValor} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
+                      <CellEdit item={item} field="estoque_minimo" className="text-gray-500" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
                     </td>
                     <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">
                       <CellEdit item={item} field="valor_custo" className="text-gray-400" editandoCell={editandoCell} editandoValor={editandoValor} setEditandoValor={setEditandoValor} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
