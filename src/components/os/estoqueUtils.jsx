@@ -47,7 +47,7 @@ export async function restaurarEstoque(pecas) {
     if (!peca.quantidade) continue;
     const item = encontrarItemEstoque(estoqueList, peca);
     if (item) {
-      const novaQtd = (item.quantidade || 0) + (peca.quantidade || 0);
+      const novaQtd = Number(item.quantidade || 0) + Number(peca.quantidade || 0);
       await base44.entities.Estoque.update(item.id, { quantidade: novaQtd });
     }
   }
