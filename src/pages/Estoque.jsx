@@ -381,15 +381,18 @@ export default function Estoque() {
           <div ref={filtroDropdownRef} className="relative flex-1">
             <button
               onClick={() => setShowFiltroDropdown(!showFiltroDropdown)}
-              className="w-full flex items-center justify-between gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all"
+              className="w-full flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all relative"
               style={{background: (filtroMarca || filtroCategoriaSel) ? "#0a4fd4" : "#062C9B", color: "#fff", border: "1px solid #1a5ce6"}}
             >
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4" />
-                <span>{filtroCategoriaSel ? filtroCategoriaSel : filtroMarca ? `Marca: ${filtroMarca}` : "Filtrar por Marca / Categoria"}</span>
-              </div>
+              <Tag className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">{filtroCategoriaSel ? filtroCategoriaSel : filtroMarca ? `Marca: ${filtroMarca}` : "Marca / Categoria"}</span>
               {(filtroMarca || filtroCategoriaSel) && (
-                <X className="w-4 h-4 opacity-70 hover:opacity-100" onClick={e => { e.stopPropagation(); setFiltroMarca(""); setFiltroCategoriaSel(""); }} />
+                <span
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 transition-all"
+                  onClick={e => { e.stopPropagation(); setFiltroMarca(""); setFiltroCategoriaSel(""); }}
+                >
+                  <X className="w-3 h-3" />
+                </span>
               )}
             </button>
             {showFiltroDropdown && (
