@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Pencil, Trash2, Camera, X, Image, Check, LayoutGrid, List, ChevronDown } from "lucide-react";
 
-const DEFAULT_CATEGORIAS = ["Equipamento", "Ferramenta", "Veículo", "Imóvel", "Mobiliário", "Eletrônico", "Outro"];
+const DEFAULT_CATEGORIAS = ["COZINHA", "ELÉTRICO", "EQUIPAMENTO", "ESCRITÓRIO", "ESTOQUE", "EXTINTOR", "FERRAMENTA", "OUTROS", "PNEUMÁTICO", "SEGURANÇA", "VEÍCULO"];
 
 function getCategorias() {
   try {
@@ -102,9 +102,9 @@ export default function Ativos() {
       <button
         onClick={() => { setEditando(null); setShowForm(true); }}
         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
-        style={{ background: "#00ff00", color: "#fff" }}
-        onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
-        onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
+        style={{ background: "#22c55e", color: "#fff" }}
+        onMouseEnter={e => e.currentTarget.style.background = "#16a34a"}
+        onMouseLeave={e => e.currentTarget.style.background = "#22c55e"}
       >
         <Plus className="w-4 h-4" /> Novo Ativo
       </button>
@@ -476,10 +476,11 @@ function AtivoForm({ ativo, categorias, onClose, onSave }) {
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const [form, setForm] = useState(ativo ? { ...ativo } : {
     nome: "",
-    categoria: categorias[0] || "Equipamento",
+    categoria: categorias[0] || "COZINHA",
     data_aquisicao: "",
     valor_aquisicao: 0,
     valor_atual: 0,
+    quantidade: 1,
     fotos: [],
     observacoes: "",
   });
@@ -565,12 +566,14 @@ function AtivoForm({ ativo, categorias, onClose, onSave }) {
             <F label="Data de Aquisição">
               <input type="date" value={form.data_aquisicao} onChange={e => setForm(f => ({ ...f, data_aquisicao: e.target.value }))} className="input-dark" />
             </F>
-            <div />
-            <F label="Valor de Compra (R$)">
-              <input type="number" value={form.valor_aquisicao} onChange={e => setForm(f => ({ ...f, valor_aquisicao: Number(e.target.value) }))} className="input-dark" />
+            <F label="Quantidade">
+              <input type="number" value={form.quantidade} onChange={e => setForm(f => ({ ...f, quantidade: Number(e.target.value) || 1 }))} className="input-dark" min="1" />
             </F>
-            <F label="Valor Atual (R$)">
-              <input type="number" value={form.valor_atual} onChange={e => setForm(f => ({ ...f, valor_atual: Number(e.target.value) }))} className="input-dark" />
+            <F label="Valor de Compra (R$)">
+              <input type="text" value={form.valor_aquisicao} onChange={e => setForm(f => ({ ...f, valor_aquisicao: Number(e.target.value.replace(/\D/g, '')) || 0 }))} className="input-dark" placeholder="0" />
+            </F>
+            <F label="Valor Atual Unitário (R$)">
+              <input type="text" value={form.valor_atual} onChange={e => setForm(f => ({ ...f, valor_atual: Number(e.target.value.replace(/\D/g, '')) || 0 }))} className="input-dark" placeholder="0" />
             </F>
           </div>
 
@@ -581,14 +584,14 @@ function AtivoForm({ ativo, categorias, onClose, onSave }) {
         <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
           <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-all">Cancelar</button>
           <button onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50"
-            style={{ background: "#cc0000" }}
-            onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
-            onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
+            style={{ background: "#22c55e" }}
+            onMouseEnter={e => e.currentTarget.style.background = "#16a34a"}
+            onMouseLeave={e => e.currentTarget.style.background = "#22c55e"}>
             {saving ? "Salvando..." : ativo ? "Salvar" : "Cadastrar Ativo"}
           </button>
         </div>
       </div>
-      <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#f97316; }`}</style>
+      <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#f97316; } .input-dark[type="number"] { -moz-appearance: textfield; } .input-dark[type="number"]::-webkit-outer-spin-button, .input-dark[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }`}</style>
     </div>
   );
 }
