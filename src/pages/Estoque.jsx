@@ -554,9 +554,15 @@ export default function Estoque() {
                   <p className="text-white font-bold text-sm">{item.estoque_minimo}</p>
                 </div>
               </div>
-              <div className="px-4 py-3">
-                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Valor de Venda</p>
-                <CellEdit item={item} field="valor_venda" className="text-green-400 font-bold text-sm" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
+              <div className="grid grid-cols-2">
+                <div className="px-4 py-3 border-r border-gray-800">
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Custo</p>
+                  <p className="text-gray-300 font-bold text-sm">R$ {Number(item.valor_custo||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</p>
+                </div>
+                <div className="px-4 py-3">
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Venda</p>
+                  <p className="text-green-400 font-bold text-sm">R$ {Number(item.valor_venda||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</p>
+                </div>
               </div>
               {item.categoria && (
                 <div className="px-4 pb-3">
