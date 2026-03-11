@@ -354,7 +354,7 @@ export default function Dashboard() {
                 <p className="text-green-400 font-bold text-sm">{fmt(valorVenda)}</p>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
                 <p className="text-gray-400 text-xs">Ativos</p>
                 <p className="text-green-400 font-bold text-lg">{totalAtivos}</p>
@@ -366,6 +366,10 @@ export default function Dashboard() {
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
                 <p className="text-gray-400 text-xs">Valor Atual</p>
                 <p className="text-green-400 font-bold text-sm">{fmt(valorAtualAtivos)}</p>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                <p className="text-gray-400 text-xs">Custo Produtos + Ativos</p>
+                <p className="text-yellow-400 font-bold text-sm">{fmt(valorCusto + valorAtualAtivos)}</p>
               </div>
             </div>
           </>
