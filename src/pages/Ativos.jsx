@@ -11,12 +11,7 @@ function getCategorias() {
   } catch { return DEFAULT_CATEGORIAS; }
 }
 
-function loadCategorias() {
-  try {
-    const s = localStorage.getItem("ativos_categorias");
-    return s ? JSON.parse(s) : DEFAULT_CATEGORIAS;
-  } catch { return DEFAULT_CATEGORIAS; }
-}
+
 
 function saveCategorias(cats) {
   localStorage.setItem("ativos_categorias", JSON.stringify(cats));
@@ -48,7 +43,7 @@ export default function Ativos() {
     setAtivos(data);
     // Sincroniza categorias dos ativos com a lista de categorias
     const catsAtivos = [...new Set(data.map(a => a.categoria).filter(Boolean))];
-    const catsSalvas = loadCategorias();
+    const catsSalvas = getCategorias();
     const catsMerged = [...new Set([...catsSalvas, ...catsAtivos])];
     if (catsMerged.length > catsSalvas.length) {
       saveCategorias(catsMerged);
