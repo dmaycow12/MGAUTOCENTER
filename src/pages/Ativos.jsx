@@ -32,19 +32,7 @@ export default function Ativos() {
   const [editandoCategoria, setEditandoCategoria] = useState(null);
   const [editNomeCategoria, setEditNomeCategoria] = useState("");
   const [viewMode, setViewMode] = useState("cards"); // "cards" | "list"
-  const dropdownRef = useRef(null);
-
   useEffect(() => { load(); }, []);
-
-  useEffect(() => {
-    const handleClick = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
 
   const load = async () => {
     const data = await base44.entities.Ativo.list("-created_date", 500);
