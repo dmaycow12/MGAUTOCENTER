@@ -101,7 +101,7 @@ export default function Estoque() {
 
   const iniciarEdicaoCell = (item, field) => {
     setEditandoCell({ id: item.id, field });
-    setEditandoValor("");
+    setEditandoValor(item[field] !== undefined && item[field] !== null ? String(item[field]) : "");
   };
 
   const salvarEdicaoCell = async (item) => {
