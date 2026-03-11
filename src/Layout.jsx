@@ -208,8 +208,8 @@ export default function Layout({ children, currentPageName }) {
                   to={createPageUrl(item.page)}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex-shrink-0"
                   style={isActive ? {
-                    background: "rgba(6,44,155,0.12)",
-                    color: "#062C9B",
+                    background: "rgba(204,0,0,0.12)",
+                    color: RED,
                   } : {color:"#6b7280"}}
                 >
                   <Icon className="w-3.5 h-3.5" style={isActive ? {color: RED} : {}} />
