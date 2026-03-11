@@ -197,8 +197,8 @@ export default function Layout({ children, currentPageName }) {
       {/* Main Content */}
       <div className="w-full flex flex-col min-w-0">
         {/* Top Bar - Desktop Flutuante */}
-        <header className="hidden lg:flex fixed top-2 left-1/2 -translate-x-1/2 px-4 items-center justify-center z-40" style={{maxWidth:"calc(100% - 32px)"}}>
-          <nav className="flex items-center gap-0.5 justify-center" style={{flexWrap:"nowrap", minWidth:"0"}}>
+        <header className="hidden lg:flex fixed top-4 left-1/2 -translate-x-1/2 px-4 items-center justify-center z-40" style={{maxWidth:"calc(100% - 32px)"}}>
+          <nav className="flex items-center gap-1 justify-center" style={{flexWrap:"nowrap", minWidth:"0"}}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPageName === item.page;
@@ -206,7 +206,7 @@ export default function Layout({ children, currentPageName }) {
                 <Link
                   key={item.page}
                   to={createPageUrl(item.page)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex-shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex-shrink-0"
                   style={{
                     background: isActive ? "#062C9B" : "#1f2937",
                     color: "#fff",
@@ -222,7 +222,7 @@ export default function Layout({ children, currentPageName }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-2 md:p-4 md:pt-20 pb-24 md:pb-4" style={{background:"#000"}}>
+        <main className="flex-1 overflow-auto p-4 md:p-6 md:pt-24 pb-24 md:pb-6" style={{background:"#000"}}>
           {children}
         </main>
 
