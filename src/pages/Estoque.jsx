@@ -535,7 +535,7 @@ export default function Estoque() {
                       <CellEdit item={item} field="categoria" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
                     </td>
                     <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">
-                      <CellEdit item={item} field="marca" className="text-gray-400" editandoCell={editandoCell} editandoValor={editandoValor} setEditandoValor={setEditandoValor} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
+                      <CellEdit item={item} field="marca" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`font-bold ${item.quantidade <= item.estoque_minimo ? "text-red-400" : "text-white"}`}>
