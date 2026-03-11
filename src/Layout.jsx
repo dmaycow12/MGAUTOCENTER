@@ -15,7 +15,7 @@ import {
   ChevronRight,
   LogOut,
   Lock,
-  TrendingUp,
+  BarChart3,
   Box
 } from "lucide-react";
 
