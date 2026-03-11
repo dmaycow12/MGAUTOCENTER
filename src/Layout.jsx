@@ -208,9 +208,9 @@ export default function Layout({ children, currentPageName }) {
                   to={createPageUrl(item.page)}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex-shrink-0"
                   style={{
-                    background: isActive ? "#062C9B" : "transparent",
+                    background: isActive ? "#062C9B" : "#1f2937",
                     color: "#fff",
-                    border: isActive ? "none" : "1px solid #374151"
+                    border: "none"
                   }}
                 >
                   <Icon className="w-4 h-4" />
