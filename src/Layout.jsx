@@ -20,15 +20,15 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { name: "Dashboard", page: "Dashboard", icon: TrendingUp },
-  { name: "Vendas", page: "OrdemServico", icon: ClipboardList },
-  { name: "Cadastro", page: "Clientes", icon: Users },
-  { name: "Produtos", page: "Estoque", icon: Package },
-  { name: "Serviços", page: "Servicos", icon: Wrench },
-  { name: "Ativos", page: "Ativos", icon: Box },
-  { name: "Notas Fiscais", page: "NotasFiscais", icon: FileText },
-  { name: "Financeiro", page: "Financeiro", icon: DollarSign },
-  { name: "Configurações", page: "Configuracoes", icon: Settings },
+  { name: "DASHBOARD", page: "Dashboard", icon: TrendingUp },
+  { name: "VENDAS", page: "OrdemServico", icon: ClipboardList },
+  { name: "CADASTRO", page: "Clientes", icon: Users },
+  { name: "PRODUTOS", page: "Estoque", icon: Package },
+  { name: "SERVIÇOS", page: "Servicos", icon: Wrench },
+  { name: "ATIVOS", page: "Ativos", icon: Box },
+  { name: "NOTAS FISCAIS", page: "NotasFiscais", icon: FileText },
+  { name: "FINANCEIRO", page: "Financeiro", icon: DollarSign },
+  { name: "CONFIGURAÇÕES", page: "Configuracoes", icon: Settings },
 ];
 
 // Vermelho da logo
