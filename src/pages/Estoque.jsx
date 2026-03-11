@@ -532,33 +532,33 @@ export default function Estoque() {
                       <input type="checkbox" checked={selecionados.includes(item.id)} onChange={() => toggleSelecionado(item.id)} className="accent-red-500 cursor-pointer w-4 h-4" />
                     </td>
                     <td className="px-4 py-3 text-gray-400 font-mono text-xs">
-                      <CellEdit item={item} field="codigo" className="text-gray-400 font-mono text-xs" />
+                      <CellEdit item={item} field="codigo" className="text-gray-400 font-mono text-xs" editandoCell={editandoCell} editandoValor={editandoValor} setEditandoValor={setEditandoValor} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {item.quantidade <= item.estoque_minimo && <AlertTriangle className="w-3 h-3 text-red-400 flex-shrink-0" />}
-                        <CellEdit item={item} field="descricao" className="text-white font-medium" />
+                        <CellEdit item={item} field="descricao" className="text-white font-medium" editandoCell={editandoCell} editandoValor={editandoValor} setEditandoValor={setEditandoValor} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
                       </div>
                     </td>
                     <td className="px-4 py-3 text-gray-400 hidden md:table-cell">
-                      <CellEdit item={item} field="categoria" className="text-gray-400" />
+                      <CellEdit item={item} field="categoria" className="text-gray-400" editandoCell={editandoCell} editandoValor={editandoValor} setEditandoValor={setEditandoValor} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
                     </td>
                     <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">
-                      <CellEdit item={item} field="marca" className="text-gray-400" />
+                      <CellEdit item={item} field="marca" className="text-gray-400" editandoCell={editandoCell} editandoValor={editandoValor} setEditandoValor={setEditandoValor} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`font-bold ${item.quantidade <= item.estoque_minimo ? "text-red-400" : "text-white"}`}>
-                        <CellEdit item={item} field="quantidade" type="number" className={item.quantidade <= item.estoque_minimo ? "text-red-400 font-bold" : "text-white font-bold"} />
+                        <CellEdit item={item} field="quantidade" className={item.quantidade <= item.estoque_minimo ? "text-red-400 font-bold" : "text-white font-bold"} editandoCell={editandoCell} editandoValor={editandoValor} setEditandoValor={setEditandoValor} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center text-gray-500 hidden sm:table-cell">
-                      <CellEdit item={item} field="estoque_minimo" type="number" className="text-gray-500" />
+                      <CellEdit item={item} field="estoque_minimo" className="text-gray-500" editandoCell={editandoCell} editandoValor={editandoValor} setEditandoValor={setEditandoValor} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
                     </td>
                     <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">
-                      <CellEdit item={item} field="valor_custo" type="number" className="text-gray-400" />
+                      <CellEdit item={item} field="valor_custo" className="text-gray-400" editandoCell={editandoCell} editandoValor={editandoValor} setEditandoValor={setEditandoValor} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
                     </td>
                     <td className="px-4 py-3 text-right text-green-400 font-medium">
-                      <CellEdit item={item} field="valor_venda" type="number" className="text-green-400 font-medium" />
+                      <CellEdit item={item} field="valor_venda" className="text-green-400 font-medium" editandoCell={editandoCell} editandoValor={editandoValor} setEditandoValor={setEditandoValor} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
