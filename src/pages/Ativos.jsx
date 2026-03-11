@@ -263,7 +263,7 @@ export default function Ativos() {
               ativo={ativo}
               onEdit={() => { setEditando(ativo); setShowForm(true); }}
               onDelete={() => excluir(ativo.id)}
-              onDetalhe={() => setDetalhando(ativo)}
+              onUpdate={async (id, data) => { await base44.entities.Ativo.update(id, data); load(); }}
             />
           ))}
         </div>
@@ -275,7 +275,7 @@ export default function Ativos() {
               ativo={ativo}
               onEdit={() => { setEditando(ativo); setShowForm(true); }}
               onDelete={() => excluir(ativo.id)}
-              onDetalhe={() => setDetalhando(ativo)}
+              onUpdate={async (id, data) => { await base44.entities.Ativo.update(id, data); load(); }}
             />
           ))}
         </div>
