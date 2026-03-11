@@ -310,9 +310,10 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
       }
     }
 
-    // Gera lançamentos financeiros se mudou para Concluída
+    // Gera lançamentos financeiros e baixa estoque se mudou para Concluída
     if (eraAberta && ficouConcluida && savedId) {
       await gerarLancamentosFinanceiros({ ...form, id: savedId });
+      await reduzirEstoque(form.pecas);
     }
 
     setSaving(false);
