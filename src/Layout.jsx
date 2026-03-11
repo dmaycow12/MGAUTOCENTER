@@ -196,8 +196,8 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Main Content */}
       <div className="w-full flex flex-col min-w-0">
-        {/* Top Bar */}
-        <header className="px-4 md:px-6 flex items-center h-[64px] flex-shrink-0 overflow-x-auto" style={{background:"#111", borderBottom:"1px solid #222"}}>
+        {/* Top Bar - Desktop */}
+        <header className="hidden md:flex px-4 md:px-6 items-center justify-center h-[64px] flex-shrink-0 overflow-x-auto" style={{background:"#111", borderBottom:"1px solid #222"}}>
           <nav className="flex items-center gap-2 md:gap-4">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -210,10 +210,10 @@ export default function Layout({ children, currentPageName }) {
                   style={isActive ? {
                     background: "rgba(204,0,0,0.12)",
                     color: RED,
-                  } : {color:"#6b7280", _hover:{color:"#fff"}}}
+                  } : {color:"#6b7280"}}
                 >
                   <Icon className="w-5 h-5" style={isActive ? {color: RED} : {}} />
-                  <span className="hidden md:inline">{item.name}</span>
+                  <span>{item.name}</span>
                 </Link>
               );
             })}
@@ -221,9 +221,31 @@ export default function Layout({ children, currentPageName }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4 md:p-6" style={{background:"#000"}}>
+        <main className="flex-1 overflow-auto p-4 md:p-6 pb-24 md:pb-6" style={{background:"#000"}}>
           {children}
         </main>
+
+        {/* Bottom Menu - Mobile */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 flex items-center justify-around px-2 py-3 overflow-x-auto" style={{background:"#111", borderTop:"1px solid #222"}}>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = currentPageName === item.page;
+            return (
+              <Link
+                key={item.page}
+                to={createPageUrl(item.page)}
+                className="flex flex-col items-center gap-1 px-2 py-2 rounded-lg text-xs font-medium transition-all flex-shrink-0"
+                style={isActive ? {
+                  background: "rgba(204,0,0,0.12)",
+                  color: RED,
+                } : {color:"#6b7280"}}
+              >
+                <Icon className="w-5 h-5" style={isActive ? {color: RED} : {}} />
+                <span className="text-xs">{item.name.substring(0, 8)}</span>
+              </Link>
+            );
+          })}
+        </nav>
       </div>
     </div>
   );
