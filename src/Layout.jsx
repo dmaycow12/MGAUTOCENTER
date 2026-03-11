@@ -13,6 +13,7 @@ import {
   X,
   Wrench,
   ChevronRight,
+  ChevronDown,
   LogOut,
   Lock,
   TrendingUp,
