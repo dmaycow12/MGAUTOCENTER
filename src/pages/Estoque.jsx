@@ -145,7 +145,9 @@ export default function Estoque() {
       i.categoria?.toLowerCase().includes(search.toLowerCase()) ||
       i.marca?.toLowerCase().includes(search.toLowerCase());
     const matchFiltro = filtro === "Todos" || (filtro === "Estoque Baixo" && i.quantidade <= i.estoque_minimo);
-    return matchSearch && matchFiltro;
+    const matchMarca = !filtroMarca || i.marca?.toLowerCase().includes(filtroMarca.toLowerCase());
+    const matchCategoria = !filtroCategoriaSel || i.categoria === filtroCategoriaSel;
+    return matchSearch && matchFiltro && matchMarca && matchCategoria;
   });
 
   // Aplicar ordenação
