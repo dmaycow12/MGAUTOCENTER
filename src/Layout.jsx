@@ -295,35 +295,22 @@ export default function Layout({ children, currentPageName }) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="px-4 md:px-6 flex items-center justify-between h-[64px] flex-shrink-0" style={{background:"#111", borderBottom:"1px solid #222"}}>
-          <div className="flex items-center gap-3">
-            <button
-              className="md:hidden p-1.5 rounded-lg text-gray-400 hover:text-white"
-              onClick={() => setMobileOpen(true)}
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <div>
-              <h1 className="text-white font-semibold text-base md:text-lg">
-                {navItems.find((n) => n.page === currentPageName)?.name || currentPageName}
-              </h1>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 rounded-full px-3 py-1.5" style={{background:"#1a1a1a", border:"1px solid #333"}}>
-              <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{background: RED}}>
-                <span className="text-white text-xs font-bold">{nomeUsuario.charAt(0).toUpperCase()}</span>
-              </div>
-              <span className="text-gray-300 text-xs font-medium hidden sm:block max-w-[120px] truncate">{nomeUsuario}</span>
-            </div>
-            <button
-              onClick={handleLogout}
-              title="Sair do sistema"
-              className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 transition-all"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
+        <header className="px-4 md:px-6 flex items-center justify-center h-[64px] flex-shrink-0 relative" style={{background:"#111", borderBottom:"1px solid #222"}}>
+          <button
+            className="md:hidden absolute left-4 p-1.5 rounded-lg text-gray-400 hover:text-white"
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <h1 className="text-white font-semibold text-base md:text-lg">
+            {navItems.find((n) => n.page === currentPageName)?.name || currentPageName}
+          </h1>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="hidden md:block absolute right-4 p-1.5 rounded-lg text-gray-400 hover:text-white"
+          >
+            <ChevronRight className={`w-5 h-5 transition-transform ${sidebarOpen ? "rotate-180" : ""}`} />
+          </button>
         </header>
 
         {/* Page Content */}
