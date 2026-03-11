@@ -128,7 +128,7 @@ export default function Configuracoes() {
   if (loading) return <Loader />;
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-4xl mx-auto">
       {salvo && (
         <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-sm">
           <CheckCircle className="w-5 h-5" />

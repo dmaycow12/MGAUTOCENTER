@@ -226,7 +226,7 @@ export default function Layout({ children, currentPageName }) {
         </main>
 
         {/* Bottom Menu - Mobile */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 flex items-center justify-around px-2 py-3 overflow-x-auto" style={{background:"#111", borderTop:"1px solid #222"}}>
+        <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 px-4 py-2 rounded-2xl overflow-x-auto" style={{background:"#111", border:"1px solid #222", maxWidth:"calc(100% - 32px)"}}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPageName === item.page;
@@ -234,14 +234,14 @@ export default function Layout({ children, currentPageName }) {
               <Link
                 key={item.page}
                 to={createPageUrl(item.page)}
-                className="flex flex-col items-center gap-1 px-2 py-2 rounded-lg text-xs font-medium transition-all flex-shrink-0"
+                className="flex items-center justify-center p-2 rounded-lg transition-all flex-shrink-0"
+                title={item.name}
                 style={isActive ? {
                   background: "rgba(204,0,0,0.12)",
                   color: RED,
                 } : {color:"#6b7280"}}
               >
                 <Icon className="w-5 h-5" style={isActive ? {color: RED} : {}} />
-                <span className="text-xs">{item.name.substring(0, 8)}</span>
               </Link>
             );
           })}

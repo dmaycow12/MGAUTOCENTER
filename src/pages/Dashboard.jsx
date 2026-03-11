@@ -258,8 +258,9 @@ export default function Dashboard() {
       </div>
 
 
-      {/* Pizza linha */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Pizza linha - Centralizadas */}
+      <div className="flex flex-col items-center justify-center gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl">
         {/* Status OS */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
           <SectionTitle>Vendas Status</SectionTitle>
@@ -322,6 +323,7 @@ export default function Dashboard() {
           ) : (
             <p className="text-gray-500 text-sm text-center py-8">Sem dados</p>
           )}
+        </div>
         </div>
       </div>
 
