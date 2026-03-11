@@ -99,31 +99,19 @@ export default function Estoque() {
   };
 
   const iniciarEdicaoCell = (item, field) => {
-    setEditandoCell({ id: item.id, field });
-    setEditandoValor(item[field] !== undefined && item[field] !== null ? String(item[field]) : "");
+    setEditandoCell({ id: item.id, field, valorInicial: item[field] !== undefined && item[field] !== null ? String(item[field]) : "" });
   };
 
-  const salvarEdicaoCell = async (item) => {
-    if (!editandoCell) return;
-    const { id: itemId, field } = editandoCell;
-    let val = ["quantidade", "estoque_minimo", "valor_custo", "valor_venda"].includes(field)
-      ? Number(editandoValor)
-      : editandoValor;
-    if (field === "valor_venda") {
-      val = arredondarVendaParaCinco(val);
-    }
-    // Fecha edição imediatamente, antes do await, para evitar onBlur duplo
+  const salvarEdicaoCell = async (itemId, field, valor) => {
     setEditandoCell(null);
-    setEditandoValor("");
-    // Atualiza estado local otimisticamente (sem load() para não perder o foco/loop)
+    let val = CAMPOS_NUMERICOS.includes(field) ? Number(valor) : valor;
+    if (field === "valor_venda") val = arredondarVendaParaCinco(val);
     setItems(prev => prev.map(i => i.id === itemId ? { ...i, [field]: val } : i));
-    // Persiste no backend em background
     await base44.entities.Estoque.update(itemId, { [field]: val });
   };
 
   const cancelarEdicaoCell = () => {
     setEditandoCell(null);
-    setEditandoValor("");
   };
 
 
