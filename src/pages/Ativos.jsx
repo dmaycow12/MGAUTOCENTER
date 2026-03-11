@@ -242,7 +242,7 @@ export default function Ativos() {
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
           <p className="text-gray-400 text-xs">Valor de Compra</p>
-          <p className="text-orange-400 font-bold text-sm">{fmt(totalValorCompra)}</p>
+          <p className="text-red-400 font-bold text-sm">{fmt(totalValorCompra)}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
           <p className="text-gray-400 text-xs">Valor Atual</p>
@@ -318,12 +318,12 @@ function AtivoCard({ ativo, onEdit, onDelete, onDetalhe }) {
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-gray-500 text-xs">Valor Atual</p>
-            <span className="text-green-400 font-black text-base">{fmt(ativo.valor_atual)}</span>
+            <p className="text-gray-500 text-xs">Valor de Compra</p>
+            <span className="text-red-400 font-black text-base">{fmt(ativo.valor_aquisicao)}</span>
           </div>
           <div className="text-right">
-            <p className="text-gray-500 text-xs">Valor de Compra</p>
-            <span className="text-white font-black text-base">{fmt(ativo.valor_aquisicao)}</span>
+            <p className="text-gray-500 text-xs">Valor Atual</p>
+            <span className="text-green-400 font-black text-base">{fmt(ativo.valor_atual)}</span>
           </div>
         </div>
         <div className="flex gap-2 pt-1" onClick={e => e.stopPropagation()}>
@@ -351,8 +351,8 @@ function AtivoRow({ ativo, onEdit, onDelete, onDetalhe }) {
         <p className="text-gray-500 text-xs">{ativo.categoria || "—"} {ativo.data_aquisicao ? `• ${fmtData(ativo.data_aquisicao)}` : ""}</p>
       </div>
       <div className="text-right flex-shrink-0">
+        <p className="text-red-400 font-black text-sm">{fmt(ativo.valor_aquisicao)}</p>
         <p className="text-green-400 font-black text-sm">{fmt(ativo.valor_atual)}</p>
-        <p className="text-white font-black text-sm">{fmt(ativo.valor_aquisicao)}</p>
       </div>
       <div className="flex gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
         <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
