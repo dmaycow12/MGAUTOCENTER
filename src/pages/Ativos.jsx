@@ -319,11 +319,11 @@ function AtivoCard({ ativo, onEdit, onDelete, onDetalhe }) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-gray-500 text-xs">Valor Atual</p>
-            <span className="text-orange-400 font-bold text-sm">{fmt(ativo.valor_atual)}</span>
+            <span className="text-green-400 font-black text-base">{fmt(ativo.valor_atual)}</span>
           </div>
           <div className="text-right">
             <p className="text-gray-500 text-xs">Valor de Compra</p>
-            <span className="text-gray-300 text-sm">{fmt(ativo.valor_aquisicao)}</span>
+            <span className="text-white font-black text-base">{fmt(ativo.valor_aquisicao)}</span>
           </div>
         </div>
         <div className="flex gap-2 pt-1" onClick={e => e.stopPropagation()}>
@@ -351,8 +351,8 @@ function AtivoRow({ ativo, onEdit, onDelete, onDetalhe }) {
         <p className="text-gray-500 text-xs">{ativo.categoria || "—"} {ativo.data_aquisicao ? `• ${fmtData(ativo.data_aquisicao)}` : ""}</p>
       </div>
       <div className="text-right flex-shrink-0">
-        <p className="text-orange-400 font-bold text-sm">{fmt(ativo.valor_atual)}</p>
-        <p className="text-gray-500 text-xs">{fmt(ativo.valor_aquisicao)}</p>
+        <p className="text-green-400 font-black text-sm">{fmt(ativo.valor_atual)}</p>
+        <p className="text-white font-black text-sm">{fmt(ativo.valor_aquisicao)}</p>
       </div>
       <div className="flex gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
         <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
