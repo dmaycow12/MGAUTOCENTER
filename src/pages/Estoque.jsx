@@ -123,40 +123,7 @@ export default function Estoque() {
     setEditandoValor("");
   };
 
-  const CellEdit = ({ item, field, type = "text", className = "" }) => {
-    const isEditing = editandoCell?.id === item.id && editandoCell?.field === field;
-    if (isEditing) {
-      return (
-        <input
-          autoFocus
-          type={["quantidade", "estoque_minimo", "valor_custo", "valor_venda"].includes(field) ? "text" : type}
-          step={type === "number" ? "0.01" : undefined}
-          value={editandoValor}
-          onChange={e => {
-            const val = ["quantidade", "estoque_minimo", "valor_custo", "valor_venda"].includes(field) 
-              ? e.target.value.replace(/[^0-9.]/g, "") 
-              : e.target.value;
-            setEditandoValor(val);
-          }}
-          onBlur={() => salvarEdicaoCell(item)}
-          onKeyDown={e => { if (e.key === "Enter") salvarEdicaoCell(item); if (e.key === "Escape") cancelarEdicaoCell(); }}
-          className={`bg-gray-700 border border-green-500 text-white rounded px-2 py-0.5 text-sm focus:outline-none w-full ${className}`}
-        />
-      );
-    }
-    const display = ["valor_custo", "valor_venda"].includes(field)
-      ? `R$ ${Number(item[field] || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
-      : (item[field] || "—");
-    return (
-      <span
-        onClick={() => iniciarEdicaoCell(item, field)}
-        className={`cursor-pointer hover:underline hover:text-white transition-all rounded px-1 -mx-1 ${className}`}
-        title="Clique para editar"
-      >
-        {display}
-      </span>
-    );
-  };
+  // CellEdit movido para fora do componente (ver abaixo)
 
   const handleSort = (campo) => {
     if (ordenacao.campo === campo) {
