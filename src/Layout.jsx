@@ -250,13 +250,8 @@ export default function Layout({ children, currentPageName }) {
           <div className="fixed inset-0 bg-black/70" onClick={() => setMobileOpen(false)} />
           <aside className="relative w-64 flex flex-col" style={{background:"#111"}}>
             <div className="flex items-center justify-between px-4 py-5" style={{borderBottom:"1px solid #222"}}>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 flex items-center justify-center">
-                  <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" alt="MG Autocenter" className="w-full h-full object-contain" />
-                </div>
-                <div>
-                  <p className="font-bold text-sm uppercase" style={{color: RED}}>MG AUTOCENTER</p>
-                </div>
+              <div className="w-9 h-9 flex items-center justify-center">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" alt="MG Autocenter" className="w-full h-full object-contain" />
               </div>
               <button onClick={() => setMobileOpen(false)}>
                 <X className="w-5 h-5 text-gray-400" />
