@@ -24,6 +24,7 @@ export default function Ativos() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("Todas");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
   const [detalhando, setDetalhando] = useState(null);
