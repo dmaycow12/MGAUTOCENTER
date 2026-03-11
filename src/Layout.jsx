@@ -243,7 +243,6 @@ export default function Layout({ children, currentPageName }) {
             style={{":hover":{background:"#1a1a1a"}}}
           >
             <ChevronRight className={`w-4 h-4 transition-transform ${sidebarOpen ? "rotate-180" : ""}`} />
-            {sidebarOpen && <span>Recolher</span>}
           </button>
         </div>
       </aside>
