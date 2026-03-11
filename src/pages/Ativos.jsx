@@ -86,7 +86,7 @@ export default function Ativos() {
   });
 
   const totalValorAtual = filtrados.reduce((acc, a) => acc + Number(a.valor_atual || 0), 0);
-  const totalValorCompra = filtrados.reduce((acc, a) => acc + Number(a.valor_aquisicao || 0), 0);
+  const totalValorCompra = filtrados.reduce((acc, a) => acc + Number(a.valor_aquisicao || 0) * Number(a.quantidade || 1), 0);
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
