@@ -197,8 +197,8 @@ export default function Layout({ children, currentPageName }) {
       {/* Main Content */}
       <div className="w-full flex flex-col min-w-0">
         {/* Top Bar - Desktop Flutuante */}
-        <header className="hidden lg:flex fixed top-4 left-1/2 -translate-x-1/2 px-4 items-center justify-center z-40" style={{maxWidth:"calc(100% - 32px)"}}>
-          <nav className="flex items-center gap-1 justify-center" style={{flexWrap:"nowrap", minWidth:"0"}}>
+        <header className="hidden md:flex fixed top-4 left-1/2 -translate-x-1/2 px-2 items-center justify-center z-40" style={{maxWidth:"calc(100% - 16px)"}}>
+          <nav className="flex items-center gap-1 overflow-x-auto" style={{flexWrap:"nowrap", minWidth:"0", scrollbarWidth:"none"}}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPageName === item.page;
