@@ -112,11 +112,13 @@ export function gerarHTMLImpressao(os) {
     enderecoRow +
     "<div class='info-row'><div class='info-cell' style='flex:2'><div class='label'>Telefone</div><div class='value'>" + (os.cliente_telefone||"—") + "</div></div><div class='info-cell' style='flex:3'><div class='label'>E-mail</div><div class='value'>" + (os.cliente_email||"") + "</div></div></div>" +
     "</div></div>" +
-    "<div class='section'><div class='section-title'>Veiculo</div><div class='info-grid'><div class='info-row'>" +
-    "<div class='info-cell' style='flex:3'><div class='label'>Veiculo</div><div class='value'>" + (os.veiculo_modelo||"—") + "</div></div>" +
-    "<div class='info-cell' style='flex:2'><div class='label'>Placa</div><div class='value'>" + (os.veiculo_placa||"—") + "</div></div>" +
-    "<div class='info-cell' style='flex:2'><div class='label'>Quilometragem</div><div class='value'>" + (os.quilometragem ? Number(os.quilometragem).toLocaleString("pt-BR") + " km" : "—") + "</div></div>" +
-    "</div></div></div>" +
+    (os.veiculo_modelo || os.veiculo_placa ? 
+      "<div class='section'><div class='section-title'>Veiculo</div><div class='info-grid'><div class='info-row'>" +
+      "<div class='info-cell' style='flex:3'><div class='label'>Veiculo</div><div class='value'>" + (os.veiculo_modelo||"—") + "</div></div>" +
+      "<div class='info-cell' style='flex:2'><div class='label'>Placa</div><div class='value'>" + (os.veiculo_placa||"—") + "</div></div>" +
+      "<div class='info-cell' style='flex:2'><div class='label'>Quilometragem</div><div class='value'>" + (os.quilometragem ? Number(os.quilometragem).toLocaleString("pt-BR") + " km" : "—") + "</div></div>" +
+      "</div></div></div>"
+    : "") +
     tecSection +
     "<div class='section'><div class='section-title'>Servicos</div><table><thead><tr><th class='col-num'>Item</th><th>Nome</th><th class='col-val'>Vl. Unit.</th><th class='col-sub'>Subtotal</th></tr></thead><tbody>" +
     (servicosRows || "<tr><td colspan='4' style='text-align:center;color:#999'>Nenhum servico</td></tr>") +
