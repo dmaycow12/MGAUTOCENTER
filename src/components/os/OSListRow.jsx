@@ -267,7 +267,7 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
                 <MoreVertical className="w-4 h-4" />
               </button>
               {menuOpen && (
-                <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-50">
+                <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-[100]">
                   {menuItems.map((item, i) => {
                     const Icon = item.icon;
                     return (
