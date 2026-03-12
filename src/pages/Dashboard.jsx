@@ -295,7 +295,7 @@ export default function Dashboard() {
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
           <SectionTitle>Vendas Financeiro</SectionTitle>
           {osPagasData.length > 0 ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center gap-4">
               <ResponsiveContainer width={160} height={160}>
                 <PieChart>
                   <Pie data={osPagasData} cx="50%" cy="50%" innerRadius={45} outerRadius={72} dataKey="value">
@@ -306,13 +306,11 @@ export default function Dashboard() {
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="space-y-2 flex-1">
+              <div className="space-y-2">
                 {osPagasData.map((d, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ background: d.color }} />
-                      <span className="text-gray-400 text-sm">{d.name}</span>
-                    </div>
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: d.color }} />
+                    <span className="text-gray-400 text-sm">{d.name}</span>
                     <span className="text-white font-semibold text-sm">{d.value}</span>
                   </div>
                 ))}
