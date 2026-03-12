@@ -120,15 +120,15 @@ export function gerarHTMLImpressao(os) {
       "</div></div></div>"
     : "") +
     tecSection +
+    (pecasRows ?
+      "<div class='section'><div class='section-title'>Produtos</div><table><thead><tr><th class='col-num'>Item</th><th>Nome</th><th class='col-qty'>Qtd.</th><th class='col-val'>Vl. Unit.</th><th class='col-sub'>Subtotal</th></tr></thead><tbody>" +
+      pecasRows +
+      "<tr style='font-weight:bold;background:#f0f0f0'><td colspan='4' style='text-align:right'>TOTAL</td><td style='text-align:right'>R$ " + fmt(os.valor_pecas) + "</td></tr></tbody></table></div>"
+    : "") +
     (servicosRows ? 
       "<div class='section'><div class='section-title'>Servicos</div><table><thead><tr><th class='col-num'>Item</th><th>Nome</th><th class='col-val'>Vl. Unit.</th><th class='col-sub'>Subtotal</th></tr></thead><tbody>" +
       servicosRows +
       "<tr style='font-weight:bold;background:#f0f0f0'><td colspan='3' style='text-align:right'>TOTAL</td><td style='text-align:right'>R$ " + fmt(os.valor_servicos) + "</td></tr></tbody></table></div>"
-    : "") +
-    (pecasRows ?
-      "<div class='section'><div class='section-title'>Pecas / Produtos</div><table><thead><tr><th class='col-num'>Item</th><th>Nome</th><th class='col-qty'>Qtd.</th><th class='col-val'>Vl. Unit.</th><th class='col-sub'>Subtotal</th></tr></thead><tbody>" +
-      pecasRows +
-      "<tr style='font-weight:bold;background:#f0f0f0'><td colspan='4' style='text-align:right'>TOTAL</td><td style='text-align:right'>R$ " + fmt(os.valor_pecas) + "</td></tr></tbody></table></div>"
     : "") +
     "<div class='totals-row'>" +
     "<div class='total-item'><div class='tl'>Produtos</div><div class='tv'>R$ " + fmt(totalProdutos) + "</div></div>" +
