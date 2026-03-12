@@ -112,7 +112,7 @@ export default function Ativos() {
       <button
         onClick={() => { setEditando(null); setShowForm(true); }}
         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
-        style={{ background: "#00ff00", color: "#000" }}
+        style={{ background: "#00ff00", color: "#fff" }}
         onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
         onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
       >
@@ -123,15 +123,15 @@ export default function Ativos() {
       <div ref={dropdownRef} className="relative">
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="w-full flex items-center justify-between px-5 py-3 rounded-xl text-sm font-semibold transition-all border"
+          className="w-full flex items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold transition-all border relative"
           style={{
             background: "#062C9B",
             color: "#fff",
             borderColor: "#1a5ce6"
           }}
         >
-          <span>{filtroCategoria === "Todas" ? "Todas as Categorias" : filtroCategoria}</span>
-          <ChevronDown className={`w-4 h-4 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+          <span className="flex-1 text-center">{filtroCategoria === "Todas" ? "Todas as Categorias" : filtroCategoria}</span>
+          <ChevronDown className={`w-4 h-4 transition-transform absolute right-4 ${dropdownOpen ? "rotate-180" : ""}`} />
         </button>
 
         {dropdownOpen && (
