@@ -258,9 +258,9 @@ export default function Dashboard() {
       </div>
 
 
-      {/* Pizza linha - Centralizadas */}
-      <div className="flex flex-col items-center justify-center gap-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl">
+      {/* Pizza linha */}
+      <div className="w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
         {/* Status OS */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
           <SectionTitle>Vendas Status</SectionTitle>
