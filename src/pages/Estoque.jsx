@@ -381,7 +381,7 @@ export default function Estoque() {
           <div ref={filtroDropdownRef} className="relative flex-1">
             <button
               onClick={() => setShowFiltroDropdown(!showFiltroDropdown)}
-              className="w-full flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all relative"
+              className="w-full flex items-center justify-center text-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all relative"
               style={{background: (filtroMarca || filtroCategoriaSel) ? "#0a4fd4" : "#062C9B", color: "#fff", border: "1px solid #1a5ce6"}}
             >
               <Tag className="w-4 h-4 flex-shrink-0" />

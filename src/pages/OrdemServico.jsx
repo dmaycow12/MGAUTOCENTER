@@ -203,7 +203,7 @@ export default function OrdemServico() {
           ))}
         </div>
       ) : (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[700px]">
               <thead>
