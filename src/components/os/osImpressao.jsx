@@ -50,8 +50,8 @@ export function gerarHTMLImpressao(os) {
   const css = [
     "* { box-sizing: border-box; margin: 0; padding: 0; }",
     "body { font-family: Arial, sans-serif; font-size: 9pt; color: #111; background: #fff; padding-top: 56px; }",
-    ".page { max-width: 210mm; margin: 0 auto; padding: 10mm 12mm; }",
-    ".header { text-align: center; border-bottom: 2px solid #c00; padding-bottom: 10px; margin-bottom: 8px; }",
+    ".page { max-width: 210mm; margin: 0 auto; padding: 6mm 12mm; }",
+    ".header { text-align: center; padding-bottom: 6px; margin-bottom: 6px; }",
     ".company-info { font-size: 8.5pt; color: #444; line-height: 1.7; }",
     ".os-title { display: flex; justify-content: space-between; align-items: center; background: #222; color: #fff; padding: 5px 10px; margin: 8px 0; border-radius: 2px; }",
     ".os-title .title { font-size: 11pt; font-weight: bold; letter-spacing: 1px; }",
