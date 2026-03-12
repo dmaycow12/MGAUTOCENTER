@@ -48,7 +48,7 @@ function KpiCard({ icon: Icon, label, value, sub, color, trend }) {
 }
 
 function SectionTitle({ children }) {
-  return <h2 className="text-white font-semibold text-base mb-3 text-center">{children}</h2>;
+  return <h2 className="text-white font-semibold text-base mb-3">{children}</h2>;
 }
 
 export default function Dashboard() {
