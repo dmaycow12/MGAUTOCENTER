@@ -197,8 +197,8 @@ export default function Layout({ children, currentPageName }) {
       {/* Main Content */}
       <div className="w-full flex flex-col min-w-0">
         {/* Top Bar - Desktop Flutuante */}
-        <header className="hidden md:flex fixed top-4 left-1/2 -translate-x-1/2 px-2 items-center justify-center z-40" style={{maxWidth:"calc(100% - 16px)"}}>
-          <nav className="flex items-center gap-1 overflow-x-auto" style={{flexWrap:"nowrap", minWidth:"0", scrollbarWidth:"none"}}>
+        <header className="hidden md:flex fixed top-4 left-0 right-0 px-2 items-center justify-center z-40">
+          <nav className="flex items-center gap-1 w-full">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPageName === item.page;
@@ -206,15 +206,16 @@ export default function Layout({ children, currentPageName }) {
                 <Link
                   key={item.page}
                   to={createPageUrl(item.page)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex-shrink-0"
+                  className="flex items-center justify-center gap-1 py-2 rounded-lg font-bold transition-all min-w-0 flex-1"
                   style={{
                     background: isActive ? "#062C9B" : "#1f2937",
                     color: "#fff",
-                    border: "none"
+                    border: "none",
+                    fontSize: "clamp(8px, 1vw, 12px)"
                   }}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.name}</span>
+                  <Icon style={{width:"clamp(10px,1.2vw,16px)", height:"clamp(10px,1.2vw,16px)", flexShrink:0}} />
+                  <span className="truncate">{item.name}</span>
                 </Link>
               );
             })}
