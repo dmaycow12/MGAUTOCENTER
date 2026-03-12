@@ -55,40 +55,32 @@ export default function Servicos() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+      {/* Botão Novo */}
+      <button
+        onClick={abrirNovo}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
+        style={{background: "#00ff00", color: "#fff"}}
+        onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
+        onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
+      >
+        <Plus className="w-4 h-4" /> Novo Serviço
+      </button>
+
+      {/* Busca + Toggle */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
             placeholder="Buscar serviço..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-orange-500"
+            className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500"
           />
         </div>
-        <div className="flex gap-2">
-          <div className="flex bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-            <button onClick={() => setViewMode("list")} className="px-3 py-2 transition-all" style={{background:viewMode==="list"?"#062C9B":"transparent",color:viewMode==="list"?"#fff":"#6b7280"}}><List className="w-4 h-4"/></button>
-            <button onClick={() => setViewMode("cards")} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-4 h-4"/></button>
-          </div>
-          <button
-            onClick={abrirNovo}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-            style={{background: "#00ff00", color: "#fff"}}
-            onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
-            onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
-          >
-            <Plus className="w-4 h-4" /> Novo Serviço
-          </button>
-        </div>
-      </div>
-
-      {/* Resumo */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <p className="text-gray-400 text-xs mb-1">Total de Serviços</p>
-          <p className="text-white font-bold text-xl">{itens.length}</p>
+        <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+          <button onClick={() => setViewMode("list")} className="px-3 py-2 transition-all" style={{background:viewMode==="list"?"#062C9B":"transparent",color:viewMode==="list"?"#fff":"#6b7280"}}><List className="w-5 h-5"/></button>
+          <button onClick={() => setViewMode("cards")} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-5 h-5"/></button>
         </div>
       </div>
 
