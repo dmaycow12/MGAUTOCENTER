@@ -105,7 +105,7 @@ export function gerarHTMLImpressao(os) {
     "<div class='page'>" +
     "<div class='header'><img src='https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png' style='width:120px;height:120px;object-fit:contain;' alt='MG Autocenter'/>" +
     "<div class='company-info' style='margin-top:6px;'>Rua Rui Barbosa, 1355 — Santa Terezinha — Patos de Minas/MG<br>CNPJ: 54.043.647/0001-20 | (34) 99879-1260</div></div>" +
-    "<div class='os-title'><span class='title'>ORDEM DE SERVICO N " + (os.numero||"—") + "</span></div>" +
+    "<div class='os-title'><span class='title'>ORDEM DE VENDA N " + (os.numero||"—") + "</span></div>" +
     "<div class='periodo'><span>Entrada: <b>" + fmtD(os.data_entrada) + "</b></span><span>Status: <b>" + (os.status||"—") + "</b></span></div>" +
     "<div class='section'><div class='section-title'>Dados do Cliente</div><div class='info-grid'>" +
     "<div class='info-row'><div class='info-cell' style='flex:3'><div class='label'>Cliente</div><div class='value'>" + (os.cliente_nome||"—") + "</div></div><div class='info-cell' style='flex:2'><div class='label'>CPF/CNPJ</div><div class='value'>" + (os.cliente_cpf_cnpj||"") + "</div></div></div>" +
