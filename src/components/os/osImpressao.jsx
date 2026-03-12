@@ -103,10 +103,21 @@ export function gerarHTMLImpressao(os) {
     "</div>" +
     "<script>var z=1;function applyZoom(){document.querySelector('.page').style.transform='scale('+z+')';document.querySelector('.page').style.transformOrigin='top center';document.getElementById('zoom-label').textContent=Math.round(z*100)+'%';}function zoomIn(){if(z<2){z=Math.round((z+0.1)*10)/10;applyZoom();}}function zoomOut(){if(z>0.5){z=Math.round((z-0.1)*10)/10;applyZoom();}}<\/script>" +
     "<div class='page'>" +
-    "<div class='header'><img src='https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png' style='width:120px;height:120px;object-fit:contain;' alt='MG Autocenter'/>" +
-    "<div class='company-info' style='margin-top:6px;'>Rua Rui Barbosa, 1355 — Santa Terezinha — Patos de Minas/MG<br>CNPJ: 54.043.647/0001-20 | (34) 99879-1260</div></div>" +
-    "<div class='os-title'><span class='title'>ORDEM DE VENDA N " + (os.numero||"—") + "</span></div>" +
-    "<div class='periodo'><span>Entrada: <b>" + fmtD(os.data_entrada) + "</b></span><span>Status: <b>" + (os.status||"—") + "</b></span></div>" +
+    "<table style='width:100%;border-collapse:collapse;border:1px solid #bbb;margin-bottom:8px;'><tr>" +
+    "<td style='width:120px;border:1px solid #bbb;padding:6px;text-align:center;vertical-align:middle;'><img src='https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png' style='width:90px;height:90px;object-fit:contain;' alt='MG Autocenter'/></td>" +
+    "<td style='border:1px solid #bbb;padding:8px 12px;text-align:center;vertical-align:middle;'>" +
+    "<div style='font-size:11pt;font-weight:bold;color:#111;'>MG AUTOCENTER LTDA - 54.043.647/0001-20</div>" +
+    "<div style='font-size:9pt;color:#333;margin-top:4px;'>CONTATO: (34) 99879-1260</div>" +
+    "<div style='font-size:9pt;color:#333;'>RUA RUI BARBOSA, 1355, B. SANTA TEREZINHA</div>" +
+    "<div style='font-size:9pt;color:#333;'>PATOS DE MINAS – MG</div>" +
+    "</td>" +
+    "<td style='width:150px;border:1px solid #bbb;padding:8px;text-align:center;vertical-align:middle;'>" +
+    "<div style='font-size:11pt;font-weight:bold;color:#111;'>ORDEM DE VENDA</div>" +
+    "<div style='font-size:10pt;font-weight:bold;color:#111;margin-top:4px;'>N° " + (os.numero||"—") + "</div>" +
+    "<div style='font-size:8pt;color:#555;margin-top:2px;'>Data: " + fmtD(os.data_entrada) + "</div>" +
+    "<div style='font-size:8pt;color:#555;'>Status: " + (os.status||"—") + "</div>" +
+    "</td>" +
+    "</tr></table>" +
     "<div class='section'><div class='section-title'>Dados do Cliente</div><div class='info-grid'>" +
     "<div class='info-row'><div class='info-cell' style='flex:3'><div class='label'>Cliente</div><div class='value'>" + (os.cliente_nome||"—") + "</div></div><div class='info-cell' style='flex:2'><div class='label'>CPF/CNPJ</div><div class='value'>" + (os.cliente_cpf_cnpj||"") + "</div></div></div>" +
     enderecoRow +
