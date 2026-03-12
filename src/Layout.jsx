@@ -197,7 +197,7 @@ export default function Layout({ children, currentPageName }) {
       {/* Main Content */}
       <div className="w-full flex flex-col min-w-0">
         {/* Top Bar - Desktop Flutuante */}
-        <header className="hidden md:flex fixed top-4 left-0 right-0 px-2 items-center justify-center z-40">
+        <header className="hidden md:flex fixed top-4 left-0 right-0 px-6 items-center justify-center z-40">
           <nav className="flex items-center gap-1 w-full">
             {navItems.map((item) => {
               const Icon = item.icon;
