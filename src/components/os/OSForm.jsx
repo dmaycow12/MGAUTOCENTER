@@ -406,7 +406,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                     <input value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} className="input-dark" placeholder="AAA0000" />
                   </Field>
                   <Field label="KM">
-                   <input type="number" value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value === "" ? "" : Number(e.target.value) }))} className="input-dark" />
+                   <input type="text" value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" />
                   </Field>
                 </div>
               </Section>
@@ -477,11 +477,11 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                           </div>
                           <div className="w-12 flex-shrink-0">
                             <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
-                            <input type="number" value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" />
+                            <input type="text" value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" />
                           </div>
                           <div className="flex-1 min-w-[70px]">
                             <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                            <input type="number" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" />
+                            <input type="text" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" />
                           </div>
                           <div className="flex-1 min-w-[70px]">
                             <label className="text-xs text-gray-500 mb-1 block">Total</label>
@@ -493,7 +493,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                     ))}
                   </div>
                 )}
-                <button onClick={addPeca} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
+                <button onClick={addPeca} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all" style={{background:"#00ff00"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
                   <Plus className="w-4 h-4" /> Adicionar
                 </button>
               </Section>
@@ -520,11 +520,11 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                           </div>
                           <div className="w-12 flex-shrink-0">
                             <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
-                            <input type="number" value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" min="1" />
+                            <input type="text" value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" />
                           </div>
                           <div className="flex-1 min-w-[70px]">
                             <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                            <input type="number" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" />
+                            <input type="text" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" />
                           </div>
                           <div className="flex-1 min-w-[70px]">
                             <label className="text-xs text-gray-500 mb-1 block">Total</label>
@@ -536,7 +536,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                     ))}
                   </div>
                 )}
-                <button onClick={addServico} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
+                <button onClick={addServico} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all" style={{background:"#00ff00"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
                   <Plus className="w-4 h-4" /> Adicionar
                 </button>
               </Section>
@@ -545,7 +545,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
               <Section title="Pagamento">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <Field label="Desconto (R$)">
-                    <input type="number" value={form.desconto} onChange={e => onDesconto(e.target.value)} className="input-dark" />
+                    <input type="text" value={form.desconto} onChange={e => onDesconto(e.target.value)} className="input-dark" />
                   </Field>
                   <Field label="Forma de Pagamento">
                     <select value={form.forma_pagamento} onChange={e => setForm(f => ({ ...f, forma_pagamento: e.target.value }))} className="input-dark">
@@ -553,7 +553,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                     </select>
                   </Field>
                   <Field label="Nº de Parcelas">
-                    <input type="number" value={form.parcelas} onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} className="input-dark" min={1} />
+                    <input type="text" value={form.parcelas} onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} className="input-dark" />
                   </Field>
                   <Field label="Total Geral">
                     <div className="input-dark font-bold text-orange-400 pointer-events-none">
@@ -576,8 +576,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                         <span className="text-white text-sm font-medium">{p.numero}/{form.parcelas_detalhes.length}</span>
                         <input type="date" value={p.vencimento} onChange={e => updateParcela(i, "vencimento", e.target.value)}
                           className="input-dark text-xs py-1.5" />
-                        <input type="number" value={p.valor} onChange={e => updateParcela(i, "valor", e.target.value)}
-                          className="input-dark text-xs py-1.5" step="0.01" />
+                        <input type="text" value={p.valor} onChange={e => updateParcela(i, "valor", e.target.value)}
+                          className="input-dark text-xs py-1.5" />
                         <select value={p.forma_pagamento} onChange={e => updateParcela(i, "forma_pagamento", e.target.value)}
                           className="input-dark text-xs py-1.5">
                           {["A Combinar","Dinheiro","Cartão de Crédito","Cartão de Débito","PIX","Boleto","Transferência","A Prazo"].map(s => <option key={s}>{s}</option>)}
@@ -597,8 +597,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
 
         <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
           <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-all">Cancelar</button>
-          <button onClick={salvar} disabled={saving} className="px-4 py-2 text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-all disabled:opacity-50">
-            {saving ? "Salvando..." : os ? "Salvar Alterações" : "Criar OS"}
+          <button onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50" style={{background:"#00ff00"}} onMouseEnter={e=>!saving&&(e.currentTarget.style.background="#00dd00")} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
+            {saving ? "Salvando..." : "Salvar"}
           </button>
         </div>
       </div>
