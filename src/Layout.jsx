@@ -176,6 +176,16 @@ export default function Layout({ children, currentPageName }) {
 
   if (currentPageName === "OrcamentoPublico") return <>{children}</>;
 
+  // Restrição por tipo de usuário
+  if (autenticado && tipoUsuario === "contador" && !["NotasFiscais", "Configuracoes"].includes(currentPageName)) {
+    window.location.href = "/NotasFiscais";
+    return null;
+  }
+  if (autenticado && tipoUsuario === "vendedor" && !["OrdemServico", "Configuracoes"].includes(currentPageName)) {
+    window.location.href = "/OrdemServico";
+    return null;
+  }
+
   if (verificando) return (
     <div className="min-h-screen flex items-center justify-center" style={{background:"#000"}}>
       <div className="w-8 h-8 border-t-transparent rounded-full animate-spin" style={{border:`2px solid ${RED}`, borderTopColor:"transparent"}} />
