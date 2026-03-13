@@ -67,11 +67,11 @@ Deno.serve(async (req) => {
     let senhaOk = false;
     const isBcrypt = encontrado.senha?.startsWith("$2");
     if (isBcrypt) {
-      senhaOk = await bcrypt.compare(senha, encontrado.senha);
+      senhaOk = await bcrypt.compare(senhaInput, encontrado.senha);
     } else {
-      senhaOk = encontrado.senha === senha;
+      senhaOk = encontrado.senha === senhaInput;
       if (senhaOk) {
-        const hash = await bcrypt.hash(senha, 10);
+        const hash = await bcrypt.hash(senhaInput, 10);
         const { _id, ...rest } = encontrado;
         await base44.asServiceRole.entities.Configuracao.update(_id, {
           chave: "usuario_extra",
