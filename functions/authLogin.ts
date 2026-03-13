@@ -100,6 +100,7 @@ Deno.serve(async (req) => {
       nome: encontrado.nome,
       usuario: encontrado.usuario,
       tipo: encontrado.tipo || "gerente",
+      token, // fallback para ambientes que bloqueiam cookies (ex: iframe)
     }), {
       status: 200,
       headers: {
