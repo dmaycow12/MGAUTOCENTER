@@ -120,13 +120,19 @@ export default function Configuracoes() {
   };
 
   const excluirUsuario = async (usuario) => {
-    // Contar gerentes totais: admin fixo + gerentes extras
-    const gerentesExtras = usuarios.filter(u => u.tipo === "gerente" || u.tipo === "usuario" || !u.tipo);
     const isGerente = usuario.tipo === "gerente" || usuario.tipo === "usuario" || !usuario.tipo;
-    // admin fixo sempre conta como 1 gerente
-    const totalGerentes = 1 + gerentesExtras.length;
-    if (isGerente && totalGerentes <= 1) {
-      setAvisoUltimoGerente(true);
+    if (isGerente) {
+      // Contar todos os gerentes: admin (fixo) + gerentes extras
+      const gerentesExtras = usuarios.filter(u => u.tipo === "gerente" || u.tipo === "usuario" || !u.tipo);
+      const totalGerentes = 1 + gerentesExtras.length; // 1 = admin fixo
+      if (totalGerentes <= 1) {
+        setAvisoUltimoGerente(true);
+        return;
+      }
+    }
+    if (usuario.usuario === "admin") {
+      // Admin fixo não pode ser removido do banco, apenas aviso
+      setAvisoUltimoGerente(false);
       return;
     }
     if (!confirm(`Excluir o usuário "${usuario.usuario}"?`)) return;
