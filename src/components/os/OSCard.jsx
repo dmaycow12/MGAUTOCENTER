@@ -221,10 +221,10 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
               <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </button>
             {statusOpen && (
-              <div ref={statusRef} className="absolute left-0 top-full mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-40 p-2 z-50 space-y-1.5">
+              <div ref={statusRef} className="absolute left-0 top-full mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-40 p-1 z-50 space-y-1">
                 {STATUS_OPTIONS.map(s => (
                   <button key={s} onClick={() => alterarStatus(s)}
-                    className="w-full text-left px-3 py-2.5 text-xs font-semibold rounded-lg transition-all hover:opacity-90"
+                    className="w-full text-left px-2.5 py-1 text-xs font-semibold rounded-md transition-all hover:opacity-90"
                     style={{ background: STATUS_STYLE[s].style.background, color: "#fff" }}>
                     {s}
                   </button>
