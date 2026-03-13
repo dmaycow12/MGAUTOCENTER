@@ -48,37 +48,22 @@ function LoginPage() {
 
     const usuarioNorm = usuario.trim().toLowerCase();
 
-    // Admin: verifica primeiro local, depois banco
-    if (usuarioNorm === "admin") {
-      // Tenta buscar senha customizada no banco
-      let senhaValida = "admin123";
-      try {
-        const configs = await base44.entities.Configuracao.list("-created_date", 200);
-        const senhaDb = configs.find(c => c.chave === "admin_senha")?.valor;
-        if (senhaDb) senhaValida = senhaDb;
-      } catch (_) { /* usa senha padrão */ }
-
-      if (senha === senhaValida) {
-        sessionStorage.setItem("oficina_auth", JSON.stringify({ usuario: "admin", nome: "Administrador", role: "admin" }));
-        window.location.reload();
-        return;
-      }
-      setErro("Senha incorreta.");
-      setCarregando(false);
-      return;
-    }
-
-    // Outros usuários: busca no banco
     try {
       const configs = await base44.entities.Configuracao.list("-created_date", 200);
-      const usuariosExtras = configs
+      const todosUsuarios = configs
         .filter(c => c.chave === "usuario_extra")
         .map(c => { try { return JSON.parse(c.valor); } catch { return null; } })
         .filter(Boolean);
 
-      const encontrado = usuariosExtras.find(u => u.usuario === usuarioNorm && u.senha === senha);
+      const encontrado = todosUsuarios.find(u => u.usuario?.toLowerCase() === usuarioNorm && u.senha === senha);
       if (encontrado) {
-        sessionStorage.setItem("oficina_auth", JSON.stringify({ usuario: encontrado.usuario, nome: encontrado.nome, role: "user", tipo: encontrado.tipo || "usuario" }));
+        const isGerente = !encontrado.tipo || encontrado.tipo === "gerente";
+        sessionStorage.setItem("oficina_auth", JSON.stringify({
+          usuario: encontrado.usuario,
+          nome: encontrado.nome,
+          role: isGerente ? "admin" : "user",
+          tipo: encontrado.tipo || "gerente"
+        }));
         window.location.reload();
         return;
       }
