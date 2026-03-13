@@ -137,6 +137,14 @@ export default function Layout({ children, currentPageName }) {
   const [tipoUsuario, setTipoUsuario] = useState("gerente");
 
   useEffect(() => {
+    // Redireciona para Dashboard se estiver na raiz
+    if (currentPageName === "Layout" || currentPageName === "") {
+      window.location.href = "/Dashboard";
+      return;
+    }
+  }, [currentPageName]);
+
+  useEffect(() => {
     // Verifica token — via cookie httpOnly ou fallback sessionStorage (para iframes)
     const tokenFallback = sessionStorage.getItem("oficina_token");
     base44.functions.invoke("authVerify", tokenFallback ? { token: tokenFallback } : {})
