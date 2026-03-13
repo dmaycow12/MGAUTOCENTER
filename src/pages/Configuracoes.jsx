@@ -48,13 +48,29 @@ export default function Configuracoes() {
     const { dados } = editandoUsuario;
     if (!dados.nome || !dados.usuario) return alert("Preencha nome e usuário.");
     setSalvandoUsuario(true);
-    // Remove o registro antigo e cria um novo
-    const registros = await base44.entities.Configuracao.filter({ chave: "usuario_extra" }, "-created_date", 50);
-    const reg = registros.find(r => { try { return JSON.parse(r.valor).usuario === editandoUsuario.usuarioOriginal; } catch { return false; } });
-    const novoValor = { nome: dados.nome, usuario: dados.usuario, senha: dados.senha, tipo: dados.tipo };
-    if (reg) {
-      await base44.entities.Configuracao.update(reg.id, { chave: "usuario_extra", valor: JSON.stringify(novoValor) });
+
+    if (editandoUsuario.isAdmin) {
+      // Salvar senha do admin se preenchida
+      if (dados.senha) {
+        const configs = await base44.entities.Configuracao.list("-created_date", 200);
+        const existente = configs.find(c => c.chave === "admin_senha");
+        if (existente) {
+          await base44.entities.Configuracao.update(existente.id, { chave: "admin_senha", valor: dados.senha });
+        } else {
+          await base44.entities.Configuracao.create({ chave: "admin_senha", valor: dados.senha, descricao: "Senha do admin" });
+        }
+      }
+    } else {
+      const registros = await base44.entities.Configuracao.filter({ chave: "usuario_extra" }, "-created_date", 50);
+      const reg = registros.find(r => { try { return JSON.parse(r.valor).usuario === editandoUsuario.usuarioOriginal; } catch { return false; } });
+      const novoValor = { nome: dados.nome, usuario: dados.usuario, senha: dados.senha, tipo: dados.tipo };
+      if (reg) {
+        await base44.entities.Configuracao.update(reg.id, { chave: "usuario_extra", valor: JSON.stringify(novoValor) });
+      } else {
+        await base44.entities.Configuracao.create({ chave: "usuario_extra", valor: JSON.stringify(novoValor), descricao: `Usuário extra: ${dados.nome}` });
+      }
     }
+
     setEditandoUsuario(null);
     setSalvandoUsuario(false);
     loadAll();
