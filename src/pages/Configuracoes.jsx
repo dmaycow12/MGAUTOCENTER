@@ -29,9 +29,13 @@ export default function Configuracoes() {
   const loadAll = async () => {
     const configs = await base44.entities.Configuracao.list("-created_date", 200);
 
-    const c = { ...config };
+    const c = {
+      nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
+      spedy_api_key: "", spedy_ambiente: "homologacao",
+      logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
+    };
     configs.forEach(item => {
-      if (c.hasOwnProperty(item.chave)) c[item.chave] = item.valor;
+      if (Object.prototype.hasOwnProperty.call(c, item.chave)) c[item.chave] = item.valor;
     });
     setConfig(c);
 
