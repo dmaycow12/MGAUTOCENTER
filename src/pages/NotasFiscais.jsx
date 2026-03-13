@@ -673,7 +673,7 @@ export default function NotasFiscais() {
         <div className="flex gap-2">
           {["Todos", "NFe", "NFSe", "NFCe"].map(m => (
             <button key={m} onClick={() => setFiltroModeloNF(m)}
-              className={`flex-1 h-9 rounded-xl text-xs font-medium transition-all ${filtroModeloNF === m ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroModeloNF === m ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {m === "Todos" ? "Tudo" : m}
             </button>
           ))}
@@ -756,9 +756,9 @@ export default function NotasFiscais() {
             <input type="text" placeholder="Buscar nota..." value={search} onChange={e => setSearch(e.target.value)}
               className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500" />
           </div>
-          <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
-            <button onClick={() => setViewMode("table")} className="px-3 py-2 transition-all" style={{background:viewMode==="table"?"#062C9B":"transparent",color:viewMode==="table"?"#fff":"#6b7280"}}><List className="w-5 h-5"/></button>
-            <button onClick={() => setViewMode("cards")} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-5 h-5"/></button>
+          <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden h-11">
+            <button onClick={() => setViewMode("table")} className="flex-1 flex items-center justify-center transition-all" style={{background:viewMode==="table"?"#062C9B":"transparent",color:viewMode==="table"?"#fff":"#6b7280"}}><List className="w-5 h-5"/></button>
+            <button onClick={() => setViewMode("cards")} className="flex-1 flex items-center justify-center transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-5 h-5"/></button>
           </div>
         </div>
       </div>
