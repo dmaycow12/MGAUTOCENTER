@@ -51,6 +51,9 @@ export default function NotasFiscais() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("Todos"); // Todos | Entrada | Saída
+  const [filtroModeloNF, setFiltroModeloNF] = useState("Todos"); // Todos | NFe | NFSe | NFCe
+  const [gerandoZip, setGerandoZip] = useState(false);
+  const [gerandoSintegra, setGerandoSintegra] = useState(false);
 
   // Período — Mês atual por padrão
   const hoje = new Date();
