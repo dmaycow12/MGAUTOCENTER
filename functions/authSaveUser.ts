@@ -2,9 +2,15 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 import bcrypt from 'npm:bcryptjs@2.4.3';
 import { jwtVerify } from 'npm:jose@5.9.6';
 
+function getTokenFromCookie(req) {
+  const cookieHeader = req.headers.get("cookie") || "";
+  const match = cookieHeader.split(";").find(c => c.trim().startsWith("oficina_token="));
+  return match ? match.split("=").slice(1).join("=").trim() : null;
+}
+
 async function verificarAdmin(req) {
-  const authHeader = req.headers.get("Authorization") || "";
-  const token = authHeader.replace("Bearer ", "").trim();
+  // Lê do cookie httpOnly (preferido) ou header Authorization (fallback)
+  const token = getTokenFromCookie(req) || (req.headers.get("Authorization") || "").replace("Bearer ", "").trim();
   if (!token) return null;
   try {
     const secret = new TextEncoder().encode(Deno.env.get("AUTH_SECRET"));
