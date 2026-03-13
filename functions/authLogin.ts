@@ -52,7 +52,11 @@ Deno.serve(async (req) => {
       .map(c => { try { return { ...JSON.parse(c.valor), _id: c.id }; } catch { return null; } })
       .filter(Boolean);
 
+    console.log(`[LOGIN] Procurando usuário: ${usuarioNorm}, Total de usuários: ${usuarios.length}`);
+    usuarios.forEach(u => console.log(`  - ${u.usuario?.toLowerCase()}`));
+
     const encontrado = usuarios.find(u => u.usuario?.toLowerCase() === usuarioNorm);
+    console.log(`[LOGIN] Usuário encontrado: ${encontrado ? "SIM" : "NÃO"}`);
     if (!encontrado) {
       return Response.json({ erro: "Usuário ou senha incorretos." }, { status: 401 });
     }
