@@ -215,8 +215,8 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
           <div className="relative">
             <button ref={statusBtnRef} onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
-              className="flex items-center gap-2 text-sm px-4 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-all"
-              style={style.style}>
+              className="flex items-center gap-2 text-sm px-4 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-all whitespace-nowrap"
+              style={{...style.style, minWidth: "120px", textAlign: "center", justifyContent: "center"}}>
               {os.status || "—"}
               <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform ${statusOpen ? 'rotate-180' : ''}`} />
             </button>
