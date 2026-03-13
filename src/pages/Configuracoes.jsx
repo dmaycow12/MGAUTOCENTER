@@ -274,15 +274,15 @@ export default function Configuracoes() {
           })}
         </div>
 
-        <div className="border-t border-gray-800 pt-4">
-          <p className="text-gray-400 text-sm font-medium mb-3 flex items-center gap-2"><Plus className="w-4 h-4" /> Criar Novo Usuário</p>
+        <div className="border-t border-gray-800 pt-5">
+          <p className="text-white text-sm font-semibold mb-4 flex items-center gap-2"><Plus className="w-4 h-4 text-green-400" /> Criar Novo Usuário</p>
           {feedbackUsuario && (
-            <div className={`mb-3 text-sm px-3 py-2 rounded-lg flex items-center gap-2 ${feedbackUsuario.tipo === "sucesso" ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
+            <div className={`mb-4 text-sm px-3 py-2 rounded-lg flex items-center gap-2 ${feedbackUsuario.tipo === "sucesso" ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
               {feedbackUsuario.tipo === "sucesso" ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
               {feedbackUsuario.msg}
             </div>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <F label="Nome *">
               <input value={novoUsuario.nome} onChange={e => setNovoUsuario(u => ({ ...u, nome: e.target.value }))} className="input-dark" />
             </F>
@@ -290,32 +290,35 @@ export default function Configuracoes() {
               <input value={novoUsuario.usuario} onChange={e => setNovoUsuario(u => ({ ...u, usuario: e.target.value }))} className="input-dark" />
             </F>
             <F label="Senha *">
-              <input type="password" value={novoUsuario.senha} onChange={e => setNovoUsuario(u => ({ ...u, senha: e.target.value }))} className="input-dark" placeholder="" />
+              <input type="password" value={novoUsuario.senha} onChange={e => setNovoUsuario(u => ({ ...u, senha: e.target.value }))} className="input-dark" autoComplete="new-password" />
             </F>
             <F label="Confirmar senha *">
-              <input type="password" value={novoUsuario.confirmarSenha} onChange={e => setNovoUsuario(u => ({ ...u, confirmarSenha: e.target.value }))} className="input-dark" placeholder="" />
-            </F>
-            <F label="Tipo de Usuário *" className="col-span-1 md:col-span-2">
-              <div className="flex gap-2 mt-1">
-                {[
-                  { value: "gerente", label: "Gerente", desc: "Acesso completo" },
-                  { value: "contador", label: "Contador", desc: "Apenas Notas Fiscais" },
-                  { value: "vendedor", label: "Vendedor", desc: "Apenas Vendas" },
-                ].map(opt => (
-                  <button key={opt.value} type="button"
-                    onClick={() => setNovoUsuario(u => ({ ...u, tipo: opt.value }))}
-                    className={`flex-1 flex flex-col items-center py-3 px-2 rounded-xl border-2 transition-all text-center ${novoUsuario.tipo === opt.value ? "border-green-500 bg-green-500/10 text-green-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}`}>
-                    <span className="text-sm font-semibold">{opt.label}</span>
-                    <span className="text-xs mt-0.5 opacity-70">{opt.desc}</span>
-                  </button>
-                ))}
-              </div>
+              <input type="password" value={novoUsuario.confirmarSenha} onChange={e => setNovoUsuario(u => ({ ...u, confirmarSenha: e.target.value }))} className="input-dark" autoComplete="new-password" />
             </F>
           </div>
-          <button onClick={criarUsuario} disabled={salvandoUsuario} className="mt-3 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
-            <UserPlus className="w-4 h-4" />
-            {salvandoUsuario ? "Criando..." : "Criar Usuário"}
-          </button>
+          <div className="mt-4">
+            <label className="block text-xs text-gray-400 mb-2">Tipo de Usuário *</label>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { value: "gerente", label: "Gerente", desc: "Acesso completo" },
+                { value: "contador", label: "Contador", desc: "Apenas Notas Fiscais" },
+                { value: "vendedor", label: "Vendedor", desc: "Apenas Vendas" },
+              ].map(opt => (
+                <button key={opt.value} type="button"
+                  onClick={() => setNovoUsuario(u => ({ ...u, tipo: opt.value }))}
+                  className={`flex flex-col items-center py-3 px-2 rounded-xl border-2 transition-all text-center ${novoUsuario.tipo === opt.value ? "border-green-500 bg-green-500/10 text-green-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}`}>
+                  <span className="text-sm font-semibold">{opt.label}</span>
+                  <span className="text-xs mt-1 opacity-70">{opt.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="mt-5">
+            <button onClick={criarUsuario} disabled={salvandoUsuario} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
+              <UserPlus className="w-4 h-4" />
+              {salvandoUsuario ? "Criando..." : "Criar Usuário"}
+            </button>
+          </div>
         </div>
       </Section>
 
