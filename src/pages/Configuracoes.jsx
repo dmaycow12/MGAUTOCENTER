@@ -304,7 +304,7 @@ export default function Configuracoes() {
                 usuario={u.usuario}
                 tipo={tipoLabel}
                 canDelete={true}
-                onEdit={() => setEditandoUsuario({ isAdmin: false, usuarioOriginal: u.usuario, dados: { ...u, tipo: u.tipo || "gerente" } })}
+                onEdit={() => setEditandoUsuario({ isAdmin: false, usuarioOriginal: u.usuario, _id: u._id, dados: { ...u, tipo: u.tipo || "gerente" } })}
                 onDelete={() => excluirUsuario(u)}
               />
             );
