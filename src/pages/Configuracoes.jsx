@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Settings, Save, CheckCircle, Plus, X, UserPlus, LogOut, AlertCircle, User } from "lucide-react";
+import { Settings, Save, CheckCircle, Plus, X, UserPlus, LogOut, AlertCircle, User, Pencil, Trash2 } from "lucide-react";
 
 export default function Configuracoes() {
   const [config, setConfig] = useState({
