@@ -46,30 +46,23 @@ function LoginPage() {
     setErro("");
     setCarregando(true);
 
-    const usuarioNorm = usuario.trim().toLowerCase();
-
     try {
-      const configs = await base44.entities.Configuracao.list("-created_date", 200);
-      const todosUsuarios = configs
-        .filter(c => c.chave === "usuario_extra")
-        .map(c => { try { return JSON.parse(c.valor); } catch { return null; } })
-        .filter(Boolean);
-
-      const encontrado = todosUsuarios.find(u => u.usuario?.toLowerCase() === usuarioNorm && u.senha === senha);
-      if (encontrado) {
-        const isGerente = !encontrado.tipo || encontrado.tipo === "gerente";
+      const response = await base44.functions.invoke("authLogin", { usuario, senha });
+      const data = response.data;
+      if (data?.token) {
         sessionStorage.setItem("oficina_auth", JSON.stringify({
-          usuario: encontrado.usuario,
-          nome: encontrado.nome,
-          role: isGerente ? "admin" : "user",
-          tipo: encontrado.tipo || "gerente"
+          token: data.token,
+          usuario: data.usuario,
+          nome: data.nome,
+          role: data.role,
+          tipo: data.tipo,
         }));
         window.location.reload();
         return;
       }
-      setErro("Usuário ou senha incorretos.");
+      setErro(data?.erro || "Usuário ou senha incorretos.");
     } catch (err) {
-      setErro("Erro ao verificar: " + err.message);
+      setErro("Erro ao verificar: " + (err.response?.data?.erro || err.message));
     }
     setCarregando(false);
   };
