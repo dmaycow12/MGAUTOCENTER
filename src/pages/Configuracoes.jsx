@@ -223,7 +223,7 @@ export default function Configuracoes() {
             <input type="password" value={senhaAdmin.confirmar} onChange={e => setSenhaAdmin(s => ({ ...s, confirmar: e.target.value }))} className="input-dark" placeholder="••••••••" />
           </F>
         </div>
-        <button onClick={alterarSenhaAdmin} disabled={salvandoSenha} className="mt-3 flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50">
+        <button onClick={alterarSenhaAdmin} disabled={salvandoSenha} className="mt-3 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50">
           <Save className="w-4 h-4" />
           {salvandoSenha ? "Salvando..." : "Alterar Senha"}
         </button>
