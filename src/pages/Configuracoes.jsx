@@ -130,10 +130,10 @@ export default function Configuracoes() {
   };
 
   const excluirUsuario = async (usuario) => {
-    const isGerente = usuario.tipo === "gerente" || !usuario.tipo;
+    const isGerente = !usuario.tipo || usuario.tipo === "gerente";
     if (isGerente) {
-      const gerentesExtras = usuarios.filter(u => u.tipo === "gerente" || !u.tipo);
-      if (1 + gerentesExtras.length <= 1) { setAvisoUltimoGerente(true); return; }
+      const totalGerentes = usuarios.filter(u => !u.tipo || u.tipo === "gerente").length;
+      if (totalGerentes <= 1) { setAvisoUltimoGerente(true); return; }
     }
 
     if (!confirm(`Excluir o usuário "${usuario.usuario}"?`)) return;
