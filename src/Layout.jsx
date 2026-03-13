@@ -47,11 +47,7 @@ function LoginPage() {
     setErro("");
     setCarregando(true);
     try {
-      const configs = await fetch ?
-        await (async () => {
-          const { base44 } = await import("@/api/base44Client");
-          return base44.entities.Configuracao.list("-created_date", 200);
-        })() : [];
+      const configs = await base44.entities.Configuracao.list("-created_date", 200);
 
       const senhaAdminConfig = configs.find(c => c.chave === "admin_senha")?.valor;
       const senhaAdminValida = senhaAdminConfig || "admin123";
@@ -76,12 +72,7 @@ function LoginPage() {
 
       setErro("Usuário ou senha incorretos.");
     } catch (err) {
-      if (usuario === "admin" && senha === "admin123") {
-        sessionStorage.setItem("oficina_auth", JSON.stringify({ usuario: "admin", nome: "Administrador", role: "admin" }));
-        window.location.href = "/Dashboard";
-        return;
-      }
-      setErro("Erro ao verificar credenciais. Tente novamente.");
+      setErro("Erro ao verificar credenciais: " + err.message);
     }
     setCarregando(false);
   };
