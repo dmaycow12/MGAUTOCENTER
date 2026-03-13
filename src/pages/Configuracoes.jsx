@@ -293,8 +293,24 @@ export default function Configuracoes() {
             <F label="Confirmar senha *">
               <input type="password" value={novoUsuario.confirmarSenha} onChange={e => setNovoUsuario(u => ({ ...u, confirmarSenha: e.target.value }))} className="input-dark" placeholder="••••••••" />
             </F>
+            <F label="Tipo de Usuário *" className="col-span-1 md:col-span-2">
+              <div className="flex gap-2 mt-1">
+                {[
+                  { value: "usuario", label: "Usuário Padrão", desc: "Acesso completo" },
+                  { value: "contador", label: "Contador", desc: "Apenas Notas Fiscais" },
+                  { value: "vendedor", label: "Vendedor", desc: "Apenas Vendas" },
+                ].map(opt => (
+                  <button key={opt.value} type="button"
+                    onClick={() => setNovoUsuario(u => ({ ...u, tipo: opt.value }))}
+                    className={`flex-1 flex flex-col items-center py-3 px-2 rounded-xl border-2 transition-all text-center ${novoUsuario.tipo === opt.value ? "border-green-500 bg-green-500/10 text-green-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}`}>
+                    <span className="text-sm font-semibold">{opt.label}</span>
+                    <span className="text-xs mt-0.5 opacity-70">{opt.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </F>
           </div>
-          <button onClick={criarUsuario} disabled={salvandoUsuario} className="mt-3 flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50">
+          <button onClick={criarUsuario} disabled={salvandoUsuario} className="mt-3 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50">
             <UserPlus className="w-4 h-4" />
             {salvandoUsuario ? "Criando..." : "Criar Usuário"}
           </button>
