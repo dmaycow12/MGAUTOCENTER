@@ -79,20 +79,12 @@ export default function Configuracoes() {
     }
   };
 
-  const getAuthToken = () => {
-    try {
-      const auth = sessionStorage.getItem("oficina_auth");
-      return auth ? JSON.parse(auth).token : null;
-    } catch { return null; }
-  };
-
   const salvarEdicaoUsuario = async () => {
     if (!editandoUsuario) return;
     const { dados } = editandoUsuario;
     if (!dados.nome || !dados.usuario) return alert("Preencha nome e usuário.");
     setSalvandoUsuario(true);
 
-    const token = getAuthToken();
     const res = await base44.functions.invoke("authSaveUser", {
       action: "update",
       _id: editandoUsuario._id,
@@ -100,7 +92,7 @@ export default function Configuracoes() {
       usuario: dados.usuario,
       senha: dados.senha || "",
       tipo: dados.tipo,
-    }, { headers: { Authorization: `Bearer ${token}` } });
+    });
 
     if (res.data?.sucesso) {
       setEditandoUsuario(null);
