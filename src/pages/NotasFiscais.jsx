@@ -650,7 +650,7 @@ export default function NotasFiscais() {
           </button>
         </div>
 
-        {/* Linha 2: filtro tipo */}
+        {/* Linha 2: filtro tipo entrada/saida */}
         <div className="flex gap-2">
           {["Tudo", "Entrada", "Saída"].map(t => (
             <button key={t} onClick={() => setFiltroTipo(t === "Tudo" ? "Todos" : t)}
@@ -658,6 +658,30 @@ export default function NotasFiscais() {
               {t}
             </button>
           ))}
+        </div>
+
+        {/* Linha 2b: filtro modelo NFe/NFSe/NFCe */}
+        <div className="flex gap-2">
+          {["Todos", "NFe", "NFSe", "NFCe"].map(m => (
+            <button key={m} onClick={() => setFiltroModeloNF(m)}
+              className={`flex-1 h-9 rounded-xl text-xs font-medium transition-all ${filtroModeloNF === m ? "bg-orange-600 text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              {m === "Todos" ? "Todos Modelos" : m}
+            </button>
+          ))}
+        </div>
+
+        {/* Linha 2c: botões exportar zip + sintegra */}
+        <div className="flex gap-2">
+          <button onClick={exportarZip} disabled={gerandoZip}
+            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 transition-all disabled:opacity-50">
+            {gerandoZip ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+            Exportar XMLs (ZIP)
+          </button>
+          <button onClick={gerarSintegra} disabled={gerandoSintegra}
+            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 transition-all disabled:opacity-50">
+            {gerandoSintegra ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <BarChart2 className="w-3.5 h-3.5" />}
+            Gerar Sintegra
+          </button>
         </div>
 
         {/* Linha 3: filtro período */}
