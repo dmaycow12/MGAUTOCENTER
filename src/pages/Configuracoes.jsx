@@ -79,33 +79,36 @@ export default function Configuracoes() {
     }
   };
 
+  const getAuthToken = () => {
+    try {
+      const auth = sessionStorage.getItem("oficina_auth");
+      return auth ? JSON.parse(auth).token : null;
+    } catch { return null; }
+  };
+
   const salvarEdicaoUsuario = async () => {
     if (!editandoUsuario) return;
     const { dados } = editandoUsuario;
     if (!dados.nome || !dados.usuario) return alert("Preencha nome e usuário.");
     setSalvandoUsuario(true);
 
-    if (editandoUsuario.isAdmin) {
-      if (dados.senha) {
-        if (configIds["admin_senha"]) {
-          await base44.entities.Configuracao.update(configIds["admin_senha"], { chave: "admin_senha", valor: dados.senha });
-        } else {
-          const novo = await base44.entities.Configuracao.create({ chave: "admin_senha", valor: dados.senha, descricao: "Senha do admin" });
-          setConfigIds(prev => ({ ...prev, admin_senha: novo.id }));
-        }
-      }
-    } else {
-      const novoValor = { nome: dados.nome, usuario: dados.usuario, senha: dados.senha, tipo: dados.tipo };
-      if (editandoUsuario._id) {
-        await base44.entities.Configuracao.update(editandoUsuario._id, { chave: "usuario_extra", valor: JSON.stringify(novoValor), descricao: `Usuário extra: ${dados.nome}` });
-      } else {
-        await base44.entities.Configuracao.create({ chave: "usuario_extra", valor: JSON.stringify(novoValor), descricao: `Usuário extra: ${dados.nome}` });
-      }
-    }
+    const token = getAuthToken();
+    const res = await base44.functions.invoke("authSaveUser", {
+      action: "update",
+      _id: editandoUsuario._id,
+      nome: dados.nome,
+      usuario: dados.usuario,
+      senha: dados.senha || "",
+      tipo: dados.tipo,
+    }, { headers: { Authorization: `Bearer ${token}` } });
 
-    setEditandoUsuario(null);
+    if (res.data?.sucesso) {
+      setEditandoUsuario(null);
+      await loadAll();
+    } else {
+      alert(res.data?.erro || "Erro ao salvar.");
+    }
     setSalvandoUsuario(false);
-    await loadAll();
   };
 
   const criarUsuario = async () => {
@@ -114,19 +117,25 @@ export default function Configuracoes() {
       return setFeedbackUsuario({ tipo: "erro", msg: "Preencha todos os campos obrigatórios." });
     if (novoUsuario.senha !== novoUsuario.confirmarSenha)
       return setFeedbackUsuario({ tipo: "erro", msg: "As senhas não coincidem." });
-    if (novoUsuario.usuario === "admin")
-      return setFeedbackUsuario({ tipo: "erro", msg: "Nome de usuário 'admin' já existe." });
 
     setSalvandoUsuario(true);
-    await base44.entities.Configuracao.create({
-      chave: "usuario_extra",
-      valor: JSON.stringify({ nome: novoUsuario.nome, usuario: novoUsuario.usuario, senha: novoUsuario.senha, tipo: novoUsuario.tipo }),
-      descricao: `Usuário extra: ${novoUsuario.nome}`,
-    });
-    setNovoUsuario({ nome: "", usuario: "", senha: "", confirmarSenha: "", tipo: "gerente" });
-    setFeedbackUsuario({ tipo: "sucesso", msg: `Usuário "${novoUsuario.usuario}" criado com sucesso!` });
+    const token = getAuthToken();
+    const res = await base44.functions.invoke("authSaveUser", {
+      action: "create",
+      nome: novoUsuario.nome,
+      usuario: novoUsuario.usuario,
+      senha: novoUsuario.senha,
+      tipo: novoUsuario.tipo,
+    }, { headers: { Authorization: `Bearer ${token}` } });
+
+    if (res.data?.sucesso) {
+      setNovoUsuario({ nome: "", usuario: "", senha: "", confirmarSenha: "", tipo: "gerente" });
+      setFeedbackUsuario({ tipo: "sucesso", msg: `Usuário "${novoUsuario.usuario}" criado com sucesso!` });
+      await loadAll();
+    } else {
+      setFeedbackUsuario({ tipo: "erro", msg: res.data?.erro || "Erro ao criar usuário." });
+    }
     setSalvandoUsuario(false);
-    await loadAll();
   };
 
   const excluirUsuario = async (usuario) => {
@@ -138,7 +147,11 @@ export default function Configuracoes() {
 
     if (!confirm(`Excluir o usuário "${usuario.usuario}"?`)) return;
     if (usuario._id) {
-      await base44.entities.Configuracao.delete(usuario._id);
+      const token = getAuthToken();
+      await base44.functions.invoke("authSaveUser", {
+        action: "delete",
+        _id: usuario._id,
+      }, { headers: { Authorization: `Bearer ${token}` } });
       await loadAll();
     }
   };
