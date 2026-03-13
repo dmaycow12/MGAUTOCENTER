@@ -2,69 +2,113 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 import bcrypt from 'npm:bcryptjs@2.4.3';
 import { SignJWT } from 'npm:jose@5.9.6';
 
+// Rate limiting: username -> { count, firstAttempt }
+const rateLimitMap = new Map();
+const MAX_ATTEMPTS = 5;
+const WINDOW_MS = 15 * 60 * 1000; // 15 minutos
+
+function checkRateLimit(key) {
+  const now = Date.now();
+  const entry = rateLimitMap.get(key);
+  if (!entry || now - entry.firstAttempt > WINDOW_MS) {
+    rateLimitMap.set(key, { count: 1, firstAttempt: now });
+    return { allowed: true };
+  }
+  if (entry.count >= MAX_ATTEMPTS) {
+    const retryMin = Math.ceil((WINDOW_MS - (now - entry.firstAttempt)) / 60000);
+    return { allowed: false, retryMin };
+  }
+  entry.count++;
+  return { allowed: true };
+}
+
+function clearRateLimit(key) {
+  rateLimitMap.delete(key);
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const { usuario, senha } = await req.json();
 
     if (!usuario || !senha) {
-      return Response.json({ erro: "Credenciais inválidas." }, { status: 400 });
+      return Response.json({ erro: "Usuário e senha são obrigatórios." }, { status: 400 });
     }
 
+    const usuarioNorm = usuario.trim().toLowerCase();
+
+    // Verifica rate limit
+    const rateCheck = checkRateLimit(usuarioNorm);
+    if (!rateCheck.allowed) {
+      return Response.json({
+        erro: `Muitas tentativas. Tente novamente em ${rateCheck.retryMin} minuto(s).`
+      }, { status: 429 });
+    }
+
+    // Busca usuários
     const configs = await base44.asServiceRole.entities.Configuracao.list("-created_date", 200);
-    const todosUsuarios = configs
+    const usuarios = configs
       .filter(c => c.chave === "usuario_extra")
       .map(c => { try { return { ...JSON.parse(c.valor), _id: c.id }; } catch { return null; } })
       .filter(Boolean);
 
-    const usuarioNorm = usuario.trim().toLowerCase();
-    const encontrado = todosUsuarios.find(u => u.usuario?.toLowerCase() === usuarioNorm);
-
+    const encontrado = usuarios.find(u => u.usuario?.toLowerCase() === usuarioNorm);
     if (!encontrado) {
       return Response.json({ erro: "Usuário ou senha incorretos." }, { status: 401 });
     }
 
-    const senhaArmazenada = encontrado.senha || "";
-    let senhaValida = false;
-
-    if (senhaArmazenada.startsWith("$2")) {
-      // Já está em bcrypt
-      senhaValida = await bcrypt.compare(senha, senhaArmazenada);
+    // Verifica senha (com migração automática de texto plano para bcrypt)
+    let senhaOk = false;
+    const isBcrypt = encontrado.senha?.startsWith("$2");
+    if (isBcrypt) {
+      senhaOk = await bcrypt.compare(senha, encontrado.senha);
     } else {
-      // Texto puro — migração automática para bcrypt
-      senhaValida = senhaArmazenada === senha;
-      if (senhaValida) {
+      senhaOk = encontrado.senha === senha;
+      if (senhaOk) {
         const hash = await bcrypt.hash(senha, 10);
-        const novoValor = { nome: encontrado.nome, usuario: encontrado.usuario, senha: hash, tipo: encontrado.tipo };
-        await base44.asServiceRole.entities.Configuracao.update(encontrado._id, {
+        const { _id, ...rest } = encontrado;
+        await base44.asServiceRole.entities.Configuracao.update(_id, {
           chave: "usuario_extra",
-          valor: JSON.stringify(novoValor),
-          descricao: `Usuário extra: ${encontrado.nome}`
+          valor: JSON.stringify({ ...rest, senha: hash }),
+          descricao: `Usuário extra: ${encontrado.nome}`,
         });
       }
     }
 
-    if (!senhaValida) {
+    if (!senhaOk) {
       return Response.json({ erro: "Usuário ou senha incorretos." }, { status: 401 });
     }
 
-    const secret = Deno.env.get("AUTH_SECRET");
-    const secretKey = new TextEncoder().encode(secret);
-    const tipo = encontrado.tipo || "gerente";
+    clearRateLimit(usuarioNorm);
 
-    const token = await new SignJWT({ usuario: encontrado.usuario, nome: encontrado.nome, tipo })
-      .setProtectedHeader({ alg: "HS256" })
-      .setExpirationTime("12h")
-      .setIssuedAt()
-      .sign(secretKey);
-
-    return Response.json({
-      token,
+    // Gera JWT
+    const secret = new TextEncoder().encode(Deno.env.get("AUTH_SECRET"));
+    const token = await new SignJWT({
       usuario: encontrado.usuario,
       nome: encontrado.nome,
-      tipo,
-      role: tipo === "gerente" ? "admin" : "user",
+      tipo: encontrado.tipo || "gerente",
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setExpirationTime("12h")
+      .sign(secret);
+
+    const isHttps = req.headers.get("x-forwarded-proto") === "https";
+    const securePart = isHttps ? "; Secure" : "";
+    const cookieValue = `oficina_token=${token}; HttpOnly; Path=/; Max-Age=43200; SameSite=Strict${securePart}`;
+
+    return new Response(JSON.stringify({
+      sucesso: true,
+      nome: encontrado.nome,
+      usuario: encontrado.usuario,
+      tipo: encontrado.tipo || "gerente",
+    }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie": cookieValue,
+      }
     });
+
   } catch (error) {
     return Response.json({ erro: error.message }, { status: 500 });
   }
