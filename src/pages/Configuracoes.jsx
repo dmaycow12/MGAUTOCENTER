@@ -111,14 +111,13 @@ export default function Configuracoes() {
       return setFeedbackUsuario({ tipo: "erro", msg: "As senhas não coincidem." });
 
     setSalvandoUsuario(true);
-    const token = getAuthToken();
     const res = await base44.functions.invoke("authSaveUser", {
       action: "create",
       nome: novoUsuario.nome,
       usuario: novoUsuario.usuario,
       senha: novoUsuario.senha,
       tipo: novoUsuario.tipo,
-    }, { headers: { Authorization: `Bearer ${token}` } });
+    });
 
     if (res.data?.sucesso) {
       setNovoUsuario({ nome: "", usuario: "", senha: "", confirmarSenha: "", tipo: "gerente" });
