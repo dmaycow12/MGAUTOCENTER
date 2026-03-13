@@ -651,10 +651,10 @@ export default function NotasFiscais() {
       <div className="flex flex-col gap-2">
         {/* Linha 1: Importar XML + Emitir Nota */}
         <div className="flex gap-2">
-          <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+          <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-xl text-xs font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
             <Upload className="w-4 h-4" /> Importar XML
           </button>
-          <button onClick={() => { setForm(defaultForm()); setAbaForm("cliente"); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+          <button onClick={() => { setForm(defaultForm()); setAbaForm("cliente"); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-xl text-xs font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
             <Plus className="w-4 h-4" /> Emitir Nota
           </button>
         </div>
@@ -663,7 +663,7 @@ export default function NotasFiscais() {
         <div className="flex gap-2">
           {["Tudo", "Entrada", "Saída"].map(t => (
             <button key={t} onClick={() => setFiltroTipo(t === "Tudo" ? "Todos" : t)}
-              className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${(t === "Tudo" ? filtroTipo === "Todos" : filtroTipo === t) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              className={`flex-1 h-9 rounded-xl text-xs font-medium transition-all ${(t === "Tudo" ? filtroTipo === "Todos" : filtroTipo === t) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {t}
             </button>
           ))}
@@ -673,7 +673,7 @@ export default function NotasFiscais() {
         <div className="flex gap-2">
           {["Todos", "NFe", "NFSe", "NFCe"].map(m => (
             <button key={m} onClick={() => setFiltroModeloNF(m)}
-              className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroModeloNF === m ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              className={`flex-1 h-9 rounded-xl text-xs font-medium transition-all ${filtroModeloNF === m ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {m === "Todos" ? "Tudo" : m}
             </button>
           ))}
@@ -682,19 +682,19 @@ export default function NotasFiscais() {
         {/* Linha 2c: botões exportar zip + sintegra */}
         <div className="flex gap-2">
           <button onClick={exportarRelatorio} disabled={gerandoZip}
-            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-2 h-9 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
             style={{background:"#00ff00", color:"#000"}}
             onMouseEnter={e => e.currentTarget.style.background="#00dd00"}
             onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-            {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}
+            {gerandoZip ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Archive className="w-3 h-3" />}
             Exportar Relatório
           </button>
           <button onClick={gerarSintegra} disabled={gerandoSintegra}
-            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-2 h-9 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
             style={{background:"#00ff00", color:"#000"}}
             onMouseEnter={e => e.currentTarget.style.background="#00dd00"}
             onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-            {gerandoSintegra ? <RefreshCw className="w-4 h-4 animate-spin" /> : <BarChart2 className="w-4 h-4" />}
+            {gerandoSintegra ? <RefreshCw className="w-3 h-3 animate-spin" /> : <BarChart2 className="w-3 h-3" />}
             Gerar Sintegra
           </button>
         </div>
@@ -702,7 +702,7 @@ export default function NotasFiscais() {
         {/* Linha 3: filtro período */}
         <div className="flex gap-2 items-center">
           {/* Botão Mês com setas internas */}
-          <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
+          <div className={`flex-1 flex items-center h-9 rounded-xl text-xs font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
             <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
               <ChevronLeft className="w-3 h-3" />
             </button>
@@ -716,7 +716,7 @@ export default function NotasFiscais() {
           <div className="relative flex-1" ref={periodoDropRef}>
             <button
               onClick={() => setPeriodoDropOpen(v => !v)}
-              className={`w-full flex items-center justify-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
+              className={`w-full flex items-center justify-center gap-2 px-4 h-9 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
             >
               {usandoOutroPeriodo && customRange ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}` : "Período"}
               <ChevronDown className={`w-4 h-4 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
@@ -750,15 +750,15 @@ export default function NotasFiscais() {
         </div>
 
         {/* Linha 4: busca + toggle */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
             <input type="text" placeholder="Buscar nota..." value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500" />
+              className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-2 text-xs focus:outline-none focus:border-orange-500" />
           </div>
-          <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden h-11">
-            <button onClick={() => setViewMode("table")} className="flex-1 flex items-center justify-center transition-all" style={{background:viewMode==="table"?"#062C9B":"transparent",color:viewMode==="table"?"#fff":"#6b7280"}}><List className="w-5 h-5"/></button>
-            <button onClick={() => setViewMode("cards")} className="flex-1 flex items-center justify-center transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-5 h-5"/></button>
+          <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden h-9 flex-shrink-0">
+            <button onClick={() => setViewMode("table")} className="px-3 flex items-center justify-center transition-all" style={{background:viewMode==="table"?"#062C9B":"transparent",color:viewMode==="table"?"#fff":"#6b7280"}}><List className="w-4 h-4"/></button>
+            <button onClick={() => setViewMode("cards")} className="px-3 flex items-center justify-center transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-4 h-4"/></button>
           </div>
         </div>
       </div>
