@@ -651,11 +651,11 @@ export default function NotasFiscais() {
       <div className="flex flex-col gap-2">
         {/* Linha 1: Importar XML + Emitir Nota */}
         <div className="flex gap-2">
-          <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
-            <Upload className="w-4 h-4" /> Importar XML
+          <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl text-xs font-medium transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+            <Upload className="w-3.5 h-3.5" /> Importar XML
           </button>
-          <button onClick={() => { setForm(defaultForm()); setAbaForm("cliente"); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
-            <Plus className="w-4 h-4" /> Emitir Nota
+          <button onClick={() => { setForm(defaultForm()); setAbaForm("cliente"); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl text-xs font-medium transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+            <Plus className="w-3.5 h-3.5" /> Emitir Nota
           </button>
         </div>
 
@@ -682,19 +682,19 @@ export default function NotasFiscais() {
         {/* Linha 2c: botões exportar zip + sintegra */}
         <div className="flex gap-2">
           <button onClick={exportarRelatorio} disabled={gerandoZip}
-            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl text-xs font-medium transition-all disabled:opacity-50"
             style={{background:"#00ff00", color:"#000"}}
             onMouseEnter={e => e.currentTarget.style.background="#00dd00"}
             onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-            {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}
+            {gerandoZip ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
             Exportar Relatório
           </button>
           <button onClick={gerarSintegra} disabled={gerandoSintegra}
-            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl text-xs font-medium transition-all disabled:opacity-50"
             style={{background:"#00ff00", color:"#000"}}
             onMouseEnter={e => e.currentTarget.style.background="#00dd00"}
             onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-            {gerandoSintegra ? <RefreshCw className="w-4 h-4 animate-spin" /> : <BarChart2 className="w-4 h-4" />}
+            {gerandoSintegra ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <BarChart2 className="w-3.5 h-3.5" />}
             Gerar Sintegra
           </button>
         </div>
