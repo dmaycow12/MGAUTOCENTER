@@ -135,7 +135,7 @@ export default function Configuracoes() {
       const gerentesExtras = usuarios.filter(u => u.tipo === "gerente" || !u.tipo);
       if (1 + gerentesExtras.length <= 1) { setAvisoUltimoGerente(true); return; }
     }
-    if (usuario.usuario === "admin") return;
+
     if (!confirm(`Excluir o usuário "${usuario.usuario}"?`)) return;
     if (usuario._id) {
       await base44.entities.Configuracao.delete(usuario._id);
