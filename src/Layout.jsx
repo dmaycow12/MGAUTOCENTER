@@ -137,8 +137,9 @@ export default function Layout({ children, currentPageName }) {
   const [tipoUsuario, setTipoUsuario] = useState("gerente");
 
   useEffect(() => {
-    // Verifica token no servidor via cookie httpOnly (sem enviar token no body)
-    base44.functions.invoke("authVerify", {})
+    // Verifica token — via cookie httpOnly ou fallback sessionStorage (para iframes)
+    const tokenFallback = sessionStorage.getItem("oficina_token");
+    base44.functions.invoke("authVerify", tokenFallback ? { token: tokenFallback } : {})
       .then(res => {
         const data = res.data;
         if (data?.valido) {
