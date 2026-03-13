@@ -12,13 +12,9 @@ export default function Configuracoes() {
   const [salvo, setSalvo] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Alterar senha admin
-  const [senhaAdmin, setSenhaAdmin] = useState({ atual: "", nova: "", confirmar: "" });
-  const [salvandoSenha, setSalvandoSenha] = useState(false);
-  const [feedbackSenha, setFeedbackSenha] = useState(null);
-
   // Usuários
-  const [novoUsuario, setNovoUsuario] = useState({ nome: "", usuario: "", senha: "", confirmarSenha: "", tipo: "usuario" });
+  const [novoUsuario, setNovoUsuario] = useState({ nome: "", usuario: "", senha: "", confirmarSenha: "", tipo: "gerente" });
+  const [editandoUsuario, setEditandoUsuario] = useState(null); // {index, dados}
   const [salvandoUsuario, setSalvandoUsuario] = useState(false);
   const [feedbackUsuario, setFeedbackUsuario] = useState(null);
 
