@@ -282,20 +282,20 @@ export default function Configuracoes() {
             nome="Administrador"
             usuario="admin"
             tipo="Gerente"
-            canDelete={false}
+            canDelete={true}
             onEdit={() => setEditandoUsuario({ isAdmin: true, usuarioOriginal: "admin", dados: { nome: "Administrador", usuario: "admin", senha: "", tipo: "gerente" } })}
+            onDelete={() => excluirUsuario({ usuario: "admin", tipo: "gerente" })}
           />
           {/* Usuários extras */}
           {usuarios.map((u, i) => {
             const tipoLabel = u.tipo === "contador" ? "Contador" : u.tipo === "vendedor" ? "Vendedor" : "Gerente";
-            const isGerente = u.tipo === "gerente" || (!u.tipo || u.tipo === "usuario");
             return (
               <UserRow
                 key={i}
                 nome={u.nome}
                 usuario={u.usuario}
                 tipo={tipoLabel}
-                canDelete={!isGerente}
+                canDelete={true}
                 onEdit={() => setEditandoUsuario({ isAdmin: false, usuarioOriginal: u.usuario, dados: { ...u, tipo: u.tipo || "gerente" } })}
                 onDelete={() => excluirUsuario(u)}
               />
