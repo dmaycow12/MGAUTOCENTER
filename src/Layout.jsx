@@ -45,39 +45,46 @@ function LoginPage() {
     e.preventDefault();
     setErro("");
     setCarregando(true);
-    try {
-      const configs = await base44.entities.Configuracao.list("-created_date", 200);
 
-      const senhaAdminConfig = configs.find(c => c.chave === "admin_senha")?.valor;
-      const senhaAdminValida = senhaAdminConfig || "admin123";
+    const usuarioNorm = usuario.trim().toLowerCase();
 
-      if (usuario === "admin" && senha === senhaAdminValida) {
+    // Admin: verifica primeiro local, depois banco
+    if (usuarioNorm === "admin") {
+      // Tenta buscar senha customizada no banco
+      let senhaValida = "admin123";
+      try {
+        const configs = await base44.entities.Configuracao.list("-created_date", 200);
+        const senhaDb = configs.find(c => c.chave === "admin_senha")?.valor;
+        if (senhaDb) senhaValida = senhaDb;
+      } catch (_) { /* usa senha padrão */ }
+
+      if (senha === senhaValida) {
         sessionStorage.setItem("oficina_auth", JSON.stringify({ usuario: "admin", nome: "Administrador", role: "admin" }));
-        window.location.href = "/Dashboard";
+        window.location.reload();
         return;
       }
+      setErro("Senha incorreta.");
+      setCarregando(false);
+      return;
+    }
 
+    // Outros usuários: busca no banco
+    try {
+      const configs = await base44.entities.Configuracao.list("-created_date", 200);
       const usuariosExtras = configs
         .filter(c => c.chave === "usuario_extra")
         .map(c => { try { return JSON.parse(c.valor); } catch { return null; } })
         .filter(Boolean);
 
-      const encontrado = usuariosExtras.find(u => u.usuario === usuario && u.senha === senha);
+      const encontrado = usuariosExtras.find(u => u.usuario === usuarioNorm && u.senha === senha);
       if (encontrado) {
         sessionStorage.setItem("oficina_auth", JSON.stringify({ usuario: encontrado.usuario, nome: encontrado.nome, role: "user", tipo: encontrado.tipo || "usuario" }));
-        window.location.href = "/Dashboard";
+        window.location.reload();
         return;
       }
-
       setErro("Usuário ou senha incorretos.");
     } catch (err) {
-      // Fallback: se não conseguir acessar o banco, permite login com credenciais padrão
-      if (usuario === "admin" && senha === "admin123") {
-        sessionStorage.setItem("oficina_auth", JSON.stringify({ usuario: "admin", nome: "Administrador", role: "admin" }));
-        window.location.href = "/Dashboard";
-        return;
-      }
-      setErro("Erro ao verificar credenciais. Tente admin / admin123.");
+      setErro("Erro ao verificar: " + err.message);
     }
     setCarregando(false);
   };
