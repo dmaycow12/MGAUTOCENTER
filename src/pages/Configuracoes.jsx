@@ -334,7 +334,7 @@ function Section({ title, icon: Icon, children }) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
       <div className="flex items-center gap-2 border-b border-gray-800 pb-3">
-        {Icon && <Icon className="w-5 h-5 text-orange-400" />}
+        {Icon && <Icon className="w-5 h-5 text-green-400" />}
         <h2 className="text-white font-semibold">{title}</h2>
       </div>
       {children}
