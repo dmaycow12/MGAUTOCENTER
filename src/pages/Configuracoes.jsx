@@ -138,11 +138,10 @@ export default function Configuracoes() {
 
     if (!confirm(`Excluir o usuário "${usuario.usuario}"?`)) return;
     if (usuario._id) {
-      const token = getAuthToken();
       await base44.functions.invoke("authSaveUser", {
         action: "delete",
         _id: usuario._id,
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      });
       await loadAll();
     }
   };
