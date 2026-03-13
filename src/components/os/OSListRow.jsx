@@ -236,8 +236,8 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
               <div ref={statusRef} className="absolute left-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-36 py-1 z-[100]">
                 {STATUS_OPTIONS.map(s => (
                   <button key={s} onClick={() => alterarStatus(s)}
-                    className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all"
-                    style={{ color: STATUS_STYLE[s].style.background }}>
+                    className="w-full text-left px-3 py-2 text-xs font-semibold transition-all"
+                    style={{ background: STATUS_STYLE[s].style.background, color: "#fff" }}>
                     {s}
                   </button>
                 ))}
