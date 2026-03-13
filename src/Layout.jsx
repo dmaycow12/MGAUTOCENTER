@@ -193,6 +193,9 @@ export default function Layout({ children, currentPageName }) {
 
   if (!autenticado && currentPageName !== "OrcamentoPublico") return <LoginPage />;
 
+  const isRestrito = tipoUsuario === "contador" || tipoUsuario === "vendedor";
+  const tituloRestrito = tipoUsuario === "contador" ? "ÁREA FISCAL" : tipoUsuario === "vendedor" ? "VENDAS" : "";
+
   return (
     <div className="min-h-screen text-gray-100 flex" style={{background:"#000"}}>
       <style>{`
@@ -204,13 +207,56 @@ export default function Layout({ children, currentPageName }) {
           aside { flex-shrink: 0; }
         `}</style>
 
-
-
       {/* Main Content */}
       <div className="w-full flex flex-col min-w-0">
-        {/* Top Bar - Desktop Flutuante */}
-        <header className="hidden md:flex fixed top-4 left-0 right-0 px-6 items-center justify-center z-40">
-          <nav className="flex items-center gap-1 w-full">
+
+        {isRestrito ? (
+          /* Header simplificado para usuários restritos */
+          <header className="fixed top-0 left-0 right-0 px-6 py-3 flex items-center justify-between z-40" style={{background:"#111", borderBottom:"1px solid #222"}}>
+            <span className="text-white font-bold text-lg tracking-widest">{tituloRestrito}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-gray-400 text-sm">{nomeUsuario}</span>
+              <button onClick={handleLogout} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white px-3 py-1.5 rounded-lg border border-gray-700 hover:border-gray-500 transition-all">
+                <LogOut className="w-3.5 h-3.5" /> Sair
+              </button>
+            </div>
+          </header>
+        ) : (
+          /* Top Bar - Desktop Flutuante para admin */
+          <header className="hidden md:flex fixed top-4 left-0 right-0 px-6 items-center justify-center z-40">
+            <nav className="flex items-center gap-1 w-full">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = currentPageName === item.page;
+                return (
+                  <Link
+                    key={item.page}
+                    to={createPageUrl(item.page)}
+                    className="flex items-center justify-center gap-1 py-2 rounded-lg font-bold transition-all min-w-0 flex-1"
+                    style={{
+                      background: isActive ? "#062C9B" : "#1f2937",
+                      color: "#fff",
+                      border: "none",
+                      fontSize: "clamp(8px, 1vw, 12px)"
+                    }}
+                  >
+                    <Icon style={{width:"clamp(10px,1.2vw,16px)", height:"clamp(10px,1.2vw,16px)", flexShrink:0}} />
+                    <span className="truncate">{item.name}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </header>
+        )}
+
+        {/* Page Content */}
+        <main className={`flex-1 overflow-auto p-4 pb-24 md:pb-6 ${isRestrito ? "pt-16" : "pt-20 md:pt-24"} md:p-6`} style={{background:"#000"}}>
+          {children}
+        </main>
+
+        {/* Bottom Menu - Mobile (apenas admin) */}
+        {!isRestrito && (
+          <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 px-2 py-2 rounded-2xl z-40" style={{background:"rgba(17,17,17,0.9)", backdropFilter:"blur(10px)", border:"1px solid rgba(34,34,34,0.8)", maxWidth:"calc(100% - 16px)"}}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPageName === item.page;
@@ -218,45 +264,16 @@ export default function Layout({ children, currentPageName }) {
                 <Link
                   key={item.page}
                   to={createPageUrl(item.page)}
-                  className="flex items-center justify-center gap-1 py-2 rounded-lg font-bold transition-all min-w-0 flex-1"
-                  style={{
-                    background: isActive ? "#062C9B" : "#1f2937",
-                    color: "#fff",
-                    border: "none",
-                    fontSize: "clamp(8px, 1vw, 12px)"
-                  }}
+                  className="flex items-center justify-center p-1.5 rounded-lg transition-all flex-shrink-0"
+                  title={item.name}
+                  style={{color: isActive ? "#fff" : "#6b7280"}}
                 >
-                  <Icon style={{width:"clamp(10px,1.2vw,16px)", height:"clamp(10px,1.2vw,16px)", flexShrink:0}} />
-                  <span className="truncate">{item.name}</span>
+                  <Icon className="w-4 h-4" style={{color: isActive ? "#062C9B" : "#6b7280"}} />
                 </Link>
               );
             })}
           </nav>
-        </header>
-
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4 pt-20 md:p-6 md:pt-24 pb-24 md:pb-6" style={{background:"#000"}}>
-          {children}
-        </main>
-
-        {/* Bottom Menu - Mobile */}
-        <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 px-2 py-2 rounded-2xl z-40" style={{background:"rgba(17,17,17,0.9)", backdropFilter:"blur(10px)", border:"1px solid rgba(34,34,34,0.8)", maxWidth:"calc(100% - 16px)"}}>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentPageName === item.page;
-            return (
-              <Link
-                key={item.page}
-                to={createPageUrl(item.page)}
-                className="flex items-center justify-center p-1.5 rounded-lg transition-all flex-shrink-0"
-                title={item.name}
-                style={{color: isActive ? "#fff" : "#6b7280"}}
-              >
-                <Icon className="w-4 h-4" style={{color: isActive ? "#062C9B" : "#6b7280"}} />
-              </Link>
-            );
-          })}
-        </nav>
+        )}
       </div>
     </div>
   );
