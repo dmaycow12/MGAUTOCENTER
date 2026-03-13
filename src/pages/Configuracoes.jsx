@@ -117,6 +117,15 @@ export default function Configuracoes() {
   };
 
   const excluirUsuario = async (usuario) => {
+    // Contar gerentes totais: admin fixo + gerentes extras
+    const gerentesExtras = usuarios.filter(u => u.tipo === "gerente" || u.tipo === "usuario" || !u.tipo);
+    const isGerente = usuario.tipo === "gerente" || usuario.tipo === "usuario" || !usuario.tipo;
+    // admin fixo sempre conta como 1 gerente
+    const totalGerentes = 1 + gerentesExtras.length;
+    if (isGerente && totalGerentes <= 1) {
+      setAvisoUltimoGerente(true);
+      return;
+    }
     if (!confirm(`Excluir o usuário "${usuario.usuario}"?`)) return;
     const registros = await base44.entities.Configuracao.filter({ chave: "usuario_extra" }, "-created_date", 50);
     const reg = registros.find(r => { try { return JSON.parse(r.valor).usuario === usuario.usuario; } catch { return false; } });
