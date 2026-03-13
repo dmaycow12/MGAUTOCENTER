@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import {
   FileText, Plus, Upload, Search, Trash2, Eye, X,
-  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List
+  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
+import JSZip from "jszip";
 
 const STATUS_COLOR = {
   Rascunho: "bg-gray-500/10 text-gray-400",
