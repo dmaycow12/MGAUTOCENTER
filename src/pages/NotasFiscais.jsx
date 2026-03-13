@@ -547,10 +547,85 @@ export default function NotasFiscais() {
     const matchTipo = filtroTipo === "Todos" ||
       (filtroTipo === "Entrada" && n.tipo === "NFe" && n.status === "Importada") ||
       (filtroTipo === "Saída" && n.status !== "Importada");
+    const matchModelo = filtroModeloNF === "Todos" || n.tipo === filtroModeloNF;
     const matchInicio = !periodoRange || (n.data_emissao && n.data_emissao >= periodoRange.inicio);
     const matchFim = !periodoRange || (n.data_emissao && n.data_emissao <= periodoRange.fim);
-    return matchSearch && matchTipo && matchInicio && matchFim;
+    return matchSearch && matchTipo && matchModelo && matchInicio && matchFim;
   });
+
+  const exportarZip = async () => {
+    const comXml = filtradas.filter(n => n.xml_content && n.xml_content.trim().startsWith("<"));
+    if (comXml.length === 0) return alert("Nenhuma nota com XML disponível no filtro atual.");
+    setGerandoZip(true);
+    const zip = new JSZip();
+    for (const nota of comXml) {
+      const nome = `NF_${nota.tipo}_${nota.numero || nota.id}.xml`;
+      zip.file(nome, nota.xml_content);
+    }
+    const blob = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `notas_fiscais_${periodoRange.inicio}_${periodoRange.fim}.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setGerandoZip(false);
+  };
+
+  const gerarSintegra = () => {
+    setGerandoSintegra(true);
+    const nfes = filtradas.filter(n => n.tipo === "NFe");
+    const mes = String(filtroMes).padStart(2, "0");
+    const ano = String(filtroAno);
+    const dtIni = `${ano}${mes}01`;
+    const dtFin = `${ano}${mes}31`;
+
+    let linhas = [];
+    // Registro 10 - Identificação do estabelecimento
+    linhas.push(`10MG AUTOCENTER LTDA              54043647000120Patos de Minas       MG${dtIni}${dtFin}1`.padEnd(125, " ").substring(0, 125) + "\r\n");
+
+    // Registro 11 - Dados complementares
+    linhas.push(`11Rua Rui Barbosa                1355Santa Terezinha    38700000                         34998791260          1`.padEnd(85, " ").substring(0, 85) + "\r\n");
+
+    let totalNotasEntrada = 0, totalValorEntrada = 0;
+    let totalNotasSaida = 0, totalValorSaida = 0;
+
+    // Registro 50 - Notas fiscais
+    for (const nota of nfes) {
+      const isEntrada = nota.status === "Importada";
+      const codSit = nota.status === "Cancelada" ? "2" : "N";
+      const tipo = isEntrada ? "E" : "S";
+      const cfop = "5405";
+      const data = (nota.data_emissao || "").replace(/-/g, "").substring(2); // AAMMDD
+      const valor = String(Math.round(Number(nota.valor_total || 0) * 100)).padStart(13, "0");
+      const cnpj = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "").padStart(14, "0");
+      const ie = "ISENTO         ";
+      const uf = "MG";
+      const num = (nota.numero || "0").padStart(6, "0");
+      const serie = (nota.serie || "1").padStart(3, " ");
+      const modelo = "55";
+
+      linhas.push(`50${cnpj}${ie}${uf}${data}${num}${serie}${modelo}${cfop}${valor}${valor}00000000000000000000000000000000000000000000000000000000${tipo}${codSit}\r\n`);
+
+      if (isEntrada) { totalNotasEntrada++; totalValorEntrada += Number(nota.valor_total || 0); }
+      else { totalNotasSaida++; totalValorSaida += Number(nota.valor_total || 0); }
+    }
+
+    // Registro 90 - Totalizadores
+    linhas.push(`9010         ${String(totalNotasEntrada).padStart(5,"0")}${String(Math.round(totalValorEntrada*100)).padStart(13,"0")}50E\r\n`);
+    linhas.push(`9010         ${String(totalNotasSaida).padStart(5,"0")}${String(Math.round(totalValorSaida*100)).padStart(13,"0")}50S\r\n`);
+    linhas.push(`99${String(linhas.length + 1).padStart(12, "0")}\r\n`);
+
+    const conteudo = linhas.join("");
+    const blob = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `SINTEGRA_${ano}${mes}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setGerandoSintegra(false);
+  };
 
   if (loading) return <Loader />;
 
