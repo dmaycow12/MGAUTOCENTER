@@ -84,17 +84,17 @@ export default function Configuracoes() {
   const salvar = async () => {
     setSalvando(true);
     try {
-      const existentes = await base44.entities.Configuracao.list("-created_date", 200);
-      for (const [chave, valor] of Object.entries(config)) {
-        // Ignorar chaves de usuario_extra para não sobrescrever
-        if (chave === "usuario_extra") continue;
-        const existente = existentes.find(e => e.chave === chave);
-        if (existente) {
-          await base44.entities.Configuracao.update(existente.id, { chave, valor: String(valor) });
-        } else {
-          await base44.entities.Configuracao.create({ chave, valor: String(valor) });
-        }
-      }
+      await Promise.all(
+        Object.entries(config).map(async ([chave, valor]) => {
+          if (chave === "usuario_extra") return;
+          const existentes = await base44.entities.Configuracao.filter({ chave }, "-created_date", 1);
+          if (existentes && existentes.length > 0) {
+            await base44.entities.Configuracao.update(existentes[0].id, { chave, valor: String(valor) });
+          } else {
+            await base44.entities.Configuracao.create({ chave, valor: String(valor) });
+          }
+        })
+      );
       await loadAll();
       setSalvo(true);
       setTimeout(() => setSalvo(false), 3000);
