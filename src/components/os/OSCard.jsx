@@ -213,24 +213,13 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         <div className="flex items-center gap-2 px-3 py-2.5">
           <span className="text-white font-bold text-sm tracking-wide flex-shrink-0">#{os.numero || "—"}</span>
 
-          <div className="relative">
+          <div>
             <button ref={statusBtnRef} onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
               className={"flex items-center gap-1 text-xs px-2.5 py-1 rounded-md font-semibold hover:opacity-90 transition-all " + style.badge}
               style={style.style}>
               {os.status || "—"}
               <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </button>
-            {statusOpen && (
-              <div ref={statusRef} className="absolute left-0 top-full mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-40 p-1 z-50 space-y-1">
-                {STATUS_OPTIONS.map(s => (
-                  <button key={s} onClick={() => alterarStatus(s)}
-                    className="w-full text-left px-2.5 py-1 text-xs font-semibold rounded-md transition-all hover:opacity-90"
-                    style={{ background: STATUS_STYLE[s].style.background, color: "#fff" }}>
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className="flex-1" />
