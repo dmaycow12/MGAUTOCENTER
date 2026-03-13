@@ -27,15 +27,17 @@ function clearRateLimit(key) {
 }
 
 Deno.serve(async (req) => {
-  try {
-    const base44 = createClientFromRequest(req);
-    const { usuario, senha } = await req.json();
+   try {
+     const base44 = createClientFromRequest(req);
+     const body = await req.json();
+     const { usuario, senha } = body;
 
-    if (!usuario || !senha) {
-      return Response.json({ erro: "Usuário e senha são obrigatórios." }, { status: 400 });
-    }
+     if (!usuario || !senha) {
+       return Response.json({ erro: "Usuário e senha são obrigatórios." }, { status: 400 });
+     }
 
-    const usuarioNorm = usuario.trim().toLowerCase();
+     const usuarioNorm = String(usuario || "").trim().toLowerCase();
+     const senhaInput = String(senha || "").trim();
 
     // Verifica rate limit
     const rateCheck = checkRateLimit(usuarioNorm);
