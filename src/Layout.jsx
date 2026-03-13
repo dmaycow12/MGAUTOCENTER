@@ -156,11 +156,14 @@ export default function Layout({ children, currentPageName }) {
   const [verificando, setVerificando] = useState(true);
   const [nomeUsuario, setNomeUsuario] = useState("Administrador");
 
+  const [tipoUsuario, setTipoUsuario] = useState("admin");
+
   useEffect(() => {
     const auth = sessionStorage.getItem("oficina_auth");
     if (auth) {
       const parsed = JSON.parse(auth);
       setNomeUsuario(parsed.nome || "Administrador");
+      setTipoUsuario(parsed.tipo || (parsed.role === "admin" ? "admin" : "usuario"));
     }
     setAutenticado(!!auth);
     setVerificando(false);
