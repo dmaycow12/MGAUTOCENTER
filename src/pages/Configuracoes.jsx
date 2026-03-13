@@ -285,15 +285,6 @@ export default function Configuracoes() {
         )}
 
         <div className="mb-4 space-y-2">
-          {/* Gerente fixo (admin) */}
-          <UserRow
-            nome="Administrador"
-            usuario="admin"
-            tipo="Gerente"
-            canDelete={true}
-            onEdit={() => setEditandoUsuario({ isAdmin: true, usuarioOriginal: "admin", dados: { nome: "Administrador", usuario: "admin", senha: "", tipo: "gerente" } })}
-            onDelete={() => excluirUsuario({ usuario: "admin", tipo: "gerente" })}
-          />
           {/* Usuários extras */}
           {usuarios.map((u, i) => {
             const tipoLabel = u.tipo === "contador" ? "Contador" : u.tipo === "vendedor" ? "Vendedor" : "Gerente";
