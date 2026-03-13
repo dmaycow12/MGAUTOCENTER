@@ -20,6 +20,7 @@ export default function Configuracoes() {
 
   // Usuários salvos no banco local
   const [usuarios, setUsuarios] = useState([]);
+  const [avisoUltimoGerente, setAvisoUltimoGerente] = useState(false);
 
   useEffect(() => {
     loadAll();
