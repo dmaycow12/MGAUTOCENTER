@@ -396,12 +396,12 @@ function UserRow({ nome, usuario, tipo, canDelete, onEdit, onDelete }) {
         <p className="text-gray-500 text-xs truncate">Usuário: {usuario}</p>
       </div>
       <span className="text-xs px-3 py-1 rounded-full font-medium flex-shrink-0" style={{background:"rgba(0,255,0,0.1)", color:"#00ff00"}}>{tipo}</span>
-      <button onClick={onEdit} className="p-1.5 text-gray-400 hover:text-white transition-all flex-shrink-0" title="Editar">
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13l6.768-6.768a2 2 0 112.828 2.828L11.828 15.828A2 2 0 0110 16.414V19h2.586a2 2 0 001.414-.586L20 12.414" /></svg>
+      <button onClick={onEdit} className="p-1.5 text-gray-400 hover:text-green-400 transition-all flex-shrink-0" title="Editar">
+        <Pencil className="w-4 h-4" />
       </button>
       {canDelete ? (
         <button onClick={onDelete} className="p-1.5 text-gray-500 hover:text-red-400 transition-all flex-shrink-0">
-          <X className="w-4 h-4" />
+          <Trash2 className="w-4 h-4" />
         </button>
       ) : (
         <div className="w-7 flex-shrink-0" />
