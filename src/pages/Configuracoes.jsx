@@ -146,8 +146,9 @@ export default function Configuracoes() {
     }
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("oficina_auth");
+  const handleLogout = async () => {
+    sessionStorage.removeItem("oficina_ui");
+    await base44.functions.invoke("authLogout", {});
     window.location.reload();
   };
 
