@@ -553,20 +553,29 @@ export default function NotasFiscais() {
     return matchSearch && matchTipo && matchModelo && matchInicio && matchFim;
   });
 
-  const exportarZip = async () => {
-    const comXml = filtradas.filter(n => n.xml_content && n.xml_content.trim().startsWith("<"));
-    if (comXml.length === 0) return alert("Nenhuma nota com XML disponível no filtro atual.");
+  const exportarRelatorio = () => {
+    if (filtradas.length === 0) return alert("Nenhuma nota no filtro atual.");
     setGerandoZip(true);
-    const zip = new JSZip();
-    for (const nota of comXml) {
-      const nome = `NF_${nota.tipo}_${nota.numero || nota.id}.xml`;
-      zip.file(nome, nota.xml_content);
-    }
-    const blob = await zip.generateAsync({ type: "blob" });
+    const header = ["Tipo", "Número", "Série", "Status", "Cliente", "Data Emissão", "Valor Total", "Chave Acesso", "Observações"];
+    const rows = filtradas.map(n => [
+      n.tipo || "",
+      n.numero || "",
+      n.serie || "",
+      n.status || "",
+      n.cliente_nome || "",
+      n.data_emissao || "",
+      Number(n.valor_total || 0).toFixed(2).replace(".", ","),
+      n.chave_acesso || "",
+      (n.observacoes || "").replace(/[\r\n;]/g, " "),
+    ]);
+    const sep = ";";
+    const bom = "\uFEFF";
+    const csvContent = bom + [header, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(sep)).join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `notas_fiscais_${periodoRange.inicio}_${periodoRange.fim}.zip`;
+    a.download = `notas_fiscais_${periodoRange.inicio}_${periodoRange.fim}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     setGerandoZip(false);
