@@ -18,7 +18,7 @@ export default function Configuracoes() {
   const [feedbackSenha, setFeedbackSenha] = useState(null);
 
   // Usuários
-  const [novoUsuario, setNovoUsuario] = useState({ nome: "", usuario: "", senha: "", confirmarSenha: "" });
+  const [novoUsuario, setNovoUsuario] = useState({ nome: "", usuario: "", senha: "", confirmarSenha: "", tipo: "usuario" });
   const [salvandoUsuario, setSalvandoUsuario] = useState(false);
   const [feedbackUsuario, setFeedbackUsuario] = useState(null);
 
