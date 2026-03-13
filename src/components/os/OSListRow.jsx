@@ -233,10 +233,10 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
               <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </button>
             {statusOpen && (
-              <div ref={statusRef} className="absolute left-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-36 py-1 z-[100]">
+              <div ref={statusRef} className="absolute left-0 top-full mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-36 p-2 z-[100] space-y-1.5">
                 {STATUS_OPTIONS.map(s => (
                   <button key={s} onClick={() => alterarStatus(s)}
-                    className="w-full text-left px-3 py-2 text-xs font-semibold transition-all"
+                    className="w-full text-left px-3 py-2.5 text-xs font-semibold rounded-lg transition-all hover:opacity-90"
                     style={{ background: STATUS_STYLE[s].style.background, color: "#fff" }}>
                     {s}
                   </button>
