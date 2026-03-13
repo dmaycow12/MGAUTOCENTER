@@ -165,7 +165,7 @@ export default function Layout({ children, currentPageName }) {
   if (currentPageName === "OrcamentoPublico") return <>{children}</>;
 
   // Restrição por tipo de usuário
-  if (autenticado && tipoUsuario === "contador" && !["NotasFiscais", "Configuracoes"].includes(currentPageName)) {
+  if (autenticado && tipoUsuario === "contador" && !["NotasFiscais"].includes(currentPageName)) {
     window.location.href = "/NotasFiscais";
     return null;
   }
