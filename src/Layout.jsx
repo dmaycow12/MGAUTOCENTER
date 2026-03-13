@@ -127,7 +127,7 @@ function LoginPage() {
               onChange={e => setSenha(e.target.value)}
               className="w-full text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none placeholder-gray-600"
               style={{background:"#1a1a1a", border:"1px solid #333"}}
-              placeholder="••••••••"
+              placeholder=""
             />
           </div>
 
