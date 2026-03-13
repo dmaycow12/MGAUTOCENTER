@@ -92,9 +92,8 @@ Deno.serve(async (req) => {
       .setExpirationTime("12h")
       .sign(secret);
 
-    const isHttps = req.headers.get("x-forwarded-proto") === "https";
-    const securePart = isHttps ? "; Secure" : "";
-    const cookieValue = `oficina_token=${token}; HttpOnly; Path=/; Max-Age=43200; SameSite=Strict${securePart}`;
+    // SameSite=None; Secure é necessário para funcionar em iframes (ex: preview Base44)
+    const cookieValue = `oficina_token=${token}; HttpOnly; Path=/; Max-Age=43200; SameSite=None; Secure`;
 
     return new Response(JSON.stringify({
       sucesso: true,
