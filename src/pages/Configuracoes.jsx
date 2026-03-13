@@ -247,48 +247,29 @@ export default function Configuracoes() {
           </div>
         )}
 
-        <div className="mb-4 space-y-3">
+        <div className="mb-4 space-y-2">
           {/* Gerente fixo (admin) */}
-          <div className="flex items-center justify-between bg-gray-800 rounded-xl px-4 py-3">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{background:"#00ff00"}}>
-                <User className="w-4 h-4 text-black" />
-              </div>
-              <div>
-                <p className="text-white text-sm font-medium">Administrador</p>
-                <p className="text-gray-500 text-xs">Usuário: admin</p>
-              </div>
-            </div>
-            <span className="text-xs px-2 py-1 rounded-full font-medium" style={{background:"rgba(0,255,0,0.1)", color:"#00ff00"}}>Gerente</span>
-          </div>
-
+          <UserRow
+            nome="Administrador"
+            usuario="admin"
+            tipo="Gerente"
+            canDelete={false}
+            onEdit={() => setEditandoUsuario({ isAdmin: true, usuarioOriginal: "admin", dados: { nome: "Administrador", usuario: "admin", senha: "", tipo: "gerente" } })}
+          />
           {/* Usuários extras */}
           {usuarios.map((u, i) => {
             const tipoLabel = u.tipo === "contador" ? "Contador" : u.tipo === "vendedor" ? "Vendedor" : "Gerente";
             const isGerente = u.tipo === "gerente" || (!u.tipo || u.tipo === "usuario");
             return (
-              <div key={i} className="flex items-center justify-between bg-gray-800 rounded-xl px-4 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-green-400" />
-                  </div>
-                  <div>
-                    <p className="text-white text-sm font-medium">{u.nome}</p>
-                    <p className="text-gray-500 text-xs">Usuário: {u.usuario}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs px-2 py-1 rounded-full font-medium" style={{background:"rgba(0,255,0,0.1)", color:"#00ff00"}}>{tipoLabel}</span>
-                  <button onClick={() => setEditandoUsuario({ usuarioOriginal: u.usuario, dados: { ...u, tipo: u.tipo || "gerente" } })} className="p-1.5 text-gray-400 hover:text-white transition-all" title="Editar">
-                    <Save className="w-4 h-4" />
-                  </button>
-                  {!isGerente && (
-                    <button onClick={() => excluirUsuario(u)} className="p-1.5 text-gray-500 hover:text-red-400 transition-all">
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
+              <UserRow
+                key={i}
+                nome={u.nome}
+                usuario={u.usuario}
+                tipo={tipoLabel}
+                canDelete={!isGerente}
+                onEdit={() => setEditandoUsuario({ isAdmin: false, usuarioOriginal: u.usuario, dados: { ...u, tipo: u.tipo || "gerente" } })}
+                onDelete={() => excluirUsuario(u)}
+              />
             );
           })}
         </div>
