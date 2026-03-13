@@ -139,25 +139,27 @@ export default function Layout({ children, currentPageName }) {
   const [tipoUsuario, setTipoUsuario] = useState("gerente");
 
   useEffect(() => {
-    const auth = sessionStorage.getItem("oficina_auth");
-    if (!auth) { setAutenticado(false); setVerificando(false); return; }
-
-    const parsed = JSON.parse(auth);
-    // Verifica token no servidor
-    base44.functions.invoke("authVerify", { token: parsed.token })
+    // Verifica token no servidor via cookie httpOnly (sem enviar token no body)
+    base44.functions.invoke("authVerify", {})
       .then(res => {
         const data = res.data;
         if (data?.valido) {
           setNomeUsuario(data.nome || "Administrador");
           setTipoUsuario(data.tipo || "gerente");
           setAutenticado(true);
+          // Atualiza cache de UI
+          sessionStorage.setItem("oficina_ui", JSON.stringify({
+            nome: data.nome,
+            usuario: data.usuario,
+            tipo: data.tipo,
+          }));
         } else {
-          sessionStorage.removeItem("oficina_auth");
+          sessionStorage.removeItem("oficina_ui");
           setAutenticado(false);
         }
       })
       .catch(() => {
-        sessionStorage.removeItem("oficina_auth");
+        sessionStorage.removeItem("oficina_ui");
         setAutenticado(false);
       })
       .finally(() => setVerificando(false));
