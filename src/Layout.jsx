@@ -9,10 +9,7 @@ import {
   FileText,
   DollarSign,
   Settings,
-  Menu,
-  X,
   Wrench,
-  ChevronRight,
   LogOut,
   Lock,
   BarChart3,
@@ -130,8 +127,6 @@ function LoginPage() {
 }
 
 export default function Layout({ children, currentPageName }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [autenticado, setAutenticado] = useState(false);
   const [verificando, setVerificando] = useState(true);
   const [nomeUsuario, setNomeUsuario] = useState("Administrador");
