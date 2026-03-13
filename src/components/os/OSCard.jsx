@@ -261,6 +261,16 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
           </div>
         </div>
 
+        <div className="flex gap-1 px-3 py-2 border-t border-gray-800">
+          {STATUS_OPTIONS.map(s => (
+            <button key={s} onClick={() => alterarStatus(s)}
+              className={`flex-1 px-2 py-1 rounded-md text-xs font-semibold transition-all ${os.status === s ? "opacity-100" : "opacity-60 hover:opacity-80"}`}
+              style={{ background: STATUS_STYLE[s].style.background, color: "#fff" }}>
+              {s}
+            </button>
+          ))}
+        </div>
+
         <div className="grid grid-cols-2 border-t border-gray-800">
           <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
