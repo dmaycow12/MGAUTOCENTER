@@ -95,6 +95,7 @@ export default function Configuracoes() {
           await base44.entities.Configuracao.create({ chave, valor: String(valor) });
         }
       }
+      await loadAll();
       setSalvo(true);
       setTimeout(() => setSalvo(false), 3000);
     } finally {
