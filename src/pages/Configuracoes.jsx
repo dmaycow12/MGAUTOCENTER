@@ -104,10 +104,10 @@ export default function Configuracoes() {
     setSalvandoUsuario(true);
     await base44.entities.Configuracao.create({
       chave: "usuario_extra",
-      valor: JSON.stringify({ nome: novoUsuario.nome, usuario: novoUsuario.usuario, senha: novoUsuario.senha }),
+      valor: JSON.stringify({ nome: novoUsuario.nome, usuario: novoUsuario.usuario, senha: novoUsuario.senha, tipo: novoUsuario.tipo }),
       descricao: `Usuário extra: ${novoUsuario.nome}`,
     });
-    setNovoUsuario({ nome: "", usuario: "", senha: "", confirmarSenha: "" });
+    setNovoUsuario({ nome: "", usuario: "", senha: "", confirmarSenha: "", tipo: "usuario" });
     setFeedbackUsuario({ tipo: "sucesso", msg: `Usuário "${novoUsuario.usuario}" criado com sucesso!` });
     setSalvandoUsuario(false);
     loadAll();
