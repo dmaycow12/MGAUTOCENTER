@@ -133,8 +133,7 @@ export default function Layout({ children, currentPageName }) {
   const [autenticado, setAutenticado] = useState(false);
   const [verificando, setVerificando] = useState(true);
   const [nomeUsuario, setNomeUsuario] = useState("Administrador");
-
-  const [tipoUsuario, setTipoUsuario] = useState("gerente");
+  const [tipoUsuario, setTipoUsuario] = useState(null);
 
   useEffect(() => {
     // Verifica token — via cookie httpOnly ou fallback sessionStorage (para iframes)
