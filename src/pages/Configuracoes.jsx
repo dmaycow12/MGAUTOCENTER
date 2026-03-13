@@ -192,8 +192,47 @@ export default function Configuracoes() {
 
       {/* Usuários */}
       <Section title="Gerenciar Usuários" icon={UserPlus}>
+        {/* Modal de edição */}
+        {editandoUsuario && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+            <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-md space-y-4">
+              <h3 className="text-white font-semibold text-lg">Editar Usuário</h3>
+              <F label="Nome *">
+                <input value={editandoUsuario.dados.nome} onChange={e => setEditandoUsuario(ed => ({ ...ed, dados: { ...ed.dados, nome: e.target.value } }))} className="input-dark" />
+              </F>
+              <F label="Nome de usuário *">
+                <input value={editandoUsuario.dados.usuario} onChange={e => setEditandoUsuario(ed => ({ ...ed, dados: { ...ed.dados, usuario: e.target.value } }))} className="input-dark" />
+              </F>
+              <F label="Senha">
+                <input type="password" value={editandoUsuario.dados.senha} onChange={e => setEditandoUsuario(ed => ({ ...ed, dados: { ...ed.dados, senha: e.target.value } }))} className="input-dark" placeholder="" />
+              </F>
+              <F label="Tipo">
+                <div className="flex gap-2 mt-1">
+                  {[
+                    { value: "gerente", label: "Gerente", desc: "Acesso completo" },
+                    { value: "contador", label: "Contador", desc: "Apenas Notas Fiscais" },
+                    { value: "vendedor", label: "Vendedor", desc: "Apenas Vendas" },
+                  ].map(opt => (
+                    <button key={opt.value} type="button"
+                      onClick={() => setEditandoUsuario(ed => ({ ...ed, dados: { ...ed.dados, tipo: opt.value } }))}
+                      className={`flex-1 flex flex-col items-center py-2 px-2 rounded-xl border-2 transition-all text-center ${editandoUsuario.dados.tipo === opt.value ? "border-green-500 bg-green-500/10 text-green-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}`}>
+                      <span className="text-xs font-semibold">{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </F>
+              <div className="flex gap-2 pt-2">
+                <button onClick={() => setEditandoUsuario(null)} className="flex-1 py-2 rounded-lg text-sm text-gray-400 border border-gray-700 hover:border-gray-500 transition-all">Cancelar</button>
+                <button onClick={salvarEdicaoUsuario} disabled={salvandoUsuario} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
+                  {salvandoUsuario ? "Salvando..." : "Salvar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-4 space-y-3">
-          {/* Admin fixo */}
+          {/* Gerente fixo (admin) */}
           <div className="flex items-center justify-between bg-gray-800 rounded-xl px-4 py-3">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{background:"#00ff00"}}>
@@ -201,16 +240,16 @@ export default function Configuracoes() {
               </div>
               <div>
                 <p className="text-white text-sm font-medium">Administrador</p>
-                <p className="text-gray-500 text-xs">Usuário: admin • Senha: ••••••••</p>
+                <p className="text-gray-500 text-xs">Usuário: admin</p>
               </div>
             </div>
-            <span className="text-xs px-2 py-1 rounded-full font-medium" style={{background:"rgba(0,255,0,0.1)", color:"#00ff00"}}>Admin</span>
+            <span className="text-xs px-2 py-1 rounded-full font-medium" style={{background:"rgba(0,255,0,0.1)", color:"#00ff00"}}>Gerente</span>
           </div>
 
           {/* Usuários extras */}
           {usuarios.map((u, i) => {
-            const tipoLabel = u.tipo === "contador" ? "Contador" : u.tipo === "vendedor" ? "Vendedor" : "Usuário";
-            const tipoColor = u.tipo === "contador" ? "text-green-400 bg-green-500/10" : u.tipo === "vendedor" ? "text-green-400 bg-green-500/10" : "text-gray-400 bg-gray-700/30";
+            const tipoLabel = u.tipo === "contador" ? "Contador" : u.tipo === "vendedor" ? "Vendedor" : "Gerente";
+            const isGerente = u.tipo === "gerente" || (!u.tipo || u.tipo === "usuario");
             return (
               <div key={i} className="flex items-center justify-between bg-gray-800 rounded-xl px-4 py-3">
                 <div className="flex items-center gap-3">
@@ -223,10 +262,15 @@ export default function Configuracoes() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${tipoColor}`}>{tipoLabel}</span>
-                  <button onClick={() => excluirUsuario(u)} className="p-1.5 text-gray-500 hover:text-red-400 transition-all">
-                    <X className="w-4 h-4" />
+                  <span className="text-xs px-2 py-1 rounded-full font-medium" style={{background:"rgba(0,255,0,0.1)", color:"#00ff00"}}>{tipoLabel}</span>
+                  <button onClick={() => setEditandoUsuario({ usuarioOriginal: u.usuario, dados: { ...u, tipo: u.tipo || "gerente" } })} className="p-1.5 text-gray-400 hover:text-white transition-all" title="Editar">
+                    <Save className="w-4 h-4" />
                   </button>
+                  {!isGerente && (
+                    <button onClick={() => excluirUsuario(u)} className="p-1.5 text-gray-500 hover:text-red-400 transition-all">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -242,22 +286,22 @@ export default function Configuracoes() {
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <F label="Nome completo *">
-              <input value={novoUsuario.nome} onChange={e => setNovoUsuario(u => ({ ...u, nome: e.target.value }))} className="input-dark" placeholder="Ex: João Silva" />
+            <F label="Nome *">
+              <input value={novoUsuario.nome} onChange={e => setNovoUsuario(u => ({ ...u, nome: e.target.value }))} className="input-dark" />
             </F>
             <F label="Nome de usuário *">
-              <input value={novoUsuario.usuario} onChange={e => setNovoUsuario(u => ({ ...u, usuario: e.target.value }))} className="input-dark" placeholder="Ex: joao123" />
+              <input value={novoUsuario.usuario} onChange={e => setNovoUsuario(u => ({ ...u, usuario: e.target.value }))} className="input-dark" />
             </F>
             <F label="Senha *">
-              <input type="password" value={novoUsuario.senha} onChange={e => setNovoUsuario(u => ({ ...u, senha: e.target.value }))} className="input-dark" placeholder="••••••••" />
+              <input type="password" value={novoUsuario.senha} onChange={e => setNovoUsuario(u => ({ ...u, senha: e.target.value }))} className="input-dark" placeholder="" />
             </F>
             <F label="Confirmar senha *">
-              <input type="password" value={novoUsuario.confirmarSenha} onChange={e => setNovoUsuario(u => ({ ...u, confirmarSenha: e.target.value }))} className="input-dark" placeholder="••••••••" />
+              <input type="password" value={novoUsuario.confirmarSenha} onChange={e => setNovoUsuario(u => ({ ...u, confirmarSenha: e.target.value }))} className="input-dark" placeholder="" />
             </F>
             <F label="Tipo de Usuário *" className="col-span-1 md:col-span-2">
               <div className="flex gap-2 mt-1">
                 {[
-                  { value: "usuario", label: "Usuário Padrão", desc: "Acesso completo" },
+                  { value: "gerente", label: "Gerente", desc: "Acesso completo" },
                   { value: "contador", label: "Contador", desc: "Apenas Notas Fiscais" },
                   { value: "vendedor", label: "Vendedor", desc: "Apenas Vendas" },
                 ].map(opt => (
@@ -271,7 +315,7 @@ export default function Configuracoes() {
               </div>
             </F>
           </div>
-          <button onClick={criarUsuario} disabled={salvandoUsuario} className="mt-3 flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50" style={{background:"#00ff00"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
+          <button onClick={criarUsuario} disabled={salvandoUsuario} className="mt-3 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
             <UserPlus className="w-4 h-4" />
             {salvandoUsuario ? "Criando..." : "Criar Usuário"}
           </button>
