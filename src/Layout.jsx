@@ -92,7 +92,6 @@ function LoginPage() {
           <div className="w-32 h-32 flex items-center justify-center mb-4">
             <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6997c92e6dd9fc3c5e8a6579/3fff287a0_LOGO.png" alt="MG Autocenter" className="w-full h-full object-contain" />
           </div>
-          <p className="text-gray-500 text-sm mt-1">Acesso Restrito</p>
         </div>
 
         <form onSubmit={handleLogin} className="border rounded-2xl p-6 space-y-4" style={{background:"#111", borderColor:"#222"}}>
@@ -115,7 +114,7 @@ function LoginPage() {
               onChange={e => setUsuario(e.target.value)}
               className="w-full text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none placeholder-gray-600"
               style={{background:"#1a1a1a", border:"1px solid #333"}}
-              placeholder="admin"
+              placeholder=""
               autoFocus
             />
           </div>
