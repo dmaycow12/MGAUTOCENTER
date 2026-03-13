@@ -49,12 +49,11 @@ function LoginPage() {
     try {
       const response = await base44.functions.invoke("authLogin", { usuario, senha });
       const data = response.data;
-      if (data?.token) {
-        sessionStorage.setItem("oficina_auth", JSON.stringify({
-          token: data.token,
-          usuario: data.usuario,
+      if (data?.sucesso) {
+        // Token fica no cookie httpOnly — apenas salvamos nome/tipo no sessionStorage para UI
+        sessionStorage.setItem("oficina_ui", JSON.stringify({
           nome: data.nome,
-          role: data.role,
+          usuario: data.usuario,
           tipo: data.tipo,
         }));
         window.location.reload();
