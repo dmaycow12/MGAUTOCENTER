@@ -245,7 +245,7 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Bottom Menu - Mobile (apenas admin) */}
         {!isRestrito && (
-          <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 px-2 py-2 rounded-2xl z-40" style={{background:"rgba(17,17,17,0.9)", backdropFilter:"blur(10px)", border:"1px solid rgba(34,34,34,0.8)", maxWidth:"calc(100% - 16px)"}}>
+          <nav className="md:hidden fixed top-2 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 px-2 py-2 rounded-2xl z-40" style={{background:"rgba(17,17,17,0.9)", backdropFilter:"blur(10px)", border:"1px solid rgba(34,34,34,0.8)", maxWidth:"calc(100% - 16px)"}}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPageName === item.page;
