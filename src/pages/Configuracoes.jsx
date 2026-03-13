@@ -221,6 +221,22 @@ export default function Configuracoes() {
 
       {/* Usuários */}
       <Section title="Gerenciar Usuários" icon={UserPlus}>
+        {/* Modal aviso último gerente */}
+        {avisoUltimoGerente && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+            <div className="bg-gray-900 border border-yellow-500/40 rounded-2xl p-6 w-full max-w-sm text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center mx-auto">
+                <AlertCircle className="w-6 h-6 text-yellow-400" />
+              </div>
+              <h3 className="text-white font-semibold text-lg">Ação não permitida</h3>
+              <p className="text-gray-400 text-sm">Não é possível excluir o último gerente do sistema. Deve existir ao menos um gerente cadastrado.</p>
+              <button onClick={() => setAvisoUltimoGerente(false)} className="w-full py-2.5 rounded-xl text-sm font-semibold" style={{background:"#00ff00", color:"#000"}}>
+                Entendido
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Modal de edição */}
         {editandoUsuario && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
