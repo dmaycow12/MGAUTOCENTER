@@ -137,17 +137,31 @@ export default function Layout({ children, currentPageName }) {
   const [verificando, setVerificando] = useState(true);
   const [nomeUsuario, setNomeUsuario] = useState("Administrador");
 
-  const [tipoUsuario, setTipoUsuario] = useState("admin");
+  const [tipoUsuario, setTipoUsuario] = useState("gerente");
 
   useEffect(() => {
     const auth = sessionStorage.getItem("oficina_auth");
-    if (auth) {
-      const parsed = JSON.parse(auth);
-      setNomeUsuario(parsed.nome || "Administrador");
-      setTipoUsuario(parsed.tipo || (parsed.role === "admin" ? "admin" : "usuario"));
-    }
-    setAutenticado(!!auth);
-    setVerificando(false);
+    if (!auth) { setAutenticado(false); setVerificando(false); return; }
+
+    const parsed = JSON.parse(auth);
+    // Verifica token no servidor
+    base44.functions.invoke("authVerify", { token: parsed.token })
+      .then(res => {
+        const data = res.data;
+        if (data?.valido) {
+          setNomeUsuario(data.nome || "Administrador");
+          setTipoUsuario(data.tipo || "gerente");
+          setAutenticado(true);
+        } else {
+          sessionStorage.removeItem("oficina_auth");
+          setAutenticado(false);
+        }
+      })
+      .catch(() => {
+        sessionStorage.removeItem("oficina_auth");
+        setAutenticado(false);
+      })
+      .finally(() => setVerificando(false));
   }, []);
 
   const handleLogout = () => {
