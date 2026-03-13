@@ -356,6 +356,31 @@ function F({ label, children, className = "" }) {
   );
 }
 
+function UserRow({ nome, usuario, tipo, canDelete, onEdit, onDelete }) {
+  return (
+    <div className="flex items-center bg-gray-800 rounded-xl px-4 py-3 gap-3">
+      <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{background:"rgba(0,255,0,0.15)"}}>
+        <User className="w-4 h-4 text-green-400" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-white text-sm font-semibold truncate">{nome}</p>
+        <p className="text-gray-500 text-xs truncate">Usuário: {usuario}</p>
+      </div>
+      <span className="text-xs px-3 py-1 rounded-full font-medium flex-shrink-0" style={{background:"rgba(0,255,0,0.1)", color:"#00ff00"}}>{tipo}</span>
+      <button onClick={onEdit} className="p-1.5 text-gray-400 hover:text-white transition-all flex-shrink-0" title="Editar">
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13l6.768-6.768a2 2 0 112.828 2.828L11.828 15.828A2 2 0 0110 16.414V19h2.586a2 2 0 001.414-.586L20 12.414" /></svg>
+      </button>
+      {canDelete ? (
+        <button onClick={onDelete} className="p-1.5 text-gray-500 hover:text-red-400 transition-all flex-shrink-0">
+          <X className="w-4 h-4" />
+        </button>
+      ) : (
+        <div className="w-7 flex-shrink-0" />
+      )}
+    </div>
+  );
+}
+
 function Loader() {
   return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-t-transparent rounded-full animate-spin" style={{border:"2px solid #00ff00", borderTopColor:"transparent"}} /></div>;
 }
