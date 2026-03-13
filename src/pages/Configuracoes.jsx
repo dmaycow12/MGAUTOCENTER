@@ -199,7 +199,7 @@ export default function Configuracoes() {
         </div>
       </Section>
 
-      <button onClick={salvar} disabled={salvando} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium transition-all disabled:opacity-50">
+      <button onClick={salvar} disabled={salvando} className="flex items-center gap-2 text-white px-6 py-3 rounded-xl font-medium transition-all disabled:opacity-50" style={{background:"#00ff00"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
         <Save className="w-5 h-5" />
         {salvando ? "Salvando..." : "Salvar Configurações"}
       </button>
@@ -223,7 +223,7 @@ export default function Configuracoes() {
             <input type="password" value={senhaAdmin.confirmar} onChange={e => setSenhaAdmin(s => ({ ...s, confirmar: e.target.value }))} className="input-dark" placeholder="••••••••" />
           </F>
         </div>
-        <button onClick={alterarSenhaAdmin} disabled={salvandoSenha} className="mt-3 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50">
+        <button onClick={alterarSenhaAdmin} disabled={salvandoSenha} className="mt-3 flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50" style={{background:"#00ff00"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
           <Save className="w-4 h-4" />
           {salvandoSenha ? "Salvando..." : "Alterar Senha"}
         </button>
@@ -235,15 +235,15 @@ export default function Configuracoes() {
           {/* Admin fixo */}
           <div className="flex items-center justify-between bg-gray-800 rounded-xl px-4 py-3">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{background:"#00ff00"}}>
+                <User className="w-4 h-4 text-black" />
               </div>
               <div>
                 <p className="text-white text-sm font-medium">Administrador</p>
                 <p className="text-gray-500 text-xs">Usuário: admin • Senha: ••••••••</p>
               </div>
             </div>
-            <span className="text-xs bg-orange-500/10 text-orange-400 px-2 py-1 rounded-full">Admin</span>
+            <span className="text-xs px-2 py-1 rounded-full font-medium" style={{background:"rgba(0,255,0,0.1)", color:"#00ff00"}}>Admin</span>
           </div>
 
           {/* Usuários extras */}
@@ -310,7 +310,7 @@ export default function Configuracoes() {
               </div>
             </F>
           </div>
-          <button onClick={criarUsuario} disabled={salvandoUsuario} className="mt-3 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50">
+          <button onClick={criarUsuario} disabled={salvandoUsuario} className="mt-3 flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50" style={{background:"#00ff00"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
             <UserPlus className="w-4 h-4" />
             {salvandoUsuario ? "Criando..." : "Criar Usuário"}
           </button>
@@ -352,5 +352,5 @@ function F({ label, children, className = "" }) {
 }
 
 function Loader() {
-  return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" /></div>;
+  return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-t-transparent rounded-full animate-spin" style={{border:"2px solid #00ff00", borderTopColor:"transparent"}} /></div>;
 }

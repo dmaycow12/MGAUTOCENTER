@@ -250,7 +250,7 @@ export default function Layout({ children, currentPageName }) {
         )}
 
         {/* Page Content */}
-        <main className={`flex-1 overflow-auto p-4 pb-24 md:pb-6 ${isRestrito ? "pt-16" : "pt-20 md:pt-24"} md:p-6`} style={{background:"#000"}}>
+        <main className={`flex-1 overflow-auto pb-24 md:pb-6 ${isRestrito ? "p-4 pt-20 md:p-6 md:pt-20" : "p-4 pt-20 md:p-6 md:pt-24"}`} style={{background:"#000"}}>
           {children}
         </main>
 
