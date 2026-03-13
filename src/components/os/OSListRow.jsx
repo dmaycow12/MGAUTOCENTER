@@ -16,8 +16,8 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
 
 const STATUS_OPTIONS = ["Aberto", "Orçamento", "Concluído"];
 const STATUS_STYLE = {
-  "Aberto":    { style: { background: "#062C9B", color: "#fff" } },
-  "Orçamento": { style: { background: "#FFCC00", color: "#fff" } },
+  "Aberto":    { style: { background: "#cc0000", color: "#fff" } },
+  "Orçamento": { style: { background: "#062C9B", color: "#fff" } },
   "Concluído": { style: { background: "#00C957", color: "#fff" } },
 };
 
