@@ -673,12 +673,18 @@ export default function NotasFiscais() {
         {/* Linha 2c: botões exportar zip + sintegra */}
         <div className="flex gap-2">
           <button onClick={exportarZip} disabled={gerandoZip}
-            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 transition-all disabled:opacity-50">
+            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold text-white transition-all disabled:opacity-50"
+            style={{background:"#00cc44"}}
+            onMouseEnter={e => e.currentTarget.style.background="#00aa33"}
+            onMouseLeave={e => e.currentTarget.style.background="#00cc44"}>
             {gerandoZip ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
-            Exportar XMLs (ZIP)
+            Exportar (DANFE em ZIP)
           </button>
           <button onClick={gerarSintegra} disabled={gerandoSintegra}
-            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-500 transition-all disabled:opacity-50">
+            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold text-white transition-all disabled:opacity-50"
+            style={{background:"#00cc44"}}
+            onMouseEnter={e => e.currentTarget.style.background="#00aa33"}
+            onMouseLeave={e => e.currentTarget.style.background="#00cc44"}>
             {gerandoSintegra ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <BarChart2 className="w-3.5 h-3.5" />}
             Gerar Sintegra
           </button>
