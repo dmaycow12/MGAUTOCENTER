@@ -183,7 +183,7 @@ export default function Layout({ children, currentPageName }) {
   if (!autenticado && currentPageName !== "OrcamentoPublico") return <LoginPage />;
 
   const isRestrito = tipoUsuario === "contador" || tipoUsuario === "vendedor";
-  const tituloRestrito = tipoUsuario === "contador" ? "ÁREA FISCAL" : tipoUsuario === "vendedor" ? "VENDAS" : "";
+  const tituloRestrito = tipoUsuario === "contador" ? "NOTAS" : tipoUsuario === "vendedor" ? "VENDAS" : "";
 
   return (
     <div className="min-h-screen text-gray-100 flex" style={{background:"#000"}}>
