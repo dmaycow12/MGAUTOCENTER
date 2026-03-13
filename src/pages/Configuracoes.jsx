@@ -3,6 +3,9 @@ import { base44 } from "@/api/base44Client";
 import { Settings, Save, CheckCircle, Plus, X, UserPlus, LogOut, AlertCircle, User, Pencil, Trash2 } from "lucide-react";
 
 export default function Configuracoes() {
+  const CHAVES = ["nome_oficina", "cnpj", "telefone", "email", "endereco", "cidade", "estado", "cep",
+    "spedy_api_key", "spedy_ambiente", "logo_url", "observacoes_padrao", "proximo_numero_os"];
+
   const [config, setConfig] = useState({
     nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
     spedy_api_key: "", spedy_ambiente: "homologacao",
@@ -12,40 +15,68 @@ export default function Configuracoes() {
   const [salvo, setSalvo] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Mapa de chave -> id do registro no banco
+  const [configIds, setConfigIds] = useState({});
+
   // Usuários
   const [novoUsuario, setNovoUsuario] = useState({ nome: "", usuario: "", senha: "", confirmarSenha: "", tipo: "gerente" });
-  const [editandoUsuario, setEditandoUsuario] = useState(null); // {index, dados}
+  const [editandoUsuario, setEditandoUsuario] = useState(null);
   const [salvandoUsuario, setSalvandoUsuario] = useState(false);
   const [feedbackUsuario, setFeedbackUsuario] = useState(null);
 
-  // Usuários salvos no banco local
-  const [usuarios, setUsuarios] = useState([]);
+  const [usuarios, setUsuarios] = useState([]); // [{...dados, _id: id_do_banco}]
   const [avisoUltimoGerente, setAvisoUltimoGerente] = useState(false);
 
-  useEffect(() => {
-    loadAll();
-  }, []);
+  useEffect(() => { loadAll(); }, []);
 
   const loadAll = async () => {
-    const configs = await base44.entities.Configuracao.list("-created_date", 200);
+    const todos = await base44.entities.Configuracao.list("-created_date", 200);
 
     const c = {
       nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
       spedy_api_key: "", spedy_ambiente: "homologacao",
       logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
     };
-    configs.forEach(item => {
-      if (Object.prototype.hasOwnProperty.call(c, item.chave)) c[item.chave] = item.valor;
+    const ids = {};
+    const extras = [];
+
+    todos.forEach(item => {
+      if (CHAVES.includes(item.chave)) {
+        c[item.chave] = item.valor || "";
+        ids[item.chave] = item.id;
+      } else if (item.chave === "usuario_extra") {
+        try {
+          const parsed = JSON.parse(item.valor);
+          extras.push({ ...parsed, _id: item.id });
+        } catch {}
+      } else if (item.chave === "admin_senha") {
+        ids["admin_senha"] = item.id;
+      }
     });
+
     setConfig(c);
-
-    // Usuários extras cadastrados
-    const usersExtras = configs.filter(i => i.chave === "usuario_extra").map(i => {
-      try { return JSON.parse(i.valor); } catch { return null; }
-    }).filter(Boolean);
-    setUsuarios(usersExtras);
-
+    setConfigIds(ids);
+    setUsuarios(extras);
     setLoading(false);
+  };
+
+  const salvar = async () => {
+    setSalvando(true);
+    try {
+      for (const chave of CHAVES) {
+        const valor = String(config[chave] ?? "");
+        if (configIds[chave]) {
+          await base44.entities.Configuracao.update(configIds[chave], { chave, valor });
+        } else {
+          const novo = await base44.entities.Configuracao.create({ chave, valor });
+          setConfigIds(prev => ({ ...prev, [chave]: novo.id }));
+        }
+      }
+      setSalvo(true);
+      setTimeout(() => setSalvo(false), 3000);
+    } finally {
+      setSalvando(false);
+    }
   };
 
   const salvarEdicaoUsuario = async () => {
@@ -55,22 +86,18 @@ export default function Configuracoes() {
     setSalvandoUsuario(true);
 
     if (editandoUsuario.isAdmin) {
-      // Salvar senha do admin se preenchida
       if (dados.senha) {
-        const configs = await base44.entities.Configuracao.list("-created_date", 200);
-        const existente = configs.find(c => c.chave === "admin_senha");
-        if (existente) {
-          await base44.entities.Configuracao.update(existente.id, { chave: "admin_senha", valor: dados.senha });
+        if (configIds["admin_senha"]) {
+          await base44.entities.Configuracao.update(configIds["admin_senha"], { chave: "admin_senha", valor: dados.senha });
         } else {
-          await base44.entities.Configuracao.create({ chave: "admin_senha", valor: dados.senha, descricao: "Senha do admin" });
+          const novo = await base44.entities.Configuracao.create({ chave: "admin_senha", valor: dados.senha, descricao: "Senha do admin" });
+          setConfigIds(prev => ({ ...prev, admin_senha: novo.id }));
         }
       }
     } else {
-      const registros = await base44.entities.Configuracao.filter({ chave: "usuario_extra" }, "-created_date", 50);
-      const reg = registros.find(r => { try { return JSON.parse(r.valor).usuario === editandoUsuario.usuarioOriginal; } catch { return false; } });
       const novoValor = { nome: dados.nome, usuario: dados.usuario, senha: dados.senha, tipo: dados.tipo };
-      if (reg) {
-        await base44.entities.Configuracao.update(reg.id, { chave: "usuario_extra", valor: JSON.stringify(novoValor) });
+      if (editandoUsuario._id) {
+        await base44.entities.Configuracao.update(editandoUsuario._id, { chave: "usuario_extra", valor: JSON.stringify(novoValor), descricao: `Usuário extra: ${dados.nome}` });
       } else {
         await base44.entities.Configuracao.create({ chave: "usuario_extra", valor: JSON.stringify(novoValor), descricao: `Usuário extra: ${dados.nome}` });
       }
@@ -78,29 +105,7 @@ export default function Configuracoes() {
 
     setEditandoUsuario(null);
     setSalvandoUsuario(false);
-    loadAll();
-  };
-
-  const salvar = async () => {
-    setSalvando(true);
-    try {
-      await Promise.all(
-        Object.entries(config).map(async ([chave, valor]) => {
-          if (chave === "usuario_extra") return;
-          const existentes = await base44.entities.Configuracao.filter({ chave }, "-created_date", 1);
-          if (existentes && existentes.length > 0) {
-            await base44.entities.Configuracao.update(existentes[0].id, { chave, valor: String(valor) });
-          } else {
-            await base44.entities.Configuracao.create({ chave, valor: String(valor) });
-          }
-        })
-      );
-      await loadAll();
-      setSalvo(true);
-      setTimeout(() => setSalvo(false), 3000);
-    } finally {
-      setSalvando(false);
-    }
+    await loadAll();
   };
 
   const criarUsuario = async () => {
@@ -118,32 +123,24 @@ export default function Configuracoes() {
       valor: JSON.stringify({ nome: novoUsuario.nome, usuario: novoUsuario.usuario, senha: novoUsuario.senha, tipo: novoUsuario.tipo }),
       descricao: `Usuário extra: ${novoUsuario.nome}`,
     });
-    setNovoUsuario({ nome: "", usuario: "", senha: "", confirmarSenha: "", tipo: "usuario" });
+    setNovoUsuario({ nome: "", usuario: "", senha: "", confirmarSenha: "", tipo: "gerente" });
     setFeedbackUsuario({ tipo: "sucesso", msg: `Usuário "${novoUsuario.usuario}" criado com sucesso!` });
     setSalvandoUsuario(false);
-    loadAll();
+    await loadAll();
   };
 
   const excluirUsuario = async (usuario) => {
-    const isGerente = usuario.tipo === "gerente" || usuario.tipo === "usuario" || !usuario.tipo;
+    const isGerente = usuario.tipo === "gerente" || !usuario.tipo;
     if (isGerente) {
-      // Contar todos os gerentes: admin (fixo) + gerentes extras
-      const gerentesExtras = usuarios.filter(u => u.tipo === "gerente" || u.tipo === "usuario" || !u.tipo);
-      const totalGerentes = 1 + gerentesExtras.length; // 1 = admin fixo
-      if (totalGerentes <= 1) {
-        setAvisoUltimoGerente(true);
-        return;
-      }
+      const gerentesExtras = usuarios.filter(u => u.tipo === "gerente" || !u.tipo);
+      if (1 + gerentesExtras.length <= 1) { setAvisoUltimoGerente(true); return; }
     }
-    if (usuario.usuario === "admin") {
-      // Admin fixo não pode ser removido do banco, apenas aviso
-      setAvisoUltimoGerente(false);
-      return;
-    }
+    if (usuario.usuario === "admin") return;
     if (!confirm(`Excluir o usuário "${usuario.usuario}"?`)) return;
-    const registros = await base44.entities.Configuracao.filter({ chave: "usuario_extra" }, "-created_date", 50);
-    const reg = registros.find(r => { try { return JSON.parse(r.valor).usuario === usuario.usuario; } catch { return false; } });
-    if (reg) { await base44.entities.Configuracao.delete(reg.id); loadAll(); }
+    if (usuario._id) {
+      await base44.entities.Configuracao.delete(usuario._id);
+      await loadAll();
+    }
   };
 
   const handleLogout = () => {
