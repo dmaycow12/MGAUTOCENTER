@@ -169,7 +169,7 @@ export default function Layout({ children, currentPageName }) {
     window.location.href = "/NotasFiscais";
     return null;
   }
-  if (autenticado && tipoUsuario === "vendedor" && !["OrdemServico", "Configuracoes"].includes(currentPageName)) {
+  if (autenticado && tipoUsuario === "vendedor" && !["OrdemServico"].includes(currentPageName)) {
     window.location.href = "/OrdemServico";
     return null;
   }
