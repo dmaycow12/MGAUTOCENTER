@@ -26,7 +26,7 @@ const navItems = [
   { name: "PRODUTOS", page: "Estoque", icon: Package },
   { name: "SERVIÇOS", page: "Servicos", icon: Wrench },
   { name: "ATIVOS", page: "Ativos", icon: Box },
-  { name: "NOTAS FISCAIS", page: "NotasFiscais", icon: FileText },
+  { name: "NOTAS", page: "NotasFiscais", icon: FileText },
   { name: "FINANCEIRO", page: "Financeiro", icon: DollarSign },
   { name: "CONFIGURAÇÕES", page: "Configuracoes", icon: Settings },
 ];
