@@ -247,22 +247,29 @@ export default function Configuracoes() {
           </div>
 
           {/* Usuários extras */}
-          {usuarios.map((u, i) => (
-            <div key={i} className="flex items-center justify-between bg-gray-800 rounded-xl px-4 py-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4 text-gray-400" />
+          {usuarios.map((u, i) => {
+            const tipoLabel = u.tipo === "contador" ? "Contador" : u.tipo === "vendedor" ? "Vendedor" : "Usuário";
+            const tipoColor = u.tipo === "contador" ? "text-green-400 bg-green-500/10" : u.tipo === "vendedor" ? "text-green-400 bg-green-500/10" : "text-gray-400 bg-gray-700/30";
+            return (
+              <div key={i} className="flex items-center justify-between bg-gray-800 rounded-xl px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-medium">{u.nome}</p>
+                    <p className="text-gray-500 text-xs">Usuário: {u.usuario}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-white text-sm font-medium">{u.nome}</p>
-                  <p className="text-gray-500 text-xs">Usuário: {u.usuario}</p>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${tipoColor}`}>{tipoLabel}</span>
+                  <button onClick={() => excluirUsuario(u)} className="p-1.5 text-gray-500 hover:text-red-400 transition-all">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-              <button onClick={() => excluirUsuario(u)} className="p-1.5 text-gray-500 hover:text-red-400 transition-all">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="border-t border-gray-800 pt-4">
