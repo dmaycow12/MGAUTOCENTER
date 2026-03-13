@@ -148,6 +148,7 @@ export default function Configuracoes() {
 
   const handleLogout = async () => {
     sessionStorage.removeItem("oficina_ui");
+    sessionStorage.removeItem("oficina_token");
     await base44.functions.invoke("authLogout", {});
     window.location.reload();
   };
