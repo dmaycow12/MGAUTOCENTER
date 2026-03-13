@@ -27,17 +27,15 @@ function clearRateLimit(key) {
 }
 
 Deno.serve(async (req) => {
-   try {
-     const base44 = createClientFromRequest(req);
-     const body = await req.json();
-     const { usuario, senha } = body;
+  try {
+    const base44 = createClientFromRequest(req);
+    const { usuario, senha } = await req.json();
 
-     if (!usuario || !senha) {
-       return Response.json({ erro: "Usuário e senha são obrigatórios." }, { status: 400 });
-     }
+    if (!usuario || !senha) {
+      return Response.json({ erro: "Usuário e senha são obrigatórios." }, { status: 400 });
+    }
 
-     const usuarioNorm = String(usuario || "").trim().toLowerCase();
-     const senhaInput = String(senha || "").trim();
+    const usuarioNorm = usuario.trim().toLowerCase();
 
     // Verifica rate limit
     const rateCheck = checkRateLimit(usuarioNorm);
@@ -63,11 +61,11 @@ Deno.serve(async (req) => {
     let senhaOk = false;
     const isBcrypt = encontrado.senha?.startsWith("$2");
     if (isBcrypt) {
-      senhaOk = await bcrypt.compare(senhaInput, encontrado.senha);
+      senhaOk = await bcrypt.compare(senha, encontrado.senha);
     } else {
-      senhaOk = encontrado.senha === senhaInput;
+      senhaOk = encontrado.senha === senha;
       if (senhaOk) {
-        const hash = await bcrypt.hash(senhaInput, 10);
+        const hash = await bcrypt.hash(senha, 10);
         const { _id, ...rest } = encontrado;
         await base44.asServiceRole.entities.Configuracao.update(_id, {
           chave: "usuario_extra",
