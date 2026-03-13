@@ -135,14 +135,15 @@ export default function Layout({ children, currentPageName }) {
   const [nomeUsuario, setNomeUsuario] = useState("Administrador");
 
   const [tipoUsuario, setTipoUsuario] = useState("gerente");
+  const location = useLocation();
 
   useEffect(() => {
-    // Redireciona para Dashboard se estiver na raiz
-    if (currentPageName === "Layout" || currentPageName === "") {
+    // Redireciona para Dashboard se acessar a raiz
+    if (location.pathname === "/" || location.pathname === "") {
       window.location.href = "/Dashboard";
       return;
     }
-  }, [currentPageName]);
+  }, [location.pathname]);
 
   useEffect(() => {
     // Verifica token — via cookie httpOnly ou fallback sessionStorage (para iframes)
