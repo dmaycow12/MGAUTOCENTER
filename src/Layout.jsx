@@ -144,19 +144,14 @@ export default function Layout({ children, currentPageName }) {
         const data = res.data;
         if (data?.valido) {
           setNomeUsuario(data.nome || "Administrador");
-          const tipo = data.tipo || "gerente";
-          setTipoUsuario(tipo);
+          setTipoUsuario(data.tipo || "gerente");
           setAutenticado(true);
           // Atualiza cache de UI
           sessionStorage.setItem("oficina_ui", JSON.stringify({
             nome: data.nome,
             usuario: data.usuario,
-            tipo: tipo,
+            tipo: data.tipo,
           }));
-          // Redireciona gerente para Dashboard se estiver em outra página
-          if (tipo === "gerente" && currentPageName !== "Dashboard") {
-            window.location.href = "/Dashboard";
-          }
         } else {
           sessionStorage.removeItem("oficina_ui");
           setAutenticado(false);
@@ -167,7 +162,7 @@ export default function Layout({ children, currentPageName }) {
         setAutenticado(false);
       })
       .finally(() => setVerificando(false));
-  }, [currentPageName]);
+  }, []);
 
   const handleLogout = async () => {
     sessionStorage.removeItem("oficina_ui");
