@@ -138,14 +138,6 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
 
   useEffect(() => {
-    // Redireciona para Dashboard se acessar a raiz
-    if (location.pathname === "/" || location.pathname === "") {
-      window.location.href = "/Dashboard";
-      return;
-    }
-  }, [location.pathname]);
-
-  useEffect(() => {
     // Verifica token — via cookie httpOnly ou fallback sessionStorage (para iframes)
     const tokenFallback = sessionStorage.getItem("oficina_token");
     base44.functions.invoke("authVerify", tokenFallback ? { token: tokenFallback } : {})
