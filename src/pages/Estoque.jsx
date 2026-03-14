@@ -146,8 +146,8 @@ export default function Estoque() {
       i.categoria?.toLowerCase().includes(search.toLowerCase()) ||
       i.marca?.toLowerCase().includes(search.toLowerCase());
     const matchFiltro = filtro === "Todos" || (filtro === "Estoque Baixo" && i.quantidade <= i.estoque_minimo);
-    const matchMarca = !filtroMarca || i.marca?.toLowerCase().includes(filtroMarca.toLowerCase());
-    const matchCategoria = !filtroCategoriaSel || i.categoria === filtroCategoriaSel;
+    const matchMarca = filtroMarcas.length === 0 || filtroMarcas.includes(i.marca);
+    const matchCategoria = filtroCategorias.length === 0 || filtroCategorias.includes(i.categoria);
     return matchSearch && matchFiltro && matchMarca && matchCategoria;
   });
 
