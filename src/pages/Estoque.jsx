@@ -334,21 +334,21 @@ export default function Estoque() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
           <p className="text-white text-sm font-medium mb-2">Total de Itens</p>
           <p className="text-white text-sm font-medium">{items.length}</p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
           <p className="text-white text-sm font-medium mb-2">Estoque Baixo</p>
           <p className="text-white text-sm font-medium">{estoqueBaixo}</p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
           <p className="text-white text-sm font-medium mb-2">Valor Total (Custo)</p>
           <p className="text-white text-sm font-medium">
             R$ {items.reduce((acc, i) => acc + (i.quantidade * i.valor_custo || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
           <p className="text-white text-sm font-medium mb-2">Valor Total (Venda)</p>
           <p className="text-green-400 text-sm font-bold">
             R$ {items.reduce((acc, i) => acc + (i.quantidade * i.valor_venda || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
