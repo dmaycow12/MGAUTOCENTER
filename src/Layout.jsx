@@ -56,7 +56,7 @@ function LoginPage() {
         if (data.token) {
           sessionStorage.setItem("oficina_token", data.token);
         }
-        window.location.reload();
+        window.location.href = "/Dashboard";
         return;
       }
       setErro(data?.erro || "Usuário ou senha incorretos.");

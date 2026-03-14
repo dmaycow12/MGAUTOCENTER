@@ -197,9 +197,9 @@ export default function Dashboard() {
     });
     return [
       { name: "Pagas", value: pagas, color: GREEN },
-      { name: "Pendentes", value: pendentes, color: YELLOW },
-      { name: "Atrasadas", value: atrasadas, color: RED },
-      { name: "Sem lançamento", value: semLancamento, color: "#6b7280" },
+      { name: "Pendentes", value: pendentes, color: BLUE },
+      { name: "Atrasadas", value: atrasadas, color: YELLOW },
+      { name: "Sem lançamento", value: semLancamento, color: RED },
     ].filter(d => d.value > 0);
   })();
 
