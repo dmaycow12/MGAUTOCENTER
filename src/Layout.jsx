@@ -265,7 +265,7 @@ export default function Layout({ children, currentPageName }) {
             }}>
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = currentPageName === item.page;
+              const isActive = location.pathname === `/${item.page}`;
               return (
                 <Link
                   key={item.page}
