@@ -179,8 +179,8 @@ export default function Dashboard() {
   const osConcluidasPeriodo = ordensPeriodo.filter(o => o.status === "Concluído").length;
 
   const statusData = [
-    { name: "Aberto", value: osAbertasPeriodo, color: BLUE },
-    { name: "Orçamento", value: osOrcamentoPeriodo, color: YELLOW },
+    { name: "Aberto", value: osAbertasPeriodo, color: RED },
+    { name: "Orçamento", value: osOrcamentoPeriodo, color: BLUE },
     { name: "Concluído", value: osConcluidasPeriodo, color: GREEN },
   ].filter(d => d.value > 0);
 
