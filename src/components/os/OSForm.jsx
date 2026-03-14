@@ -274,46 +274,49 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     if (!form.cliente_nome && !form.cliente_id) return alert("Selecione ou informe o cliente.");
     setSaving(true);
 
-    const eraAberta = os?.status !== "Concluído";
-    const ficouConcluida = form.status === "Concluído";
+    try {
+      const eraAberta = os?.status !== "Concluído";
+      const ficouConcluida = form.status === "Concluído";
 
-    let savedId = os?.id;
+      let savedId = os?.id;
 
-    const formToSave = {
-      ...form,
-      quilometragem: form.quilometragem === "" || form.quilometragem === null || form.quilometragem === undefined
-        ? null
-        : Number(form.quilometragem),
-    };
+      const formToSave = {
+        ...form,
+        quilometragem: form.quilometragem === "" || form.quilometragem === null || form.quilometragem === undefined
+          ? null
+          : Number(form.quilometragem),
+      };
 
-    if (os) {
-      await base44.entities.OrdemServico.update(os.id, formToSave);
-    } else {
-      const criada = await base44.entities.OrdemServico.create(formToSave);
-      savedId = criada.id;
-      
-      // Auto-registra veículo se for nova OS
-      if (form.veiculo_placa && form.cliente_id) {
-        const veiculo_marca = form.veiculo_modelo?.split(" ")[0] || "";
-        const veiculo_modelo = form.veiculo_modelo?.substring(veiculo_marca.length).trim() || "";
-        await base44.functions.invoke('autoRegistrarVeiculo', {
-          cliente_id: form.cliente_id,
-          veiculo_placa: form.veiculo_placa,
-          veiculo_marca,
-          veiculo_modelo,
-          veiculo_ano: form.veiculo_ano,
-        });
+      if (os) {
+        await base44.entities.OrdemServico.update(os.id, formToSave);
+      } else {
+        const criada = await base44.entities.OrdemServico.create(formToSave);
+        savedId = criada.id;
+
+        // Auto-registra veículo se for nova OS
+        if (form.veiculo_placa && form.cliente_id) {
+          const veiculo_marca = form.veiculo_modelo?.split(" ")[0] || "";
+          const veiculo_modelo = form.veiculo_modelo?.substring(veiculo_marca.length).trim() || "";
+          await base44.functions.invoke('autoRegistrarVeiculo', {
+            cliente_id: form.cliente_id,
+            veiculo_placa: form.veiculo_placa,
+            veiculo_marca,
+            veiculo_modelo,
+            veiculo_ano: form.veiculo_ano,
+          });
+        }
       }
-    }
 
-    // Gera lançamentos financeiros e baixa estoque se mudou para Concluída
-    if (eraAberta && ficouConcluida && savedId) {
-      await gerarLancamentosFinanceiros({ ...form, id: savedId });
-      await reduzirEstoque(form.pecas);
-    }
+      // Gera lançamentos financeiros e baixa estoque se mudou para Concluída
+      if (eraAberta && ficouConcluida && savedId) {
+        await gerarLancamentosFinanceiros({ ...form, id: savedId });
+        await reduzirEstoque(form.pecas);
+      }
 
-    setSaving(false);
-    onSave();
+      onSave();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const fmt = (v) => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
