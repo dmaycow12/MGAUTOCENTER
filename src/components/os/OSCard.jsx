@@ -224,7 +224,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
               <div ref={statusRef} className="absolute left-0 top-full mt-1 z-50 overflow-hidden rounded-lg shadow-2xl w-full">
                 {STATUS_OPTIONS.filter(s => s !== os.status).map(s => (
                   <button key={s} onClick={() => alterarStatus(s)}
-                    className="flex items-center justify-center text-sm font-semibold transition-all hover:opacity-80 w-full"
+                    className="flex items-center justify-center text-sm font-semibold w-full"
                     style={{ background: STATUS_STYLE[s].style.background, color: "#fff", height: "34px" }}>
                     {s}
                   </button>
