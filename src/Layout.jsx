@@ -136,6 +136,13 @@ export default function Layout({ children, currentPageName }) {
 
   const [tipoUsuario, setTipoUsuario] = useState("gerente");
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.pathname === "/" || location.pathname === "") {
+      navigate("/Dashboard", { replace: true });
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     // Verifica token — via cookie httpOnly ou fallback sessionStorage (para iframes)
