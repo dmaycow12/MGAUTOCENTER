@@ -752,13 +752,13 @@ export default function NotasFiscais() {
         {/* Linha 4: busca */}
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input type="text" placeholder="Buscar nota..." value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-9 pr-3 py-1.5 text-xs focus:outline-none focus:border-orange-500" />
+              className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500" />
           </div>
-          <div className="flex bg-gray-800 border border-gray-700 rounded-lg overflow-hidden h-8 gap-0.5 p-0.5">
-            <button onClick={() => setViewMode("table")} className="flex-1 flex items-center justify-center transition-all rounded" style={{background:viewMode==="table"?"#062C9B":"transparent",color:viewMode==="table"?"#fff":"#6b7280"}}><List className="w-3 h-3"/></button>
-            <button onClick={() => setViewMode("cards")} className="flex-1 flex items-center justify-center transition-all rounded" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-3 h-3"/></button>
+          <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+            <button onClick={() => setViewMode("table")} className="px-3 py-2 transition-all" style={{background:viewMode==="table"?"#062C9B":"transparent",color:viewMode==="table"?"#fff":"#6b7280"}} title="Lista"><List className="w-5 h-5"/></button>
+            <button onClick={() => setViewMode("cards")} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}} title="Cards"><LayoutGrid className="w-5 h-5"/></button>
           </div>
         </div>
       </div>
