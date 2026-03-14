@@ -213,27 +213,25 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
         <div className="flex items-center gap-2 px-3 py-2.5">
           <span className="text-white font-bold text-sm tracking-wide flex-shrink-0">#{os.numero || "—"}</span>
 
-          <div className="relative">
+          <div className="relative flex-1">
             <button ref={statusBtnRef} onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
-              className="flex items-center justify-center gap-2 text-sm font-semibold hover:opacity-90 transition-all"
-              style={{...style.style, width: "120px", height: "34px", borderRadius: "8px"}}>
+              className="flex items-center justify-center gap-2 text-sm font-semibold hover:opacity-90 transition-all w-full"
+              style={{...style.style, height: "34px", borderRadius: "8px"}}>
               {os.status || "—"}
               <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform ${statusOpen ? 'rotate-180' : ''}`} />
             </button>
             {statusOpen && (
-              <div ref={statusRef} className="absolute left-0 top-full mt-1 z-50 overflow-hidden rounded-lg shadow-2xl" style={{width: "120px"}}>
+              <div ref={statusRef} className="absolute left-0 top-full mt-1 z-50 overflow-hidden rounded-lg shadow-2xl w-full">
                 {STATUS_OPTIONS.filter(s => s !== os.status).map(s => (
                   <button key={s} onClick={() => alterarStatus(s)}
-                    className="flex items-center justify-center text-sm font-semibold transition-all hover:opacity-80"
-                    style={{ background: STATUS_STYLE[s].style.background, color: "#fff", width: "120px", height: "34px" }}>
+                    className="flex items-center justify-center text-sm font-semibold transition-all hover:opacity-80 w-full"
+                    style={{ background: STATUS_STYLE[s].style.background, color: "#fff", height: "34px" }}>
                     {s}
                   </button>
                 ))}
               </div>
             )}
           </div>
-
-          <div className="flex-1" />
 
           <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Editar"><Pencil className="w-3.5 h-3.5" /></button>
           <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Imprimir"><Printer className="w-3.5 h-3.5" /></button>
