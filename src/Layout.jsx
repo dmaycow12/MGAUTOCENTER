@@ -47,18 +47,17 @@ function LoginPage() {
       const response = await base44.functions.invoke("authLogin", { usuario, senha });
       const data = response.data;
       if (data?.sucesso) {
-        // Salva token no sessionStorage como fallback (para iframes que bloqueiam cookies)
-        sessionStorage.setItem("oficina_ui", JSON.stringify({
-          nome: data.nome,
-          usuario: data.usuario,
-          tipo: data.tipo,
-        }));
-        if (data.token) {
-          sessionStorage.setItem("oficina_token", data.token);
+          sessionStorage.setItem("oficina_ui", JSON.stringify({
+            nome: data.nome,
+            usuario: data.usuario,
+            tipo: data.tipo,
+          }));
+          if (data.token) {
+            sessionStorage.setItem("oficina_token", data.token);
+          }
+          window.location.replace("/Dashboard");
+          return;
         }
-        window.location.href = "/Dashboard";
-        return;
-      }
       setErro(data?.erro || "Usuário ou senha incorretos.");
     } catch (err) {
       setErro("Erro ao verificar: " + (err.response?.data?.erro || err.message));
