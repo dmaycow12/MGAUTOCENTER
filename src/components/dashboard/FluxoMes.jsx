@@ -29,7 +29,7 @@ function fmt(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function Card({ title, pago, previsto, color, bg, bgColor }) {
+function Card({ title, pago, previsto, color, bg, bgColor, borderColor }) {
   const falta = Math.max(previsto - pago, 0);
   const percent = previsto > 0 ? (pago / previsto) * 100 : 0;
   const textColor = "#fff";
