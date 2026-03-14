@@ -262,12 +262,17 @@ export default function Layout({ children, currentPageName }) {
               return (
                 <Link
                   key={item.page}
-                  to={createPageUrl(item.page)}
-                  className="flex items-center justify-center p-1.5 rounded-lg transition-all flex-shrink-0"
+                  to={`/${item.page}`}
+                  className="flex items-center justify-center rounded-lg transition-all flex-shrink-0"
                   title={item.name}
-                  style={{color: isActive ? "#fff" : "#6b7280"}}
+                  style={{
+                    color: isActive ? "#fff" : "#6b7280",
+                    padding: "10px",
+                    minWidth: "36px",
+                    minHeight: "36px",
+                  }}
                 >
-                  <Icon className="w-4 h-4" style={{color: isActive ? "#062C9B" : "#6b7280"}} />
+                  <Icon style={{width:"18px", height:"18px", color: isActive ? "#062C9B" : "#6b7280", flexShrink: 0}} />
                 </Link>
               );
             })}
