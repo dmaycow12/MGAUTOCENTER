@@ -188,7 +188,12 @@ export default function Layout({ children, currentPageName }) {
     </div>
   );
 
-  if (!autenticado && currentPageName !== "OrcamentoPublico") return <LoginPage />;
+  if (!autenticado && currentPageName !== "OrcamentoPublico") return (
+    <LoginPage onSuccess={() => {
+      setAutenticado(true);
+      navigate("/Dashboard", { replace: true });
+    }} />
+  );
 
   const isRestrito = tipoUsuario === "contador" || tipoUsuario === "vendedor";
   const tituloRestrito = tipoUsuario === "contador" ? "NOTAS" : tipoUsuario === "vendedor" ? "VENDAS" : "";
