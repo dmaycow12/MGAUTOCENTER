@@ -383,47 +383,88 @@ export default function Estoque() {
             <button
               onClick={() => setShowFiltroDropdown(!showFiltroDropdown)}
               className="w-full flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all relative"
-              style={{background: (filtroMarca || filtroCategoriaSel) ? "#0a4fd4" : "#062C9B", color: "#fff", border: "1px solid #1a5ce6"}}
+              style={{background: (filtroMarcas.length > 0 || filtroCategorias.length > 0) ? "#0a4fd4" : "#062C9B", color: "#fff", border: "1px solid #1a5ce6"}}
             >
               <Tag className="w-4 h-4 flex-shrink-0" />
-              <span className="truncate">{filtroCategoriaSel ? filtroCategoriaSel : filtroMarca ? `Marca: ${filtroMarca}` : "Marca / Categoria"}</span>
-              {(filtroMarca || filtroCategoriaSel) && (
+              <span className="truncate">
+                {(filtroMarcas.length + filtroCategorias.length) > 0
+                  ? `${filtroMarcas.length + filtroCategorias.length} filtro(s)`
+                  : "Marca / Categoria"}
+              </span>
+              {(filtroMarcas.length > 0 || filtroCategorias.length > 0) && (
                 <span
                   className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 transition-all"
-                  onClick={e => { e.stopPropagation(); setFiltroMarca(""); setFiltroCategoriaSel(""); }}
+                  onClick={e => { e.stopPropagation(); setFiltroMarcas([]); setFiltroCategorias([]); setFiltroSearch(""); }}
                 >
                   <X className="w-3 h-3" />
                 </span>
               )}
             </button>
-            {showFiltroDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-700 rounded-xl z-20 shadow-xl p-3 space-y-3">
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Buscar por Marca</label>
+            {showFiltroDropdown && (() => {
+              const todasMarcas = Array.from(new Set(items.map(i => i.marca).filter(Boolean))).sort();
+              const todasCats = Array.from(new Set(items.map(i => i.categoria).filter(Boolean))).sort();
+              const q = filtroSearch.toLowerCase();
+              const marcasFiltradas = todasMarcas.filter(m => m.toLowerCase().includes(q));
+              const catsFiltradas = todasCats.filter(c => c.toLowerCase().includes(q));
+              return (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-700 rounded-xl z-20 shadow-xl p-3 space-y-3">
                   <input
-                    value={filtroMarca}
-                    onChange={e => { setFiltroMarca(e.target.value); setFiltroCategoriaSel(""); }}
-                    placeholder="Digite a marca..."
+                    autoFocus
+                    value={filtroSearch}
+                    onChange={e => setFiltroSearch(e.target.value)}
+                    placeholder="Buscar marca ou categoria..."
                     className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
                   />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Filtrar por Categoria</label>
-                  <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
-                    {Array.from(new Set(items.map(i => i.categoria).filter(Boolean))).sort().map(cat => (
-                      <button
-                        key={cat}
-                        onClick={() => { setFiltroCategoriaSel(filtroCategoriaSel === cat ? "" : cat); setFiltroMarca(""); setShowFiltroDropdown(false); }}
-                        className="px-3 py-1 rounded-full text-xs font-medium transition-all"
-                        style={{background: filtroCategoriaSel === cat ? "#062C9B" : "#1f2937", color: filtroCategoriaSel === cat ? "#fff" : "#9ca3af", border: "1px solid #374151"}}
-                      >
-                        {cat}
-                      </button>
-                    ))}
+                  <div className="max-h-56 overflow-y-auto space-y-1">
+                    {catsFiltradas.length > 0 && (
+                      <>
+                        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide px-1 pt-1">Categorias</p>
+                        {catsFiltradas.map(cat => (
+                          <label key={cat} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800 cursor-pointer transition-all">
+                            <input
+                              type="checkbox"
+                              checked={filtroCategorias.includes(cat)}
+                              onChange={() => setFiltroCategorias(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
+                              className="accent-blue-500 w-4 h-4 cursor-pointer"
+                            />
+                            <span className="text-sm text-gray-300">{cat}</span>
+                            <span className="ml-auto text-xs text-gray-600">{items.filter(i => i.categoria === cat).length}</span>
+                          </label>
+                        ))}
+                      </>
+                    )}
+                    {marcasFiltradas.length > 0 && (
+                      <>
+                        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide px-1 pt-2">Marcas</p>
+                        {marcasFiltradas.map(marca => (
+                          <label key={marca} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800 cursor-pointer transition-all">
+                            <input
+                              type="checkbox"
+                              checked={filtroMarcas.includes(marca)}
+                              onChange={() => setFiltroMarcas(prev => prev.includes(marca) ? prev.filter(m => m !== marca) : [...prev, marca])}
+                              className="accent-blue-500 w-4 h-4 cursor-pointer"
+                            />
+                            <span className="text-sm text-gray-300">{marca}</span>
+                            <span className="ml-auto text-xs text-gray-600">{items.filter(i => i.marca === marca).length}</span>
+                          </label>
+                        ))}
+                      </>
+                    )}
+                    {marcasFiltradas.length === 0 && catsFiltradas.length === 0 && (
+                      <p className="text-gray-500 text-sm text-center py-4">Nenhum resultado</p>
+                    )}
                   </div>
+                  {(filtroMarcas.length > 0 || filtroCategorias.length > 0) && (
+                    <button
+                      onClick={() => { setFiltroMarcas([]); setFiltroCategorias([]); setFiltroSearch(""); }}
+                      className="w-full py-1.5 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all"
+                    >
+                      Limpar filtros
+                    </button>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
 
           {/* Filtro Estoque Baixo */}
