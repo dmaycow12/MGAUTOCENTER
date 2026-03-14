@@ -247,7 +247,16 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Bottom Menu - Mobile (apenas admin) */}
         {!isRestrito && (
-          <nav className="md:hidden fixed top-2 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 px-2 py-2 rounded-2xl z-40" style={{background:"rgba(17,17,17,0.9)", backdropFilter:"blur(10px)", border:"1px solid rgba(34,34,34,0.8)", maxWidth:"calc(100% - 16px)"}}>
+          <nav className="md:hidden fixed top-2 left-1/2 -translate-x-1/2 flex items-center justify-center z-40"
+            style={{
+              background:"rgba(17,17,17,0.95)",
+              backdropFilter:"blur(10px)",
+              border:"1px solid rgba(34,34,34,0.8)",
+              borderRadius:"16px",
+              maxWidth:"calc(100% - 16px)",
+              padding:"4px",
+              gap:"2px",
+            }}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPageName === item.page;
@@ -255,16 +264,19 @@ export default function Layout({ children, currentPageName }) {
                 <Link
                   key={item.page}
                   to={`/${item.page}`}
-                  className="flex items-center justify-center rounded-lg transition-all flex-shrink-0"
                   title={item.name}
                   style={{
-                    color: isActive ? "#fff" : "#6b7280",
-                    padding: "10px",
-                    minWidth: "36px",
-                    minHeight: "36px",
+                    display:"flex",
+                    alignItems:"center",
+                    justifyContent:"center",
+                    borderRadius:"10px",
+                    flexShrink: 0,
+                    width:"40px",
+                    height:"40px",
+                    background: isActive ? "rgba(6,44,155,0.3)" : "transparent",
                   }}
                 >
-                  <Icon style={{width:"18px", height:"18px", color: isActive ? "#062C9B" : "#6b7280", flexShrink: 0}} />
+                  <Icon style={{width:"20px", height:"20px", color: isActive ? "#4d7fff" : "#9ca3af", flexShrink: 0, pointerEvents:"none"}} />
                 </Link>
               );
             })}
