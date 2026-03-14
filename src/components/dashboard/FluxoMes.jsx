@@ -37,7 +37,7 @@ function Card({ title, pago, previsto, color, bg, bgColor, borderColor }) {
 
   return (
     <div className={`flex-1 ${bg} rounded-xl px-6 py-5 flex items-center justify-center gap-5`} style={{ background: bgColor, border: `1px solid ${borderColor}` }}>
-      <CircleProgress percent={percent} color={color} textColor={textColor} trackColor={trackColor} />
+      <CircleProgress percent={percent} color={color} textColor={color} trackColor={trackColor} />
       <div className="space-y-1 text-center">
         <p className="text-base font-bold" style={{ color: textColor }}>{title}</p>
         <p className="text-sm font-bold" style={{ color: textColor }}>Pago: {fmt(pago)}</p>
