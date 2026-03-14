@@ -38,9 +38,10 @@ export default function Estoque() {
   const [progressoReajuste, setProgressoReajuste] = useState({ isOpen: false, progresso: 0, status: 'processando', sucessos: 0, erro: null });
   const [filtroMarcas, setFiltroMarcas] = useState([]);
   const [filtroCategorias, setFiltroCategorias] = useState([]);
-  const [showFiltroDropdown, setShowFiltroDropdown] = useState(false);
-  const [filtroSearch, setFiltroSearch] = useState("");
-  const filtroDropdownRef = useRef(null);
+  const [showMarcaDropdown, setShowMarcaDropdown] = useState(false);
+  const [showCatDropdown, setShowCatDropdown] = useState(false);
+  const marcaDropdownRef = useRef(null);
+  const catDropdownRef = useRef(null);
 
   useEffect(() => { load(); }, []);
 
