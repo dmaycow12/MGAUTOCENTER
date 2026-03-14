@@ -203,6 +203,33 @@ export default function Financeiro() {
         {/* Gráficos */}
         <FluxoMes financeiro={itemsNoPeriodo} />
 
+        {/* Saldo do Caixa */}
+        {(() => {
+          const totalRecebido = items.filter(f => f.tipo === "Receita" && f.status === "Pago").reduce((acc, f) => acc + Number(f.valor || 0), 0);
+          const totalPago = items.filter(f => f.tipo === "Despesa" && f.status === "Pago").reduce((acc, f) => acc + Number(f.valor || 0), 0);
+          const saldo = totalRecebido - totalPago;
+          const fmt = v => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+          return (
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+              <h2 className="text-white font-semibold text-base mb-3 text-center">Saldo do Caixa</h2>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-gray-800 rounded-xl p-3 text-center">
+                  <p className="text-gray-400 text-xs mb-1">Total Recebido</p>
+                  <p className="text-green-400 font-bold text-sm">{fmt(totalRecebido)}</p>
+                </div>
+                <div className="bg-gray-800 rounded-xl p-3 text-center">
+                  <p className="text-gray-400 text-xs mb-1">Total Pago</p>
+                  <p className="text-red-400 font-bold text-sm">{fmt(totalPago)}</p>
+                </div>
+                <div className="rounded-xl p-3 text-center" style={{background: saldo >= 0 ? "rgba(0,201,87,0.12)" : "rgba(204,0,0,0.12)", border: `1px solid ${saldo >= 0 ? "rgba(0,201,87,0.3)" : "rgba(204,0,0,0.3)"}`}}>
+                  <p className="text-gray-400 text-xs mb-1">Saldo</p>
+                  <p className="font-bold text-base" style={{color: saldo >= 0 ? "#00C957" : "#cc0000"}}>{fmt(saldo)}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Linha 3: filtro tipo — Receita / Despesa / Todos */}
             <div className="flex gap-2">
               {["Todos","Receita","Despesa"].map(t => (
