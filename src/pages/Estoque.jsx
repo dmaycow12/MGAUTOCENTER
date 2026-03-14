@@ -47,9 +47,8 @@ export default function Estoque() {
 
   useEffect(() => {
     const handleClick = (e) => {
-      if (filtroDropdownRef.current && !filtroDropdownRef.current.contains(e.target)) {
-        setShowFiltroDropdown(false);
-      }
+      if (marcaDropdownRef.current && !marcaDropdownRef.current.contains(e.target)) setShowMarcaDropdown(false);
+      if (catDropdownRef.current && !catDropdownRef.current.contains(e.target)) setShowCatDropdown(false);
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
