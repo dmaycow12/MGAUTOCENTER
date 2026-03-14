@@ -32,7 +32,7 @@ const navItems = [
 const RED = "#cc0000";
 const RED_DARK = "#aa0000";
 
-function LoginPage() {
+function LoginPage({ onSuccess }) {
   const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
@@ -55,7 +55,7 @@ function LoginPage() {
           if (data.token) {
             sessionStorage.setItem("oficina_token", data.token);
           }
-          window.location.replace("/Dashboard");
+          onSuccess();
           return;
         }
       setErro(data?.erro || "Usuário ou senha incorretos.");
