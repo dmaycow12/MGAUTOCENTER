@@ -583,7 +583,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                           className="input-dark text-xs py-1.5" />
                         <select value={p.forma_pagamento} onChange={e => updateParcela(i, "forma_pagamento", e.target.value)}
                           className="input-dark text-xs py-1.5">
-                          {["A Combinar","Dinheiro","Cartão de Crédito","Cartão de Débito","PIX","Boleto","Transferência","A Prazo"].map(s => <option key={s}>{s}</option>)}
+                          {["A Combinar","Boleto","Cartão","Dinheiro","PIX"].map(s => <option key={s}>{s}</option>)}
                         </select>
                       </div>
                     ))}
