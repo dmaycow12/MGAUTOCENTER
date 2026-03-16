@@ -1,6 +1,32 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { X, Plus, Trash2, AlertTriangle, Camera, Image } from "lucide-react";
+
+// Input que BLOQUEIA autocomplete do browser usando readonly trick
+function NoAutoInput({ value, onChange, className, placeholder, type = "text", disabled, name, ...props }) {
+  const [focused, setFocused] = useState(false);
+  const ref = useRef(null);
+  return (
+    <input
+      ref={ref}
+      type={type}
+      value={value}
+      onChange={onChange}
+      className={className}
+      placeholder={focused ? placeholder : ""}
+      disabled={disabled}
+      readOnly={!focused}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      autoComplete="new-password"
+      autoCorrect="off"
+      autoCapitalize="off"
+      spellCheck="false"
+      name={name || `f_${Math.random()}`}
+      {...props}
+    />
+  );
+}
 import { reduzirEstoque, restaurarEstoque, excluirLancamentosOS } from "./estoqueUtils";
 
 const defaultForm = () => ({
