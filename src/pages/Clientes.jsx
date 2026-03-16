@@ -280,6 +280,26 @@ export default function Clientes() {
         </div>
       )}
 
+      {/* Modal aviso CONSUMIDOR */}
+      {avisoConsumidor && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-red-500/40 rounded-2xl w-full max-w-sm p-6 space-y-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6 text-red-400" />
+            </div>
+            <h3 className="text-white font-bold text-lg">Ação não permitida</h3>
+            <p className="text-gray-400 text-sm">O cliente <strong className="text-white">CONSUMIDOR</strong> é um registro padrão do sistema e não pode ser excluído.</p>
+            <button onClick={() => setAvisoConsumidor(false)}
+              className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+              style={{background:"#cc0000"}}
+              onMouseEnter={e=>e.currentTarget.style.background="#aa0000"}
+              onMouseLeave={e=>e.currentTarget.style.background="#cc0000"}>
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
+
       <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#f97316; } .input-dark::placeholder { color:#6b7280; }`}</style>
     </div>
   );
