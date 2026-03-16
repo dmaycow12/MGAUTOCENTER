@@ -380,7 +380,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                     <input value={form.cliente_endereco || ""} autoComplete="off" onChange={e => setForm(f => ({ ...f, cliente_endereco: e.target.value }))} className="input-dark" placeholder="Rua, número" />
                   </Field>
                   <Field label="Bairro">
-                    <input value={form.cliente_bairro || ""} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} className="input-dark" placeholder="Bairro" />
+                    <input value={form.cliente_bairro || ""} autoComplete="off" onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} className="input-dark" placeholder="Bairro" />
                   </Field>
                   <Field label="Cidade">
                     <input value={form.cliente_cidade || ""} onChange={e => setForm(f => ({ ...f, cliente_cidade: e.target.value }))} className="input-dark" placeholder="Cidade" />
