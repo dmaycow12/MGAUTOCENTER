@@ -322,6 +322,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   const fmt = (v) => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 
   return (
+    <>
     <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto">
       <div className="min-h-full flex items-start justify-center p-4 pt-8">
       <form autoComplete="off" onSubmit={e => e.preventDefault()} className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-3xl my-4">
