@@ -15,6 +15,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Dados do veículo incompletos' }, { status: 400 });
     }
 
+    // Não salva veículos do cliente CONSUMIDOR
+    const cliente = await base44.entities.Cliente.filter({ id: cliente_id });
+    if (cliente?.[0]?.nome?.toUpperCase() === "CONSUMIDOR") {
+      return Response.json({ criado: false, motivo: 'consumidor' });
+    }
+
     // Verifica se o veículo já existe
     const veiculos = await base44.entities.Veiculo.list("-created_date", 500);
     const jaCadastrado = veiculos.find(v => v.placa?.toUpperCase() === veiculo_placa.toUpperCase() && v.cliente_id === cliente_id);
