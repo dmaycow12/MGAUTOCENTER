@@ -577,9 +577,9 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                     {form.parcelas_detalhes.map((p, i) => (
                       <div key={i} className={`grid grid-cols-4 gap-2 px-3 py-2 items-center ${i % 2 === 0 ? "bg-gray-900" : "bg-gray-800/40"}`}>
                         <span className="text-white text-sm font-medium">{p.numero}/{form.parcelas_detalhes.length}</span>
-                        <input type="date" value={p.vencimento} onChange={e => updateParcela(i, "vencimento", e.target.value)}
+                        <input type="date" value={p.vencimento} autoComplete="off" onChange={e => updateParcela(i, "vencimento", e.target.value)}
                           className="input-dark text-xs py-1.5" />
-                        <input type="text" value={p.valor} onChange={e => updateParcela(i, "valor", e.target.value)}
+                        <input type="text" value={p.valor} autoComplete="off" onChange={e => updateParcela(i, "valor", e.target.value)}
                           className="input-dark text-xs py-1.5" />
                         <select value={p.forma_pagamento} onChange={e => updateParcela(i, "forma_pagamento", e.target.value)}
                           className="input-dark text-xs py-1.5">
