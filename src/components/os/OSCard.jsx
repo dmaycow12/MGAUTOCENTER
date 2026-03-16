@@ -284,6 +284,10 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
             <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
           </div>
           <div className="px-3 py-2.5 border-t border-gray-800">
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Pagamento</p>
+            <p className="text-white text-sm font-medium">{os.forma_pagamento || "—"}</p>
+          </div>
+          <div className="col-span-2 px-3 py-2.5 border-t border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>
             <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
           </div>
