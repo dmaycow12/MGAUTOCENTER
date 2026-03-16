@@ -413,6 +413,77 @@ function KpiCard({ icon: Icon, label, value, color }) {
   );
 }
 
+function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }) {
+  const [statusOpen, setStatusOpen] = useState(false);
+  const [pagamentoOpen, setPagamentoOpen] = useState(false);
+  const statusRef = useRef(null);
+  const pagamentoRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (statusRef.current && !statusRef.current.contains(e.target)) setStatusOpen(false);
+      if (pagamentoRef.current && !pagamentoRef.current.contains(e.target)) setPagamentoOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const fmt = v => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
+      <div className="flex-1 min-w-0">
+        <p className="text-white font-semibold text-sm truncate">{item.descricao}</p>
+        <p className="text-gray-500 text-xs">{item.categoria || "—"} • {item.data_vencimento || "—"}</p>
+      </div>
+
+      <span className={`text-xs px-2 py-1 rounded-full font-medium flex-shrink-0 ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo}</span>
+
+      {/* Status dropdown */}
+      <div className="relative flex-shrink-0" ref={statusRef}>
+        <button onClick={() => setStatusOpen(v => !v)}
+          className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium hover:opacity-80 transition-all ${STATUS_STYLE[item.status] || "bg-gray-500/10 text-gray-400"}`}>
+          {item.status} <ChevronDown className="w-3 h-3" />
+        </button>
+        {statusOpen && (
+          <div className="absolute left-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-36 py-1 z-50">
+            {STATUS_OPTIONS.map(s => (
+              <button key={s} onClick={() => { onAlterarStatus(item, s); setStatusOpen(false); }}
+                className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${item.status === s ? "text-orange-400" : "text-gray-300"}`}>
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Pagamento dropdown */}
+      <div className="relative flex-shrink-0" ref={pagamentoRef}>
+        <button onClick={() => setPagamentoOpen(v => !v)}
+          className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-gray-700 text-blue-300 hover:text-blue-200 font-medium transition-all">
+          {item.forma_pagamento || "A Combinar"} <ChevronDown className="w-3 h-3" />
+        </button>
+        {pagamentoOpen && (
+          <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-44 py-1 z-50">
+            {PAGAMENTO_OPTIONS.map(p => (
+              <button key={p} onClick={() => { onAlterarPagamento(item, p); setPagamentoOpen(false); }}
+                className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${item.forma_pagamento === p ? "text-orange-400" : "text-gray-300"}`}>
+                {p}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <span className={`font-bold text-sm flex-shrink-0 ${item.tipo==="Receita"?"text-green-400":"text-red-400"}`}>R$ {fmt(item.valor)}</span>
+      <div className="flex gap-1 flex-shrink-0">
+        <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all"><Edit className="w-3.5 h-3.5"/></button>
+        <button onClick={onDelete} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
+      </div>
+    </div>
+  );
+}
+
 function F({ label, children, className = "" }) {
   return (
     <div className={className}>
