@@ -349,7 +349,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
               </select>
             </Field>
             <Field label="Data Entrada">
-              <input type="date" value={form.data_entrada} disabled={isConcluida} onChange={e => setForm(f => ({ ...f, data_entrada: e.target.value }))} className={`input-dark ${isConcluida ? "opacity-50 cursor-not-allowed" : ""}`} />
+              <input type="date" value={form.data_entrada} disabled={isConcluida} autoComplete="off" onChange={e => setForm(f => ({ ...f, data_entrada: e.target.value }))} className={`input-dark ${isConcluida ? "opacity-50 cursor-not-allowed" : ""}`} />
             </Field>
           </div>
 
