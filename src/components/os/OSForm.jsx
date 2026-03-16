@@ -406,7 +406,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                     <input value={form.veiculo_modelo} onChange={e => setForm(f => ({ ...f, veiculo_modelo: e.target.value }))} className="input-dark" autoComplete="new-password" name="veiculo_modelo_field" />
                   </Field>
                   <Field label="Placa">
-                    <input value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} className="input-dark" placeholder="AAA0000" />
+                    <input value={form.veiculo_placa} autoComplete="off" onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} className="input-dark" placeholder="AAA0000" />
                   </Field>
                   <Field label="KM">
                    <input type="text" value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" />
