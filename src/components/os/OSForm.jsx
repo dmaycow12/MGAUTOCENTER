@@ -259,10 +259,24 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const updateParcela = (i, field, val) => {
     setForm(f => {
-      const novos = f.parcelas_detalhes.map((p, idx) =>
-        idx === i ? { ...p, [field]: field === "valor" ? Number(val) : val } : p
-      );
-      return { ...f, parcelas_detalhes: novos };
+      if (field === "valor") {
+        const novoValor = Number(val) || 0;
+        const valorAnterior = Number(f.parcelas_detalhes[i]?.valor || 0);
+        const diferenca = novoValor - valorAnterior;
+        const outrasParcelasCount = f.parcelas_detalhes.length - 1;
+        const ajusteDistribuido = outrasParcelasCount > 0 ? diferenca / outrasParcelasCount : 0;
+
+        const novos = f.parcelas_detalhes.map((p, idx) => {
+          if (idx === i) return { ...p, valor: novoValor };
+          return { ...p, valor: Math.max(0, Number(p.valor || 0) - ajusteDistribuido) };
+        });
+        return { ...f, parcelas_detalhes: novos };
+      } else {
+        const novos = f.parcelas_detalhes.map((p, idx) =>
+          idx === i ? { ...p, [field]: val } : p
+        );
+        return { ...f, parcelas_detalhes: novos };
+      }
     });
   };
 
