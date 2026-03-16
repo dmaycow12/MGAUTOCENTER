@@ -337,7 +337,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
            </div>
          )}
 
-        <div className="p-5 space-y-5">
+        <div className="p-5 space-y-5" autoComplete="off">
           {/* Header Info */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <Field label="Número OS">
