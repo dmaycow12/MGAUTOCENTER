@@ -655,8 +655,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
         </div>
 
         <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-all">Cancelar</button>
-          <button onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50" style={{background:"#00ff00"}} onMouseEnter={e=>!saving&&(e.currentTarget.style.background="#00dd00")} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-all">Cancelar</button>
+          <button type="button" onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50" style={{background:"#00ff00"}} onMouseEnter={e=>!saving&&(e.currentTarget.style.background="#00dd00")} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
             {saving ? "Salvando..." : "Salvar"}
           </button>
         </div>
