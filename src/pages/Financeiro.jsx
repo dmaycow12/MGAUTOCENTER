@@ -117,7 +117,7 @@ export default function Financeiro() {
 
   const alterarPagamento = async (item, novaForma) => {
     const update = { forma_pagamento: novaForma };
-    if (["Dinheiro", "PIX"].includes(novaForma) && item.status !== "Pago") {
+    if (["Dinheiro", "PIX"].includes(novaForma)) {
       update.status = "Pago";
       update.data_pagamento = new Date().toISOString().split("T")[0];
     }
