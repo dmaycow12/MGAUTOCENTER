@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List } from "lucide-react";
+import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Edit, Trash2 } from "lucide-react";
+
+const STATUS_OPTIONS = ["Pendente", "Pago", "Atrasado", "Cancelado"];
+const PAGAMENTO_OPTIONS = ["Dinheiro", "Cartão de Crédito", "Cartão de Débito", "PIX", "Boleto", "Transferência", "A Prazo", "A Combinar"];
+const STATUS_STYLE = { "Pendente": "bg-yellow-500/10 text-yellow-400", "Pago": "bg-green-500/10 text-green-400", "Atrasado": "bg-red-500/10 text-red-400", "Cancelado": "bg-gray-500/10 text-gray-400" };
 import FinanceiroCard from "@/components/financeiro/FinanceiroCard";
 import FluxoMes from "@/components/dashboard/FluxoMes";
 
