@@ -427,8 +427,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field label="Selecionar Cliente">
                     <select value={form.cliente_id} onChange={e => onClienteChange(e.target.value)} className="input-dark">
-                      <option value="">— Selecione —</option>
-                      {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                      {clientes.filter(c => c.id !== form.cliente_id).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
                     </select>
                   </Field>
                   <Field label="Nome Social / Nome Fantasia">
