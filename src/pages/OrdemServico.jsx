@@ -48,6 +48,16 @@ export default function OrdemServico() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Persistir filtros no localStorage
+  useEffect(() => { localStorage.setItem("os_search", search); }, [search]);
+  useEffect(() => { localStorage.setItem("os_filtroStatus", JSON.stringify(filtroStatus)); }, [filtroStatus]);
+  useEffect(() => { localStorage.setItem("os_filtroMes", filtroMes); }, [filtroMes]);
+  useEffect(() => { localStorage.setItem("os_filtroAno", filtroAno); }, [filtroAno]);
+  useEffect(() => { localStorage.setItem("os_usandoOutroPeriodo", usandoOutroPeriodo); }, [usandoOutroPeriodo]);
+  useEffect(() => { localStorage.setItem("os_outroPeriodoInicio", outroPeriodoInicio); }, [outroPeriodoInicio]);
+  useEffect(() => { localStorage.setItem("os_outroPeriodoFim", outroPeriodoFim); }, [outroPeriodoFim]);
+  useEffect(() => { localStorage.setItem("os_customRange", JSON.stringify(customRange)); }, [customRange]);
+
   const navegarMes = (dir) => {
     setUsandoOutroPeriodo(false);
     setCustomRange(null);
