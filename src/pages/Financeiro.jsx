@@ -111,6 +111,11 @@ export default function Financeiro() {
     load();
   };
 
+  const alterarPagamento = async (item, novaForma) => {
+    await base44.entities.Financeiro.update(item.id, { forma_pagamento: novaForma });
+    load();
+  };
+
   const periodoRange = usandoOutroPeriodo && customRange
     ? customRange
     : getPeriodoRange(filtroMes, filtroAno);
