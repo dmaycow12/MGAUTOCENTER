@@ -655,13 +655,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                       <div key={i} className={`grid grid-cols-3 gap-2 px-3 py-2 items-center ${i % 2 === 0 ? "bg-gray-900" : "bg-gray-800/40"}`}>
                         <input type="date" value={p.vencimento} autoComplete="off" onChange={e => updateParcela(i, "vencimento", e.target.value)}
                           className="input-dark text-xs py-1.5" />
-                        <NoAutoInput value={p.valor} onChange={e => {
-                          const novoValor = Number(e.target.value) || 0;
-                          // Calcula soma das outras parcelas
-                          const somaOutras = form.parcelas_detalhes.reduce((acc, pp, idx) => idx !== i ? acc + Number(pp.valor || 0) : acc, 0);
-                          const maximo = form.valor_total - somaOutras;
-                          updateParcela(i, "valor", Math.min(novoValor, maximo));
-                        }}
+                        <NoAutoInput value={p.valor} onChange={e => updateParcela(i, "valor", e.target.value)}
                           className="input-dark text-xs py-1.5" />
                         <div className="input-dark text-xs py-1.5 text-gray-400 pointer-events-none opacity-60">
                           {p.forma_pagamento || form.forma_pagamento}
