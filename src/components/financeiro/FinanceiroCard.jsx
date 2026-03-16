@@ -95,8 +95,8 @@ export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus
         {/* Forma Pagamento */}
         <div className="px-3 py-2.5 relative">
           <p className="text-white text-xs font-medium uppercase tracking-wider mb-1">Pagamento</p>
-          {item.status === "Pago" ? (
-            <span className="text-xs text-gray-400 font-medium">{item.forma_pagamento || "A Combinar"}</span>
+          {item.status === "Pago" && item.forma_pagamento ? (
+            <span className="text-xs text-gray-400 font-medium">{item.forma_pagamento}</span>
           ) : (
             <>
               <button
