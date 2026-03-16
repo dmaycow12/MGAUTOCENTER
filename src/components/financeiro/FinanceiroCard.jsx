@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Edit, Trash2, ChevronDown } from "lucide-react";
 
 const STATUS_OPTIONS = ["Pendente", "Pago", "Atrasado", "Cancelado"];
+const PAGAMENTO_OPTIONS = ["", "Dinheiro", "Cartão de Crédito", "Cartão de Débito", "PIX", "Boleto", "Transferência", "A Prazo", "A Combinar"];
 
 const STATUS_STYLE = {
   "Pendente":  { badge: "bg-yellow-600 text-white" },
