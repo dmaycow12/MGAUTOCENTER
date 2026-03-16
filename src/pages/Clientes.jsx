@@ -31,6 +31,7 @@ export default function Clientes() {
     setLoading(false);
   };
 
+  const [avisoConsumidor, setAvisoConsumidor] = useState(false);
   const isConsumidor = (c) => c?.nome?.toUpperCase() === "CONSUMIDOR";
 
   const salvar = async () => {
