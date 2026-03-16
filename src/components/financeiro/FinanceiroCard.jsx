@@ -112,7 +112,6 @@ export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus
                   {PAGAMENTO_OPTIONS.filter(p => p !== "").map(p => (
                     <button key={p} onClick={() => {
                       onAlterarPagamento?.(item, p);
-                      if (["Dinheiro", "PIX"].includes(p)) onAlterarStatus?.(item, "Pago");
                       setPagamentoOpen(false);
                     }}
                       className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${item.forma_pagamento === p ? "text-orange-400" : "text-gray-300"}`}>
