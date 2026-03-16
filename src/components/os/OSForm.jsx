@@ -495,7 +495,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                         <div className="flex flex-wrap md:flex-nowrap gap-2 items-end">
                           <div className="relative flex-1 min-w-[140px]">
                             <label className="text-xs text-gray-500 mb-1 block">Nome do Produto</label>
-                            <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} onBlur={() => setTimeout(() => setProdutoSugestoes({ idx: null, lista: [] }), 200)} className="input-dark" placeholder="Nome do produto" autoComplete="off" />
+                            <NoAutoInput value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} onBlur={() => setTimeout(() => setProdutoSugestoes({ idx: null, lista: [] }), 200)} className="input-dark" placeholder="Nome do produto" />
                             {produtoSugestoes.idx === i && produtoSugestoes.lista.length > 0 && (
                               <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-64 max-h-48 overflow-y-auto">
                                 {produtoSugestoes.lista.map(item => (
