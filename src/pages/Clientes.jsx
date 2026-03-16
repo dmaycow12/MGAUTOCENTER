@@ -57,9 +57,15 @@ export default function Clientes() {
   };
 
   const excluir = async (c) => {
-    if (isConsumidor(c)) return alert("O cliente CONSUMIDOR não pode ser excluído.");
+    if (isConsumidor(c)) { setAvisoConsumidor(true); return; }
     if (!confirm("Excluir este cliente?")) return;
     await base44.entities.Cliente.delete(c.id);
+    load();
+  };
+
+  const excluirVeiculo = async (veiculoId) => {
+    if (!confirm("Excluir este veículo?")) return;
+    await base44.entities.Veiculo.delete(veiculoId);
     load();
   };
 
