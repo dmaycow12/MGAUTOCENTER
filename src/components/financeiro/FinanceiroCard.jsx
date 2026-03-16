@@ -22,17 +22,18 @@ function fmtValor(v) {
   return "R$ " + Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 }
 
-export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus }) {
+export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }) {
   const [statusOpen, setStatusOpen] = useState(false);
+  const [pagamentoOpen, setPagamentoOpen] = useState(false);
   const statusRef = useRef(null);
   const statusBtnRef = useRef(null);
+  const pagamentoRef = useRef(null);
+  const pagamentoBtnRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
-      if (
-        statusRef.current && !statusRef.current.contains(e.target) &&
-        statusBtnRef.current && !statusBtnRef.current.contains(e.target)
-      ) setStatusOpen(false);
+      if (statusRef.current && !statusRef.current.contains(e.target) && statusBtnRef.current && !statusBtnRef.current.contains(e.target)) setStatusOpen(false);
+      if (pagamentoRef.current && !pagamentoRef.current.contains(e.target) && pagamentoBtnRef.current && !pagamentoBtnRef.current.contains(e.target)) setPagamentoOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
