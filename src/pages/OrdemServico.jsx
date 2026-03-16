@@ -10,8 +10,11 @@ const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Ag
 export default function OrdemServico() {
   const [ordens, setOrdens] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [filtroStatus, setFiltroStatus] = useState([]); // multi-select
+  const [search, setSearch] = useState(() => localStorage.getItem("os_search") || "");
+  const [filtroStatus, setFiltroStatus] = useState(() => {
+    const saved = localStorage.getItem("os_filtroStatus");
+    return saved ? JSON.parse(saved) : [];
+  });
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
   const [clientes, setClientes] = useState([]);
@@ -19,13 +22,22 @@ export default function OrdemServico() {
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("os_viewmode") || "cards");
 
   const hoje = new Date();
-  const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
-  const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
-  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(false);
+  const [filtroMes, setFiltroMes] = useState(() => {
+    const saved = localStorage.getItem("os_filtroMes");
+    return saved ? parseInt(saved) : hoje.getMonth() + 1;
+  });
+  const [filtroAno, setFiltroAno] = useState(() => {
+    const saved = localStorage.getItem("os_filtroAno");
+    return saved ? parseInt(saved) : hoje.getFullYear();
+  });
+  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(() => localStorage.getItem("os_usandoOutroPeriodo") === "true");
   const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
-  const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
-  const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
-  const [customRange, setCustomRange] = useState(null);
+  const [outroPeriodoInicio, setOutroPeriodoInicio] = useState(() => localStorage.getItem("os_outroPeriodoInicio") || "");
+  const [outroPeriodoFim, setOutroPeriodoFim] = useState(() => localStorage.getItem("os_outroPeriodoFim") || "");
+  const [customRange, setCustomRange] = useState(() => {
+    const saved = localStorage.getItem("os_customRange");
+    return saved ? JSON.parse(saved) : null;
+  });
   const periodoDropRef = useRef(null);
 
   useEffect(() => {
