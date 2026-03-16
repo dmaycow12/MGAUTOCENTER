@@ -344,8 +344,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
         const criada = await base44.entities.OrdemServico.create(formToSave);
         savedId = criada.id;
 
-        // Auto-registra veículo se for nova OS
-        if (form.veiculo_placa && form.cliente_id) {
+        // Auto-registra veículo se for nova OS (exceto CONSUMIDOR)
+        if (form.veiculo_placa && form.cliente_id && form.cliente_nome?.toUpperCase() !== "CONSUMIDOR") {
           const veiculo_marca = form.veiculo_modelo?.split(" ")[0] || "";
           const veiculo_modelo = form.veiculo_modelo?.substring(veiculo_marca.length).trim() || "";
           await base44.functions.invoke('autoRegistrarVeiculo', {
