@@ -86,6 +86,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const [saving, setSaving] = useState(false);
+  const [clienteSearch, setClienteSearch] = useState("");
+  const [clienteSugestoes, setClienteSugestoes] = useState([]);
 
   const handleFotoUpload = async (file) => {
     if (!file) return;
