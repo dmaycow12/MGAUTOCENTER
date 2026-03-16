@@ -632,8 +632,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                 {/* Tabela de Parcelas */}
                 {form.parcelas_detalhes && form.parcelas_detalhes.length > 0 && (
                   <div className="border border-gray-700 rounded-xl overflow-hidden">
-                    <div className="bg-gray-800 px-3 py-2 text-xs text-gray-400 font-semibold uppercase tracking-wider grid grid-cols-4 gap-2">
-                      <span>Parcela</span>
+                    <div className="bg-gray-800 px-3 py-2 text-xs text-gray-400 font-semibold uppercase tracking-wider grid grid-cols-3 gap-2">
                       <span>Vencimento</span>
                       <span>Valor (R$)</span>
                       <span>Forma Pgto</span>
