@@ -251,6 +251,9 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
           </div>
         </td>
 
+        {/* Pagamento */}
+        <td className="px-4 py-3 text-gray-300 text-sm whitespace-nowrap">{os.forma_pagamento || "—"}</td>
+
         {/* Valor */}
         <td className="px-4 py-3 text-right text-green-400 font-bold text-sm whitespace-nowrap">{fmtValor(os.valor_total)}</td>
 
