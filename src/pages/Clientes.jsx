@@ -31,8 +31,11 @@ export default function Clientes() {
     setLoading(false);
   };
 
+  const isConsumidor = (c) => c?.nome?.toUpperCase() === "CONSUMIDOR";
+
   const salvar = async () => {
     if (!form.nome) return alert("Informe o nome do cliente.");
+    if (editando && isConsumidor(editando)) return alert("O cliente CONSUMIDOR não pode ser alterado.");
     // Validar CPF/CNPJ duplicado
     if (form.cpf_cnpj) {
       const cpfLimpo = form.cpf_cnpj.replace(/\D/g, "");
@@ -52,13 +55,15 @@ export default function Clientes() {
     load();
   };
 
-  const excluir = async (id) => {
+  const excluir = async (c) => {
+    if (isConsumidor(c)) return alert("O cliente CONSUMIDOR não pode ser excluído.");
     if (!confirm("Excluir este cliente?")) return;
-    await base44.entities.Cliente.delete(id);
+    await base44.entities.Cliente.delete(c.id);
     load();
   };
 
   const editarCliente = (c) => {
+    if (isConsumidor(c)) return alert("O cliente CONSUMIDOR não pode ser alterado.");
     setForm({ ...defaultForm(), ...c });
     setEditando(c);
     setShowForm(true);
