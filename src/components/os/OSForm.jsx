@@ -444,11 +444,11 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                   <Field label="Selecionar Cliente" className="relative col-span-1 md:col-span-2">
                     <div className="relative">
                       <NoAutoInput 
-                        value={clienteSearch || form.cliente_nome} 
+                        value={clienteSearch} 
                         onChange={e => handleClienteSearch(e.target.value)} 
                         onBlur={() => setTimeout(() => setClienteSugestoes([]), 200)}
                         className="input-dark" 
-                        placeholder="Digite para pesquisar..." 
+                        placeholder={form.cliente_nome || "Digite para pesquisar..."} 
                       />
                       {clienteSugestoes.length > 0 && (
                         <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-full max-h-48 overflow-y-auto">
