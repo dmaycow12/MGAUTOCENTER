@@ -441,10 +441,25 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
               {/* Cliente */}
               <Section title="Cliente">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Selecionar Cliente">
-                    <select value={form.cliente_id} onChange={e => onClienteChange(e.target.value)} className="input-dark">
-                      {clientes.filter(c => c.id !== form.cliente_id).map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                    </select>
+                  <Field label="Selecionar Cliente" className="relative col-span-1 md:col-span-2">
+                    <div className="relative">
+                      <NoAutoInput 
+                        value={clienteSearch || form.cliente_nome} 
+                        onChange={e => handleClienteSearch(e.target.value)} 
+                        onBlur={() => setTimeout(() => setClienteSugestoes([]), 200)}
+                        className="input-dark" 
+                        placeholder="Digite para pesquisar..." 
+                      />
+                      {clienteSugestoes.length > 0 && (
+                        <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-full max-h-48 overflow-y-auto">
+                          {clienteSugestoes.map(item => (
+                            <button key={item.id} onMouseDown={() => onClienteChange(item.id)} className="w-full text-left px-3 py-2 text-xs text-gray-200 hover:bg-gray-700 border-b border-gray-700 last:border-0">
+                              {item.nome}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </Field>
                   <Field label="Nome Social / Nome Fantasia">
                     <NoAutoInput value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} className="input-dark" placeholder="Ou digite manualmente" />
