@@ -1,14 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Edit, Trash2, ChevronDown } from "lucide-react";
 
-const STATUS_OPTIONS = ["Pendente", "Pago", "Atrasado", "Cancelado"];
+const STATUS_OPTIONS = ["Pendente", "Pago", "Atrasado"];
 const PAGAMENTO_OPTIONS = ["", "Dinheiro", "Cartão de Crédito", "Cartão de Débito", "PIX", "Boleto", "Transferência", "A Prazo", "A Combinar"];
 
-const STATUS_STYLE = {
-  "Pendente":  { badge: "bg-yellow-600 text-white" },
-  "Pago":      { badge: "bg-green-600 text-white" },
-  "Atrasado":  { badge: "bg-red-600 text-white" },
-  "Cancelado": { badge: "bg-gray-600 text-white" },
+const STATUS_BG = {
+  "Pendente": "#f59e0b",
+  "Pago":     "#16a34a",
+  "Atrasado": "#dc2626",
 };
 
 function fmtData(d) {
