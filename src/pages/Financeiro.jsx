@@ -3,8 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Edit, Trash2 } from "lucide-react";
 
 const STATUS_OPTIONS = ["Pendente", "Pago", "Atrasado"];
-const PAGAMENTO_OPTIONS = ["Dinheiro", "Cartão de Crédito", "Cartão de Débito", "PIX", "Boleto", "Transferência", "A Prazo", "A Combinar"];
-const STATUS_BG_LIST = { "Pendente": "#f59e0b", "Pago": "#16a34a", "Atrasado": "#dc2626" };
+const PAGAMENTO_OPTIONS = ["A Combinar", "A Prazo", "Boleto", "Dinheiro"];
+const STATUS_BG_LIST = { "Pendente": "#062C9B", "Pago": "#16a34a", "Atrasado": "#dc2626" };
 import FinanceiroCard from "@/components/financeiro/FinanceiroCard";
 import FluxoMes from "@/components/dashboard/FluxoMes";
 
