@@ -285,13 +285,14 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const gerarLancamentosFinanceiros = async (osData) => {
+    const formaPrincipal = osData.forma_pagamento || "A Combinar";
+    const pagoNaHora = ["Dinheiro", "PIX"].includes(formaPrincipal);
+
     const parcelas = osData.parcelas_detalhes && osData.parcelas_detalhes.length > 0
       ? osData.parcelas_detalhes
-      : gerarParcelas(osData.valor_total, Number(osData.parcelas) || 1, osData.forma_pagamento, osData.data_entrada);
+      : gerarParcelas(osData.valor_total, Number(osData.parcelas) || 1, formaPrincipal, osData.data_entrada);
 
     for (const p of parcelas) {
-      const formaPgto = osData.forma_pagamento || p.forma_pagamento || "A Combinar";
-      const pagoNaHora = ["Dinheiro", "PIX"].includes(formaPgto);
       await base44.entities.Financeiro.create({
         tipo: "Receita",
         categoria: "Ordem de Serviço",
@@ -300,7 +301,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
         data_vencimento: p.vencimento,
         status: pagoNaHora ? "Pago" : "Pendente",
         data_pagamento: pagoNaHora ? new Date().toISOString().split("T")[0] : "",
-        forma_pagamento: formaPgto,
+        forma_pagamento: formaPrincipal,
         ordem_servico_id: osData.id || "",
         cliente_id: osData.cliente_id || "",
       });
