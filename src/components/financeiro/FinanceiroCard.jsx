@@ -95,23 +95,29 @@ export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus
         {/* Forma Pagamento */}
         <div className="px-3 py-2.5 relative">
           <p className="text-white text-xs font-medium uppercase tracking-wider mb-1">Pagamento</p>
-          <button
-            ref={pagamentoBtnRef}
-            onClick={() => setPagamentoOpen(v => !v)}
-            className="flex items-center gap-1 text-xs text-blue-300 hover:text-blue-200 font-medium transition-all"
-          >
-            {item.forma_pagamento || "A Combinar"}
-            <ChevronDown className="w-3 h-3 flex-shrink-0" />
-          </button>
-          {pagamentoOpen && (
-            <div ref={pagamentoRef} className="absolute left-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-44 py-1 z-50">
-              {PAGAMENTO_OPTIONS.filter(p => p !== "").map(p => (
-                <button key={p} onClick={() => { onAlterarPagamento?.(item, p); setPagamentoOpen(false); }}
-                  className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${item.forma_pagamento === p ? "text-orange-400" : "text-gray-300"}`}>
-                  {p}
-                </button>
-              ))}
-            </div>
+          {item.status === "Pago" ? (
+            <span className="text-xs text-gray-400 font-medium">{item.forma_pagamento || "A Combinar"}</span>
+          ) : (
+            <>
+              <button
+                ref={pagamentoBtnRef}
+                onClick={() => setPagamentoOpen(v => !v)}
+                className="flex items-center gap-1 text-xs text-blue-300 hover:text-blue-200 font-medium transition-all"
+              >
+                {item.forma_pagamento || "A Combinar"}
+                <ChevronDown className="w-3 h-3 flex-shrink-0" />
+              </button>
+              {pagamentoOpen && (
+                <div ref={pagamentoRef} className="absolute left-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-44 py-1 z-50">
+                  {PAGAMENTO_OPTIONS.filter(p => p !== "").map(p => (
+                    <button key={p} onClick={() => { onAlterarPagamento?.(item, p); setPagamentoOpen(false); }}
+                      className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${item.forma_pagamento === p ? "text-orange-400" : "text-gray-300"}`}>
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
 
