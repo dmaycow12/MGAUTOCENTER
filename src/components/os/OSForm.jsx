@@ -607,7 +607,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                         <span className="text-white text-sm font-medium">{p.numero}/{form.parcelas_detalhes.length}</span>
                         <input type="date" value={p.vencimento} autoComplete="off" onChange={e => updateParcela(i, "vencimento", e.target.value)}
                           className="input-dark text-xs py-1.5" />
-                        <input type="text" value={p.valor} autoComplete="off" onChange={e => updateParcela(i, "valor", e.target.value)}
+                        <NoAutoInput value={p.valor} onChange={e => updateParcela(i, "valor", e.target.value)}
                           className="input-dark text-xs py-1.5" />
                         <select value={p.forma_pagamento} onChange={e => updateParcela(i, "forma_pagamento", e.target.value)}
                           className="input-dark text-xs py-1.5">
