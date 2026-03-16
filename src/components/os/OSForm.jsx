@@ -417,7 +417,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
               {/* Defeito / Diagnóstico */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field label="Defeito Relatado">
-                  <textarea value={form.defeito_relatado} onChange={e => setForm(f => ({ ...f, defeito_relatado: e.target.value }))} className="input-dark" rows={2} />
+                  <textarea value={form.defeito_relatado} autoComplete="off" onChange={e => setForm(f => ({ ...f, defeito_relatado: e.target.value }))} className="input-dark" rows={2} />
                 </Field>
                 <Field label="Diagnóstico">
                   <textarea value={form.diagnostico} onChange={e => setForm(f => ({ ...f, diagnostico: e.target.value }))} className="input-dark" rows={2} />
