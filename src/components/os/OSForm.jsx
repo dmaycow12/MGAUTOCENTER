@@ -604,7 +604,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
             {saving ? "Salvando..." : "Salvar"}
           </button>
         </div>
-      </div>
+      </form>
 
       {/* Modal de aviso ao reabrir OS Concluída */}
       {showAvisoReabrir && (
