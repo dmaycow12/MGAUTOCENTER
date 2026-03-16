@@ -326,7 +326,7 @@ export default function Financeiro() {
                 <F label="Forma Pagamento" className="col-span-2">
                   <select value={form.forma_pagamento} onChange={e => setForm({ ...form, forma_pagamento: e.target.value })} className="input-dark">
                     <option value="">—</option>
-                    {["A Combinar","A Prazo","Boleto","Dinheiro"].map(s => <option key={s}>{s}</option>)}
+                    {["A Combinar","Boleto","Cartão","Dinheiro"].map(s => <option key={s}>{s}</option>)}
                   </select>
                 </F>
               </div>
