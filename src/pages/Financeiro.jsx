@@ -116,7 +116,12 @@ export default function Financeiro() {
   };
 
   const alterarPagamento = async (item, novaForma) => {
-    await base44.entities.Financeiro.update(item.id, { forma_pagamento: novaForma });
+    const update = { forma_pagamento: novaForma };
+    if (["Dinheiro", "PIX"].includes(novaForma) && item.status !== "Pago") {
+      update.status = "Pago";
+      update.data_pagamento = new Date().toISOString().split("T")[0];
+    }
+    await base44.entities.Financeiro.update(item.id, update);
     load();
   };
 
