@@ -371,7 +371,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                     <input value={form.cliente_telefone} autoComplete="off" onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} className="input-dark" placeholder="(XX) XXXXX-XXXX" />
                   </Field>
                   <Field label="E-mail">
-                    <input value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} className="input-dark" placeholder="email@exemplo.com" />
+                    <input value={form.cliente_email} autoComplete="off" onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} className="input-dark" placeholder="email@exemplo.com" />
                   </Field>
                   <Field label="CPF / CNPJ">
                     <input value={form.cliente_cpf_cnpj} onChange={e => setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value }))} className="input-dark" placeholder="000.000.000-00" />
