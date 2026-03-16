@@ -548,7 +548,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
               <Section title="Pagamento">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <Field label="Desconto (R$)">
-                    <input type="text" value={form.desconto} onChange={e => onDesconto(e.target.value)} className="input-dark" />
+                    <input type="text" value={form.desconto} autoComplete="off" onChange={e => onDesconto(e.target.value)} className="input-dark" />
                   </Field>
                   <Field label="Forma de Pagamento">
                     <select value={form.forma_pagamento} onChange={e => setForm(f => ({ ...f, forma_pagamento: e.target.value }))} className="input-dark">
