@@ -290,7 +290,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
       : gerarParcelas(osData.valor_total, Number(osData.parcelas) || 1, osData.forma_pagamento, osData.data_entrada);
 
     for (const p of parcelas) {
-      const formaPgto = p.forma_pagamento || osData.forma_pagamento || "Dinheiro";
+      const formaPgto = osData.forma_pagamento || p.forma_pagamento || "A Combinar";
       const pagoNaHora = ["Dinheiro", "PIX"].includes(formaPgto);
       await base44.entities.Financeiro.create({
         tipo: "Receita",
