@@ -252,7 +252,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   // Recalcula parcelas automaticamente quando valor, quantidade de parcelas ou forma de pagamento muda
   useEffect(() => {
     const detalhes = gerarParcelas(form.valor_total, Number(form.parcelas) || 1, form.forma_pagamento, form.data_entrada);
-    setForm(f => ({ ...f, parcelas_detalhes: detalhes }));
+    setForm(f => ({ ...f, parcelas_detalhes: detalhes, forma_pagamento: f.forma_pagamento }));
   }, [form.valor_total, form.parcelas, form.forma_pagamento]);
 
   const updateParcela = (i, field, val) => {
