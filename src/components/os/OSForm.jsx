@@ -590,7 +590,10 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                     <NoAutoInput value={form.desconto} onChange={e => onDesconto(e.target.value)} className="input-dark" />
                   </Field>
                   <Field label="Forma de Pagamento">
-                    <select value={form.forma_pagamento} onChange={e => setForm(f => ({ ...f, forma_pagamento: e.target.value }))} className="input-dark">
+                    <select value={form.forma_pagamento} onChange={e => {
+                      const novaForma = e.target.value;
+                      setForm(f => ({ ...f, forma_pagamento: novaForma }));
+                    }} className="input-dark">
                       {["A Combinar","Boleto","Cartão","Dinheiro","PIX"].map(s => <option key={s}>{s}</option>)}
                     </select>
                   </Field>
