@@ -123,6 +123,14 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     }
   }, []);
 
+  // Seleciona CONSUMIDOR como cliente padrão em nova OS
+  useEffect(() => {
+    if (!os && clientes.length > 0) {
+      const consumidor = clientes.find(c => c.nome?.toUpperCase() === "CONSUMIDOR");
+      if (consumidor) onClienteChange(consumidor.id);
+    }
+  }, [clientes]);
+
   useEffect(() => {
     if (form.cliente_id) {
       setVeiculosCliente(veiculos.filter(v => v.cliente_id === form.cliente_id));
