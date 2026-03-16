@@ -322,7 +322,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   const fmt = (v) => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto">
+      <div className="min-h-full flex items-start justify-center p-4 pt-8">
       <form autoComplete="off" onSubmit={e => e.preventDefault()} className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-3xl my-4">
         <div className="flex items-center justify-between p-5 border-b border-gray-800">
           <h2 className="text-white font-semibold">{os ? `Ordem de Venda #${os.numero}` : "Nova Ordem de Venda"}</h2>
