@@ -480,7 +480,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                           </div>
                           <div className="w-12 flex-shrink-0">
                             <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
-                            <input type="text" value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" />
+                            <input type="text" value={p.quantidade} autoComplete="off" onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" />
                           </div>
                           <div className="flex-1 min-w-[70px]">
                             <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
