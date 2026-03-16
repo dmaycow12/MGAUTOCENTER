@@ -249,11 +249,13 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     setForm(f => ({ ...f, desconto: d, ...recalcular(f.servicos, f.pecas, d) }));
   };
 
-  // Recalcula parcelas automaticamente quando valor, quantidade de parcelas ou forma de pagamento muda
+  // Recalcula parcelas automaticamente quando valor ou quantidade de parcelas muda
   useEffect(() => {
-    const detalhes = gerarParcelas(form.valor_total, Number(form.parcelas) || 1, form.forma_pagamento, form.data_entrada);
-    setForm(f => ({ ...f, parcelas_detalhes: detalhes, forma_pagamento: f.forma_pagamento }));
-  }, [form.valor_total, form.parcelas, form.forma_pagamento]);
+    setForm(f => {
+      const detalhes = gerarParcelas(f.valor_total, Number(f.parcelas) || 1, f.forma_pagamento, f.data_entrada);
+      return { ...f, parcelas_detalhes: detalhes };
+    });
+  }, [form.valor_total, form.parcelas]);
 
   const updateParcela = (i, field, val) => {
     setForm(f => {
