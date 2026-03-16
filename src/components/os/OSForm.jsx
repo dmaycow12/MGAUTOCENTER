@@ -565,6 +565,10 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                     {(form.servicos || []).map((s, i) => (
                       <div key={i} className="bg-gray-800/50 rounded-xl p-3">
                         <div className="flex flex-wrap md:flex-nowrap gap-2 items-end">
+                          <div className="w-24 flex-shrink-0">
+                            <label className="text-xs text-gray-500 mb-1 block">Código</label>
+                            <NoAutoInput value={s.codigo || ""} onChange={e => updateServico(i, "codigo", e.target.value)} onBlur={() => setTimeout(() => setServicoSugestoes({ idx: null, lista: [] }), 200)} className="input-dark" placeholder="Cód." />
+                          </div>
                           <div className="relative flex-1 min-w-[140px]">
                             <label className="text-xs text-gray-500 mb-1 block">Nome do Serviço</label>
                             <NoAutoInput value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} onBlur={() => setTimeout(() => setServicoSugestoes({ idx: null, lista: [] }), 200)} className="input-dark" placeholder="Nome do serviço" />
