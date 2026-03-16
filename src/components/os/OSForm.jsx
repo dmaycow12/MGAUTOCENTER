@@ -393,28 +393,28 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                     </select>
                   </Field>
                   <Field label="Nome Social / Nome Fantasia">
-                    <input value={form.cliente_nome} autoComplete="off" onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} className="input-dark" placeholder="Ou digite manualmente" />
+                    <NoAutoInput value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} className="input-dark" placeholder="Ou digite manualmente" />
                   </Field>
                   <Field label="Telefone / WhatsApp">
-                    <input value={form.cliente_telefone} autoComplete="off" onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} className="input-dark" placeholder="(XX) XXXXX-XXXX" />
+                    <NoAutoInput value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} className="input-dark" placeholder="(XX) XXXXX-XXXX" />
                   </Field>
                   <Field label="E-mail">
-                    <input value={form.cliente_email} autoComplete="off" onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} className="input-dark" placeholder="email@exemplo.com" />
+                    <NoAutoInput value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} className="input-dark" placeholder="email@exemplo.com" />
                   </Field>
                   <Field label="CPF / CNPJ">
-                    <input value={form.cliente_cpf_cnpj} autoComplete="off" onChange={e => setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value }))} className="input-dark" placeholder="000.000.000-00" />
+                    <NoAutoInput value={form.cliente_cpf_cnpj} onChange={e => setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value }))} className="input-dark" placeholder="000.000.000-00" />
                   </Field>
                   <Field label="Endereço">
-                    <input value={form.cliente_endereco || ""} autoComplete="off" onChange={e => setForm(f => ({ ...f, cliente_endereco: e.target.value }))} className="input-dark" placeholder="Rua, número" />
+                    <NoAutoInput value={form.cliente_endereco || ""} onChange={e => setForm(f => ({ ...f, cliente_endereco: e.target.value }))} className="input-dark" placeholder="Rua, número" />
                   </Field>
                   <Field label="Bairro">
-                    <input value={form.cliente_bairro || ""} autoComplete="off" onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} className="input-dark" placeholder="Bairro" />
+                    <NoAutoInput value={form.cliente_bairro || ""} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} className="input-dark" placeholder="Bairro" />
                   </Field>
                   <Field label="Cidade">
-                    <input value={form.cliente_cidade || ""} autoComplete="off" onChange={e => setForm(f => ({ ...f, cliente_cidade: e.target.value }))} className="input-dark" placeholder="Cidade" />
+                    <NoAutoInput value={form.cliente_cidade || ""} onChange={e => setForm(f => ({ ...f, cliente_cidade: e.target.value }))} className="input-dark" placeholder="Cidade" />
                   </Field>
                   <Field label="Estado">
-                    <input value={form.cliente_estado || ""} autoComplete="off" onChange={e => setForm(f => ({ ...f, cliente_estado: e.target.value }))} className="input-dark" placeholder="UF" />
+                    <NoAutoInput value={form.cliente_estado || ""} onChange={e => setForm(f => ({ ...f, cliente_estado: e.target.value }))} className="input-dark" placeholder="UF" />
                   </Field>
                 </div>
               </Section>
