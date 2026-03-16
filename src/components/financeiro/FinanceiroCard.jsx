@@ -42,7 +42,7 @@ export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus
   const isReceita = item.tipo === "Receita";
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
       {/* Linha 1: status largo + ações */}
       <div className="flex items-center gap-2 px-3 py-2.5">
 
