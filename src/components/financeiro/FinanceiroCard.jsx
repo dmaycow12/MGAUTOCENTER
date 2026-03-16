@@ -2,10 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 import { Edit, Trash2, ChevronDown } from "lucide-react";
 
 const STATUS_OPTIONS = ["Pendente", "Pago", "Atrasado"];
-const PAGAMENTO_OPTIONS = ["", "Dinheiro", "Cartão de Crédito", "Cartão de Débito", "PIX", "Boleto", "Transferência", "A Prazo", "A Combinar"];
+const PAGAMENTO_OPTIONS = ["A Combinar", "A Prazo", "Boleto", "Dinheiro"];
 
 const STATUS_BG = {
-  "Pendente": "#f59e0b",
+  "Pendente": "#062C9B",
   "Pago":     "#16a34a",
   "Atrasado": "#dc2626",
 };
