@@ -187,8 +187,13 @@ export default function Clientes() {
                     ) : (
                       <div className="flex flex-wrap gap-2">
                         {veiculosDoCliente(c.id).map(v => (
-                          <span key={v.id} className="bg-gray-800 border border-gray-700 text-xs text-gray-300 px-3 py-1 rounded-full">
+                          <span key={v.id} className="flex items-center gap-1 bg-gray-800 border border-gray-700 text-xs text-gray-300 px-3 py-1 rounded-full">
                             {v.placa} • {v.marca} {v.modelo} {v.ano}
+                            {!isConsumidor(c) && (
+                              <button onClick={() => excluirVeiculo(v.id)} className="ml-1 text-gray-500 hover:text-red-400 transition-all">
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
                           </span>
                         ))}
                       </div>
