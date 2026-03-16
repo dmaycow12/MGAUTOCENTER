@@ -278,19 +278,12 @@ export default function Financeiro() {
           ) : (
             <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
               {filtrados.map(item => (
-                <div key={item.id} className="flex items-center gap-3 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/50 transition-all">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-semibold text-sm truncate">{item.descricao}</p>
-                    <p className="text-gray-500 text-xs">{item.categoria || "—"} • {item.data_vencimento || "—"}</p>
-                  </div>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo}</span>
-                  <span className={`text-xs px-2 py-1 rounded-full ${item.status==="Pago"?"bg-green-500/10 text-green-400":item.status==="Atrasado"?"bg-red-500/10 text-red-400":"bg-yellow-500/10 text-yellow-400"}`}>{item.status}</span>
-                  <span className={`font-bold text-sm ${item.tipo==="Receita"?"text-green-400":"text-red-400"}`}>R$ {Number(item.valor||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</span>
-                  <div className="flex gap-1">
-                    <button onClick={() => { setForm({...defaultForm(),...item}); setEditando(item); setShowForm(true); }} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all"><Search className="w-3.5 h-3.5"/></button>
-                    <button onClick={() => excluir(item.id)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all"><X className="w-3.5 h-3.5"/></button>
-                  </div>
-                </div>
+                <ListRow key={item.id} item={item}
+                  onEdit={() => { setForm({...defaultForm(),...item}); setEditando(item); setShowForm(true); }}
+                  onDelete={() => excluir(item.id)}
+                  onAlterarStatus={alterarStatus}
+                  onAlterarPagamento={alterarPagamento}
+                />
               ))}
             </div>
           )}
