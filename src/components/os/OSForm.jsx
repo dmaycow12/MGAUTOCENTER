@@ -312,6 +312,17 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     setSaving(true);
 
     try {
+      // Validar número duplicado (apenas na criação)
+      if (!os) {
+        const todas = await base44.entities.OrdemServico.list("-created_date", 500);
+        const existe = todas.some(o => String(o.numero).trim() === String(form.numero).trim());
+        if (existe) {
+          alert(`Já existe uma Ordem de Venda com o número #${form.numero}. Use outro número.`);
+          setSaving(false);
+          return;
+        }
+      }
+
       const eraAberta = os?.status !== "Concluído";
       const ficouConcluida = form.status === "Concluído";
 
