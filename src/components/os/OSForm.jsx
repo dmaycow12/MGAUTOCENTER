@@ -556,7 +556,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                     </select>
                   </Field>
                   <Field label="Nº de Parcelas">
-                    <input type="text" value={form.parcelas} onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} className="input-dark" />
+                    <input type="text" value={form.parcelas} autoComplete="off" onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} className="input-dark" />
                   </Field>
                   <Field label="Total Geral">
                     <div className="input-dark font-bold text-orange-400 pointer-events-none">
