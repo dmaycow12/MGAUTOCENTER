@@ -582,7 +582,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                       </div>
                       <div className="relative flex-1 min-w-[140px]">
                         <label className="text-xs text-gray-500 mb-1 block">Nome do Serviço</label>
-                        <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} onBlur={() => setTimeout(() => setServicoSugestoes({ idx: null, lista: [] }), 200)} className="input-dark" autoComplete="off" placeholder="Nome do serviço" />
+                        <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} onBlur={() => setTimeout(() => setServicoSugestoes({ idx: null, lista: [] }), 200)} className="input-dark" autoComplete="new-password" placeholder="Nome do serviço" />
                         {servicoSugestoes.idx === i && servicoSugestoes.lista.length > 0 && (
                           <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-64 max-h-48 overflow-y-auto">
                             {servicoSugestoes.lista.map(item => (
