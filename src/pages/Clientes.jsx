@@ -207,7 +207,11 @@ export default function Clientes() {
                     {colunas.rg_ie && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.rg_ie || "—"}</td>}
                     {colunas.email && <td className="px-4 py-1.5 text-gray-400 text-xs truncate">{c.email || "—"}</td>}
                     {colunas.cep && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.cep || "—"}</td>}
-                    {colunas.endereco && <td className="px-4 py-1.5"><div className="text-gray-400 text-xs">{(c.endereco || "—")}</div><div className="text-gray-500 text-xs">{(c.numero || "—")}</div><div className="text-gray-500 text-xs">{(c.bairro || "—")}</div><div className="text-gray-500 text-xs">{((c.cidade || "") + (c.estado ? " - " + c.estado : "") || "—")}</div></td>}
+                    {colunas.endereco && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.endereco || "—"}</td>}
+                    {colunas.numero && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.numero || "—"}</td>}
+                    {colunas.bairro && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.bairro || "—"}</td>}
+                    {colunas.cidade && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.cidade || "—"}</td>}
+                    {colunas.estado && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.estado || "—"}</td>}
                   </tr>
                 ))}
               </tbody>
