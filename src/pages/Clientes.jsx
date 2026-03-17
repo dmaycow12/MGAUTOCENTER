@@ -169,16 +169,17 @@ export default function Clientes() {
               <tbody className="divide-y divide-gray-800">
                 {filtrados.map(c => (
                   <tr key={c.id} className="hover:bg-gray-800/50 transition-all">
-                    <td className="px-4 py-3 text-white font-medium text-xs whitespace-nowrap">{c.nome}</td>
                     <td className="px-4 py-3 text-gray-300 text-xs whitespace-nowrap">{c.tipo || "—"}</td>
+                    <td className="px-4 py-3 text-white font-medium text-xs whitespace-nowrap">{c.nome}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.nome_fantasia || "—"}</td>
                     <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cpf_cnpj || "—"}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.rg_ie || "—"}</td>
                     <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.telefone || "—"}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs truncate">{c.email || "—"}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs truncate">{c.endereco ? `${c.endereco}, ${c.numero}` : "—"}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.bairro || "—"}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cidade ? `${c.cidade}/${c.estado}` : "—"}</td>
                     <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cep || "—"}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs truncate">{c.endereco || "—"}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.numero || "—"}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.bairro || "—"}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cidade || "—"}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.estado || "—"}</td>
                     <td className="px-4 py-3 flex items-center gap-1 justify-center sticky right-0 bg-gray-900">
                       <button onClick={() => editarCliente(c)} className="p-1.5 text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
                         <Edit className="w-3.5 h-3.5" />
