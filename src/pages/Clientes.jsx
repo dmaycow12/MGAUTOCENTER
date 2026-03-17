@@ -216,10 +216,10 @@ export default function Clientes() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-5 space-y-4">
+            <div className="p-5 space-y-4" autoComplete="off">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormGroup label="Tipo">
-                  <select value={form.tipo} onChange={e => setForm({ ...form, tipo: e.target.value })} className="input-dark">
+                  <select value={form.tipo} onChange={e => setForm({ ...form, tipo: e.target.value })} className="input-dark" autoComplete="off">
                     <option>Pessoa Física</option>
                     <option>Pessoa Jurídica</option>
                   </select>
