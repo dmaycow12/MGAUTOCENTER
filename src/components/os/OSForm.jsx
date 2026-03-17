@@ -352,7 +352,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     setSaving(true);
 
     try {
-      let formFinal = { ...form, parcelas_detalhes: parcelas };
+      const parcelasNormalizadas = parcelas.map(p => ({ ...p, valor: Number(p.valor) || 0 }));
+      let formFinal = { ...form, parcelas_detalhes: parcelasNormalizadas };
 
       if (!os) {
         const todas = await base44.entities.OrdemServico.list("-created_date", 500);
