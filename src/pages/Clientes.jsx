@@ -281,13 +281,18 @@ export default function Clientes() {
                 <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} className="input-dark" rows={2} />
               </FormGroup>
             </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
-              <button onClick={() => { setShowForm(false); setEditando(null); }} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-all">
-                Cancelar
+            <div className="flex justify-between gap-3 p-5 border-t border-gray-800">
+              <button onClick={() => { if (editando && !isConsumidor(editando)) excluir(editando); }} className={`px-4 py-2 text-sm rounded-lg font-medium transition-all ${editando ? "text-white hover:opacity-90" : "text-gray-500 cursor-not-allowed opacity-50"}`} style={{background: editando ? "#cc0000" : "#666"}}>
+                Excluir
               </button>
-              <button onClick={salvar} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all" style={{background: "#00ff00"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
-                {editando ? "Salvar Alterações" : "Cadastrar"}
-              </button>
+              <div className="flex gap-3">
+                <button onClick={() => { setShowForm(false); setEditando(null); }} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-all">
+                  Cancelar
+                </button>
+                <button onClick={salvar} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all" style={{background: "#00ff00"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+                  {editando ? "Salvar Alterações" : "Cadastrar"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
