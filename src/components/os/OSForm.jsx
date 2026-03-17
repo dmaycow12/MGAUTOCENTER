@@ -423,7 +423,14 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     <>
     <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto">
       <div className="min-h-full flex items-start justify-center p-4 pt-8">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-3xl my-4" autoComplete="off">
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-3xl my-4">
+        {/* Honeypot para bloquear autocomplete do browser */}
+        <div style={{display:"none"}} aria-hidden="true">
+          <input type="text" name="username" autoComplete="username" tabIndex={-1} />
+          <input type="password" name="password" autoComplete="current-password" tabIndex={-1} />
+          <input type="text" name="address" autoComplete="street-address" tabIndex={-1} />
+          <input type="email" name="email" autoComplete="email" tabIndex={-1} />
+        </div>
         <div className="flex items-center justify-between p-5 border-b border-gray-800">
           <h2 className="text-white font-semibold">{os ? `Ordem de Venda #${os.numero}` : "Ordem de Venda"}</h2>
           <button type="button" onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
