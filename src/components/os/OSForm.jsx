@@ -128,8 +128,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     prevTotalRef.current = form.valor_total;
     prevQtdRef.current = form.parcelas;
     prevFormaRef.current = form.forma_pagamento;
-    if (qtdMudou || formaMudou) {
-      // Recria todas as parcelas do zero
+    if (qtdMudou) {
+      // Recria todas as parcelas do zero (preserva a forma do campo principal)
       setParcelas(gerarParcelas(form.valor_total, form.parcelas, form.forma_pagamento, form.data_entrada));
     } else if (totalMudou) {
       // Redistribui igualmente
