@@ -364,6 +364,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
 
     try {
       let formFinal = { ...form };
+      console.log("[OSForm] Iniciando salvar...", { cliente_nome: formFinal.cliente_nome, status: formFinal.status });
 
       // Validar número duplicado (apenas na criação) — tenta próximo disponível
       if (!os) {
