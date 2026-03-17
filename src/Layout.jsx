@@ -258,50 +258,31 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Bottom Menu - Mobile (apenas admin) */}
         {!isRestrito && (
-          <nav className="md:hidden fixed top-0 left-0 right-0 z-50"
-            style={{
-              background:"rgba(17,17,17,0.97)",
-              borderBottom:"1px solid #222",
-              height:"56px",
-              display:"flex",
-              alignItems:"stretch",
-            }}>
+          <div className="md:hidden" style={{
+            position:"fixed", top:0, left:0, right:0, height:"56px", zIndex:9999,
+            background:"#111", borderBottom:"1px solid #222",
+            display:"grid", gridTemplateColumns:`repeat(${navItems.length}, 1fr)`,
+          }}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === `/${item.page}`;
               return (
-                <Link
+                <button
                   key={item.page}
-                  to={`/${item.page}`}
-                  title={item.name}
-                  onClick={e => e.currentTarget.blur()}
+                  onClick={() => navigate(`/${item.page}`)}
                   style={{
-                    flex:1,
-                    display:"flex",
-                    alignItems:"center",
-                    justifyContent:"center",
+                    display:"flex", alignItems:"center", justifyContent:"center",
                     background: isActive ? "rgba(6,44,155,0.4)" : "transparent",
-                    borderRadius:"0",
-                    cursor:"pointer",
-                    WebkitTapHighlightColor:"rgba(255,255,255,0.1)",
-                    userSelect:"none",
-                    WebkitUserSelect:"none",
+                    border:"none", outline:"none", cursor:"pointer",
+                    padding:0, margin:0, width:"100%", height:"56px",
+                    WebkitTapHighlightColor:"transparent",
                   }}
                 >
-                  <span style={{
-                    display:"flex",
-                    alignItems:"center",
-                    justifyContent:"center",
-                    width:"100%",
-                    height:"100%",
-                    pointerEvents:"none",
-                  }}>
-                    <Icon style={{width:"24px", height:"24px", color: isActive ? "#4d7fff" : "#9ca3af"}} />
-                  </span>
-                </Link>
+                  <Icon style={{width:"24px", height:"24px", color: isActive ? "#4d7fff" : "#9ca3af", pointerEvents:"none"}} />
+                </button>
               );
             })}
-          </nav>
+          </div>
         )}
       </div>
     </div>
