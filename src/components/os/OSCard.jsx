@@ -285,7 +285,14 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
           </div>
           <div className="px-3 py-2.5 border-t border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Pagamento</p>
-            <p className="text-white text-sm font-medium">{os.forma_pagamento || "—"}</p>
+            <p className="text-white text-sm font-medium">{(() => {
+            const pd = os.parcelas_detalhes;
+            if (!pd || pd.length === 0) return os.forma_pagamento || "—";
+            const formas = [...new Set(pd.map(p => p.forma_pagamento).filter(Boolean))];
+            if (formas.length === 0) return os.forma_pagamento || "—";
+            if (formas.length === 1) return formas[0];
+            return "Misto";
+          })()}</p>
           </div>
           <div className="col-span-2 px-3 py-2.5 border-t border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>
