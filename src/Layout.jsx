@@ -258,13 +258,13 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Bottom Menu - Mobile (apenas admin) */}
         {!isRestrito && (
-          <nav className="md:hidden fixed top-0 left-0 right-0 flex items-center justify-around z-40"
+          <nav className="md:hidden fixed top-0 left-0 right-0 z-50"
             style={{
               background:"rgba(17,17,17,0.97)",
-              backdropFilter:"blur(10px)",
-              borderBottom:"1px solid rgba(34,34,34,0.8)",
-              height:"52px",
-              padding:"0 4px",
+              borderBottom:"1px solid #222",
+              height:"56px",
+              display:"flex",
+              alignItems:"stretch",
             }}>
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -274,19 +274,30 @@ export default function Layout({ children, currentPageName }) {
                   key={item.page}
                   to={`/${item.page}`}
                   title={item.name}
+                  onClick={e => e.currentTarget.blur()}
                   style={{
+                    flex:1,
                     display:"flex",
                     alignItems:"center",
                     justifyContent:"center",
-                    borderRadius:"10px",
-                    flex:1,
-                    height:"44px",
-                    background: isActive ? "rgba(6,44,155,0.35)" : "transparent",
-                    touchAction:"manipulation",
-                    WebkitTapHighlightColor:"transparent",
+                    background: isActive ? "rgba(6,44,155,0.4)" : "transparent",
+                    borderRadius:"0",
+                    cursor:"pointer",
+                    WebkitTapHighlightColor:"rgba(255,255,255,0.1)",
+                    userSelect:"none",
+                    WebkitUserSelect:"none",
                   }}
                 >
-                  <Icon style={{width:"22px", height:"22px", color: isActive ? "#4d7fff" : "#9ca3af", pointerEvents:"none", display:"block"}} />
+                  <span style={{
+                    display:"flex",
+                    alignItems:"center",
+                    justifyContent:"center",
+                    width:"100%",
+                    height:"100%",
+                    pointerEvents:"none",
+                  }}>
+                    <Icon style={{width:"24px", height:"24px", color: isActive ? "#4d7fff" : "#9ca3af"}} />
+                  </span>
                 </Link>
               );
             })}
