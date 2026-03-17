@@ -438,7 +438,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
         <div className="p-5 space-y-5">
           {/* Header Info */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <Field label="Número OS">
+            <Field label="Número">
               <NoAutoInput value={form.numero} disabled={isConcluida} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} className={`input-dark ${isConcluida ? "opacity-50 cursor-not-allowed" : ""}`} />
             </Field>
             <Field label="Status">
