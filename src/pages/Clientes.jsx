@@ -137,7 +137,7 @@ export default function Clientes() {
                 <p className="text-white font-bold text-sm leading-snug">{c.nome}</p>
                 <div className="flex gap-1 flex-shrink-0">
                   <button onClick={() => editarCliente(c)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all"><Edit className="w-3.5 h-3.5"/></button>
-                  <button onClick={() => excluir(c.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
+                  <button onClick={() => excluir(c)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
                 </div>
               </div>
               {c.telefone && <p className="text-gray-400 text-xs">{c.telefone}</p>}
