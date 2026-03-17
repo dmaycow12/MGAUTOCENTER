@@ -460,12 +460,13 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                     <label className="block text-xs text-gray-400 mb-1">Selecionar Cliente</label>
                     <div className="flex gap-2">
                       <div className="relative flex-1">
-                        <NoAutoInput 
-                          value={clienteSearch} 
-                          onChange={e => handleClienteSearch(e.target.value)} 
+                        <input
+                          value={clienteSearch}
+                          onChange={e => handleClienteSearch(e.target.value)}
                           onBlur={() => setTimeout(() => setClienteSugestoes([]), 200)}
-                          className="input-dark" 
-                          placeholder={form.cliente_nome || "Digite para pesquisar..."} 
+                          className="input-dark"
+                          placeholder={form.cliente_nome || "Digite para pesquisar..."}
+                          autoComplete="new-password"
                         />
                         {clienteSugestoes.length > 0 && (
                           <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-full max-h-48 overflow-y-auto">
