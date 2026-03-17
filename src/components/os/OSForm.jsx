@@ -128,9 +128,16 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     prevTotalRef.current = form.valor_total;
     prevQtdRef.current = form.parcelas;
     prevFormaRef.current = form.forma_pagamento;
-    if (qtdMudou || formaMudou) {
-      // Recria todas as parcelas do zero
+    if (qtdMudou) {
+      // Só recria se mudou a quantidade de parcelas
       setParcelas(gerarParcelas(form.valor_total, form.parcelas, form.forma_pagamento, form.data_entrada));
+    } else if (formaMudou) {
+      // Quando muda a forma principal, atualiza apenas parcelas que ainda são "A Combinar"
+      setParcelas(prev => prev.map(p =>
+        (!p.forma_pagamento || p.forma_pagamento === "A Combinar")
+          ? { ...p, forma_pagamento: form.forma_pagamento }
+          : p
+      ));
     } else if (totalMudou) {
       // Redistribui igualmente
       const n = Math.max(1, Number(form.parcelas) || 1);
