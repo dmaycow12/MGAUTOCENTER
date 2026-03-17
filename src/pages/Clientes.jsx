@@ -225,43 +225,43 @@ export default function Clientes() {
                   </select>
                 </FormGroup>
                 <FormGroup label="CPF / CNPJ">
-                   <input value={form.cpf_cnpj} onChange={e => setForm({ ...form, cpf_cnpj: e.target.value })} className="input-dark" placeholder="000.000.000-00" />
+                   <input value={form.cpf_cnpj} onChange={e => setForm({ ...form, cpf_cnpj: e.target.value })} className="input-dark" autoComplete="off" />
                  </FormGroup>
                 <FormGroup label="Nome / Razão Social *">
-                   <input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} className="input-dark" placeholder="Nome completo" />
+                   <input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} className="input-dark" autoComplete="off" />
                  </FormGroup>
                  <FormGroup label="Nome Social / Nome Fantasia">
-                   <input value={form.nome_fantasia} onChange={e => setForm({ ...form, nome_fantasia: e.target.value })} className="input-dark" placeholder="Nome fantasia" />
+                   <input value={form.nome_fantasia} onChange={e => setForm({ ...form, nome_fantasia: e.target.value })} className="input-dark" autoComplete="off" />
                  </FormGroup>
                 <FormGroup label="Inscrição Estadual">
-                  <input value={form.rg_ie} onChange={e => setForm({ ...form, rg_ie: e.target.value })} className="input-dark" />
+                  <input value={form.rg_ie} onChange={e => setForm({ ...form, rg_ie: e.target.value.replace(/[.-]/g, '') })} className="input-dark" autoComplete="off" />
                 </FormGroup>
                 <FormGroup label="Telefone Contato">
-                  <input value={form.telefone} onChange={e => setForm({ ...form, telefone: e.target.value })} className="input-dark" />
+                  <input value={form.telefone} onChange={e => setForm({ ...form, telefone: e.target.value })} className="input-dark" autoComplete="off" />
                 </FormGroup>
                 <FormGroup label="E-mail">
-                  <input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="input-dark" placeholder="email@exemplo.com" />
+                  <input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="input-dark" autoComplete="off" />
                 </FormGroup>
                 <FormGroup label="CEP">
-                  <input value={form.cep} onChange={e => setForm({ ...form, cep: e.target.value })} className="input-dark" placeholder="00000-000" />
+                  <input value={form.cep} onChange={e => setForm({ ...form, cep: e.target.value })} className="input-dark" autoComplete="off" />
                 </FormGroup>
                 <FormGroup label="Endereço">
-                  <input value={form.endereco} onChange={e => setForm({ ...form, endereco: e.target.value })} className="input-dark" />
+                  <input value={form.endereco} onChange={e => setForm({ ...form, endereco: e.target.value })} className="input-dark" autoComplete="off" />
                 </FormGroup>
                 <FormGroup label="Número">
-                  <input value={form.numero} onChange={e => setForm({ ...form, numero: e.target.value })} className="input-dark" />
+                  <input value={form.numero} onChange={e => setForm({ ...form, numero: e.target.value })} className="input-dark" autoComplete="off" />
                 </FormGroup>
                 <FormGroup label="Complemento">
-                  <input value={form.complemento} onChange={e => setForm({ ...form, complemento: e.target.value })} className="input-dark" />
+                  <input value={form.complemento} onChange={e => setForm({ ...form, complemento: e.target.value })} className="input-dark" autoComplete="off" />
                 </FormGroup>
                 <FormGroup label="Bairro">
-                  <input value={form.bairro} onChange={e => setForm({ ...form, bairro: e.target.value })} className="input-dark" />
+                  <input value={form.bairro} onChange={e => setForm({ ...form, bairro: e.target.value })} className="input-dark" autoComplete="off" />
                 </FormGroup>
                 <FormGroup label="Cidade">
-                  <input value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} className="input-dark" />
+                  <input value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} className="input-dark" autoComplete="off" />
                 </FormGroup>
                 <FormGroup label="Estado">
-                  <input value={form.estado} onChange={e => setForm({ ...form, estado: e.target.value })} className="input-dark" maxLength={2} />
+                  <input value={form.estado} onChange={e => setForm({ ...form, estado: e.target.value })} className="input-dark" maxLength={2} autoComplete="off" />
                 </FormGroup>
               </div>
               <FormGroup label="Observações">
