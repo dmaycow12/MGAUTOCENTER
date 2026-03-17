@@ -147,62 +147,50 @@ export default function Clientes() {
           ))}
         </div>
       ) : (
-        <div className="space-y-2">
-          {filtrados.map(c => (
-            <div key={c.id} className="bg-gray-900 border border-gray-800 rounded-xl">
-              <div
-                className="flex items-center justify-between gap-2 p-4 cursor-pointer select-none"
-                onClick={() => setExpandido(expandido === c.id ? null : c.id)}
-              >
-                <div className="flex-1 min-w-0">
-                   <p className="text-white text-xs font-bold leading-snug">{c.nome}</p>
-                 </div>
-                <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => editarCliente(c)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => excluir(c)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {expandido === c.id && (
-                <div className="border-t border-gray-800 p-4 bg-gray-900/50">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-4">
-                     {c.endereco && <Info label="Endereço" value={`${c.endereco}, ${c.numero}`} />}
-                     {c.bairro && <Info label="Bairro" value={c.bairro} />}
-                     {c.cidade && <Info label="Cidade" value={`${c.cidade}/${c.estado}`} />}
-                     {c.tipo && <Info label="Tipo" value={c.tipo} />}
-                     {c.email && <Info label="E-mail" value={c.email} />}
-                     {c.telefone && <Info label="Contato" value={c.telefone} />}
-                     {c.observacoes && <Info label="Observações" value={c.observacoes} />}
-                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium mb-2 flex items-center gap-1">
-                      <Car className="w-3 h-3" /> Veículos
-                    </p>
-                    {veiculosDoCliente(c.id).length === 0 ? (
-                      <p className="text-gray-600 text-xs">Nenhum veículo cadastrado</p>
-                    ) : (
-                      <div className="flex flex-wrap gap-2">
-                        {veiculosDoCliente(c.id).map(v => (
-                          <span key={v.id} className="flex items-center gap-1 bg-gray-800 border border-gray-700 text-xs text-gray-300 px-3 py-1 rounded-full">
-                            {v.placa} • {v.marca} {v.modelo} {v.ano}
-                            {!isConsumidor(c) && (
-                              <button onClick={() => excluirVeiculo(v.id)} className="ml-1 text-gray-500 hover:text-red-400 transition-all">
-                                <X className="w-3 h-3" />
-                              </button>
-                            )}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-800 border-b border-gray-700 sticky top-0">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">NOME</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">TIPO</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CPF/CNPJ</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">INSCRIÇÃO ESTADUAL</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">TELEFONE</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">E-MAIL</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">ENDEREÇO</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">BAIRRO</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CIDADE</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CEP</th>
+                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-300 whitespace-nowrap sticky right-12">AÇÕES</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800">
+                {filtrados.map(c => (
+                  <tr key={c.id} className="hover:bg-gray-800/50 transition-all">
+                    <td className="px-4 py-3 text-white font-medium text-xs whitespace-nowrap">{c.nome}</td>
+                    <td className="px-4 py-3 text-gray-300 text-xs whitespace-nowrap">{c.tipo || "—"}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cpf_cnpj || "—"}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.rg_ie || "—"}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.telefone || "—"}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs truncate">{c.email || "—"}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs truncate">{c.endereco ? `${c.endereco}, ${c.numero}` : "—"}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.bairro || "—"}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cidade ? `${c.cidade}/${c.estado}` : "—"}</td>
+                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cep || "—"}</td>
+                    <td className="px-4 py-3 flex items-center gap-1 justify-center sticky right-0 bg-gray-900">
+                      <button onClick={() => editarCliente(c)} className="p-1.5 text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => excluir(c)} className="p-1.5 text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
