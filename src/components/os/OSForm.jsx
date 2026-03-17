@@ -456,26 +456,36 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
               {/* Cliente */}
               <Section title="Cliente">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Selecionar Cliente" className="relative col-span-1 md:col-span-2">
-                    <div className="relative">
-                      <NoAutoInput 
-                        value={clienteSearch} 
-                        onChange={e => handleClienteSearch(e.target.value)} 
-                        onBlur={() => setTimeout(() => setClienteSugestoes([]), 200)}
-                        className="input-dark" 
-                        placeholder={form.cliente_nome || "Digite para pesquisar..."} 
-                      />
-                      {clienteSugestoes.length > 0 && (
-                        <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-full max-h-48 overflow-y-auto">
-                          {clienteSugestoes.map(item => (
-                            <button key={item.id} onMouseDown={() => onClienteChange(item.id)} className="w-full text-left px-3 py-2 text-xs text-gray-200 hover:bg-gray-700 border-b border-gray-700 last:border-0">
-                              {item.nome}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                  <div className="col-span-1 md:col-span-2">
+                    <label className="block text-xs text-gray-400 mb-1">Selecionar Cliente</label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <NoAutoInput 
+                          value={clienteSearch} 
+                          onChange={e => handleClienteSearch(e.target.value)} 
+                          onBlur={() => setTimeout(() => setClienteSugestoes([]), 200)}
+                          className="input-dark" 
+                          placeholder={form.cliente_nome || "Digite para pesquisar..."} 
+                        />
+                        {clienteSugestoes.length > 0 && (
+                          <div className="absolute z-50 top-full left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-full max-h-48 overflow-y-auto">
+                            {clienteSugestoes.map(item => (
+                              <button key={item.id} onMouseDown={() => onClienteChange(item.id)} className="w-full text-left px-3 py-2 text-xs text-gray-200 hover:bg-gray-700 border-b border-gray-700 last:border-0">
+                                {item.nome}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <button type="button" onClick={() => setShowNovoCliente(true)}
+                        className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-white flex-shrink-0 transition-all"
+                        style={{background:"#062C9B"}}
+                        onMouseEnter={e => e.currentTarget.style.background="#0a3fd4"}
+                        onMouseLeave={e => e.currentTarget.style.background="#062C9B"}>
+                        <Plus className="w-3.5 h-3.5" /> Novo
+                      </button>
                     </div>
-                  </Field>
+                  </div>
                   <Field label="Nome Social / Nome Fantasia">
                     <NoAutoInput value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} className="input-dark" placeholder="Ou digite manualmente" />
                   </Field>
