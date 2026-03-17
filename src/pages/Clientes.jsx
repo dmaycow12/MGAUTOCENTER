@@ -9,8 +9,15 @@ export default function Clientes() {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
-  const [expandido, setExpandido] = useState(null);
-  const [viewMode, setViewMode] = useState(() => localStorage.getItem("clientes_viewmode") || "list");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [colunas, setColunas] = useState(() => {
+    const saved = localStorage.getItem("clientes_colunas");
+    return saved ? JSON.parse(saved) : {
+      tipo: true, nome: true, cpf_cnpj: true, telefone: true,
+      rg_ie: false, email: false, cep: false, endereco: false, numero: false, 
+      bairro: false, complemento: false, cidade: false, estado: false
+    };
+  });
   const [form, setForm] = useState(defaultForm());
 
   function defaultForm() {
