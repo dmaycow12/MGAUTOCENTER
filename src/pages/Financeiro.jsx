@@ -440,6 +440,12 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
       {/* Tipo badge — largura fixa */}
       <span className={`text-xs px-2 py-1 rounded-full font-medium flex-shrink-0 w-16 text-center ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo}</span>
 
+      {/* Descrição + categoria — ocupa espaço restante */}
+      <div className="flex-1 min-w-0">
+        <p className="text-white font-semibold text-sm truncate">{item.descricao}</p>
+        <p className="text-gray-500 text-xs truncate">{item.categoria || "—"} • {item.data_vencimento || "—"}</p>
+      </div>
+
       {/* Status dropdown — largura fixa */}
       <div className="relative flex-shrink-0 w-28" ref={statusRef}>
         <button onClick={() => setStatusOpen(v => !v)}
