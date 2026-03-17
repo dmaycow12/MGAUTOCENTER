@@ -98,16 +98,24 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   };
 
   const confirmarMudancaStatus = async () => {
-    // Busca dados atuais da OS antes de restaurar estoque
-    const osAtualizada = await base44.entities.OrdemServico.filter({ id: os.id });
-    const osData = osAtualizada?.[0] || os;
-    
-    await excluirLancamentosOS(os.id);
-    await restaurarEstoque(osData.pecas);
-    await base44.entities.OrdemServico.update(os.id, { status: statusPendenteCard });
-    setShowAvisoStatus(false);
-    setStatusPendenteCard(null);
-    onRefresh?.();
+    try {
+      // Busca dados atuais da OS antes de restaurar estoque
+      const todasOS = await base44.entities.OrdemServico.list("-created_date", 1000);
+      const osAtualizada = todasOS.find(o => o.id === os.id);
+      const osData = osAtualizada || os;
+      
+      console.log("OS para restaurar:", osData.id, "Peças:", osData.pecas);
+      
+      await excluirLancamentosOS(os.id);
+      await restaurarEstoque(osData.pecas || []);
+      await base44.entities.OrdemServico.update(os.id, { status: statusPendenteCard });
+      setShowAvisoStatus(false);
+      setStatusPendenteCard(null);
+      onRefresh?.();
+    } catch (err) {
+      console.error("Erro ao reabrir OS:", err);
+      alert("Erro: " + err.message);
+    }
   };
 
   const confirmarExcluir = async () => {
