@@ -261,7 +261,7 @@ export default function Clientes() {
                   <input value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} className="input-dark" />
                 </FormGroup>
                 <FormGroup label="Estado">
-                  <input value={form.estado} onChange={e => setForm({ ...form, estado: e.target.value })} className="input-dark" maxLength={2} placeholder="SP" />
+                  <input value={form.estado} onChange={e => setForm({ ...form, estado: e.target.value })} className="input-dark" maxLength={2} />
                 </FormGroup>
               </div>
               <FormGroup label="Observações">
