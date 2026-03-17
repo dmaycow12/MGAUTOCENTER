@@ -713,7 +713,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                         <NoAutoInput value={p.valor} onChange={e => updateParcela(i, "valor", e.target.value)}
                           className="input-dark text-xs py-1.5" />
                         <div className="input-dark text-xs py-1.5 text-gray-400 pointer-events-none opacity-60">
-                          {p.forma_pagamento || form.forma_pagamento}
+                          {form.forma_pagamento}
                         </div>
                       </div>
                     ))}
