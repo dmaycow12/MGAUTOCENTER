@@ -436,15 +436,11 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
   const fmt = v => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 
   return (
-    <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
-      <div className="flex-1 min-w-0">
-        <p className="text-white font-semibold text-sm truncate">{item.descricao}</p>
-        <p className="text-gray-500 text-xs">{item.categoria || "—"} • {item.data_vencimento || "—"}</p>
-      </div>
+    <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
+      {/* Tipo badge — largura fixa */}
+      <span className={`text-xs px-2 py-1 rounded-full font-medium flex-shrink-0 w-16 text-center ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo}</span>
 
-      <span className={`text-xs px-2 py-1 rounded-full font-medium flex-shrink-0 ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo}</span>
-
-      {/* Status dropdown */}
+      {/* Status dropdown — largura fixa */}
       <div className="relative flex-shrink-0 w-28" ref={statusRef}>
         <button onClick={() => setStatusOpen(v => !v)}
           className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg font-bold text-white text-xs hover:opacity-90 transition-all"
@@ -464,15 +460,15 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
         )}
       </div>
 
-      {/* Pagamento dropdown */}
-      <div className="relative flex-shrink-0" ref={pagamentoRef}>
+      {/* Pagamento dropdown — largura fixa */}
+      <div className="relative flex-shrink-0 w-28" ref={pagamentoRef}>
         {item.status === "Pago" ? (
-          <span className="text-xs px-2 py-1 rounded-full bg-gray-700 text-gray-400 font-medium">{item.forma_pagamento || "A Combinar"}</span>
+          <span className="block text-xs px-2 py-1.5 rounded-lg bg-gray-700 text-gray-400 font-medium text-center truncate">{item.forma_pagamento || "A Combinar"}</span>
         ) : (
           <>
             <button onClick={() => setPagamentoOpen(v => !v)}
-              className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-gray-700 text-blue-300 hover:text-blue-200 font-medium transition-all">
-              {item.forma_pagamento || "A Combinar"} <ChevronDown className="w-3 h-3" />
+              className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg bg-gray-700 text-blue-300 hover:text-blue-200 font-medium text-xs transition-all">
+              <span className="truncate">{item.forma_pagamento || "A Combinar"}</span> <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </button>
             {pagamentoOpen && (
               <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-44 py-1 z-50">
@@ -492,7 +488,10 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
         )}
       </div>
 
-      <span className={`font-bold text-sm flex-shrink-0 ${item.tipo==="Receita"?"text-green-400":"text-red-400"}`}>R$ {fmt(item.valor)}</span>
+      {/* Valor — largura fixa, alinhado à direita */}
+      <span className={`font-bold text-sm flex-shrink-0 w-28 text-right ${item.tipo==="Receita"?"text-green-400":"text-red-400"}`}>R$ {fmt(item.valor)}</span>
+
+      {/* Ações */}
       <div className="flex gap-1 flex-shrink-0">
         <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all"><Edit className="w-3.5 h-3.5"/></button>
         <button onClick={onDelete} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
