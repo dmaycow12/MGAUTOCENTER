@@ -197,7 +197,17 @@ export default function Clientes() {
                     {colunas.rg_ie && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.rg_ie || "—"}</td>}
                     {colunas.email && <td className="px-4 py-1.5 text-gray-400 text-xs truncate">{c.email || "—"}</td>}
                     {colunas.cep && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.cep || "—"}</td>}
-                    {colunas.endereco && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap truncate">{formatarEndereco(c) || "—"}</td>}
+                    {colunas.endereco && (
+                      <td className="px-4 py-1.5 text-gray-400 text-xs">
+                        <div className="space-y-0.5">
+                          {c.endereco && <div className="text-white font-medium">{c.endereco}</div>}
+                          {c.numero && <div>{c.numero}</div>}
+                          {c.bairro && <div>{c.bairro}</div>}
+                          {c.complemento && <div>{c.complemento}</div>}
+                          {(c.cidade || c.estado) && <div>{[c.cidade, c.estado].filter(Boolean).join(" - ")}</div>}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
