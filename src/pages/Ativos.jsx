@@ -225,7 +225,7 @@ export default function Ativos() {
         {/* Toggle cards/lista */}
         <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
           <button
-            onClick={() => setViewMode("list")}
+            onClick={() => { setViewMode("list"); localStorage.setItem("ativos_viewmode","list"); }}
             className="px-3 py-2 transition-all"
             style={{ background: viewMode === "list" ? "#062C9B" : "transparent", color: viewMode === "list" ? "#fff" : "#6b7280" }}
             title="Lista"
@@ -233,7 +233,7 @@ export default function Ativos() {
             <List className="w-5 h-5" />
           </button>
           <button
-            onClick={() => setViewMode("cards")}
+            onClick={() => { setViewMode("cards"); localStorage.setItem("ativos_viewmode","cards"); }}
             className="px-3 py-2 transition-all"
             style={{ background: viewMode === "cards" ? "#062C9B" : "transparent", color: viewMode === "cards" ? "#fff" : "#6b7280" }}
             title="Cards"

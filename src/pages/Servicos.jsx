@@ -79,8 +79,8 @@ export default function Servicos() {
           />
         </div>
         <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
-          <button onClick={() => setViewMode("list")} className="px-3 py-2 transition-all" style={{background:viewMode==="list"?"#062C9B":"transparent",color:viewMode==="list"?"#fff":"#6b7280"}}><List className="w-5 h-5"/></button>
-          <button onClick={() => setViewMode("cards")} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-5 h-5"/></button>
+          <button onClick={() => { setViewMode("list"); localStorage.setItem("servicos_viewmode","list"); }} className="px-3 py-2 transition-all" style={{background:viewMode==="list"?"#062C9B":"transparent",color:viewMode==="list"?"#fff":"#6b7280"}}><List className="w-5 h-5"/></button>
+          <button onClick={() => { setViewMode("cards"); localStorage.setItem("servicos_viewmode","cards"); }} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-5 h-5"/></button>
         </div>
       </div>
 
@@ -149,7 +149,7 @@ export default function Servicos() {
               <F label="Código"><input value={form.codigo} onChange={e => setForm(f => ({ ...f, codigo: e.target.value }))} className="inp" placeholder="Ex: SRV001" /></F>
               <F label="Descrição *"><input value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} className="inp" placeholder="Nome do serviço" /></F>
               <F label="Descrição"><input value={form.categoria} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))} className="inp" placeholder="Ex: Mecânica, Elétrica..." /></F>
-              <F label="Valor (R$)"><input type="number" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} className="inp" placeholder="0,00" /></F>
+              <F label="Valor (R$)"><input type="text" inputMode="decimal" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} className="inp" placeholder="0,00" /></F>
               <F label="Observações"><textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} className="inp" rows={2} /></F>
             </div>
             <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
