@@ -265,8 +265,8 @@ export default function Layout({ children, currentPageName }) {
               border:"1px solid rgba(34,34,34,0.8)",
               borderRadius:"16px",
               maxWidth:"calc(100% - 16px)",
-              padding:"4px",
-              gap:"2px",
+              padding:"2px",
+              gap:"0px",
             }}>
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -280,14 +280,18 @@ export default function Layout({ children, currentPageName }) {
                     display:"flex",
                     alignItems:"center",
                     justifyContent:"center",
-                    borderRadius:"10px",
+                    borderRadius:"12px",
                     flexShrink: 0,
-                    width:"40px",
-                    height:"40px",
+                    width:"44px",
+                    height:"44px",
+                    minWidth:"44px",
+                    minHeight:"44px",
                     background: isActive ? "rgba(6,44,155,0.3)" : "transparent",
+                    touchAction:"manipulation",
+                    WebkitTapHighlightColor:"transparent",
                   }}
                 >
-                  <Icon style={{width:"20px", height:"20px", color: isActive ? "#4d7fff" : "#9ca3af", flexShrink: 0, pointerEvents:"none"}} />
+                  <Icon style={{width:"22px", height:"22px", color: isActive ? "#4d7fff" : "#9ca3af", flexShrink: 0, pointerEvents:"none", display:"block"}} />
                 </Link>
               );
             })}
