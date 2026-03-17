@@ -336,10 +336,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
       : gerarParcelas(osData.valor_total, Number(osData.parcelas) || 1, formaPrincipal, osData.data_entrada);
 
     for (const p of lista) {
-      // Usa a forma individual da parcela; só usa a principal se for "A Combinar" ou vazia
-      const formaParc = (p.forma_pagamento && p.forma_pagamento !== "A Combinar")
-        ? p.forma_pagamento
-        : formaPrincipal;
+      const formaParc = p.forma_pagamento || formaPrincipal;
       const pago = ["Dinheiro", "PIX"].includes(formaParc);
       await base44.entities.Financeiro.create({
         tipo: "Receita",
@@ -402,7 +399,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
       }
 
       if (eraAberta && ficouConcluida && savedId) {
-        await gerarLancamentosFinanceiros({ ...formFinal, id: savedId }, parcelasNormalizadas);
+        await gerarLancamentosFinanceiros({ ...formFinal, id: savedId }, parcelas);
         await reduzirEstoque(formFinal.pecas);
       }
 
@@ -607,6 +604,11 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <Field label="Desconto (R$)">
                     <input value={form.desconto} onChange={e => onDesconto(e.target.value)} className="input-dark" autoComplete="off" />
+                  </Field>
+                  <Field label="Forma de Pagamento">
+                    <select value={form.forma_pagamento} onChange={e => setForm(f => ({ ...f, forma_pagamento: e.target.value }))} className="input-dark">
+                      {["A Combinar","Boleto","Cartão","Dinheiro","PIX"].map(s => <option key={s}>{s}</option>)}
+                    </select>
                   </Field>
                   <Field label="Nº de Parcelas">
                     <input value={form.parcelas} onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} className="input-dark" autoComplete="off" />
