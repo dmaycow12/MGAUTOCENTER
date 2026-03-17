@@ -632,8 +632,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                         <select
                           value={p.forma_pagamento || "A Combinar"}
                           onChange={e => updateParcela(i, "forma_pagamento", e.target.value)}
-                          disabled={p.forma_pagamento !== "A Combinar"}
-                          className="input-dark text-xs py-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="input-dark text-xs py-1.5"
                         >
                           {["A Combinar","Boleto","Cartão","Dinheiro","PIX"].map(s => <option key={s}>{s}</option>)}
                         </select>
