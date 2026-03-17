@@ -63,7 +63,14 @@ function recalcular(servicos, pecas, desconto) {
 
 export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   const isConcluida = os?.status === "Concluído";
-  const [form, setForm] = useState(() => os ? { ...defaultForm(), ...os, fotos: os.fotos || [] } : defaultForm());
+  const [form, setForm] = useState(() => {
+    const base = os ? { ...defaultForm(), ...os, fotos: os.fotos || [] } : defaultForm();
+    // Apenas preenche data_entrada com hoje se for uma OS nova
+    if (!os && !base.data_entrada) {
+      base.data_entrada = new Date().toISOString().split("T")[0];
+    }
+    return base;
+  });
   const [parcelas, setParcelas] = useState(() => {
     if (os?.parcelas_detalhes?.length > 0) return os.parcelas_detalhes;
     return gerarParcelas(os?.valor_total || 0, os?.parcelas || 1, os?.data_entrada);
