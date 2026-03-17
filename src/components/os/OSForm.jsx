@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { X, Plus, Trash2, AlertTriangle, Camera, Image } from "lucide-react";
-import { reduzirEstoque, restaurarEstoque, excluirLancamentosOS } from "./estoqueUtils";
+import { reduzirEstoque } from "./estoqueUtils";
 
 const defaultForm = () => ({
   numero: "",
