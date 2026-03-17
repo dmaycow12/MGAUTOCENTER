@@ -31,7 +31,7 @@ const defaultForm = () => ({
   valor_pecas: 0,
   desconto: 0,
   valor_total: 0,
-  forma_pagamento: "A Combinar",
+  forma_pagamento: "",
   parcelas: 1,
   parcelas_detalhes: [],
   fotos: [],
