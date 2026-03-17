@@ -716,9 +716,15 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                           className="input-dark text-xs py-1.5" />
                         <NoAutoInput value={p.valor} onChange={e => updateParcela(i, "valor", e.target.value)}
                           className="input-dark text-xs py-1.5" />
-                        <div className="input-dark text-xs py-1.5 text-gray-400 pointer-events-none opacity-60">
-                          {form.forma_pagamento}
-                        </div>
+                        {form.forma_pagamento === "A Combinar" ? (
+                          <select value={p.forma_pagamento || "A Combinar"} onChange={e => updateParcela(i, "forma_pagamento", e.target.value)} className="input-dark text-xs py-1.5">
+                            {["A Combinar","Boleto","Cartão","Dinheiro","PIX"].map(s => <option key={s}>{s}</option>)}
+                          </select>
+                        ) : (
+                          <div className="input-dark text-xs py-1.5 text-gray-400 pointer-events-none opacity-60">
+                            {form.forma_pagamento}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
