@@ -13,7 +13,7 @@ export default function Clientes() {
   const [colunas, setColunas] = useState(() => {
     const saved = localStorage.getItem("clientes_colunas");
     return saved ? JSON.parse(saved) : {
-      tipo: true, nome: true, nome_fantasia: false, cpf_cnpj: true, telefone: true,
+      tipo: true, nome: true, cpf_cnpj: true, telefone: true,
       rg_ie: false, email: false, cep: false, endereco: false
     };
   });
@@ -98,12 +98,21 @@ export default function Clientes() {
   };
 
   const colunasDisponiveis = [
-    { key: "nome_fantasia", label: "NOME SOCIAL / NOME FANTASIA" },
     { key: "rg_ie", label: "INSCRIÇÃO ESTADUAL" },
     { key: "email", label: "E-MAIL" },
     { key: "cep", label: "CEP" },
     { key: "endereco", label: "ENDEREÇO" }
   ];
+
+  const formatarEndereco = (c) => {
+    const partes = [c.endereco];
+    if (c.numero) partes.push(c.numero);
+    if (c.bairro) partes.push(c.bairro);
+    if (c.complemento) partes.push(c.complemento);
+    if (c.cidade) partes.push(c.cidade);
+    if (c.estado) partes.push(c.estado);
+    return partes.join(" - ");
+  };
 
   if (loading) return <Loader />;
 
@@ -177,7 +186,6 @@ export default function Clientes() {
                 <tr>
                   {colunas.tipo && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">TIPO</th>}
                   {colunas.nome && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">NOME / RAZÃO SOCIAL</th>}
-                  {colunas.nome_fantasia && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">NOME SOCIAL / FANTASIA</th>}
                   {colunas.cpf_cnpj && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CPF/CNPJ</th>}
                   {colunas.telefone && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CONTATO</th>}
                   {colunas.rg_ie && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">INSCRIÇÃO ESTADUAL</th>}
@@ -191,17 +199,12 @@ export default function Clientes() {
                   <tr key={c.id} className="hover:bg-gray-800/50 transition-all cursor-pointer" onClick={() => editarCliente(c)}>
                     {colunas.tipo && <td className="px-4 py-1.5 text-gray-300 text-xs whitespace-nowrap">{isConsumidor(c) ? "—" : (c.tipo || "—")}</td>}
                     {colunas.nome && <td className="px-4 py-1.5 text-white font-medium text-xs whitespace-nowrap">{c.nome}</td>}
-                    {colunas.nome_fantasia && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.nome_fantasia || "—"}</td>}
                     {colunas.cpf_cnpj && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.cpf_cnpj || "—"}</td>}
                     {colunas.telefone && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.telefone || "—"}</td>}
                     {colunas.rg_ie && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.rg_ie || "—"}</td>}
                     {colunas.email && <td className="px-4 py-1.5 text-gray-400 text-xs truncate">{c.email || "—"}</td>}
                     {colunas.cep && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.cep || "—"}</td>}
-                    {colunas.endereco && (
-                      <td className="px-4 py-1.5 text-gray-400 text-xs">
-                        {[c.endereco, c.numero, c.bairro, c.complemento, c.cidade, c.estado].filter(Boolean).join(" - ") || "—"}
-                      </td>
-                    )}
+                    {colunas.endereco && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap truncate">{formatarEndereco(c) || "—"}</td>}
                   </tr>
                 ))}
               </tbody>
