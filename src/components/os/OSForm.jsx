@@ -739,6 +739,40 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
       </div>
     </div>
 
+    {/* Modal Novo Cliente Rápido */}
+    {showNovoCliente && (
+      <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
+        <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-white font-semibold text-sm">Novo Cliente</h3>
+            <button onClick={() => setShowNovoCliente(false)}><X className="w-4 h-4 text-gray-400 hover:text-white" /></button>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Nome *</label>
+              <NoAutoInput value={novoClienteForm.nome} onChange={e => setNovoClienteForm(f => ({ ...f, nome: e.target.value }))} className="input-dark" placeholder="Nome do cliente" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Telefone / WhatsApp</label>
+              <NoAutoInput value={novoClienteForm.telefone} onChange={e => setNovoClienteForm(f => ({ ...f, telefone: e.target.value }))} className="input-dark" placeholder="(XX) XXXXX-XXXX" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">CPF / CNPJ</label>
+              <NoAutoInput value={novoClienteForm.cpf_cnpj} onChange={e => setNovoClienteForm(f => ({ ...f, cpf_cnpj: e.target.value }))} className="input-dark" placeholder="000.000.000-00" />
+            </div>
+          </div>
+          <div className="flex gap-3 justify-end pt-1">
+            <button onClick={() => setShowNovoCliente(false)} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Cancelar</button>
+            <button onClick={salvarNovoCliente} disabled={salvandoCliente}
+              className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50"
+              style={{background:"#062C9B"}}>
+              {salvandoCliente ? "Salvando..." : "Cadastrar"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     {/* Modal de aviso ao reabrir OS Concluída */}
     {showAvisoReabrir && (
       <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
