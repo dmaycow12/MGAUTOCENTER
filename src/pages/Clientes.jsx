@@ -102,7 +102,11 @@ export default function Clientes() {
     { key: "rg_ie", label: "INSCRIÇÃO ESTADUAL" },
     { key: "email", label: "E-MAIL" },
     { key: "cep", label: "CEP" },
-    { key: "endereco", label: "ENDEREÇO" }
+    { key: "endereco", label: "ENDEREÇO" },
+    { key: "numero", label: "NÚMERO" },
+    { key: "bairro", label: "BAIRRO" },
+    { key: "cidade", label: "CIDADE" },
+    { key: "estado", label: "ESTADO" }
   ];
 
 
