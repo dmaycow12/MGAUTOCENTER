@@ -193,7 +193,6 @@ export default function Clientes() {
                   {colunas.complemento && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">COMPLEMENTO</th>}
                   {colunas.cidade && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CIDADE</th>}
                   {colunas.estado && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">ESTADO</th>}
-                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-300 whitespace-nowrap sticky right-0 bg-gray-800">AÇÕES</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
