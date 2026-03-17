@@ -20,7 +20,7 @@ const defaultForm = () => ({
   veiculo_modelo: "",
   veiculo_ano: "",
   quilometragem: "",
-  data_entrada: new Date().toISOString().split("T")[0],
+  data_entrada: "",
   data_previsao: "",
   data_conclusao: "",
   defeito_relatado: "",
