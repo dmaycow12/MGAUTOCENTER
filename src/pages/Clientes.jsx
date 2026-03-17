@@ -126,7 +126,7 @@ export default function Clientes() {
         >
           <Plus className="w-4 h-4" /> Novo Cadastro
         </button>
-        {/* Linha 2: busca + toggle */}
+        {/* Linha 2: busca + filtro */}
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -138,9 +138,29 @@ export default function Clientes() {
               className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500"
             />
           </div>
-          <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
-            <button onClick={() => { setViewMode("list"); localStorage.setItem("clientes_viewmode","list"); }} className="px-3 py-2 transition-all" style={{background:viewMode==="list"?"#062C9B":"transparent",color:viewMode==="list"?"#fff":"#6b7280"}}><List className="w-5 h-5"/></button>
-            <button onClick={() => { setViewMode("cards"); localStorage.setItem("clientes_viewmode","cards"); }} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-5 h-5"/></button>
+          <div className="relative">
+            <button 
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-xl text-sm font-medium hover:bg-gray-700 transition-all flex items-center gap-2"
+            >
+              ⚙️ Filtro
+            </button>
+            {filterOpen && (
+              <div className="absolute right-0 top-full mt-2 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 z-50 w-64 space-y-2">
+                <p className="text-xs text-gray-400 font-semibold mb-3">COLUNAS ADICIONAIS</p>
+                {colunasDisponiveis.map(col => (
+                  <label key={col.key} className="flex items-center gap-2 cursor-pointer hover:bg-gray-800 p-2 rounded transition-all">
+                    <input 
+                      type="checkbox" 
+                      checked={colunas[col.key]} 
+                      onChange={() => toggleColuna(col.key)}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-xs text-gray-300">{col.label}</span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
