@@ -118,8 +118,25 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     }
   }, [form.cliente_id, veiculos]);
 
+  const prevTotalRef = useRef(form.valor_total);
+  const prevQtdRef = useRef(form.parcelas);
+  const prevFormaRef = useRef(form.forma_pagamento);
   useEffect(() => {
-    setParcelas(gerarParcelas(form.valor_total, form.parcelas, form.forma_pagamento, form.data_entrada));
+    const totalMudou = prevTotalRef.current !== form.valor_total;
+    const qtdMudou = String(prevQtdRef.current) !== String(form.parcelas);
+    const formaMudou = prevFormaRef.current !== form.forma_pagamento;
+    prevTotalRef.current = form.valor_total;
+    prevQtdRef.current = form.parcelas;
+    prevFormaRef.current = form.forma_pagamento;
+    if (qtdMudou || formaMudou) {
+      // Recria todas as parcelas do zero
+      setParcelas(gerarParcelas(form.valor_total, form.parcelas, form.forma_pagamento, form.data_entrada));
+    } else if (totalMudou) {
+      // Redistribui igualmente
+      const n = Math.max(1, Number(form.parcelas) || 1);
+      const valorParcela = parseFloat((form.valor_total / n).toFixed(2));
+      setParcelas(prev => prev.map(p => ({ ...p, valor: valorParcela })));
+    }
   }, [form.valor_total, form.parcelas, form.forma_pagamento]);
 
   const onClienteChange = (clienteId) => {
