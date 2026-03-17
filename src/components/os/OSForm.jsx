@@ -161,6 +161,18 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     setClienteSugestoes([]);
   };
 
+  const salvarNovoCliente = async () => {
+    if (!novoClienteForm.nome.trim()) return alert("Informe o nome do cliente.");
+    setSalvandoCliente(true);
+    const criado = await base44.entities.Cliente.create(novoClienteForm);
+    // Injeta na lista local e seleciona automaticamente
+    clientes.push(criado);
+    onClienteChange(criado.id);
+    setShowNovoCliente(false);
+    setNovoClienteForm({ nome: "", telefone: "", cpf_cnpj: "" });
+    setSalvandoCliente(false);
+  };
+
   const handleClienteSearch = (val) => {
     setClienteSearch(val);
     if (val.length > 0) {
