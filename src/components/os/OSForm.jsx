@@ -340,15 +340,17 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
       : gerarParcelas(osData.valor_total, Number(osData.parcelas) || 1, formaPrincipal, osData.data_entrada);
 
     for (const p of parcelas) {
+      const formaParc = p.forma_pagamento || formaPrincipal;
+      const pagoParc = ["Dinheiro", "PIX"].includes(formaParc);
       await base44.entities.Financeiro.create({
         tipo: "Receita",
         categoria: "Ordem de Serviço",
         descricao: `OS #${osData.numero} — ${osData.cliente_nome || ""} — Parcela ${p.numero}/${parcelas.length}`,
         valor: p.valor,
         data_vencimento: p.vencimento,
-        status: pagoNaHora ? "Pago" : "Pendente",
-        data_pagamento: pagoNaHora ? new Date().toISOString().split("T")[0] : "",
-        forma_pagamento: formaPrincipal,
+        status: pagoParc ? "Pago" : "Pendente",
+        data_pagamento: pagoParc ? new Date().toISOString().split("T")[0] : "",
+        forma_pagamento: formaParc,
         ordem_servico_id: osData.id || "",
         cliente_id: osData.cliente_id || "",
       });
