@@ -66,7 +66,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   const [form, setForm] = useState(() => os ? { ...defaultForm(), ...os, fotos: os.fotos || [] } : defaultForm());
   const [parcelas, setParcelas] = useState(() => {
     if (os?.parcelas_detalhes?.length > 0) return os.parcelas_detalhes;
-    return gerarParcelas(os?.valor_total || 0, os?.parcelas || 1, os?.forma_pagamento || "A Combinar", os?.data_entrada);
+    return gerarParcelas(os?.valor_total || 0, os?.parcelas || 1, os?.data_entrada);
   });
 
   const [saving, setSaving] = useState(false);
