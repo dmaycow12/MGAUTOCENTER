@@ -180,34 +180,38 @@ export default function Clientes() {
             <table className="w-full text-sm">
               <thead className="bg-gray-800 border-b border-gray-700 sticky top-0">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">TIPO</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">NOME / RAZÃO SOCIAL</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">NOME FANTASIA</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CPF/CNPJ</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CONTATO</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CEP</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">ENDEREÇO</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">Nº</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">BAIRRO</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CIDADE</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">ESTADO</th>
-                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-300 whitespace-nowrap sticky right-12">AÇÕES</th>
+                  {colunas.tipo && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">TIPO</th>}
+                  {colunas.nome && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">NOME / RAZÃO SOCIAL</th>}
+                  {colunas.cpf_cnpj && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CPF/CNPJ</th>}
+                  {colunas.telefone && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CONTATO</th>}
+                  {colunas.rg_ie && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">INSCRIÇÃO ESTADUAL</th>}
+                  {colunas.email && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">E-MAIL</th>}
+                  {colunas.cep && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CEP</th>}
+                  {colunas.endereco && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">ENDEREÇO</th>}
+                  {colunas.numero && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">NÚMERO</th>}
+                  {colunas.bairro && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">BAIRRO</th>}
+                  {colunas.complemento && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">COMPLEMENTO</th>}
+                  {colunas.cidade && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CIDADE</th>}
+                  {colunas.estado && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">ESTADO</th>}
+                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-300 whitespace-nowrap sticky right-0 bg-gray-800">AÇÕES</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
                 {filtrados.map(c => (
                   <tr key={c.id} className="hover:bg-gray-800/50 transition-all">
-                    <td className="px-4 py-3 text-gray-300 text-xs whitespace-nowrap">{c.tipo || "—"}</td>
-                    <td className="px-4 py-3 text-white font-medium text-xs whitespace-nowrap">{c.nome}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.nome_fantasia || "—"}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cpf_cnpj || "—"}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.telefone || "—"}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cep || "—"}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs truncate">{c.endereco || "—"}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.numero || "—"}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.bairro || "—"}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cidade || "—"}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.estado || "—"}</td>
+                    {colunas.tipo && <td className="px-4 py-3 text-gray-300 text-xs whitespace-nowrap">{c.tipo || "—"}</td>}
+                    {colunas.nome && <td className="px-4 py-3 text-white font-medium text-xs whitespace-nowrap">{c.nome}</td>}
+                    {colunas.cpf_cnpj && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cpf_cnpj || "—"}</td>}
+                    {colunas.telefone && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.telefone || "—"}</td>}
+                    {colunas.rg_ie && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.rg_ie || "—"}</td>}
+                    {colunas.email && <td className="px-4 py-3 text-gray-400 text-xs truncate">{c.email || "—"}</td>}
+                    {colunas.cep && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cep || "—"}</td>}
+                    {colunas.endereco && <td className="px-4 py-3 text-gray-400 text-xs truncate">{c.endereco || "—"}</td>}
+                    {colunas.numero && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.numero || "—"}</td>}
+                    {colunas.bairro && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.bairro || "—"}</td>}
+                    {colunas.complemento && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.complemento || "—"}</td>}
+                    {colunas.cidade && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cidade || "—"}</td>}
+                    {colunas.estado && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.estado || "—"}</td>}
                     <td className="px-4 py-3 flex items-center gap-1 justify-center sticky right-0 bg-gray-900">
                       <button onClick={() => editarCliente(c)} className="p-1.5 text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
                         <Edit className="w-3.5 h-3.5" />
