@@ -211,14 +211,6 @@ export default function Clientes() {
                     {colunas.complemento && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.complemento || "—"}</td>}
                     {colunas.cidade && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cidade || "—"}</td>}
                     {colunas.estado && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.estado || "—"}</td>}
-                    <td className="px-4 py-3 flex items-center gap-1 justify-center sticky right-0 bg-gray-900">
-                      <button onClick={() => editarCliente(c)} className="p-1.5 text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
-                        <Edit className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => excluir(c)} className="p-1.5 text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
                   </tr>
                 ))}
               </tbody>
