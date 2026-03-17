@@ -174,23 +174,6 @@ export default function Clientes() {
             Criar primeiro cadastro
           </button>
         </div>
-      ) : viewMode === "cards" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filtrados.map(c => (
-            <div key={c.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col gap-2 hover:border-gray-700 transition-all">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-white font-bold text-sm leading-snug">{c.nome}</p>
-                <div className="flex gap-1 flex-shrink-0">
-                  <button onClick={() => editarCliente(c)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all"><Edit className="w-3.5 h-3.5"/></button>
-                  <button onClick={() => excluir(c)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
-                </div>
-              </div>
-              {c.telefone && <p className="text-gray-400 text-xs">{c.telefone}</p>}
-              {c.email && <p className="text-gray-500 text-xs truncate">{c.email}</p>}
-              {c.cidade && <p className="text-gray-500 text-xs">{c.cidade}/{c.estado}</p>}
-            </div>
-          ))}
-        </div>
       ) : (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
