@@ -199,13 +199,7 @@ export default function Clientes() {
                     {colunas.cep && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.cep || "—"}</td>}
                     {colunas.endereco && (
                       <td className="px-4 py-1.5 text-gray-400 text-xs">
-                        <div className="space-y-0.5">
-                          {c.endereco && <div className="text-white font-medium">{c.endereco}</div>}
-                          {c.numero && <div>{c.numero}</div>}
-                          {c.bairro && <div>{c.bairro}</div>}
-                          {c.complemento && <div>{c.complemento}</div>}
-                          {(c.cidade || c.estado) && <div>{[c.cidade, c.estado].filter(Boolean).join(" - ")}</div>}
-                        </div>
+                        {[c.endereco, c.numero, c.bairro, c.complemento, c.cidade, c.estado].filter(Boolean).join(" - ") || "—"}
                       </td>
                     )}
                   </tr>
