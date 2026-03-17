@@ -88,6 +88,9 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   const [saving, setSaving] = useState(false);
   const [clienteSearch, setClienteSearch] = useState("");
   const [clienteSugestoes, setClienteSugestoes] = useState([]);
+  const [showNovoCliente, setShowNovoCliente] = useState(false);
+  const [novoClienteForm, setNovoClienteForm] = useState({ nome: "", telefone: "", cpf_cnpj: "" });
+  const [salvandoCliente, setSalvandoCliente] = useState(false);
 
   const handleFotoUpload = async (file) => {
     if (!file) return;
