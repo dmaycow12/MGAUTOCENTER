@@ -204,12 +204,7 @@ export default function Clientes() {
                     {colunas.rg_ie && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.rg_ie || "—"}</td>}
                     {colunas.email && <td className="px-4 py-3 text-gray-400 text-xs truncate">{c.email || "—"}</td>}
                     {colunas.cep && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cep || "—"}</td>}
-                    {colunas.endereco && <td className="px-4 py-3 text-gray-400 text-xs truncate">{c.endereco || "—"}</td>}
-                    {colunas.numero && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.numero || "—"}</td>}
-                    {colunas.bairro && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.bairro || "—"}</td>}
-                    {colunas.complemento && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.complemento || "—"}</td>}
-                    {colunas.cidade && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cidade || "—"}</td>}
-                    {colunas.estado && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.estado || "—"}</td>}
+                    {colunas.endereco && <td className="px-4 py-3 text-gray-400 text-xs"><div className="font-medium text-white mb-0.5">{c.endereco || "—"}</div><div className="text-gray-500 text-xs">{formatarEndereco(c)}</div></td>}
                   </tr>
                 ))}
               </tbody>
