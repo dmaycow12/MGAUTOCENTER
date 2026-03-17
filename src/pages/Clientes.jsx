@@ -191,6 +191,7 @@ export default function Clientes() {
                   <tr key={c.id} className="hover:bg-gray-800/50 transition-all cursor-pointer" onClick={() => editarCliente(c)}>
                     {colunas.tipo && <td className="px-4 py-1.5 text-gray-300 text-xs whitespace-nowrap">{isConsumidor(c) ? "—" : (c.tipo || "—")}</td>}
                     {colunas.nome && <td className="px-4 py-1.5 text-white font-medium text-xs whitespace-nowrap">{c.nome}</td>}
+                    {colunas.nome_fantasia && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.nome_fantasia || "—"}</td>}
                     {colunas.cpf_cnpj && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.cpf_cnpj || "—"}</td>}
                     {colunas.telefone && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.telefone || "—"}</td>}
                     {colunas.rg_ie && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.rg_ie || "—"}</td>}
