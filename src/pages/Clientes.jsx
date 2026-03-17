@@ -13,7 +13,7 @@ export default function Clientes() {
   const [colunas, setColunas] = useState(() => {
     const saved = localStorage.getItem("clientes_colunas");
     return saved ? JSON.parse(saved) : {
-      tipo: true, nome: true, cpf_cnpj: true, telefone: true,
+      tipo: true, nome: true, nome_fantasia: false, cpf_cnpj: true, telefone: true,
       rg_ie: false, email: false, cep: false, endereco: false
     };
   });
