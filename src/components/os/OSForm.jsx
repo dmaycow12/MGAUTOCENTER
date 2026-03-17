@@ -320,12 +320,14 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const gerarLancamentosFinanceiros = async (osData, parcelasData) => {
+    console.log("GERAR LANCAMENTOS - parcelasData:", JSON.stringify(parcelasData));
     const lista = parcelasData && parcelasData.length > 0
       ? parcelasData
       : gerarParcelas(osData.valor_total, Number(osData.parcelas) || 1, osData.data_entrada);
 
     for (const p of lista) {
       const formaParc = p.forma_pagamento || "A Combinar";
+      console.log(`Parcela ${p.numero}: forma=${formaParc}`);
       const pago = ["Dinheiro", "PIX"].includes(formaParc);
       await base44.entities.Financeiro.create({
         tipo: "Receita",
