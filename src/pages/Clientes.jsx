@@ -187,6 +187,7 @@ export default function Clientes() {
                 <tr>
                   {colunas.tipo && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">TIPO</th>}
                   {colunas.nome && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">NOME / RAZÃO SOCIAL</th>}
+                  {colunas.nome_fantasia && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">NOME SOCIAL / FANTASIA</th>}
                   {colunas.cpf_cnpj && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CPF/CNPJ</th>}
                   {colunas.telefone && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CONTATO</th>}
                   {colunas.rg_ie && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">INSCRIÇÃO ESTADUAL</th>}
