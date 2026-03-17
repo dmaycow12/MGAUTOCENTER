@@ -120,11 +120,18 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   const confirmarExcluir = async () => {
     if (os.status === "Concluído") {
-      const osAtualizada = await base44.entities.OrdemServico.filter({ id: os.id });
-      const osData = osAtualizada?.[0] || os;
-      
-      await excluirLancamentosOS(os.id);
-      await restaurarEstoque(osData.pecas);
+      try {
+        const todasOS = await base44.entities.OrdemServico.list("-created_date", 1000);
+        const osAtualizada = todasOS.find(o => o.id === os.id);
+        const osData = osAtualizada || os;
+        
+        console.log("Excluindo OS:", osData.id, "Peças:", osData.pecas);
+        
+        await excluirLancamentosOS(os.id);
+        await restaurarEstoque(osData.pecas || []);
+      } catch (err) {
+        console.error("Erro ao restaurar estoque na exclusão:", err);
+      }
     }
     await base44.entities.OrdemServico.delete(os.id);
     setShowAvisoExcluir(false);
