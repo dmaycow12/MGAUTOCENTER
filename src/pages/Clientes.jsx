@@ -92,6 +92,24 @@ export default function Clientes() {
 
   const veiculosDoCliente = (id) => veiculos.filter(v => v.cliente_id === id);
 
+  const toggleColuna = (col) => {
+    const updated = { ...colunas, [col]: !colunas[col] };
+    setColunas(updated);
+    localStorage.setItem("clientes_colunas", JSON.stringify(updated));
+  };
+
+  const colunasDisponiveis = [
+    { key: "rg_ie", label: "INSCRIÇÃO ESTADUAL" },
+    { key: "email", label: "E-MAIL" },
+    { key: "cep", label: "CEP" },
+    { key: "endereco", label: "ENDEREÇO" },
+    { key: "numero", label: "NÚMERO" },
+    { key: "bairro", label: "BAIRRO" },
+    { key: "complemento", label: "COMPLEMENTO" },
+    { key: "cidade", label: "CIDADE" },
+    { key: "estado", label: "ESTADO" }
+  ];
+
   if (loading) return <Loader />;
 
   return (
