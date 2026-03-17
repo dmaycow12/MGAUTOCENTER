@@ -588,8 +588,20 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                     {parcelas.map((p, i) => (
                       <div key={i} className={`grid grid-cols-3 gap-2 px-3 py-2 items-center ${i % 2 === 0 ? "bg-gray-900" : "bg-gray-800/40"}`}>
                         <input type="date" value={p.vencimento || ""} onChange={e => updateParcela(i, "vencimento", e.target.value)} className="input-dark text-xs py-1.5" />
-                        <input type="number" value={p.valor} onChange={e => updateParcela(i, "valor", e.target.value)} className="input-dark text-xs py-1.5" step="0.01" min="0" />
-                        <select value={p.forma_pagamento || "A Combinar"} onChange={e => updateParcela(i, "forma_pagamento", e.target.value)} className="input-dark text-xs py-1.5">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={p.valor}
+                          onChange={e => updateParcela(i, "valor", e.target.value)}
+                          className="input-dark text-xs py-1.5"
+                          style={{MozAppearance:"textfield", appearance:"textfield"}}
+                        />
+                        <select
+                          value={p.forma_pagamento || "A Combinar"}
+                          onChange={e => updateParcela(i, "forma_pagamento", e.target.value)}
+                          disabled={p.forma_pagamento !== "A Combinar"}
+                          className="input-dark text-xs py-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                           {["A Combinar","Boleto","Cartão","Dinheiro","PIX"].map(s => <option key={s}>{s}</option>)}
                         </select>
                       </div>
