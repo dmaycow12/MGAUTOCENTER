@@ -380,10 +380,10 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
       let savedId = os?.id;
 
       const formToSave = {
-        ...form,
-        quilometragem: form.quilometragem === "" || form.quilometragem === null || form.quilometragem === undefined
+        ...formFinal,
+        quilometragem: formFinal.quilometragem === "" || formFinal.quilometragem === null || formFinal.quilometragem === undefined
           ? null
-          : Number(form.quilometragem),
+          : Number(formFinal.quilometragem),
       };
 
       if (os) {
@@ -393,23 +393,23 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
         savedId = criada.id;
 
         // Auto-registra veículo se for nova OS (exceto CONSUMIDOR)
-        if (form.veiculo_placa && form.cliente_id && form.cliente_nome?.toUpperCase() !== "CONSUMIDOR") {
-          const veiculo_marca = form.veiculo_modelo?.split(" ")[0] || "";
-          const veiculo_modelo = form.veiculo_modelo?.substring(veiculo_marca.length).trim() || "";
+        if (formFinal.veiculo_placa && formFinal.cliente_id && formFinal.cliente_nome?.toUpperCase() !== "CONSUMIDOR") {
+          const veiculo_marca = formFinal.veiculo_modelo?.split(" ")[0] || "";
+          const veiculo_modelo = formFinal.veiculo_modelo?.substring(veiculo_marca.length).trim() || "";
           await base44.functions.invoke('autoRegistrarVeiculo', {
-            cliente_id: form.cliente_id,
-            veiculo_placa: form.veiculo_placa,
+            cliente_id: formFinal.cliente_id,
+            veiculo_placa: formFinal.veiculo_placa,
             veiculo_marca,
             veiculo_modelo,
-            veiculo_ano: form.veiculo_ano,
+            veiculo_ano: formFinal.veiculo_ano,
           });
         }
       }
 
       // Gera lançamentos financeiros e baixa estoque se mudou para Concluída
       if (eraAberta && ficouConcluida && savedId) {
-        await gerarLancamentosFinanceiros({ ...form, id: savedId });
-        await reduzirEstoque(form.pecas);
+        await gerarLancamentosFinanceiros({ ...formFinal, id: savedId });
+        await reduzirEstoque(formFinal.pecas);
       }
 
       onSave();
