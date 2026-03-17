@@ -203,8 +203,8 @@ export default function Clientes() {
                     {colunas.telefone && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.telefone || "—"}</td>}
                     {colunas.rg_ie && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.rg_ie || "—"}</td>}
                     {colunas.email && <td className="px-4 py-3 text-gray-400 text-xs truncate">{c.email || "—"}</td>}
-                    {colunas.cep && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cep || "—"}</td>}
-                    {colunas.endereco && <td className="px-4 py-3 text-gray-400 text-xs"><div className="font-medium text-white mb-0.5">{c.endereco || "—"}</div><div className="text-gray-500 text-xs">{formatarEndereco(c)}</div></td>}
+                    {colunas.cep && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.cep || "—"}</td>}
+                    {colunas.endereco && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap truncate">{formatarEndereco(c) || "—"}</td>}
                   </tr>
                 ))}
               </tbody>
