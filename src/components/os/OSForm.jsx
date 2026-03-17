@@ -359,6 +359,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const salvar = async () => {
     if (!form.cliente_nome && !form.cliente_id) return alert("Selecione ou informe o cliente.");
+    if (saving) return;
     setSaving(true);
 
     try {
