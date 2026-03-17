@@ -252,7 +252,14 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
         </td>
 
         {/* Pagamento */}
-        <td className="px-4 py-3 text-gray-300 text-sm whitespace-nowrap">{os.forma_pagamento || "—"}</td>
+        <td className="px-4 py-3 text-gray-300 text-sm whitespace-nowrap">{(() => {
+          const pd = os.parcelas_detalhes;
+          if (!pd || pd.length === 0) return os.forma_pagamento || "—";
+          const formas = [...new Set(pd.map(p => p.forma_pagamento).filter(Boolean))];
+          if (formas.length === 0) return os.forma_pagamento || "—";
+          if (formas.length === 1) return formas[0];
+          return "Misto";
+        })()}</td>
 
         {/* Valor */}
         <td className="px-4 py-3 text-right text-green-400 font-bold text-sm whitespace-nowrap">{fmtValor(os.valor_total)}</td>
