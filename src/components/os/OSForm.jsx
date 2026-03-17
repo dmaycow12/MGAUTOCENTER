@@ -118,17 +118,9 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     }
   }, [form.cliente_id, veiculos]);
 
-  const prevTotalRef = useRef(form.valor_total);
-  const prevParcelasRef = useRef(form.parcelas);
   useEffect(() => {
-    const totalMudou = prevTotalRef.current !== form.valor_total;
-    const qtdMudou = prevParcelasRef.current !== form.parcelas;
-    if (totalMudou || qtdMudou) {
-      prevTotalRef.current = form.valor_total;
-      prevParcelasRef.current = form.parcelas;
-      setParcelas(gerarParcelas(form.valor_total, form.parcelas, form.forma_pagamento, form.data_entrada));
-    }
-  }, [form.valor_total, form.parcelas]);
+    setParcelas(gerarParcelas(form.valor_total, form.parcelas, form.forma_pagamento, form.data_entrada));
+  }, [form.valor_total, form.parcelas, form.forma_pagamento]);
 
   const onClienteChange = (clienteId) => {
     const c = clientes.find(c => c.id === clienteId);
