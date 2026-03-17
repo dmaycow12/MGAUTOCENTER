@@ -97,7 +97,7 @@ export default function NotasFiscais() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-  const [viewMode, setViewMode] = useState("table");
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem("notas_viewmode") || "table");
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showEntrada, setShowEntrada] = useState(false);

@@ -39,7 +39,7 @@ export default function Ativos() {
   const [novaCategoria, setNovaCategoria] = useState("");
   const [editandoCategoria, setEditandoCategoria] = useState(null);
   const [editNomeCategoria, setEditNomeCategoria] = useState("");
-  const [viewMode, setViewMode] = useState("cards"); // "cards" | "list"
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem("ativos_viewmode") || "cards"); // "cards" | "list"
   useEffect(() => { load(); }, []);
 
   const load = async () => {

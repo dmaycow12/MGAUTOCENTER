@@ -30,7 +30,7 @@ export default function Financeiro() {
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
   const [form, setForm] = useState(defaultForm());
-  const [viewMode, setViewMode] = useState("cards");
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem("financeiro_viewmode") || "cards");
   const [filtroTipo, setFiltroTipo] = useState("Todos");
   const [filtroStatus, setFiltroStatus] = useState("Todos");
 
