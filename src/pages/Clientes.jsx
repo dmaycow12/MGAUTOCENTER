@@ -152,16 +152,17 @@ export default function Clientes() {
             <table className="w-full text-sm">
               <thead className="bg-gray-800 border-b border-gray-700 sticky top-0">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">NOME</th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">TIPO</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">NOME / RAZÃO SOCIAL</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">NOME FANTASIA</th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CPF/CNPJ</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">INSCRIÇÃO ESTADUAL</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">TELEFONE</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">E-MAIL</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CONTATO</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CEP</th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">ENDEREÇO</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">Nº</th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">BAIRRO</th>
                   <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CIDADE</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CEP</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">ESTADO</th>
                   <th className="px-4 py-3 text-center text-xs font-bold text-gray-300 whitespace-nowrap sticky right-12">AÇÕES</th>
                 </tr>
               </thead>
