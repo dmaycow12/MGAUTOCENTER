@@ -192,11 +192,6 @@ export default function Clientes() {
                   {colunas.email && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">E-MAIL</th>}
                   {colunas.cep && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CEP</th>}
                   {colunas.endereco && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">ENDEREÇO</th>}
-                  {colunas.numero && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">NÚMERO</th>}
-                  {colunas.bairro && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">BAIRRO</th>}
-                  {colunas.complemento && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">COMPLEMENTO</th>}
-                  {colunas.cidade && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CIDADE</th>}
-                  {colunas.estado && <th className="px-4 py-3 text-left text-xs font-bold text-gray-300 whitespace-nowrap">ESTADO</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
