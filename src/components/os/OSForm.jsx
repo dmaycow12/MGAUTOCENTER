@@ -324,10 +324,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const confirmarReabrir = async () => {
-    if (os?.id) {
-      await excluirLancamentosOS(os.id);
-      await restaurarEstoque(os.pecas);
-    }
+    // Nota: A restauração de estoque é feita em OSCard ao alterar status
+    // Aqui apenas atualizamos o form para permitir edição
     setForm(f => ({ ...f, status: statusPendente }));
     setShowAvisoReabrir(false);
     setStatusPendente(null);
