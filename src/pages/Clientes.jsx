@@ -14,8 +14,7 @@ export default function Clientes() {
     const saved = localStorage.getItem("clientes_colunas");
     return saved ? JSON.parse(saved) : {
       tipo: true, nome: true, cpf_cnpj: true, telefone: true,
-      rg_ie: false, email: false, cep: false, endereco: false, numero: false, 
-      bairro: false, complemento: false, cidade: false, estado: false
+      rg_ie: false, email: false, cep: false, endereco: false
     };
   });
   const [form, setForm] = useState(defaultForm());
