@@ -68,6 +68,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     if (os?.parcelas_detalhes?.length > 0) return os.parcelas_detalhes;
     return gerarParcelas(os?.valor_total || 0, os?.parcelas || 1, os?.data_entrada);
   });
+  const parcelasRef = useRef(parcelas);
+  useEffect(() => { parcelasRef.current = parcelas; }, [parcelas]);
 
   const [saving, setSaving] = useState(false);
   const [uploadingFoto, setUploadingFoto] = useState(false);
