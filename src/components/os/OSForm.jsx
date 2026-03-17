@@ -504,9 +504,9 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                       </select>
                     </Field>
                   )}
-                  <Field label="Modelo"><input value={form.veiculo_modelo} onChange={e => setForm(f => ({ ...f, veiculo_modelo: e.target.value }))} className="input-dark" autoComplete="off" /></Field>
-                  <Field label="Placa"><input value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} className="input-dark" autoComplete="off" placeholder="AAA0000" /></Field>
-                  <Field label="KM"><input value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" autoComplete="off" /></Field>
+                  <Field label="Modelo"><input value={form.veiculo_modelo} onChange={e => setForm(f => ({ ...f, veiculo_modelo: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
+                  <Field label="Placa"><input value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} className="input-dark" autoComplete="new-password" placeholder="AAA0000" /></Field>
+                  <Field label="KM"><input value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
                 </div>
               </Section>
 
