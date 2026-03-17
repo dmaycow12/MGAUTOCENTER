@@ -105,15 +105,7 @@ export default function Clientes() {
     { key: "endereco", label: "ENDEREÇO" }
   ];
 
-  const formatarEndereco = (c) => {
-    const partes = [c.endereco];
-    if (c.numero) partes.push(c.numero);
-    if (c.bairro) partes.push(c.bairro);
-    if (c.complemento) partes.push(c.complemento);
-    if (c.cidade) partes.push(c.cidade);
-    if (c.estado) partes.push(c.estado);
-    return partes.join(" - ");
-  };
+
 
   if (loading) return <Loader />;
 
