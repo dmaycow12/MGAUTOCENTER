@@ -329,7 +329,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
       : gerarParcelas(osData.valor_total, Number(osData.parcelas) || 1, formaPrincipal, osData.data_entrada);
 
     for (const p of lista) {
-      const formaParc = (p.forma_pagamento && p.forma_pagamento !== "A Combinar") ? p.forma_pagamento : formaPrincipal;
+      const formaParc = p.forma_pagamento || formaPrincipal;
       const pago = ["Dinheiro", "PIX"].includes(formaParc);
       await base44.entities.Financeiro.create({
         tipo: "Receita",
