@@ -233,11 +233,11 @@ export default function Clientes() {
                  <FormGroup label="Nome Social / Nome Fantasia">
                    <input value={form.nome_fantasia} onChange={e => setForm({ ...form, nome_fantasia: e.target.value })} className="input-dark" placeholder="Nome fantasia" />
                  </FormGroup>
-                <FormGroup label="RG / IE">
+                <FormGroup label="Inscrição Estadual">
                   <input value={form.rg_ie} onChange={e => setForm({ ...form, rg_ie: e.target.value })} className="input-dark" />
                 </FormGroup>
-                <FormGroup label="Telefone / WhatsApp">
-                  <input value={form.telefone} onChange={e => setForm({ ...form, telefone: e.target.value })} className="input-dark" placeholder="(00) 00000-0000" />
+                <FormGroup label="Telefone Contato">
+                  <input value={form.telefone} onChange={e => setForm({ ...form, telefone: e.target.value })} className="input-dark" />
                 </FormGroup>
                 <FormGroup label="E-mail">
                   <input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="input-dark" placeholder="email@exemplo.com" />
