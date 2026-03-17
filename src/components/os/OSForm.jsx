@@ -416,7 +416,11 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
         await reduzirEstoque(formFinal.pecas);
       }
 
+      console.log("[OSForm] Salvo com sucesso!");
       onSave();
+    } catch (err) {
+      console.error("[OSForm] Erro ao salvar:", err?.message || err);
+      alert("Erro ao salvar: " + (err?.message || "Erro desconhecido"));
     } finally {
       setSaving(false);
     }
