@@ -128,10 +128,24 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     prevTotalRef.current = form.valor_total;
     prevQtdRef.current = form.parcelas;
     if (qtdMudou) {
-      setParcelas(gerarParcelas(form.valor_total, form.parcelas, form.data_entrada));
+      const n = Math.max(1, Number(form.parcelas) || 1);
+      const valorParcela = parseFloat((form.valor_total / n).toFixed(2));
+      const base = form.data_entrada ? new Date(form.data_entrada + "T00:00:00") : new Date();
+      // Ao mudar quantidade: recria parcelas preservando formas já definidas
+      setParcelas(prev => Array.from({ length: n }, (_, i) => {
+        const d = new Date(base);
+        d.setMonth(d.getMonth() + i);
+        return {
+          numero: i + 1,
+          valor: valorParcela,
+          vencimento: prev[i]?.vencimento || d.toISOString().split("T")[0],
+          forma_pagamento: prev[i]?.forma_pagamento || "A Combinar",
+        };
+      }));
     } else if (totalMudou) {
       const n = Math.max(1, Number(form.parcelas) || 1);
       const valorParcela = parseFloat((form.valor_total / n).toFixed(2));
+      // Ao mudar total: só atualiza valor, PRESERVA forma_pagamento
       setParcelas(prev => prev.map(p => ({ ...p, valor: valorParcela })));
     }
   }, [form.valor_total, form.parcelas]);
