@@ -38,7 +38,7 @@ const defaultForm = () => ({
   observacoes: "",
 });
 
-function gerarParcelas(total, qtd, formaPagamento, dataBase) {
+function gerarParcelas(total, qtd, dataBase) {
   const n = Math.max(1, Number(qtd) || 1);
   const valorParcela = parseFloat((total / n).toFixed(2));
   const base = dataBase ? new Date(dataBase + "T00:00:00") : new Date();
@@ -49,7 +49,7 @@ function gerarParcelas(total, qtd, formaPagamento, dataBase) {
       numero: i + 1,
       valor: valorParcela,
       vencimento: d.toISOString().split("T")[0],
-      forma_pagamento: formaPagamento === "A Combinar" ? "A Combinar" : formaPagamento,
+      forma_pagamento: "A Combinar",
     };
   });
 }
