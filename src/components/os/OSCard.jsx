@@ -56,29 +56,29 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   }, []);
 
   const gerarLancamentosFinanceiros = async (osData) => {
-    const formaPrincipal = osData.forma_pagamento || "A Combinar";
-    const pagoNaHora = ["Dinheiro", "PIX"].includes(formaPrincipal);
-    const gerarParcelas = (total, qtd, dataBase) => {
+    const gerarParcelasBase = (total, qtd, dataBase) => {
       const valorParcela = total / Math.max(1, qtd);
       const base = dataBase ? new Date(dataBase + "T00:00:00") : new Date();
       return Array.from({ length: qtd }, (_, i) => {
         const d = new Date(base);
         d.setMonth(d.getMonth() + i);
-        return { numero: i + 1, valor: parseFloat(valorParcela.toFixed(2)), vencimento: d.toISOString().split("T")[0] };
+        return { numero: i + 1, valor: parseFloat(valorParcela.toFixed(2)), vencimento: d.toISOString().split("T")[0], forma_pagamento: "A Combinar" };
       });
     };
     const parcelas = osData.parcelas_detalhes && osData.parcelas_detalhes.length > 0
       ? osData.parcelas_detalhes
-      : gerarParcelas(osData.valor_total, Number(osData.parcelas) || 1, osData.data_entrada);
+      : gerarParcelasBase(osData.valor_total, Number(osData.parcelas) || 1, osData.data_entrada);
     for (const p of parcelas) {
+      const forma = p.forma_pagamento || "A Combinar";
+      const pago = ["Dinheiro", "PIX"].includes(forma);
       await base44.entities.Financeiro.create({
         tipo: "Receita", categoria: "Ordem de Serviço",
         descricao: "OS #" + osData.numero + " — " + (osData.cliente_nome || "") + " — Parcela " + p.numero + "/" + parcelas.length,
         valor: p.valor,
         data_vencimento: p.vencimento,
-        status: pagoNaHora ? "Pago" : "Pendente",
-        data_pagamento: pagoNaHora ? new Date().toISOString().split("T")[0] : "",
-        forma_pagamento: formaPrincipal,
+        status: pago ? "Pago" : "Pendente",
+        data_pagamento: pago ? new Date().toISOString().split("T")[0] : "",
+        forma_pagamento: forma,
         ordem_servico_id: osData.id || "", cliente_id: osData.cliente_id || "",
       });
     }
