@@ -258,15 +258,13 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Bottom Menu - Mobile (apenas admin) */}
         {!isRestrito && (
-          <nav className="md:hidden fixed top-2 left-1/2 -translate-x-1/2 flex items-center justify-center z-40"
+          <nav className="md:hidden fixed top-0 left-0 right-0 flex items-center justify-around z-40"
             style={{
-              background:"rgba(17,17,17,0.95)",
+              background:"rgba(17,17,17,0.97)",
               backdropFilter:"blur(10px)",
-              border:"1px solid rgba(34,34,34,0.8)",
-              borderRadius:"16px",
-              maxWidth:"calc(100% - 16px)",
-              padding:"2px",
-              gap:"0px",
+              borderBottom:"1px solid rgba(34,34,34,0.8)",
+              height:"52px",
+              padding:"0 4px",
             }}>
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -280,18 +278,15 @@ export default function Layout({ children, currentPageName }) {
                     display:"flex",
                     alignItems:"center",
                     justifyContent:"center",
-                    borderRadius:"12px",
-                    flexShrink: 0,
-                    width:"44px",
+                    borderRadius:"10px",
+                    flex:1,
                     height:"44px",
-                    minWidth:"44px",
-                    minHeight:"44px",
-                    background: isActive ? "rgba(6,44,155,0.3)" : "transparent",
+                    background: isActive ? "rgba(6,44,155,0.35)" : "transparent",
                     touchAction:"manipulation",
                     WebkitTapHighlightColor:"transparent",
                   }}
                 >
-                  <Icon style={{width:"22px", height:"22px", color: isActive ? "#4d7fff" : "#9ca3af", flexShrink: 0, pointerEvents:"none", display:"block"}} />
+                  <Icon style={{width:"22px", height:"22px", color: isActive ? "#4d7fff" : "#9ca3af", pointerEvents:"none", display:"block"}} />
                 </Link>
               );
             })}
