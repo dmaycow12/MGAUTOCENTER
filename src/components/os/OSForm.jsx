@@ -664,6 +664,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
           </button>
         </div>
         <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#f97316; } .input-dark::placeholder { color:#6b7280; }`}</style>
+        <div style={{display:"none"}}><input type="text" name="prevent_autofill" /><input type="password" name="prevent_autofill_pw" /></div>
       </div>
       </div>
     </div>
