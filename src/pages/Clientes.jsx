@@ -197,12 +197,12 @@ export default function Clientes() {
               <tbody className="divide-y divide-gray-800">
                 {filtrados.map(c => (
                   <tr key={c.id} className="hover:bg-gray-800/50 transition-all cursor-pointer" onClick={() => editarCliente(c)}>
-                    {colunas.tipo && <td className="px-4 py-3 text-gray-300 text-xs whitespace-nowrap">{c.tipo || "—"}</td>}
-                    {colunas.nome && <td className="px-4 py-3 text-white font-medium text-xs whitespace-nowrap">{c.nome}</td>}
-                    {colunas.cpf_cnpj && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.cpf_cnpj || "—"}</td>}
-                    {colunas.telefone && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.telefone || "—"}</td>}
-                    {colunas.rg_ie && <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{c.rg_ie || "—"}</td>}
-                    {colunas.email && <td className="px-4 py-3 text-gray-400 text-xs truncate">{c.email || "—"}</td>}
+                    {colunas.tipo && <td className="px-4 py-1.5 text-gray-300 text-xs whitespace-nowrap">{c.tipo || "—"}</td>}
+                    {colunas.nome && <td className="px-4 py-1.5 text-white font-medium text-xs whitespace-nowrap">{c.nome}</td>}
+                    {colunas.cpf_cnpj && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.cpf_cnpj || "—"}</td>}
+                    {colunas.telefone && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.telefone || "—"}</td>}
+                    {colunas.rg_ie && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.rg_ie || "—"}</td>}
+                    {colunas.email && <td className="px-4 py-1.5 text-gray-400 text-xs truncate">{c.email || "—"}</td>}
                     {colunas.cep && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.cep || "—"}</td>}
                     {colunas.endereco && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap truncate">{formatarEndereco(c) || "—"}</td>}
                   </tr>
