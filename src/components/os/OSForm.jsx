@@ -348,7 +348,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     setSaving(true);
 
     try {
-      const parcelasNormalizadas = parcelas.map(p => ({ ...p, valor: Number(p.valor) || 0 }));
+      const parcelasNormalizadas = parcelasRef.current.map(p => ({ ...p, valor: Number(p.valor) || 0 }));
+      console.log("PARCELAS AO SALVAR:", JSON.stringify(parcelasNormalizadas));
       let formFinal = { ...form, parcelas_detalhes: parcelasNormalizadas };
 
       if (!os) {
