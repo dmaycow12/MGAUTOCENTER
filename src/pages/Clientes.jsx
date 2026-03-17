@@ -98,6 +98,7 @@ export default function Clientes() {
   };
 
   const colunasDisponiveis = [
+    { key: "nome_fantasia", label: "NOME SOCIAL / NOME FANTASIA" },
     { key: "rg_ie", label: "INSCRIÇÃO ESTADUAL" },
     { key: "email", label: "E-MAIL" },
     { key: "cep", label: "CEP" },
