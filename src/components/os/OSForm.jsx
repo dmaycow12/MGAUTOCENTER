@@ -360,14 +360,17 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     setSaving(true);
 
     try {
-      // Validar número duplicado (apenas na criação)
+      // Validar número duplicado (apenas na criação) — tenta próximo disponível
       if (!os) {
         const todas = await base44.entities.OrdemServico.list("-created_date", 500);
-        const existe = todas.some(o => String(o.numero).trim() === String(form.numero).trim());
-        if (existe) {
-          alert(`Já existe uma Ordem de Venda com o número #${form.numero}. Use outro número.`);
-          setSaving(false);
-          return;
+        const numerosUsados = new Set(todas.map(o => String(o.numero).trim()));
+        let numeroTentativa = parseInt(form.numero, 10) || 1;
+        while (numerosUsados.has(String(numeroTentativa))) {
+          numeroTentativa++;
+        }
+        if (String(numeroTentativa) !== String(form.numero)) {
+          setForm(f => ({ ...f, numero: String(numeroTentativa) }));
+          form = { ...form, numero: String(numeroTentativa) };
         }
       }
 
