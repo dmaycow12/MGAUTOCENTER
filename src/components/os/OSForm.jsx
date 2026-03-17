@@ -399,7 +399,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
       }
 
       if (eraAberta && ficouConcluida && savedId) {
-        await gerarLancamentosFinanceiros({ ...formFinal, id: savedId }, parcelas);
+        await gerarLancamentosFinanceiros({ ...formFinal, id: savedId }, parcelasNormalizadas);
         await reduzirEstoque(formFinal.pecas);
       }
 
