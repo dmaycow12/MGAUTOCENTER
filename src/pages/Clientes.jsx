@@ -161,7 +161,7 @@ export default function Clientes() {
                   <button onClick={() => editarCliente(c)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
                     <Edit className="w-4 h-4" />
                   </button>
-                  <button onClick={() => excluir(c.id)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
+                  <button onClick={() => excluir(c)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
