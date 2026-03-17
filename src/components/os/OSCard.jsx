@@ -112,8 +112,11 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
   const confirmarExcluir = async () => {
     if (os.status === "Concluído") {
+      const osAtualizada = await base44.entities.OrdemServico.filter({ id: os.id });
+      const osData = osAtualizada?.[0] || os;
+      
       await excluirLancamentosOS(os.id);
-      await restaurarEstoque(os.pecas);
+      await restaurarEstoque(osData.pecas);
     }
     await base44.entities.OrdemServico.delete(os.id);
     setShowAvisoExcluir(false);
