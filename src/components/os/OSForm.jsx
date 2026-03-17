@@ -360,22 +360,22 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     setSaving(true);
 
     try {
+      let formFinal = { ...form };
+
       // Validar número duplicado (apenas na criação) — tenta próximo disponível
       if (!os) {
         const todas = await base44.entities.OrdemServico.list("-created_date", 500);
         const numerosUsados = new Set(todas.map(o => String(o.numero).trim()));
-        let numeroTentativa = parseInt(form.numero, 10) || 1;
+        let numeroTentativa = parseInt(formFinal.numero, 10) || 1;
         while (numerosUsados.has(String(numeroTentativa))) {
           numeroTentativa++;
         }
-        if (String(numeroTentativa) !== String(form.numero)) {
-          setForm(f => ({ ...f, numero: String(numeroTentativa) }));
-          form = { ...form, numero: String(numeroTentativa) };
-        }
+        formFinal = { ...formFinal, numero: String(numeroTentativa) };
+        setForm(f => ({ ...f, numero: String(numeroTentativa) }));
       }
 
       const eraAberta = os?.status !== "Concluído";
-      const ficouConcluida = form.status === "Concluído";
+      const ficouConcluida = formFinal.status === "Concluído";
 
       let savedId = os?.id;
 
