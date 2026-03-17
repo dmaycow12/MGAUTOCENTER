@@ -285,7 +285,22 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const updateParcela = (i, field, val) => {
-    setParcelas(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: field === "valor" ? Number(val) : val } : p));
+    if (field !== "valor") {
+      setParcelas(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: val } : p));
+      return;
+    }
+    // Rebalanceia as outras parcelas
+    setParcelas(prev => {
+      const novoValor = Number(val) || 0;
+      const totalGeral = form.valor_total;
+      const resto = parseFloat((totalGeral - novoValor).toFixed(2));
+      const outras = prev.length - 1;
+      const valorOutras = outras > 0 ? parseFloat((resto / outras).toFixed(2)) : 0;
+      return prev.map((p, idx) => {
+        if (idx === i) return { ...p, valor: novoValor };
+        return { ...p, valor: valorOutras };
+      });
+    });
   };
 
   const onStatusChange = (novoStatus) => {
