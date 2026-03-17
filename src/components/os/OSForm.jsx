@@ -120,31 +120,19 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const prevTotalRef = useRef(form.valor_total);
   const prevQtdRef = useRef(form.parcelas);
-  const prevFormaRef = useRef(form.forma_pagamento);
   useEffect(() => {
     const totalMudou = prevTotalRef.current !== form.valor_total;
     const qtdMudou = String(prevQtdRef.current) !== String(form.parcelas);
-    const formaMudou = prevFormaRef.current !== form.forma_pagamento;
     prevTotalRef.current = form.valor_total;
     prevQtdRef.current = form.parcelas;
-    prevFormaRef.current = form.forma_pagamento;
     if (qtdMudou) {
-      // Recria todas as parcelas do zero
-      setParcelas(gerarParcelas(form.valor_total, form.parcelas, form.forma_pagamento, form.data_entrada));
-    } else if (formaMudou) {
-      // Atualiza apenas parcelas que ainda estão como "A Combinar"
-      setParcelas(prev => prev.map(p =>
-        (!p.forma_pagamento || p.forma_pagamento === "A Combinar")
-          ? { ...p, forma_pagamento: form.forma_pagamento }
-          : p
-      ));
+      setParcelas(gerarParcelas(form.valor_total, form.parcelas, form.data_entrada));
     } else if (totalMudou) {
-      // Redistribui igualmente
       const n = Math.max(1, Number(form.parcelas) || 1);
       const valorParcela = parseFloat((form.valor_total / n).toFixed(2));
       setParcelas(prev => prev.map(p => ({ ...p, valor: valorParcela })));
     }
-  }, [form.valor_total, form.parcelas, form.forma_pagamento]);
+  }, [form.valor_total, form.parcelas]);
 
   const onClienteChange = (clienteId) => {
     const c = clientes.find(c => c.id === clienteId);
