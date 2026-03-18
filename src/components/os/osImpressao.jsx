@@ -98,7 +98,7 @@ export function gerarHTMLImpressao(os) {
     "</div>" +
     "<div class='tb-sep'></div><div class='tb-spacer'></div>" +
     "<button class='tb-btn' onclick='window.print()'>Imprimir</button>" +
-    "<button class='tb-btn' onclick=\"document.title='OS_'+'" + (os.numero||"") + "';window.print()\">Salvar PDF</button>" +
+    "<button class='tb-btn' onclick=\"document.title='OS_" + (os.numero||"") + "';window.print()\">Salvar PDF</button>" +
     "<button class='tb-btn' onclick='window.close()'>Fechar</button>" +
     "</div>" +
     "<script>var z=1;function applyZoom(){document.querySelector('.page').style.transform='scale('+z+')';document.querySelector('.page').style.transformOrigin='top center';document.getElementById('zoom-label').textContent=Math.round(z*100)+'%';}function zoomIn(){if(z<2){z=Math.round((z+0.1)*10)/10;applyZoom();}}function zoomOut(){if(z>0.5){z=Math.round((z-0.1)*10)/10;applyZoom();}}<\/script>" +
