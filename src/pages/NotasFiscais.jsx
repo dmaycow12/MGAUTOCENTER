@@ -49,6 +49,7 @@ function defaultForm() {
 export default function NotasFiscais() {
   const [notas, setNotas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [ordensVenda, setOrdensVenda] = useState([]);
   const [search, setSearch] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("Todos"); // Todos | Entrada | Saída
   const [filtroModeloNF, setFiltroModeloNF] = useState("Todos"); // Todos | NFe | NFSe | NFCe
