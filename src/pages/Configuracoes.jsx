@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Settings, Save, CheckCircle, Plus, UserPlus, LogOut, AlertCircle, User, Pencil, Trash2 } from "lucide-react";
+import { Settings, Save, CheckCircle, UserPlus, LogOut, User, Pencil, Trash2 } from "lucide-react";
 
 export default function Configuracoes() {
   const CHAVES = ["nome_oficina", "cnpj", "telefone", "email", "endereco", "cidade", "estado", "cep",
-    "focusnfe_ambiente", "codigo_municipio", "codigo_servico", "aliquota_iss", "logo_url", "observacoes_padrao", "proximo_numero_os",
+    "logo_url", "observacoes_padrao", "proximo_numero_os",
     "focusnfe_api_key_homologacao", "focusnfe_api_key_producao",
     "nfe_serie", "nfe_ultimo_numero", "nfe_versao",
     "nfce_serie", "nfce_ultimo_numero", "nfce_versao", "nfce_token", "nfce_csc",
@@ -12,7 +12,6 @@ export default function Configuracoes() {
 
   const [config, setConfig] = useState({
     nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
-    focusnfe_ambiente: "producao", codigo_municipio: "", codigo_servico: "07498", aliquota_iss: "2.0",
     logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
     focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
     nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00",
@@ -36,7 +35,6 @@ export default function Configuracoes() {
     const todos = await base44.entities.Configuracao.list("-created_date", 200);
     const c = {
       nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
-      focusnfe_ambiente: "producao", codigo_municipio: "", codigo_servico: "07498", aliquota_iss: "2.0",
       logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
       focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
       nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00",
@@ -179,31 +177,12 @@ export default function Configuracoes() {
         </div>
       </Section>
 
-      <Section title="Integração Focus NFe — Configuração Geral" icon={null}>
-        <div className="bg-gray-800 rounded-xl p-4 mb-6 space-y-3">
-          <label className="block text-xs text-gray-400 font-semibold">Chaves API Focus NFe</label>
+      <Section title="Integração Focus NFe — Chaves API" icon={null}>
+        <div className="bg-gray-800 rounded-xl p-4 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <TokenField label="Token de Homologação" value={config.focusnfe_api_key_homologacao} onChange={val => setConfig({ ...config, focusnfe_api_key_homologacao: val })} />
             <TokenField label="Token de Produção" value={config.focusnfe_api_key_producao} onChange={val => setConfig({ ...config, focusnfe_api_key_producao: val })} />
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <F label="Ambiente">
-            <select value={config.focusnfe_ambiente} onChange={e => setConfig({ ...config, focusnfe_ambiente: e.target.value })} className="input-dark">
-              <option value="producao">Produção</option>
-              <option value="homologacao">Homologação (Teste)</option>
-            </select>
-          </F>
-          <F label="Código do Município (IBGE)">
-            <input value={config.codigo_municipio} onChange={e => setConfig({ ...config, codigo_municipio: e.target.value })} className="input-dark" placeholder="Ex: 3147907" />
-          </F>
-          <F label="Código do Serviço (LC116)">
-            <input value={config.codigo_servico} onChange={e => setConfig({ ...config, codigo_servico: e.target.value })} className="input-dark" placeholder="Ex: 07498" />
-          </F>
-          <F label="Alíquota ISS (%)">
-            <input value={config.aliquota_iss} onChange={e => setConfig({ ...config, aliquota_iss: e.target.value })} className="input-dark" placeholder="Ex: 2.0" />
-          </F>
         </div>
       </Section>
 
@@ -214,12 +193,6 @@ export default function Configuracoes() {
           </F>
           <F label="Série NF-e">
             <input value={config.nfe_serie} onChange={e => setConfig({ ...config, nfe_serie: e.target.value })} className="input-dark" />
-          </F>
-          <F label="Ambiente">
-            <select value={config.focusnfe_ambiente} onChange={e => setConfig({ ...config, focusnfe_ambiente: e.target.value })} className="input-dark">
-              <option value="producao">Produção</option>
-              <option value="homologacao">Homologação</option>
-            </select>
           </F>
           <F label="Versão da NF-e">
             <select value={config.nfe_versao} onChange={e => setConfig({ ...config, nfe_versao: e.target.value })} className="input-dark">
@@ -244,12 +217,6 @@ export default function Configuracoes() {
           <F label="CSC (Código de Segurança)">
             <input value={config.nfce_csc} onChange={e => setConfig({ ...config, nfce_csc: e.target.value })} className="input-dark" />
           </F>
-          <F label="Ambiente">
-            <select value={config.focusnfe_ambiente} onChange={e => setConfig({ ...config, focusnfe_ambiente: e.target.value })} className="input-dark">
-              <option value="producao">Produção</option>
-              <option value="homologacao">Homologação</option>
-            </select>
-          </F>
           <F label="Versão da NFC-e">
             <select value={config.nfce_versao} onChange={e => setConfig({ ...config, nfce_versao: e.target.value })} className="input-dark">
               <option value="4.00">4.00</option>
@@ -269,12 +236,6 @@ export default function Configuracoes() {
           </F>
           <F label="Natureza de operação">
             <input value={config.nfse_natureza_operacao} onChange={e => setConfig({ ...config, nfse_natureza_operacao: e.target.value })} className="input-dark" />
-          </F>
-          <F label="Ambiente">
-            <select value={config.focusnfe_ambiente} onChange={e => setConfig({ ...config, focusnfe_ambiente: e.target.value })} className="input-dark">
-              <option value="producao">Produção</option>
-              <option value="homologacao">Homologação</option>
-            </select>
           </F>
           <F label="Layout da NFS-e">
             <select value={config.nfse_layout} onChange={e => setConfig({ ...config, nfse_layout: e.target.value })} className="input-dark">
