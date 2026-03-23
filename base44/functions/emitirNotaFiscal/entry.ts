@@ -47,6 +47,7 @@ Deno.serve(async (req) => {
     const {
       nota_id,
       numero_manual,
+      serie_manual,
       tipo,
       cliente_id,
       cliente_nome,
@@ -140,21 +141,24 @@ Deno.serve(async (req) => {
       }),
     }];
 
-    // 4. Monta payload do pedido (Order)
-    // invoiceType: 'NFS-e' para serviços, 'NF-e' para produtos/NFe, 'NFC-e' para consumidor
-    const invoiceTypeMap = { 'NFSe': 'NFS-e', 'NFe': 'NF-e', 'NFCe': 'NFC-e' };
-    const invoiceType = invoiceTypeMap[tipo] || 'NFS-e';
+    // Mapeia tipo para modelo Spedy
+    const modeloSpedy = tipo === 'NFCe' ? 'NFC-e' : tipo === 'NFe' ? 'NF-e' : 'NFS-e';
+    const serieNum = parseInt(serie_manual || '1', 10) || 1;
+    const numeroNum = parseInt(numero_manual || '1', 10) || 1;
 
     const orderPayload = {
-      date: data_emissao ? new Date(data_emissao).toISOString() : new Date().toISOString(),
+      date: data_emissao ? new Date(data_emissao + 'T12:00:00').toISOString() : new Date().toISOString(),
       amount: Number(valor_total) || 0,
+      number: numeroNum,
+      series: serieNum,
       customer,
       items: orderItems,
       status: 'approved',
       autoIssueMode: 'immediately',
-      invoiceType,
+      model: modeloSpedy,
+      invoiceType: modeloSpedy,
       ...(forma_pagamento ? { paymentMethod: PAYMENT_MAP[forma_pagamento] || 'other' } : {}),
-      ...(ordem_servico_id ? { transactionId: ordem_servico_id } : {}),
+      ...(ordem_servico_id ? { transactionId: `OS-${ordem_servico_id.substring(0, 20)}` } : {}),
       sendEmailToCustomer: false,
     };
 
@@ -208,8 +212,8 @@ Deno.serve(async (req) => {
     // 7. Salva/atualiza no banco local
     const notaData = {
       tipo: tipo || 'NFSe',
-      numero: numero_manual || String(orderResult.number || orderResult.id || orderId || ''),
-      serie: String(orderResult.series || ''),
+      numero: String(numeroNum),
+      serie: String(serieNum),
       status: 'Emitida',
       cliente_id: cliente_id || '',
       cliente_nome: cliente_nome || '',
