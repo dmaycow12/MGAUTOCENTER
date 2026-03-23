@@ -123,6 +123,7 @@ export default function NotasFiscais() {
         const cliente_id = params.get("cliente_id") || "";
         const cliente_nome = decodeURIComponent(params.get("cliente_nome") || "");
         const valor = parseFloat(params.get("valor") || "0");
+        const descItem = tipo === "NFSe" ? `Serviços OS #${os_numero}` : `Produtos OS #${os_numero}`;
         setForm({
           ...defaultForm(),
           tipo,
@@ -130,7 +131,7 @@ export default function NotasFiscais() {
           cliente_id,
           cliente_nome,
           valor_total: valor,
-          items: [{ descricao: `Serviços OS #${os_numero}`, quantidade: 1, valor_unitario: valor, valor_total: valor }],
+          items: [{ descricao: descItem, quantidade: 1, valor_unitario: valor, valor_total: valor }],
         });
         setAbaForm("cliente");
         setShowForm(true);
@@ -950,7 +951,7 @@ export default function NotasFiscais() {
             {/* Tipo + Data */}
             <div className="px-5 pt-4 flex-shrink-0 grid grid-cols-2 gap-4">
               <F label="Tipo de Nota Fiscal">
-                <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} className="input-dark">
+                <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value, items: [defaultItem()] }))} className="input-dark">
                   <option value="NFSe">NFSe — Nota de Serviço</option>
                   <option value="NFe">NFe — Nota de Produto</option>
                   <option value="NFCe">NFCe — Nota ao Consumidor</option>
@@ -1036,6 +1037,16 @@ export default function NotasFiscais() {
               {/* ABA ITENS */}
               {abaForm === "itens" && (
                 <div className="space-y-4">
+                  {form.tipo === "NFSe" && (
+                    <p className="text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2">
+                      ⚠️ NFSe lança apenas <strong>serviços</strong> — não inclua produtos
+                    </p>
+                  )}
+                  {(form.tipo === "NFCe" || form.tipo === "NFe") && (
+                    <p className="text-xs text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
+                      ℹ️ {form.tipo} lança apenas <strong>produtos</strong> — não inclua serviços
+                    </p>
+                  )}
                   <div className="space-y-3">
                     {form.items.map((item, idx) => (
                       <div key={idx} className="bg-gray-800 border border-gray-700 rounded-xl p-4">
