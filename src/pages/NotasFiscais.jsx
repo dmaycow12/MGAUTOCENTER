@@ -664,7 +664,7 @@ export default function NotasFiscais() {
         </div>
 
         <div className="flex gap-2">
-          {["Todos", "NFe", "NFSe", "NFCe"].map(m => (
+          {["Todos", "NFe", "NFSe"].map(m => (
             <button key={m} onClick={() => setFiltroModeloNF(m)}
               className={`flex-1 h-8 rounded-lg text-[11px] font-medium transition-all ${filtroModeloNF === m ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {m === "Todos" ? "Tudo" : m}
