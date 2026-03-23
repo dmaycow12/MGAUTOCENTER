@@ -189,9 +189,9 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   const menuItems = [
     { label: "Enviar orçamento", icon: WhatsAppIcon, action: enviarOrcamento },
     { label: "Chamar no WhatsApp", icon: WhatsAppIcon, action: chamarWhatsApp },
-    { label: "Emitir NFe", icon: FileText, action: () => emitirNF("NFe") },
-    { label: "Emitir NFSe", icon: FileText, action: () => emitirNF("NFSe") },
-    { label: "Emitir NFCe", icon: FileText, action: () => emitirNF("NFCe") },
+    { label: "Emitir NFe (Produtos)", icon: FileText, action: () => emitirNF("NFe") },
+    { label: "Emitir NFSe (Serviços)", icon: FileText, action: () => emitirNF("NFSe") },
+    { label: "Emitir NFCe (Consumidor)", icon: FileText, action: () => emitirNF("NFCe") },
   ];
 
   return (

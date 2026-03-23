@@ -1153,7 +1153,7 @@ export default function NotasFiscais() {
                         {FORMAS_PAGAMENTO.map(fp => <option key={fp} value={fp}>{fp}</option>)}
                       </select>
                     </F>
-                    <F label="OS Vinculada (opcional)">
+                    <F label="Ordem de Venda Vinculada (opcional)">
                       <input value={form.ordem_servico_id} onChange={e => setForm(f => ({ ...f, ordem_servico_id: e.target.value }))} className="input-dark" placeholder="ID da Ordem de Serviço" />
                     </F>
                   </div>
