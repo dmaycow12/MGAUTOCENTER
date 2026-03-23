@@ -113,7 +113,7 @@ export default function NotasFiscais() {
   const [abaForm, setAbaForm] = useState("cliente"); // 'cliente' | 'itens' | 'pagamento'
 
   useEffect(() => {
-    load().then(() => {
+    load().then(async () => {
       // Verifica se veio da OS para emitir NF automaticamente
       const params = new URLSearchParams(window.location.search);
       if (params.get("emitir") === "1") {
