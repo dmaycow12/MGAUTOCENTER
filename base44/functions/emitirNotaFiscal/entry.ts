@@ -141,13 +141,19 @@ Deno.serve(async (req) => {
     }];
 
     // 4. Monta payload do pedido (Order)
+    // invoiceType: 'NFS-e' para serviços, 'NF-e' para produtos/NFe, 'NFC-e' para consumidor
+    const invoiceTypeMap = { 'NFSe': 'NFS-e', 'NFe': 'NF-e', 'NFCe': 'NFC-e' };
+    const invoiceType = invoiceTypeMap[tipo] || 'NFS-e';
+
     const orderPayload = {
       date: data_emissao ? new Date(data_emissao).toISOString() : new Date().toISOString(),
       amount: Number(valor_total) || 0,
+      ...(numero_manual ? { number: parseInt(numero_manual, 10) } : {}),
       customer,
       items: orderItems,
       status: 'approved',
       autoIssueMode: 'immediately',
+      invoiceType,
       ...(forma_pagamento ? { paymentMethod: PAYMENT_MAP[forma_pagamento] || 'other' } : {}),
       ...(ordem_servico_id ? { transactionId: ordem_servico_id } : {}),
       sendEmailToCustomer: false,
