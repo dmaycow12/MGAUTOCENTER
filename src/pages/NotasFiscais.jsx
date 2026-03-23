@@ -881,8 +881,8 @@ export default function NotasFiscais() {
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-1 rounded-full ${STATUS_COLOR[nota.status] || "bg-gray-500/10 text-gray-400"}`}>{nota.status}</span>
                     </td>
-                    <td className="px-4 py-3 text-right text-orange-400 font-bold">
-                      R$ {Number(nota.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    <td className="px-4 py-3 text-right font-bold" style={{color:"#00ff00"}}>
+                     R$ {Number(nota.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">
