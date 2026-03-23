@@ -1175,7 +1175,7 @@ export default function NotasFiscais() {
                       <div className="text-gray-500">Itens</div><div className="text-white">{form.items.length} item(ns)</div>
                       <div className="text-gray-500">Pagamento</div><div className="text-white">{form.forma_pagamento}</div>
                       <div className="text-gray-500 font-semibold">Total</div>
-                      <div className="text-orange-400 font-bold text-lg">R$ {Number(form.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
+                      <div className="font-bold text-lg" style={{color:"#00ff00"}}>R$ {Number(form.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
                     </div>
                   </div>
 
