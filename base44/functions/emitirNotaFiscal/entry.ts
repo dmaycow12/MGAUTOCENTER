@@ -287,6 +287,14 @@ Deno.serve(async (req) => {
     }
 
     // 7. Salva no banco de dados
+    const itensParaSalvar = (items && items.length > 0) ? items : [{
+      descricao: observacoes || 'Serviços',
+      quantidade: 1,
+      valor_unitario: Number(valor_total),
+      valor_total: Number(valor_total),
+      forma_pagamento: forma_pagamento || 'PIX',
+    }];
+
     const notaData = {
       tipo,
       numero: String(proximoNum),
@@ -302,6 +310,7 @@ Deno.serve(async (req) => {
       chave_acesso: result.chave_nfe || result.chave_nfce || result.chave_nfse || '',
       pdf_url: result.caminho_danfe || result.caminho_pdf_nfse || '',
       xml_url: result.caminho_xml_nota_fiscal || '',
+      xml_content: JSON.stringify(itensParaSalvar),
     };
 
     if (nota_id) {
