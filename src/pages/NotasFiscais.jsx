@@ -278,6 +278,15 @@ export default function NotasFiscais() {
     });
   };
 
+  const atualizarItemCompleto = (idx, dados) => {
+    setForm(f => {
+      const items = [...f.items];
+      items[idx] = { ...items[idx], ...dados };
+      const total = items.reduce((s, it) => s + (Number(it.valor_total) || 0), 0);
+      return { ...f, items, valor_total: total };
+    });
+  };
+
   const addItem = () => setForm(f => ({ ...f, items: [...f.items, defaultItem()] }));
   const removeItem = (idx) => {
     setForm(f => {
