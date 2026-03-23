@@ -291,33 +291,6 @@ Deno.serve(async (req) => {
     if (!resp.ok) {
       const errMsg = result.mensagem || result.erros?.map(e => e.mensagem).join('; ') || rawText.substring(0, 500);
       console.error(`Erro Focus NFe: ${errMsg}`);
-      
-      const itensParaSalvar = (items && items.length > 0) ? items : [{
-        descricao: observacoes || 'Serviços',
-        quantidade: 1,
-        valor_unitario: Number(valor_total),
-        valor_total: Number(valor_total),
-        forma_pagamento: forma_pagamento || 'PIX',
-      }];
-      
-      const notaRascunho = {
-        tipo,
-        numero: String(proximoNum),
-        serie: String(parseInt(serieUsada, 10) || 1),
-        status: 'Rascunho',
-        cliente_id: cliente_id || '',
-        cliente_nome: cliente_nome || '',
-        ordem_servico_id: ordem_servico_id || '',
-        valor_total: Number(valor_total),
-        data_emissao: dataEmissaoFormatada,
-        observacoes: observacoes || '',
-        xml_content: JSON.stringify(itensParaSalvar),
-      };
-      
-      if (!nota_id) {
-        await base44.asServiceRole.entities.NotaFiscal.create(notaRascunho);
-      }
-      
       return Response.json({
         sucesso: false,
         erro: `Erro Focus NFe (${resp.status}): ${errMsg}`,
@@ -326,7 +299,7 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    // 7. Salva no banco de dados
+    // 7. Salva no banco de dados com status Emitida
     const itensParaSalvar = (items && items.length > 0) ? items : [{
       descricao: observacoes || 'Serviços',
       quantidade: 1,
