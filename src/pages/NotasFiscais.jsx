@@ -1183,7 +1183,7 @@ export default function NotasFiscais() {
                        className="px-6 py-2 text-sm text-black rounded-lg font-medium transition-all disabled:opacity-50 flex items-center gap-2"
                        style={{background: "#00ff00"}}
                        onMouseEnter={e => !emitindo && (e.currentTarget.style.background = "#00dd00")}
-                       onMouseLeave={e => e.currentTarget.style.background = "#00ff00"
+                       onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
                       >
                         {emitindo && <RefreshCw className="w-4 h-4 animate-spin" />}
                         {emitindo ? "Emitindo..." : temSpedy ? "Transmitir Nota" : "Salvar Nota"}
