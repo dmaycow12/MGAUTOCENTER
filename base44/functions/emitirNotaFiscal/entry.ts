@@ -357,7 +357,6 @@ Deno.serve(async (req) => {
     }
 
     // 8. Atualiza último número nas config
-    const ambiente = configs.find(c => c.chave === 'focusnfe_ambiente')?.valor || 'producao';
     const isHomologacao = ambiente === 'homologacao';
     
     let chaveAtualizar = 'nfce_ultimo_numero';
