@@ -1035,7 +1035,7 @@ export default function NotasFiscais() {
                                   if (srv) atualizarItemCompleto(idx, { descricao: srv.descricao, quantidade: 1, valor_unitario: srv.valor || 0, valor_total: srv.valor || 0 });
                                 } else {
                                   const prod = estoque.find(p => p.id === id);
-                                  if (prod) atualizarItemCompleto(idx, { descricao: prod.descricao, quantidade: 1, valor_unitario: prod.valor_venda || 0, valor_total: prod.valor_venda || 0 });
+                                   if (prod) atualizarItemCompleto(idx, { descricao: prod.descricao, quantidade: 1, valor_unitario: prod.valor_venda || 0, valor_total: prod.valor_venda || 0, ncm: prod.ncm || '', cfop: prod.cfop || '', cest: prod.cest || '', unidade: prod.unidade || 'UN', codigo: prod.codigo || '' });
                                 }
                               }}
                             >
