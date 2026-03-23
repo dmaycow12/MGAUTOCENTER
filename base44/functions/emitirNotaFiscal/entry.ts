@@ -21,10 +21,12 @@ const PAYMENT_MAP = {
   'A Prazo': 'other',
 };
 
+// A Spedy suporta apenas NF-e (productInvoice) e NFS-e (serviceInvoice).
+// NFC-e não é suportada — mapeamos para productInvoice como fallback.
 const INVOICE_MODEL_MAP = {
   'NFSe': 'serviceInvoice',
   'NFe':  'productInvoice',
-  'NFCe': 'consumerInvoice',
+  'NFCe': 'productInvoice',
 };
 
 Deno.serve(async (req) => {

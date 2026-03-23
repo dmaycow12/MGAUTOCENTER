@@ -892,8 +892,7 @@ export default function NotasFiscais() {
                   setForm(f => ({ ...f, tipo: novoTipo, items: [defaultItem()], numero: proximoNumero(notas, novoTipo), serie: proximaSerie(notas, novoTipo) }));
                 }} className="input-dark">
                   <option value="NFSe">NFSe — Serviço</option>
-                  <option value="NFe">NFe — Produto</option>
-                  <option value="NFCe">NFCe — Consumidor</option>
+                  <option value="NFe">NFe — Produto / Consumidor</option>
                 </select>
               </F>
               <F label="Série">
@@ -982,9 +981,9 @@ export default function NotasFiscais() {
                       ⚠️ NFSe lança apenas <strong>serviços</strong> — não inclua produtos
                     </p>
                   )}
-                  {(form.tipo === "NFCe" || form.tipo === "NFe") && (
+                  {form.tipo === "NFe" && (
                     <p className="text-xs text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
-                      ℹ️ {form.tipo} lança apenas <strong>produtos</strong> — não inclua serviços
+                      ℹ️ NFe lança apenas <strong>produtos</strong> — não inclua serviços
                     </p>
                   )}
                   <div className="space-y-3">
