@@ -224,8 +224,8 @@ export default function NotasFiscais() {
     setNotas(n);
     setClientes(c);
     setOrdensVenda(os);
-    const apiKey = configs.find(cfg => cfg.chave === "spedy_api_key")?.valor;
-    setTemSpedy(!!(apiKey && apiKey.trim()));
+    // Focus NFe usa variável de ambiente FOCUSNFE_API_KEY — sempre habilitado
+    setTemSpedy(true);
     setLoading(false);
   };
 
