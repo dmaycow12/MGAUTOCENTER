@@ -6,7 +6,7 @@ export default function Configuracoes() {
   const CHAVES = ["nome_oficina", "cnpj", "telefone", "email", "endereco", "cidade", "estado", "cep",
     "focusnfe_ambiente", "codigo_municipio", "codigo_servico", "aliquota_iss", "logo_url", "observacoes_padrao", "proximo_numero_os",
     "nfce_token", "nfce_csc", "nfce_serie", "nfce_versao", "nfce_ultimo_numero",
-    "nfe_serie", "nfe_ultimo_numero"];
+    "nfe_serie", "nfe_ultimo_numero", "focusnfe_api_key_homologacao", "focusnfe_api_key_producao"];
 
   const [config, setConfig] = useState({
     nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
@@ -14,6 +14,7 @@ export default function Configuracoes() {
     logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
     nfce_token: "", nfce_csc: "", nfce_serie: "1", nfce_versao: "4.00", nfce_ultimo_numero: "0",
     nfe_serie: "1", nfe_ultimo_numero: "0",
+    focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
   });
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
@@ -42,6 +43,7 @@ export default function Configuracoes() {
       logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
       nfce_token: "", nfce_csc: "", nfce_serie: "1", nfce_versao: "4.00", nfce_ultimo_numero: "0",
       nfe_serie: "1", nfe_ultimo_numero: "0",
+      focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
     };
     const ids = {};
     const extras = [];
@@ -208,7 +210,16 @@ export default function Configuracoes() {
 
       {/* Focus NFe */}
       <Section title="Integração Focus NFe — Notas Fiscais" icon={null}>
-        <p className="text-xs text-gray-400 mb-4">A chave API (<code className="text-green-400">FOCUSNFE_API_KEY</code>) está configurada como variável de ambiente segura. Aqui você define os parâmetros fiscais da emissão.</p>
+        <p className="text-xs text-gray-400 mb-4">Configure suas chaves API para cada ambiente e os parâmetros fiscais da emissão.</p>
+        
+        <div className="bg-gray-800 rounded-xl p-4 mb-6 space-y-3">
+          <label className="block text-xs text-gray-400 font-semibold">Chaves API Focus NFe</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TokenField label="Token de Homologação" value={config.focusnfe_api_key_homologacao} onChange={val => setConfig({ ...config, focusnfe_api_key_homologacao: val })} />
+            <TokenField label="Token de Produção" value={config.focusnfe_api_key_producao} onChange={val => setConfig({ ...config, focusnfe_api_key_producao: val })} />
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <F label="Ambiente">
             <select value={config.focusnfe_ambiente} onChange={e => setConfig({ ...config, focusnfe_ambiente: e.target.value })} className="input-dark">
@@ -458,4 +469,19 @@ function UserRow({ nome, usuario, tipo, canDelete, onEdit, onDelete }) {
 
 function Loader() {
   return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-t-transparent rounded-full animate-spin" style={{border:"2px solid #00ff00", borderTopColor:"transparent"}} /></div>;
+}
+
+function TokenField({ label, value, onChange }) {
+  const [visible, setVisible] = React.useState(false);
+  return (
+    <div>
+      <label className="block text-xs text-gray-400 mb-1">{label}</label>
+      <div className="relative">
+        <input type={visible ? "text" : "password"} value={value} onChange={e => onChange(e.target.value)} className="input-dark pr-10" placeholder="Cole seu token aqui" />
+        <button type="button" onClick={() => setVisible(!visible)} className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-300 transition-all" title={visible ? "Ocultar" : "Mostrar"}>
+          {visible ? '🙈' : '👁️'}
+        </button>
+      </div>
+    </div>
+  );
 }
