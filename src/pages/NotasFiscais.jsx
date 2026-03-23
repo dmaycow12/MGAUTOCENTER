@@ -367,6 +367,10 @@ export default function NotasFiscais() {
       if (isConsumidor) return alert("NFSe não aceita o cliente CONSUMIDOR. Selecione um cliente com CPF ou CNPJ cadastrado.");
       if (!f.cliente_cpf_cnpj?.trim()) return alert("NFSe exige cliente com CPF ou CNPJ cadastrado.");
     }
+    if (f.tipo === "NFe") {
+      if (isConsumidor) return alert("NFe não aceita CONSUMIDOR. Use NFCe para venda ao consumidor final, ou selecione um cliente com CPF/CNPJ.");
+      if (!f.cliente_cpf_cnpj?.trim()) return alert("NFe exige cliente com CPF ou CNPJ cadastrado.");
+    }
 
     if (rascunhoNota) setTransmitindo(rascunhoNota.id);
     else setEmitindo(true);
@@ -664,7 +668,7 @@ export default function NotasFiscais() {
         </div>
 
         <div className="flex gap-2">
-          {["Todos", "NFe", "NFSe"].map(m => (
+          {["Todos", "NFe", "NFSe", "NFCe"].map(m => (
             <button key={m} onClick={() => setFiltroModeloNF(m)}
               className={`flex-1 h-8 rounded-lg text-[11px] font-medium transition-all ${filtroModeloNF === m ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {m === "Todos" ? "Tudo" : m}
@@ -892,7 +896,8 @@ export default function NotasFiscais() {
                   setForm(f => ({ ...f, tipo: novoTipo, items: [defaultItem()], numero: proximoNumero(notas, novoTipo), serie: proximaSerie(notas, novoTipo) }));
                 }} className="input-dark">
                   <option value="NFSe">NFSe — Serviço</option>
-                  <option value="NFe">NFe — Produto / Consumidor</option>
+                  <option value="NFe">NFe — Produto</option>
+                  <option value="NFCe">NFCe — Consumidor</option>
                 </select>
               </F>
               <F label="Série">
@@ -983,7 +988,12 @@ export default function NotasFiscais() {
                   )}
                   {form.tipo === "NFe" && (
                     <p className="text-xs text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
-                      ℹ️ NFe lança apenas <strong>produtos</strong> — não inclua serviços
+                      ℹ️ NFe lança apenas <strong>produtos</strong> e exige cliente com CPF/CNPJ — não aceita CONSUMIDOR
+                    </p>
+                  )}
+                  {form.tipo === "NFCe" && (
+                    <p className="text-xs text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
+                      ℹ️ NFCe é para venda ao <strong>consumidor final</strong> — CPF/CNPJ opcional — não inclua serviços
                     </p>
                   )}
                   <div className="space-y-3">
