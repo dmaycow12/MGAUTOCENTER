@@ -27,7 +27,6 @@ function defaultForm() {
     data_emissao: new Date().toISOString().split("T")[0],
     forma_pagamento: "PIX",
     observacoes: "",
-    // cliente
     cliente_id: "",
     cliente_nome: "",
     cliente_cpf_cnpj: "",
@@ -39,12 +38,28 @@ function defaultForm() {
     cliente_cep: "",
     cliente_cidade: "",
     cliente_estado: "",
-    // OS
     ordem_servico_id: "",
-    // itens
     items: [defaultItem()],
     valor_total: 0,
   };
+}
+
+// Input sem autocomplete do navegador
+function NoACInput({ value, onChange, placeholder, maxLength, className = "input-dark", type = "text" }) {
+  return (
+    <input
+      type={type}
+      autoComplete="new-password"
+      autoCorrect="off"
+      autoCapitalize="off"
+      spellCheck="false"
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      maxLength={maxLength}
+      className={className}
+    />
+  );
 }
 
 export default function NotasFiscais() {
@@ -52,12 +67,11 @@ export default function NotasFiscais() {
   const [loading, setLoading] = useState(true);
   const [ordensVenda, setOrdensVenda] = useState([]);
   const [search, setSearch] = useState("");
-  const [filtroTipo, setFiltroTipo] = useState("Todos"); // Todos | Entrada | Saída
-  const [filtroModeloNF, setFiltroModeloNF] = useState("Todos"); // Todos | NFe | NFSe | NFCe
+  const [filtroTipo, setFiltroTipo] = useState("Todos");
+  const [filtroModeloNF, setFiltroModeloNF] = useState("Todos");
   const [gerandoZip, setGerandoZip] = useState(false);
   const [gerandoSintegra, setGerandoSintegra] = useState(false);
 
-  // Período — Mês atual por padrão
   const hoje = new Date();
   const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
   const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
@@ -99,6 +113,7 @@ export default function NotasFiscais() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("notas_viewmode") || "table");
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -112,11 +127,10 @@ export default function NotasFiscais() {
   const [transmitindo, setTransmitindo] = useState(null);
   const [msgFeedback, setMsgFeedback] = useState(null);
   const [temSpedy, setTemSpedy] = useState(false);
-  const [abaForm, setAbaForm] = useState("cliente"); // 'cliente' | 'itens' | 'pagamento'
+  const [abaForm, setAbaForm] = useState("cliente");
 
   useEffect(() => {
     load().then(async () => {
-      // Verifica se veio da OS para emitir NF automaticamente
       const params = new URLSearchParams(window.location.search);
       if (params.get("emitir") === "1") {
         const tipo = params.get("tipo") || "NFSe";
@@ -125,7 +139,6 @@ export default function NotasFiscais() {
         const cliente_nome = decodeURIComponent(params.get("cliente_nome") || "");
         window.history.replaceState({}, "", window.location.pathname);
 
-        // Busca a OS completa para pegar itens individuais
         let items = [defaultItem()];
         let valor_total = 0;
         let clienteExtra = {};
@@ -134,7 +147,6 @@ export default function NotasFiscais() {
             const osData = await base44.entities.OrdemServico.filter({ id: os_id }, "-created_date", 1);
             const os = osData[0];
             if (os) {
-              // Dados extras do cliente da OS
               clienteExtra = {
                 cliente_cpf_cnpj: os.cliente_cpf_cnpj || "",
                 cliente_email: os.cliente_email || "",
@@ -145,7 +157,6 @@ export default function NotasFiscais() {
                 cliente_estado: os.cliente_estado || "",
               };
               if (tipo === "NFSe") {
-                // Pega cada serviço individualmente
                 const servicos = os.servicos || [];
                 if (servicos.length > 0) {
                   items = servicos.map(s => ({
@@ -157,7 +168,6 @@ export default function NotasFiscais() {
                 }
                 valor_total = items.reduce((sum, it) => sum + it.valor_total, 0);
               } else {
-                // NFCe / NFe — pega cada peça individualmente
                 const pecas = os.pecas || [];
                 if (pecas.length > 0) {
                   items = pecas.map(p => ({
@@ -211,12 +221,11 @@ export default function NotasFiscais() {
     setLoading(false);
   };
 
-  // Filtra clientes por tipo de NF
   const clientesFiltrados = clientes.filter(c => {
     const isConsumidor = c.nome?.toUpperCase() === "CONSUMIDOR";
     const temDocumento = !!(c.cpf_cnpj && c.cpf_cnpj.trim());
     if (form.tipo === "NFSe") return !isConsumidor && temDocumento;
-    return true; // NFCe e NFe aceitam todos
+    return true;
   });
 
   const selecionarCliente = (clienteId) => {
@@ -268,15 +277,12 @@ export default function NotasFiscais() {
     if (!confirm("Excluir esta nota fiscal? Isso também removerá os itens do estoque e os lançamentos financeiros vinculados.")) return;
     const nota = notas.find(n => n.id === id);
 
-    // 1. Reverter estoque — só para notas importadas
     if (nota?.status === "Importada" && nota?.xml_content) {
       const xmlItens = parsearItensXML(nota.xml_content);
       if (xmlItens.length > 0) {
-        // Busca o estoque fresco do servidor para ter quantidades atualizadas
         const estoque = await base44.entities.Estoque.list("-created_date", 500);
         for (const item of xmlItens) {
           if (!item.descricao) continue;
-          // Tenta encontrar por código primeiro (mais preciso), depois por descrição
           const existente = estoque.find(e => {
             if (item.codigo && item.codigo !== "SEM GTIN" && item.codigo !== "" && e.codigo) {
               return e.codigo === item.codigo;
@@ -291,7 +297,6 @@ export default function NotasFiscais() {
       }
     }
 
-    // 2. Excluir lançamentos financeiros vinculados (pelo número/descrição da NF)
     if (nota?.numero) {
       const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
       const vinculados = financeiros.filter(f => f.descricao?.includes(`NF ${nota.numero}`));
@@ -300,19 +305,15 @@ export default function NotasFiscais() {
       }
     }
 
-    // 3. Excluir a nota
     await base44.entities.NotaFiscal.delete(id);
     load();
   };
 
-  // Helper para parsear itens — agora armazenados como JSON
   const parsearItensXML = (xmlContent) => {
-    // Primeiro tenta JSON (novo formato)
     try {
       const parsed = JSON.parse(xmlContent);
       if (Array.isArray(parsed)) return parsed.filter(i => i.descricao);
     } catch {}
-    // Fallback: tenta parsear XML legado
     const xml = (xmlContent || "").replace(/<(\/?)[a-zA-Z0-9_]+:([a-zA-Z0-9_]+)/g, "<$1$2");
     const getAll = (tag) => { const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "g"); const r = []; let m; while((m=re.exec(xml))!==null) r.push(m[1]); return r; };
     return getAll("det").map(det => ({
@@ -325,12 +326,6 @@ export default function NotasFiscais() {
   const importarXML = async () => {
     if (!xmlTexto.trim()) return alert("Cole o conteúdo do XML.");
     setImportando(true);
-    const chave = xmlTexto.match(/chNFe[">]*>?([0-9]{44})/)?.[1] || "";
-    const numero = xmlTexto.match(/nNF[">]*>(\d+)/)?.[1] || "";
-    const serie = xmlTexto.match(/serie[">]*>(\d+)/)?.[1] || "";
-    const valor = parseFloat(xmlTexto.match(/vNF[">]*>([\d.]+)/)?.[1] || "0");
-    const nomeDest = xmlTexto.match(/<xNome>(.*?)<\/xNome>/)?.[1] || "";
-    // Em vez de importar direto, abre o modal de entrada
     setXmlParaEntrada(xmlTexto);
     setXmlTexto("");
     setShowImport(false);
@@ -359,7 +354,6 @@ export default function NotasFiscais() {
     if (!f.cliente_nome) return alert("Informe o nome do cliente.");
     if (!f.valor_total || f.valor_total <= 0) return alert("Informe o valor total.");
 
-    // Validações por tipo de NF
     const isConsumidor = f.cliente_nome?.toUpperCase() === "CONSUMIDOR";
     if (f.tipo === "NFSe") {
       if (isConsumidor) return alert("NFSe não aceita o cliente CONSUMIDOR. Selecione um cliente com CPF ou CNPJ cadastrado.");
@@ -406,7 +400,6 @@ export default function NotasFiscais() {
   };
 
   const imprimirNota = (nota) => {
-    // Para notas importadas, gera DANFE simplificado com dados do XML
     let dadosXML = null;
     if (nota.status === "Importada" && nota.xml_content) {
       try {
@@ -471,8 +464,6 @@ export default function NotasFiscais() {
         .h-info{padding:4px;font-size:7pt}
         .section-title{background:#eee;font-size:7pt;font-weight:bold;text-transform:uppercase;padding:1px 4px;border:1px solid #000;margin-bottom:2px;margin-top:4px}
         .grid2{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-bottom:2px}
-        .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;margin-bottom:2px}
-        .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:2px;margin-bottom:2px}
         table{width:100%;border-collapse:collapse;font-size:7pt;margin-bottom:2px}
         th{background:#eee;border:1px solid #000;padding:2px 3px;text-align:center;font-size:6.5pt;font-weight:bold}
         td{border:1px solid #000;padding:2px 3px}
@@ -500,37 +491,19 @@ export default function NotasFiscais() {
           <div class="val" style="font-size:7pt">${nota.chave_acesso ? "Nota Autorizada" : "Uso Denegado / Sem Protocolo"}</div>
         </div>
       </div>
-
       ${nota.chave_acesso ? `<div class="chave">Chave de Acesso: ${chaveFormatada}</div>` : ""}
-
       <div class="section-title">Destinatário / Remetente</div>
       <div class="grid2">
         <div class="box"><div class="lbl">Nome / Razão Social</div><div class="val">${dadosXML.dest_nome || "—"}</div></div>
         <div class="box"><div class="lbl">CNPJ / CPF</div><div class="val">${dadosXML.dest_cnpj || "—"}</div></div>
       </div>
-
       <div class="section-title">Dados dos Produtos / Serviços</div>
       <table>
-        <thead>
-          <tr>
-            <th>#</th><th>Descrição do Produto / Serviço</th><th>NCM</th><th>CFOP</th>
-            <th>UN</th><th>Qtd</th><th>V. Unit.</th><th>V. Total</th>
-          </tr>
-        </thead>
+        <thead><tr><th>#</th><th>Descrição</th><th>NCM</th><th>CFOP</th><th>UN</th><th>Qtd</th><th>V. Unit.</th><th>V. Total</th></tr></thead>
         <tbody>
-          ${dadosXML.itens.map(it => `<tr>
-            <td style="text-align:center">${it.num}</td>
-            <td>${it.descricao}</td>
-            <td style="text-align:center">${it.ncm}</td>
-            <td style="text-align:center">${it.cfop}</td>
-            <td style="text-align:center">${it.unidade}</td>
-            <td style="text-align:right">${it.quantidade}</td>
-            <td style="text-align:right">${fmt(it.vUnit)}</td>
-            <td style="text-align:right"><b>${fmt(it.vTotal)}</b></td>
-          </tr>`).join("")}
+          ${dadosXML.itens.map(it => `<tr><td style="text-align:center">${it.num}</td><td>${it.descricao}</td><td style="text-align:center">${it.ncm}</td><td style="text-align:center">${it.cfop}</td><td style="text-align:center">${it.unidade}</td><td style="text-align:right">${it.quantidade}</td><td style="text-align:right">${fmt(it.vUnit)}</td><td style="text-align:right"><b>${fmt(it.vTotal)}</b></td></tr>`).join("")}
         </tbody>
       </table>
-
       <div class="section-title">Cálculo do Imposto / Totais</div>
       <div class="totais">
         <div class="box"><div class="lbl">Base Cálc. ICMS</div><div class="val">R$ ${fmt(dadosXML.vBC)}</div></div>
@@ -538,23 +511,12 @@ export default function NotasFiscais() {
         <div class="box"><div class="lbl">Valor IPI</div><div class="val">R$ ${fmt(dadosXML.vIPI)}</div></div>
         <div class="box"><div class="lbl">Valor PIS</div><div class="val">R$ ${fmt(dadosXML.vPIS)}</div></div>
         <div class="box"><div class="lbl">Valor COFINS</div><div class="val">R$ ${fmt(dadosXML.vCOFINS)}</div></div>
-        <div class="box"><div class="lbl">Valor Desconto</div><div class="val">R$ ${fmt(dadosXML.vDesc)}</div></div>
-        <div class="box"><div class="lbl">Valor Frete</div><div class="val">R$ ${fmt(dadosXML.vFrete)}</div></div>
+        <div class="box"><div class="lbl">Desconto</div><div class="val">R$ ${fmt(dadosXML.vDesc)}</div></div>
+        <div class="box"><div class="lbl">Frete</div><div class="val">R$ ${fmt(dadosXML.vFrete)}</div></div>
         <div class="box" style="border:2px solid #000"><div class="lbl">VALOR TOTAL NF</div><div class="val" style="font-size:11pt">R$ ${fmt(dadosXML.vNF)}</div></div>
       </div>
-
-      ${dadosXML.dups.length > 0 ? `
-      <div class="section-title">Dados das Duplicatas / Cobranças</div>
-      <div class="dup-grid">
-      ${dadosXML.dups.map(d => {
-        const [ano, mes, dia] = (d.dVenc || "").split("-");
-        const dataFormatada = ano && mes && dia ? `${dia}/${mes}/${ano.slice(-2)}` : d.dVenc;
-        return `<div class="box"><div class="lbl">Bol. ${d.nDup}</div><div class="val" style="font-size:7pt">Venc: ${dataFormatada}</div><div class="val">R$ ${fmt(d.vDup)}</div></div>`;
-      }).join("")}
-      </div>` : ""}
-
+      ${dadosXML.dups.length > 0 ? `<div class="section-title">Duplicatas</div><div class="dup-grid">${dadosXML.dups.map(d => { const [ano, mes, dia] = (d.dVenc || "").split("-"); const df = ano && mes && dia ? `${dia}/${mes}/${ano.slice(-2)}` : d.dVenc; return `<div class="box"><div class="lbl">Bol. ${d.nDup}</div><div class="val" style="font-size:7pt">Venc: ${df}</div><div class="val">R$ ${fmt(d.vDup)}</div></div>`; }).join("")}</div>` : ""}
       ${dadosXML.infCpl ? `<div class="section-title">Informações Complementares</div><div class="box" style="font-size:7pt">${dadosXML.infCpl}</div>` : ""}
-
       <script>window.onload=function(){window.print()}</script>
       </body></html>
     ` : `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/>
@@ -566,10 +528,6 @@ export default function NotasFiscais() {
         .lbl{font-size:7pt;color:#888;text-transform:uppercase;letter-spacing:.5px}
         .val{font-size:11pt;font-weight:bold}
         .total-val{font-size:18pt;font-weight:bold;color:#f97316}
-        table{width:100%;border-collapse:collapse;font-size:9pt;margin:8px 0}
-        th{background:#f3f4f6;border:1px solid #ddd;padding:4px 6px;text-align:left}
-        td{border:1px solid #ddd;padding:4px 6px}
-        .chave{font-size:7pt;color:#666;word-break:break-all;background:#f9f9f9;padding:6px;border:1px solid #ddd;margin-top:8px}
         @media print{@page{size:A4;margin:15mm}body{padding:0}}
       </style></head><body>
       <h1>${nota.tipo} — Nota Fiscal</h1>
@@ -578,7 +536,7 @@ export default function NotasFiscais() {
       <div class="box"><div class="lbl">Cliente</div><div class="val">${nota.cliente_nome || "—"}</div></div>
       <div class="box"><div class="lbl">Valor Total</div><div class="total-val">R$ ${fmt(nota.valor_total)}</div></div>
       ${nota.observacoes ? `<div class="box"><div class="lbl">Observações</div><div class="val" style="font-size:10pt">${nota.observacoes}</div></div>` : ""}
-      ${nota.chave_acesso ? `<div class="chave"><b>Chave de Acesso:</b> ${nota.chave_acesso}</div>` : ""}
+      ${nota.chave_acesso ? `<div class="box" style="font-size:7pt;word-break:break-all"><b>Chave de Acesso:</b> ${nota.chave_acesso}</div>` : ""}
       ${nota.pdf_url ? `<div style="margin-top:12px"><a href="${nota.pdf_url}" target="_blank" style="color:#f97316;font-weight:bold">📄 Baixar PDF Oficial</a></div>` : ""}
       <script>window.onload=function(){window.print()}</script>
       </body></html>`;
@@ -606,15 +564,9 @@ export default function NotasFiscais() {
     setGerandoZip(true);
     const header = ["Tipo", "Número", "Série", "Status", "Cliente", "Data Emissão", "Valor Total", "Chave Acesso", "Observações"];
     const rows = filtradas.map(n => [
-      n.tipo || "",
-      n.numero || "",
-      n.serie || "",
-      n.status || "",
-      n.cliente_nome || "",
-      n.data_emissao || "",
-      Number(n.valor_total || 0).toFixed(2).replace(".", ","),
-      n.chave_acesso || "",
-      (n.observacoes || "").replace(/[\r\n;]/g, " "),
+      n.tipo || "", n.numero || "", n.serie || "", n.status || "", n.cliente_nome || "",
+      n.data_emissao || "", Number(n.valor_total || 0).toFixed(2).replace(".", ","),
+      n.chave_acesso || "", (n.observacoes || "").replace(/[\r\n;]/g, " "),
     ]);
     const sep = ";";
     const bom = "\uFEFF";
@@ -636,24 +588,17 @@ export default function NotasFiscais() {
     const ano = String(filtroAno);
     const dtIni = `${ano}${mes}01`;
     const dtFin = `${ano}${mes}31`;
-
     let linhas = [];
-    // Registro 10 - Identificação do estabelecimento
     linhas.push(`10MG AUTOCENTER LTDA              54043647000120Patos de Minas       MG${dtIni}${dtFin}1`.padEnd(125, " ").substring(0, 125) + "\r\n");
-
-    // Registro 11 - Dados complementares
     linhas.push(`11Rua Rui Barbosa                1355Santa Terezinha    38700000                         34998791260          1`.padEnd(85, " ").substring(0, 85) + "\r\n");
-
     let totalNotasEntrada = 0, totalValorEntrada = 0;
     let totalNotasSaida = 0, totalValorSaida = 0;
-
-    // Registro 50 - Notas fiscais
     for (const nota of nfes) {
       const isEntrada = nota.status === "Importada";
       const codSit = nota.status === "Cancelada" ? "2" : "N";
       const tipo = isEntrada ? "E" : "S";
       const cfop = "5405";
-      const data = (nota.data_emissao || "").replace(/-/g, "").substring(2); // AAMMDD
+      const data = (nota.data_emissao || "").replace(/-/g, "").substring(2);
       const valor = String(Math.round(Number(nota.valor_total || 0) * 100)).padStart(13, "0");
       const cnpj = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "").padStart(14, "0");
       const ie = "ISENTO         ";
@@ -661,18 +606,13 @@ export default function NotasFiscais() {
       const num = (nota.numero || "0").padStart(6, "0");
       const serie = (nota.serie || "1").padStart(3, " ");
       const modelo = "55";
-
       linhas.push(`50${cnpj}${ie}${uf}${data}${num}${serie}${modelo}${cfop}${valor}${valor}00000000000000000000000000000000000000000000000000000000${tipo}${codSit}\r\n`);
-
       if (isEntrada) { totalNotasEntrada++; totalValorEntrada += Number(nota.valor_total || 0); }
       else { totalNotasSaida++; totalValorSaida += Number(nota.valor_total || 0); }
     }
-
-    // Registro 90 - Totalizadores
     linhas.push(`9010         ${String(totalNotasEntrada).padStart(5,"0")}${String(Math.round(totalValorEntrada*100)).padStart(13,"0")}50E\r\n`);
     linhas.push(`9010         ${String(totalNotasSaida).padStart(5,"0")}${String(Math.round(totalValorSaida*100)).padStart(13,"0")}50S\r\n`);
     linhas.push(`99${String(linhas.length + 1).padStart(12, "0")}\r\n`);
-
     const conteudo = linhas.join("");
     const blob = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -697,7 +637,6 @@ export default function NotasFiscais() {
 
       {/* Header / Filtros */}
       <div className="flex flex-col gap-2">
-        {/* Linha 1: Importar XML + Emitir Nota */}
         <div className="flex gap-2">
           <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
             <Upload className="w-3 h-3" /> Importar XML
@@ -707,7 +646,6 @@ export default function NotasFiscais() {
           </button>
         </div>
 
-        {/* Linha 2: filtro tipo entrada/saida */}
         <div className="flex gap-2">
           {["Tudo", "Entrada", "Saída"].map(t => (
             <button key={t} onClick={() => setFiltroTipo(t === "Tudo" ? "Todos" : t)}
@@ -717,7 +655,6 @@ export default function NotasFiscais() {
           ))}
         </div>
 
-        {/* Linha 2b: filtro modelo NFe/NFSe/NFCe */}
         <div className="flex gap-2">
           {["Todos", "NFe", "NFSe", "NFCe"].map(m => (
             <button key={m} onClick={() => setFiltroModeloNF(m)}
@@ -727,29 +664,16 @@ export default function NotasFiscais() {
           ))}
         </div>
 
-        {/* Linha 2c: botões exportar zip + sintegra */}
         <div className="flex gap-2">
-          <button onClick={exportarRelatorio} disabled={gerandoZip}
-            className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50"
-            style={{background:"#00ff00", color:"#000"}}
-            onMouseEnter={e => e.currentTarget.style.background="#00dd00"}
-            onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-            {gerandoZip ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Archive className="w-3 h-3" />}
-            Exportar
+          <button onClick={exportarRelatorio} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+            {gerandoZip ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Archive className="w-3 h-3" />} Exportar
           </button>
-          <button onClick={gerarSintegra} disabled={gerandoSintegra}
-            className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50"
-            style={{background:"#00ff00", color:"#000"}}
-            onMouseEnter={e => e.currentTarget.style.background="#00dd00"}
-            onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-            {gerandoSintegra ? <RefreshCw className="w-3 h-3 animate-spin" /> : <BarChart2 className="w-3 h-3" />}
-            Sintegra
+          <button onClick={gerarSintegra} disabled={gerandoSintegra} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+            {gerandoSintegra ? <RefreshCw className="w-3 h-3 animate-spin" /> : <BarChart2 className="w-3 h-3" />} Sintegra
           </button>
         </div>
 
-        {/* Linha 3: filtro período */}
         <div className="flex gap-2 items-center">
-          {/* Botão Mês com setas internas */}
           <div className={`flex-1 flex items-center h-8 rounded-lg text-[11px] font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
             <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
               <ChevronLeft className="w-3 h-3" />
@@ -759,13 +683,9 @@ export default function NotasFiscais() {
               <ChevronRight className="w-3 h-3" />
             </button>
           </div>
-
-          {/* Botão Período customizado */}
           <div className="relative flex-1" ref={periodoDropRef}>
-            <button
-              onClick={() => setPeriodoDropOpen(v => !v)}
-              className={`w-full flex items-center justify-center gap-2 px-4 h-8 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
-            >
+            <button onClick={() => setPeriodoDropOpen(v => !v)}
+              className={`w-full flex items-center justify-center gap-2 px-4 h-8 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}>
               {usandoOutroPeriodo && customRange ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}` : "Período"}
               <ChevronDown className={`w-4 h-4 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
             </button>
@@ -774,30 +694,21 @@ export default function NotasFiscais() {
                 <p className="text-xs text-gray-400 font-medium">Selecione o período</p>
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">De</label>
-                  <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
+                  <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">Até</label>
-                  <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
+                  <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setPeriodoDropOpen(false)}
-                    className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
-                    Cancelar
-                  </button>
-                  <button onClick={aplicarOutroPeriodo}
-                    className="flex-1 py-2 text-xs text-white rounded-lg font-medium transition-all bg-blue-600 hover:bg-blue-700">
-                    Aplicar
-                  </button>
+                  <button onClick={() => setPeriodoDropOpen(false)} className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Cancelar</button>
+                  <button onClick={aplicarOutroPeriodo} className="flex-1 py-2 text-xs text-white rounded-lg font-medium transition-all bg-blue-600 hover:bg-blue-700">Aplicar</button>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Linha 4: busca */}
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -865,17 +776,13 @@ export default function NotasFiscais() {
                       <span className={`text-xs px-2 py-1 rounded-full ${STATUS_COLOR[nota.status] || "bg-gray-500/10 text-gray-400"}`}>{nota.status}</span>
                     </td>
                     <td className="px-4 py-3 text-right font-bold" style={{color:"#00ff00"}}>
-                     R$ {Number(nota.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      R$ {Number(nota.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">
                         {nota.status === "Rascunho" && temSpedy && (
-                          <button
-                            title="Transmitir para Spedy"
-                            onClick={() => emitirNota(nota)}
-                            disabled={transmitindo === nota.id}
-                            className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 rounded-lg transition-all disabled:opacity-50"
-                          >
+                          <button title="Transmitir para Spedy" onClick={() => emitirNota(nota)} disabled={transmitindo === nota.id}
+                            className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 rounded-lg transition-all disabled:opacity-50">
                             {transmitindo === nota.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
                             {transmitindo === nota.id ? "..." : "Transmitir"}
                           </button>
@@ -889,13 +796,8 @@ export default function NotasFiscais() {
                           <Printer className="w-4 h-4" />
                         </button>
                         {nota.chave_acesso && (
-                          <a
-                            href={`https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=completa&tipoConteudo=XbSeqxE8pl8=&nfe=${nota.chave_acesso}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            title="Consultar/Baixar DANFE na SEFAZ"
-                            className="p-1 text-gray-500 hover:text-green-400 transition-all"
-                          >
+                          <a href={`https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=completa&tipoConteudo=XbSeqxE8pl8=&nfe=${nota.chave_acesso}`}
+                            target="_blank" rel="noreferrer" title="Consultar DANFE na SEFAZ" className="p-1 text-gray-500 hover:text-green-400 transition-all">
                             <Eye className="w-4 h-4" />
                           </a>
                         )}
@@ -924,7 +826,6 @@ export default function NotasFiscais() {
               <button onClick={() => setShowImport(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
             </div>
             <div className="p-5 space-y-4">
-              {/* Upload de arquivo */}
               <div>
                 <label className="block text-xs text-gray-400 mb-2">Selecionar arquivo XML</label>
                 <label className="flex items-center justify-center gap-3 w-full border-2 border-dashed border-gray-700 hover:border-orange-500 rounded-xl p-6 cursor-pointer transition-all group">
@@ -939,17 +840,14 @@ export default function NotasFiscais() {
                   }} />
                 </label>
               </div>
-
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-px bg-gray-800" />
                 <span className="text-gray-600 text-xs">ou cole o XML abaixo</span>
                 <div className="flex-1 h-px bg-gray-800" />
               </div>
-
               <textarea value={xmlTexto} onChange={e => setXmlTexto(e.target.value)}
                 className="w-full bg-gray-800 border border-gray-700 text-green-400 font-mono rounded-lg p-3 text-xs focus:outline-none focus:border-orange-500 resize-none"
                 rows={8} placeholder='<?xml version="1.0" encoding="UTF-8"?>&#10;<nfeProc>...</nfeProc>' />
-
               {xmlTexto && (
                 <p className="text-green-400 text-xs flex items-center gap-1">
                   <CheckCircle className="w-3.5 h-3.5" /> XML carregado ({(xmlTexto.length / 1024).toFixed(1)} KB)
@@ -966,11 +864,10 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      {/* Modal Emitir NF - Completo */}
+      {/* Modal Emitir NF */}
       {showForm && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col" autoComplete="off">
-            {/* Header */}
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-gray-800 flex-shrink-0">
               <div>
                 <h2 className="text-white font-semibold text-lg">Emitir Nota Fiscal</h2>
@@ -980,7 +877,6 @@ export default function NotasFiscais() {
               <button onClick={() => setShowForm(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
             </div>
 
-            {/* Tipo + Data + Número */}
             <div className="px-5 pt-4 flex-shrink-0 grid grid-cols-3 gap-4">
               <F label="Tipo de Nota Fiscal">
                 <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value, items: [defaultItem()] }))} className="input-dark">
@@ -990,14 +886,13 @@ export default function NotasFiscais() {
                 </select>
               </F>
               <F label="Número da Nota">
-                <input type="text" value={form.numero} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} className="input-dark" placeholder="Ex: 1" />
+                <NoACInput value={form.numero} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} placeholder="Ex: 1" />
               </F>
               <F label="Data de Emissão">
                 <input type="date" value={form.data_emissao} onChange={e => setForm(f => ({ ...f, data_emissao: e.target.value }))} className="input-dark" />
               </F>
             </div>
 
-            {/* Abas */}
             <div className="px-5 pt-3 flex-shrink-0 flex gap-1 border-b border-gray-800">
               {[["cliente", "1. Cliente"], ["itens", form.tipo === "NFSe" ? "2. Serviços" : "2. Produtos"], ["pagamento", "3. Pagamento"]].map(([aba, label]) => (
                 <button key={aba} onClick={() => setAbaForm(aba)}
@@ -1007,7 +902,6 @@ export default function NotasFiscais() {
               ))}
             </div>
 
-            {/* Conteúdo das abas */}
             <div className="flex-1 overflow-y-auto p-5">
 
               {/* ABA CLIENTE */}
@@ -1031,39 +925,39 @@ export default function NotasFiscais() {
                   </F>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <F label="Nome / Razão Social *" className="col-span-2">
-                      <input autoComplete="off" value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} className="input-dark" placeholder="Nome completo ou razão social" />
+                      <NoACInput value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} placeholder="Nome completo ou razão social" />
                     </F>
                     <F label="CPF / CNPJ">
-                      <input autoComplete="off" value={form.cliente_cpf_cnpj} onChange={e => setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value }))} className="input-dark" placeholder="000.000.000-00" />
+                      <NoACInput value={form.cliente_cpf_cnpj} onChange={e => setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value }))} placeholder="000.000.000-00" />
                     </F>
                     <F label="E-mail">
-                      <input type="email" autoComplete="off" value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} className="input-dark" placeholder="email@cliente.com" />
+                      <NoACInput value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} placeholder="email@cliente.com" />
                     </F>
                     <F label="Telefone">
-                      <input autoComplete="off" value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} className="input-dark" placeholder="(00) 00000-0000" />
+                      <NoACInput value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} placeholder="(00) 00000-0000" />
                     </F>
                     <F label="CEP">
-                      <input autoComplete="off" value={form.cliente_cep} onChange={e => setForm(f => ({ ...f, cliente_cep: e.target.value }))} className="input-dark" placeholder="00000-000" />
+                      <NoACInput value={form.cliente_cep} onChange={e => setForm(f => ({ ...f, cliente_cep: e.target.value }))} placeholder="00000-000" />
                     </F>
                     <F label="Endereço" className="col-span-2">
-                      <input autoComplete="off" value={form.cliente_endereco} onChange={e => setForm(f => ({ ...f, cliente_endereco: e.target.value }))} className="input-dark" placeholder="Rua, Avenida..." />
+                      <NoACInput value={form.cliente_endereco} onChange={e => setForm(f => ({ ...f, cliente_endereco: e.target.value }))} placeholder="Rua, Avenida..." />
                     </F>
                     <F label="Número">
-                      <input autoComplete="off" value={form.cliente_numero} onChange={e => setForm(f => ({ ...f, cliente_numero: e.target.value }))} className="input-dark" placeholder="123" />
+                      <NoACInput value={form.cliente_numero} onChange={e => setForm(f => ({ ...f, cliente_numero: e.target.value }))} placeholder="123" />
                     </F>
                     <F label="Bairro">
-                      <input autoComplete="off" value={form.cliente_bairro} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} className="input-dark" />
+                      <NoACInput value={form.cliente_bairro} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} placeholder="" />
                     </F>
                     <F label="Cidade">
-                      <input autoComplete="off" value={form.cliente_cidade} onChange={e => setForm(f => ({ ...f, cliente_cidade: e.target.value }))} className="input-dark" placeholder="Nome da cidade" />
+                      <NoACInput value={form.cliente_cidade} onChange={e => setForm(f => ({ ...f, cliente_cidade: e.target.value }))} placeholder="Nome da cidade" />
                     </F>
                     <F label="Estado (UF)">
-                      <input autoComplete="off" value={form.cliente_estado} maxLength={2} onChange={e => setForm(f => ({ ...f, cliente_estado: e.target.value.toUpperCase() }))} className="input-dark" placeholder="MG" />
+                      <NoACInput value={form.cliente_estado} onChange={e => setForm(f => ({ ...f, cliente_estado: e.target.value.toUpperCase() }))} placeholder="MG" maxLength={2} />
                     </F>
                   </div>
                   <div className="flex justify-end">
                     <button onClick={() => setAbaForm("itens")} className="text-black px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#00ff00"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
-                     Próximo: Itens →
+                      Próximo: Itens →
                     </button>
                   </div>
                 </div>
@@ -1095,19 +989,16 @@ export default function NotasFiscais() {
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           <F label="Descrição" className="col-span-2 md:col-span-4">
-                            <input value={item.descricao} onChange={e => atualizarItem(idx, "descricao", e.target.value)} className="input-dark" placeholder={form.tipo === "NFSe" ? "Ex: Troca de óleo, Alinhamento, Diagnóstico..." : "Ex: Filtro de óleo, Pastilha de freio, Pneu..."} />
+                            <NoACInput value={item.descricao} onChange={e => atualizarItem(idx, "descricao", e.target.value)} placeholder={form.tipo === "NFSe" ? "Ex: Troca de óleo, Alinhamento..." : "Ex: Filtro de óleo, Pastilha de freio..."} />
                           </F>
                           <F label="Quantidade">
-                            <input type="text" value={item.quantidade}
-                              onChange={e => atualizarItem(idx, "quantidade", e.target.value)} className="input-dark" />
+                            <NoACInput value={item.quantidade} onChange={e => atualizarItem(idx, "quantidade", e.target.value)} placeholder="1" />
                           </F>
                           <F label="Valor Unitário (R$)">
-                            <input type="text" value={item.valor_unitario}
-                              onChange={e => atualizarItem(idx, "valor_unitario", e.target.value)} className="input-dark" />
+                            <NoACInput value={item.valor_unitario} onChange={e => atualizarItem(idx, "valor_unitario", e.target.value)} placeholder="0" />
                           </F>
                           <F label="Total (R$)" className="col-span-2">
-                            <input type="text" value={item.valor_total}
-                              onChange={e => atualizarItem(idx, "valor_total", e.target.value)} className="input-dark" />
+                            <NoACInput value={item.valor_total} onChange={e => atualizarItem(idx, "valor_total", e.target.value)} placeholder="0" />
                           </F>
                         </div>
                       </div>
@@ -1119,12 +1010,12 @@ export default function NotasFiscais() {
                   <div className="bg-gray-800 rounded-xl p-4 flex justify-between items-center">
                     <span className="text-gray-400 font-medium">Total da Nota</span>
                     <span className="text-2xl font-bold" style={{color:"#00ff00"}}>
-                     R$ {Number(form.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      R$ {Number(form.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                   <F label="Discriminação / Observações">
                     <textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))}
-                      className="input-dark" rows={3} placeholder="Informações adicionais sobre os serviços prestados..." />
+                      className="input-dark" rows={3} placeholder="Informações adicionais..." autoComplete="off" />
                   </F>
                   <div className="flex justify-between">
                     <button onClick={() => setAbaForm("cliente")} className="text-gray-400 hover:text-white text-sm px-4 py-2 border border-gray-700 rounded-lg transition-all">← Voltar</button>
@@ -1143,14 +1034,13 @@ export default function NotasFiscais() {
                       </select>
                     </F>
                     <F label="Ordem de Venda Vinculada (opcional)">
-                     <select value={form.ordem_servico_id} onChange={e => setForm(f => ({ ...f, ordem_servico_id: e.target.value }))} className="input-dark">
-                       <option value="">— Nenhuma —</option>
-                       {ordensVenda.map(ov => <option key={ov.id} value={ov.id}>{ov.numero ? `Nº ${ov.numero}` : `OS ${ov.id.slice(-6)}`} — {ov.cliente_nome || "sem cliente"}</option>)}
-                     </select>
+                      <select value={form.ordem_servico_id} onChange={e => setForm(f => ({ ...f, ordem_servico_id: e.target.value }))} className="input-dark">
+                        <option value="">— Nenhuma —</option>
+                        {ordensVenda.map(ov => <option key={ov.id} value={ov.id}>{ov.numero ? `Nº ${ov.numero}` : `OS ${ov.id.slice(-6)}`} — {ov.cliente_nome || "sem cliente"}</option>)}
+                      </select>
                     </F>
                   </div>
 
-                  {/* Resumo */}
                   <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 space-y-3">
                     <h3 className="text-white font-medium text-sm">Resumo da Nota</h3>
                     <div className="grid grid-cols-2 gap-2 text-sm">
@@ -1170,12 +1060,12 @@ export default function NotasFiscais() {
                     <div className="flex gap-3">
                       <button onClick={salvarRascunho} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Salvar Rascunho</button>
                       <button
-                       onClick={() => temSpedy ? emitirNota() : salvarRascunho()}
-                       disabled={emitindo}
-                       className="px-6 py-2 text-sm text-black rounded-lg font-medium transition-all disabled:opacity-50 flex items-center gap-2"
-                       style={{background: "#00ff00"}}
-                       onMouseEnter={e => !emitindo && (e.currentTarget.style.background = "#00dd00")}
-                       onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
+                        onClick={() => temSpedy ? emitirNota() : salvarRascunho()}
+                        disabled={emitindo}
+                        className="px-6 py-2 text-sm text-black rounded-lg font-medium transition-all disabled:opacity-50 flex items-center gap-2"
+                        style={{background: "#00ff00"}}
+                        onMouseEnter={e => !emitindo && (e.currentTarget.style.background = "#00dd00")}
+                        onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
                       >
                         {emitindo && <RefreshCw className="w-4 h-4 animate-spin" />}
                         {emitindo ? "Emitindo..." : temSpedy ? "Transmitir Nota" : "Salvar Nota"}
@@ -1189,7 +1079,6 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      {/* Modal Entrada de NF com estoque + financeiro */}
       {showEntrada && xmlParaEntrada && (
         <ModalEntradaNF
           xmlTexto={xmlParaEntrada}
