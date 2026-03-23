@@ -356,20 +356,27 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.NotaFiscal.create(notaData);
     }
 
-    // 8. Atualiza último número NFCe nas config
-    if (tipo === 'NFCe') {
-      const cfgUltimoNFCe = configs.find(c => c.chave === 'nfce_ultimo_numero');
-      if (cfgUltimoNFCe?.id) {
-        await base44.asServiceRole.entities.Configuracao.update(cfgUltimoNFCe.id, {
-          chave: 'nfce_ultimo_numero',
-          valor: String(proximoNum),
-        });
-      } else {
-        await base44.asServiceRole.entities.Configuracao.create({
-          chave: 'nfce_ultimo_numero',
-          valor: String(proximoNum),
-        });
-      }
+    // 8. Atualiza último número nas config
+    const ambiente = configs.find(c => c.chave === 'focusnfe_ambiente')?.valor || 'producao';
+    const isHomologacao = ambiente === 'homologacao';
+    
+    let chaveAtualizar = 'nfce_ultimo_numero';
+    if (tipo === 'NFCe' && isHomologacao) chaveAtualizar = 'nfce_ultimo_numero';
+    if (tipo === 'NFe' && isHomologacao) chaveAtualizar = 'nfe_ultimo_numero';
+    if (tipo === 'NFe' && !isHomologacao) chaveAtualizar = 'nfce_ultimo_numero';
+    if (tipo === 'NFCe' && !isHomologacao) chaveAtualizar = 'nfce_ultimo_numero';
+    
+    const cfgUltimo = configs.find(c => c.chave === chaveAtualizar);
+    if (cfgUltimo?.id) {
+      await base44.asServiceRole.entities.Configuracao.update(cfgUltimo.id, {
+        chave: chaveAtualizar,
+        valor: String(proximoNum),
+      });
+    } else {
+      await base44.asServiceRole.entities.Configuracao.create({
+        chave: chaveAtualizar,
+        valor: String(proximoNum),
+      });
     }
 
     return Response.json({
