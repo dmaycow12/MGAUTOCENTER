@@ -23,6 +23,7 @@ function defaultItem() {
 function defaultForm() {
   return {
     tipo: "NFSe",
+    numero: "",
     data_emissao: new Date().toISOString().split("T")[0],
     forma_pagamento: "PIX",
     observacoes: "",
@@ -187,6 +188,13 @@ export default function NotasFiscais() {
       }
     });
   }, []);
+
+  const proximoNumero = (notasList) => {
+    const nums = notasList
+      .map(n => parseInt(n.numero, 10))
+      .filter(n => !isNaN(n));
+    return nums.length > 0 ? String(Math.max(...nums) + 1) : "1";
+  };
 
   const load = async () => {
     const [n, c, configs, os] = await Promise.all([
@@ -694,7 +702,7 @@ export default function NotasFiscais() {
           <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
             <Upload className="w-3 h-3" /> Importar XML
           </button>
-          <button onClick={() => { setForm(defaultForm()); setAbaForm("cliente"); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+          <button onClick={() => { const df = defaultForm(); setForm({...df, numero: proximoNumero(notas)}); setAbaForm("cliente"); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
             <Plus className="w-3 h-3" /> Emitir Nota
           </button>
         </div>
@@ -972,14 +980,17 @@ export default function NotasFiscais() {
               <button onClick={() => setShowForm(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
             </div>
 
-            {/* Tipo + Data */}
-            <div className="px-5 pt-4 flex-shrink-0 grid grid-cols-2 gap-4">
+            {/* Tipo + Data + Número */}
+            <div className="px-5 pt-4 flex-shrink-0 grid grid-cols-3 gap-4">
               <F label="Tipo de Nota Fiscal">
                 <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value, items: [defaultItem()] }))} className="input-dark">
                   <option value="NFSe">NFSe — Nota de Serviço</option>
                   <option value="NFe">NFe — Nota de Produto</option>
                   <option value="NFCe">NFCe — Nota ao Consumidor</option>
                 </select>
+              </F>
+              <F label="Número da Nota">
+                <input type="text" value={form.numero} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} className="input-dark" placeholder="Ex: 1" />
               </F>
               <F label="Data de Emissão">
                 <input type="date" value={form.data_emissao} onChange={e => setForm(f => ({ ...f, data_emissao: e.target.value }))} className="input-dark" />
@@ -1087,15 +1098,15 @@ export default function NotasFiscais() {
                             <input value={item.descricao} onChange={e => atualizarItem(idx, "descricao", e.target.value)} className="input-dark" placeholder={form.tipo === "NFSe" ? "Ex: Troca de óleo, Alinhamento, Diagnóstico..." : "Ex: Filtro de óleo, Pastilha de freio, Pneu..."} />
                           </F>
                           <F label="Quantidade">
-                            <input type="number" min="1" step="0.01" value={item.quantidade}
+                            <input type="text" value={item.quantidade}
                               onChange={e => atualizarItem(idx, "quantidade", e.target.value)} className="input-dark" />
                           </F>
                           <F label="Valor Unitário (R$)">
-                            <input type="number" min="0" step="0.01" value={item.valor_unitario}
+                            <input type="text" value={item.valor_unitario}
                               onChange={e => atualizarItem(idx, "valor_unitario", e.target.value)} className="input-dark" />
                           </F>
                           <F label="Total (R$)" className="col-span-2">
-                            <input type="number" min="0" step="0.01" value={item.valor_total}
+                            <input type="text" value={item.valor_total}
                               onChange={e => atualizarItem(idx, "valor_total", e.target.value)} className="input-dark" />
                           </F>
                         </div>
