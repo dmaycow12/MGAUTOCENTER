@@ -969,7 +969,7 @@ export default function NotasFiscais() {
       {/* Modal Emitir NF - Completo */}
       {showForm && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col" autoComplete="off">
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-gray-800 flex-shrink-0">
               <div>
