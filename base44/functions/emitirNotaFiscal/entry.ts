@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const {
       nota_id,
+      numero_manual,
       tipo,
       cliente_id,
       cliente_nome,
@@ -107,26 +108,36 @@ Deno.serve(async (req) => {
     };
 
     // 3. Monta itens da venda
+    // NFSe = servicos, NFe/NFCe = produtos
+    const isServico = tipo === 'NFSe';
     const orderItems = (items && items.length > 0) ? items.map((item, idx) => ({
       description: item.descricao || `Item ${idx + 1}`,
       quantity: Number(item.quantidade) || 1,
       price: Number(item.valor_unitario) || Number(item.valor_total) || Number(valor_total),
       amount: Number(item.valor_total) || (Number(item.quantidade) * Number(item.valor_unitario)),
-      product: {
-        code: `SRV-${String(idx + 1).padStart(3, '0')}`,
-        name: (item.descricao || `Serviço ${idx + 1}`).substring(0, 120),
-        price: Number(item.valor_unitario) || Number(item.valor_total) || Number(valor_total),
-      },
+      ...(isServico ? {
+        service: {
+          code: `SRV-${String(idx + 1).padStart(3, '0')}`,
+          name: (item.descricao || `Serviço ${idx + 1}`).substring(0, 120),
+          price: Number(item.valor_unitario) || Number(item.valor_total) || Number(valor_total),
+        }
+      } : {
+        product: {
+          code: `PROD-${String(idx + 1).padStart(3, '0')}`,
+          name: (item.descricao || `Produto ${idx + 1}`).substring(0, 120),
+          price: Number(item.valor_unitario) || Number(item.valor_total) || Number(valor_total),
+        }
+      }),
     })) : [{
-      description: observacoes || 'Serviços de manutenção automotiva',
+      description: observacoes || (isServico ? 'Serviços de manutenção automotiva' : 'Produtos'),
       quantity: 1,
       price: Number(valor_total) || 0,
       amount: Number(valor_total) || 0,
-      product: {
-        code: 'SRV-001',
-        name: (observacoes || 'Serviços de manutenção automotiva').substring(0, 120),
-        price: Number(valor_total) || 0,
-      },
+      ...(isServico ? {
+        service: { code: 'SRV-001', name: (observacoes || 'Serviços').substring(0, 120), price: Number(valor_total) || 0 }
+      } : {
+        product: { code: 'PROD-001', name: (observacoes || 'Produtos').substring(0, 120), price: Number(valor_total) || 0 }
+      }),
     }];
 
     // 4. Monta payload do pedido (Order)
@@ -192,7 +203,7 @@ Deno.serve(async (req) => {
     // 7. Salva/atualiza no banco local
     const notaData = {
       tipo: tipo || 'NFSe',
-      numero: String(orderResult.number || orderResult.id || orderId || ''),
+      numero: numero_manual || String(orderResult.number || orderResult.id || orderId || ''),
       serie: String(orderResult.series || ''),
       status: 'Emitida',
       cliente_id: cliente_id || '',
