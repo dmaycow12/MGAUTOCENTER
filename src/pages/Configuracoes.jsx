@@ -1,67 +1,60 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Settings, Save, CheckCircle, Plus, X, UserPlus, LogOut, AlertCircle, User, Pencil, Trash2 } from "lucide-react";
+import { Settings, Save, CheckCircle, Plus, UserPlus, LogOut, AlertCircle, User, Pencil, Trash2 } from "lucide-react";
 
 export default function Configuracoes() {
   const CHAVES = ["nome_oficina", "cnpj", "telefone", "email", "endereco", "cidade", "estado", "cep",
     "focusnfe_ambiente", "codigo_municipio", "codigo_servico", "aliquota_iss", "logo_url", "observacoes_padrao", "proximo_numero_os",
-    "nfce_token", "nfce_csc", "nfce_serie", "nfce_versao", "nfce_ultimo_numero",
-    "nfe_serie", "nfe_ultimo_numero", "focusnfe_api_key_homologacao", "focusnfe_api_key_producao"];
+    "focusnfe_api_key_homologacao", "focusnfe_api_key_producao",
+    "nfe_serie", "nfe_ultimo_numero", "nfe_versao",
+    "nfce_serie", "nfce_ultimo_numero", "nfce_versao", "nfce_token", "nfce_csc",
+    "nfse_serie_rps", "nfse_ultimo_rps", "nfse_natureza_operacao", "nfse_layout", "nfse_apuracao", "nfse_imunidade", "nfse_tipo_operacao"];
 
   const [config, setConfig] = useState({
     nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
     focusnfe_ambiente: "producao", codigo_municipio: "", codigo_servico: "07498", aliquota_iss: "2.0",
     logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
-    nfce_token: "", nfce_csc: "", nfce_serie: "1", nfce_versao: "4.00", nfce_ultimo_numero: "0",
-    nfe_serie: "1", nfe_ultimo_numero: "0",
     focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
+    nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00",
+    nfce_serie: "1", nfce_ultimo_numero: "0", nfce_versao: "4.00", nfce_token: "", nfce_csc: "",
+    nfse_serie_rps: "1", nfse_ultimo_rps: "0", nfse_natureza_operacao: "", nfse_layout: "Nacional", nfse_apuracao: "", nfse_imunidade: "", nfse_tipo_operacao: "",
   });
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // Mapa de chave -> id do registro no banco
   const [configIds, setConfigIds] = useState({});
-
-  // Usuários
   const [novoUsuario, setNovoUsuario] = useState({ nome: "", usuario: "", senha: "", confirmarSenha: "", tipo: "gerente" });
   const [editandoUsuario, setEditandoUsuario] = useState(null);
   const [salvandoUsuario, setSalvandoUsuario] = useState(false);
   const [feedbackUsuario, setFeedbackUsuario] = useState(null);
-
-  const [usuarios, setUsuarios] = useState([]); // [{...dados, _id: id_do_banco}]
+  const [usuarios, setUsuarios] = useState([]);
   const [avisoUltimoGerente, setAvisoUltimoGerente] = useState(false);
 
   useEffect(() => { loadAll(); }, []);
 
   const loadAll = async () => {
     const todos = await base44.entities.Configuracao.list("-created_date", 200);
-
     const c = {
       nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
       focusnfe_ambiente: "producao", codigo_municipio: "", codigo_servico: "07498", aliquota_iss: "2.0",
       logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
-      nfce_token: "", nfce_csc: "", nfce_serie: "1", nfce_versao: "4.00", nfce_ultimo_numero: "0",
-      nfe_serie: "1", nfe_ultimo_numero: "0",
       focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
+      nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00",
+      nfce_serie: "1", nfce_ultimo_numero: "0", nfce_versao: "4.00", nfce_token: "", nfce_csc: "",
+      nfse_serie_rps: "1", nfse_ultimo_rps: "0", nfse_natureza_operacao: "", nfse_layout: "Nacional", nfse_apuracao: "", nfse_imunidade: "", nfse_tipo_operacao: "",
     };
     const ids = {};
     const extras = [];
-
     todos.forEach(item => {
       if (CHAVES.includes(item.chave)) {
         c[item.chave] = item.valor || "";
         ids[item.chave] = item.id;
       } else if (item.chave === "usuario_extra") {
         try {
-          const parsed = JSON.parse(item.valor);
-          extras.push({ ...parsed, _id: item.id });
+          extras.push({ ...JSON.parse(item.valor), _id: item.id });
         } catch {}
-      } else if (item.chave === "admin_senha") {
-        ids["admin_senha"] = item.id;
       }
     });
-
     setConfig(c);
     setConfigIds(ids);
     setUsuarios(extras);
@@ -92,16 +85,10 @@ export default function Configuracoes() {
     const { dados } = editandoUsuario;
     if (!dados.nome || !dados.usuario) return alert("Preencha nome e usuário.");
     setSalvandoUsuario(true);
-
     const res = await base44.functions.invoke("authSaveUser", {
-      action: "update",
-      _id: editandoUsuario._id,
-      nome: dados.nome,
-      usuario: dados.usuario,
-      senha: dados.senha || "",
-      tipo: dados.tipo,
+      action: "update", _id: editandoUsuario._id, nome: dados.nome, usuario: dados.usuario,
+      senha: dados.senha || "", tipo: dados.tipo,
     });
-
     if (res.data?.sucesso) {
       setEditandoUsuario(null);
       await loadAll();
@@ -117,16 +104,11 @@ export default function Configuracoes() {
       return setFeedbackUsuario({ tipo: "erro", msg: "Preencha todos os campos obrigatórios." });
     if (novoUsuario.senha !== novoUsuario.confirmarSenha)
       return setFeedbackUsuario({ tipo: "erro", msg: "As senhas não coincidem." });
-
     setSalvandoUsuario(true);
     const res = await base44.functions.invoke("authSaveUser", {
-      action: "create",
-      nome: novoUsuario.nome,
-      usuario: novoUsuario.usuario,
-      senha: novoUsuario.senha,
-      tipo: novoUsuario.tipo,
+      action: "create", nome: novoUsuario.nome, usuario: novoUsuario.usuario,
+      senha: novoUsuario.senha, tipo: novoUsuario.tipo,
     });
-
     if (res.data?.sucesso) {
       setNovoUsuario({ nome: "", usuario: "", senha: "", confirmarSenha: "", tipo: "gerente" });
       setFeedbackUsuario({ tipo: "sucesso", msg: `Usuário "${novoUsuario.usuario}" criado com sucesso!` });
@@ -143,13 +125,9 @@ export default function Configuracoes() {
       const totalGerentes = usuarios.filter(u => !u.tipo || u.tipo === "gerente").length;
       if (totalGerentes <= 1) { setAvisoUltimoGerente(true); return; }
     }
-
     if (!confirm(`Excluir o usuário "${usuario.usuario}"?`)) return;
     if (usuario._id) {
-      await base44.functions.invoke("authSaveUser", {
-        action: "delete",
-        _id: usuario._id,
-      });
+      await base44.functions.invoke("authSaveUser", { action: "delete", _id: usuario._id });
       await loadAll();
     }
   };
@@ -164,7 +142,7 @@ export default function Configuracoes() {
   if (loading) return <Loader />;
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-5xl mx-auto">
       {salvo && (
         <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-sm">
           <CheckCircle className="w-5 h-5" />
@@ -172,7 +150,6 @@ export default function Configuracoes() {
         </div>
       )}
 
-      {/* Dados da Oficina */}
       <Section title="Dados da Oficina" icon={Settings}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <F label="Nome da Oficina">
@@ -182,7 +159,7 @@ export default function Configuracoes() {
             <input value={config.cnpj} onChange={e => setConfig({ ...config, cnpj: e.target.value })} className="input-dark" placeholder="00.000.000/0001-00" />
           </F>
           <F label="Telefone">
-            <input value={config.telefone} onChange={e => setConfig({ ...config, telefone: e.target.value })} className="input-dark" placeholder="(00) 00000-0000" />
+            <input value={config.telefone} onChange={e => setConfig({ ...config, telefone: e.target.value })} className="input-dark" />
           </F>
           <F label="E-mail">
             <input value={config.email} onChange={e => setConfig({ ...config, email: e.target.value })} className="input-dark" />
@@ -199,19 +176,10 @@ export default function Configuracoes() {
           <F label="Estado">
             <input value={config.estado} onChange={e => setConfig({ ...config, estado: e.target.value })} className="input-dark" maxLength={2} />
           </F>
-          <F label="Próximo Número OS">
-            <input type="number" value={config.proximo_numero_os} onChange={e => setConfig({ ...config, proximo_numero_os: e.target.value })} className="input-dark" />
-          </F>
         </div>
-        <F label="Observações Padrão OS">
-          <textarea value={config.observacoes_padrao} onChange={e => setConfig({ ...config, observacoes_padrao: e.target.value })} className="input-dark" rows={2} placeholder="Texto que aparece automaticamente em novas OS" />
-        </F>
       </Section>
 
-      {/* Focus NFe */}
-      <Section title="Integração Focus NFe — Notas Fiscais" icon={null}>
-        <p className="text-xs text-gray-400 mb-4">Configure suas chaves API para cada ambiente e os parâmetros fiscais da emissão.</p>
-        
+      <Section title="Integração Focus NFe — Configuração Geral" icon={null}>
         <div className="bg-gray-800 rounded-xl p-4 mb-6 space-y-3">
           <label className="block text-xs text-gray-400 font-semibold">Chaves API Focus NFe</label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -228,56 +196,100 @@ export default function Configuracoes() {
             </select>
           </F>
           <F label="Código do Município (IBGE)">
-            <input value={config.codigo_municipio} onChange={e => setConfig({ ...config, codigo_municipio: e.target.value })} className="input-dark" placeholder="Ex: 3147907 (Patos de Minas)" />
+            <input value={config.codigo_municipio} onChange={e => setConfig({ ...config, codigo_municipio: e.target.value })} className="input-dark" placeholder="Ex: 3147907" />
           </F>
-          <F label="Código do Serviço (LC116) — NFSe">
+          <F label="Código do Serviço (LC116)">
             <input value={config.codigo_servico} onChange={e => setConfig({ ...config, codigo_servico: e.target.value })} className="input-dark" placeholder="Ex: 07498" />
           </F>
-          <F label="Alíquota ISS (%) — NFSe">
+          <F label="Alíquota ISS (%)">
             <input value={config.aliquota_iss} onChange={e => setConfig({ ...config, aliquota_iss: e.target.value })} className="input-dark" placeholder="Ex: 2.0" />
           </F>
         </div>
+      </Section>
 
-        <div className="border-t border-gray-800 mt-4 pt-4">
-          <p className="text-xs text-gray-400 font-semibold mb-3">Homologação (Teste)</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <F label="Série">
-              <input value={config.nfe_serie} onChange={e => setConfig({ ...config, nfe_serie: e.target.value })} className="input-dark" placeholder="Ex: 2" />
-            </F>
-            <F label="Próximo Número">
-              <input type="number" value={config.nfe_ultimo_numero} onChange={e => setConfig({ ...config, nfe_ultimo_numero: e.target.value })} className="input-dark" placeholder="Ex: 147" />
-            </F>
-          </div>
+      <Section title="NF-e — Nota Fiscal de Produto" icon={null}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <F label="Última NF-e">
+            <input type="number" value={config.nfe_ultimo_numero} onChange={e => setConfig({ ...config, nfe_ultimo_numero: e.target.value })} className="input-dark" />
+          </F>
+          <F label="Série NF-e">
+            <input value={config.nfe_serie} onChange={e => setConfig({ ...config, nfe_serie: e.target.value })} className="input-dark" />
+          </F>
+          <F label="Ambiente">
+            <select value={config.focusnfe_ambiente} onChange={e => setConfig({ ...config, focusnfe_ambiente: e.target.value })} className="input-dark">
+              <option value="producao">Produção</option>
+              <option value="homologacao">Homologação</option>
+            </select>
+          </F>
+          <F label="Versão da NF-e">
+            <select value={config.nfe_versao} onChange={e => setConfig({ ...config, nfe_versao: e.target.value })} className="input-dark">
+              <option value="4.00">4.00</option>
+              <option value="3.10">3.10</option>
+            </select>
+          </F>
         </div>
+      </Section>
 
-        <div className="border-t border-gray-800 mt-4 pt-4">
-          <p className="text-xs text-gray-400 font-semibold mb-3">Produção (NFCe + NFe)</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <F label="Série">
-              <input value={config.nfce_serie} onChange={e => setConfig({ ...config, nfce_serie: e.target.value })} className="input-dark" placeholder="Ex: 2" />
-            </F>
-            <F label="Próximo Número">
-              <input type="number" value={config.nfce_ultimo_numero} onChange={e => setConfig({ ...config, nfce_ultimo_numero: e.target.value })} className="input-dark" placeholder="Ex: 147" />
-            </F>
-          </div>
+      <Section title="NFC-e — Nota Fiscal do Consumidor" icon={null}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <F label="Última NFC-e">
+            <input type="number" value={config.nfce_ultimo_numero} onChange={e => setConfig({ ...config, nfce_ultimo_numero: e.target.value })} className="input-dark" />
+          </F>
+          <F label="Série NFC-e">
+            <input value={config.nfce_serie} onChange={e => setConfig({ ...config, nfce_serie: e.target.value })} className="input-dark" />
+          </F>
+          <F label="Token (CSC Token)">
+            <input value={config.nfce_token} onChange={e => setConfig({ ...config, nfce_token: e.target.value })} className="input-dark" placeholder="Ex: 000001" />
+          </F>
+          <F label="CSC (Código de Segurança)">
+            <input value={config.nfce_csc} onChange={e => setConfig({ ...config, nfce_csc: e.target.value })} className="input-dark" />
+          </F>
+          <F label="Ambiente">
+            <select value={config.focusnfe_ambiente} onChange={e => setConfig({ ...config, focusnfe_ambiente: e.target.value })} className="input-dark">
+              <option value="producao">Produção</option>
+              <option value="homologacao">Homologação</option>
+            </select>
+          </F>
+          <F label="Versão da NFC-e">
+            <select value={config.nfce_versao} onChange={e => setConfig({ ...config, nfce_versao: e.target.value })} className="input-dark">
+              <option value="4.00">4.00</option>
+              <option value="3.10">3.10</option>
+            </select>
+          </F>
         </div>
+      </Section>
 
-        <div className="border-t border-gray-800 mt-4 pt-4">
-          <p className="text-xs text-gray-400 font-semibold mb-3">NFC-e — Configurações Específicas</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <F label="Versão da NFC-e">
-              <select value={config.nfce_versao} onChange={e => setConfig({ ...config, nfce_versao: e.target.value })} className="input-dark">
-                <option value="4.00">4.00</option>
-                <option value="3.10">3.10</option>
-              </select>
-            </F>
-            <F label="Token ID (CSC Token)">
-              <input value={config.nfce_token} onChange={e => setConfig({ ...config, nfce_token: e.target.value })} className="input-dark" placeholder="Ex: 000001" />
-            </F>
-            <F label="CSC (Código de Segurança do Contribuinte)" className="col-span-2">
-              <input value={config.nfce_csc} onChange={e => setConfig({ ...config, nfce_csc: e.target.value })} className="input-dark" placeholder="Ex: 1811f9bb3649372c6b87b879" />
-            </F>
-          </div>
+      <Section title="NFS-e — Nota Fiscal de Serviço" icon={null}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <F label="Último RPS NFS-e">
+            <input type="number" value={config.nfse_ultimo_rps} onChange={e => setConfig({ ...config, nfse_ultimo_rps: e.target.value })} className="input-dark" />
+          </F>
+          <F label="Série do RPS">
+            <input value={config.nfse_serie_rps} onChange={e => setConfig({ ...config, nfse_serie_rps: e.target.value })} className="input-dark" />
+          </F>
+          <F label="Natureza de operação">
+            <input value={config.nfse_natureza_operacao} onChange={e => setConfig({ ...config, nfse_natureza_operacao: e.target.value })} className="input-dark" />
+          </F>
+          <F label="Ambiente">
+            <select value={config.focusnfe_ambiente} onChange={e => setConfig({ ...config, focusnfe_ambiente: e.target.value })} className="input-dark">
+              <option value="producao">Produção</option>
+              <option value="homologacao">Homologação</option>
+            </select>
+          </F>
+          <F label="Layout da NFS-e">
+            <select value={config.nfse_layout} onChange={e => setConfig({ ...config, nfse_layout: e.target.value })} className="input-dark">
+              <option value="Nacional">Nacional</option>
+            </select>
+          </F>
+          <F label="Apuração dos tributos">
+            <input value={config.nfse_apuracao} onChange={e => setConfig({ ...config, nfse_apuracao: e.target.value })} className="input-dark" />
+          </F>
+          <F label="Tipo imunidade">
+            <input value={config.nfse_imunidade} onChange={e => setConfig({ ...config, nfse_imunidade: e.target.value })} className="input-dark" />
+          </F>
+          <F label="Tipo operação">
+            <input value={config.nfse_tipo_operacao} onChange={e => setConfig({ ...config, nfse_tipo_operacao: e.target.value })} className="input-dark" />
+          </F>
         </div>
       </Section>
 
@@ -286,25 +298,17 @@ export default function Configuracoes() {
         {salvando ? "Salvando..." : "Salvar Configurações"}
       </button>
 
-      {/* Usuários */}
       <Section title="Gerenciar Usuários" icon={UserPlus}>
-        {/* Modal aviso último gerente */}
         {avisoUltimoGerente && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
             <div className="bg-gray-900 border border-yellow-500/40 rounded-2xl p-6 w-full max-w-sm text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center mx-auto">
-                <AlertCircle className="w-6 h-6 text-yellow-400" />
-              </div>
               <h3 className="text-white font-semibold text-lg">Ação não permitida</h3>
-              <p className="text-gray-400 text-sm">Não é possível excluir o último gerente do sistema. Deve existir ao menos um gerente cadastrado.</p>
-              <button onClick={() => setAvisoUltimoGerente(false)} className="w-full py-2.5 rounded-xl text-sm font-semibold" style={{background:"#00ff00", color:"#000"}}>
-                Entendido
-              </button>
+              <p className="text-gray-400 text-sm">Não é possível excluir o último gerente do sistema.</p>
+              <button onClick={() => setAvisoUltimoGerente(false)} className="w-full py-2.5 rounded-xl text-sm font-semibold" style={{background:"#00ff00", color:"#000"}}>Entendido</button>
             </div>
           </div>
         )}
 
-        {/* Modal de edição */}
         {editandoUsuario && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
             <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-md space-y-4">
@@ -318,24 +322,9 @@ export default function Configuracoes() {
               <F label="Senha">
                 <input type="password" value={editandoUsuario.dados.senha} onChange={e => setEditandoUsuario(ed => ({ ...ed, dados: { ...ed.dados, senha: e.target.value } }))} className="input-dark" autoComplete="new-password" />
               </F>
-              <F label="Tipo">
-                <div className="flex gap-2 mt-1">
-                  {[
-                    { value: "gerente", label: "Gerente", desc: "Acesso completo" },
-                    { value: "contador", label: "Contador", desc: "Apenas Notas Fiscais" },
-                    { value: "vendedor", label: "Vendedor", desc: "Apenas Vendas" },
-                  ].map(opt => (
-                    <button key={opt.value} type="button"
-                      onClick={() => setEditandoUsuario(ed => ({ ...ed, dados: { ...ed.dados, tipo: opt.value } }))}
-                      className={`flex-1 flex flex-col items-center py-2 px-2 rounded-xl border-2 transition-all text-center ${editandoUsuario.dados.tipo === opt.value ? "border-green-500 bg-green-500/10 text-green-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}`}>
-                      <span className="text-xs font-semibold">{opt.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </F>
               <div className="flex gap-2 pt-2">
-                <button onClick={() => setEditandoUsuario(null)} className="flex-1 py-2 rounded-lg text-sm text-gray-400 border border-gray-700 hover:border-gray-500 transition-all">Cancelar</button>
-                <button onClick={salvarEdicaoUsuario} disabled={salvandoUsuario} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
+                <button onClick={() => setEditandoUsuario(null)} className="flex-1 py-2 rounded-lg text-sm text-gray-400 border border-gray-700">Cancelar</button>
+                <button onClick={salvarEdicaoUsuario} disabled={salvandoUsuario} className="flex-1 py-2 rounded-lg text-sm font-semibold" style={{background:"#00ff00", color:"#000"}}>
                   {salvandoUsuario ? "Salvando..." : "Salvar"}
                 </button>
               </div>
@@ -344,27 +333,18 @@ export default function Configuracoes() {
         )}
 
         <div className="mb-4 space-y-2">
-          {usuarios.map((u, i) => {
-            const tipoLabel = u.tipo === "contador" ? "Contador" : u.tipo === "vendedor" ? "Vendedor" : "Gerente";
-            return (
-              <UserRow
-                key={i}
-                nome={u.nome}
-                usuario={u.usuario}
-                tipo={tipoLabel}
-                canDelete={true}
-                onEdit={() => setEditandoUsuario({ isAdmin: false, usuarioOriginal: u.usuario, _id: u._id, dados: { ...u, tipo: u.tipo || "gerente" } })}
-                onDelete={() => excluirUsuario(u)}
-              />
-            );
-          })}
+          {usuarios.map((u, i) => (
+            <UserRow key={i} nome={u.nome} usuario={u.usuario} tipo={u.tipo === "contador" ? "Contador" : u.tipo === "vendedor" ? "Vendedor" : "Gerente"}
+              onEdit={() => setEditandoUsuario({ _id: u._id, dados: { ...u, tipo: u.tipo || "gerente" } })}
+              onDelete={() => excluirUsuario(u)}
+            />
+          ))}
         </div>
 
         <div className="border-t border-gray-800 pt-5">
-          <p className="text-white text-sm font-semibold mb-4 flex items-center gap-2"><Plus className="w-4 h-4 text-green-400" /> Criar Novo Usuário</p>
+          <p className="text-white text-sm font-semibold mb-4">Criar Novo Usuário</p>
           {feedbackUsuario && (
             <div className={`mb-4 text-sm px-3 py-2 rounded-lg flex items-center gap-2 ${feedbackUsuario.tipo === "sucesso" ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
-              {feedbackUsuario.tipo === "sucesso" ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
               {feedbackUsuario.msg}
             </div>
           )}
@@ -382,25 +362,8 @@ export default function Configuracoes() {
               <input type="password" value={novoUsuario.confirmarSenha} onChange={e => setNovoUsuario(u => ({ ...u, confirmarSenha: e.target.value }))} className="input-dark" autoComplete="new-password" />
             </F>
           </div>
-          <div className="mt-4">
-            <label className="block text-xs text-gray-400 mb-2">Tipo de Usuário *</label>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { value: "gerente", label: "Gerente", desc: "Acesso completo" },
-                { value: "contador", label: "Contador", desc: "Apenas Notas Fiscais" },
-                { value: "vendedor", label: "Vendedor", desc: "Apenas Vendas" },
-              ].map(opt => (
-                <button key={opt.value} type="button"
-                  onClick={() => setNovoUsuario(u => ({ ...u, tipo: opt.value }))}
-                  className={`flex flex-col items-center py-3 px-2 rounded-xl border-2 transition-all text-center ${novoUsuario.tipo === opt.value ? "border-green-500 bg-green-500/10 text-green-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}`}>
-                  <span className="text-sm font-semibold">{opt.label}</span>
-                  <span className="text-xs mt-1 opacity-70">{opt.desc}</span>
-                </button>
-              ))}
-            </div>
-          </div>
           <div className="mt-5">
-            <button onClick={criarUsuario} disabled={salvandoUsuario} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
+            <button onClick={criarUsuario} disabled={salvandoUsuario} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold" style={{background:"#00ff00", color:"#000"}}>
               <UserPlus className="w-4 h-4" />
               {salvandoUsuario ? "Criando..." : "Criar Usuário"}
             </button>
@@ -408,10 +371,8 @@ export default function Configuracoes() {
         </div>
       </Section>
 
-      {/* Sair */}
       <Section title="Sessão" icon={LogOut}>
-        <p className="text-gray-400 text-sm mb-3">Clique abaixo para encerrar sua sessão e voltar à tela de login.</p>
-        <button onClick={handleLogout} className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 px-5 py-2.5 rounded-xl text-sm font-medium transition-all">
+        <button onClick={handleLogout} className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 px-5 py-2.5 rounded-xl text-sm font-medium">
           <LogOut className="w-4 h-4" /> Sair do Sistema
         </button>
       </Section>
@@ -442,7 +403,7 @@ function F({ label, children, className = "" }) {
   );
 }
 
-function UserRow({ nome, usuario, tipo, canDelete, onEdit, onDelete }) {
+function UserRow({ nome, usuario, tipo, onEdit, onDelete }) {
   return (
     <div className="flex items-center bg-gray-800 rounded-xl px-4 py-3 gap-3">
       <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{background:"rgba(0,255,0,0.15)"}}>
@@ -453,16 +414,12 @@ function UserRow({ nome, usuario, tipo, canDelete, onEdit, onDelete }) {
         <p className="text-gray-500 text-xs truncate">Usuário: {usuario}</p>
       </div>
       <span className="text-xs px-3 py-1 rounded-full font-medium flex-shrink-0" style={{background:"rgba(0,255,0,0.1)", color:"#00ff00"}}>{tipo}</span>
-      <button onClick={onEdit} className="p-1.5 text-gray-400 hover:text-green-400 transition-all flex-shrink-0" title="Editar">
+      <button onClick={onEdit} className="p-1.5 text-gray-400 hover:text-green-400 transition-all flex-shrink-0">
         <Pencil className="w-4 h-4" />
       </button>
-      {canDelete ? (
-        <button onClick={onDelete} className="p-1.5 text-gray-500 hover:text-red-400 transition-all flex-shrink-0">
-          <Trash2 className="w-4 h-4" />
-        </button>
-      ) : (
-        <div className="w-7 flex-shrink-0" />
-      )}
+      <button onClick={onDelete} className="p-1.5 text-gray-500 hover:text-red-400 transition-all flex-shrink-0">
+        <Trash2 className="w-4 h-4" />
+      </button>
     </div>
   );
 }
@@ -478,7 +435,7 @@ function TokenField({ label, value, onChange }) {
       <label className="block text-xs text-gray-400 mb-1">{label}</label>
       <div className="relative">
         <input type={visible ? "text" : "password"} value={value} onChange={e => onChange(e.target.value)} className="input-dark pr-10" placeholder="Cole seu token aqui" />
-        <button type="button" onClick={() => setVisible(!visible)} className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-300 transition-all" title={visible ? "Ocultar" : "Mostrar"}>
+        <button type="button" onClick={() => setVisible(!visible)} className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-300">
           {visible ? '🙈' : '👁️'}
         </button>
       </div>
