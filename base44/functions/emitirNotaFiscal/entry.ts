@@ -153,8 +153,10 @@ Deno.serve(async (req) => {
       const nfceCsc = configs.find(c => c.chave === 'nfce_csc')?.valor?.trim() || '';
 
       const prodItems = (items && items.length > 0) ? items : [
-        { descricao: observacoes || 'Produtos', quantidade: 1, valor_unitario: Number(valor_total), valor_total: Number(valor_total), ncm: '87089990', cfop: '5102', unidade: 'UN' }
+        { descricao: observacoes || 'Produtos', quantidade: 1, valor_unitario: Number(valor_total), valor_total: Number(valor_total), ncm: '87089990', unidade: 'UN' }
       ];
+
+      const temCPFCNPJ = cpfCnpjLimpo && (cpfCnpjLimpo.length === 11 || cpfCnpjLimpo.length === 14);
 
       payload = {
         cnpj_emitente: cfgCnpj.replace(/\D/g, ''),
@@ -168,9 +170,9 @@ Deno.serve(async (req) => {
         ...(cpfCnpjLimpo && cpfCnpjLimpo.length === 11 ? { destinatario_cpf: cpfCnpjLimpo } : {}),
         ...(cpfCnpjLimpo && cpfCnpjLimpo.length === 14 ? { destinatario_cnpj: cpfCnpjLimpo } : {}),
         destinatario_nome: cliente_nome || 'Consumidor Final',
-        ...(cliente_email ? { destinatario_email: cliente_email } : {}),
-        ...(cliente_telefone ? { destinatario_telefone: cliente_telefone.replace(/\D/g, '') } : {}),
-        ...(cliente_endereco ? {
+        ...(temCPFCNPJ && cliente_email ? { destinatario_email: cliente_email } : {}),
+        ...(temCPFCNPJ && cliente_telefone ? { destinatario_telefone: cliente_telefone.replace(/\D/g, '') } : {}),
+        ...(temCPFCNPJ && cliente_endereco ? {
           destinatario_logradouro: cliente_endereco,
           destinatario_numero: cliente_numero || 'S/N',
           destinatario_bairro: cliente_bairro || '',
