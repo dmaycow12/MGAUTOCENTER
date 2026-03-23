@@ -1073,8 +1073,8 @@ export default function NotasFiscais() {
                     </F>
                   </div>
                   <div className="flex justify-end">
-                    <button onClick={() => setAbaForm("itens")} className="text-white px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
-                      Próximo: Itens →
+                    <button onClick={() => setAbaForm("itens")} className="text-black px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#00ff00"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+                     Próximo: Itens →
                     </button>
                   </div>
                 </div>
@@ -1139,7 +1139,7 @@ export default function NotasFiscais() {
                   </F>
                   <div className="flex justify-between">
                     <button onClick={() => setAbaForm("cliente")} className="text-gray-400 hover:text-white text-sm px-4 py-2 border border-gray-700 rounded-lg transition-all">← Voltar</button>
-                    <button onClick={() => setAbaForm("pagamento")} className="text-white px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>Próximo: Pagamento →</button>
+                    <button onClick={() => setAbaForm("pagamento")} className="text-black px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#00ff00"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>Próximo: Pagamento →</button>
                   </div>
                 </div>
               )}
@@ -1178,12 +1178,12 @@ export default function NotasFiscais() {
                     <div className="flex gap-3">
                       <button onClick={salvarRascunho} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Salvar Rascunho</button>
                       <button
-                        onClick={() => temSpedy ? emitirNota() : salvarRascunho()}
-                        disabled={emitindo}
-                        className="px-6 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50 flex items-center gap-2"
-                        style={{background: "#cc0000"}}
-                        onMouseEnter={e => !emitindo && (e.currentTarget.style.background = "#aa0000")}
-                        onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}
+                       onClick={() => temSpedy ? emitirNota() : salvarRascunho()}
+                       disabled={emitindo}
+                       className="px-6 py-2 text-sm text-black rounded-lg font-medium transition-all disabled:opacity-50 flex items-center gap-2"
+                       style={{background: "#00ff00"}}
+                       onMouseEnter={e => !emitindo && (e.currentTarget.style.background = "#00dd00")}
+                       onMouseLeave={e => e.currentTarget.style.background = "#00ff00"
                       >
                         {emitindo && <RefreshCw className="w-4 h-4 animate-spin" />}
                         {emitindo ? "Emitindo..." : temSpedy ? "Transmitir Nota" : "Salvar Nota"}
