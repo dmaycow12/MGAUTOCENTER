@@ -1,17 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
-/**
- * Emissão de Notas Fiscais via Focus NFe
- * Documentação: https://focusnfe.com.br/doc/
- * 
- * Endpoints:
- * - NFe:  POST /nfe?ref=XXX
- * - NFCe: POST /nfce?ref=XXX
- * - NFSe: POST /nfse?ref=XXX
- * 
- * Autenticação: Basic HTTP (API_KEY:vazio)
- */
-
 const PAYMENT_MAP = {
   'Dinheiro': '01',
   'Cartão de Crédito': '03',
@@ -29,21 +17,7 @@ Deno.serve(async (req) => {
 
     // 1. Busca e valida configurações
     const configs = await base44.asServiceRole.entities.Configuracao.list('-created_date', 200);
-    const ambiente = configs.find(c => c.chave === 'focusnfe_ambiente')?.valor || 'producao';
     
-    // Usa API key específica por ambiente, com fallback para variável de ambiente
-    const chaveAmbiente = ambiente === 'homologacao' ? 'focusnfe_api_key_homologacao' : 'focusnfe_api_key_producao';
-    const apiKey = Deno.env.get('FOCUSNFE_API_KEY') || 
-      configs.find(c => c.chave === chaveAmbiente)?.valor?.trim() ||
-      configs.find(c => c.chave === 'focusnfe_api_key')?.valor?.trim();
-    
-    if (!apiKey) {
-      return Response.json(
-        { sucesso: false, erro: `API Key Focus NFe não configurada para ${ambiente}` },
-        { status: 400 }
-      );
-    }
-
     // 2. Extrai dados do request
     const {
       tipo, cliente_nome, cliente_cpf_cnpj, cliente_email,
@@ -57,6 +31,29 @@ Deno.serve(async (req) => {
     if (!['NFCe', 'NFe', 'NFSe'].includes(tipo)) {
       return Response.json(
         { sucesso: false, erro: 'Tipo deve ser NFCe, NFe ou NFSe' },
+        { status: 400 }
+      );
+    }
+
+    // Define ambiente específico por tipo
+    let ambiente = 'producao';
+    if (tipo === 'NFe') {
+      ambiente = configs.find(c => c.chave === 'nfe_ambiente')?.valor || 'producao';
+    } else if (tipo === 'NFCe') {
+      ambiente = configs.find(c => c.chave === 'nfce_ambiente')?.valor || 'producao';
+    } else if (tipo === 'NFSe') {
+      ambiente = configs.find(c => c.chave === 'nfse_ambiente')?.valor || 'producao';
+    }
+    
+    // Usa API key específica por ambiente, com fallback para variável de ambiente
+    const chaveAmbiente = ambiente === 'homologacao' ? 'focusnfe_api_key_homologacao' : 'focusnfe_api_key_producao';
+    const apiKey = Deno.env.get('FOCUSNFE_API_KEY') || 
+      configs.find(c => c.chave === chaveAmbiente)?.valor?.trim() ||
+      configs.find(c => c.chave === 'focusnfe_api_key')?.valor?.trim();
+    
+    if (!apiKey) {
+      return Response.json(
+        { sucesso: false, erro: `API Key Focus NFe não configurada para ${ambiente}` },
         { status: 400 }
       );
     }
@@ -76,25 +73,27 @@ Deno.serve(async (req) => {
       const ultimoNota = numsNFCe.length > 0 ? Math.max(...numsNFCe) : 0;
       proximoNum = Math.max(ultimoSalvo, ultimoNota) + 1;
       serieUsada = (configs.find(c => c.chave === 'nfce_serie')?.valor || '1').padStart(3, '0');
+    } else if (tipo === 'NFe') {
+      const cfgUltimoNFe = configs.find(c => c.chave === 'nfe_ultimo_numero');
+      const ultimoSalvo = parseInt(cfgUltimoNFe?.valor || '0', 10);
+      const numsNFe = todasNotas
+        .filter(n => n.tipo === 'NFe')
+        .map(n => parseInt(n.numero, 10))
+        .filter(n => !isNaN(n));
+      const ultimoNota = numsNFe.length > 0 ? Math.max(...numsNFe) : 0;
+      proximoNum = Math.max(ultimoSalvo, ultimoNota) + 1;
+      serieUsada = (configs.find(c => c.chave === 'nfe_serie')?.valor || '1').padStart(3, '0');
     } else {
-     // NFe/NFSe: usar configuração específica conforme ambiente
-     const ambiente = configs.find(c => c.chave === 'focusnfe_ambiente')?.valor || 'producao';
-     const isHomologacao = ambiente === 'homologacao';
-
-     const chaveNumero = isHomologacao ? 'nfe_ultimo_numero' : 'nfce_ultimo_numero';
-     const chaveSerie = isHomologacao ? 'nfe_serie' : 'nfce_serie';
-
-     const cfgUltimo = configs.find(c => c.chave === chaveNumero);
-     const ultimoSalvo = parseInt(cfgUltimo?.valor || '0', 10);
-
-     const nums = todasNotas
-       .filter(n => n.tipo === tipo)
-       .map(n => parseInt(n.numero, 10))
-       .filter(n => !isNaN(n));
-     const ultimoNota = nums.length > 0 ? Math.max(...nums) : 0;
-     proximoNum = Math.max(ultimoSalvo, ultimoNota) + 1;
-
-     serieUsada = (configs.find(c => c.chave === chaveSerie)?.valor || '1').padStart(3, '0');
+      // NFSe
+      const cfgUltimoNFSe = configs.find(c => c.chave === 'nfse_ultimo_rps');
+      const ultimoSalvo = parseInt(cfgUltimoNFSe?.valor || '0', 10);
+      const numsNFSe = todasNotas
+        .filter(n => n.tipo === 'NFSe')
+        .map(n => parseInt(n.numero, 10))
+        .filter(n => !isNaN(n));
+      const ultimoNota = numsNFSe.length > 0 ? Math.max(...numsNFSe) : 0;
+      proximoNum = Math.max(ultimoSalvo, ultimoNota) + 1;
+      serieUsada = (configs.find(c => c.chave === 'nfse_serie_rps')?.valor || '1').padStart(3, '0');
     }
 
     const agora = new Date();
@@ -118,9 +117,6 @@ Deno.serve(async (req) => {
     if (tipo === 'NFSe') {
       endpoint = `/nfse?ref=${ref}`;
       const cfgCnpj = configs.find(c => c.chave === 'cnpj')?.valor || '';
-      const cfgCodMun = configs.find(c => c.chave === 'codigo_municipio')?.valor || '';
-      const cfgCodServ = configs.find(c => c.chave === 'codigo_servico')?.valor || '07498';
-      const cfgAliq = parseFloat(configs.find(c => c.chave === 'aliquota_iss')?.valor || '2.0');
 
       const servicoItems = (items && items.length > 0) ? items : [
         { descricao: observacoes || 'Serviços', quantidade: 1, valor_unitario: Number(valor_total), valor_total: Number(valor_total) }
@@ -130,7 +126,6 @@ Deno.serve(async (req) => {
         data_emissao: dataEmissaoFormatada,
         prestador: {
           cnpj: cfgCnpj.replace(/\D/g, ''),
-          ...(cfgCodMun ? { codigo_municipio: cfgCodMun } : {}),
         },
         tomador: {
           razao_social: cliente_nome || 'Consumidor',
@@ -146,7 +141,6 @@ Deno.serve(async (req) => {
               nome_municipio: cliente_cidade || '',
               cep: (cliente_cep || '').replace(/\D/g, ''),
               uf: cliente_estado || 'MG',
-              ...(cfgCodMun ? { codigo_municipio: cfgCodMun } : {}),
             }
           } : {}),
         },
@@ -155,9 +149,6 @@ Deno.serve(async (req) => {
           quantidade: Number(it.quantidade) || 1,
           valor_unitario: Number(it.valor_unitario) || 0,
           valor_total: Number(it.valor_total) || 0,
-          codigo_servico: cfgCodServ,
-          aliquota_iss: cfgAliq,
-          iss_retido: '2',
         })),
         ...(observacoes ? { observacoes } : {}),
       };
@@ -361,13 +352,10 @@ Deno.serve(async (req) => {
     }
 
     // 8. Atualiza último número nas config
-    const isHomologacao = ambiente === 'homologacao';
-    
-    let chaveAtualizar = 'nfce_ultimo_numero';
-    if (tipo === 'NFCe' && isHomologacao) chaveAtualizar = 'nfce_ultimo_numero';
-    if (tipo === 'NFe' && isHomologacao) chaveAtualizar = 'nfe_ultimo_numero';
-    if (tipo === 'NFe' && !isHomologacao) chaveAtualizar = 'nfce_ultimo_numero';
-    if (tipo === 'NFCe' && !isHomologacao) chaveAtualizar = 'nfce_ultimo_numero';
+    let chaveAtualizar = '';
+    if (tipo === 'NFe') chaveAtualizar = 'nfe_ultimo_numero';
+    if (tipo === 'NFCe') chaveAtualizar = 'nfce_ultimo_numero';
+    if (tipo === 'NFSe') chaveAtualizar = 'nfse_ultimo_rps';
     
     const cfgUltimo = configs.find(c => c.chave === chaveAtualizar);
     if (cfgUltimo?.id) {
