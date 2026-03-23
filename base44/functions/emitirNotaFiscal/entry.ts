@@ -197,29 +197,34 @@ Deno.serve(async (req) => {
           destinatario_numero: cliente_numero || 'S/N',
           destinatario_bairro: cliente_bairro || '',
           destinatario_municipio: cliente_cidade || '',
-          destinatario_uf: cliente_estado || 'MG',
+          destinatario_uf: (cliente_estado || 'MG').toUpperCase(),
           destinatario_cep: (cliente_cep || '').replace(/\D/g, ''),
         } : {}),
-        items: prodItems.map((it, idx) => ({
-          numero_item: idx + 1,
-          codigo_produto: it.codigo || `PROD${String(idx + 1).padStart(3, '0')}`,
-          descricao: (it.descricao || `Produto ${idx + 1}`).substring(0, 120),
-          codigo_ncm: (it.ncm || '87089990').replace(/\D/g, '').padStart(8, '0').substring(0, 8),
-          unidade_comercial: it.unidade || 'UN',
-          quantidade_comercial: Number(it.quantidade) || 1,
-          valor_unitario_comercial: Number(it.valor_unitario) || 0,
-          valor_bruto: Number(it.valor_total) || 0,
-          unidade_tributavel: it.unidade || 'UN',
-          quantidade_tributavel: Number(it.quantidade) || 1,
-          valor_unitario_tributavel: Number(it.valor_unitario) || 0,
-          icms_situacao_tributaria: '400',
-          icms_origem: '0',
-          pis_situacao_tributaria: '07',
-          cofins_situacao_tributaria: '07',
-        })),
+        items: prodItems.map((it, idx) => {
+          const qtd = Number(it.quantidade) || 1;
+          const valUni = Number(it.valor_unitario) || 0;
+          const valTotal = Number(it.valor_total) || (qtd * valUni);
+          return {
+            numero_item: idx + 1,
+            codigo_produto: (it.codigo || `PROD${String(idx + 1).padStart(3, '0')}`).substring(0, 60),
+            descricao: (it.descricao || `Produto ${idx + 1}`).substring(0, 120),
+            codigo_ncm: (it.ncm || '87089990').replace(/\D/g, '').padStart(8, '0').substring(0, 8),
+            unidade_comercial: (it.unidade || 'UN').substring(0, 6),
+            quantidade_comercial: qtd,
+            valor_unitario_comercial: parseFloat(valUni.toFixed(2)),
+            valor_bruto: parseFloat(valTotal.toFixed(2)),
+            unidade_tributavel: (it.unidade || 'UN').substring(0, 6),
+            quantidade_tributavel: qtd,
+            valor_unitario_tributavel: parseFloat(valUni.toFixed(2)),
+            icms_situacao_tributaria: '400',
+            icms_origem: '0',
+            pis_situacao_tributaria: '07',
+            cofins_situacao_tributaria: '07',
+          };
+        }),
         formas_pagamento: [{
           forma_pagamento: formaPgtoCode,
-          valor_pagamento: String(Number(valor_total).toFixed(2)),
+          valor_pagamento: parseFloat(Number(valor_total).toFixed(2)),
         }],
         ...(observacoes ? { informacoes_adicionais_contribuinte: observacoes.substring(0, 500) } : {}),
       };
