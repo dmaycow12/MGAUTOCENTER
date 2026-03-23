@@ -153,6 +153,14 @@ export default function NotasFiscais() {
     setLoading(false);
   };
 
+  // Filtra clientes por tipo de NF
+  const clientesFiltrados = clientes.filter(c => {
+    const isConsumidor = c.nome?.toUpperCase() === "CONSUMIDOR";
+    const temDocumento = !!(c.cpf_cnpj && c.cpf_cnpj.trim());
+    if (form.tipo === "NFSe") return !isConsumidor && temDocumento;
+    return true; // NFCe e NFe aceitam todos
+  });
+
   const selecionarCliente = (clienteId) => {
     const c = clientes.find(cl => cl.id === clienteId);
     if (!c) { setForm(f => ({ ...f, cliente_id: "", cliente_nome: "" })); return; }
@@ -292,6 +300,13 @@ export default function NotasFiscais() {
 
     if (!f.cliente_nome) return alert("Informe o nome do cliente.");
     if (!f.valor_total || f.valor_total <= 0) return alert("Informe o valor total.");
+
+    // Validações por tipo de NF
+    const isConsumidor = f.cliente_nome?.toUpperCase() === "CONSUMIDOR";
+    if (f.tipo === "NFSe") {
+      if (isConsumidor) return alert("NFSe não aceita o cliente CONSUMIDOR. Selecione um cliente com CPF ou CNPJ cadastrado.");
+      if (!f.cliente_cpf_cnpj?.trim()) return alert("NFSe exige cliente com CPF ou CNPJ cadastrado.");
+    }
 
     if (rascunhoNota) setTransmitindo(rascunhoNota.id);
     else setEmitindo(true);
@@ -948,7 +963,7 @@ export default function NotasFiscais() {
 
             {/* Abas */}
             <div className="px-5 pt-3 flex-shrink-0 flex gap-1 border-b border-gray-800">
-              {[["cliente", "1. Cliente"], ["itens", "2. Itens / Serviços"], ["pagamento", "3. Pagamento"]].map(([aba, label]) => (
+              {[["cliente", "1. Cliente"], ["itens", form.tipo === "NFSe" ? "2. Serviços" : "2. Produtos"], ["pagamento", "3. Pagamento"]].map(([aba, label]) => (
                 <button key={aba} onClick={() => setAbaForm(aba)}
                   className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-all -mb-px ${abaForm === aba ? "bg-gray-800 text-white border border-gray-700 border-b-gray-800" : "text-gray-500 hover:text-gray-300"}`}>
                   {label}
@@ -962,10 +977,20 @@ export default function NotasFiscais() {
               {/* ABA CLIENTE */}
               {abaForm === "cliente" && (
                 <div className="space-y-4">
+                  {form.tipo === "NFSe" && (
+                    <p className="text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2 mb-2">
+                      ⚠️ NFSe aceita apenas clientes com CPF/CNPJ cadastrado — CONSUMIDOR não é permitido
+                    </p>
+                  )}
+                  {form.tipo === "NFCe" && (
+                    <p className="text-xs text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2 mb-2">
+                      ℹ️ NFCe aceita CONSUMIDOR e clientes com CPF/CNPJ — lança apenas produtos
+                    </p>
+                  )}
                   <F label="Selecionar Cliente Cadastrado">
                     <select value={form.cliente_id} onChange={e => selecionarCliente(e.target.value)} className="input-dark">
                       <option value="">— Selecione ou preencha abaixo —</option>
-                      {clientes.map(c => <option key={c.id} value={c.id}>{c.nome} {c.cpf_cnpj ? `(${c.cpf_cnpj})` : ""}</option>)}
+                      {clientesFiltrados.map(c => <option key={c.id} value={c.id}>{c.nome} {c.cpf_cnpj ? `(${c.cpf_cnpj})` : ""}</option>)}
                     </select>
                   </F>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1024,7 +1049,7 @@ export default function NotasFiscais() {
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           <F label="Descrição" className="col-span-2 md:col-span-4">
-                            <input value={item.descricao} onChange={e => atualizarItem(idx, "descricao", e.target.value)} className="input-dark" placeholder="Ex: Troca de óleo, Alinhamento..." />
+                            <input value={item.descricao} onChange={e => atualizarItem(idx, "descricao", e.target.value)} className="input-dark" placeholder={form.tipo === "NFSe" ? "Ex: Troca de óleo, Alinhamento, Diagnóstico..." : "Ex: Filtro de óleo, Pastilha de freio, Pneu..."} />
                           </F>
                           <F label="Quantidade">
                             <input type="number" min="1" step="0.01" value={item.quantidade}
