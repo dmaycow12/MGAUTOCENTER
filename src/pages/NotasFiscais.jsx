@@ -203,10 +203,15 @@ export default function NotasFiscais() {
   }, []);
 
   const proximoNumero = (notasList, tipo) => {
+    if (tipo === 'NFCe') {
+      const cfgUltimo = configsNF.find(c => c.chave === 'nfce_ultimo_numero');
+      const ultimoSalvo = parseInt(cfgUltimo?.valor || '0', 10);
+      const nums = notasList.filter(n => n.tipo === 'NFCe').map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
+      const ultimoNota = nums.length > 0 ? Math.max(...nums) : 0;
+      return String(Math.max(ultimoSalvo, ultimoNota) + 1);
+    }
     const filtradas = notasList.filter(n => n.tipo === tipo);
-    const nums = filtradas
-      .map(n => parseInt(n.numero, 10))
-      .filter(n => !isNaN(n));
+    const nums = filtradas.map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
     return nums.length > 0 ? String(Math.max(...nums) + 1) : "1";
   };
 
@@ -215,6 +220,8 @@ export default function NotasFiscais() {
     const series = filtradas.map(n => parseInt(n.serie, 10)).filter(n => !isNaN(n));
     return series.length > 0 ? String(Math.max(...series)) : "1";
   };
+
+  const [configsNF, setConfigsNF] = useState([]);
 
   const load = async () => {
     const [n, c, configs, os, est, srv] = await Promise.all([
@@ -230,7 +237,7 @@ export default function NotasFiscais() {
     setOrdensVenda(os);
     setEstoque(est);
     setServicos(srv);
-    // Focus NFe usa variável de ambiente FOCUSNFE_API_KEY — sempre habilitado
+    setConfigsNF(configs);
     setTemSpedy(true);
     setLoading(false);
   };
