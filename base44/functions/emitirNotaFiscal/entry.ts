@@ -81,8 +81,9 @@ Deno.serve(async (req) => {
     }
 
     const agora = new Date();
-    const dataEmissaoFormatada = data_emissao || agora.toISOString().split('T')[0];
-    const horaEmissao = agora.toISOString().substring(11, 19);
+    const agoraBrasilia = new Date(agora.getTime() - 3 * 60 * 60 * 1000);
+    const dataEmissaoFormatada = data_emissao || agoraBrasilia.toISOString().split('T')[0];
+    const horaEmissao = agoraBrasilia.toISOString().substring(11, 19);
     const ref = `${tipo.toLowerCase()}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
     const formaPgtoCode = PAYMENT_MAP[forma_pagamento] || '01';
     const cpfCnpjLimpo = (cliente_cpf_cnpj || '').replace(/\D/g, '');
@@ -167,6 +168,16 @@ Deno.serve(async (req) => {
         ...(cpfCnpjLimpo && cpfCnpjLimpo.length === 11 ? { destinatario_cpf: cpfCnpjLimpo } : {}),
         ...(cpfCnpjLimpo && cpfCnpjLimpo.length === 14 ? { destinatario_cnpj: cpfCnpjLimpo } : {}),
         destinatario_nome: cliente_nome || 'Consumidor Final',
+        ...(cliente_email ? { destinatario_email: cliente_email } : {}),
+        ...(cliente_telefone ? { destinatario_telefone: cliente_telefone.replace(/\D/g, '') } : {}),
+        ...(cliente_endereco ? {
+          destinatario_logradouro: cliente_endereco,
+          destinatario_numero: cliente_numero || 'S/N',
+          destinatario_bairro: cliente_bairro || '',
+          destinatario_municipio: cliente_cidade || '',
+          destinatario_uf: cliente_estado || 'MG',
+          destinatario_cep: (cliente_cep || '').replace(/\D/g, ''),
+        } : {}),
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
           codigo_produto: it.codigo || `PROD${String(idx + 1).padStart(3, '0')}`,
