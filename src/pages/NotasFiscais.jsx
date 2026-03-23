@@ -850,7 +850,7 @@ export default function NotasFiscais() {
               </div>
               <p className="text-white font-semibold text-sm">{nota.cliente_nome || "—"}</p>
               <p className="text-gray-500 text-xs">Nº {nota.numero || "—"} • {nota.data_emissao || "—"}</p>
-              <p className="text-orange-400 font-bold">R$ {Number(nota.valor_total||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</p>
+              <p className="font-bold" style={{color:"#00ff00"}}>R$ {Number(nota.valor_total||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</p>
             </div>
           ))}
         </div>
