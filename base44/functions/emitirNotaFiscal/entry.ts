@@ -177,6 +177,8 @@ Deno.serve(async (req) => {
       ];
 
       const temCPFCNPJ = cpfCnpjLimpo && (cpfCnpjLimpo.length === 11 || cpfCnpjLimpo.length === 14);
+      const emailValido = cliente_email && cliente_email.includes('@');
+      const teleValido = cliente_telefone && cliente_telefone.replace(/\D/g, '').length >= 10;
 
       payload = {
         cnpj_emitente: cfgCnpj.replace(/\D/g, ''),
@@ -190,15 +192,15 @@ Deno.serve(async (req) => {
         ...(cpfCnpjLimpo && cpfCnpjLimpo.length === 11 ? { destinatario_cpf: cpfCnpjLimpo } : {}),
         ...(cpfCnpjLimpo && cpfCnpjLimpo.length === 14 ? { destinatario_cnpj: cpfCnpjLimpo } : {}),
         destinatario_nome: cliente_nome || 'Consumidor Final',
-        ...(temCPFCNPJ && cliente_email ? { destinatario_email: cliente_email } : {}),
-        ...(temCPFCNPJ && cliente_telefone ? { destinatario_telefone: cliente_telefone.replace(/\D/g, '') } : {}),
-        ...(temCPFCNPJ && cliente_endereco ? {
-          destinatario_logradouro: cliente_endereco,
-          destinatario_numero: cliente_numero || 'S/N',
-          destinatario_bairro: cliente_bairro || '',
-          destinatario_municipio: cliente_cidade || '',
-          destinatario_uf: (cliente_estado || 'MG').toUpperCase(),
-          destinatario_cep: (cliente_cep || '').replace(/\D/g, ''),
+        ...(temCPFCNPJ && emailValido ? { destinatario_email: cliente_email } : {}),
+        ...(temCPFCNPJ && teleValido ? { destinatario_telefone: cliente_telefone.replace(/\D/g, '') } : {}),
+        ...(temCPFCNPJ && cliente_endereco && cliente_endereco.trim() ? {
+          destinatario_logradouro: cliente_endereco.substring(0, 60),
+          destinatario_numero: (cliente_numero || 'S/N').substring(0, 60),
+          ...(cliente_bairro && cliente_bairro.trim() ? { destinatario_bairro: cliente_bairro.substring(0, 60) } : {}),
+          ...(cliente_cidade && cliente_cidade.trim() ? { destinatario_municipio: cliente_cidade.substring(0, 60) } : {}),
+          destinatario_uf: (cliente_estado || 'MG').toUpperCase().substring(0, 2),
+          ...(cliente_cep && cliente_cep.replace(/\D/g, '').length >= 8 ? { destinatario_cep: cliente_cep.replace(/\D/g, '').substring(0, 8) } : {}),
         } : {}),
         items: prodItems.map((it, idx) => {
           const qtd = Number(it.quantidade) || 1;
