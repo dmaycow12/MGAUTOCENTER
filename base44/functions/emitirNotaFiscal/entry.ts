@@ -72,12 +72,24 @@ Deno.serve(async (req) => {
       proximoNum = Math.max(ultimoSalvo, ultimoNota) + 1;
       serieUsada = (configs.find(c => c.chave === 'nfce_serie')?.valor || '1').padStart(3, '0');
     } else {
-      const nums = todasNotas
-        .filter(n => n.tipo === tipo)
-        .map(n => parseInt(n.numero, 10))
-        .filter(n => !isNaN(n));
-      proximoNum = nums.length > 0 ? Math.max(...nums) + 1 : 1;
-      serieUsada = (serie_manual || '1').padStart(3, '0');
+     // NFe/NFSe: usar configuração específica conforme ambiente
+     const ambiente = configs.find(c => c.chave === 'focusnfe_ambiente')?.valor || 'producao';
+     const isHomologacao = ambiente === 'homologacao';
+
+     const chaveNumero = isHomologacao ? 'nfe_ultimo_numero' : 'nfce_ultimo_numero';
+     const chaveSerie = isHomologacao ? 'nfe_serie' : 'nfce_serie';
+
+     const cfgUltimo = configs.find(c => c.chave === chaveNumero);
+     const ultimoSalvo = parseInt(cfgUltimo?.valor || '0', 10);
+
+     const nums = todasNotas
+       .filter(n => n.tipo === tipo)
+       .map(n => parseInt(n.numero, 10))
+       .filter(n => !isNaN(n));
+     const ultimoNota = nums.length > 0 ? Math.max(...nums) : 0;
+     proximoNum = Math.max(ultimoSalvo, ultimoNota) + 1;
+
+     serieUsada = (configs.find(c => c.chave === chaveSerie)?.valor || '1').padStart(3, '0');
     }
 
     const agora = new Date();
