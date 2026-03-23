@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
     const {
-      nota_id, serie_manual, tipo,
+      nota_id, tipo,
       cliente_id, cliente_nome, cliente_cpf_cnpj, cliente_email, cliente_telefone,
       cliente_endereco, cliente_numero, cliente_bairro, cliente_cep, cliente_cidade, cliente_estado,
       ordem_servico_id, items, valor_total, forma_pagamento, observacoes, data_emissao,
@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     const ambiente = configs.find(c => c.chave === 'focusnfe_ambiente')?.valor || 'producao';
 
     if (!apiKey) {
-      return Response.json({ sucesso: false, erro: 'Chave API Focus NFe não configurada.' }, { status: 400 });
+      return Response.json({ sucesso: false, erro: 'Chave API Focus NFe não configurada. Acesse Configurações e salve a chave FOCUSNFE_API_KEY.' }, { status: 400 });
     }
 
     const baseUrl = ambiente === 'homologacao'
@@ -45,11 +45,30 @@ Deno.serve(async (req) => {
       : 'https://api.focusnfe.com.br/v2';
 
     const authHeader = 'Basic ' + btoa(apiKey + ':');
-    const ref = `${tipo}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
     const cpfCnpj = (cliente_cpf_cnpj || '').replace(/\D/g, '') || null;
-    const serieNum = parseInt(serie_manual || '1', 10) || 1;
     const dataEmissao = data_emissao || new Date().toISOString().split('T')[0];
+
+    // 2. Calcula próximo número ANTES de montar o payload (precisamos dele no payload)
+    const todasNotas = await base44.asServiceRole.entities.NotaFiscal.list('-created_date', 200);
+    let proximoNum;
+    let serieUsada;
+
+    if (tipo === 'NFCe') {
+      const cfgUltimoNFCe = configs.find(c => c.chave === 'nfce_ultimo_numero');
+      const ultimoSalvo = parseInt(cfgUltimoNFCe?.valor || '0', 10);
+      const numsNFCe = todasNotas.filter(n => n.tipo === 'NFCe').map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
+      const ultimoNota = numsNFCe.length > 0 ? Math.max(...numsNFCe) : 0;
+      proximoNum = Math.max(ultimoSalvo, ultimoNota) + 1;
+      serieUsada = configs.find(c => c.chave === 'nfce_serie')?.valor || '1';
+    } else {
+      const nums = todasNotas.filter(n => n.tipo === tipo).map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
+      proximoNum = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+      // serie_manual vem do payload (campo Série no form)
+      serieUsada = body.serie_manual || '1';
+    }
+
+    const ref = `${tipo.toLowerCase()}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
     let endpoint = '';
     let payload = {};
@@ -64,9 +83,7 @@ Deno.serve(async (req) => {
         { descricao: observacoes || 'Serviços', quantidade: 1, valor_unitario: Number(valor_total), valor_total: Number(valor_total) }
       ];
 
-      // Pega dados do emitente das configurações
       const cfgCnpjEmit = configs.find(c => c.chave === 'cnpj')?.valor || '';
-      const cfgCidadeEmit = configs.find(c => c.chave === 'cidade')?.valor || '';
       const cfgCodigoMun = configs.find(c => c.chave === 'codigo_municipio')?.valor || '';
       const cfgCodigoServico = configs.find(c => c.chave === 'codigo_servico')?.valor || '07498';
       const cfgAliquota = parseFloat(configs.find(c => c.chave === 'aliquota_iss')?.valor || '2.0');
@@ -75,7 +92,7 @@ Deno.serve(async (req) => {
         data_emissao: dataEmissao,
         prestador: {
           cnpj: cfgCnpjEmit.replace(/\D/g, ''),
-          codigo_municipio: cfgCodigoMun || undefined,
+          ...(cfgCodigoMun ? { codigo_municipio: cfgCodigoMun } : {}),
         },
         tomador: {
           ...(cpfCnpj && cpfCnpj.length === 11 ? { cpf: cpfCnpj } : {}),
@@ -88,8 +105,8 @@ Deno.serve(async (req) => {
               logradouro: cliente_endereco,
               numero: cliente_numero || 'S/N',
               bairro: cliente_bairro || '',
-              codigo_municipio: cfgCodigoMun || undefined,
-              nome_municipio: cliente_cidade || cfgCidadeEmit || '',
+              ...(cfgCodigoMun ? { codigo_municipio: cfgCodigoMun } : {}),
+              nome_municipio: cliente_cidade || '',
               cep: (cliente_cep || '').replace(/\D/g, ''),
               uf: cliente_estado || 'MG',
             }
@@ -102,7 +119,7 @@ Deno.serve(async (req) => {
           valor_total: Number(it.valor_total) || 0,
           codigo_servico: cfgCodigoServico,
           aliquota_iss: cfgAliquota,
-          iss_retido: '2', // 2 = não retido
+          iss_retido: '2',
           ...(observacoes ? { discriminacao: observacoes } : {}),
         })),
         ...(observacoes ? { observacoes } : {}),
@@ -118,36 +135,38 @@ Deno.serve(async (req) => {
         { descricao: observacoes || 'Produtos', quantidade: 1, valor_unitario: Number(valor_total), valor_total: Number(valor_total) }
       ];
 
-      const cfgCnpjEmitNFCe = configs.find(c => c.chave === 'cnpj')?.valor || '';
-      const nfceToken = configs.find(c => c.chave === 'nfce_token')?.valor || '';
-      const nfceCsc = configs.find(c => c.chave === 'nfce_csc')?.valor || '';
+      const cfgCnpjEmit = configs.find(c => c.chave === 'cnpj')?.valor || '';
+      // Focus NFe: csc_token = Token ID (6 dígitos), csc = código CSC
+      const nfceToken = (configs.find(c => c.chave === 'nfce_token')?.valor || '').trim();
+      const nfceCsc = (configs.find(c => c.chave === 'nfce_csc')?.valor || '').trim();
       const nfceVersao = configs.find(c => c.chave === 'nfce_versao')?.valor || '4.00';
       const formaPgto = PAYMENT_MAP[forma_pagamento] || '01';
 
       payload = {
-        cnpj_emitente: cfgCnpjEmitNFCe.replace(/\D/g, ''),
+        cnpj_emitente: cfgCnpjEmit.replace(/\D/g, ''),
+        numero: String(proximoNum),
+        serie: String(parseInt(serieUsada, 10) || 1),
         data_emissao: `${dataEmissao}T12:00:00-03:00`,
-        serie: String(serieNum),
         modalidade_frete: '9',
-        ...(nfceToken ? { csc_token: nfceToken } : {}),
-        ...(nfceCsc ? { csc_codigo: nfceCsc } : {}),
-        versao: nfceVersao,
-        ...(cpfCnpj ? { destinatario_cpf_cnpj: cpfCnpj, destinatario_nome: cliente_nome || 'Consumidor Final' } : {}),
         presenca_comprador: '1',
+        // CSC Token para geração do QR Code (obrigatório para NFC-e)
+        csc_token: nfceToken.padStart(6, '0'),
+        csc: nfceCsc,
+        ...(cpfCnpj ? { destinatario_cpf: cpfCnpj.length === 11 ? cpfCnpj : undefined, destinatario_cnpj: cpfCnpj.length === 14 ? cpfCnpj : undefined, destinatario_nome: cliente_nome || 'Consumidor Final' } : {}),
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
           codigo_produto: it.codigo || `PROD-${String(idx + 1).padStart(3, '0')}`,
           descricao: (it.descricao || `Produto ${idx + 1}`).substring(0, 120),
-          codigo_ncm: (it.ncm || '87089990').replace(/\D/g, '').padEnd(8, '0').substring(0, 8),
+          codigo_ncm: (it.ncm || '87089990').replace(/\D/g, '').padStart(8, '0').substring(0, 8),
           cfop: it.cfop || '5102',
           ...(it.cest ? { codigo_cest: it.cest } : {}),
           unidade_comercial: it.unidade || 'UN',
           quantidade_comercial: Number(it.quantidade) || 1,
-          valor_unitario_comercial: Number(it.valor_unitario) || Number(it.valor_total) || 0,
+          valor_unitario_comercial: Number(it.valor_unitario) || 0,
           valor_bruto: Number(it.valor_total) || 0,
           unidade_tributavel: it.unidade || 'UN',
           quantidade_tributavel: Number(it.quantidade) || 1,
-          valor_unitario_tributavel: Number(it.valor_unitario) || Number(it.valor_total) || 0,
+          valor_unitario_tributavel: Number(it.valor_unitario) || 0,
           icms_situacao_tributaria: '400',
           icms_origem: '0',
           pis_situacao_tributaria: '07',
@@ -155,81 +174,79 @@ Deno.serve(async (req) => {
         })),
         formas_pagamento: [{
           forma_pagamento: formaPgto,
-          valor_pagamento: Number(valor_total),
+          valor_pagamento: String(Number(valor_total).toFixed(2)),
         }],
-        ...(observacoes ? { informacoes_adicionais_contribuinte: observacoes } : {}),
+        ...(observacoes ? { informacoes_adicionais_contribuinte: observacoes.substring(0, 500) } : {}),
       };
 
     // ─────────────────────────────────────────────
     // NFe — Nota Fiscal Eletrônica (produtos)
     // ─────────────────────────────────────────────
     } else {
-    endpoint = `/nfe?ref=${ref}`;
+      endpoint = `/nfe?ref=${ref}`;
 
-    const prodItems = (items && items.length > 0) ? items : [
-      { descricao: observacoes || 'Produtos', quantidade: 1, valor_unitario: Number(valor_total), valor_total: Number(valor_total) }
-    ];
+      const prodItems = (items && items.length > 0) ? items : [
+        { descricao: observacoes || 'Produtos', quantidade: 1, valor_unitario: Number(valor_total), valor_total: Number(valor_total) }
+      ];
 
-    const cfgCnpjEmitNFe = configs.find(c => c.chave === 'cnpj')?.valor || '';
-    const formaPgto = PAYMENT_MAP[forma_pagamento] || '01';
+      const cfgCnpjEmit = configs.find(c => c.chave === 'cnpj')?.valor || '';
+      const formaPgto = PAYMENT_MAP[forma_pagamento] || '01';
 
-    payload = {
-      cnpj_emitente: cfgCnpjEmitNFe.replace(/\D/g, ''),
-      natureza_operacao: 'Venda de mercadoria',
-      data_emissao: `${dataEmissao}T12:00:00-03:00`,
-      data_saida_entrada: `${dataEmissao}T12:00:00-03:00`,
-      tipo_documento: '1',
-      finalidade_emissao: '1',
-      serie: String(serieNum),
-      indicador_presenca: '1',
-      ...(cpfCnpj && cpfCnpj.length === 11
-        ? { destinatario_cpf: cpfCnpj }
-        : cpfCnpj && cpfCnpj.length === 14
-          ? { destinatario_cnpj: cpfCnpj }
-          : {}),
-      destinatario_nome: cliente_nome || 'Consumidor Final',
-      destinatario_indicador_ie: '9',
-      ...(cliente_email ? { destinatario_email: cliente_email } : {}),
-      ...(cliente_endereco ? {
-        destinatario_logradouro: cliente_endereco,
-        destinatario_numero: cliente_numero || 'S/N',
-        destinatario_bairro: cliente_bairro || '',
-        destinatario_municipio: cliente_cidade || '',
-        destinatario_uf: cliente_estado || 'MG',
-        destinatario_cep: (cliente_cep || '').replace(/\D/g, ''),
-        destinatario_pais: '1058',
-        destinatario_telefone: cliente_telefone ? cliente_telefone.replace(/\D/g, '') : undefined,
-      } : {}),
-      items: prodItems.map((it, idx) => ({
-        numero_item: idx + 1,
-        codigo_produto: it.codigo || `PROD-${String(idx + 1).padStart(3, '0')}`,
-        descricao: (it.descricao || `Produto ${idx + 1}`).substring(0, 120),
-        codigo_ncm: (it.ncm || '87089990').replace(/\D/g, '').padEnd(8, '0').substring(0, 8),
-        cfop: it.cfop || '5405',
-        ...(it.cest ? { codigo_cest: it.cest } : {}),
-        unidade_comercial: it.unidade || 'UN',
-        quantidade_comercial: Number(it.quantidade) || 1,
-        valor_unitario_comercial: Number(it.valor_unitario) || Number(it.valor_total) || 0,
-        valor_bruto: Number(it.valor_total) || 0,
-        unidade_tributavel: it.unidade || 'UN',
-        quantidade_tributavel: Number(it.quantidade) || 1,
-        valor_unitario_tributavel: Number(it.valor_unitario) || Number(it.valor_total) || 0,
-        icms_situacao_tributaria: '400',
-        icms_origem: '0',
-        pis_situacao_tributaria: '07',
-        cofins_situacao_tributaria: '07',
-      })),
-      formas_pagamento: [{
-        forma_pagamento: formaPgto,
-        valor_pagamento: Number(valor_total),
-      }],
-      ...(observacoes ? { informacoes_adicionais_contribuinte: observacoes } : {}),
-    };
+      payload = {
+        cnpj_emitente: cfgCnpjEmit.replace(/\D/g, ''),
+        numero: String(proximoNum),
+        serie: String(parseInt(serieUsada, 10) || 1),
+        natureza_operacao: 'Venda de mercadoria',
+        data_emissao: `${dataEmissao}T12:00:00-03:00`,
+        data_saida_entrada: `${dataEmissao}T12:00:00-03:00`,
+        tipo_documento: '1',
+        finalidade_emissao: '1',
+        indicador_presenca: '1',
+        ...(cpfCnpj && cpfCnpj.length === 11 ? { destinatario_cpf: cpfCnpj } : {}),
+        ...(cpfCnpj && cpfCnpj.length === 14 ? { destinatario_cnpj: cpfCnpj } : {}),
+        destinatario_nome: cliente_nome || 'Consumidor Final',
+        destinatario_indicador_ie: '9',
+        ...(cliente_email ? { destinatario_email: cliente_email } : {}),
+        ...(cliente_endereco ? {
+          destinatario_logradouro: cliente_endereco,
+          destinatario_numero: cliente_numero || 'S/N',
+          destinatario_bairro: cliente_bairro || '',
+          destinatario_municipio: cliente_cidade || '',
+          destinatario_uf: cliente_estado || 'MG',
+          destinatario_cep: (cliente_cep || '').replace(/\D/g, ''),
+          destinatario_pais: '1058',
+          ...(cliente_telefone ? { destinatario_telefone: cliente_telefone.replace(/\D/g, '') } : {}),
+        } : {}),
+        items: prodItems.map((it, idx) => ({
+          numero_item: idx + 1,
+          codigo_produto: it.codigo || `PROD-${String(idx + 1).padStart(3, '0')}`,
+          descricao: (it.descricao || `Produto ${idx + 1}`).substring(0, 120),
+          codigo_ncm: (it.ncm || '87089990').replace(/\D/g, '').padStart(8, '0').substring(0, 8),
+          cfop: it.cfop || '5405',
+          ...(it.cest ? { codigo_cest: it.cest } : {}),
+          unidade_comercial: it.unidade || 'UN',
+          quantidade_comercial: Number(it.quantidade) || 1,
+          valor_unitario_comercial: Number(it.valor_unitario) || 0,
+          valor_bruto: Number(it.valor_total) || 0,
+          unidade_tributavel: it.unidade || 'UN',
+          quantidade_tributavel: Number(it.quantidade) || 1,
+          valor_unitario_tributavel: Number(it.valor_unitario) || 0,
+          icms_situacao_tributaria: '400',
+          icms_origem: '0',
+          pis_situacao_tributaria: '07',
+          cofins_situacao_tributaria: '07',
+        })),
+        formas_pagamento: [{
+          forma_pagamento: formaPgto,
+          valor_pagamento: String(Number(valor_total).toFixed(2)),
+        }],
+        ...(observacoes ? { informacoes_adicionais_contribuinte: observacoes.substring(0, 500) } : {}),
+      };
     }
 
-    // 2. Envia para Focus NFe
-    console.log(`[${tipo}] Enviando para Focus NFe:`, endpoint);
-    console.log('Payload:', JSON.stringify(payload, null, 2));
+    // 3. Envia para Focus NFe
+    console.log(`[${tipo}] ref=${ref} numero=${proximoNum} serie=${serieUsada}`);
+    console.log('Payload enviado:', JSON.stringify(payload, null, 2));
 
     const resp = await fetch(`${baseUrl}${endpoint}`, {
       method: 'POST',
@@ -241,37 +258,28 @@ Deno.serve(async (req) => {
     });
 
     const rawText = await resp.text();
-    console.log(`Focus NFe status: ${resp.status}`);
-    console.log(`Focus NFe response: ${rawText.substring(0, 800)}`);
+    console.log(`Focus NFe HTTP status: ${resp.status}`);
+    console.log(`Focus NFe resposta: ${rawText.substring(0, 1000)}`);
 
     let result = {};
     try { result = JSON.parse(rawText); } catch (_) { result = { raw: rawText }; }
 
     if (!resp.ok) {
       const erros = result.erros?.map(e => e.mensagem || JSON.stringify(e)).join('; ')
-        || result.mensagem || rawText.substring(0, 400);
-      return Response.json({ sucesso: false, erro: `Erro Focus NFe (${resp.status}): ${erros}`, detalhes: result }, { status: 400 });
-    }
-
-    // 3. Sequência numérica por tipo — usa config nfce_ultimo_numero para NFCe
-    const todasNotas = await base44.asServiceRole.entities.NotaFiscal.list('-created_date', 200);
-    let proximoNum;
-    if (tipo === 'NFCe') {
-      const cfgUltimoNFCe = configs.find(c => c.chave === 'nfce_ultimo_numero');
-      const ultimoSalvo = parseInt(cfgUltimoNFCe?.valor || '0', 10);
-      const numsNFCe = todasNotas.filter(n => n.tipo === 'NFCe').map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
-      const ultimoNota = numsNFCe.length > 0 ? Math.max(...numsNFCe) : 0;
-      proximoNum = Math.max(ultimoSalvo, ultimoNota) + 1;
-    } else {
-      const nums = todasNotas.filter(n => n.tipo === tipo).map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
-      proximoNum = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+        || result.mensagem || rawText.substring(0, 500);
+      return Response.json({
+        sucesso: false,
+        erro: `Erro Focus NFe (${resp.status}): ${erros}`,
+        detalhes: result,
+        payload_enviado: payload,
+      }, { status: 400 });
     }
 
     // 4. Salva no banco
     const notaData = {
       tipo,
       numero: String(proximoNum),
-      serie: String(serieNum),
+      serie: String(serieUsada),
       status: 'Emitida',
       cliente_id: cliente_id || '',
       cliente_nome: cliente_nome || '',
@@ -291,7 +299,7 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.NotaFiscal.create(notaData);
     }
 
-    // Atualiza nfce_ultimo_numero nas configurações
+    // 5. Atualiza nfce_ultimo_numero nas configurações
     if (tipo === 'NFCe') {
       const cfgUltimoNFCe = configs.find(c => c.chave === 'nfce_ultimo_numero');
       if (cfgUltimoNFCe?.id) {
@@ -305,12 +313,13 @@ Deno.serve(async (req) => {
       sucesso: true,
       ref,
       numero: String(proximoNum),
+      serie: String(serieUsada),
       status: result.status || 'processando',
-      mensagem: `${tipo} nº ${proximoNum} (série ${serieNum}) enfileirada no Focus NFe. Status: ${result.status || 'processando'}`,
+      mensagem: `${tipo} nº ${proximoNum} (série ${serieUsada}) enviada ao Focus NFe. Status: ${result.status || 'processando'}`,
     });
 
   } catch (error) {
-    console.error('Erro emitirNotaFiscal:', error.message);
+    console.error('Erro emitirNotaFiscal:', error.message, error.stack);
     return Response.json({ sucesso: false, erro: error.message }, { status: 500 });
   }
 });
