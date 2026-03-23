@@ -152,6 +152,26 @@ Deno.serve(async (req) => {
       const nfceToken = configs.find(c => c.chave === 'nfce_token')?.valor?.trim() || '';
       const nfceCsc = configs.find(c => c.chave === 'nfce_csc')?.valor?.trim() || '';
 
+      // Validar configurações obrigatórias
+      if (!cfgCnpj || cfgCnpj.replace(/\D/g, '').length !== 14) {
+        return Response.json(
+          { sucesso: false, erro: 'CNPJ da empresa não configurado ou inválido' },
+          { status: 400 }
+        );
+      }
+      if (!nfceToken || nfceToken.length < 6) {
+        return Response.json(
+          { sucesso: false, erro: 'Token NFCe não configurado (nfce_token)' },
+          { status: 400 }
+        );
+      }
+      if (!nfceCsc || nfceCsc.length < 4) {
+        return Response.json(
+          { sucesso: false, erro: 'CSC NFCe não configurado (nfce_csc)' },
+          { status: 400 }
+        );
+      }
+
       const prodItems = (items && items.length > 0) ? items : [
         { descricao: observacoes || 'Produtos', quantidade: 1, valor_unitario: Number(valor_total), valor_total: Number(valor_total), ncm: '87089990', unidade: 'UN' }
       ];
