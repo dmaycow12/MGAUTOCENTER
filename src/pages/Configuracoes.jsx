@@ -4,11 +4,11 @@ import { Settings, Save, CheckCircle, Plus, X, UserPlus, LogOut, AlertCircle, Us
 
 export default function Configuracoes() {
   const CHAVES = ["nome_oficina", "cnpj", "telefone", "email", "endereco", "cidade", "estado", "cep",
-    "spedy_api_key", "spedy_ambiente", "logo_url", "observacoes_padrao", "proximo_numero_os"];
+    "focusnfe_ambiente", "codigo_municipio", "codigo_servico", "aliquota_iss", "logo_url", "observacoes_padrao", "proximo_numero_os"];
 
   const [config, setConfig] = useState({
     nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
-    spedy_api_key: "", spedy_ambiente: "homologacao",
+    focusnfe_ambiente: "producao", codigo_municipio: "", codigo_servico: "07498", aliquota_iss: "2.0",
     logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
   });
   const [salvando, setSalvando] = useState(false);
@@ -34,7 +34,7 @@ export default function Configuracoes() {
 
     const c = {
       nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
-      spedy_api_key: "", spedy_ambiente: "homologacao",
+      focusnfe_ambiente: "producao", codigo_municipio: "", codigo_servico: "07498", aliquota_iss: "2.0",
       logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
     };
     const ids = {};
@@ -200,29 +200,24 @@ export default function Configuracoes() {
         </F>
       </Section>
 
-      {/* Spedy */}
-      <Section title="Integração Spedy — Notas Fiscais" icon={null}>
-        {!config.spedy_api_key && (
-          <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-4 mb-4 text-sm text-yellow-300 flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span>Chave API da Spedy não configurada. Insira abaixo para habilitar a emissão de notas fiscais. Consulte: <a href="https://docs.spedy.com.br" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-200">docs.spedy.com.br</a></span>
-          </div>
-        )}
+      {/* Focus NFe */}
+      <Section title="Integração Focus NFe — Notas Fiscais" icon={null}>
+        <p className="text-xs text-gray-400 mb-4">A chave API (<code className="text-green-400">FOCUSNFE_API_KEY</code>) está configurada como variável de ambiente segura. Aqui você define os parâmetros fiscais da emissão.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <F label="Chave API Spedy" className="col-span-1 md:col-span-2">
-            <input
-              type="password"
-              value={config.spedy_api_key}
-              onChange={e => setConfig({ ...config, spedy_api_key: e.target.value })}
-              className="input-dark"
-              placeholder="Insira sua chave API Spedy"
-            />
-          </F>
           <F label="Ambiente">
-            <select value={config.spedy_ambiente} onChange={e => setConfig({ ...config, spedy_ambiente: e.target.value })} className="input-dark">
-              <option value="homologacao">Homologação (Teste)</option>
+            <select value={config.focusnfe_ambiente} onChange={e => setConfig({ ...config, focusnfe_ambiente: e.target.value })} className="input-dark">
               <option value="producao">Produção</option>
+              <option value="homologacao">Homologação (Teste)</option>
             </select>
+          </F>
+          <F label="Código do Município (IBGE)">
+            <input value={config.codigo_municipio} onChange={e => setConfig({ ...config, codigo_municipio: e.target.value })} className="input-dark" placeholder="Ex: 3147907 (Patos de Minas)" />
+          </F>
+          <F label="Código do Serviço (LC116) — NFSe">
+            <input value={config.codigo_servico} onChange={e => setConfig({ ...config, codigo_servico: e.target.value })} className="input-dark" placeholder="Ex: 07498" />
+          </F>
+          <F label="Alíquota ISS (%) — NFSe">
+            <input value={config.aliquota_iss} onChange={e => setConfig({ ...config, aliquota_iss: e.target.value })} className="input-dark" placeholder="Ex: 2.0" />
           </F>
         </div>
       </Section>
