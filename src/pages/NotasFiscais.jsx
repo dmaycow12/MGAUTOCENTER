@@ -119,24 +119,70 @@ export default function NotasFiscais() {
       if (params.get("emitir") === "1") {
         const tipo = params.get("tipo") || "NFSe";
         const os_id = params.get("os_id") || "";
-        const os_numero = params.get("os_numero") || "";
         const cliente_id = params.get("cliente_id") || "";
         const cliente_nome = decodeURIComponent(params.get("cliente_nome") || "");
-        const valor = parseFloat(params.get("valor") || "0");
-        const descItem = tipo === "NFSe" ? `Serviços OS #${os_numero}` : `Produtos OS #${os_numero}`;
+        window.history.replaceState({}, "", window.location.pathname);
+
+        // Busca a OS completa para pegar itens individuais
+        let items = [defaultItem()];
+        let valor_total = 0;
+        let clienteExtra = {};
+        if (os_id) {
+          try {
+            const osData = await base44.entities.OrdemServico.filter({ id: os_id }, "-created_date", 1);
+            const os = osData[0];
+            if (os) {
+              // Dados extras do cliente da OS
+              clienteExtra = {
+                cliente_cpf_cnpj: os.cliente_cpf_cnpj || "",
+                cliente_email: os.cliente_email || "",
+                cliente_telefone: os.cliente_telefone || "",
+                cliente_endereco: os.cliente_endereco || "",
+                cliente_bairro: os.cliente_bairro || "",
+                cliente_cidade: os.cliente_cidade || "",
+                cliente_estado: os.cliente_estado || "",
+              };
+              if (tipo === "NFSe") {
+                // Pega cada serviço individualmente
+                const servicos = os.servicos || [];
+                if (servicos.length > 0) {
+                  items = servicos.map(s => ({
+                    descricao: s.descricao || "",
+                    quantidade: Number(s.quantidade ?? 1),
+                    valor_unitario: Number(s.valor || 0),
+                    valor_total: Number(s.valor || 0) * Number(s.quantidade ?? 1),
+                  }));
+                }
+                valor_total = items.reduce((sum, it) => sum + it.valor_total, 0);
+              } else {
+                // NFCe / NFe — pega cada peça individualmente
+                const pecas = os.pecas || [];
+                if (pecas.length > 0) {
+                  items = pecas.map(p => ({
+                    descricao: p.descricao || "",
+                    quantidade: Number(p.quantidade || 1),
+                    valor_unitario: Number(p.valor_unitario || 0),
+                    valor_total: Number(p.valor_total || 0),
+                  }));
+                }
+                valor_total = items.reduce((sum, it) => sum + it.valor_total, 0);
+              }
+            }
+          } catch {}
+        }
+
         setForm({
           ...defaultForm(),
           tipo,
           ordem_servico_id: os_id,
           cliente_id,
           cliente_nome,
-          valor_total: valor,
-          items: [{ descricao: descItem, quantidade: 1, valor_unitario: valor, valor_total: valor }],
+          ...clienteExtra,
+          valor_total,
+          items,
         });
         setAbaForm("cliente");
         setShowForm(true);
-        // Limpa os parâmetros da URL sem recarregar
-        window.history.replaceState({}, "", window.location.pathname);
       }
     });
   }, []);
