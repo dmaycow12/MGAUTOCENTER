@@ -369,7 +369,6 @@ export default function NotasFiscais() {
   };
 
   const emitirNota = async (rascunhoNota = null) => {
-    const editId = form._editId || null;
     const f = rascunhoNota ? {
       ...defaultForm(),
       tipo: rascunhoNota.tipo,
@@ -379,7 +378,7 @@ export default function NotasFiscais() {
       valor_total: rascunhoNota.valor_total,
       observacoes: rascunhoNota.observacoes,
       data_emissao: rascunhoNota.data_emissao,
-      items: [{ descricao: rascunhoNota.observacoes || "Serviços", quantidade: 1, valor_unitario: rascunhoNota.valor_total, valor_total: rascunhoNota.valor_total }],
+      items: [{ descricao: rascunhoNota.observacoes || 'Serviços', quantidade: 1, valor_unitario: rascunhoNota.valor_total, valor_total: rascunhoNota.valor_total }],
     } : form;
 
     if (!f.cliente_nome) return alert("Informe o nome do cliente.");
@@ -399,7 +398,19 @@ export default function NotasFiscais() {
     else setEmitindo(true);
 
     try {
-      const payload = { ...f, nota_id: rascunhoNota?.id || form._editId || null, serie_manual: f.serie || "1" };
+      const payload = {
+        ...f,
+        nota_id: rascunhoNota?.id || form._editId || null,
+        serie_manual: f.serie || '1',
+        // garante que items sempre tem valor_unitario correto
+        items: f.items.map(it => ({
+          ...it,
+          valor_unitario: Number(it.valor_unitario) || (Number(it.valor_total) / (Number(it.quantidade) || 1)),
+          quantidade: Number(it.quantidade) || 1,
+          valor_total: Number(it.valor_total) || 0,
+        })),
+        valor_total: Number(f.valor_total) || 0,
+      };
       const response = await base44.functions.invoke("emitirNotaFiscal", payload);
 
       if (response.data?.sucesso) {
@@ -930,8 +941,8 @@ export default function NotasFiscais() {
             <div className="flex items-center justify-between p-5 border-b border-gray-800 flex-shrink-0">
               <div>
                 <h2 className="text-white font-semibold text-lg">Emitir Nota Fiscal</h2>
-                {!temSpedy && <p className="text-yellow-400 text-xs mt-0.5">⚠️ Spedy não configurada — será salvo como rascunho</p>}
-                {temSpedy && <p className="text-green-400 text-xs mt-0.5">✓ Spedy configurada — será transmitida automaticamente</p>}
+                {!temSpedy && <p className="text-yellow-400 text-xs mt-0.5">⚠️ Focus NFe não configurada — será salvo como rascunho</p>}
+                {temSpedy && <p className="text-green-400 text-xs mt-0.5">✓ Focus NFe configurada — será transmitida automaticamente</p>}
               </div>
               <button onClick={() => setShowForm(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
             </div>
