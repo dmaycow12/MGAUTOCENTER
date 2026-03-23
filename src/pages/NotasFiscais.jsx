@@ -940,8 +940,8 @@ export default function NotasFiscais() {
                   <option value="NFCe">NFCe — Consumidor</option>
                 </select>
               </F>
-              <F label="Série">
-                <NoACInput value={form.serie} onChange={e => setForm(f => ({ ...f, serie: e.target.value }))} placeholder="1" />
+              <F label="Número">
+                <NoACInput value={form.numero} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} placeholder="1" />
               </F>
               <F label="Data de Emissão">
                 <input type="date" value={form.data_emissao} onChange={e => setForm(f => ({ ...f, data_emissao: e.target.value }))} className="input-dark" />
