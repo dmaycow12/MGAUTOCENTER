@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import {
   FileText, Plus, Upload, Search, Trash2, Eye, X,
-  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2
+  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2, Pencil
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import JSZip from "jszip";
@@ -362,6 +362,7 @@ export default function NotasFiscais() {
   };
 
   const emitirNota = async (rascunhoNota = null) => {
+    const editId = form._editId || null;
     const f = rascunhoNota ? {
       ...defaultForm(),
       tipo: rascunhoNota.tipo,
@@ -391,7 +392,7 @@ export default function NotasFiscais() {
     else setEmitindo(true);
 
     try {
-      const payload = { ...f, nota_id: rascunhoNota?.id || null, serie_manual: f.serie || "1" };
+      const payload = { ...f, nota_id: rascunhoNota?.id || form._editId || null, serie_manual: f.serie || "1" };
       const response = await base44.functions.invoke("emitirNotaFiscal", payload);
 
       if (response.data?.sucesso) {
@@ -416,6 +417,26 @@ export default function NotasFiscais() {
     }
     setEmitindo(false);
     setTransmitindo(null);
+  };
+
+  const editarNota = (nota) => {
+    setForm({
+      ...defaultForm(),
+      tipo: nota.tipo || 'NFSe',
+      numero: nota.numero || '',
+      serie: nota.serie || '1',
+      data_emissao: nota.data_emissao || new Date().toISOString().split('T')[0],
+      cliente_id: nota.cliente_id || '',
+      cliente_nome: nota.cliente_nome || '',
+      ordem_servico_id: nota.ordem_servico_id || '',
+      valor_total: nota.valor_total || 0,
+      observacoes: nota.observacoes || '',
+      forma_pagamento: 'PIX',
+      items: nota.xml_content ? (() => { try { const p = JSON.parse(nota.xml_content); if (Array.isArray(p) && p.length > 0) return p.map(i => ({ descricao: i.descricao || '', quantidade: i.quantidade || 1, valor_unitario: i.valor_unitario || 0, valor_total: i.valor_total || 0, ncm: i.ncm || '', cfop: i.cfop || '', cest: i.cest || '', unidade: i.unidade || 'UN', codigo: i.codigo || '' })); } catch {} return [defaultItem()]; })() : [defaultItem()],
+      _editId: nota.id,
+    });
+    setAbaForm('cliente');
+    setShowForm(true);
   };
 
   const salvarRascunho = async () => {
@@ -765,6 +786,7 @@ export default function NotasFiscais() {
                   <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${STATUS_COLOR[nota.status]||"bg-gray-500/10 text-gray-400"}`}>{nota.status}</span>
                 </div>
                 <div className="flex gap-1">
+                  <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>
                   <button onClick={() => imprimirNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Printer className="w-3.5 h-3.5"/></button>
                   <button onClick={() => excluir(nota.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
                 </div>
@@ -819,6 +841,9 @@ export default function NotasFiscais() {
                             <Download className="w-4 h-4" />
                           </a>
                         )}
+                        <button title="Editar" onClick={() => editarNota(nota)} className="p-1 text-gray-500 hover:text-yellow-400 transition-all">
+                          <Pencil className="w-4 h-4" />
+                        </button>
                         <button title="Imprimir" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
                           <Printer className="w-4 h-4" />
                         </button>
@@ -1049,15 +1074,31 @@ export default function NotasFiscais() {
                           <F label="Descrição" className="col-span-2 md:col-span-4">
                               <NoACInput value={item.descricao} onChange={e => atualizarItem(idx, "descricao", e.target.value)} placeholder={form.tipo === "NFSe" ? "Ex: Troca de óleo, Alinhamento..." : "Ex: Filtro de óleo, Pastilha de freio..."} />
                             </F>
-                          <F label="Quantidade">
-                            <NoACInput value={item.quantidade} onChange={e => atualizarItem(idx, "quantidade", e.target.value)} placeholder="1" />
-                          </F>
-                          <F label="Valor Unitário (R$)">
-                            <NoACInput value={item.valor_unitario} onChange={e => atualizarItem(idx, "valor_unitario", e.target.value)} placeholder="0" />
-                          </F>
-                          <F label="Total (R$)" className="col-span-2">
-                            <NoACInput value={item.valor_total} onChange={e => atualizarItem(idx, "valor_total", e.target.value)} placeholder="0" />
-                          </F>
+                           <F label="Quantidade">
+                             <NoACInput value={item.quantidade} onChange={e => atualizarItem(idx, "quantidade", e.target.value)} placeholder="1" />
+                           </F>
+                           <F label="Valor Unitário (R$)">
+                             <NoACInput value={item.valor_unitario} onChange={e => atualizarItem(idx, "valor_unitario", e.target.value)} placeholder="0" />
+                           </F>
+                           <F label="Total (R$)" className="col-span-2">
+                             <NoACInput value={item.valor_total} onChange={e => atualizarItem(idx, "valor_total", e.target.value)} placeholder="0" />
+                           </F>
+                           {form.tipo !== 'NFSe' && (
+                             <>
+                               <F label="NCM">
+                                 <NoACInput value={item.ncm || ''} onChange={e => atualizarItem(idx, 'ncm', e.target.value)} placeholder="87089990" />
+                               </F>
+                               <F label="CFOP">
+                                 <NoACInput value={item.cfop || ''} onChange={e => atualizarItem(idx, 'cfop', e.target.value)} placeholder="5405" />
+                               </F>
+                               <F label="CEST (opcional)">
+                                 <NoACInput value={item.cest || ''} onChange={e => atualizarItem(idx, 'cest', e.target.value)} placeholder="" />
+                               </F>
+                               <F label="Unidade">
+                                 <NoACInput value={item.unidade || ''} onChange={e => atualizarItem(idx, 'unidade', e.target.value)} placeholder="UN" />
+                               </F>
+                             </>
+                           )}
                         </div>
                       </div>
                     ))}
