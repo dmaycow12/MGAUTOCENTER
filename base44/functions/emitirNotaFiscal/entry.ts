@@ -280,9 +280,6 @@ Deno.serve(async (req) => {
           pis_situacao_tributaria: '07',
           cofins_situacao_tributaria: '07',
         })),
-        transp: {
-          modafrete: '9',
-        },
         total: {
           icms_base_calculo: String(Number(valor_total).toFixed(2)),
           icms_valor: '0.00',
@@ -300,6 +297,9 @@ Deno.serve(async (req) => {
           valor_cofins: '0.00',
           valor_outras_despesas: '0.00',
           valor_nfe: String(Number(valor_total).toFixed(2)),
+        },
+        transp: {
+          modafrete: '9',
         },
         formas_pagamento: [{
           forma_pagamento: formaPgtoCode,
