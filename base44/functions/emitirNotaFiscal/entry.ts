@@ -2,14 +2,13 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 /**
  * Emite nota fiscal via Spedy.
- * - NFSe → serviceInvoice (serviço)
- * - NFe  → productInvoice (produto)
- * - NFCe → consumerInvoice (consumidor final)
+ * - NFSe → serviceInvoice
+ * - NFe  → productInvoice
+ * - NFCe → consumerInvoice
  *
- * O modelo da NF é controlado pelo invoiceModel dentro de cada item (produto/serviço).
- * A Spedy usa esse campo para decidir qual tipo de NF emitir — NÃO o campo invoiceType do pedido.
- *
- * Numeração: cada tipo (NFSe, NFe, NFCe) tem sua própria sequência, controlada pelo campo `serie`.
+ * IMPORTANTE: A Spedy usa o invoiceModel do produto/serviço para decidir o tipo de NF.
+ * Usamos códigos prefixados por tipo (NFCE-PROD-001, NFE-PROD-001, NFSE-SRV-001)
+ * para evitar reutilização de produto cadastrado com modelo errado.
  */
 
 const PAYMENT_MAP = {
@@ -22,10 +21,9 @@ const PAYMENT_MAP = {
   'A Prazo': 'other',
 };
 
-// Mapeamento tipo → invoiceModel da Spedy
 const INVOICE_MODEL_MAP = {
   'NFSe': 'serviceInvoice',
-  'NFe': 'productInvoice',
+  'NFe':  'productInvoice',
   'NFCe': 'consumerInvoice',
 };
 
@@ -34,26 +32,10 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
     const {
-      nota_id,
-      serie_manual,
-      tipo,
-      cliente_id,
-      cliente_nome,
-      cliente_cpf_cnpj,
-      cliente_email,
-      cliente_telefone,
-      cliente_endereco,
-      cliente_numero,
-      cliente_bairro,
-      cliente_cep,
-      cliente_cidade,
-      cliente_estado,
-      ordem_servico_id,
-      items,
-      valor_total,
-      forma_pagamento,
-      observacoes,
-      data_emissao,
+      nota_id, serie_manual, tipo,
+      cliente_id, cliente_nome, cliente_cpf_cnpj, cliente_email, cliente_telefone,
+      cliente_endereco, cliente_numero, cliente_bairro, cliente_cep, cliente_cidade, cliente_estado,
+      ordem_servico_id, items, valor_total, forma_pagamento, observacoes, data_emissao,
     } = body;
 
     // 1. Busca configurações Spedy
@@ -62,19 +44,21 @@ Deno.serve(async (req) => {
     const ambiente = configs.find(c => c.chave === 'spedy_ambiente')?.valor || 'homologacao';
 
     if (!spedyApiKey) {
-      return Response.json({ sucesso: false, erro: 'Chave API Spedy não configurada. Acesse Configurações.' }, { status: 400 });
+      return Response.json({ sucesso: false, erro: 'Chave API Spedy não configurada.' }, { status: 400 });
     }
 
     const baseUrl = ambiente === 'producao'
       ? 'https://api.spedy.com.br/v1'
       : 'https://sandbox-api.spedy.com.br/v1';
 
-    // 2. Monta dados do cliente
+    const invoiceModel = INVOICE_MODEL_MAP[tipo] || 'consumerInvoice';
+    const isServico = tipo === 'NFSe';
+    // Prefixo único por tipo: evita que Spedy reutilize produto com invoiceModel errado
+    const prefix = tipo === 'NFSe' ? 'NFSE' : tipo === 'NFCe' ? 'NFCE' : 'NFE';
+
+    // 2. Monta cliente
     const cpfCnpj = (cliente_cpf_cnpj || '').replace(/\D/g, '') || null;
     const cep = (cliente_cep || '').replace(/\D/g, '') || null;
-    const invoiceModel = INVOICE_MODEL_MAP[tipo] || 'serviceInvoice';
-    const isServico = tipo === 'NFSe';
-
     const customer = {
       name: cliente_nome || 'Consumidor Final',
       ...(cpfCnpj ? { federalTaxNumber: cpfCnpj } : {}),
@@ -92,63 +76,18 @@ Deno.serve(async (req) => {
       } : {}),
     };
 
-    // 3. Monta itens — o invoiceModel dentro do produto/serviço é o que define o tipo de NF na Spedy
-    // Prefixo único por tipo garante que a Spedy crie um novo produto/serviço
-    // com o invoiceModel correto — sem reutilizar produto antigo com modelo errado
-    const prefix = tipo === 'NFSe' ? 'NFSE' : tipo === 'NFCe' ? 'NFCE' : 'NFE';
-
+    // 3. Monta itens com invoiceModel correto por tipo
     const buildItem = (item, idx) => {
-      const unitPrice = Number(item.valor_unitario) || (Number(item.valor_total) / (Number(item.quantidade) || 1));
-      const totalAmt = Number(item.valor_total) || (unitPrice * (Number(item.quantidade) || 1));
+      const qty = Number(item.quantidade) || 1;
+      const unitPrice = Number(item.valor_unitario) || (Number(item.valor_total) / qty);
+      const totalAmt = Number(item.valor_total) || (unitPrice * qty);
       const name = (item.descricao || `Item ${idx + 1}`).substring(0, 120);
-      const baseItem = {
-        description: name,
-        quantity: Number(item.quantidade) || 1,
-        price: unitPrice,
-        amount: totalAmt,
-      };
+      const code = `${prefix}-${isServico ? 'SRV' : 'PROD'}-${String(idx + 1).padStart(3, '0')}`;
+      const baseItem = { description: name, quantity: qty, price: unitPrice, amount: totalAmt };
       if (isServico) {
-        return {
-          ...baseItem,
-          service: {
-            code: `${prefix}-SRV-${String(idx + 1).padStart(3, '0')}`,
-            name,
-            price: unitPrice,
-            invoiceModel,
-          }
-        };
+        return { ...baseItem, service: { code, name, price: unitPrice, invoiceModel } };
       } else {
-        return {
-          ...baseItem,
-          product: {
-            code: `${prefix}-PROD-${String(idx + 1).padStart(3, '0')}`,
-            name,
-            price: unitPrice,
-            invoiceModel,
-          }
-        };
-      }
-    };
-      if (isServico) {
-        return {
-          ...baseItem,
-          service: {
-            code: `SRV-${String(idx + 1).padStart(3, '0')}`,
-            name,
-            price: unitPrice,
-            invoiceModel,  // ← campo chave: diz à Spedy que é NFS-e
-          }
-        };
-      } else {
-        return {
-          ...baseItem,
-          product: {
-            code: `PROD-${String(idx + 1).padStart(3, '0')}`,
-            name,
-            price: unitPrice,
-            invoiceModel,  // ← campo chave: diz à Spedy que é NF-e ou NFC-e
-          }
-        };
+        return { ...baseItem, product: { code, name, price: unitPrice, invoiceModel } };
       }
     };
 
@@ -156,9 +95,9 @@ Deno.serve(async (req) => {
       ? items.map(buildItem)
       : [buildItem({ descricao: observacoes || (isServico ? 'Serviços' : 'Produtos'), quantidade: 1, valor_unitario: Number(valor_total), valor_total: Number(valor_total) }, 0)];
 
-    // 4. Monta payload do pedido
+    // 4. Payload do pedido
     const serieNum = parseInt(serie_manual || '1', 10) || 1;
-    const transactionId = `${tipo}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const transactionId = `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
     const orderPayload = {
       date: data_emissao ? new Date(data_emissao + 'T12:00:00').toISOString() : new Date().toISOString(),
@@ -173,9 +112,9 @@ Deno.serve(async (req) => {
       sendEmailToCustomer: false,
     };
 
-    console.log(`[${tipo}] Enviando para Spedy (invoiceModel: ${invoiceModel}):`, JSON.stringify(orderPayload, null, 2));
+    console.log(`[${tipo}] invoiceModel=${invoiceModel} prefix=${prefix}`, JSON.stringify(orderPayload, null, 2));
 
-    // 5. Cria a venda na Spedy
+    // 5. Cria venda na Spedy
     const orderResp = await fetch(`${baseUrl}/orders`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Api-Key': spedyApiKey },
@@ -187,7 +126,7 @@ Deno.serve(async (req) => {
     console.log('Spedy /orders response:', orderRaw.substring(0, 1000));
 
     let orderResult = {};
-    try { orderResult = orderRaw ? JSON.parse(orderRaw) : {}; } catch (_) { orderResult = { raw: orderRaw }; }
+    try { orderResult = JSON.parse(orderRaw); } catch (_) { orderResult = { raw: orderRaw }; }
 
     if (!orderResp.ok) {
       const erros = orderResult.errors?.map(e => e.message || JSON.stringify(e)).join('; ') || orderResult.message || orderRaw.substring(0, 400);
@@ -196,28 +135,23 @@ Deno.serve(async (req) => {
 
     const orderId = orderResult.id;
 
-    // 6. Solicita emissão das NFs
+    // 6. Solicita emissão
     const issueResp = await fetch(`${baseUrl}/orders/${orderId}/invoices/issue`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Api-Key': spedyApiKey },
       body: JSON.stringify({ effectiveDate: data_emissao ? new Date(data_emissao + 'T12:00:00').toISOString() : new Date().toISOString() }),
     });
-
     const issueRaw = await issueResp.text();
     console.log('Spedy /issue status:', issueResp.status, issueRaw.substring(0, 300));
 
-    let issueResult = {};
-    try { issueResult = issueRaw ? JSON.parse(issueRaw) : {}; } catch (_) { issueResult = {}; }
-
-    // 7. Busca próximo número da sequência por tipo
+    // 7. Sequência numérica por tipo
     const todasNotas = await base44.asServiceRole.entities.NotaFiscal.list('-created_date', 200);
-    const notasDoTipo = todasNotas.filter(n => n.tipo === tipo);
-    const nums = notasDoTipo.map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
+    const nums = todasNotas.filter(n => n.tipo === tipo).map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
     const proximoNum = nums.length > 0 ? Math.max(...nums) + 1 : 1;
 
-    // 8. Salva no banco local
+    // 8. Salva no banco
     const notaData = {
-      tipo: tipo || 'NFSe',
+      tipo: tipo || 'NFCe',
       numero: String(proximoNum),
       serie: String(serieNum),
       status: 'Emitida',
@@ -240,7 +174,7 @@ Deno.serve(async (req) => {
       sucesso: true,
       ordem_id: orderId,
       numero: String(proximoNum),
-      mensagem: `${tipo} nº ${proximoNum} (série ${serieNum}) enfileirada para emissão na Spedy.`,
+      mensagem: `${tipo} nº ${proximoNum} (série ${serieNum}) enfileirada na Spedy.`,
     });
 
   } catch (error) {
