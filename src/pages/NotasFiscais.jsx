@@ -885,7 +885,7 @@ export default function NotasFiscais() {
               <button onClick={() => setShowForm(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
             </div>
 
-            <div className="px-5 pt-4 flex-shrink-0 grid grid-cols-4 gap-4">
+            <div className="px-5 pt-4 flex-shrink-0 grid grid-cols-3 gap-4">
               <F label="Tipo de Nota Fiscal">
                 <select value={form.tipo} onChange={e => {
                   const novoTipo = e.target.value;
@@ -898,9 +898,6 @@ export default function NotasFiscais() {
               </F>
               <F label="Série">
                 <NoACInput value={form.serie} onChange={e => setForm(f => ({ ...f, serie: e.target.value }))} placeholder="1" />
-              </F>
-              <F label="Número">
-                <NoACInput value={form.numero} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} placeholder="1" />
               </F>
               <F label="Data de Emissão">
                 <input type="date" value={form.data_emissao} onChange={e => setForm(f => ({ ...f, data_emissao: e.target.value }))} className="input-dark" />
