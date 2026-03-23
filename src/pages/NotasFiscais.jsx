@@ -1132,8 +1132,8 @@ export default function NotasFiscais() {
                   </button>
                   <div className="bg-gray-800 rounded-xl p-4 flex justify-between items-center">
                     <span className="text-gray-400 font-medium">Total da Nota</span>
-                    <span className="text-2xl font-bold text-orange-400">
-                      R$ {Number(form.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    <span className="text-2xl font-bold" style={{color:"#00ff00"}}>
+                     R$ {Number(form.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                   <F label="Discriminação / Observações">
