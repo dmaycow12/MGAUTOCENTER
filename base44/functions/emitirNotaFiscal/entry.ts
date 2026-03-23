@@ -118,85 +118,21 @@ Deno.serve(async (req) => {
         { descricao: observacoes || 'Produtos', quantidade: 1, valor_unitario: Number(valor_total), valor_total: Number(valor_total) }
       ];
 
+      const cfgCnpjEmitNFCe = configs.find(c => c.chave === 'cnpj')?.valor || '';
       const formaPgto = PAYMENT_MAP[forma_pagamento] || '01';
 
       payload = {
+        cnpj_emitente: cfgCnpjEmitNFCe.replace(/\D/g, ''),
         data_emissao: `${dataEmissao}T12:00:00-03:00`,
         serie: String(serieNum),
-        // Consumidor final – CPF opcional
         ...(cpfCnpj ? { destinatario_cpf_cnpj: cpfCnpj, destinatario_nome: cliente_nome || 'Consumidor Final' } : {}),
-        presenca_comprador: '1', // operação presencial
+        presenca_comprador: '1',
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
           codigo_produto: `PROD-${String(idx + 1).padStart(3, '0')}`,
           descricao: (it.descricao || `Produto ${idx + 1}`).substring(0, 120),
           ncm: '87089990',
           cfop: '5102',
-          unidade_comercial: 'UN',
-          quantidade_comercial: Number(it.quantidade) || 1,
-          valor_unitario_comercial: Number(it.valor_unitario) || Number(it.valor_total) || 0,
-          valor_bruto: Number(it.valor_total) || 0,
-          unidade_tributavel: 'UN',
-          quantidade_tributavel: Number(it.quantidade) || 1,
-          valor_unitario_tributavel: Number(it.valor_unitario) || Number(it.valor_total) || 0,
-          codigo_tributario_municipio: undefined,
-          icms_situacao_tributaria: '400', // CSOSN 400 – Simples
-          icms_origem: '0',
-          pis_situacao_tributaria: '07',
-          cofins_situacao_tributaria: '07',
-        })),
-        formas_pagamento: [{
-          forma_pagamento: formaPgto,
-          valor_pagamento: Number(valor_total),
-        }],
-        ...(observacoes ? { informacoes_adicionais_contribuinte: observacoes } : {}),
-      };
-
-    // ─────────────────────────────────────────────
-    // NFe — Nota Fiscal Eletrônica (produtos)
-    // ─────────────────────────────────────────────
-    } else {
-      endpoint = `/nfe?ref=${ref}`;
-
-      const prodItems = (items && items.length > 0) ? items : [
-        { descricao: observacoes || 'Produtos', quantidade: 1, valor_unitario: Number(valor_total), valor_total: Number(valor_total) }
-      ];
-
-      const formaPgto = PAYMENT_MAP[forma_pagamento] || '01';
-
-      payload = {
-        natureza_operacao: 'Venda de mercadoria',
-        data_emissao: `${dataEmissao}T12:00:00-03:00`,
-        data_saida_entrada: `${dataEmissao}T12:00:00-03:00`,
-        tipo_documento: '1', // saída
-        finalidade_emissao: '1', // normal
-        serie: String(serieNum),
-        indicador_presenca: '1',
-        // Destinatário
-        ...(cpfCnpj && cpfCnpj.length === 11
-          ? { destinatario_cpf: cpfCnpj }
-          : cpfCnpj && cpfCnpj.length === 14
-            ? { destinatario_cnpj: cpfCnpj }
-            : {}),
-        destinatario_nome: cliente_nome || 'Consumidor Final',
-        destinatario_indicador_ie: '9', // não contribuinte
-        ...(cliente_email ? { destinatario_email: cliente_email } : {}),
-        ...(cliente_endereco ? {
-          destinatario_logradouro: cliente_endereco,
-          destinatario_numero: cliente_numero || 'S/N',
-          destinatario_bairro: cliente_bairro || '',
-          destinatario_municipio: cliente_cidade || '',
-          destinatario_uf: cliente_estado || 'MG',
-          destinatario_cep: (cliente_cep || '').replace(/\D/g, ''),
-          destinatario_pais: '1058',
-          destinatario_telefone: cliente_telefone ? cliente_telefone.replace(/\D/g, '') : undefined,
-        } : {}),
-        items: prodItems.map((it, idx) => ({
-          numero_item: idx + 1,
-          codigo_produto: `PROD-${String(idx + 1).padStart(3, '0')}`,
-          descricao: (it.descricao || `Produto ${idx + 1}`).substring(0, 120),
-          ncm: '87089990',
-          cfop: '5405',
           unidade_comercial: 'UN',
           quantidade_comercial: Number(it.quantidade) || 1,
           valor_unitario_comercial: Number(it.valor_unitario) || Number(it.valor_total) || 0,
@@ -215,6 +151,71 @@ Deno.serve(async (req) => {
         }],
         ...(observacoes ? { informacoes_adicionais_contribuinte: observacoes } : {}),
       };
+
+    // ─────────────────────────────────────────────
+    // NFe — Nota Fiscal Eletrônica (produtos)
+    // ─────────────────────────────────────────────
+    } else {
+    endpoint = `/nfe?ref=${ref}`;
+
+    const prodItems = (items && items.length > 0) ? items : [
+      { descricao: observacoes || 'Produtos', quantidade: 1, valor_unitario: Number(valor_total), valor_total: Number(valor_total) }
+    ];
+
+    const cfgCnpjEmitNFe = configs.find(c => c.chave === 'cnpj')?.valor || '';
+    const formaPgto = PAYMENT_MAP[forma_pagamento] || '01';
+
+    payload = {
+      cnpj_emitente: cfgCnpjEmitNFe.replace(/\D/g, ''),
+      natureza_operacao: 'Venda de mercadoria',
+      data_emissao: `${dataEmissao}T12:00:00-03:00`,
+      data_saida_entrada: `${dataEmissao}T12:00:00-03:00`,
+      tipo_documento: '1',
+      finalidade_emissao: '1',
+      serie: String(serieNum),
+      indicador_presenca: '1',
+      ...(cpfCnpj && cpfCnpj.length === 11
+        ? { destinatario_cpf: cpfCnpj }
+        : cpfCnpj && cpfCnpj.length === 14
+          ? { destinatario_cnpj: cpfCnpj }
+          : {}),
+      destinatario_nome: cliente_nome || 'Consumidor Final',
+      destinatario_indicador_ie: '9',
+      ...(cliente_email ? { destinatario_email: cliente_email } : {}),
+      ...(cliente_endereco ? {
+        destinatario_logradouro: cliente_endereco,
+        destinatario_numero: cliente_numero || 'S/N',
+        destinatario_bairro: cliente_bairro || '',
+        destinatario_municipio: cliente_cidade || '',
+        destinatario_uf: cliente_estado || 'MG',
+        destinatario_cep: (cliente_cep || '').replace(/\D/g, ''),
+        destinatario_pais: '1058',
+        destinatario_telefone: cliente_telefone ? cliente_telefone.replace(/\D/g, '') : undefined,
+      } : {}),
+      items: prodItems.map((it, idx) => ({
+        numero_item: idx + 1,
+        codigo_produto: `PROD-${String(idx + 1).padStart(3, '0')}`,
+        descricao: (it.descricao || `Produto ${idx + 1}`).substring(0, 120),
+        ncm: '87089990',
+        cfop: '5405',
+        unidade_comercial: 'UN',
+        quantidade_comercial: Number(it.quantidade) || 1,
+        valor_unitario_comercial: Number(it.valor_unitario) || Number(it.valor_total) || 0,
+        valor_bruto: Number(it.valor_total) || 0,
+        unidade_tributavel: 'UN',
+        quantidade_tributavel: Number(it.quantidade) || 1,
+        valor_unitario_tributavel: Number(it.valor_unitario) || Number(it.valor_total) || 0,
+        icms_situacao_tributaria: '400',
+        icms_origem: '0',
+        pis_situacao_tributaria: '07',
+        cofins_situacao_tributaria: '07',
+      })),
+      formas_pagamento: [{
+        forma_pagamento: formaPgto,
+        valor_pagamento: Number(valor_total),
+      }],
+      ...(observacoes ? { informacoes_adicionais_contribuinte: observacoes } : {}),
+    };
     }
 
     // 2. Envia para Focus NFe
