@@ -6,17 +6,17 @@ export default function Configuracoes() {
   const CHAVES = ["nome_oficina", "cnpj", "telefone", "email", "endereco", "cidade", "estado", "cep",
     "logo_url", "observacoes_padrao", "proximo_numero_os",
     "focusnfe_api_key_homologacao", "focusnfe_api_key_producao",
-    "nfe_serie", "nfe_ultimo_numero", "nfe_versao",
-    "nfce_serie", "nfce_ultimo_numero", "nfce_versao", "nfce_token", "nfce_csc",
-    "nfse_serie_rps", "nfse_ultimo_rps", "nfse_natureza_operacao", "nfse_layout", "nfse_apuracao", "nfse_imunidade", "nfse_tipo_operacao"];
+    "nfe_serie", "nfe_ultimo_numero", "nfe_versao", "nfe_ambiente",
+    "nfce_serie", "nfce_ultimo_numero", "nfce_versao", "nfce_token", "nfce_csc", "nfce_ambiente",
+    "nfse_serie_rps", "nfse_ultimo_rps", "nfse_natureza_operacao", "nfse_layout", "nfse_apuracao", "nfse_imunidade", "nfse_tipo_operacao", "nfse_ambiente"];
 
   const [config, setConfig] = useState({
     nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
     logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
     focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
-    nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00",
-    nfce_serie: "1", nfce_ultimo_numero: "0", nfce_versao: "4.00", nfce_token: "", nfce_csc: "",
-    nfse_serie_rps: "1", nfse_ultimo_rps: "0", nfse_natureza_operacao: "", nfse_layout: "Nacional", nfse_apuracao: "", nfse_imunidade: "", nfse_tipo_operacao: "",
+    nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00", nfe_ambiente: "producao",
+    nfce_serie: "1", nfce_ultimo_numero: "0", nfce_versao: "4.00", nfce_token: "", nfce_csc: "", nfce_ambiente: "producao",
+    nfse_serie_rps: "1", nfse_ultimo_rps: "0", nfse_natureza_operacao: "", nfse_layout: "Nacional", nfse_apuracao: "", nfse_imunidade: "", nfse_tipo_operacao: "", nfse_ambiente: "producao",
   });
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
@@ -37,9 +37,9 @@ export default function Configuracoes() {
       nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
       logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
       focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
-      nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00",
-      nfce_serie: "1", nfce_ultimo_numero: "0", nfce_versao: "4.00", nfce_token: "", nfce_csc: "",
-      nfse_serie_rps: "1", nfse_ultimo_rps: "0", nfse_natureza_operacao: "", nfse_layout: "Nacional", nfse_apuracao: "", nfse_imunidade: "", nfse_tipo_operacao: "",
+      nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00", nfe_ambiente: "producao",
+      nfce_serie: "1", nfce_ultimo_numero: "0", nfce_versao: "4.00", nfce_token: "", nfce_csc: "", nfce_ambiente: "producao",
+      nfse_serie_rps: "1", nfse_ultimo_rps: "0", nfse_natureza_operacao: "", nfse_layout: "Nacional", nfse_apuracao: "", nfse_imunidade: "", nfse_tipo_operacao: "", nfse_ambiente: "producao",
     };
     const ids = {};
     const extras = [];
@@ -194,6 +194,12 @@ export default function Configuracoes() {
           <F label="Série NF-e">
             <input value={config.nfe_serie} onChange={e => setConfig({ ...config, nfe_serie: e.target.value })} className="input-dark" />
           </F>
+          <F label="Ambiente">
+            <select value={config.nfe_ambiente} onChange={e => setConfig({ ...config, nfe_ambiente: e.target.value })} className="input-dark">
+              <option value="producao">Produção</option>
+              <option value="homologacao">Homologação</option>
+            </select>
+          </F>
           <F label="Versão da NF-e">
             <select value={config.nfe_versao} onChange={e => setConfig({ ...config, nfe_versao: e.target.value })} className="input-dark">
               <option value="4.00">4.00</option>
@@ -217,6 +223,12 @@ export default function Configuracoes() {
           <F label="CSC (Código de Segurança)">
             <input value={config.nfce_csc} onChange={e => setConfig({ ...config, nfce_csc: e.target.value })} className="input-dark" />
           </F>
+          <F label="Ambiente">
+            <select value={config.nfce_ambiente} onChange={e => setConfig({ ...config, nfce_ambiente: e.target.value })} className="input-dark">
+              <option value="producao">Produção</option>
+              <option value="homologacao">Homologação</option>
+            </select>
+          </F>
           <F label="Versão da NFC-e">
             <select value={config.nfce_versao} onChange={e => setConfig({ ...config, nfce_versao: e.target.value })} className="input-dark">
               <option value="4.00">4.00</option>
@@ -236,6 +248,12 @@ export default function Configuracoes() {
           </F>
           <F label="Natureza de operação">
             <input value={config.nfse_natureza_operacao} onChange={e => setConfig({ ...config, nfse_natureza_operacao: e.target.value })} className="input-dark" />
+          </F>
+          <F label="Ambiente">
+            <select value={config.nfse_ambiente} onChange={e => setConfig({ ...config, nfse_ambiente: e.target.value })} className="input-dark">
+              <option value="producao">Produção</option>
+              <option value="homologacao">Homologação</option>
+            </select>
           </F>
           <F label="Layout da NFS-e">
             <select value={config.nfse_layout} onChange={e => setConfig({ ...config, nfse_layout: e.target.value })} className="input-dark">
