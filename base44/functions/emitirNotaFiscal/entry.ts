@@ -21,10 +21,12 @@ const PAYMENT_MAP = {
   'A Prazo': 'other',
 };
 
+// Spedy suporta apenas serviceInvoice e productInvoice.
+// NFCe (cupom fiscal) é emitido como productInvoice — sem CPF/CNPJ obrigatório.
 const INVOICE_MODEL_MAP = {
   'NFSe': 'serviceInvoice',
   'NFe':  'productInvoice',
-  'NFCe': 'consumerInvoice',
+  'NFCe': 'productInvoice',
 };
 
 Deno.serve(async (req) => {
