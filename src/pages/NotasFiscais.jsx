@@ -1031,34 +1031,34 @@ export default function NotasFiscais() {
                   </F>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <F label="Nome / Razão Social *" className="col-span-2">
-                      <input value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} className="input-dark" placeholder="Nome completo ou razão social" />
+                      <input autoComplete="off" value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} className="input-dark" placeholder="Nome completo ou razão social" />
                     </F>
                     <F label="CPF / CNPJ">
-                      <input value={form.cliente_cpf_cnpj} onChange={e => setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value }))} className="input-dark" placeholder="000.000.000-00" />
+                      <input autoComplete="off" value={form.cliente_cpf_cnpj} onChange={e => setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value }))} className="input-dark" placeholder="000.000.000-00" />
                     </F>
                     <F label="E-mail">
-                      <input type="email" value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} className="input-dark" placeholder="email@cliente.com" />
+                      <input type="email" autoComplete="off" value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} className="input-dark" placeholder="email@cliente.com" />
                     </F>
                     <F label="Telefone">
-                      <input value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} className="input-dark" placeholder="(00) 00000-0000" />
+                      <input autoComplete="off" value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} className="input-dark" placeholder="(00) 00000-0000" />
                     </F>
                     <F label="CEP">
-                      <input value={form.cliente_cep} onChange={e => setForm(f => ({ ...f, cliente_cep: e.target.value }))} className="input-dark" placeholder="00000-000" />
+                      <input autoComplete="off" value={form.cliente_cep} onChange={e => setForm(f => ({ ...f, cliente_cep: e.target.value }))} className="input-dark" placeholder="00000-000" />
                     </F>
                     <F label="Endereço" className="col-span-2">
-                      <input value={form.cliente_endereco} onChange={e => setForm(f => ({ ...f, cliente_endereco: e.target.value }))} className="input-dark" placeholder="Rua, Avenida..." />
+                      <input autoComplete="off" value={form.cliente_endereco} onChange={e => setForm(f => ({ ...f, cliente_endereco: e.target.value }))} className="input-dark" placeholder="Rua, Avenida..." />
                     </F>
                     <F label="Número">
-                      <input value={form.cliente_numero} onChange={e => setForm(f => ({ ...f, cliente_numero: e.target.value }))} className="input-dark" placeholder="123" />
+                      <input autoComplete="off" value={form.cliente_numero} onChange={e => setForm(f => ({ ...f, cliente_numero: e.target.value }))} className="input-dark" placeholder="123" />
                     </F>
                     <F label="Bairro">
-                      <input value={form.cliente_bairro} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} className="input-dark" />
+                      <input autoComplete="off" value={form.cliente_bairro} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} className="input-dark" />
                     </F>
                     <F label="Cidade">
-                      <input value={form.cliente_cidade} onChange={e => setForm(f => ({ ...f, cliente_cidade: e.target.value }))} className="input-dark" placeholder="Nome da cidade" />
+                      <input autoComplete="off" value={form.cliente_cidade} onChange={e => setForm(f => ({ ...f, cliente_cidade: e.target.value }))} className="input-dark" placeholder="Nome da cidade" />
                     </F>
                     <F label="Estado (UF)">
-                      <input value={form.cliente_estado} maxLength={2} onChange={e => setForm(f => ({ ...f, cliente_estado: e.target.value.toUpperCase() }))} className="input-dark" placeholder="MG" />
+                      <input autoComplete="off" value={form.cliente_estado} maxLength={2} onChange={e => setForm(f => ({ ...f, cliente_estado: e.target.value.toUpperCase() }))} className="input-dark" placeholder="MG" />
                     </F>
                   </div>
                   <div className="flex justify-end">
