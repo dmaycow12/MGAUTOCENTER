@@ -24,6 +24,7 @@ function defaultForm() {
   return {
     tipo: "NFSe",
     numero: "",
+    serie: "1",
     data_emissao: new Date().toISOString().split("T")[0],
     forma_pagamento: "PIX",
     observacoes: "",
@@ -199,11 +200,18 @@ export default function NotasFiscais() {
     });
   }, []);
 
-  const proximoNumero = (notasList) => {
-    const nums = notasList
+  const proximoNumero = (notasList, tipo) => {
+    const filtradas = notasList.filter(n => n.tipo === tipo);
+    const nums = filtradas
       .map(n => parseInt(n.numero, 10))
       .filter(n => !isNaN(n));
     return nums.length > 0 ? String(Math.max(...nums) + 1) : "1";
+  };
+
+  const proximaSerie = (notasList, tipo) => {
+    const filtradas = notasList.filter(n => n.tipo === tipo && n.serie);
+    const series = filtradas.map(n => parseInt(n.serie, 10)).filter(n => !isNaN(n));
+    return series.length > 0 ? String(Math.max(...series)) : "1";
   };
 
   const load = async () => {
@@ -364,7 +372,7 @@ export default function NotasFiscais() {
     else setEmitindo(true);
 
     try {
-      const payload = { ...f, nota_id: rascunhoNota?.id || null, numero_manual: f.numero || null };
+      const payload = { ...f, nota_id: rascunhoNota?.id || null, numero_manual: f.numero || null, serie_manual: f.serie || "1" };
       const response = await base44.functions.invoke("emitirNotaFiscal", payload);
 
       if (response.data?.sucesso) {
@@ -641,9 +649,7 @@ export default function NotasFiscais() {
           <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
             <Upload className="w-3 h-3" /> Importar XML
           </button>
-          <button onClick={() => { const df = defaultForm(); setForm({...df, numero: proximoNumero(notas)}); setAbaForm("cliente"); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
-            <Plus className="w-3 h-3" /> Emitir Nota
-          </button>
+          <button onClick={() => { const df = defaultForm(); setForm({...df, numero: proximoNumero(notas, df.tipo), serie: proximaSerie(notas, df.tipo)}); setAbaForm("cliente"); setShowForm(true); }}
         </div>
 
         <div className="flex gap-2">
@@ -769,7 +775,7 @@ export default function NotasFiscais() {
                     <td className="px-4 py-3">
                       <span className="bg-orange-500/10 text-orange-400 text-xs px-2 py-1 rounded-full font-medium">{nota.tipo}</span>
                     </td>
-                    <td className="px-4 py-3 text-white font-mono text-xs">{nota.numero || "—"}{nota.serie ? `/${nota.serie}` : ""}</td>
+                    <td className="px-4 py-3 text-white font-mono text-xs">{nota.serie || "1"}/{nota.numero || "—"}</td>
                     <td className="px-4 py-3 text-white">{nota.cliente_nome || "—"}</td>
                     <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{nota.data_emissao || "—"}</td>
                     <td className="px-4 py-3">
@@ -877,16 +883,22 @@ export default function NotasFiscais() {
               <button onClick={() => setShowForm(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
             </div>
 
-            <div className="px-5 pt-4 flex-shrink-0 grid grid-cols-3 gap-4">
+            <div className="px-5 pt-4 flex-shrink-0 grid grid-cols-4 gap-4">
               <F label="Tipo de Nota Fiscal">
-                <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value, items: [defaultItem()] }))} className="input-dark">
-                  <option value="NFSe">NFSe — Nota de Serviço</option>
-                  <option value="NFe">NFe — Nota de Produto</option>
-                  <option value="NFCe">NFCe — Nota ao Consumidor</option>
+                <select value={form.tipo} onChange={e => {
+                  const novoTipo = e.target.value;
+                  setForm(f => ({ ...f, tipo: novoTipo, items: [defaultItem()], numero: proximoNumero(notas, novoTipo), serie: proximaSerie(notas, novoTipo) }));
+                }} className="input-dark">
+                  <option value="NFSe">NFSe — Serviço</option>
+                  <option value="NFe">NFe — Produto</option>
+                  <option value="NFCe">NFCe — Consumidor</option>
                 </select>
               </F>
-              <F label="Número da Nota">
-                <NoACInput value={form.numero} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} placeholder="Ex: 1" />
+              <F label="Série">
+                <NoACInput value={form.serie} onChange={e => setForm(f => ({ ...f, serie: e.target.value }))} placeholder="1" />
+              </F>
+              <F label="Número">
+                <NoACInput value={form.numero} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} placeholder="1" />
               </F>
               <F label="Data de Emissão">
                 <input type="date" value={form.data_emissao} onChange={e => setForm(f => ({ ...f, data_emissao: e.target.value }))} className="input-dark" />
