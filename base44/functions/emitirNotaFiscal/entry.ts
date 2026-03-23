@@ -141,22 +141,25 @@ Deno.serve(async (req) => {
       }),
     }];
 
-    // Mapeia tipo para modelo Spedy
-    const modeloSpedy = tipo === 'NFCe' ? 'NFC-e' : tipo === 'NFe' ? 'NF-e' : 'NFS-e';
+    // Mapeia tipo para valores corretos do endpoint /orders da Spedy
+    // Conforme documentação: invoiceType usa camelCase (serviceInvoice, productInvoice, consumerInvoice)
+    const INVOICE_TYPE_MAP = {
+      'NFSe': 'serviceInvoice',
+      'NFe': 'productInvoice',
+      'NFCe': 'consumerInvoice',
+    };
+    const invoiceType = INVOICE_TYPE_MAP[tipo] || 'serviceInvoice';
     const serieNum = parseInt(serie_manual || '1', 10) || 1;
     const numeroNum = parseInt(numero_manual || '1', 10) || 1;
 
     const orderPayload = {
       date: data_emissao ? new Date(data_emissao + 'T12:00:00').toISOString() : new Date().toISOString(),
       amount: Number(valor_total) || 0,
-      number: numeroNum,
-      series: serieNum,
       customer,
       items: orderItems,
       status: 'approved',
       autoIssueMode: 'immediately',
-      model: modeloSpedy,
-      invoiceType: modeloSpedy,
+      invoiceType: invoiceType,
       ...(forma_pagamento ? { paymentMethod: PAYMENT_MAP[forma_pagamento] || 'other' } : {}),
       ...(ordem_servico_id ? { transactionId: `OS-${ordem_servico_id.substring(0, 20)}` } : {}),
       sendEmailToCustomer: false,
