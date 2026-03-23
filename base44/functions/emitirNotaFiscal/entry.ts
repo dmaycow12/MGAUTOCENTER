@@ -204,7 +204,7 @@ Deno.serve(async (req) => {
           const qtd = Number(it.quantidade) || 1;
           const valUni = Number(it.valor_unitario) || 0;
           const valTotal = Number(it.valor_total) || (qtd * valUni);
-          return {
+          const item = {
             numero_item: idx + 1,
             codigo_produto: (it.codigo || `PROD${String(idx + 1).padStart(3, '0')}`).substring(0, 60),
             descricao: (it.descricao || `Produto ${idx + 1}`).substring(0, 120),
@@ -221,6 +221,7 @@ Deno.serve(async (req) => {
             pis_situacao_tributaria: '07',
             cofins_situacao_tributaria: '07',
           };
+          return item;
         }),
         formas_pagamento: [{
           forma_pagamento: formaPgtoCode,
