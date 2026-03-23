@@ -119,6 +119,9 @@ Deno.serve(async (req) => {
       ];
 
       const cfgCnpjEmitNFCe = configs.find(c => c.chave === 'cnpj')?.valor || '';
+      const nfceToken = configs.find(c => c.chave === 'nfce_token')?.valor || '';
+      const nfceCsc = configs.find(c => c.chave === 'nfce_csc')?.valor || '';
+      const nfceVersao = configs.find(c => c.chave === 'nfce_versao')?.valor || '4.00';
       const formaPgto = PAYMENT_MAP[forma_pagamento] || '01';
 
       payload = {
@@ -126,6 +129,9 @@ Deno.serve(async (req) => {
         data_emissao: `${dataEmissao}T12:00:00-03:00`,
         serie: String(serieNum),
         modalidade_frete: '9',
+        ...(nfceToken ? { csc_token: nfceToken } : {}),
+        ...(nfceCsc ? { csc_codigo: nfceCsc } : {}),
+        versao: nfceVersao,
         ...(cpfCnpj ? { destinatario_cpf_cnpj: cpfCnpj, destinatario_nome: cliente_nome || 'Consumidor Final' } : {}),
         presenca_comprador: '1',
         items: prodItems.map((it, idx) => ({
