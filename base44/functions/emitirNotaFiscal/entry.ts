@@ -183,7 +183,6 @@ Deno.serve(async (req) => {
           codigo_produto: it.codigo || `PROD${String(idx + 1).padStart(3, '0')}`,
           descricao: (it.descricao || `Produto ${idx + 1}`).substring(0, 120),
           codigo_ncm: (it.ncm || '87089990').replace(/\D/g, '').padStart(8, '0').substring(0, 8),
-          cfop: it.cfop || '5102',
           unidade_comercial: it.unidade || 'UN',
           quantidade_comercial: Number(it.quantidade) || 1,
           valor_unitario_comercial: Number(it.valor_unitario) || 0,
