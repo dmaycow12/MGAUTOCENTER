@@ -29,12 +29,17 @@ Deno.serve(async (req) => {
 
     // 1. Busca e valida configurações
     const configs = await base44.asServiceRole.entities.Configuracao.list('-created_date', 200);
+    const ambiente = configs.find(c => c.chave === 'focusnfe_ambiente')?.valor || 'producao';
+    
+    // Usa API key específica por ambiente, com fallback para variável de ambiente
+    const chaveAmbiente = ambiente === 'homologacao' ? 'focusnfe_api_key_homologacao' : 'focusnfe_api_key_producao';
     const apiKey = Deno.env.get('FOCUSNFE_API_KEY') || 
+      configs.find(c => c.chave === chaveAmbiente)?.valor?.trim() ||
       configs.find(c => c.chave === 'focusnfe_api_key')?.valor?.trim();
     
     if (!apiKey) {
       return Response.json(
-        { sucesso: false, erro: 'API Key Focus NFe não configurada' },
+        { sucesso: false, erro: `API Key Focus NFe não configurada para ${ambiente}` },
         { status: 400 }
       );
     }
@@ -100,7 +105,6 @@ Deno.serve(async (req) => {
     const formaPgtoCode = PAYMENT_MAP[forma_pagamento] || '01';
     const cpfCnpjLimpo = (cliente_cpf_cnpj || '').replace(/\D/g, '');
 
-    const ambiente = configs.find(c => c.chave === 'focusnfe_ambiente')?.valor || 'producao';
     const baseUrl = ambiente === 'homologacao'
       ? 'https://homologacao.focusnfe.com.br/v2'
       : 'https://api.focusnfe.com.br/v2';
