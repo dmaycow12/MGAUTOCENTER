@@ -93,6 +93,10 @@ Deno.serve(async (req) => {
     };
 
     // 3. Monta itens — o invoiceModel dentro do produto/serviço é o que define o tipo de NF na Spedy
+    // Prefixo único por tipo garante que a Spedy crie um novo produto/serviço
+    // com o invoiceModel correto — sem reutilizar produto antigo com modelo errado
+    const prefix = tipo === 'NFSe' ? 'NFSE' : tipo === 'NFCe' ? 'NFCE' : 'NFE';
+
     const buildItem = (item, idx) => {
       const unitPrice = Number(item.valor_unitario) || (Number(item.valor_total) / (Number(item.quantidade) || 1));
       const totalAmt = Number(item.valor_total) || (unitPrice * (Number(item.quantidade) || 1));
@@ -103,6 +107,28 @@ Deno.serve(async (req) => {
         price: unitPrice,
         amount: totalAmt,
       };
+      if (isServico) {
+        return {
+          ...baseItem,
+          service: {
+            code: `${prefix}-SRV-${String(idx + 1).padStart(3, '0')}`,
+            name,
+            price: unitPrice,
+            invoiceModel,
+          }
+        };
+      } else {
+        return {
+          ...baseItem,
+          product: {
+            code: `${prefix}-PROD-${String(idx + 1).padStart(3, '0')}`,
+            name,
+            price: unitPrice,
+            invoiceModel,
+          }
+        };
+      }
+    };
       if (isServico) {
         return {
           ...baseItem,
