@@ -67,6 +67,8 @@ export default function NotasFiscais() {
   const [notas, setNotas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ordensVenda, setOrdensVenda] = useState([]);
+  const [estoque, setEstoque] = useState([]);
+  const [servicos, setServicos] = useState([]);
   const [search, setSearch] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("Todos");
   const [filtroModeloNF, setFiltroModeloNF] = useState("Todos");
@@ -215,15 +217,19 @@ export default function NotasFiscais() {
   };
 
   const load = async () => {
-    const [n, c, configs, os] = await Promise.all([
+    const [n, c, configs, os, est, srv] = await Promise.all([
       base44.entities.NotaFiscal.list("-created_date", 200),
       base44.entities.Cliente.list("-created_date", 200),
       base44.entities.Configuracao.list("-created_date", 100),
       base44.entities.OrdemServico.list("-created_date", 500),
+      base44.entities.Estoque.list("-created_date", 500),
+      base44.entities.Servico.list("-created_date", 500),
     ]);
     setNotas(n);
     setClientes(c);
     setOrdensVenda(os);
+    setEstoque(est);
+    setServicos(srv);
     // Focus NFe usa variável de ambiente FOCUSNFE_API_KEY — sempre habilitado
     setTemSpedy(true);
     setLoading(false);
@@ -1008,9 +1014,32 @@ export default function NotasFiscais() {
                           )}
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          <F label="Descrição" className="col-span-2 md:col-span-4">
-                            <NoACInput value={item.descricao} onChange={e => atualizarItem(idx, "descricao", e.target.value)} placeholder={form.tipo === "NFSe" ? "Ex: Troca de óleo, Alinhamento..." : "Ex: Filtro de óleo, Pastilha de freio..."} />
+                          <F label={form.tipo === 'NFSe' ? 'Selecionar Serviço Cadastrado' : 'Selecionar Produto do Estoque'} className="col-span-2 md:col-span-4">
+                            <select
+                              className="input-dark"
+                              value=""
+                              onChange={e => {
+                                const id = e.target.value;
+                                if (!id) return;
+                                if (form.tipo === 'NFSe') {
+                                  const srv = servicos.find(s => s.id === id);
+                                  if (srv) atualizarItemCompleto(idx, { descricao: srv.descricao, quantidade: 1, valor_unitario: srv.valor || 0, valor_total: srv.valor || 0 });
+                                } else {
+                                  const prod = estoque.find(p => p.id === id);
+                                  if (prod) atualizarItemCompleto(idx, { descricao: prod.descricao, quantidade: 1, valor_unitario: prod.valor_venda || 0, valor_total: prod.valor_venda || 0 });
+                                }
+                              }}
+                            >
+                              <option value="">— Selecione para preencher automaticamente —</option>
+                              {form.tipo === 'NFSe'
+                                ? servicos.map(s => <option key={s.id} value={s.id}>{s.descricao}{s.valor ? ` — R$ ${Number(s.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}` : ''}</option>)
+                                : estoque.filter(p => p.quantidade > 0 || true).map(p => <option key={p.id} value={p.id}>{p.descricao}{p.codigo ? ` (${p.codigo})` : ''}{p.valor_venda ? ` — R$ ${Number(p.valor_venda).toLocaleString('pt-BR', {minimumFractionDigits:2})}` : ''}</option>)
+                              }
+                            </select>
                           </F>
+                          <F label="Descrição" className="col-span-2 md:col-span-4">
+                              <NoACInput value={item.descricao} onChange={e => atualizarItem(idx, "descricao", e.target.value)} placeholder={form.tipo === "NFSe" ? "Ex: Troca de óleo, Alinhamento..." : "Ex: Filtro de óleo, Pastilha de freio..."} />
+                            </F>
                           <F label="Quantidade">
                             <NoACInput value={item.quantidade} onChange={e => atualizarItem(idx, "quantidade", e.target.value)} placeholder="1" />
                           </F>
