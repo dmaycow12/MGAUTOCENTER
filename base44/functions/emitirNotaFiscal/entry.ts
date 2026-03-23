@@ -255,26 +255,19 @@ Deno.serve(async (req) => {
           destinatario_pais: '1058',
           ...(cliente_telefone ? { destinatario_telefone: cliente_telefone.replace(/\D/g, '') } : {}),
         } : {}),
-        items: prodItems.map((it, idx) => {
-          const qtd = Number(it.quantidade) || 1;
-          const valUni = Number(it.valor_unitario) || 0;
-          const valTotal = Number(it.valor_total) || (qtd * valUni);
-          return {
-            numero_item: idx + 1,
-            codigo_produto: it.codigo || `PROD${String(idx + 1).padStart(3, '0')}`,
-            descricao: (it.descricao || `Produto ${idx + 1}`).substring(0, 120),
-            codigo_ncm: (it.ncm || '87089990').replace(/\D/g, '').padStart(8, '0').substring(0, 8),
-            cfop: it.cfop || '5405',
-            unidade_tributavel: (it.unidade || 'UN').substring(0, 6),
-            quantidade_tributavel: qtd,
-            valor_unitario_tributavel: parseFloat(valUni.toFixed(2)),
-            valor_bruto: parseFloat(valTotal.toFixed(2)),
-            icms_situacao_tributaria: '400',
-            icms_origem: '0',
-            pis_situacao_tributaria: '07',
-            cofins_situacao_tributaria: '07',
-          };
-        }),
+        items: prodItems.map((it, idx) => ({
+          numero_item: idx + 1,
+          descricao: (it.descricao || `Produto ${idx + 1}`).substring(0, 120),
+          codigo_ncm: (it.ncm || '87089990').replace(/\D/g, '').padStart(8, '0').substring(0, 8),
+          cfop: it.cfop || '5405',
+          quantidade: Number(it.quantidade) || 1,
+          valor_unitario: parseFloat(Number(it.valor_unitario || 0).toFixed(2)),
+          valor_total: parseFloat(Number(it.valor_total || 0).toFixed(2)),
+          icms_situacao_tributaria: '400',
+          icms_origem: '0',
+          pis_situacao_tributaria: '07',
+          cofins_situacao_tributaria: '07',
+        })),
         formas_pagamento: [{
           forma_pagamento: formaPgtoCode,
           valor_pagamento: String(Number(valor_total).toFixed(2)),
