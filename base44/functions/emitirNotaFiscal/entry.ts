@@ -34,15 +34,15 @@ Deno.serve(async (req) => {
     // 1. Busca configurações
     const configs = await base44.asServiceRole.entities.Configuracao.list();
     const apiKey = Deno.env.get('FOCUSNFE_API_KEY') || configs.find(c => c.chave === 'focusnfe_api_key')?.valor?.trim();
-    const ambiente = configs.find(c => c.chave === 'focusnfe_ambiente')?.valor || 'homologacao';
+    const ambiente = configs.find(c => c.chave === 'focusnfe_ambiente')?.valor || 'producao';
 
     if (!apiKey) {
       return Response.json({ sucesso: false, erro: 'Chave API Focus NFe não configurada.' }, { status: 400 });
     }
 
-    const baseUrl = ambiente === 'producao'
-      ? 'https://api.focusnfe.com.br/v2'
-      : 'https://homologacao.focusnfe.com.br/v2';
+    const baseUrl = ambiente === 'homologacao'
+      ? 'https://homologacao.focusnfe.com.br/v2'
+      : 'https://api.focusnfe.com.br/v2';
 
     const authHeader = 'Basic ' + btoa(apiKey + ':');
     const ref = `${tipo}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
