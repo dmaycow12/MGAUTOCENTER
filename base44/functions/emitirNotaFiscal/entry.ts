@@ -148,7 +148,6 @@ Deno.serve(async (req) => {
     const orderPayload = {
       date: data_emissao ? new Date(data_emissao).toISOString() : new Date().toISOString(),
       amount: Number(valor_total) || 0,
-      ...(numero_manual ? { number: parseInt(numero_manual, 10) } : {}),
       customer,
       items: orderItems,
       status: 'approved',
