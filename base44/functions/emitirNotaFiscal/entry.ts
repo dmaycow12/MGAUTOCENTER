@@ -253,10 +253,19 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: `Erro Focus NFe (${resp.status}): ${erros}`, detalhes: result }, { status: 400 });
     }
 
-    // 3. Sequência numérica por tipo
+    // 3. Sequência numérica por tipo — usa config nfce_ultimo_numero para NFCe
     const todasNotas = await base44.asServiceRole.entities.NotaFiscal.list('-created_date', 200);
-    const nums = todasNotas.filter(n => n.tipo === tipo).map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
-    const proximoNum = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+    let proximoNum;
+    if (tipo === 'NFCe') {
+      const cfgUltimoNFCe = configs.find(c => c.chave === 'nfce_ultimo_numero');
+      const ultimoSalvo = parseInt(cfgUltimoNFCe?.valor || '0', 10);
+      const numsNFCe = todasNotas.filter(n => n.tipo === 'NFCe').map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
+      const ultimoNota = numsNFCe.length > 0 ? Math.max(...numsNFCe) : 0;
+      proximoNum = Math.max(ultimoSalvo, ultimoNota) + 1;
+    } else {
+      const nums = todasNotas.filter(n => n.tipo === tipo).map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
+      proximoNum = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+    }
 
     // 4. Salva no banco
     const notaData = {
@@ -280,6 +289,16 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, notaData);
     } else {
       await base44.asServiceRole.entities.NotaFiscal.create(notaData);
+    }
+
+    // Atualiza nfce_ultimo_numero nas configurações
+    if (tipo === 'NFCe') {
+      const cfgUltimoNFCe = configs.find(c => c.chave === 'nfce_ultimo_numero');
+      if (cfgUltimoNFCe?.id) {
+        await base44.asServiceRole.entities.Configuracao.update(cfgUltimoNFCe.id, { chave: 'nfce_ultimo_numero', valor: String(proximoNum) });
+      } else {
+        await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfce_ultimo_numero', valor: String(proximoNum) });
+      }
     }
 
     return Response.json({

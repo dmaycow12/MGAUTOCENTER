@@ -5,13 +5,13 @@ import { Settings, Save, CheckCircle, Plus, X, UserPlus, LogOut, AlertCircle, Us
 export default function Configuracoes() {
   const CHAVES = ["nome_oficina", "cnpj", "telefone", "email", "endereco", "cidade", "estado", "cep",
     "focusnfe_ambiente", "codigo_municipio", "codigo_servico", "aliquota_iss", "logo_url", "observacoes_padrao", "proximo_numero_os",
-    "nfce_token", "nfce_csc", "nfce_serie", "nfce_versao"];
+    "nfce_token", "nfce_csc", "nfce_serie", "nfce_versao", "nfce_ultimo_numero"];
 
   const [config, setConfig] = useState({
     nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
     focusnfe_ambiente: "producao", codigo_municipio: "", codigo_servico: "07498", aliquota_iss: "2.0",
     logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
-    nfce_token: "", nfce_csc: "", nfce_serie: "1", nfce_versao: "4.00",
+    nfce_token: "", nfce_csc: "", nfce_serie: "1", nfce_versao: "4.00", nfce_ultimo_numero: "0",
   });
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
@@ -38,7 +38,7 @@ export default function Configuracoes() {
       nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
       focusnfe_ambiente: "producao", codigo_municipio: "", codigo_servico: "07498", aliquota_iss: "2.0",
       logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
-      nfce_token: "", nfce_csc: "", nfce_serie: "1", nfce_versao: "4.00",
+      nfce_token: "", nfce_csc: "", nfce_serie: "1", nfce_versao: "4.00", nfce_ultimo_numero: "0",
     };
     const ids = {};
     const extras = [];
@@ -235,6 +235,9 @@ export default function Configuracoes() {
                 <option value="4.00">4.00</option>
                 <option value="3.10">3.10</option>
               </select>
+            </F>
+            <F label="Último Número NFC-e">
+              <input value={config.nfce_ultimo_numero} onChange={e => setConfig({ ...config, nfce_ultimo_numero: e.target.value })} className="input-dark" placeholder="Ex: 146" />
             </F>
             <F label="Token ID (CSC Token)">
               <input value={config.nfce_token} onChange={e => setConfig({ ...config, nfce_token: e.target.value })} className="input-dark" placeholder="Ex: 000001" />
