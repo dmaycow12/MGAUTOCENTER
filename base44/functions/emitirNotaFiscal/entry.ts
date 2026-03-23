@@ -80,7 +80,9 @@ Deno.serve(async (req) => {
       serieUsada = (serie_manual || '1').padStart(3, '0');
     }
 
-    const dataEmissaoFormatada = data_emissao || new Date().toISOString().split('T')[0];
+    const agora = new Date();
+    const dataEmissaoFormatada = data_emissao || agora.toISOString().split('T')[0];
+    const horaEmissao = agora.toISOString().substring(11, 19);
     const ref = `${tipo.toLowerCase()}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
     const formaPgtoCode = PAYMENT_MAP[forma_pagamento] || '01';
     const cpfCnpjLimpo = (cliente_cpf_cnpj || '').replace(/\D/g, '');
@@ -157,7 +159,7 @@ Deno.serve(async (req) => {
         cnpj_emitente: cfgCnpj.replace(/\D/g, ''),
         numero: String(proximoNum),
         serie: String(parseInt(serieUsada, 10) || 1),
-        data_emissao: `${dataEmissaoFormatada}T12:00:00-03:00`,
+        data_emissao: `${dataEmissaoFormatada}T${horaEmissao}-03:00`,
         modalidade_frete: '9',
         presenca_comprador: '1',
         csc_token: nfceToken.padStart(6, '0'),
@@ -204,8 +206,8 @@ Deno.serve(async (req) => {
         numero: String(proximoNum),
         serie: String(parseInt(serieUsada, 10) || 1),
         natureza_operacao: 'Venda de mercadoria',
-        data_emissao: `${dataEmissaoFormatada}T12:00:00-03:00`,
-        data_saida_entrada: `${dataEmissaoFormatada}T12:00:00-03:00`,
+        data_emissao: `${dataEmissaoFormatada}T${horaEmissao}-03:00`,
+        data_saida_entrada: `${dataEmissaoFormatada}T${horaEmissao}-03:00`,
         tipo_documento: '1',
         finalidade_emissao: '1',
         indicador_presenca: '1',
@@ -277,6 +279,32 @@ Deno.serve(async (req) => {
     if (!resp.ok) {
       const errMsg = result.mensagem || result.erros?.map(e => e.mensagem).join('; ') || rawText.substring(0, 500);
       console.error(`Erro Focus NFe: ${errMsg}`);
+      
+      const itensParaSalvar = (items && items.length > 0) ? items : [{
+        descricao: observacoes || 'Serviços',
+        quantidade: 1,
+        valor_unitario: Number(valor_total),
+        valor_total: Number(valor_total),
+        forma_pagamento: forma_pagamento || 'PIX',
+      }];
+      
+      const notaRascunho = {
+        tipo,
+        numero: String(proximoNum),
+        serie: String(parseInt(serieUsada, 10) || 1),
+        status: 'Rascunho',
+        cliente_id: cliente_id || '',
+        cliente_nome: cliente_nome || '',
+        ordem_servico_id: ordem_servico_id || '',
+        valor_total: Number(valor_total),
+        data_emissao: dataEmissaoFormatada,
+        observacoes: observacoes || '',
+        xml_content: JSON.stringify(itensParaSalvar),
+      };
+      
+      if (!nota_id) {
+        await base44.asServiceRole.entities.NotaFiscal.create(notaRascunho);
+      }
       
       return Response.json({
         sucesso: false,
