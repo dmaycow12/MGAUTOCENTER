@@ -161,7 +161,7 @@ Deno.serve(async (req) => {
       autoIssueMode: 'immediately',
       invoiceType: invoiceType,
       ...(forma_pagamento ? { paymentMethod: PAYMENT_MAP[forma_pagamento] || 'other' } : {}),
-      ...(ordem_servico_id ? { transactionId: `OS-${ordem_servico_id.substring(0, 20)}` } : {}),
+      ...(ordem_servico_id ? { transactionId: `OS-${ordem_servico_id.substring(0, 15)}-${Date.now()}` } : { transactionId: `NF-${Date.now()}` }),
       sendEmailToCustomer: false,
     };
 
