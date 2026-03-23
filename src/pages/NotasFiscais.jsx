@@ -1157,7 +1157,10 @@ export default function NotasFiscais() {
                       </select>
                     </F>
                     <F label="Ordem de Venda Vinculada (opcional)">
-                      <input value={form.ordem_servico_id} onChange={e => setForm(f => ({ ...f, ordem_servico_id: e.target.value }))} className="input-dark" placeholder="ID da Ordem de Serviço" />
+                     <select value={form.ordem_servico_id} onChange={e => setForm(f => ({ ...f, ordem_servico_id: e.target.value }))} className="input-dark">
+                       <option value="">— Nenhuma —</option>
+                       {ordensVenda.map(ov => <option key={ov.id} value={ov.id}>{ov.numero ? `Nº ${ov.numero}` : `OS ${ov.id.slice(-6)}`} — {ov.cliente_nome || "sem cliente"}</option>)}
+                     </select>
                     </F>
                   </div>
 
