@@ -71,7 +71,6 @@ Deno.serve(async (req) => {
           district: cliente_bairro || '',
           postalCode: cep || '',
           city: { name: cliente_cidade, state: cliente_estado || '' },
-          country: 'BRA',
         }
       } : {}),
     };

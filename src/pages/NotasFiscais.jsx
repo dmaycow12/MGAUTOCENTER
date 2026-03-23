@@ -781,7 +781,7 @@ export default function NotasFiscais() {
                     <td className="px-4 py-3">
                       <span className="bg-orange-500/10 text-orange-400 text-xs px-2 py-1 rounded-full font-medium">{nota.tipo}</span>
                     </td>
-                    <td className="px-4 py-3 text-white font-mono text-xs">{nota.serie || "1"}/{nota.numero || "—"}</td>
+                    <td className="px-4 py-3 text-white font-mono text-xs">{nota.numero || "—"}</td>
                     <td className="px-4 py-3 text-white">{nota.cliente_nome || "—"}</td>
                     <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{nota.data_emissao || "—"}</td>
                     <td className="px-4 py-3">
