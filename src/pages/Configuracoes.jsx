@@ -4,12 +4,14 @@ import { Settings, Save, CheckCircle, Plus, X, UserPlus, LogOut, AlertCircle, Us
 
 export default function Configuracoes() {
   const CHAVES = ["nome_oficina", "cnpj", "telefone", "email", "endereco", "cidade", "estado", "cep",
-    "focusnfe_ambiente", "codigo_municipio", "codigo_servico", "aliquota_iss", "logo_url", "observacoes_padrao", "proximo_numero_os"];
+    "focusnfe_ambiente", "codigo_municipio", "codigo_servico", "aliquota_iss", "logo_url", "observacoes_padrao", "proximo_numero_os",
+    "nfce_token", "nfce_csc", "nfce_serie", "nfce_versao"];
 
   const [config, setConfig] = useState({
     nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
     focusnfe_ambiente: "producao", codigo_municipio: "", codigo_servico: "07498", aliquota_iss: "2.0",
     logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
+    nfce_token: "", nfce_csc: "", nfce_serie: "1", nfce_versao: "4.00",
   });
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
@@ -36,6 +38,7 @@ export default function Configuracoes() {
       nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
       focusnfe_ambiente: "producao", codigo_municipio: "", codigo_servico: "07498", aliquota_iss: "2.0",
       logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
+      nfce_token: "", nfce_csc: "", nfce_serie: "1", nfce_versao: "4.00",
     };
     const ids = {};
     const extras = [];
@@ -219,6 +222,27 @@ export default function Configuracoes() {
           <F label="Alíquota ISS (%) — NFSe">
             <input value={config.aliquota_iss} onChange={e => setConfig({ ...config, aliquota_iss: e.target.value })} className="input-dark" placeholder="Ex: 2.0" />
           </F>
+        </div>
+
+        <div className="border-t border-gray-800 mt-4 pt-4">
+          <p className="text-xs text-gray-400 font-semibold mb-3">NFC-e — Configurações Específicas</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <F label="Série NFC-e">
+              <input value={config.nfce_serie} onChange={e => setConfig({ ...config, nfce_serie: e.target.value })} className="input-dark" placeholder="Ex: 1" />
+            </F>
+            <F label="Versão da NFC-e">
+              <select value={config.nfce_versao} onChange={e => setConfig({ ...config, nfce_versao: e.target.value })} className="input-dark">
+                <option value="4.00">4.00</option>
+                <option value="3.10">3.10</option>
+              </select>
+            </F>
+            <F label="Token ID (CSC Token)">
+              <input value={config.nfce_token} onChange={e => setConfig({ ...config, nfce_token: e.target.value })} className="input-dark" placeholder="Ex: 000001" />
+            </F>
+            <F label="CSC (Código de Segurança do Contribuinte)">
+              <input value={config.nfce_csc} onChange={e => setConfig({ ...config, nfce_csc: e.target.value })} className="input-dark" placeholder="Ex: 1811f9bb3649372c6b87b879" />
+            </F>
+          </div>
         </div>
       </Section>
 
