@@ -370,7 +370,7 @@ export default function NotasFiscais() {
     else setEmitindo(true);
 
     try {
-      const payload = { ...f, nota_id: rascunhoNota?.id || null };
+      const payload = { ...f, nota_id: rascunhoNota?.id || null, numero_manual: f.numero || null };
       const response = await base44.functions.invoke("emitirNotaFiscal", payload);
 
       if (response.data?.sucesso) {
