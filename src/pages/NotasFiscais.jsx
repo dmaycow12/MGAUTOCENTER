@@ -465,150 +465,170 @@ export default function NotasFiscais() {
     load();
   };
 
-  const imprimirNota = (nota) => {
-    let dadosXML = null;
-    if (nota.status === "Importada" && nota.xml_content) {
+  const imprimirNota = async (nota) => {
+    // Busca configurações para cupom
+    const configs = await base44.entities.Configuracao.list('-created_date', 100);
+    const getNomeOficina = () => configs.find(c => c.chave === 'nome_oficina')?.valor || 'MG AUTOCENTER';
+    const getEndereco = () => configs.find(c => c.chave === 'endereco')?.valor || '';
+    const getCidade = () => configs.find(c => c.chave === 'cidade')?.valor || '';
+    const getEstado = () => configs.find(c => c.chave === 'estado')?.valor || '';
+    const getCep = () => configs.find(c => c.chave === 'cep')?.valor || '';
+    const getTelefone = () => configs.find(c => c.chave === 'telefone')?.valor || '';
+    const getCnpj = () => configs.find(c => c.chave === 'cnpj')?.valor || '';
+
+    const nomeOficina = getNomeOficina();
+    const endereco = getEndereco();
+    const cidade = getCidade();
+    const estado = getEstado();
+    const cep = getCep();
+    const telefone = getTelefone();
+    const cnpj = getCnpj();
+
+    // Parse itens se houver
+    let itens = [];
+    if (nota.xml_content) {
       try {
-        const xml = nota.xml_content.replace(/<(\/?)[a-zA-Z0-9_]+:([a-zA-Z0-9_]+)/g, "<$1$2");
-        const get = (tag) => { const m = xml.match(new RegExp(`<${tag}[^>]*>([^<]*)<\\/${tag}>`)); return m ? m[1].trim() : ""; };
-        const getAll = (tag) => { const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "g"); const r = []; let m; while((m=re.exec(xml))!==null) r.push(m[1]); return r; };
-        const xNomes = [...xml.matchAll(/<xNome>([^<]*)<\/xNome>/g)];
-        const cnpjs = [...xml.matchAll(/<CNPJ>([^<]*)<\/CNPJ>/g)];
-        const IEs = [...xml.matchAll(/<IE>([^<]*)<\/IE>/g)];
-        const detNodes = getAll("det");
-        const itens = detNodes.map((det,i) => ({
-          num: i+1,
-          descricao: det.match(/<xProd>([^<]*)<\/xProd>/)?.[1] || "",
-          ncm: det.match(/<NCM>([^<]*)<\/NCM>/)?.[1] || "",
-          cfop: det.match(/<CFOP>([^<]*)<\/CFOP>/)?.[1] || "",
-          unidade: det.match(/<uCom>([^<]*)<\/uCom>/)?.[1] || "",
-          quantidade: det.match(/<qCom>([^<]*)<\/qCom>/)?.[1] || "",
-          vUnit: det.match(/<vUnCom>([^<]*)<\/vUnCom>/)?.[1] || "",
-          vTotal: det.match(/<vProd>([^<]*)<\/vProd>/)?.[1] || "",
-        }));
-        const dupNodes = getAll("dup");
-        const dups = dupNodes.map(dup => ({
-          nDup: dup.match(/<nDup>([^<]*)<\/nDup>/)?.[1] || "",
-          dVenc: dup.match(/<dVenc>([^<]*)<\/dVenc>/)?.[1] || "",
-          vDup: dup.match(/<vDup>([^<]*)<\/vDup>/)?.[1] || "",
-        }));
-        dadosXML = {
-          emit_nome: xNomes[0]?.[1] || nota.cliente_nome,
-          emit_cnpj: cnpjs[0]?.[1] || "",
-          emit_ie: IEs[0]?.[1] || "",
-          emit_end: `${get("xLgr")}, ${get("nro")} — ${get("xBairro")} — ${get("xMun")}/${get("UF")} CEP: ${get("CEP")}`,
-          dest_nome: xNomes[1]?.[1] || "",
-          dest_cnpj: cnpjs[1]?.[1] || "",
-          dest_ie: IEs[1]?.[1] || "",
-          natOp: get("natOp"),
-          dataEmissao: (get("dhEmi") || get("dEmi"))?.substring(0,10) || nota.data_emissao,
-          vBC: get("vBC"), vICMS: get("vICMS"), vIPI: get("vIPI"), vPIS: get("vPIS"), vCOFINS: get("vCOFINS"),
-          vProd: get("vProd"), vDesc: get("vDesc"), vFrete: get("vFrete"), vNF: get("vNF"),
-          infCpl: get("infCpl"),
-          itens,
-          dups,
-        };
+        const parsed = JSON.parse(nota.xml_content);
+        itens = Array.isArray(parsed) ? parsed : [];
       } catch {}
     }
 
-    const fmt = (v) => Number(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2});
-    const chaveFormatada = (nota.chave_acesso||"").replace(/(\d{4})/g,"$1 ").trim();
+    const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const chaveFormatada = (nota.chave_acesso || '').replace(/(\d{4})/g, '$1 ').trim();
+    const dataFormatada = nota.data_emissao ? nota.data_emissao.split('-').reverse().join('/') : '';
 
-    const htmlDanfe = dadosXML ? `
-      <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/>
-      <title>DANFE NF-e ${nota.numero}</title>
-      <style>
-        *{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:Arial,sans-serif;font-size:8pt;color:#000;background:#fff;padding:6mm}
-        .border{border:1px solid #000}
-        .box{border:1px solid #000;padding:2px 4px;margin-bottom:2px}
-        .box .lbl{font-size:6pt;color:#333;text-transform:uppercase;font-weight:bold}
-        .box .val{font-size:8.5pt;font-weight:bold}
-        .header{display:grid;grid-template-columns:1fr 140px 1fr;border:1px solid #000;margin-bottom:3px}
-        .h-emit{padding:4px;border-right:1px solid #000}
-        .h-danfe{padding:4px;text-align:center;border-right:1px solid #000;display:flex;flex-direction:column;justify-content:center}
-        .h-info{padding:4px;font-size:7pt}
-        .section-title{background:#eee;font-size:7pt;font-weight:bold;text-transform:uppercase;padding:1px 4px;border:1px solid #000;margin-bottom:2px;margin-top:4px}
-        .grid2{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-bottom:2px}
-        table{width:100%;border-collapse:collapse;font-size:7pt;margin-bottom:2px}
-        th{background:#eee;border:1px solid #000;padding:2px 3px;text-align:center;font-size:6.5pt;font-weight:bold}
-        td{border:1px solid #000;padding:2px 3px}
-        .chave{font-size:7pt;font-family:monospace;letter-spacing:1px;word-break:break-all;border:1px solid #000;padding:3px;background:#f9f9f9;margin-bottom:3px;text-align:center}
-        .totais{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-bottom:2px}
-        .dup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:2px;margin-bottom:2px}
-        @media print{@page{size:A4;margin:8mm}body{padding:0}}
-      </style></head><body>
-      <div class="header">
-        <div class="h-emit">
-          <div class="lbl" style="font-size:9pt;font-weight:bold">${dadosXML.emit_nome}</div>
-          <div style="font-size:7pt;margin-top:2px">${dadosXML.emit_end}</div>
-          <div style="font-size:7pt;margin-top:2px">CNPJ: ${dadosXML.emit_cnpj} — IE: ${dadosXML.emit_ie}</div>
-        </div>
-        <div class="h-danfe">
-          <div style="font-size:10pt;font-weight:bold;letter-spacing:2px">DANFE</div>
-          <div style="font-size:7pt;margin-top:2px">Documento Auxiliar da<br/>Nota Fiscal Eletrônica</div>
-          <div style="margin-top:4px;font-size:8pt;font-weight:bold">Nº ${nota.numero} Série ${nota.serie || "1"}</div>
-          <div style="font-size:7pt;margin-top:2px">Emissão: ${dadosXML.dataEmissao}</div>
-        </div>
-        <div class="h-info">
-          <div class="lbl">Natureza da Operação</div>
-          <div class="val" style="font-size:8pt">${dadosXML.natOp}</div>
-          <div style="margin-top:4px" class="lbl">Protocolo de Autorização</div>
-          <div class="val" style="font-size:7pt">${nota.chave_acesso ? "Nota Autorizada" : "Uso Denegado / Sem Protocolo"}</div>
-        </div>
-      </div>
-      ${nota.chave_acesso ? `<div class="chave">Chave de Acesso: ${chaveFormatada}</div>` : ""}
-      <div class="section-title">Destinatário / Remetente</div>
-      <div class="grid2">
-        <div class="box"><div class="lbl">Nome / Razão Social</div><div class="val">${dadosXML.dest_nome || "—"}</div></div>
-        <div class="box"><div class="lbl">CNPJ / CPF</div><div class="val">${dadosXML.dest_cnpj || "—"}</div></div>
-      </div>
-      <div class="section-title">Dados dos Produtos / Serviços</div>
-      <table>
-        <thead><tr><th>#</th><th>Descrição</th><th>NCM</th><th>CFOP</th><th>UN</th><th>Qtd</th><th>V. Unit.</th><th>V. Total</th></tr></thead>
-        <tbody>
-          ${dadosXML.itens.map(it => `<tr><td style="text-align:center">${it.num}</td><td>${it.descricao}</td><td style="text-align:center">${it.ncm}</td><td style="text-align:center">${it.cfop}</td><td style="text-align:center">${it.unidade}</td><td style="text-align:right">${it.quantidade}</td><td style="text-align:right">${fmt(it.vUnit)}</td><td style="text-align:right"><b>${fmt(it.vTotal)}</b></td></tr>`).join("")}
-        </tbody>
-      </table>
-      <div class="section-title">Cálculo do Imposto / Totais</div>
-      <div class="totais">
-        <div class="box"><div class="lbl">Base Cálc. ICMS</div><div class="val">R$ ${fmt(dadosXML.vBC)}</div></div>
-        <div class="box"><div class="lbl">Valor ICMS</div><div class="val">R$ ${fmt(dadosXML.vICMS)}</div></div>
-        <div class="box"><div class="lbl">Valor IPI</div><div class="val">R$ ${fmt(dadosXML.vIPI)}</div></div>
-        <div class="box"><div class="lbl">Valor PIS</div><div class="val">R$ ${fmt(dadosXML.vPIS)}</div></div>
-        <div class="box"><div class="lbl">Valor COFINS</div><div class="val">R$ ${fmt(dadosXML.vCOFINS)}</div></div>
-        <div class="box"><div class="lbl">Desconto</div><div class="val">R$ ${fmt(dadosXML.vDesc)}</div></div>
-        <div class="box"><div class="lbl">Frete</div><div class="val">R$ ${fmt(dadosXML.vFrete)}</div></div>
-        <div class="box" style="border:2px solid #000"><div class="lbl">VALOR TOTAL NF</div><div class="val" style="font-size:11pt">R$ ${fmt(dadosXML.vNF)}</div></div>
-      </div>
-      ${dadosXML.dups.length > 0 ? `<div class="section-title">Duplicatas</div><div class="dup-grid">${dadosXML.dups.map(d => { const [ano, mes, dia] = (d.dVenc || "").split("-"); const df = ano && mes && dia ? `${dia}/${mes}/${ano.slice(-2)}` : d.dVenc; return `<div class="box"><div class="lbl">Bol. ${d.nDup}</div><div class="val" style="font-size:7pt">Venc: ${df}</div><div class="val">R$ ${fmt(d.vDup)}</div></div>`; }).join("")}</div>` : ""}
-      ${dadosXML.infCpl ? `<div class="section-title">Informações Complementares</div><div class="box" style="font-size:7pt">${dadosXML.infCpl}</div>` : ""}
-      <script>window.onload=function(){window.print()}</script>
-      </body></html>
-    ` : `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/>
-      <title>NF ${nota.tipo} ${nota.numero || nota.id}</title>
-      <style>
-        body{font-family:Arial,sans-serif;padding:20mm;color:#111;max-width:210mm;margin:0 auto}
-        h1{font-size:18pt;margin-bottom:4px}.sub{color:#888;font-size:10pt;margin-bottom:12px}
-        .box{border:1px solid #ccc;padding:6px 10px;margin-bottom:6px;border-radius:4px}
-        .lbl{font-size:7pt;color:#888;text-transform:uppercase;letter-spacing:.5px}
-        .val{font-size:11pt;font-weight:bold}
-        .total-val{font-size:18pt;font-weight:bold;color:#f97316}
-        @media print{@page{size:A4;margin:15mm}body{padding:0}}
-      </style></head><body>
-      <h1>${nota.tipo} — Nota Fiscal</h1>
-      <p class="sub">Emitida por Oficina Pro • ${nota.data_emissao || ""} • Status: ${nota.status}</p>
-      <div class="box"><div class="lbl">Número / Série</div><div class="val">${nota.numero || "—"}${nota.serie ? ` / ${nota.serie}` : ""}</div></div>
-      <div class="box"><div class="lbl">Cliente</div><div class="val">${nota.cliente_nome || "—"}</div></div>
-      <div class="box"><div class="lbl">Valor Total</div><div class="total-val">R$ ${fmt(nota.valor_total)}</div></div>
-      ${nota.observacoes ? `<div class="box"><div class="lbl">Observações</div><div class="val" style="font-size:10pt">${nota.observacoes}</div></div>` : ""}
-      ${nota.chave_acesso ? `<div class="box" style="font-size:7pt;word-break:break-all"><b>Chave de Acesso:</b> ${nota.chave_acesso}</div>` : ""}
-      ${nota.pdf_url ? `<div style="margin-top:12px"><a href="${nota.pdf_url}" target="_blank" style="color:#f97316;font-weight:bold">📄 Baixar PDF Oficial</a></div>` : ""}
-      <script>window.onload=function(){window.print()}</script>
-      </body></html>`;
+    const htmlCupom = `
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Cupom NFCe ${nota.numero}</title>
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: 'Courier New', monospace; font-size: 11pt; color: #000; background: #fff; padding: 6mm; line-height: 1.3; }
+          .cupom { width: 80mm; margin: 0 auto; }
+          .header { text-align: center; border-bottom: 1px dashed #000; padding: 4mm 0; margin-bottom: 2mm; }
+          .header h1 { font-size: 12pt; font-weight: bold; margin-bottom: 2mm; }
+          .header p { font-size: 9pt; margin: 1mm 0; }
+          .secao { margin: 3mm 0; padding: 2mm 0; border-bottom: 1px dashed #000; }
+          .secao-titulo { font-size: 8pt; font-weight: bold; text-transform: uppercase; color: #333; margin-bottom: 2mm; }
+          .linha { display: flex; justify-content: space-between; font-size: 9pt; margin: 1.5mm 0; }
+          .label { font-weight: bold; }
+          .valor { text-align: right; }
+          .item { font-size: 8.5pt; margin: 2mm 0; padding: 1mm 0; border-bottom: 1px dotted #ccc; }
+          .item-desc { font-weight: bold; }
+          .item-info { display: flex; justify-content: space-between; font-size: 8pt; margin-top: 0.5mm; }
+          .total { font-size: 12pt; font-weight: bold; text-align: right; margin: 2mm 0; }
+          .qrcode { text-align: center; margin: 3mm 0; font-size: 7pt; }
+          .rodape { text-align: center; font-size: 7pt; color: #666; margin-top: 2mm; }
+          @media print {
+            @page { size: 80mm auto; margin: 2mm; }
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="cupom">
+          <!-- HEADER -->
+          <div class="header">
+            <h1>${nomeOficina}</h1>
+            <p>${cnpj ? 'CNPJ: ' + cnpj : ''}</p>
+            <p>${endereco}${endereco && cidade ? ', ' : ''}${cidade}${cidade && estado ? '/' : ''}${estado}</p>
+            ${cep ? '<p>CEP: ' + cep + '</p>' : ''}
+            ${telefone ? '<p>Tel: ' + telefone + '</p>' : ''}
+          </div>
 
-    const win = window.open("", "_blank");
-    win.document.write(htmlDanfe);
+          <!-- INFO NOTA -->
+          <div class="secao">
+            <div class="linha">
+              <span class="label">NFCe Nº:</span>
+              <span class="valor">${nota.numero || '—'}</span>
+            </div>
+            <div class="linha">
+              <span class="label">Série:</span>
+              <span class="valor">${nota.serie || '1'}</span>
+            </div>
+            <div class="linha">
+              <span class="label">Data/Hora:</span>
+              <span class="valor">${dataFormatada} 12:00</span>
+            </div>
+            <div class="linha">
+              <span class="label">Status:</span>
+              <span class="valor">${nota.status || 'Emitida'}</span>
+            </div>
+          </div>
+
+          <!-- CLIENTE -->
+          <div class="secao">
+            <div class="secao-titulo">Cliente</div>
+            <div style="font-size: 9pt;">
+              <strong>${nota.cliente_nome || 'Consumidor Final'}</strong>
+            </div>
+          </div>
+
+          <!-- ITENS -->
+          ${itens.length > 0 ? `
+            <div class="secao">
+              <div class="secao-titulo">Itens</div>
+              ${itens.map((it, idx) => `
+                <div class="item">
+                  <div class="item-desc">${(idx + 1).toString().padStart(2, '0')}. ${(it.descricao || 'Produto').toUpperCase()}</div>
+                  <div class="item-info">
+                    <span>${Number(it.quantidade || 1)} x R$ ${fmt(it.valor_unitario || 0)}</span>
+                    <span style="font-weight: bold;">R$ ${fmt(it.valor_total || 0)}</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          <!-- TOTALIZADORES -->
+          <div class="secao">
+            <div class="linha">
+              <span class="label">Subtotal:</span>
+              <span class="valor">R$ ${fmt(nota.valor_total || 0)}</span>
+            </div>
+            <div class="total">
+              <div style="font-size: 9pt; color: #666; margin-bottom: 1mm;">TOTAL</div>
+              R$ ${fmt(nota.valor_total || 0)}
+            </div>
+          </div>
+
+          <!-- PAGAMENTO -->
+          <div class="secao">
+            <div class="secao-titulo">Forma de Pagamento</div>
+            <div style="font-size: 9pt; font-weight: bold;">
+              ${itens.length > 0 ? (itens[0].forma_pagamento || 'PIX') : 'PIX'}
+            </div>
+          </div>
+
+          <!-- CHAVE -->
+          ${nota.chave_acesso ? `
+            <div class="secao">
+              <div class="secao-titulo">Chave de Acesso</div>
+              <div class="qrcode">
+                <strong>${chaveFormatada}</strong>
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- RODAPÉ -->
+          <div class="rodape">
+            <p>Obrigado pela compra!</p>
+            <p style="margin-top: 2mm; font-size: 6.5pt;">Este é um documento fiscal eletrônico.</p>
+          </div>
+        </div>
+
+        <script>
+          window.onload = function() { window.print(); };
+        </script>
+      </body>
+      </html>
+    `;
+
+    const win = window.open('', '_blank');
+    win.document.write(htmlCupom);
     win.document.close();
   };
 
