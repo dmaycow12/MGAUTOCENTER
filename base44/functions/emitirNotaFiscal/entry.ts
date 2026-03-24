@@ -325,7 +325,7 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    // 7. Salva no banco de dados com status Emitida
+    // 7. Salva no banco de dados com status correto da API
     const itensParaSalvar = (items && items.length > 0) ? items : [{
       descricao: observacoes || 'Serviços',
       quantidade: 1,
@@ -334,11 +334,19 @@ Deno.serve(async (req) => {
       forma_pagamento: forma_pagamento || 'PIX',
     }];
 
+    // Mapeia status do Focus NFe para status interno
+    const statusFocus = result.status || '';
+    let statusInterno = 'Processando';
+    if (['autorizado'].includes(statusFocus)) statusInterno = 'Emitida';
+    else if (['erro', 'rejeitado', 'denegado', 'cancelado'].includes(statusFocus)) statusInterno = 'Erro';
+
     const notaData = {
       tipo,
       numero: String(proximoNum),
       serie: String(parseInt(serieUsada, 10) || 1),
-      status: 'Emitida',
+      status: statusInterno,
+      status_sefaz: statusFocus,
+      mensagem_sefaz: result.mensagem_sefaz || result.mensagem || '',
       cliente_id: cliente_id || '',
       cliente_nome: cliente_nome || '',
       ordem_servico_id: ordem_servico_id || '',
