@@ -25,6 +25,8 @@ function defaultForm() {
     tipo: "NFSe",
     numero: "",
     serie: "1",
+    natureza_operacao: "Venda de mercadoria",
+    tipo_documento: "1",
     data_emissao: new Date().toISOString().split("T")[0],
     forma_pagamento: "PIX",
     observacoes: "",
@@ -1032,6 +1034,19 @@ export default function NotasFiscais() {
                 <input type="date" value={form.data_emissao} onChange={e => setForm(f => ({ ...f, data_emissao: e.target.value }))} className="input-dark" />
               </F>
             </div>
+            {form.tipo === "NFe" && (
+              <div className="px-5 pt-3 flex-shrink-0 grid grid-cols-2 gap-4">
+                <F label="Natureza da Operação *">
+                  <NoACInput value={form.natureza_operacao} onChange={e => setForm(f => ({ ...f, natureza_operacao: e.target.value }))} placeholder="Venda de mercadoria" />
+                </F>
+                <F label="Tipo *">
+                  <select value={form.tipo_documento} onChange={e => setForm(f => ({ ...f, tipo_documento: e.target.value }))} className="input-dark">
+                    <option value="1">Saída</option>
+                    <option value="0">Entrada</option>
+                  </select>
+                </F>
+              </div>
+            )}
 
             <div className="px-5 pt-3 flex-shrink-0 flex gap-1 border-b border-gray-800">
               {[["cliente", "1. Cliente"], ["itens", form.tipo === "NFSe" ? "2. Serviços" : "2. Produtos"], ["pagamento", "3. Pagamento"]].map(([aba, label]) => (
