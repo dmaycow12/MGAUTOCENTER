@@ -97,7 +97,8 @@ Deno.serve(async (req) => {
     }
 
     const agora = new Date();
-    const agoraBrasilia = new Date(agora.getTime() - 3 * 60 * 60 * 1000);
+    // Subtrai 5 minutos para evitar erro 703 (clock skew com SEFAZ)
+    const agoraBrasilia = new Date(agora.getTime() - 3 * 60 * 60 * 1000 - 5 * 60 * 1000);
     const dataEmissaoFormatada = data_emissao || agoraBrasilia.toISOString().split('T')[0];
     const horaEmissao = agoraBrasilia.toISOString().substring(11, 19);
     const ref = `${tipo.toLowerCase()}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
