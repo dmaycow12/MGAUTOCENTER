@@ -131,6 +131,7 @@ export default function NotasFiscais() {
   const [msgFeedback, setMsgFeedback] = useState(null);
   const [temSpedy, setTemSpedy] = useState(false);
   const [abaForm, setAbaForm] = useState("cliente");
+  const [errosForm, setErrosForm] = useState({});
 
   useEffect(() => {
     load().then(async () => {
@@ -368,6 +369,37 @@ export default function NotasFiscais() {
     setTimeout(() => setMsgFeedback(null), 6000);
   };
 
+  const validarForm = (f) => {
+    const erros = {};
+    if (!f.cliente_nome?.trim()) erros.cliente_nome = "Nome do cliente é obrigatório";
+    if (!f.valor_total || f.valor_total <= 0) erros.valor_total = "Valor total deve ser maior que zero";
+
+    if (f.tipo === "NFSe" || f.tipo === "NFe") {
+      if (!f.cliente_cpf_cnpj?.trim()) erros.cliente_cpf_cnpj = `${f.tipo} exige CPF ou CNPJ do cliente`;
+    }
+    if (f.tipo === "NFe") {
+      if (!f.cliente_endereco?.trim()) erros.cliente_endereco = "NFe exige endereço do destinatário";
+      if (!f.cliente_cidade?.trim()) erros.cliente_cidade = "NFe exige cidade do destinatário";
+      if (!f.cliente_estado?.trim()) erros.cliente_estado = "NFe exige UF do destinatário";
+      if (!f.cliente_cep?.trim()) erros.cliente_cep = "NFe exige CEP do destinatário";
+    }
+
+    const itemErros = f.items.map((it, idx) => {
+      const ie = {};
+      if (!it.descricao?.trim()) ie.descricao = "Descrição obrigatória";
+      if (!it.valor_total || Number(it.valor_total) <= 0) ie.valor_total = "Valor deve ser maior que zero";
+      if (f.tipo !== "NFSe") {
+        if (!it.ncm?.trim()) ie.ncm = "NCM obrigatório";
+        if (!it.cfop?.trim()) ie.cfop = "CFOP obrigatório";
+      }
+      return ie;
+    });
+    const temErroItem = itemErros.some(ie => Object.keys(ie).length > 0);
+    if (temErroItem) erros.items = itemErros;
+
+    return erros;
+  };
+
   const emitirNota = async (rascunhoNota = null) => {
     const f = rascunhoNota ? {
       ...defaultForm(),
@@ -380,6 +412,21 @@ export default function NotasFiscais() {
       data_emissao: rascunhoNota.data_emissao,
       items: [{ descricao: rascunhoNota.observacoes || 'Serviços', quantidade: 1, valor_unitario: rascunhoNota.valor_total, valor_total: rascunhoNota.valor_total }],
     } : form;
+
+    if (!rascunhoNota) {
+      const erros = validarForm(f);
+      if (Object.keys(erros).length > 0) {
+        setErrosForm(erros);
+        // Navega para a aba com o primeiro erro
+        if (erros.cliente_nome || erros.cliente_cpf_cnpj || erros.cliente_endereco || erros.cliente_cidade || erros.cliente_estado || erros.cliente_cep) {
+          setAbaForm("cliente");
+        } else if (erros.items || erros.valor_total) {
+          setAbaForm("itens");
+        }
+        return;
+      }
+      setErrosForm({});
+    }
 
     if (!f.cliente_nome) return alert("Informe o nome do cliente.");
     if (!f.valor_total || f.valor_total <= 0) return alert("Informe o valor total.");
@@ -1018,10 +1065,12 @@ export default function NotasFiscais() {
                   </F>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <F label="Nome / Razão Social *" className="col-span-2">
-                      <NoACInput value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} placeholder="Nome completo ou razão social" />
+                      <NoACInput value={form.cliente_nome} onChange={e => { setForm(f => ({ ...f, cliente_nome: e.target.value })); setErrosForm(e2 => ({...e2, cliente_nome: undefined})); }} placeholder="Nome completo ou razão social" className={`input-dark ${errosForm.cliente_nome ? 'border-red-500' : ''}`} />
+                      {errosForm.cliente_nome && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_nome}</p>}
                     </F>
                     <F label="CPF / CNPJ">
-                      <NoACInput value={form.cliente_cpf_cnpj} onChange={e => setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value }))} placeholder="000.000.000-00" />
+                      <NoACInput value={form.cliente_cpf_cnpj} onChange={e => { setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cpf_cnpj: undefined})); }} placeholder="000.000.000-00" className={`input-dark ${errosForm.cliente_cpf_cnpj ? 'border-red-500' : ''}`} />
+                      {errosForm.cliente_cpf_cnpj && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cpf_cnpj}</p>}
                     </F>
                     <F label="E-mail">
                       <NoACInput value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} placeholder="email@cliente.com" />
@@ -1030,10 +1079,12 @@ export default function NotasFiscais() {
                       <NoACInput value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} placeholder="(00) 00000-0000" />
                     </F>
                     <F label="CEP">
-                      <NoACInput value={form.cliente_cep} onChange={e => setForm(f => ({ ...f, cliente_cep: e.target.value }))} placeholder="00000-000" />
+                      <NoACInput value={form.cliente_cep} onChange={e => { setForm(f => ({ ...f, cliente_cep: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cep: undefined})); }} placeholder="00000-000" className={`input-dark ${errosForm.cliente_cep ? 'border-red-500' : ''}`} />
+                      {errosForm.cliente_cep && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cep}</p>}
                     </F>
                     <F label="Endereço" className="col-span-2">
-                      <NoACInput value={form.cliente_endereco} onChange={e => setForm(f => ({ ...f, cliente_endereco: e.target.value }))} placeholder="Rua, Avenida..." />
+                      <NoACInput value={form.cliente_endereco} onChange={e => { setForm(f => ({ ...f, cliente_endereco: e.target.value })); setErrosForm(e2 => ({...e2, cliente_endereco: undefined})); }} placeholder="Rua, Avenida..." className={`input-dark ${errosForm.cliente_endereco ? 'border-red-500' : ''}`} />
+                      {errosForm.cliente_endereco && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_endereco}</p>}
                     </F>
                     <F label="Número">
                       <NoACInput value={form.cliente_numero} onChange={e => setForm(f => ({ ...f, cliente_numero: e.target.value }))} placeholder="123" />
@@ -1042,10 +1093,12 @@ export default function NotasFiscais() {
                       <NoACInput value={form.cliente_bairro} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} placeholder="" />
                     </F>
                     <F label="Cidade">
-                      <NoACInput value={form.cliente_cidade} onChange={e => setForm(f => ({ ...f, cliente_cidade: e.target.value }))} placeholder="Nome da cidade" />
+                      <NoACInput value={form.cliente_cidade} onChange={e => { setForm(f => ({ ...f, cliente_cidade: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cidade: undefined})); }} placeholder="Nome da cidade" className={`input-dark ${errosForm.cliente_cidade ? 'border-red-500' : ''}`} />
+                      {errosForm.cliente_cidade && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cidade}</p>}
                     </F>
                     <F label="Estado (UF)">
-                      <NoACInput value={form.cliente_estado} onChange={e => setForm(f => ({ ...f, cliente_estado: e.target.value.toUpperCase() }))} placeholder="MG" maxLength={2} />
+                      <NoACInput value={form.cliente_estado} onChange={e => { setForm(f => ({ ...f, cliente_estado: e.target.value.toUpperCase() })); setErrosForm(e2 => ({...e2, cliente_estado: undefined})); }} placeholder="MG" maxLength={2} className={`input-dark ${errosForm.cliente_estado ? 'border-red-500' : ''}`} />
+                      {errosForm.cliente_estado && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_estado}</p>}
                     </F>
                   </div>
                   <div className="flex justify-end">
@@ -1110,7 +1163,8 @@ export default function NotasFiscais() {
                             </select>
                           </F>
                           <F label="Descrição" className="col-span-2 md:col-span-4">
-                              <NoACInput value={item.descricao} onChange={e => atualizarItem(idx, "descricao", e.target.value)} placeholder={form.tipo === "NFSe" ? "Ex: Troca de óleo, Alinhamento..." : "Ex: Filtro de óleo, Pastilha de freio..."} />
+                              <NoACInput value={item.descricao} onChange={e => atualizarItem(idx, "descricao", e.target.value)} placeholder={form.tipo === "NFSe" ? "Ex: Troca de óleo, Alinhamento..." : "Ex: Filtro de óleo, Pastilha de freio..."} className={`input-dark ${errosForm.items?.[idx]?.descricao ? 'border-red-500' : ''}`} />
+                              {errosForm.items?.[idx]?.descricao && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].descricao}</p>}
                             </F>
                            <F label="Quantidade">
                              <NoACInput value={item.quantidade} onChange={e => atualizarItem(idx, "quantidade", e.target.value)} placeholder="1" />
@@ -1124,10 +1178,12 @@ export default function NotasFiscais() {
                            {form.tipo !== 'NFSe' && (
                              <>
                                <F label="NCM">
-                                 <NoACInput value={item.ncm || ''} onChange={e => atualizarItem(idx, 'ncm', e.target.value)} placeholder="87089990" />
+                                 <NoACInput value={item.ncm || ''} onChange={e => atualizarItem(idx, 'ncm', e.target.value)} placeholder="87089990" className={`input-dark ${errosForm.items?.[idx]?.ncm ? 'border-red-500' : ''}`} />
+                                 {errosForm.items?.[idx]?.ncm && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].ncm}</p>}
                                </F>
                                <F label="CFOP">
-                                 <NoACInput value={item.cfop || ''} onChange={e => atualizarItem(idx, 'cfop', e.target.value)} placeholder="5405" />
+                                 <NoACInput value={item.cfop || ''} onChange={e => atualizarItem(idx, 'cfop', e.target.value)} placeholder="5405" className={`input-dark ${errosForm.items?.[idx]?.cfop ? 'border-red-500' : ''}`} />
+                                 {errosForm.items?.[idx]?.cfop && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].cfop}</p>}
                                </F>
                                <F label="CEST (opcional)">
                                  <NoACInput value={item.cest || ''} onChange={e => atualizarItem(idx, 'cest', e.target.value)} placeholder="" />
