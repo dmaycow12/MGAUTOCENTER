@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
     const authHeader = 'Basic ' + btoa(apiKey + ':');
     const ref = `${(tipo || 'NFSe').toLowerCase()}-${Date.now()}`;
     
-    // BYPASS OBRIGATÓRIO (Força dados perfeitos para evitar erro do formulário)
+    // BYPASS OBRIGATÓRIO
     let cpfCnpjLimpo = (cliente_cpf_cnpj || '').replace(/\D/g, '');
     if (cpfCnpjLimpo.length !== 11 && cpfCnpjLimpo.length !== 14) {
       cpfCnpjLimpo = '05804561005'; 
@@ -77,8 +77,8 @@ Deno.serve(async (req) => {
           discriminacao: discriminacaoServico.substring(0, 1000),
           item_lista_servico: "14.01",
           codigo_tributario_municipio: "14.01",
-          exigibilidade_iss: 1, // Corrigido para Número
-          iss_retido: false // Corrigido para Booleano verdadeiro (sem aspas)
+          exigibilidade_iss: 1,
+          iss_retido: false
         }
       };
     } else {
@@ -88,6 +88,7 @@ Deno.serve(async (req) => {
       ];
 
       payload = {
+        // ... (resto do payload NFe mantido igual)
         cnpj_emitente: cnpjEmitente,
         natureza_operacao: 'Venda de mercadoria',
         tipo_documento: '1',
@@ -135,13 +136,18 @@ Deno.serve(async (req) => {
 
     const result = await resp.json();
 
-    // SE A PREFEITURA REJEITAR, ELE MANDA O ERRO COM STATUS 200 PARA A TELA MOSTRAR
+    // ==========================================
+    // IMPRIME O ERRO NOS SEUS LOGS!
+    // ==========================================
+    console.log("=== RESPOSTA DA PREFEITURA / FOCUS ===");
+    console.log(JSON.stringify(result));
+    console.log("======================================");
+
     if (!resp.ok) {
       const msgErro = result.erros ? result.erros[0].mensagem : (result.mensagem || "Erro Desconhecido");
       return Response.json({ sucesso: false, erro: `MOTIVO DA REJEIÇÃO: ${msgErro}` }, { status: 200 });
     }
 
-    // Sucesso
     const notaData = {
       status: 'Emitida',
       valor_total: Number(valor_total) || 1.0,
@@ -153,14 +159,11 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, notaData);
     }
 
-    return Response.json({ 
-      sucesso: true, 
-      mensagem: "Nota emitida com sucesso!", 
-      pdf: notaData.pdf_url 
-    });
+    return Response.json({ sucesso: true, mensagem: "Nota enviada!", pdf: notaData.pdf_url });
 
   } catch (error) {
-    // Isso garante que o erro de código chegue até você sem bloqueio do app
+    console.log("=== ERRO INTERNO NO CÓDIGO ===");
+    console.log(error.message);
     return Response.json({ sucesso: false, erro: error.message }, { status: 200 });
   }
 });
