@@ -135,10 +135,10 @@ Deno.serve(async (req) => {
 
     const result = await resp.json();
 
-    // SE A PREFEITURA REJEITAR, ELE EXPLODE O ERRO NA TELA NA MARRA
+    // SE A PREFEITURA REJEITAR, ELE MANDA O ERRO COM STATUS 200 PARA A TELA MOSTRAR
     if (!resp.ok) {
       const msgErro = result.erros ? result.erros[0].mensagem : (result.mensagem || "Erro Desconhecido");
-      throw new Error(`MOTIVO DA REJEIÇÃO: ${msgErro}`);
+      return Response.json({ sucesso: false, erro: `MOTIVO DA REJEIÇÃO: ${msgErro}` }, { status: 200 });
     }
 
     // Sucesso
@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
-    // Isso garante que o erro chegue até você, não importa o que o aplicativo tente fazer
-    return Response.json({ sucesso: false, erro: error.message }, { status: 400 });
+    // Isso garante que o erro de código chegue até você sem bloqueio do app
+    return Response.json({ sucesso: false, erro: error.message }, { status: 200 });
   }
 });
