@@ -68,7 +68,9 @@ Deno.serve(async (req) => {
         },
         tomador: {
           razao_social: (cliente_nome || 'Consumidor Final Teste').substring(0, 100),
-          cnpj_cpf: cpfCnpjLimpo, // A API de NFSe exige esse campo unificado
+          // Separando o CPF ou CNPJ certinho para a API
+          ...(cpfCnpjLimpo.length === 11 ? { cpf: cpfCnpjLimpo } : {}),
+          ...(cpfCnpjLimpo.length === 14 ? { cnpj: cpfCnpjLimpo } : {}),
           email: cliente_email || undefined,
           endereco: {
             logradouro: cliente_endereco || 'Rua Rui Barbosa',
@@ -147,13 +149,15 @@ Deno.serve(async (req) => {
 
     const result = await resp.json();
 
-    // Tratamento de Erro Detalhado
+    // ==========================================
+    // TRUQUE PARA O ERRO APARECER NA TELA (STATUS 200)
+    // ==========================================
     if (!resp.ok) {
       const msgErro = result.erros ? result.erros[0].mensagem : (result.mensagem || "Erro desconhecido");
       return Response.json({
         sucesso: false,
         erro: `Erro Focus NFe: ${msgErro}`
-      }, { status: 400 });
+      }, { status: 200 }); // <-- O segredo está aqui!
     }
 
     // Sucesso
@@ -175,6 +179,6 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
-    return Response.json({ sucesso: false, erro: `Erro interno: ${error.message}` }, { status: 500 });
+    return Response.json({ sucesso: false, erro: `Erro interno: ${error.message}` }, { status: 200 });
   }
 });
