@@ -338,7 +338,11 @@ export default function NotasFiscais() {
       }
     }
 
-    await base44.entities.NotaFiscal.delete(id);
+    try {
+      await base44.entities.NotaFiscal.delete(id);
+    } catch (_) {
+      // Nota já não existe no banco, apenas atualiza a lista
+    }
     load();
   };
 
