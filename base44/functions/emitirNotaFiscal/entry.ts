@@ -15,7 +15,6 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
     
-    // Extração dos dados do formulário
     const {
       tipo, cliente_nome, cliente_cpf_cnpj, cliente_email,
       cliente_telefone, cliente_endereco, cliente_numero,
@@ -24,8 +23,6 @@ Deno.serve(async (req) => {
       nota_id, cliente_id,
     } = body;
 
-    // CONFIGURAÇÕES FIXAS
-    const ambiente = 'homologacao';
     const baseUrl = 'https://homologacao.focusnfe.com.br/v2';
     const apiKey = 'dK6EQsntpg7M4gnNpAoUOO8Yos023CyC'; 
     const cnpjEmitente = '54043647000120';
@@ -34,25 +31,20 @@ Deno.serve(async (req) => {
     const authHeader = 'Basic ' + btoa(apiKey + ':');
     const ref = `${(tipo || 'NFSe').toLowerCase()}-${Date.now()}`;
     
-    // ==========================================
-    // BYPASS: FORÇA DADOS VÁLIDOS SE O FORMULÁRIO FALHAR
-    // ==========================================
+    // BYPASS OBRIGATÓRIO (Força dados perfeitos para evitar erro do formulário)
     let cpfCnpjLimpo = (cliente_cpf_cnpj || '').replace(/\D/g, '');
     if (cpfCnpjLimpo.length !== 11 && cpfCnpjLimpo.length !== 14) {
-      cpfCnpjLimpo = '05804561005'; // CPF válido injetado à força para o teste
+      cpfCnpjLimpo = '05804561005'; 
     }
     
     let cepLimpo = (cliente_cep || '').replace(/\D/g, '');
     if (cepLimpo.length !== 8) {
-      cepLimpo = '38700327'; // CEP válido de Patos de Minas injetado à força
+      cepLimpo = '38700327'; 
     }
 
     let endpoint = '';
     let payload = null;
 
-    // ==========================================
-    // NOTA DE SERVIÇO (NFSe)
-    // ==========================================
     if (tipo === 'NFSe') {
       endpoint = `/nfse?ref=${ref}`;
       
@@ -68,7 +60,6 @@ Deno.serve(async (req) => {
         },
         tomador: {
           razao_social: (cliente_nome || 'Consumidor Final Teste').substring(0, 100),
-          // Separando o CPF ou CNPJ certinho para a API
           ...(cpfCnpjLimpo.length === 11 ? { cpf: cpfCnpjLimpo } : {}),
           ...(cpfCnpjLimpo.length === 14 ? { cnpj: cpfCnpjLimpo } : {}),
           email: cliente_email || undefined,
@@ -86,15 +77,11 @@ Deno.serve(async (req) => {
           discriminacao: discriminacaoServico.substring(0, 1000),
           item_lista_servico: "14.01",
           codigo_tributario_municipio: "14.01",
-          exigibilidade_iss: "1",
-          iss_retido: "false"
+          exigibilidade_iss: 1, // Corrigido para Número
+          iss_retido: false // Corrigido para Booleano verdadeiro (sem aspas)
         }
       };
-    } 
-    // ==========================================
-    // NOTA DE PRODUTO (NFe)
-    // ==========================================
-    else {
+    } else {
       endpoint = `/nfe?ref=${ref}`;
       const prodItems = (items && items.length > 0) ? items : [
         { descricao: 'Pecas de Automoveis', quantidade: 1, valor_unitario: Number(valor_total) || 1.0 }
@@ -137,7 +124,6 @@ Deno.serve(async (req) => {
       };
     }
 
-    // Disparo para a API
     const resp = await fetch(`${baseUrl}${endpoint}`, {
       method: 'POST',
       headers: { 
@@ -149,15 +135,10 @@ Deno.serve(async (req) => {
 
     const result = await resp.json();
 
-    // ==========================================
-    // TRUQUE PARA O ERRO APARECER NA TELA (STATUS 200)
-    // ==========================================
+    // SE A PREFEITURA REJEITAR, ELE EXPLODE O ERRO NA TELA NA MARRA
     if (!resp.ok) {
-      const msgErro = result.erros ? result.erros[0].mensagem : (result.mensagem || "Erro desconhecido");
-      return Response.json({
-        sucesso: false,
-        erro: `Erro Focus NFe: ${msgErro}`
-      }, { status: 200 }); // <-- O segredo está aqui!
+      const msgErro = result.erros ? result.erros[0].mensagem : (result.mensagem || "Erro Desconhecido");
+      throw new Error(`MOTIVO DA REJEIÇÃO: ${msgErro}`);
     }
 
     // Sucesso
@@ -179,6 +160,7 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
-    return Response.json({ sucesso: false, erro: `Erro interno: ${error.message}` }, { status: 200 });
+    // Isso garante que o erro chegue até você, não importa o que o aplicativo tente fazer
+    return Response.json({ sucesso: false, erro: error.message }, { status: 400 });
   }
 });
