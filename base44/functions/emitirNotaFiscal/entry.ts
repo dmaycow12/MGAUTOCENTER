@@ -26,12 +26,12 @@ Deno.serve(async (req) => {
     const baseUrl = 'https://homologacao.focusnfe.com.br/v2';
     const apiKey = 'dK6EQsntpg7M4gnNpAoUOO8Yos023CyC'; 
     const cnpjEmitente = '54043647000120';
-    const codMunicipioPatos = "3148004";
+    const codMunicipioPatos = "3148004"; // Código IBGE de Patos de Minas
     
     const authHeader = 'Basic ' + btoa(apiKey + ':');
     const ref = `${(tipo || 'NFSe').toLowerCase()}-${Date.now()}`;
     
-    // BYPASS: Garante um CPF válido caso o formulário falhe
+    // BYPASS: Garante dados válidos para teste
     let cpfCnpjLimpo = (cliente_cpf_cnpj || '').replace(/\D/g, '');
     if (cpfCnpjLimpo.length !== 11 && cpfCnpjLimpo.length !== 14) {
       cpfCnpjLimpo = '05804561005'; 
@@ -56,11 +56,11 @@ Deno.serve(async (req) => {
         data_emissao: new Date().toISOString(),
         prestador: {
           cnpj: cnpjEmitente,
-          inscricao_municipal: "2024000738"
+          inscricao_municipal: "2024000738",
+          codigo_municipio: codMunicipioPatos // ADICIONADO: O que a prefeitura pediu!
         },
         tomador: {
           razao_social: (cliente_nome || 'Consumidor Final Teste').substring(0, 100),
-          // CORREÇÃO: A API de NFSe exige que seja neste campo único
           cnpj_cpf: cpfCnpjLimpo, 
           email: cliente_email || undefined,
           endereco: {
@@ -93,7 +93,6 @@ Deno.serve(async (req) => {
         tipo_documento: '1',
         presenca_comprador: '1',
         nome_destinatario: (cliente_nome || 'Consumidor Final Teste').substring(0, 60),
-        // Já na NFe (Produto), a API exige separado:
         cpf_destinatario: cpfCnpjLimpo.length === 11 ? cpfCnpjLimpo : undefined,
         cnpj_destinatario: cpfCnpjLimpo.length === 14 ? cpfCnpjLimpo : undefined,
         logradouro_destinatario: cliente_endereco || 'Rua Rui Barbosa',
