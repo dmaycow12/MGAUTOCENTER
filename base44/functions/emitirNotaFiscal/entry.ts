@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
     const authHeader = 'Basic ' + btoa(apiKey + ':');
     const ref = `${(tipo || 'NFSe').toLowerCase()}-${Date.now()}`;
     
-    // BYPASS OBRIGATÓRIO
+    // BYPASS: Garante um CPF válido caso o formulário falhe
     let cpfCnpjLimpo = (cliente_cpf_cnpj || '').replace(/\D/g, '');
     if (cpfCnpjLimpo.length !== 11 && cpfCnpjLimpo.length !== 14) {
       cpfCnpjLimpo = '05804561005'; 
@@ -60,8 +60,8 @@ Deno.serve(async (req) => {
         },
         tomador: {
           razao_social: (cliente_nome || 'Consumidor Final Teste').substring(0, 100),
-          ...(cpfCnpjLimpo.length === 11 ? { cpf: cpfCnpjLimpo } : {}),
-          ...(cpfCnpjLimpo.length === 14 ? { cnpj: cpfCnpjLimpo } : {}),
+          // CORREÇÃO: A API de NFSe exige que seja neste campo único
+          cnpj_cpf: cpfCnpjLimpo, 
           email: cliente_email || undefined,
           endereco: {
             logradouro: cliente_endereco || 'Rua Rui Barbosa',
@@ -88,12 +88,12 @@ Deno.serve(async (req) => {
       ];
 
       payload = {
-        // ... (resto do payload NFe mantido igual)
         cnpj_emitente: cnpjEmitente,
         natureza_operacao: 'Venda de mercadoria',
         tipo_documento: '1',
         presenca_comprador: '1',
         nome_destinatario: (cliente_nome || 'Consumidor Final Teste').substring(0, 60),
+        // Já na NFe (Produto), a API exige separado:
         cpf_destinatario: cpfCnpjLimpo.length === 11 ? cpfCnpjLimpo : undefined,
         cnpj_destinatario: cpfCnpjLimpo.length === 14 ? cpfCnpjLimpo : undefined,
         logradouro_destinatario: cliente_endereco || 'Rua Rui Barbosa',
@@ -136,16 +136,9 @@ Deno.serve(async (req) => {
 
     const result = await resp.json();
 
-    // ==========================================
-    // IMPRIME O ERRO NOS SEUS LOGS!
-    // ==========================================
-    console.log("=== RESPOSTA DA PREFEITURA / FOCUS ===");
-    console.log(JSON.stringify(result));
-    console.log("======================================");
-
     if (!resp.ok) {
       const msgErro = result.erros ? result.erros[0].mensagem : (result.mensagem || "Erro Desconhecido");
-      return Response.json({ sucesso: false, erro: `MOTIVO DA REJEIÇÃO: ${msgErro}` }, { status: 200 });
+      return Response.json({ sucesso: false, erro: `${msgErro}` }, { status: 200 });
     }
 
     const notaData = {
@@ -162,8 +155,6 @@ Deno.serve(async (req) => {
     return Response.json({ sucesso: true, mensagem: "Nota enviada!", pdf: notaData.pdf_url });
 
   } catch (error) {
-    console.log("=== ERRO INTERNO NO CÓDIGO ===");
-    console.log(error.message);
     return Response.json({ sucesso: false, erro: error.message }, { status: 200 });
   }
 });
