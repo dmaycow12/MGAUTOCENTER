@@ -10,8 +10,7 @@ Deno.serve(async (req) => {
     
     const authHeader = 'Basic ' + btoa(apiKey + ':');
 
-    // CORREÇÃO: O parâmetro exato que a API exige é "cnpj_empresa"
-    const resp = await fetch(`${baseUrl}?cnpj_empresa=${cnpjEmpresa}`, {
+    const resp = await fetch(`${baseUrl}?cnpj_empresa=${cnpjEmpresa}&ambiente=1`, {
       method: 'GET',
       headers: { 
         'Authorization': authHeader 
