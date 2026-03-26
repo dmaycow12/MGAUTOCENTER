@@ -23,15 +23,17 @@ Deno.serve(async (req) => {
       nota_id, cliente_id,
     } = body;
 
-    const baseUrl = 'https://homologacao.focusnfe.com.br/v2';
+    // ==========================================
+    // CHAVE VIRADA PARA PRODUÇÃO (AMBIENTE REAL)
+    // ==========================================
+    const baseUrl = 'https://api.focusnfe.com.br/v2'; 
     const apiKey = 'dK6EQsntpg7M4gnNpAoUOO8Yos023CyC'; 
     const cnpjEmitente = '54043647000120';
-    const codMunicipioPatos = "3148004"; // Código IBGE de Patos de Minas
+    const codMunicipioPatos = "3148004"; 
     
     const authHeader = 'Basic ' + btoa(apiKey + ':');
     const ref = `${(tipo || 'NFSe').toLowerCase()}-${Date.now()}`;
     
-    // BYPASS: Garante dados válidos para teste
     let cpfCnpjLimpo = (cliente_cpf_cnpj || '').replace(/\D/g, '');
     if (cpfCnpjLimpo.length !== 11 && cpfCnpjLimpo.length !== 14) {
       cpfCnpjLimpo = '05804561005'; 
@@ -57,7 +59,7 @@ Deno.serve(async (req) => {
         prestador: {
           cnpj: cnpjEmitente,
           inscricao_municipal: "2024000738",
-          codigo_municipio: codMunicipioPatos // ADICIONADO: O que a prefeitura pediu!
+          codigo_municipio: codMunicipioPatos
         },
         tomador: {
           razao_social: (cliente_nome || 'Consumidor Final Teste').substring(0, 100),
@@ -151,7 +153,7 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, notaData);
     }
 
-    return Response.json({ sucesso: true, mensagem: "Nota enviada!", pdf: notaData.pdf_url });
+    return Response.json({ sucesso: true, mensagem: "Nota enviada para a Prefeitura!", pdf: notaData.pdf_url });
 
   } catch (error) {
     return Response.json({ sucesso: false, erro: error.message }, { status: 200 });
