@@ -99,6 +99,7 @@ Deno.serve(async (req) => {
         data_emissao: dataEmissaoISO,
         data_saida_entrada: dataEmissaoISO,
         natureza_operacao: 'Venda de mercadoria',
+        finalidade_emissao: '1',
         tipo_documento: '1',
         presenca_comprador: '1',
         nome_destinatario: (cliente_nome || 'Consumidor Final Teste').substring(0, 60),
