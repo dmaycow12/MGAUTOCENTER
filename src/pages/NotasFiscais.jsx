@@ -75,6 +75,7 @@ export default function NotasFiscais() {
   const [filtroTipo, setFiltroTipo] = useState("Todos");
   const [filtroModeloNF, setFiltroModeloNF] = useState("Todos");
   const [gerandoZip, setGerandoZip] = useState(false);
+  const [buscandoSefaz, setBuscandoSefaz] = useState(false);
   const [gerandoSintegra, setGerandoSintegra] = useState(false);
 
   const hoje = new Date();
@@ -779,6 +780,31 @@ export default function NotasFiscais() {
         <div className="flex gap-2">
           <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
             <Upload className="w-3 h-3" /> Importar XML
+          </button>
+          <button
+            onClick={async () => {
+              setBuscandoSefaz(true);
+              try {
+                const res = await base44.functions.invoke('importarSefaz', {});
+                const data = res.data;
+                if (data?.sucesso) {
+                  feedback('sucesso', `Busca concluída! ${JSON.stringify(data.notas_encontradas).substring(0, 200)}`);
+                } else {
+                  feedback('erro', data?.erro || 'Erro ao buscar na SEFAZ.');
+                }
+              } catch (e) {
+                feedback('erro', 'Erro: ' + e.message);
+              }
+              setBuscandoSefaz(false);
+            }}
+            disabled={buscandoSefaz}
+            className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50"
+            style={{background: "#00cc44", color: "#000"}}
+            onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00aa33"; }}
+            onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}
+          >
+            {buscandoSefaz ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+            {buscandoSefaz ? 'Buscando...' : 'Buscar da SEFAZ'}
           </button>
           <button onClick={() => { const df = defaultForm(); setForm({...df, numero: proximoNumero(notas, df.tipo), serie: proximaSerie(notas, df.tipo)}); setAbaForm("cliente"); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
             <Plus className="w-3 h-3" /> Emitir Nota
