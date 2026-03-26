@@ -4,15 +4,14 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    // CORREÇÃO: Coloquei o "S" (nfes_recebidas) no endereço da Sefaz!
     const baseUrl = 'https://api.focusnfe.com.br/v2/nfes_recebidas'; 
     const apiKey = 'NoVwceYcJEYWnkweE8agjTEzBRtDe9lr'; // Token Principal de Produção
     const cnpjEmpresa = '54043647000120'; // CNPJ da MG Autocenter
     
     const authHeader = 'Basic ' + btoa(apiKey + ':');
 
-    // Vai na Sefaz perguntar: "Tem nota nova pra esse CNPJ?"
-    const resp = await fetch(`${baseUrl}?cnpj=${cnpjEmpresa}`, {
+    // CORREÇÃO: O parâmetro exato que a API exige é "cnpj_empresa"
+    const resp = await fetch(`${baseUrl}?cnpj_empresa=${cnpjEmpresa}`, {
       method: 'GET',
       headers: { 
         'Authorization': authHeader 
