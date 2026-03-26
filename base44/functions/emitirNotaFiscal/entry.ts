@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
         },
         tomador: {
           razao_social: (cliente_nome || 'Consumidor Final Teste').substring(0, 100),
-          cnpj_cpf: cpfCnpjLimpo, 
+          ...(cpfCnpjLimpo.length === 14 ? { cnpj: cpfCnpjLimpo } : { cpf: cpfCnpjLimpo }),
           email: cliente_email || undefined,
           endereco: {
             logradouro: cliente_endereco || 'Rua Rui Barbosa',
