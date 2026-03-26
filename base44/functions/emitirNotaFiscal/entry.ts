@@ -23,11 +23,12 @@ Deno.serve(async (req) => {
       nota_id, cliente_id,
     } = body;
 
-    // ==========================================
-    // CHAVE VIRADA PARA PRODUÇÃO (AMBIENTE REAL)
-    // ==========================================
+    // AMBIENTE DE PRODUÇÃO (MUNDO REAL)
     const baseUrl = 'https://api.focusnfe.com.br/v2'; 
-    const apiKey = 'dK6EQsntpg7M4gnNpAoUOO8Yos023CyC'; 
+    
+    // TOKEN PRINCIPAL DE PRODUÇÃO APLICADO:
+    const apiKey = 'NoVwceYcJEYWnkweE8agjTEzBRtDe9lr'; 
+    
     const cnpjEmitente = '54043647000120';
     const codMunicipioPatos = "3148004"; 
     
@@ -135,7 +136,16 @@ Deno.serve(async (req) => {
       body: JSON.stringify(payload),
     });
 
-    const result = await resp.json();
+    const responseText = await resp.text();
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (e) {
+      return Response.json({ 
+        sucesso: false, 
+        erro: `Erro de Autenticação/Servidor: ${responseText.substring(0, 100)}` 
+      }, { status: 200 });
+    }
 
     if (!resp.ok) {
       const msgErro = result.erros ? result.erros[0].mensagem : (result.mensagem || "Erro Desconhecido");
