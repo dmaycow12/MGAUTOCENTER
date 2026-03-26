@@ -469,6 +469,17 @@ export default function NotasFiscais() {
 
       if (response.data?.sucesso) {
         feedback("sucesso", `Nota ${f.tipo} transmitida com sucesso! ${response.data.mensagem || ""}`);
+        // Atualiza o registro no banco com os dados retornados
+        const idParaAtualizar = rascunhoNota?.id || form._editId;
+        if (idParaAtualizar) {
+          const atualizacao = {};
+          if (response.data.numero) atualizacao.numero = response.data.numero;
+          if (response.data.serie) atualizacao.serie = response.data.serie;
+          if (response.data.status) atualizacao.status_sefaz = response.data.status;
+          if (Object.keys(atualizacao).length > 0) {
+            await base44.entities.NotaFiscal.update(idParaAtualizar, atualizacao);
+          }
+        }
         setShowForm(false);
         setForm(defaultForm());
       } else {
