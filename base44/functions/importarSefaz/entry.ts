@@ -4,8 +4,8 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    // Configurações do Ambiente Real
-    const baseUrl = 'https://api.focusnfe.com.br/v2/nfe_recebidas'; 
+    // CORREÇÃO: Coloquei o "S" (nfes_recebidas) no endereço da Sefaz!
+    const baseUrl = 'https://api.focusnfe.com.br/v2/nfes_recebidas'; 
     const apiKey = 'NoVwceYcJEYWnkweE8agjTEzBRtDe9lr'; // Token Principal de Produção
     const cnpjEmpresa = '54043647000120'; // CNPJ da MG Autocenter
     
