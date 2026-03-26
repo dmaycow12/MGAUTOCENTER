@@ -454,6 +454,7 @@ export default function NotasFiscais() {
     try {
       const payload = {
         ...f,
+        data_emissao: f.data_emissao || new Date().toISOString().split('T')[0],
         nota_id: rascunhoNota?.id || form._editId || null,
         serie_manual: f.serie || '1',
         // garante que items sempre tem valor_unitario correto

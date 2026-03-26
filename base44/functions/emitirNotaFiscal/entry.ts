@@ -20,8 +20,12 @@ Deno.serve(async (req) => {
       cliente_telefone, cliente_endereco, cliente_numero,
       cliente_bairro, cliente_cep, cliente_cidade, cliente_estado,
       items, valor_total, forma_pagamento, observacoes,
-      nota_id, cliente_id,
+      nota_id, cliente_id, data_emissao,
     } = body;
+
+    const dataEmissaoISO = data_emissao
+      ? `${data_emissao}T12:00:00-03:00`
+      : new Date().toISOString();
 
     // AMBIENTE DE PRODUÇÃO (MUNDO REAL)
     const baseUrl = 'https://api.focusnfe.com.br/v2'; 
@@ -56,7 +60,7 @@ Deno.serve(async (req) => {
         : (observacoes || 'Serviços de manutenção e reparação mecânica');
 
       payload = {
-        data_emissao: new Date().toISOString(),
+        data_emissao: dataEmissaoISO,
         prestador: {
           cnpj: cnpjEmitente,
           inscricao_municipal: "2024000738",
@@ -92,6 +96,8 @@ Deno.serve(async (req) => {
 
       payload = {
         cnpj_emitente: cnpjEmitente,
+        data_emissao: dataEmissaoISO,
+        data_saida_entrada: dataEmissaoISO,
         natureza_operacao: 'Venda de mercadoria',
         tipo_documento: '1',
         presenca_comprador: '1',
