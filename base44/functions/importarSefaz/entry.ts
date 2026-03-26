@@ -4,13 +4,14 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    const baseUrl = 'https://api.focusnfe.com.br/v2/nfes_recebidas'; 
-    const apiKey = 'NoVwceYcJEYWnkweE8agjTEzBRtDe9lr'; // Token Principal de Produção
-    const cnpjEmpresa = '54043647000120'; // CNPJ da MG Autocenter
+    // URL COM AMBIENTE 1 (PRODUÇÃO) FORÇADO
+    const cnpjEmpresa = '54043647000120';
+    const apiKey = 'NoVwceYcJEYWnkweE8agjTEzBRtDe9lr';
+    const baseUrl = `https://api.focusnfe.com.br/v2/nfes_recebidas?cnpj_empresa=${cnpjEmpresa}&ambiente=1`; 
     
     const authHeader = 'Basic ' + btoa(apiKey + ':');
 
-    const resp = await fetch(`${baseUrl}?cnpj_empresa=${cnpjEmpresa}&ambiente=1`, {
+    const resp = await fetch(baseUrl, {
       method: 'GET',
       headers: { 
         'Authorization': authHeader 
@@ -23,19 +24,19 @@ Deno.serve(async (req) => {
     try {
       result = JSON.parse(responseText);
     } catch (e) {
-      return Response.json({ sucesso: false, erro: `Erro de comunicação com a SEFAZ.` }, { status: 200 });
+      return Response.json({ sucesso: false, erro: "Erro na resposta da Focus NFe." }, { status: 200 });
     }
 
     if (!resp.ok) {
-      const msgErro = result.erros ? result.erros[0].mensagem : (result.mensagem || "Erro Desconhecido na Sefaz");
-      return Response.json({ sucesso: false, erro: `${msgErro}` }, { status: 200 });
+      // Se ainda der erro, vamos mostrar exatamente o que a Focus respondeu
+      const msgErro = result.erros ? result.erros[0].mensagem : (result.mensagem || "Erro na SEFAZ");
+      return Response.json({ sucesso: false, erro: msgErro }, { status: 200 });
     }
 
-    // Retorna a lista de notas encontradas
     return Response.json({ 
       sucesso: true, 
-      mensagem: "Busca na SEFAZ concluída!", 
-      notas_encontradas: result 
+      mensagem: "Notas localizadas!", 
+      notas: result 
     });
 
   } catch (error) {
