@@ -408,17 +408,35 @@ export default function NotasFiscais() {
   };
 
   const emitirNota = async (rascunhoNota = null) => {
-    const f = rascunhoNota ? {
-      ...defaultForm(),
-      tipo: rascunhoNota.tipo,
-      cliente_id: rascunhoNota.cliente_id,
-      cliente_nome: rascunhoNota.cliente_nome,
-      ordem_servico_id: rascunhoNota.ordem_servico_id,
-      valor_total: rascunhoNota.valor_total,
-      observacoes: rascunhoNota.observacoes,
-      data_emissao: rascunhoNota.data_emissao,
-      items: [{ descricao: rascunhoNota.observacoes || 'Serviços', quantidade: 1, valor_unitario: rascunhoNota.valor_total, valor_total: rascunhoNota.valor_total }],
-    } : form;
+    let f = form;
+    if (rascunhoNota) {
+      const clienteVinculado = clientes.find(c => c.id === rascunhoNota.cliente_id);
+      if ((rascunhoNota.tipo === 'NFe' || rascunhoNota.tipo === 'NFSe') && !clienteVinculado?.cpf_cnpj?.trim()) {
+        alert('Esta nota exige um cliente com CPF ou CNPJ cadastrado. Edite a nota e selecione o cliente correto.');
+        setTransmitindo(null);
+        return;
+      }
+      f = {
+        ...defaultForm(),
+        tipo: rascunhoNota.tipo,
+        cliente_id: rascunhoNota.cliente_id,
+        cliente_nome: rascunhoNota.cliente_nome || clienteVinculado?.nome || '',
+        cliente_cpf_cnpj: rascunhoNota.cliente_cpf_cnpj || clienteVinculado?.cpf_cnpj || '',
+        cliente_email: clienteVinculado?.email || '',
+        cliente_telefone: clienteVinculado?.telefone || '',
+        cliente_endereco: clienteVinculado?.endereco || '',
+        cliente_numero: clienteVinculado?.numero || '',
+        cliente_bairro: clienteVinculado?.bairro || '',
+        cliente_cep: clienteVinculado?.cep || '',
+        cliente_cidade: clienteVinculado?.cidade || '',
+        cliente_estado: clienteVinculado?.estado || '',
+        ordem_servico_id: rascunhoNota.ordem_servico_id,
+        valor_total: rascunhoNota.valor_total,
+        observacoes: rascunhoNota.observacoes,
+        data_emissao: rascunhoNota.data_emissao,
+        items: [{ descricao: rascunhoNota.observacoes || 'Serviços', quantidade: 1, valor_unitario: rascunhoNota.valor_total, valor_total: rascunhoNota.valor_total }],
+      };
+    }
 
     if (!rascunhoNota) {
       const erros = validarForm(f);
