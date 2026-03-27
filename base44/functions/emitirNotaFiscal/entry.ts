@@ -75,9 +75,9 @@ Deno.serve(async (req) => {
           cnpj: CNPJ_EMITENTE,
           inscricao_municipal: INSCRICAO_MUNICIPAL,
           codigo_municipio: COD_MUNICIPIO_PATOS,
-          regime_tributario: 3,
+          regime_tributario: 1,
           regime_especial_tributacao: 0,
-          optante_simples_nacional: 2,
+          optante_simples_nacional: true,
         },
         tomador: {
           razao_social: (cliente_nome || 'Consumidor Final').substring(0, 100),
