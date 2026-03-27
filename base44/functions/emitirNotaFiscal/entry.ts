@@ -214,10 +214,18 @@ Deno.serve(async (req) => {
 
     const pdfUrl = normalizarUrl(result.caminho_pdf_nfse || result.caminho_danfe || '');
     const chaveAcesso = result.chave_nfe || '';
+    const mensagemSefaz = result.erros?.[0]?.mensagem || result.mensagem_sefaz || result.mensagem || '';
+    
     let statusNota = 'Processando';
     if (result.status === 'autorizado') statusNota = 'Emitida';
-    else if (result.status === 'erro_autorizacao' || result.status === 'rejeitado') statusNota = 'Erro';
-    const mensagemSefaz = result.erros?.[0]?.mensagem || result.mensagem_sefaz || result.mensagem || '';
+    else if (result.status === 'erro_autorizacao' || result.status === 'rejeitado') {
+      // Detecta erro E0160 (delay do Portal Nacional)
+      if (mensagemSefaz.includes('E0160')) {
+        statusNota = 'Erro de Sincronia Governamental';
+      } else {
+        statusNota = 'Erro';
+      }
+    }
 
     const notaData = {
       tipo,
