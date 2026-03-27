@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
           codigo_produto: it.codigo || `REF${idx + 1}`,
           descricao: (it.descricao || 'Produto').substring(0, 120),
           codigo_ncm: validarNcm(it.ncm),
-          cfop: it.cfop || '5102',
+          cfop: '5102',
           unidade_comercial: it.unidade || 'UN',
           quantidade_comercial: Number(it.quantidade) || 1,
           valor_unitario_comercial: Number(it.valor_unitario) || Number(valor_total) || 1.0,
