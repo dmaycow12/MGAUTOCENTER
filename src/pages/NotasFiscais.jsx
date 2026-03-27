@@ -934,13 +934,7 @@ export default function NotasFiscais() {
                 <input type="date" value={form.data_emissao} onChange={e => setForm(f => ({ ...f, data_emissao: e.target.value }))} className="input-dark" />
               </F>
             </div>
-            {form.tipo === "NFSe" && (
-              <div className="px-5 pt-3 flex-shrink-0 grid grid-cols-1 gap-4">
-                <F label="Número da NFSe">
-                  <NoACInput value={form.numero} readOnly placeholder="30" type="number" className="input-dark bg-gray-700 cursor-not-allowed opacity-75" />
-                </F>
-              </div>
-            )}
+
             {form.tipo === "NFe" && (
               <div className="px-5 pt-3 flex-shrink-0 grid grid-cols-2 gap-4">
                 <F label="Natureza da Operação *">
