@@ -934,6 +934,13 @@ export default function NotasFiscais() {
                 <input type="date" value={form.data_emissao} onChange={e => setForm(f => ({ ...f, data_emissao: e.target.value }))} className="input-dark" />
               </F>
             </div>
+            {form.tipo === "NFSe" && (
+              <div className="px-5 pt-3 flex-shrink-0 grid grid-cols-1 gap-4">
+                <F label="Número da NFSe">
+                  <NoACInput value={form.numero} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} placeholder="30" type="number" />
+                </F>
+              </div>
+            )}
             {form.tipo === "NFe" && (
               <div className="px-5 pt-3 flex-shrink-0 grid grid-cols-2 gap-4">
                 <F label="Natureza da Operação *">
@@ -961,16 +968,7 @@ export default function NotasFiscais() {
               {/* ABA CLIENTE */}
               {abaForm === "cliente" && (
                 <div className="space-y-4">
-                  {form.tipo === "NFSe" && (
-                    <p className="text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2 mb-2">
-                      ⚠️ NFSe aceita apenas clientes com CPF/CNPJ cadastrado — CONSUMIDOR não é permitido
-                    </p>
-                  )}
-                  {form.tipo === "NFCe" && (
-                    <p className="text-xs text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2 mb-2">
-                      ℹ️ NFCe aceita CONSUMIDOR e clientes com CPF/CNPJ — lança apenas produtos
-                    </p>
-                  )}
+
                   <F label="Selecionar Cliente Cadastrado">
                     <select value={form.cliente_id} onChange={e => selecionarCliente(e.target.value)} className="input-dark">
                       <option value="">— Selecione ou preencha abaixo —</option>
