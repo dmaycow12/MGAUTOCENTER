@@ -30,7 +30,8 @@
         "Importada",
         "Erro",
         "Processando",
-        "Erro de Sincronia Governamental"
+        "Erro de Sincronia Governamental",
+        "Espera Valida\u00e7\u00e3o Cliente"
       ],
       "default": "Rascunho"
     },

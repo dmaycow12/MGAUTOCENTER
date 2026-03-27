@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
         ? items.map(i => `${i.descricao} (Qtd: ${i.quantidade})`).join('; ')
         : (observacoes || 'Serviços de manutenção e reparação mecânica');
       payload = {
+        provedor: 'nacional',
         data_emissao: dataEmissaoISO,
         prestador: {
           cnpj: CNPJ_EMITENTE,
