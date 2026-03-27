@@ -588,170 +588,30 @@ export default function NotasFiscais() {
   };
 
   const imprimirNota = async (nota) => {
-    // Busca configurações para cupom
-    const configs = await base44.entities.Configuracao.list('-created_date', 100);
-    const getNomeOficina = () => configs.find(c => c.chave === 'nome_oficina')?.valor || 'MG AUTOCENTER';
-    const getEndereco = () => configs.find(c => c.chave === 'endereco')?.valor || '';
-    const getCidade = () => configs.find(c => c.chave === 'cidade')?.valor || '';
-    const getEstado = () => configs.find(c => c.chave === 'estado')?.valor || '';
-    const getCep = () => configs.find(c => c.chave === 'cep')?.valor || '';
-    const getTelefone = () => configs.find(c => c.chave === 'telefone')?.valor || '';
-    const getCnpj = () => configs.find(c => c.chave === 'cnpj')?.valor || '';
-
-    const nomeOficina = getNomeOficina();
-    const endereco = getEndereco();
-    const cidade = getCidade();
-    const estado = getEstado();
-    const cep = getCep();
-    const telefone = getTelefone();
-    const cnpj = getCnpj();
-
-    // Parse itens se houver
-    let itens = [];
-    if (nota.xml_content) {
-      try {
-        const parsed = JSON.parse(nota.xml_content);
-        itens = Array.isArray(parsed) ? parsed : [];
-      } catch {}
+    // Se já tem PDF salvo, abre direto
+    if (nota.pdf_url) {
+      window.open(nota.pdf_url, '_blank');
+      return;
     }
 
-    const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const chaveFormatada = (nota.chave_acesso || '').replace(/(\d{4})/g, '$1 ').trim();
-    const dataFormatada = nota.data_emissao ? nota.data_emissao.split('-').reverse().join('/') : '';
-
-    const htmlCupom = `
-      <!DOCTYPE html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Cupom NFCe ${nota.numero}</title>
-        <style>
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: 'Courier New', monospace; font-size: 11pt; color: #000; background: #fff; padding: 6mm; line-height: 1.3; }
-          .cupom { width: 80mm; margin: 0 auto; }
-          .header { text-align: center; border-bottom: 1px dashed #000; padding: 4mm 0; margin-bottom: 2mm; }
-          .header h1 { font-size: 12pt; font-weight: bold; margin-bottom: 2mm; }
-          .header p { font-size: 9pt; margin: 1mm 0; }
-          .secao { margin: 3mm 0; padding: 2mm 0; border-bottom: 1px dashed #000; }
-          .secao-titulo { font-size: 8pt; font-weight: bold; text-transform: uppercase; color: #333; margin-bottom: 2mm; }
-          .linha { display: flex; justify-content: space-between; font-size: 9pt; margin: 1.5mm 0; }
-          .label { font-weight: bold; }
-          .valor { text-align: right; }
-          .item { font-size: 8.5pt; margin: 2mm 0; padding: 1mm 0; border-bottom: 1px dotted #ccc; }
-          .item-desc { font-weight: bold; }
-          .item-info { display: flex; justify-content: space-between; font-size: 8pt; margin-top: 0.5mm; }
-          .total { font-size: 12pt; font-weight: bold; text-align: right; margin: 2mm 0; }
-          .qrcode { text-align: center; margin: 3mm 0; font-size: 7pt; }
-          .rodape { text-align: center; font-size: 7pt; color: #666; margin-top: 2mm; }
-          @media print {
-            @page { size: 80mm auto; margin: 2mm; }
-            body { padding: 0; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="cupom">
-          <!-- HEADER -->
-          <div class="header">
-            <h1>${nomeOficina}</h1>
-            <p>${cnpj ? 'CNPJ: ' + cnpj : ''}</p>
-            <p>${endereco}${endereco && cidade ? ', ' : ''}${cidade}${cidade && estado ? '/' : ''}${estado}</p>
-            ${cep ? '<p>CEP: ' + cep + '</p>' : ''}
-            ${telefone ? '<p>Tel: ' + telefone + '</p>' : ''}
-          </div>
-
-          <!-- INFO NOTA -->
-          <div class="secao">
-            <div class="linha">
-              <span class="label">NFCe Nº:</span>
-              <span class="valor">${nota.numero || '—'}</span>
-            </div>
-            <div class="linha">
-              <span class="label">Série:</span>
-              <span class="valor">${nota.serie || '1'}</span>
-            </div>
-            <div class="linha">
-              <span class="label">Data/Hora:</span>
-              <span class="valor">${dataFormatada} 12:00</span>
-            </div>
-            <div class="linha">
-              <span class="label">Status:</span>
-              <span class="valor">${nota.status || 'Emitida'}</span>
-            </div>
-          </div>
-
-          <!-- CLIENTE -->
-          <div class="secao">
-            <div class="secao-titulo">Cliente</div>
-            <div style="font-size: 9pt;">
-              <strong>${nota.cliente_nome || 'Consumidor Final'}</strong>
-            </div>
-          </div>
-
-          <!-- ITENS -->
-          ${itens.length > 0 ? `
-            <div class="secao">
-              <div class="secao-titulo">Itens</div>
-              ${itens.map((it, idx) => `
-                <div class="item">
-                  <div class="item-desc">${(idx + 1).toString().padStart(2, '0')}. ${(it.descricao || 'Produto').toUpperCase()}</div>
-                  <div class="item-info">
-                    <span>${Number(it.quantidade || 1)} x R$ ${fmt(it.valor_unitario || 0)}</span>
-                    <span style="font-weight: bold;">R$ ${fmt(it.valor_total || 0)}</span>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          ` : ''}
-
-          <!-- TOTALIZADORES -->
-          <div class="secao">
-            <div class="linha">
-              <span class="label">Subtotal:</span>
-              <span class="valor">R$ ${fmt(nota.valor_total || 0)}</span>
-            </div>
-            <div class="total">
-              <div style="font-size: 9pt; color: #666; margin-bottom: 1mm;">TOTAL</div>
-              R$ ${fmt(nota.valor_total || 0)}
-            </div>
-          </div>
-
-          <!-- PAGAMENTO -->
-          <div class="secao">
-            <div class="secao-titulo">Forma de Pagamento</div>
-            <div style="font-size: 9pt; font-weight: bold;">
-              ${itens.length > 0 ? (itens[0].forma_pagamento || 'PIX') : 'PIX'}
-            </div>
-          </div>
-
-          <!-- CHAVE -->
-          ${nota.chave_acesso ? `
-            <div class="secao">
-              <div class="secao-titulo">Chave de Acesso</div>
-              <div class="qrcode">
-                <strong>${chaveFormatada}</strong>
-              </div>
-            </div>
-          ` : ''}
-
-          <!-- RODAPÉ -->
-          <div class="rodape">
-            <p>Obrigado pela compra!</p>
-            <p style="margin-top: 2mm; font-size: 6.5pt;">Este é um documento fiscal eletrônico.</p>
-          </div>
-        </div>
-
-        <script>
-          window.onload = function() { window.print(); };
-        </script>
-      </body>
-      </html>
-    `;
-
-    const win = window.open('', '_blank');
-    win.document.write(htmlCupom);
-    win.document.close();
+    // Consulta Focus NFe para buscar o PDF
+    feedback('sucesso', 'Consultando PDF na Focus NFe...');
+    try {
+      const res = await base44.functions.invoke('consultarPdfNota', { nota_id: nota.id });
+      const data = res.data;
+      if (data?.sucesso && data?.pdf_url) {
+        // Atualiza lista localmente
+        setNotas(prev => prev.map(n => n.id === nota.id ? { ...n, pdf_url: data.pdf_url, status: 'Emitida' } : n));
+        window.open(data.pdf_url, '_blank');
+        setMsgFeedback(null);
+      } else if (data?.processando) {
+        feedback('erro', data.mensagem || 'A SEFAZ ainda está processando a nota, tente imprimir em alguns segundos.');
+      } else {
+        feedback('erro', data?.erro || 'PDF não disponível para esta nota.');
+      }
+    } catch (e) {
+      feedback('erro', 'Erro ao consultar PDF: ' + e.message);
+    }
   };
 
   const filtradas = notas.filter(n => {
@@ -972,7 +832,7 @@ export default function NotasFiscais() {
                 </div>
                 <div className="flex gap-1">
                   <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>
-                  <button onClick={() => nota.pdf_url ? window.open(nota.pdf_url, '_blank') : alert('PDF não disponível para esta nota.')} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Printer className="w-3.5 h-3.5"/></button>
+                  <button onClick={() => imprimirNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Printer className="w-3.5 h-3.5"/></button>
                   <button onClick={() => excluir(nota.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
                 </div>
               </div>
@@ -1029,7 +889,7 @@ export default function NotasFiscais() {
                         <button title="Editar" onClick={() => editarNota(nota)} className="p-1 text-gray-500 hover:text-yellow-400 transition-all">
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button title="Imprimir" onClick={() => nota.pdf_url ? window.open(nota.pdf_url, '_blank') : alert('PDF não disponível para esta nota.')} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
+                        <button title="Imprimir" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
                           <Printer className="w-4 h-4" />
                         </button>
                         {nota.chave_acesso && (

@@ -194,6 +194,7 @@ Deno.serve(async (req) => {
     const notaData = {
       tipo,
       status: statusNota,
+      spedy_id: ref,
       cliente_id: cliente_id || '',
       cliente_nome: cliente_nome || '',
       data_emissao: data_emissao || new Date().toISOString().split('T')[0],
