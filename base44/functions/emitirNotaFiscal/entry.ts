@@ -33,11 +33,21 @@ Deno.serve(async (req) => {
       data_emissao, serie_manual,
     } = body;
 
+    // Gera data/hora no fuso de Brasília (UTC-3) para evitar rejeição SEFAZ 703
     const agora = new Date();
-    const horaAtual = agora.toTimeString().substring(0, 8);
+    const brasiliaOffset = -3 * 60; // UTC-3 em minutos
+    const brasiliaDate = new Date(agora.getTime() + brasiliaOffset * 60 * 1000);
+    const pad = (n) => String(n).padStart(2, '0');
+    const ano = brasiliaDate.getUTCFullYear();
+    const mes = pad(brasiliaDate.getUTCMonth() + 1);
+    const dia = pad(brasiliaDate.getUTCDate());
+    const hora = pad(brasiliaDate.getUTCHours());
+    const min = pad(brasiliaDate.getUTCMinutes());
+    const seg = pad(brasiliaDate.getUTCSeconds());
+    const hojeStr = `${ano}-${mes}-${dia}`;
     const dataEmissaoISO = data_emissao
-      ? `${data_emissao}T${horaAtual}-03:00`
-      : agora.toISOString();
+      ? `${data_emissao}T${hora}:${min}:${seg}-03:00`
+      : `${hojeStr}T${hora}:${min}:${seg}-03:00`;
 
     const ref = `${(tipo || 'nfe').toLowerCase()}-${Date.now()}`;
 
