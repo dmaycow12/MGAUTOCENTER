@@ -208,13 +208,6 @@ export default function NotasFiscais() {
   }, []);
 
   const proximoNumero = (notasList, tipo) => {
-    if (tipo === 'NFSe') {
-      const cfgUltimo = configsNF.find(c => c.chave === 'nfse_ultimo_numero');
-      const ultimoSalvo = parseInt(cfgUltimo?.valor || '29', 10);
-      const nums = notasList.filter(n => n.tipo === 'NFSe').map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
-      const ultimoNota = nums.length > 0 ? Math.max(...nums) : 29;
-      return String(Math.max(ultimoSalvo, ultimoNota) + 1);
-    }
     if (tipo === 'NFCe') {
       const cfgUltimo = configsNF.find(c => c.chave === 'nfce_ultimo_numero');
       const ultimoSalvo = parseInt(cfgUltimo?.valor || '0', 10);
