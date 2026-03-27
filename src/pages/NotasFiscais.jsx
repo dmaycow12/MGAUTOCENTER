@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import {
   FileText, Plus, Upload, Search, Trash2, Eye, X,
-  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2, Pencil
+  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2, Pencil, ClipboardList
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import JSZip from "jszip";
@@ -623,39 +623,26 @@ export default function NotasFiscais() {
     }
   };
 
-  const filtradas = notas.filter(n => {
-    const matchSearch = !search || n.numero?.includes(search) ||
-      n.cliente_nome?.toLowerCase().includes(search.toLowerCase()) ||
-      n.chave_acesso?.includes(search);
-    const matchTipo = filtroTipo === "Todos" ||
-      (filtroTipo === "Entrada" && n.tipo === "NFe" && n.status === "Importada") ||
-      (filtroTipo === "Saída" && n.status !== "Importada");
-    const matchModelo = filtroModeloNF === "Todos" || n.tipo === filtroModeloNF;
-    const matchInicio = !periodoRange || (n.data_emissao && n.data_emissao >= periodoRange.inicio);
-    const matchFim = !periodoRange || (n.data_emissao && n.data_emissao <= periodoRange.fim);
-    return matchSearch && matchTipo && matchModelo && matchInicio && matchFim;
-  });
-
-  const exportarRelatorio = () => {
-    if (filtradas.length === 0) return alert("Nenhuma nota no filtro atual.");
-    setGerandoZip(true);
-    const header = ["Tipo", "Número", "Série", "Status", "Cliente", "Data Emissão", "Valor Total", "Chave Acesso", "Observações"];
-    const rows = filtradas.map(n => [
-      n.tipo || "", n.numero || "", n.serie || "", n.status || "", n.cliente_nome || "",
-      n.data_emissao || "", Number(n.valor_total || 0).toFixed(2).replace(".", ","),
-      n.chave_acesso || "", (n.observacoes || "").replace(/[\r\n;]/g, " "),
-    ]);
-    const sep = ";";
-    const bom = "\uFEFF";
-    const csvContent = bom + [header, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(sep)).join("\r\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `notas_fiscais_${periodoRange.inicio}_${periodoRange.fim}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setGerandoZip(false);
+  const gerarPdfConferencia = async (nota) => {
+    if (nota.status !== 'Importada') {
+      feedback('erro', 'Apenas notas importadas podem gerar relatório de conferência.');
+      return;
+    }
+    try {
+      feedback('sucesso', 'Gerando PDF de conferência...');
+      const res = await base44.functions.invoke('gerarPdfConferenciaCompra', { nota_id: nota.id });
+      // A resposta é um blob do PDF
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `conferencia_${nota.numero || 'nota'}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setMsgFeedback(null);
+    } catch (e) {
+      feedback('erro', 'Erro ao gerar PDF: ' + e.message);
+    }
   };
 
   const gerarSintegra = () => {
@@ -903,10 +890,10 @@ export default function NotasFiscais() {
                             {transmitindo === nota.id ? "..." : "Transmitir"}
                           </button>
                         )}
-                        {nota.pdf_url && (
-                          <a href={nota.pdf_url} target="_blank" rel="noreferrer" title="Baixar PDF" className="p-1 text-gray-500 hover:text-green-400 transition-all">
-                            <Download className="w-4 h-4" />
-                          </a>
+                        {nota.status === "Importada" && (
+                          <button title="Gerar PDF de Conferência" onClick={() => gerarPdfConferencia(nota)} className="p-1 text-gray-500 hover:text-purple-400 transition-all">
+                            <ClipboardList className="w-4 h-4" />
+                          </button>
                         )}
                         <button title="Editar" onClick={() => editarNota(nota)} className="p-1 text-gray-500 hover:text-yellow-400 transition-all">
                           <Pencil className="w-4 h-4" />
