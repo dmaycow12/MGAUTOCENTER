@@ -503,31 +503,10 @@ export default function NotasFiscais() {
         setForm(defaultForm());
       } else {
         feedback("erro", response.data?.erro || "Erro ao emitir na Spedy.");
-        if (!rascunhoNota) {
-          const editId = form._editId;
-          const { _editId, ...dadosSemId } = form;
-          if (editId) {
-            await base44.entities.NotaFiscal.update(editId, { ...dadosSemId, status: "Rascunho" });
-          } else {
-            await base44.entities.NotaFiscal.create({ ...dadosSemId, status: "Rascunho" });
-          }
-        }
       }
       load();
     } catch (e) {
       feedback("erro", "Erro: " + e.message);
-      if (!rascunhoNota) {
-        const editId = form._editId;
-        const { _editId, ...dadosSemId } = form;
-        if (editId) {
-          await base44.entities.NotaFiscal.update(editId, { ...dadosSemId, status: "Rascunho" });
-        } else {
-          await base44.entities.NotaFiscal.create({ ...dadosSemId, status: "Rascunho" });
-        }
-        setShowForm(false);
-        setForm(defaultForm());
-        load();
-      }
     }
     setEmitindo(false);
     setTransmitindo(null);
