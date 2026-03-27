@@ -722,12 +722,13 @@ export default function NotasFiscais() {
             onClick={async () => {
               setBuscandoSefaz(true);
               try {
-                const res = await base44.functions.invoke('importarSefaz', {});
+                const res = await base44.functions.invoke('consultarNotasRecebidas', {});
                 const data = res.data;
                 if (data?.sucesso) {
-                  feedback('sucesso', `Busca concluída! ${JSON.stringify(data.notas_encontradas).substring(0, 200)}`);
+                  feedback('sucesso', data.mensagem || 'Notas importadas com sucesso.');
+                  load();
                 } else {
-                  feedback('erro', data?.erro || 'Erro ao buscar na SEFAZ.');
+                  feedback('erro', data?.erro || 'Erro ao buscar notas na SEFAZ.');
                 }
               } catch (e) {
                 feedback('erro', 'Erro: ' + e.message);
