@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     let payload = null;
 
     if (tipo === 'NFSe') {
-      endpoint = `/nfse_nacional?ref=${ref}`;
+      endpoint = `/nfse?ref=${ref}`;
       const discriminacao = items && items.length > 0
         ? items.map(i => `${i.descricao} (Qtd: ${i.quantidade})`).join('; ')
         : (observacoes || 'Serviços de manutenção e reparação mecânica');
@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
         servico: {
           valor_servicos: Number(valor_total) || 1.0,
           discriminacao: discriminacao.substring(0, 1000),
-          item_lista_servico: '140101',
+          item_lista_servico: '1401',
           codigo_tributario_municipio: '000',
           exigibilidade_iss: 1,
           iss_retido: false,
