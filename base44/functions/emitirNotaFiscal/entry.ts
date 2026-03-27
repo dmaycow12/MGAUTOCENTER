@@ -162,15 +162,44 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: `${msgErro}` }, { status: 200 });
     }
 
+    // Normaliza URL do PDF (pode vir como caminho relativo)
+    const normalizarUrl = (url) => {
+      if (!url) return '';
+      if (url.startsWith('http')) return url;
+      return `https://api.focusnfe.com.br${url}`;
+    };
+
+    // Tenta buscar os detalhes da nota para pegar o PDF (pode estar em processamento)
+    let pdfUrl = normalizarUrl(result.caminho_pdf_nfse || result.caminho_danfe || result.url_danfe || '');
+    let chaveAcesso = result.chave_nfe || '';
+    let statusNota = 'Emitida';
+
+    // Se não tiver PDF ainda, busca detalhes da nota pelo ref
+    if (!pdfUrl || result.status === 'processando') {
+      try {
+        const tipoEndpoint = tipo === 'NFSe' ? 'nfse_nacional' : (tipo === 'NFCe' ? 'nfce' : 'nfe');
+        const detalhesResp = await fetch(`https://api.focusnfe.com.br/v2/${tipoEndpoint}/${ref}?completo=1`, {
+          headers: { 'Authorization': authHeader }
+        });
+        if (detalhesResp.ok) {
+          const detalhes = await detalhesResp.json();
+          pdfUrl = normalizarUrl(detalhes.caminho_pdf_nfse || detalhes.caminho_danfe || detalhes.url_danfe || pdfUrl);
+          chaveAcesso = detalhes.chave_nfe || chaveAcesso;
+          if (detalhes.status === 'autorizado') statusNota = 'Emitida';
+          else if (detalhes.status === 'processando_autorizacao') statusNota = 'Processando';
+        }
+      } catch (_) { /* ignora erro de consulta */ }
+    }
+
     const notaData = {
       tipo,
-      status: 'Emitida',
+      status: statusNota,
       cliente_id: cliente_id || '',
       cliente_nome: cliente_nome || '',
       data_emissao: data_emissao || new Date().toISOString().split('T')[0],
       valor_total: Number(valor_total) || 1.0,
-      pdf_url: result.caminho_pdf_nfse || result.caminho_danfe || result.url_danfe || '',
-      chave_acesso: result.chave_nfe || '',
+      pdf_url: pdfUrl,
+      chave_acesso: chaveAcesso,
       ordem_servico_id: body.ordem_servico_id || '',
       observacoes: observacoes || '',
     };
@@ -181,7 +210,7 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.NotaFiscal.create(notaData);
     }
 
-    return Response.json({ sucesso: true, mensagem: 'Nota enviada!', pdf: notaData.pdf_url });
+    return Response.json({ sucesso: true, mensagem: 'Nota enviada!', pdf: pdfUrl });
 
   } catch (error) {
     return Response.json({ sucesso: false, erro: error.message }, { status: 200 });
