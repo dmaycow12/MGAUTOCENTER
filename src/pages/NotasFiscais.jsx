@@ -669,17 +669,51 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      {/* Botão Emitir Nota - TOPO */}
-      <div className="flex gap-2">
-        <button onClick={() => setShowForm(true)} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
-          <Plus className="w-4 h-4" /> Nova Emissão
+      {/* Botões Principais - Linha com 3 Colunas Iguais */}
+      <div className="grid grid-cols-3 gap-2">
+        <button onClick={() => setShowImport(true)} className="flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
+          <Upload className="w-4 h-4" /> Importar XML
+        </button>
+        <button
+          onClick={async () => {
+            setBuscandoSefaz(true);
+            try {
+              const dataInicio = '2026-01-01';
+              const dataFim = new Date().toISOString().split('T')[0];
+              const res = await base44.functions.invoke('sincronizarNotasRetroativas', { data_inicio: dataInicio, data_fim: dataFim });
+              const data = res.data;
+              if (data?.sucesso) {
+                feedback('sucesso', data.mensagem || 'Sincronização concluída.');
+                if (data.primeiraNotaJaneiro) {
+                  feedback('sucesso', `✓ Primeira nota de janeiro salva: NF ${data.primeiraNotaJaneiro.numero} em ${data.primeiraNotaJaneiro.data}`);
+                }
+                load();
+              } else {
+                feedback('erro', data?.erro || 'Erro ao sincronizar notas.');
+              }
+            } catch (e) {
+              feedback('erro', 'Erro: ' + e.message);
+            }
+            setBuscandoSefaz(false);
+          }}
+          disabled={buscandoSefaz}
+          className="flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+          style={{background: "#00cc44", color: "#000"}}
+          onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00aa33"; }}
+          onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}
+        >
+          {buscandoSefaz ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+          {buscandoSefaz ? 'Buscando...' : 'Buscar da SEFAZ'}
+        </button>
+        <button onClick={() => setShowForm(true)} className="flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
+          <Plus className="w-4 h-4" /> Emitir Nota
         </button>
       </div>
 
       {/* Header / Filtros */}
       <div className="flex flex-col gap-2">
-        <div className="flex gap-2">
-          {/* ENTRADA: Importar XML e Sincronizar (Verde Escuro) */}
+        <div className="flex gap-2" style={{display: "none"}}>
+          {/* ENTRADA: Importar XML e Sincronizar (Verde Escuro) - HIDDEN */}
           <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
             <Upload className="w-3 h-3" /> Importar XML
           </button>
@@ -892,16 +926,19 @@ export default function NotasFiscais() {
             <div className="px-5 pt-4 flex-shrink-0 grid grid-cols-3 gap-4">
               <F label="Tipo de Nota Fiscal">
                 <select value={form.tipo} onChange={e => {
-                  const novoTipo = e.target.value;
-                  setForm(f => ({ ...f, tipo: novoTipo, items: [defaultItem()], numero: proximoNumero(notas, novoTipo), serie: proximaSerie(notas, novoTipo) }));
+                    const novoTipo = e.target.value;
+                    let numero = proximoNumero(notas, novoTipo);
+                    let serie = proximaSerie(notas, novoTipo);
+                    if (novoTipo === 'NFSe') {
+                      numero = '30';
+                      serie = '900';
+                    }
+                    setForm(f => ({ ...f, tipo: novoTipo, items: [defaultItem()], numero, serie }));
                 }} className="input-dark">
                   <option value="NFSe">NFSe — Serviço</option>
                   <option value="NFe">NFe — Produto</option>
                   <option value="NFCe">NFCe — Consumidor</option>
                 </select>
-              </F>
-              <F label="Número">
-                <NoACInput value={form.numero} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} placeholder="1" />
               </F>
               <F label="Data de Emissão">
                 <input type="date" value={form.data_emissao} onChange={e => setForm(f => ({ ...f, data_emissao: e.target.value }))} className="input-dark" />
