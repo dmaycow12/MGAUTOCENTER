@@ -47,7 +47,6 @@ function defaultForm() {
   };
 }
 
-// Input sem autocomplete do navegador
 function NoACInput({ value, onChange, placeholder, maxLength, className = "input-dark", type = "text" }) {
   return (
     <input
@@ -136,6 +135,7 @@ export default function NotasFiscais() {
   const [temSpedy, setTemSpedy] = useState(false);
   const [abaForm, setAbaForm] = useState("cliente");
   const [errosForm, setErrosForm] = useState({});
+  const [configsNF, setConfigsNF] = useState([]);
 
   useEffect(() => {
     load().then(async () => {
@@ -208,7 +208,6 @@ export default function NotasFiscais() {
   }, []);
 
   const proximoNumero = (notasList, tipo) => {
-    // Fallback local (usado apenas se a consulta à API falhar)
     if (tipo === 'NFCe') {
       const cfgUltimo = configsNF.find(c => c.chave === 'nfce_ultimo_numero');
       const ultimoSalvo = parseInt(cfgUltimo?.valor || '0', 10);
@@ -231,8 +230,6 @@ export default function NotasFiscais() {
     return series.length > 0 ? String(Math.max(...series)) : "1";
   };
 
-  const [configsNF, setConfigsNF] = useState([]);
-
   const load = async () => {
     const [n, c, configs, os, est, srv] = await Promise.all([
       base44.entities.NotaFiscal.list("-created_date", 200),
@@ -251,6 +248,20 @@ export default function NotasFiscais() {
     setTemSpedy(true);
     setLoading(false);
   };
+
+  const filtradas = notas.filter(n => {
+    const isEntrada = n.status === "Importada";
+    if (filtroTipo === "Entrada" && !isEntrada) return false;
+    if (filtroTipo === "Saída" && isEntrada) return false;
+    if (filtroModeloNF !== "Todos" && n.tipo !== filtroModeloNF) return false;
+    const data = n.data_emissao || "";
+    if (data < periodoRange.inicio || data > periodoRange.fim) return false;
+    if (search) {
+      const s = search.toLowerCase();
+      return (n.cliente_nome || "").toLowerCase().includes(s) || (n.numero || "").includes(s) || (n.chave_acesso || "").includes(s);
+    }
+    return true;
+  });
 
   const clientesFiltrados = clientes.filter(c => {
     const isConsumidor = c.nome?.toUpperCase() === "CONSUMIDOR";
@@ -314,42 +325,14 @@ export default function NotasFiscais() {
   };
 
   const excluir = async (id) => {
-    if (!confirm("Excluir esta nota fiscal? Isso também removerá os itens do estoque e os lançamentos financeiros vinculados.")) return;
+    if (!confirm("Excluir esta nota fiscal?")) return;
     const nota = notas.find(n => n.id === id);
-
-    if (nota?.status === "Importada" && nota?.xml_content) {
-      const xmlItens = parsearItensXML(nota.xml_content);
-      if (xmlItens.length > 0) {
-        const estoque = await base44.entities.Estoque.list("-created_date", 500);
-        for (const item of xmlItens) {
-          if (!item.descricao) continue;
-          const existente = estoque.find(e => {
-            if (item.codigo && item.codigo !== "SEM GTIN" && item.codigo !== "" && e.codigo) {
-              return e.codigo === item.codigo;
-            }
-            return e.descricao?.trim().toLowerCase() === item.descricao.trim().toLowerCase();
-          });
-          if (existente) {
-            const novaQtd = (Number(existente.quantidade) || 0) - (Number(item.quantidade) || 0);
-            await base44.entities.Estoque.update(existente.id, { quantidade: Math.max(0, novaQtd) });
-          }
-        }
-      }
-    }
-
     if (nota?.numero) {
       const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
       const vinculados = financeiros.filter(f => f.descricao?.includes(`NF ${nota.numero}`));
-      for (const f of vinculados) {
-        await base44.entities.Financeiro.delete(f.id);
-      }
+      for (const f of vinculados) await base44.entities.Financeiro.delete(f.id);
     }
-
-    try {
-      await base44.entities.NotaFiscal.delete(id);
-    } catch (_) {
-      // Nota já não existe no banco, apenas atualiza a lista
-    }
+    try { await base44.entities.NotaFiscal.delete(id); } catch (_) {}
     load();
   };
 
@@ -358,13 +341,7 @@ export default function NotasFiscais() {
       const parsed = JSON.parse(xmlContent);
       if (Array.isArray(parsed)) return parsed.filter(i => i.descricao);
     } catch {}
-    const xml = (xmlContent || "").replace(/<(\/?)[a-zA-Z0-9_]+:([a-zA-Z0-9_]+)/g, "<$1$2");
-    const getAll = (tag) => { const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "g"); const r = []; let m; while((m=re.exec(xml))!==null) r.push(m[1]); return r; };
-    return getAll("det").map(det => ({
-      descricao: det.match(/<xProd>([^<]*)<\/xProd>/)?.[1]?.trim() || "",
-      quantidade: parseFloat(det.match(/<qCom>([^<]*)<\/qCom>/)?.[1] || "0"),
-      codigo: det.match(/<cEAN>([^<]*)<\/cEAN>/)?.[1]?.trim() || "",
-    })).filter(i => i.descricao);
+    return [];
   };
 
   const importarXML = async () => {
@@ -386,7 +363,6 @@ export default function NotasFiscais() {
     const erros = {};
     if (!f.cliente_nome?.trim()) erros.cliente_nome = "Nome do cliente é obrigatório";
     if (!f.valor_total || f.valor_total <= 0) erros.valor_total = "Valor total deve ser maior que zero";
-
     if (f.tipo === "NFSe" || f.tipo === "NFe") {
       if (!f.cliente_cpf_cnpj?.trim()) erros.cliente_cpf_cnpj = `${f.tipo} exige CPF ou CNPJ do cliente`;
     }
@@ -396,8 +372,7 @@ export default function NotasFiscais() {
       if (!f.cliente_estado?.trim()) erros.cliente_estado = "NFe exige UF do destinatário";
       if (!f.cliente_cep?.trim()) erros.cliente_cep = "NFe exige CEP do destinatário";
     }
-
-    const itemErros = f.items.map((it, idx) => {
+    const itemErros = f.items.map((it) => {
       const ie = {};
       if (!it.descricao?.trim()) ie.descricao = "Descrição obrigatória";
       if (!it.valor_total || Number(it.valor_total) <= 0) ie.valor_total = "Valor deve ser maior que zero";
@@ -409,7 +384,6 @@ export default function NotasFiscais() {
     });
     const temErroItem = itemErros.some(ie => Object.keys(ie).length > 0);
     if (temErroItem) erros.items = itemErros;
-
     return erros;
   };
 
@@ -418,7 +392,7 @@ export default function NotasFiscais() {
     if (rascunhoNota) {
       const clienteVinculado = clientes.find(c => c.id === rascunhoNota.cliente_id);
       if ((rascunhoNota.tipo === 'NFe' || rascunhoNota.tipo === 'NFSe') && !clienteVinculado?.cpf_cnpj?.trim()) {
-        alert('Esta nota exige um cliente com CPF ou CNPJ cadastrado. Edite a nota e selecione o cliente correto.');
+        alert('Esta nota exige um cliente com CPF ou CNPJ cadastrado.');
         setTransmitindo(null);
         return;
       }
@@ -448,7 +422,6 @@ export default function NotasFiscais() {
       const erros = validarForm(f);
       if (Object.keys(erros).length > 0) {
         setErrosForm(erros);
-        // Navega para a aba com o primeiro erro
         if (erros.cliente_nome || erros.cliente_cpf_cnpj || erros.cliente_endereco || erros.cliente_cidade || erros.cliente_estado || erros.cliente_cep) {
           setAbaForm("cliente");
         } else if (erros.items || erros.valor_total) {
@@ -464,18 +437,17 @@ export default function NotasFiscais() {
 
     const isConsumidor = f.cliente_nome?.toUpperCase() === "CONSUMIDOR";
     if (f.tipo === "NFSe") {
-      if (isConsumidor) return alert("NFSe não aceita o cliente CONSUMIDOR. Selecione um cliente com CPF ou CNPJ cadastrado.");
+      if (isConsumidor) return alert("NFSe não aceita o cliente CONSUMIDOR.");
       if (!f.cliente_cpf_cnpj?.trim()) return alert("NFSe exige cliente com CPF ou CNPJ cadastrado.");
     }
     if (f.tipo === "NFe") {
-      if (isConsumidor) return alert("NFe não aceita CONSUMIDOR. Use NFCe para venda ao consumidor final, ou selecione um cliente com CPF/CNPJ.");
+      if (isConsumidor) return alert("NFe não aceita CONSUMIDOR.");
       if (!f.cliente_cpf_cnpj?.trim()) return alert("NFe exige cliente com CPF ou CNPJ cadastrado.");
     }
 
     if (rascunhoNota) setTransmitindo(rascunhoNota.id);
     else setEmitindo(true);
 
-    // Se nota nova sem ID ainda, cria rascunho agora para garantir idempotência
     if (!rascunhoNota && !currentEditIdRef.current) {
       const { _editId, ...dadosForm } = f;
       const novoRascunho = await base44.entities.NotaFiscal.create({ ...dadosForm, status: 'Rascunho' });
@@ -489,7 +461,6 @@ export default function NotasFiscais() {
         nota_id: rascunhoNota?.id || currentEditIdRef.current || null,
         data_emissao: f.data_emissao || new Date().toISOString().split('T')[0],
         serie_manual: f.serie || '1',
-        // garante que items sempre tem valor_unitario correto
         items: f.items.map(it => ({
           ...it,
           valor_unitario: Number(it.valor_unitario) || (Number(it.valor_total) / (Number(it.quantidade) || 1)),
@@ -502,22 +473,11 @@ export default function NotasFiscais() {
 
       if (response.data?.sucesso) {
         feedback('sucesso', `Nota ${f.tipo} transmitida com sucesso! ${response.data.mensagem || ''}`);
-        const idParaAtualizar = rascunhoNota?.id || currentEditIdRef.current || form._editId;
         currentEditIdRef.current = null;
-        if (idParaAtualizar) {
-          const atualizacao = {};
-          if (response.data.numero) atualizacao.numero = response.data.numero;
-          if (response.data.serie) atualizacao.serie = response.data.serie;
-          if (response.data.status) atualizacao.status_sefaz = response.data.status;
-          if (response.data.pdf) atualizacao.pdf_url = response.data.pdf;
-          if (Object.keys(atualizacao).length > 0) {
-            await base44.entities.NotaFiscal.update(idParaAtualizar, atualizacao);
-          }
-        }
         setShowForm(false);
         setForm(defaultForm());
       } else {
-        feedback("erro", response.data?.erro || "Erro ao emitir na Spedy.");
+        feedback("erro", response.data?.erro || "Erro ao emitir.");
       }
       load();
     } catch (e) {
@@ -532,7 +492,6 @@ export default function NotasFiscais() {
       feedback('erro', 'Notas com status Emitida não podem ser editadas.');
       return;
     }
-    // Tenta restaurar itens salvos do xml_content
     let itensSalvos = [defaultItem()];
     if (nota.xml_content) {
       try {
@@ -597,24 +556,17 @@ export default function NotasFiscais() {
   };
 
   const imprimirNota = async (nota) => {
-    // Se já tem PDF salvo, abre direto
-    if (nota.pdf_url) {
-      window.open(nota.pdf_url, '_blank');
-      return;
-    }
-
-    // Consulta Focus NFe para buscar o PDF
+    if (nota.pdf_url) { window.open(nota.pdf_url, '_blank'); return; }
     feedback('sucesso', 'Consultando PDF na Focus NFe...');
     try {
       const res = await base44.functions.invoke('consultarPdfNota', { nota_id: nota.id });
       const data = res.data;
       if (data?.sucesso && data?.pdf_url) {
-        // Atualiza lista localmente
         setNotas(prev => prev.map(n => n.id === nota.id ? { ...n, pdf_url: data.pdf_url, status: 'Emitida' } : n));
         window.open(data.pdf_url, '_blank');
         setMsgFeedback(null);
       } else if (data?.processando) {
-        feedback('erro', data.mensagem || 'A SEFAZ ainda está processando a nota, tente imprimir em alguns segundos.');
+        feedback('erro', data.mensagem || 'A SEFAZ ainda está processando a nota.');
       } else {
         feedback('erro', data?.erro || 'PDF não disponível para esta nota.');
       }
@@ -624,14 +576,10 @@ export default function NotasFiscais() {
   };
 
   const gerarPdfConferencia = async (nota) => {
-    if (nota.status !== 'Importada') {
-      feedback('erro', 'Apenas notas importadas podem gerar relatório de conferência.');
-      return;
-    }
+    if (nota.status !== 'Importada') { feedback('erro', 'Apenas notas importadas podem gerar relatório de conferência.'); return; }
     try {
       feedback('sucesso', 'Gerando PDF de conferência...');
       const res = await base44.functions.invoke('gerarPdfConferenciaCompra', { nota_id: nota.id });
-      // A resposta é um blob do PDF
       const blob = new Blob([res.data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -768,9 +716,9 @@ export default function NotasFiscais() {
           }} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
             <Plus className="w-3 h-3" /> Emitir Nota
           </button>
-          </div>
+        </div>
 
-          <div className="flex gap-2">
+        <div className="flex gap-2">
           {["Tudo", "Entrada", "Saída"].map(t => (
             <button key={t} onClick={() => setFiltroTipo(t === "Tudo" ? "Todos" : t)}
               className={`flex-1 h-8 rounded-lg text-[11px] font-medium transition-all ${(t === "Tudo" ? filtroTipo === "Todos" : filtroTipo === t) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
@@ -796,6 +744,17 @@ export default function NotasFiscais() {
             {gerandoSintegra ? <RefreshCw className="w-3 h-3 animate-spin" /> : <BarChart2 className="w-3 h-3" />} Sintegra
           </button>
         </div>
+
+        <div className="flex gap-2 items-center">
+          <div className={`flex-1 flex items-center h-8 rounded-lg text-[11px] font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
+            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
+              <ChevronLeft className="w-3 h-3" />
+            </button>
+            <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
+            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
+              <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
           <div className="relative flex-1" ref={periodoDropRef}>
             <button onClick={() => setPeriodoDropOpen(v => !v)}
               className={`w-full flex items-center justify-center gap-2 px-4 h-8 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}>
@@ -895,7 +854,7 @@ export default function NotasFiscais() {
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">
                         {nota.status === "Rascunho" && temSpedy && (
-                          <button title="Transmitir para Spedy" onClick={() => { if (transmitindo) return; emitirNota(nota); }} disabled={transmitindo !== null}
+                          <button title="Transmitir" onClick={() => { if (transmitindo) return; emitirNota(nota); }} disabled={transmitindo !== null}
                             className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 rounded-lg transition-all disabled:opacity-50">
                             {transmitindo === nota.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
                             {transmitindo === nota.id ? "..." : "Transmitir"}
@@ -1036,7 +995,6 @@ export default function NotasFiscais() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-5">
-
               {/* ABA CLIENTE */}
               {abaForm === "cliente" && (
                 <div className="space-y-4">
@@ -1133,59 +1091,55 @@ export default function NotasFiscais() {
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           <F label={form.tipo === 'NFSe' ? 'Selecionar Serviço Cadastrado' : 'Selecionar Produto do Estoque'} className="col-span-2 md:col-span-4">
-                            <select
-                              className="input-dark"
-                              value=""
-                              onChange={e => {
-                                const id = e.target.value;
-                                if (!id) return;
-                                if (form.tipo === 'NFSe') {
-                                  const srv = servicos.find(s => s.id === id);
-                                  if (srv) atualizarItemCompleto(idx, { descricao: srv.descricao, quantidade: 1, valor_unitario: srv.valor || 0, valor_total: srv.valor || 0 });
-                                } else {
-                                  const prod = estoque.find(p => p.id === id);
-                                   if (prod) atualizarItemCompleto(idx, { descricao: prod.descricao, quantidade: 1, valor_unitario: prod.valor_venda || 0, valor_total: prod.valor_venda || 0, ncm: prod.ncm || '', cfop: prod.cfop || '', cest: prod.cest || '', unidade: prod.unidade || 'UN', codigo: prod.codigo || '' });
-                                }
-                              }}
-                            >
+                            <select className="input-dark" value="" onChange={e => {
+                              const id = e.target.value;
+                              if (!id) return;
+                              if (form.tipo === 'NFSe') {
+                                const srv = servicos.find(s => s.id === id);
+                                if (srv) atualizarItemCompleto(idx, { descricao: srv.descricao, quantidade: 1, valor_unitario: srv.valor || 0, valor_total: srv.valor || 0 });
+                              } else {
+                                const prod = estoque.find(p => p.id === id);
+                                if (prod) atualizarItemCompleto(idx, { descricao: prod.descricao, quantidade: 1, valor_unitario: prod.valor_venda || 0, valor_total: prod.valor_venda || 0, ncm: prod.ncm || '', cfop: prod.cfop || '', cest: prod.cest || '', unidade: prod.unidade || 'UN', codigo: prod.codigo || '' });
+                              }
+                            }}>
                               <option value="">— Selecione para preencher automaticamente —</option>
                               {form.tipo === 'NFSe'
                                 ? servicos.map(s => <option key={s.id} value={s.id}>{s.descricao}{s.valor ? ` — R$ ${Number(s.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}` : ''}</option>)
-                                : estoque.filter(p => p.quantidade > 0 || true).map(p => <option key={p.id} value={p.id}>{p.descricao}{p.codigo ? ` (${p.codigo})` : ''}{p.valor_venda ? ` — R$ ${Number(p.valor_venda).toLocaleString('pt-BR', {minimumFractionDigits:2})}` : ''}</option>)
+                                : estoque.map(p => <option key={p.id} value={p.id}>{p.descricao}{p.codigo ? ` (${p.codigo})` : ''}{p.valor_venda ? ` — R$ ${Number(p.valor_venda).toLocaleString('pt-BR', {minimumFractionDigits:2})}` : ''}</option>)
                               }
                             </select>
                           </F>
                           <F label="Descrição" className="col-span-2 md:col-span-4">
-                              <NoACInput value={item.descricao} onChange={e => atualizarItem(idx, "descricao", e.target.value)} placeholder={form.tipo === "NFSe" ? "Ex: Troca de óleo, Alinhamento..." : "Ex: Filtro de óleo, Pastilha de freio..."} className={`input-dark ${errosForm.items?.[idx]?.descricao ? 'border-red-500' : ''}`} />
-                              {errosForm.items?.[idx]?.descricao && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].descricao}</p>}
-                            </F>
-                           <F label="Quantidade">
-                             <NoACInput value={item.quantidade} onChange={e => atualizarItem(idx, "quantidade", e.target.value)} placeholder="1" />
-                           </F>
-                           <F label="Valor Unitário (R$)">
-                             <NoACInput value={item.valor_unitario} onChange={e => atualizarItem(idx, "valor_unitario", e.target.value)} placeholder="0" />
-                           </F>
-                           <F label="Total (R$)" className="col-span-2">
-                             <NoACInput value={item.valor_total} onChange={e => atualizarItem(idx, "valor_total", e.target.value)} placeholder="0" />
-                           </F>
-                           {form.tipo !== 'NFSe' && (
-                             <>
-                               <F label="NCM">
-                                 <NoACInput value={item.ncm || ''} onChange={e => atualizarItem(idx, 'ncm', e.target.value)} placeholder="87089990" className={`input-dark ${errosForm.items?.[idx]?.ncm ? 'border-red-500' : ''}`} />
-                                 {errosForm.items?.[idx]?.ncm && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].ncm}</p>}
-                               </F>
-                               <F label="CFOP">
-                                 <NoACInput value={item.cfop || ''} onChange={e => atualizarItem(idx, 'cfop', e.target.value)} placeholder="5405" className={`input-dark ${errosForm.items?.[idx]?.cfop ? 'border-red-500' : ''}`} />
-                                 {errosForm.items?.[idx]?.cfop && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].cfop}</p>}
-                               </F>
-                               <F label="CEST (opcional)">
-                                 <NoACInput value={item.cest || ''} onChange={e => atualizarItem(idx, 'cest', e.target.value)} placeholder="" />
-                               </F>
-                               <F label="Unidade">
-                                 <NoACInput value={item.unidade || ''} onChange={e => atualizarItem(idx, 'unidade', e.target.value)} placeholder="UN" />
-                               </F>
-                             </>
-                           )}
+                            <NoACInput value={item.descricao} onChange={e => atualizarItem(idx, "descricao", e.target.value)} placeholder={form.tipo === "NFSe" ? "Ex: Troca de óleo, Alinhamento..." : "Ex: Filtro de óleo, Pastilha de freio..."} className={`input-dark ${errosForm.items?.[idx]?.descricao ? 'border-red-500' : ''}`} />
+                            {errosForm.items?.[idx]?.descricao && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].descricao}</p>}
+                          </F>
+                          <F label="Quantidade">
+                            <NoACInput value={item.quantidade} onChange={e => atualizarItem(idx, "quantidade", e.target.value)} placeholder="1" />
+                          </F>
+                          <F label="Valor Unitário (R$)">
+                            <NoACInput value={item.valor_unitario} onChange={e => atualizarItem(idx, "valor_unitario", e.target.value)} placeholder="0" />
+                          </F>
+                          <F label="Total (R$)" className="col-span-2">
+                            <NoACInput value={item.valor_total} onChange={e => atualizarItem(idx, "valor_total", e.target.value)} placeholder="0" />
+                          </F>
+                          {form.tipo !== 'NFSe' && (
+                            <>
+                              <F label="NCM">
+                                <NoACInput value={item.ncm || ''} onChange={e => atualizarItem(idx, 'ncm', e.target.value)} placeholder="87089990" className={`input-dark ${errosForm.items?.[idx]?.ncm ? 'border-red-500' : ''}`} />
+                                {errosForm.items?.[idx]?.ncm && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].ncm}</p>}
+                              </F>
+                              <F label="CFOP">
+                                <NoACInput value={item.cfop || ''} onChange={e => atualizarItem(idx, 'cfop', e.target.value)} placeholder="5405" className={`input-dark ${errosForm.items?.[idx]?.cfop ? 'border-red-500' : ''}`} />
+                                {errosForm.items?.[idx]?.cfop && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].cfop}</p>}
+                              </F>
+                              <F label="CEST (opcional)">
+                                <NoACInput value={item.cest || ''} onChange={e => atualizarItem(idx, 'cest', e.target.value)} placeholder="" />
+                              </F>
+                              <F label="Unidade">
+                                <NoACInput value={item.unidade || ''} onChange={e => atualizarItem(idx, 'unidade', e.target.value)} placeholder="UN" />
+                              </F>
+                            </>
+                          )}
                         </div>
                       </div>
                     ))}
