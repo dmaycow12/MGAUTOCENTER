@@ -108,6 +108,7 @@ Deno.serve(async (req) => {
         modalidade_frete: '9',
         local_destino: '1',
         presenca_comprador: '1',
+        numero: 100,
         ...(cpfCnpjLimpo.length === 11 ? { cpf_destinatario: cpfCnpjLimpo } : {}),
         ...(cpfCnpjLimpo.length === 14 ? { cnpj_destinatario: cpfCnpjLimpo } : {}),
         ...(serie_manual ? { serie: serie_manual } : {}),
@@ -158,6 +159,7 @@ Deno.serve(async (req) => {
         cep_destinatario: cepLimpo,
         indicador_inscricao_estadual_destinatario: '9',
         modalidade_frete: '9',
+        numero: 100,
         ...(serie_manual ? { serie: serie_manual } : {}),
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
