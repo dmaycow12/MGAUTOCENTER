@@ -213,9 +213,9 @@ Deno.serve(async (req) => {
     const pdfUrl = normalizarUrl(result.caminho_pdf_nfse || result.caminho_danfe || '');
     const chaveAcesso = result.chave_nfe || '';
     let statusNota = 'Processando';
-    if (tipo === 'NFCe') statusNota = 'Emitida';
-    else if (result.status === 'autorizado') statusNota = 'Emitida';
+    if (result.status === 'autorizado') statusNota = 'Emitida';
     else if (result.status === 'erro_autorizacao' || result.status === 'rejeitado') statusNota = 'Erro';
+    const mensagemSefaz = result.erros?.[0]?.mensagem || result.mensagem_sefaz || result.mensagem || '';
 
     const notaData = {
       tipo,
@@ -229,6 +229,7 @@ Deno.serve(async (req) => {
       chave_acesso: chaveAcesso,
       ordem_servico_id: body.ordem_servico_id || '',
       observacoes: observacoes || '',
+      mensagem_sefaz: mensagemSefaz,
     };
 
     // Tenta atualizar nota existente; se não existir, cria nova
@@ -261,7 +262,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return Response.json({ sucesso: true, mensagem, pdf: pdfUrl, status: statusNota });
+    return Response.json({ sucesso: true, mensagem, pdf: pdfUrl, status: statusNota, mensagem_sefaz: mensagemSefaz });
 
   } catch (error) {
     return Response.json({ sucesso: false, erro: error.message });
