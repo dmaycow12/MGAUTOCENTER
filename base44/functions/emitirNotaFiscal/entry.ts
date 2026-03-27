@@ -91,8 +91,8 @@ Deno.serve(async (req) => {
         servico: {
           valor_servicos: Number(valor_total) || 1.0,
           discriminacao: discriminacao.substring(0, 1000),
-          item_lista_servico: '1401',
-          codigo_tributario_municipio: '000',
+          item_lista_servico: '140101',
+          codigo_tributario_municipio: '140101',
           exigibilidade_iss: 1,
           iss_retido: false,
         },
