@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
           inscricao_municipal: INSCRICAO_MUNICIPAL,
           codigo_municipio: COD_MUNICIPIO_PATOS,
           regime_tributario: 1,
-          regime_especial_tributacao: 6,
+          regime_especial_tributacao: 0,
           optante_simples_nacional: true,
         },
         tomador: {
