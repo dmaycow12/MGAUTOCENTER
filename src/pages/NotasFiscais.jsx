@@ -528,6 +528,10 @@ export default function NotasFiscais() {
   };
 
   const editarNota = (nota) => {
+    if (nota.status === 'Emitida') {
+      feedback('erro', 'Notas com status Emitida não podem ser editadas.');
+      return;
+    }
     // Tenta restaurar itens salvos do xml_content
     let itensSalvos = [defaultItem()];
     if (nota.xml_content) {
