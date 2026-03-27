@@ -679,13 +679,13 @@ export default function NotasFiscais() {
             onClick={async () => {
               setBuscandoSefaz(true);
               try {
-                const res = await base44.functions.invoke('consultarNotasRecebidas', {});
+                const res = await base44.functions.invoke('sincronizarNotasRetroativas', {});
                 const data = res.data;
                 if (data?.sucesso) {
-                  feedback('sucesso', data.mensagem || 'Notas importadas com sucesso.');
+                  feedback('sucesso', data.mensagem || 'Sincronização concluída.');
                   load();
                 } else {
-                  feedback('erro', data?.erro || 'Erro ao buscar notas na SEFAZ.');
+                  feedback('erro', data?.erro || 'Erro ao sincronizar notas.');
                 }
               } catch (e) {
                 feedback('erro', 'Erro: ' + e.message);
@@ -699,22 +699,7 @@ export default function NotasFiscais() {
             onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}
           >
             {buscandoSefaz ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
-            {buscandoSefaz ? 'Buscando...' : 'Buscar da SEFAZ'}
-          </button>
-          <button onClick={async () => {
-            const df = defaultForm();
-            const numFallback = proximoNumero(notas, df.tipo);
-            setForm({...df, numero: numFallback, serie: proximaSerie(notas, df.tipo)});
-            setAbaForm('cliente');
-            setShowForm(true);
-            try {
-              const res = await base44.functions.invoke('consultarProximoNumeroNF', { tipo: df.tipo });
-              if (res.data?.sucesso && res.data?.proximo_numero) {
-                setForm(f => ({ ...f, numero: String(res.data.proximo_numero) }));
-              }
-            } catch {}
-          }} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
-            <Plus className="w-3 h-3" /> Emitir Nota
+            {buscandoSefaz ? 'Sincronizando...' : 'Sincronizar 90d'}
           </button>
         </div>
 
