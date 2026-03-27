@@ -96,7 +96,6 @@ Deno.serve(async (req) => {
           exigibilidade_iss: 1,
           iss_retido: false,
         },
-        regime_tributario: 6,
       };
     } else if (tipo === 'NFCe') {
       endpoint = `/nfce?ref=${ref}`;
