@@ -669,10 +669,10 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      {/* Botões Principais - Linha com 3 Colunas Iguais */}
+      {/* Botões - 3 Colunas Compactas */}
       <div className="grid grid-cols-3 gap-2">
-        <button onClick={() => setShowImport(true)} className="flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
-          <Upload className="w-4 h-4" /> Importar XML
+        <button onClick={() => setShowImport(true)} className="flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
+          <Upload className="w-3 h-3" /> Importar XML
         </button>
         <button
           onClick={async () => {
@@ -697,60 +697,49 @@ export default function NotasFiscais() {
             setBuscandoSefaz(false);
           }}
           disabled={buscandoSefaz}
-          className="flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+          className="flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50"
           style={{background: "#00cc44", color: "#000"}}
           onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00aa33"; }}
           onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}
         >
-          {buscandoSefaz ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+          {buscandoSefaz ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
           {buscandoSefaz ? 'Buscando...' : 'Buscar da SEFAZ'}
         </button>
-        <button onClick={() => setShowForm(true)} className="flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
-          <Plus className="w-4 h-4" /> Emitir Nota
+        <button onClick={() => setShowForm(true)} className="flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
+          <Plus className="w-3 h-3" /> Emitir Nota
         </button>
       </div>
 
-      {/* Header / Filtros */}
+      {/* Filtros */}
       <div className="flex flex-col gap-2">
-        <div className="flex gap-2" style={{display: "none"}}>
-          {/* ENTRADA: Importar XML e Sincronizar (Verde Escuro) - HIDDEN */}
-          <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
-            <Upload className="w-3 h-3" /> Importar XML
-          </button>
-          <button
-            onClick={async () => {
-              setBuscandoSefaz(true);
-              try {
-                const dataInicio = '2026-01-01';
-                const dataFim = new Date().toISOString().split('T')[0];
-                const res = await base44.functions.invoke('sincronizarNotasRetroativas', { data_inicio: dataInicio, data_fim: dataFim });
-                const data = res.data;
-                if (data?.sucesso) {
-                  feedback('sucesso', data.mensagem || 'Sincronização concluída.');
-                  if (data.primeiraNotaJaneiro) {
-                    feedback('sucesso', `✓ Primeira nota de janeiro salva: NF ${data.primeiraNotaJaneiro.numero} em ${data.primeiraNotaJaneiro.data}`);
-                  }
-                  load();
-                } else {
-                  feedback('erro', data?.erro || 'Erro ao sincronizar notas.');
-                }
-              } catch (e) {
-                feedback('erro', 'Erro: ' + e.message);
-              }
-              setBuscandoSefaz(false);
-            }}
-            disabled={buscandoSefaz}
-            className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50"
-            style={{background: "#00cc44", color: "#000"}}
-            onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00aa33"; }}
-            onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}
-          >
-            {buscandoSefaz ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
-            {buscandoSefaz ? 'Sincronizando...' : 'Sincronizar 90d'}
-          </button>
-
+        {/* Entrada/Saída + NFe/NFSe/NFCe */}
+        <div className="flex gap-2">
+          <button onClick={() => setFiltroTipo("Todos")} className={`flex-1 h-8 rounded-lg text-[11px] font-medium transition-all ${filtroTipo === "Todos" ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
+          <button onClick={() => setFiltroTipo("Entrada")} className={`flex-1 h-8 rounded-lg text-[11px] font-medium transition-all ${filtroTipo === "Entrada" ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
+          {["Todos", "NFe", "NFSe", "NFCe"].map(m => (
+            <button key={m} onClick={() => setFiltroModeloNF(m)}
+              className={`flex-1 h-8 rounded-lg text-[11px] font-medium transition-all ${filtroModeloNF === m ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              {m === "Todos" ? "Tudo" : m}
+            </button>
+          ))}
         </div>
 
+        {/* Botões Export + Período */}
+        <div className="flex gap-2">
+          <button onClick={() => exportarRelatorio()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+            {gerandoZip ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Archive className="w-3 h-3" />} Exportar
+          </button>
+          <button onClick={gerarSintegra} disabled={gerandoSintegra} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+            {gerandoSintegra ? <RefreshCw className="w-3 h-3 animate-spin" /> : <BarChart2 className="w-3 h-3" />} Sintegra
+          </button>
+          <div className={`flex-1 flex items-center h-8 rounded-lg text-[11px] font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
+            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>< ChevronLeft className="w-3 h-3" /></button>
+            <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
+            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>< ChevronRight className="w-3 h-3" /></button>
+          </div>
+        </div>
+
+        {/* Busca + View */}
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
