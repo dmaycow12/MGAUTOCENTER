@@ -92,6 +92,7 @@ Deno.serve(async (req) => {
           valor_servicos: Number(valor_total) || 1.0,
           discriminacao: discriminacao.substring(0, 1000),
           item_lista_servico: '140101',
+          op_simples_nacional: 2,
           exigibilidade_iss: 1,
           iss_retido: false,
         },
