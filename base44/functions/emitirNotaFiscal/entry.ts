@@ -158,6 +158,7 @@ Deno.serve(async (req) => {
         uf_destinatario: cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
         indicador_inscricao_estadual_destinatario: '9',
+        ...(cpfCnpjLimpo.length === 14 ? { inscricao_estadual_destinatario: (body.cliente_ie && body.cliente_ie.trim()) ? body.cliente_ie.trim() : 'ISENTO' } : {}),
         modalidade_frete: '9',
         ...(body.numero ? { numero: Number(body.numero) } : {}),
         ...(serie_manual ? { serie: serie_manual } : {}),
