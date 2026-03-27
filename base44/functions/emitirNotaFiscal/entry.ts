@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
       // NFe
       endpoint = `/nfe?ref=${ref}`;
       const prodItems = (items && items.length > 0) ? items : [
-        { descricao: 'Peças de Automóveis', quantidade: 1, valor_unitario: Number(valor_total) || 1.0, valor_total: Number(valor_total) || 1.0, ncm: '87089990', cfop: '5405' }
+        { descricao: 'Peças de Automóveis', quantidade: 1, valor_unitario: Number(valor_total) || 1.0, valor_total: Number(valor_total) || 1.0, ncm: '87089990', cfop: '5102' }
       ];
       payload = {
         cnpj_emitente: CNPJ_EMITENTE,
@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
           codigo_produto: it.codigo || `REF${idx + 1}`,
           descricao: (it.descricao || 'Produto').substring(0, 120),
           codigo_ncm: validarNcm(it.ncm),
-          cfop: it.cfop || '5405',
+          cfop: it.cfop || '5102',
           unidade_comercial: it.unidade || 'UN',
           quantidade_comercial: Number(it.quantidade) || 1,
           valor_unitario_comercial: Number(it.valor_unitario) || Number(valor_total) || 1.0,
