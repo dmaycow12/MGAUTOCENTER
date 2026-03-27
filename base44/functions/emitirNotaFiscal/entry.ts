@@ -259,7 +259,7 @@ Deno.serve(async (req) => {
 
     // Salva o número usado para manter sequência correta
     if (body.numero && (statusNota === 'Emitida' || statusNota === 'Processando')) {
-      const chave = tipo === 'NFCe' ? 'nfce_ultimo_numero' : 'nfe_ultimo_numero';
+      let chave = tipo === 'NFCe' ? 'nfce_ultimo_numero' : tipo === 'NFSe' ? 'nfse_ultimo_numero' : 'nfe_ultimo_numero';
       const configs = await base44.asServiceRole.entities.Configuracao.filter({ chave });
       const ultimoLocal = parseInt(configs[0]?.valor || '0', 10);
       const numeroAtual = parseInt(body.numero, 10);
