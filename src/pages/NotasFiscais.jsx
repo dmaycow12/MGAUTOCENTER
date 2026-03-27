@@ -679,10 +679,15 @@ export default function NotasFiscais() {
             onClick={async () => {
               setBuscandoSefaz(true);
               try {
-                const res = await base44.functions.invoke('sincronizarNotasRetroativas', {});
+                const dataInicio = '2026-01-01';
+                const dataFim = new Date().toISOString().split('T')[0];
+                const res = await base44.functions.invoke('sincronizarNotasRetroativas', { data_inicio: dataInicio, data_fim: dataFim });
                 const data = res.data;
                 if (data?.sucesso) {
                   feedback('sucesso', data.mensagem || 'Sincronização concluída.');
+                  if (data.primeiraNotaJaneiro) {
+                    feedback('sucesso', `✓ Primeira nota de janeiro salva: NF ${data.primeiraNotaJaneiro.numero} em ${data.primeiraNotaJaneiro.data}`);
+                  }
                   load();
                 } else {
                   feedback('erro', data?.erro || 'Erro ao sincronizar notas.');

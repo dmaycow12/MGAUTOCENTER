@@ -13,68 +13,94 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Calcula os últimos 90 dias
-    const dataFim = new Date();
-    const dataInicio = new Date();
-    dataInicio.setDate(dataInicio.getDate() - 90);
+    const body = await req.json().catch(() => ({}));
+    const dataInicioParam = body.data_inicio; // ex: "2026-01-01"
+    const dataFimParam = body.data_fim; // ex: "2026-03-27"
 
     const pad = (n) => String(n).padStart(2, '0');
     const formatoData = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
-    const dataInicioStr = formatoData(dataInicio);
-    const dataFimStr = formatoData(dataFim);
+    let dataInicio, dataFim;
+    if (dataInicioParam && dataFimParam) {
+      dataInicio = new Date(dataInicioParam + 'T00:00:00Z');
+      dataFim = new Date(dataFimParam + 'T23:59:59Z');
+    } else {
+      // Padrão: últimos 90 dias
+      dataFim = new Date();
+      dataInicio = new Date();
+      dataInicio.setDate(dataInicio.getDate() - 90);
+    }
 
-    // Consulta manifestos (recebidas/entradas)
-    const res = await fetch(
-      `${FOCUSNFE_BASE}/manifestos?cnpj=${CNPJ_EMITENTE}&data_inicio=${dataInicioStr}&data_fim=${dataFimStr}`,
-      {
-        method: 'GET',
-        headers: {
-          'Authorization': AUTH_HEADER,
-          'Content-Type': 'application/json',
-        },
+    // Busca em lotes de 60 dias para evitar timeout
+    const allManifestos = [];
+    let currentStart = new Date(dataInicio);
+    const end = new Date(dataFim);
+
+    while (currentStart < end) {
+      let currentEnd = new Date(currentStart);
+      currentEnd.setDate(currentEnd.getDate() + 60);
+      if (currentEnd > end) currentEnd = new Date(end);
+
+      const startStr = formatoData(currentStart);
+      const endStr = formatoData(currentEnd);
+
+      try {
+        const res = await fetch(
+          `${FOCUSNFE_BASE}/manifestos?cnpj=${CNPJ_EMITENTE}&data_inicio=${startStr}&data_fim=${endStr}`,
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': AUTH_HEADER,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        const responseText = await res.text();
+        let result;
+        try {
+          result = JSON.parse(responseText);
+        } catch {
+          currentStart = new Date(currentEnd);
+          continue;
+        }
+
+        if (res.ok) {
+          const manifestos = Array.isArray(result) ? result : (result.manifestos || []);
+          allManifestos.push(...manifestos);
+        }
+      } catch (_) {
+        // Continua com o próximo lote
       }
-    );
 
-    const responseText = await res.text();
-    let result;
-    try {
-      result = JSON.parse(responseText);
-    } catch {
-      return Response.json({
-        sucesso: false,
-        erro: `Resposta inválida da Focus: ${responseText.substring(0, 200)}`,
-      });
+      currentStart = new Date(currentEnd);
     }
 
-    if (!res.ok) {
-      const msgErro = result.erros
-        ? result.erros.map(e => e.mensagem).join('; ')
-        : (result.mensagem || JSON.stringify(result));
-      return Response.json({
-        sucesso: false,
-        erro: msgErro,
-      });
-    }
-
-    // result deve ser um array de manifestos/notas
-    const manifestos = Array.isArray(result) ? result : (result.manifestos || []);
-    if (manifestos.length === 0) {
+    if (allManifestos.length === 0) {
       return Response.json({
         sucesso: true,
-        mensagem: 'Nenhuma nota encontrada no período de 90 dias.',
+        mensagem: 'Nenhuma nota encontrada no período selecionado.',
         importadas: 0,
       });
     }
 
     let importadas = 0;
+    let primeiraNotaJaneiro = null;
+
     const notasExistentes = await base44.asServiceRole.entities.NotaFiscal.list(
       '-created_date',
-      500
+      1000
     );
     const chavasExistentes = new Set(notasExistentes.map(n => n.chave_acesso).filter(Boolean));
 
-    for (const manifesto of manifestos) {
+    // Ordena as notas por data para rastrear a primeira de janeiro
+    const notasOrdenadas = allManifestos.sort((a, b) => {
+      const dataA = a.nfe_data_emissao || a.data_emissao || '';
+      const dataB = b.nfe_data_emissao || b.data_emissao || '';
+      return new Date(dataA) - new Date(dataB);
+    });
+
+    for (const manifesto of notasOrdenadas) {
       const chave = manifesto.chave_nfe || manifesto.chave || manifesto.nfe_numero_chave;
       if (!chave || chavasExistentes.has(chave)) continue;
 
@@ -83,10 +109,10 @@ Deno.serve(async (req) => {
       const cliente_nome = manifesto.nome_emitente || manifesto.razao_social || 'Fornecedor';
       const cliente_cpf_cnpj = manifesto.cnpj_emitente || manifesto.cpf_emitente || '';
       const valor = parseFloat(manifesto.nfe_valor_total || manifesto.valor_total || '0');
-      const data_emissao = manifesto.nfe_data_emissao || manifesto.data_emissao || '';
+      const data_emissao = (manifesto.nfe_data_emissao || manifesto.data_emissao || '').substring(0, 10);
 
       try {
-        await base44.asServiceRole.entities.NotaFiscal.create({
+        const createdNota = await base44.asServiceRole.entities.NotaFiscal.create({
           tipo: 'NFe',
           numero,
           serie,
@@ -95,11 +121,21 @@ Deno.serve(async (req) => {
           cliente_cpf_cnpj,
           chave_acesso: chave,
           valor_total: valor,
-          data_emissao: data_emissao.substring(0, 10),
+          data_emissao,
           observacoes: `Sincronização retroativa - ${new Date().toLocaleDateString('pt-BR')}`,
         });
 
         importadas++;
+
+        // Rastreia a primeira nota de janeiro
+        if (!primeiraNotaJaneiro && data_emissao.startsWith('2026-01')) {
+          primeiraNotaJaneiro = {
+            id: createdNota.id,
+            numero,
+            data: data_emissao,
+            cliente: cliente_nome,
+          };
+        }
       } catch (_) {
         // Continua com a próxima nota em caso de erro
       }
@@ -107,10 +143,11 @@ Deno.serve(async (req) => {
 
     return Response.json({
       sucesso: true,
-      mensagem: `Sincronização concluída: ${importadas} nota(s) importada(s) dos últimos 90 dias.`,
+      mensagem: `Sincronização concluída: ${importadas} nota(s) importada(s).`,
       importadas,
+      primeiraNotaJaneiro,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ sucesso: false, erro: error.message }, { status: 500 });
   }
 });
