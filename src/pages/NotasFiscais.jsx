@@ -131,6 +131,7 @@ export default function NotasFiscais() {
   const [form, setForm] = useState(defaultForm());
   const [emitindo, setEmitindo] = useState(false);
   const [transmitindo, setTransmitindo] = useState(null);
+  const currentEditIdRef = useRef(null);
   const [msgFeedback, setMsgFeedback] = useState(null);
   const [temSpedy, setTemSpedy] = useState(false);
   const [abaForm, setAbaForm] = useState("cliente");
@@ -469,11 +470,19 @@ export default function NotasFiscais() {
     if (rascunhoNota) setTransmitindo(rascunhoNota.id);
     else setEmitindo(true);
 
+    // Se nota nova sem ID ainda, cria rascunho agora para garantir idempotência
+    if (!rascunhoNota && !currentEditIdRef.current) {
+      const { _editId, ...dadosForm } = f;
+      const novoRascunho = await base44.entities.NotaFiscal.create({ ...dadosForm, status: 'Rascunho' });
+      currentEditIdRef.current = novoRascunho.id;
+      setForm(prev => ({ ...prev, _editId: novoRascunho.id }));
+    }
+
     try {
       const payload = {
         ...f,
+        nota_id: rascunhoNota?.id || currentEditIdRef.current || null,
         data_emissao: f.data_emissao || new Date().toISOString().split('T')[0],
-        nota_id: rascunhoNota?.id || form._editId || null,
         serie_manual: f.serie || '1',
         // garante que items sempre tem valor_unitario correto
         items: f.items.map(it => ({
@@ -487,9 +496,9 @@ export default function NotasFiscais() {
       const response = await base44.functions.invoke("emitirNotaFiscal", payload);
 
       if (response.data?.sucesso) {
-        feedback("sucesso", `Nota ${f.tipo} transmitida com sucesso! ${response.data.mensagem || ""}`);
-        // Atualiza o registro no banco com os dados retornados
-        const idParaAtualizar = rascunhoNota?.id || form._editId;
+        feedback('sucesso', `Nota ${f.tipo} transmitida com sucesso! ${response.data.mensagem || ''}`);
+        const idParaAtualizar = rascunhoNota?.id || currentEditIdRef.current || form._editId;
+        currentEditIdRef.current = null;
         if (idParaAtualizar) {
           const atualizacao = {};
           if (response.data.numero) atualizacao.numero = response.data.numero;
@@ -557,20 +566,23 @@ export default function NotasFiscais() {
       items: itensSalvos,
       _editId: nota.id,
     });
+    currentEditIdRef.current = nota.id;
     setAbaForm('cliente');
     setShowForm(true);
   };
 
   const salvarRascunho = async () => {
-    if (form._editId) {
+    const editId = currentEditIdRef.current || form._editId;
+    if (editId) {
       const { _editId, ...dados } = form;
-      await base44.entities.NotaFiscal.update(_editId, { ...dados, status: "Rascunho" });
+      await base44.entities.NotaFiscal.update(editId, { ...dados, status: 'Rascunho' });
     } else {
-      await base44.entities.NotaFiscal.create({ ...form, status: "Rascunho" });
+      await base44.entities.NotaFiscal.create({ ...form, status: 'Rascunho' });
     }
+    currentEditIdRef.current = null;
     setShowForm(false);
     setForm(defaultForm());
-    feedback("sucesso", "Salvo como rascunho.");
+    feedback('sucesso', 'Salvo como rascunho.');
     load();
   };
 
@@ -1002,7 +1014,7 @@ export default function NotasFiscais() {
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">
                         {nota.status === "Rascunho" && temSpedy && (
-                          <button title="Transmitir para Spedy" onClick={() => emitirNota(nota)} disabled={transmitindo === nota.id}
+                          <button title="Transmitir para Spedy" onClick={() => { if (transmitindo) return; emitirNota(nota); }} disabled={transmitindo !== null}
                             className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 rounded-lg transition-all disabled:opacity-50">
                             {transmitindo === nota.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
                             {transmitindo === nota.id ? "..." : "Transmitir"}
@@ -1098,7 +1110,7 @@ export default function NotasFiscais() {
                 {!temSpedy && <p className="text-yellow-400 text-xs mt-0.5">⚠️ Focus NFe não configurada — será salvo como rascunho</p>}
                 {temSpedy && <p className="text-green-400 text-xs mt-0.5">✓ Focus NFe configurada — será transmitida automaticamente</p>}
               </div>
-              <button onClick={() => setShowForm(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
+              <button onClick={() => { setShowForm(false); currentEditIdRef.current = null; }}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
             </div>
 
             <div className="px-5 pt-4 flex-shrink-0 grid grid-cols-3 gap-4">
