@@ -160,9 +160,10 @@ Deno.serve(async (req) => {
         uf_destinatario: cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
         indicador_inscricao_estadual_destinatario: cpfCnpjLimpo.length === 14
-          ? ((body.cliente_ie && body.cliente_ie.trim()) ? '1' : '2')
+          ? ((body.cliente_ie && body.cliente_ie.trim()) ? '1' : '9')
           : '9',
-        ...(cpfCnpjLimpo.length === 14 ? { inscricao_estadual_destinatario: (body.cliente_ie && body.cliente_ie.trim()) ? body.cliente_ie.trim() : 'ISENTO' } : {}),
+        ...(cpfCnpjLimpo.length === 14 && body.cliente_ie && body.cliente_ie.trim() ? { inscricao_estadual_destinatario: body.cliente_ie.trim() } : {}),
+        consumidor_final: cpfCnpjLimpo.length === 11 || !(body.cliente_ie && body.cliente_ie.trim()) ? '1' : '0',
         modalidade_frete: '9',
         ...(body.numero ? { numero: Number(body.numero) } : {}),
         ...(serie_manual ? { serie: serie_manual } : {}),
