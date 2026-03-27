@@ -157,7 +157,9 @@ Deno.serve(async (req) => {
         municipio_destinatario: cliente_cidade || 'Patos de Minas',
         uf_destinatario: cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
-        indicador_inscricao_estadual_destinatario: '9',
+        indicador_inscricao_estadual_destinatario: cpfCnpjLimpo.length === 14
+          ? ((body.cliente_ie && body.cliente_ie.trim()) ? '1' : '2')
+          : '9',
         ...(cpfCnpjLimpo.length === 14 ? { inscricao_estadual_destinatario: (body.cliente_ie && body.cliente_ie.trim()) ? body.cliente_ie.trim() : 'ISENTO' } : {}),
         modalidade_frete: '9',
         ...(body.numero ? { numero: Number(body.numero) } : {}),
