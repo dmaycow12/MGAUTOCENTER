@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
       cliente_nome: cliente_nome || '',
       data_emissao: data_emissao || new Date().toISOString().split('T')[0],
       valor_total: Number(valor_total) || 1.0,
-      pdf_url: result.caminho_pdf_nfse || result.caminho_danfe || '',
+      pdf_url: result.caminho_pdf_nfse || result.caminho_danfe || result.url_danfe || '',
       chave_acesso: result.chave_nfe || '',
       ordem_servico_id: body.ordem_servico_id || '',
       observacoes: observacoes || '',
@@ -181,7 +181,7 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.NotaFiscal.create(notaData);
     }
 
-    return Response.json({ sucesso: true, mensagem: "Nota enviada para a Prefeitura!", pdf: notaData.pdf_url });
+    return Response.json({ sucesso: true, mensagem: 'Nota enviada!', pdf: notaData.pdf_url });
 
   } catch (error) {
     return Response.json({ sucesso: false, erro: error.message }, { status: 200 });
