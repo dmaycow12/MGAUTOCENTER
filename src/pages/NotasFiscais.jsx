@@ -645,6 +645,28 @@ export default function NotasFiscais() {
     }
   };
 
+  const exportarRelatorio = () => {
+    if (filtradas.length === 0) return alert("Nenhuma nota no filtro atual.");
+    setGerandoZip(true);
+    const header = ["Tipo", "Número", "Série", "Status", "Cliente", "Data Emissão", "Valor Total", "Chave Acesso", "Observações"];
+    const rows = filtradas.map(n => [
+      n.tipo || "", n.numero || "", n.serie || "", n.status || "", n.cliente_nome || "",
+      n.data_emissao || "", Number(n.valor_total || 0).toFixed(2).replace(".", ","),
+      n.chave_acesso || "", (n.observacoes || "").replace(/[\r\n;]/g, " "),
+    ]);
+    const sep = ";";
+    const bom = "\uFEFF";
+    const csvContent = bom + [header, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(sep)).join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `notas_fiscais_${periodoRange.inicio}_${periodoRange.fim}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setGerandoZip(false);
+  };
+
   const gerarSintegra = () => {
     setGerandoSintegra(true);
     const nfes = filtradas.filter(n => n.tipo === "NFe");
@@ -767,24 +789,13 @@ export default function NotasFiscais() {
         </div>
 
         <div className="flex gap-2">
-          <button onClick={exportarRelatorio} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+          <button onClick={() => exportarRelatorio()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             {gerandoZip ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Archive className="w-3 h-3" />} Exportar
           </button>
           <button onClick={gerarSintegra} disabled={gerandoSintegra} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             {gerandoSintegra ? <RefreshCw className="w-3 h-3 animate-spin" /> : <BarChart2 className="w-3 h-3" />} Sintegra
           </button>
         </div>
-
-        <div className="flex gap-2 items-center">
-          <div className={`flex-1 flex items-center h-8 rounded-lg text-[11px] font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
-            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
-              <ChevronLeft className="w-3 h-3" />
-            </button>
-            <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
-            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
-              <ChevronRight className="w-3 h-3" />
-            </button>
-          </div>
           <div className="relative flex-1" ref={periodoDropRef}>
             <button onClick={() => setPeriodoDropOpen(v => !v)}
               className={`w-full flex items-center justify-center gap-2 px-4 h-8 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}>
