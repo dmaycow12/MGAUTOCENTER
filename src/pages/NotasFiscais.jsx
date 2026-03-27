@@ -542,7 +542,12 @@ export default function NotasFiscais() {
   };
 
   const salvarRascunho = async () => {
-    await base44.entities.NotaFiscal.create({ ...form, status: "Rascunho" });
+    if (form._editId) {
+      const { _editId, ...dados } = form;
+      await base44.entities.NotaFiscal.update(_editId, { ...dados, status: "Rascunho" });
+    } else {
+      await base44.entities.NotaFiscal.create({ ...form, status: "Rascunho" });
+    }
     setShowForm(false);
     setForm(defaultForm());
     feedback("sucesso", "Salvo como rascunho.");
