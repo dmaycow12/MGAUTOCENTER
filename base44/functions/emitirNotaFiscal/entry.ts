@@ -245,6 +245,21 @@ Deno.serve(async (req) => {
       ? 'NFCe autorizada com sucesso!'
       : 'Nota enviada para processamento. Aguarde autorização da SEFAZ.';
 
+    // Salva o número usado para manter sequência correta
+    if (body.numero && (statusNota === 'Emitida' || statusNota === 'Processando')) {
+      const chave = tipo === 'NFCe' ? 'nfce_ultimo_numero' : 'nfe_ultimo_numero';
+      const configs = await base44.asServiceRole.entities.Configuracao.filter({ chave });
+      const ultimoLocal = parseInt(configs[0]?.valor || '0', 10);
+      const numeroAtual = parseInt(body.numero, 10);
+      if (numeroAtual > ultimoLocal) {
+        if (configs.length > 0) {
+          await base44.asServiceRole.entities.Configuracao.update(configs[0].id, { valor: String(numeroAtual) });
+        } else {
+          await base44.asServiceRole.entities.Configuracao.create({ chave, valor: String(numeroAtual), descricao: `Último número ${tipo} autorizado` });
+        }
+      }
+    }
+
     return Response.json({ sucesso: true, mensagem, pdf: pdfUrl, status: statusNota });
 
   } catch (error) {

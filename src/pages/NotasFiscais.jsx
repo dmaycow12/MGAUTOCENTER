@@ -208,6 +208,7 @@ export default function NotasFiscais() {
   }, []);
 
   const proximoNumero = (notasList, tipo) => {
+    // Fallback local (usado apenas se a consulta à API falhar)
     if (tipo === 'NFCe') {
       const cfgUltimo = configsNF.find(c => c.chave === 'nfce_ultimo_numero');
       const ultimoSalvo = parseInt(cfgUltimo?.valor || '0', 10);
@@ -215,9 +216,13 @@ export default function NotasFiscais() {
       const ultimoNota = nums.length > 0 ? Math.max(...nums) : 0;
       return String(Math.max(ultimoSalvo, ultimoNota) + 1);
     }
+    const chaveConfig = tipo === 'NFe' ? 'nfe_ultimo_numero' : null;
+    const cfgUltimo = chaveConfig ? configsNF.find(c => c.chave === chaveConfig) : null;
+    const ultimoSalvo = parseInt(cfgUltimo?.valor || '0', 10);
     const filtradas = notasList.filter(n => n.tipo === tipo);
     const nums = filtradas.map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
-    return nums.length > 0 ? String(Math.max(...nums) + 1) : "1";
+    const ultimoNota = nums.length > 0 ? Math.max(...nums) : 0;
+    return String(Math.max(ultimoSalvo, ultimoNota) + 1);
   };
 
   const proximaSerie = (notasList, tipo) => {
@@ -734,7 +739,19 @@ export default function NotasFiscais() {
             {buscandoSefaz ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
             {buscandoSefaz ? 'Buscando...' : 'Buscar da SEFAZ'}
           </button>
-          <button onClick={() => { const df = defaultForm(); setForm({...df, numero: proximoNumero(notas, df.tipo), serie: proximaSerie(notas, df.tipo)}); setAbaForm("cliente"); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+          <button onClick={async () => {
+            const df = defaultForm();
+            const numFallback = proximoNumero(notas, df.tipo);
+            setForm({...df, numero: numFallback, serie: proximaSerie(notas, df.tipo)});
+            setAbaForm('cliente');
+            setShowForm(true);
+            try {
+              const res = await base44.functions.invoke('consultarProximoNumeroNF', { tipo: df.tipo });
+              if (res.data?.sucesso && res.data?.proximo_numero) {
+                setForm(f => ({ ...f, numero: String(res.data.proximo_numero) }));
+              }
+            } catch {}
+          }} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
             <Plus className="w-3 h-3" /> Emitir Nota
           </button>
           </div>
