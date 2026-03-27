@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
     // Valida NCM: deve ter exatamente 8 dígitos numéricos, caso contrário usa padrão
     const NCM_PADRAO = '87089990';
     const validarNcm = (ncm) => /^[0-9]{8}$/.test((ncm || '').replace(/\D/g, '')) ? (ncm || '').replace(/\D/g, '') : NCM_PADRAO;
+    const validarCest = (cest) => { if (!cest) return null; const s = (cest || '').replace(/\D/g, ''); return s.length > 0 ? s.padStart(7, '0') : null; };
 
     let cpfCnpjLimpo = (cliente_cpf_cnpj || '').replace(/\D/g, '');
     let cepLimpo = (cliente_cep || '').replace(/\D/g, '');
@@ -126,6 +127,7 @@ Deno.serve(async (req) => {
           icms_situacao_tributaria: '102',
           pis_situacao_tributaria: '07',
           cofins_situacao_tributaria: '07',
+          ...(validarCest(it.cest) ? { cest: validarCest(it.cest) } : {}),
         })),
         formas_pagamento: [{
           forma_pagamento: PAYMENT_MAP[forma_pagamento] || '17',
@@ -178,7 +180,7 @@ Deno.serve(async (req) => {
           icms_situacao_tributaria: '102',
           pis_situacao_tributaria: '07',
           cofins_situacao_tributaria: '07',
-          ...(it.cest ? { cest: it.cest } : {}),
+          ...(validarCest(it.cest) ? { cest: validarCest(it.cest) } : {}),
         })),
         formas_pagamento: [{
           forma_pagamento: PAYMENT_MAP[forma_pagamento] || '17',
