@@ -672,7 +672,8 @@ export default function NotasFiscais() {
       {/* Header / Filtros */}
       <div className="flex flex-col gap-2">
         <div className="flex gap-2">
-          <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+          {/* ENTRADA: Importar XML e Sincronizar (Verde Escuro) */}
+          <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
             <Upload className="w-3 h-3" /> Importar XML
           </button>
           <button
@@ -706,15 +707,13 @@ export default function NotasFiscais() {
             {buscandoSefaz ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
             {buscandoSefaz ? 'Sincronizando...' : 'Sincronizar 90d'}
           </button>
-        </div>
 
-        <div className="flex gap-2">
-          {["Tudo", "Entrada", "Saída"].map(t => (
-            <button key={t} onClick={() => setFiltroTipo(t === "Tudo" ? "Todos" : t)}
-              className={`flex-1 h-8 rounded-lg text-[11px] font-medium transition-all ${(t === "Tudo" ? filtroTipo === "Todos" : filtroTipo === t) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
-              {t}
+          {/* SAÍDA: Emitir Nota (Verde Claro/Destaque) */}
+          <div className="relative flex-1">
+            <button onClick={() => setShowForm(true)} className="w-full flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+              <FileText className="w-3 h-3" /> Emitir Nota
             </button>
-          ))}
+          </div>
         </div>
 
         <div className="flex gap-2">
