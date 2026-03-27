@@ -74,7 +74,6 @@ Deno.serve(async (req) => {
           cnpj: CNPJ_EMITENTE,
           inscricao_municipal: INSCRICAO_MUNICIPAL,
           codigo_municipio: COD_MUNICIPIO_PATOS,
-          optante_simples_nacional: true,
         },
         tomador: {
           razao_social: (cliente_nome || 'Consumidor Final').substring(0, 100),
@@ -96,6 +95,7 @@ Deno.serve(async (req) => {
           exigibilidade_iss: 1,
           iss_retido: false,
         },
+        optante_simples_nacional: true,
       };
     } else if (tipo === 'NFCe') {
       endpoint = `/nfce?ref=${ref}`;
