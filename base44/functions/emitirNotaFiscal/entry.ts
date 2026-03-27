@@ -23,9 +23,12 @@ Deno.serve(async (req) => {
       nota_id, cliente_id, data_emissao,
     } = body;
 
+    // Usa a hora atual para evitar erro E0008 (data futura)
+    const agora = new Date();
+    const horaAtual = agora.toTimeString().substring(0, 8); // HH:MM:SS
     const dataEmissaoISO = data_emissao
-      ? `${data_emissao}T12:00:00-03:00`
-      : new Date().toISOString();
+      ? `${data_emissao}T${horaAtual}-03:00`
+      : agora.toISOString();
 
     // AMBIENTE DE PRODUÇÃO (MUNDO REAL)
     const baseUrl = 'https://api.focusnfe.com.br/v2'; 
