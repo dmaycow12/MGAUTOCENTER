@@ -504,14 +504,26 @@ export default function NotasFiscais() {
       } else {
         feedback("erro", response.data?.erro || "Erro ao emitir na Spedy.");
         if (!rascunhoNota) {
-          await base44.entities.NotaFiscal.create({ ...f, status: "Rascunho" });
+          const editId = form._editId;
+          const { _editId, ...dadosSemId } = form;
+          if (editId) {
+            await base44.entities.NotaFiscal.update(editId, { ...dadosSemId, status: "Rascunho" });
+          } else {
+            await base44.entities.NotaFiscal.create({ ...dadosSemId, status: "Rascunho" });
+          }
         }
       }
       load();
     } catch (e) {
       feedback("erro", "Erro: " + e.message);
       if (!rascunhoNota) {
-        await base44.entities.NotaFiscal.create({ ...form, status: "Rascunho" });
+        const editId = form._editId;
+        const { _editId, ...dadosSemId } = form;
+        if (editId) {
+          await base44.entities.NotaFiscal.update(editId, { ...dadosSemId, status: "Rascunho" });
+        } else {
+          await base44.entities.NotaFiscal.create({ ...dadosSemId, status: "Rascunho" });
+        }
         setShowForm(false);
         setForm(defaultForm());
         load();
@@ -522,6 +534,26 @@ export default function NotasFiscais() {
   };
 
   const editarNota = (nota) => {
+    // Tenta restaurar itens salvos do xml_content
+    let itensSalvos = [defaultItem()];
+    if (nota.xml_content) {
+      try {
+        const p = JSON.parse(nota.xml_content);
+        if (Array.isArray(p) && p.length > 0) {
+          itensSalvos = p.map(i => ({
+            descricao: i.descricao || '',
+            quantidade: i.quantidade || 1,
+            valor_unitario: i.valor_unitario || 0,
+            valor_total: i.valor_total || 0,
+            ncm: i.ncm || '',
+            cfop: i.cfop || '',
+            cest: i.cest || '',
+            unidade: i.unidade || 'UN',
+            codigo: i.codigo || ''
+          }));
+        }
+      } catch {}
+    }
     setForm({
       ...defaultForm(),
       tipo: nota.tipo || 'NFSe',
@@ -530,11 +562,20 @@ export default function NotasFiscais() {
       data_emissao: nota.data_emissao || new Date().toISOString().split('T')[0],
       cliente_id: nota.cliente_id || '',
       cliente_nome: nota.cliente_nome || '',
+      cliente_cpf_cnpj: nota.cliente_cpf_cnpj || '',
+      cliente_email: nota.cliente_email || '',
+      cliente_telefone: nota.cliente_telefone || '',
+      cliente_endereco: nota.cliente_endereco || '',
+      cliente_numero: nota.cliente_numero || '',
+      cliente_bairro: nota.cliente_bairro || '',
+      cliente_cep: nota.cliente_cep || '',
+      cliente_cidade: nota.cliente_cidade || '',
+      cliente_estado: nota.cliente_estado || '',
       ordem_servico_id: nota.ordem_servico_id || '',
       valor_total: nota.valor_total || 0,
       observacoes: nota.observacoes || '',
-      forma_pagamento: 'PIX',
-      items: nota.xml_content ? (() => { try { const p = JSON.parse(nota.xml_content); if (Array.isArray(p) && p.length > 0) return p.map(i => ({ descricao: i.descricao || '', quantidade: i.quantidade || 1, valor_unitario: i.valor_unitario || 0, valor_total: i.valor_total || 0, ncm: i.ncm || '', cfop: i.cfop || '', cest: i.cest || '', unidade: i.unidade || 'UN', codigo: i.codigo || '' })); } catch {} return [defaultItem()]; })() : [defaultItem()],
+      forma_pagamento: nota.forma_pagamento || 'PIX',
+      items: itensSalvos,
       _editId: nota.id,
     });
     setAbaForm('cliente');
