@@ -669,6 +669,13 @@ export default function NotasFiscais() {
         </div>
       )}
 
+      {/* Botão Emitir Nota - TOPO */}
+      <div className="flex gap-2">
+        <button onClick={() => setShowForm(true)} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+          <Plus className="w-4 h-4" /> Nova Emissão
+        </button>
+      </div>
+
       {/* Header / Filtros */}
       <div className="flex flex-col gap-2">
         <div className="flex gap-2">
@@ -708,66 +715,6 @@ export default function NotasFiscais() {
             {buscandoSefaz ? 'Sincronizando...' : 'Sincronizar 90d'}
           </button>
 
-          {/* SAÍDA: Emitir Nota (Verde Claro/Destaque) */}
-          <div className="relative flex-1">
-            <button onClick={() => setShowForm(true)} className="w-full flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00ff00", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
-              <FileText className="w-3 h-3" /> Emitir Nota
-            </button>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          {["Todos", "NFe", "NFSe", "NFCe"].map(m => (
-            <button key={m} onClick={() => setFiltroModeloNF(m)}
-              className={`flex-1 h-8 rounded-lg text-[11px] font-medium transition-all ${filtroModeloNF === m ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
-              {m === "Todos" ? "Tudo" : m}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex gap-2">
-          <button onClick={() => exportarRelatorio()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-            {gerandoZip ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Archive className="w-3 h-3" />} Exportar
-          </button>
-          <button onClick={gerarSintegra} disabled={gerandoSintegra} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-            {gerandoSintegra ? <RefreshCw className="w-3 h-3 animate-spin" /> : <BarChart2 className="w-3 h-3" />} Sintegra
-          </button>
-        </div>
-
-        <div className="flex gap-2 items-center">
-          <div className={`flex-1 flex items-center h-8 rounded-lg text-[11px] font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
-            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
-              <ChevronLeft className="w-3 h-3" />
-            </button>
-            <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
-            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
-              <ChevronRight className="w-3 h-3" />
-            </button>
-          </div>
-          <div className="relative flex-1" ref={periodoDropRef}>
-            <button onClick={() => setPeriodoDropOpen(v => !v)}
-              className={`w-full flex items-center justify-center gap-2 px-4 h-8 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}>
-              {usandoOutroPeriodo && customRange ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}` : "Período"}
-              <ChevronDown className={`w-4 h-4 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
-            </button>
-            {periodoDropOpen && (
-              <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
-                <p className="text-xs text-gray-400 font-medium">Selecione o período</p>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">De</label>
-                  <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Até</label>
-                  <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setPeriodoDropOpen(false)} className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Cancelar</button>
-                  <button onClick={aplicarOutroPeriodo} className="flex-1 py-2 text-xs text-white rounded-lg font-medium transition-all bg-blue-600 hover:bg-blue-700">Aplicar</button>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
         <div className="flex gap-2">
