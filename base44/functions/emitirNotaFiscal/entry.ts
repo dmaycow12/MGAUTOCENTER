@@ -51,6 +51,10 @@ Deno.serve(async (req) => {
 
     const ref = `${(tipo || 'nfe').toLowerCase()}-${Date.now()}`;
 
+    // Valida NCM: deve ter exatamente 8 dígitos numéricos, caso contrário usa padrão
+    const NCM_PADRAO = '87089990';
+    const validarNcm = (ncm) => /^[0-9]{8}$/.test((ncm || '').replace(/\D/g, '')) ? (ncm || '').replace(/\D/g, '') : NCM_PADRAO;
+
     let cpfCnpjLimpo = (cliente_cpf_cnpj || '').replace(/\D/g, '');
     let cepLimpo = (cliente_cep || '').replace(/\D/g, '');
     if (cepLimpo.length !== 8) cepLimpo = '38700327';
@@ -111,7 +115,7 @@ Deno.serve(async (req) => {
           numero_item: idx + 1,
           codigo_produto: it.codigo || `REF${idx + 1}`,
           descricao: (it.descricao || 'Produto').substring(0, 120),
-          codigo_ncm: it.ncm || '87089990',
+          codigo_ncm: validarNcm(it.ncm),
           cfop: it.cfop || '5102',
           unidade_comercial: it.unidade || 'UN',
           quantidade_comercial: Number(it.quantidade) || 1,
@@ -159,7 +163,7 @@ Deno.serve(async (req) => {
           numero_item: idx + 1,
           codigo_produto: it.codigo || `REF${idx + 1}`,
           descricao: (it.descricao || 'Produto').substring(0, 120),
-          codigo_ncm: it.ncm || '87089990',
+          codigo_ncm: validarNcm(it.ncm),
           cfop: it.cfop || '5405',
           unidade_comercial: it.unidade || 'UN',
           quantidade_comercial: Number(it.quantidade) || 1,
