@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     let payload = null;
 
     if (tipo === 'NFSe') {
-      endpoint = `/nfse?ref=${ref}`;
+      endpoint = `/nfse_nacional?ref=${ref}`;
       
       const discriminacaoServico = items && items.length > 0 
         ? items.map(i => `${i.descricao} (Qtd: ${i.quantidade})`).join('; ')
