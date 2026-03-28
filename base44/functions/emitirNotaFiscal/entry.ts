@@ -72,15 +72,15 @@ Deno.serve(async (req) => {
 
       // Calcula proximo numero RPS: usa APENAS a config salva (fonte da verdade)
       // Notas com erro NAO contam para a sequencia
-      const configsNfse = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_numero' });
-      const ultimoRps = parseInt(configsNfse[0]?.valor || '29', 10);
+      const configsNfse = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_rps' });
+      const ultimoRps = parseInt(configsNfse[0]?.valor || '0', 10);
       proximoRps = ultimoRps + 1;
 
       // Reserva o numero ANTES de enviar a Focus NFe
       if (configsNfse.length > 0) {
         await base44.asServiceRole.entities.Configuracao.update(configsNfse[0].id, { valor: String(proximoRps) });
       } else {
-        await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_numero', valor: String(proximoRps), descricao: 'Ultimo numero NFSe autorizado' });
+        await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_rps', valor: String(proximoRps), descricao: 'Ultimo numero NFSe autorizado' });
       }
 
       const discriminacao = items && items.length > 0

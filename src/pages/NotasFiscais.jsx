@@ -215,7 +215,7 @@ export default function NotasFiscais() {
       const ultimoNota = nums.length > 0 ? Math.max(...nums) : 0;
       return String(Math.max(ultimoSalvo, ultimoNota) + 1);
     }
-    const chaveConfig = tipo === 'NFe' ? 'nfe_ultimo_numero' : tipo === 'NFSe' ? 'nfse_ultimo_numero' : null;
+    const chaveConfig = tipo === 'NFe' ? 'nfe_ultimo_numero' : tipo === 'NFSe' ? 'nfse_ultimo_rps' : null;
     const cfgUltimo = chaveConfig ? configsNF.find(c => c.chave === chaveConfig) : null;
     // Para NFSe, se não houver config, assume 29 (último RPS registrado no painel Focus NFe)
     const defaultBase = tipo === 'NFSe' ? 29 : 0;
