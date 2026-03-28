@@ -215,9 +215,11 @@ export default function NotasFiscais() {
       const ultimoNota = nums.length > 0 ? Math.max(...nums) : 0;
       return String(Math.max(ultimoSalvo, ultimoNota) + 1);
     }
-    const chaveConfig = tipo === 'NFe' ? 'nfe_ultimo_numero' : null;
+    const chaveConfig = tipo === 'NFe' ? 'nfe_ultimo_numero' : tipo === 'NFSe' ? 'nfse_ultimo_numero' : null;
     const cfgUltimo = chaveConfig ? configsNF.find(c => c.chave === chaveConfig) : null;
-    const ultimoSalvo = parseInt(cfgUltimo?.valor || '0', 10);
+    // Para NFSe, se não houver config, assume 29 (último RPS registrado no painel Focus NFe)
+    const defaultBase = tipo === 'NFSe' ? 29 : 0;
+    const ultimoSalvo = parseInt(cfgUltimo?.valor || String(defaultBase), 10);
     const filtradas = notasList.filter(n => n.tipo === tipo);
     const nums = filtradas.map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
     const ultimoNota = nums.length > 0 ? Math.max(...nums) : 0;
@@ -706,7 +708,7 @@ export default function NotasFiscais() {
           {buscandoSefaz ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
           {buscandoSefaz ? 'Buscando...' : 'Buscar da SEFAZ'}
         </button>
-        <button onClick={() => setShowForm(true)} className="flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
+        <button onClick={() => { setForm(f => ({ ...f, numero: proximoNumero(notas, f.tipo), serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
           <Plus className="w-3 h-3" /> Emitir Nota
         </button>
       </div>
@@ -919,10 +921,6 @@ export default function NotasFiscais() {
                     const novoTipo = e.target.value;
                     let numero = proximoNumero(notas, novoTipo);
                     let serie = proximaSerie(notas, novoTipo);
-                    if (novoTipo === 'NFSe') {
-                      numero = '30';
-                      serie = '900';
-                    }
                     setForm(f => ({ ...f, tipo: novoTipo, items: [defaultItem()], numero, serie }));
                 }} className="input-dark">
                   <option value="NFSe">NFSe — Serviço</option>
