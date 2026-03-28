@@ -33,10 +33,10 @@ Deno.serve(async (req) => {
       data_emissao, serie_manual,
     } = body;
 
-    // Gera data/hora no fuso de Brasília (UTC-3) para evitar rejeição SEFAZ 703
+    // Gera data/hora no fuso de Brasília (UTC-3), 5min atrás para evitar E0008
     const agora = new Date();
     const brasiliaOffset = -3 * 60; // UTC-3 em minutos
-    const brasiliaDate = new Date(agora.getTime() + brasiliaOffset * 60 * 1000);
+    const brasiliaDate = new Date(agora.getTime() + brasiliaOffset * 60 * 1000 - 5 * 60 * 1000);
     const pad = (n) => String(n).padStart(2, '0');
     const ano = brasiliaDate.getUTCFullYear();
     const mes = pad(brasiliaDate.getUTCMonth() + 1);
