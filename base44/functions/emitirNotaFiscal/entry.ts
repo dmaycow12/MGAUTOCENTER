@@ -33,14 +33,25 @@ Deno.serve(async (req) => {
       data_emissao, serie_manual,
     } = body;
 
-    // Usa a data do formulário com horário fixo 08:00 Brasília para evitar E0008
+    // Monta timestamp de emissão sempre no passado para evitar E0008
     const pad = (n) => String(n).padStart(2, '0');
     const agora = new Date();
-    const brasiliaMs = agora.getTime() + (-3 * 60 * 60 * 1000);
+    const brasiliaMs = agora.getTime() - (3 * 60 * 60 * 1000);
     const brasiliaDate = new Date(brasiliaMs);
     const hojeStr = `${brasiliaDate.getUTCFullYear()}-${pad(brasiliaDate.getUTCMonth() + 1)}-${pad(brasiliaDate.getUTCDate())}`;
     const dataBase = data_emissao || hojeStr;
-    const dataEmissaoISO = `${dataBase}T00:01:00-03:00`;
+
+    let dataEmissaoISO;
+    if (dataBase >= hojeStr) {
+      // Data de hoje ou futura: usa hora atual de Brasília menos 10 minutos
+      const dezMinAtras = new Date(brasiliaMs - 10 * 60 * 1000);
+      const h = pad(dezMinAtras.getUTCHours());
+      const m = pad(dezMinAtras.getUTCMinutes());
+      dataEmissaoISO = `${hojeStr}T${h}:${m}:00-03:00`;
+    } else {
+      // Data passada: usa meio-dia (sempre seguro)
+      dataEmissaoISO = `${dataBase}T12:00:00-03:00`;
+    }
 
     const ref = `${(tipo || 'nfe').toLowerCase()}-${Date.now()}`;
 
