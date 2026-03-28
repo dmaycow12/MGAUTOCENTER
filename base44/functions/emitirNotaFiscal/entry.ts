@@ -67,14 +67,24 @@ Deno.serve(async (req) => {
     let endpoint = '';
     let payload = null;
 
+    let proximoRps = null;
     if (tipo === 'NFSe') {
       endpoint = `/nfse?ref=${ref}`;
+
+      // Calcula próximo número RPS a partir da config salva
+      const configsNfse = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_numero' });
+      const ultimoRps = parseInt(configsNfse[0]?.valor || '29', 10);
+      proximoRps = ultimoRps + 1;
+
       const discriminacao = items && items.length > 0
         ? items.map(i => `${i.descricao} (Qtd: ${i.quantidade})`).join('; ')
         : (observacoes || 'Serviços de manutenção e reparação mecânica');
       payload = {
         provedor: 'nacional',
         data_emissao: dataEmissaoISO,
+        numero_rps: proximoRps,
+        serie_rps: '900',
+        tipo_rps: 'RPS',
         prestador: {
           cnpj: CNPJ_EMITENTE,
           inscricao_municipal: INSCRICAO_MUNICIPAL,
@@ -263,16 +273,16 @@ Deno.serve(async (req) => {
       : 'Nota enviada para processamento. Aguarde autorização da SEFAZ.';
 
     // Salva o número usado para manter sequência correta
-    if (body.numero && (statusNota === 'Emitida' || statusNota === 'Processando')) {
-      let chave = tipo === 'NFCe' ? 'nfce_ultimo_numero' : tipo === 'NFSe' ? 'nfse_ultimo_numero' : 'nfe_ultimo_numero';
+    const numeroParaSalvar = tipo === 'NFSe' ? proximoRps : (body.numero ? parseInt(body.numero, 10) : null);
+    if (numeroParaSalvar && (statusNota === 'Emitida' || statusNota === 'Processando')) {
+      const chave = tipo === 'NFCe' ? 'nfce_ultimo_numero' : tipo === 'NFSe' ? 'nfse_ultimo_numero' : 'nfe_ultimo_numero';
       const configs = await base44.asServiceRole.entities.Configuracao.filter({ chave });
       const ultimoLocal = parseInt(configs[0]?.valor || '0', 10);
-      const numeroAtual = parseInt(body.numero, 10);
-      if (numeroAtual > ultimoLocal) {
+      if (numeroParaSalvar > ultimoLocal) {
         if (configs.length > 0) {
-          await base44.asServiceRole.entities.Configuracao.update(configs[0].id, { valor: String(numeroAtual) });
+          await base44.asServiceRole.entities.Configuracao.update(configs[0].id, { valor: String(numeroParaSalvar) });
         } else {
-          await base44.asServiceRole.entities.Configuracao.create({ chave, valor: String(numeroAtual), descricao: `Último número ${tipo} autorizado` });
+          await base44.asServiceRole.entities.Configuracao.create({ chave, valor: String(numeroParaSalvar), descricao: `Último número ${tipo} autorizado` });
         }
       }
     }
