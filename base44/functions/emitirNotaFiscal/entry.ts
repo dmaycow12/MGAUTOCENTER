@@ -55,7 +55,6 @@ Deno.serve(async (req) => {
 
     const ref = `${(tipo || 'nfe').toLowerCase()}-${Date.now()}`;
 
-    // Valida NCM: deve ter exatamente 8 dígitos numéricos, caso contrário usa padrão
     const NCM_PADRAO = '87089990';
     const validarNcm = (ncm) => /^[0-9]{8}$/.test((ncm || '').replace(/\D/g, '')) ? (ncm || '').replace(/\D/g, '') : NCM_PADRAO;
     const validarCest = (cest) => { if (!cest) return null; const s = (cest || '').replace(/\D/g, ''); return s.length > 0 ? s.padStart(7, '0') : null; };
@@ -66,19 +65,32 @@ Deno.serve(async (req) => {
 
     let endpoint = '';
     let payload = null;
-
     let proximoRps = null;
+
     if (tipo === 'NFSe') {
       endpoint = `/nfse?ref=${ref}`;
 
-      // Calcula próximo número RPS a partir da config salva
-      const configsNfse = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_numero' });
-      const ultimoRps = parseInt(configsNfse[0]?.valor || '29', 10);
+      // Calcula proximo numero RPS: maximo entre config salva e notas existentes
+      const [configsNfse, notasNfse] = await Promise.all([
+        base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_numero' }),
+        base44.asServiceRole.entities.NotaFiscal.filter({ tipo: 'NFSe' }),
+      ]);
+      const ultimoConfig = parseInt(configsNfse[0]?.valor || '29', 10);
+      const numerosNotas = notasNfse.map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
+      const ultimoNota = numerosNotas.length > 0 ? Math.max(...numerosNotas) : 0;
+      const ultimoRps = Math.max(ultimoConfig, ultimoNota);
       proximoRps = ultimoRps + 1;
+
+      // Reserva o numero ANTES de enviar a Focus NFe para garantir sequencia
+      if (configsNfse.length > 0) {
+        await base44.asServiceRole.entities.Configuracao.update(configsNfse[0].id, { valor: String(proximoRps) });
+      } else {
+        await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_numero', valor: String(proximoRps), descricao: 'Ultimo numero NFSe autorizado' });
+      }
 
       const discriminacao = items && items.length > 0
         ? items.map(i => `${i.descricao} (Qtd: ${i.quantidade})`).join('; ')
-        : (observacoes || 'Serviços de manutenção e reparação mecânica');
+        : (observacoes || 'Servicos de manutencao e reparacao mecanica');
       payload = {
         provedor: 'nacional',
         data_emissao: dataEmissaoISO,
@@ -217,7 +229,7 @@ Deno.serve(async (req) => {
     const responseText = await resp.text();
     let result;
     try { result = JSON.parse(responseText); } catch {
-      return Response.json({ sucesso: false, erro: `Resposta inválida: ${responseText.substring(0, 200)}` });
+      return Response.json({ sucesso: false, erro: `Resposta invalida: ${responseText.substring(0, 200)}` });
     }
 
     if (!resp.ok) {
@@ -230,11 +242,10 @@ Deno.serve(async (req) => {
     const pdfUrl = normalizarUrl(result.caminho_pdf_nfse || result.caminho_danfe || '');
     const chaveAcesso = result.chave_nfe || '';
     const mensagemSefaz = result.erros?.[0]?.mensagem || result.mensagem_sefaz || result.mensagem || '';
-    
+
     let statusNota = 'Processando';
     if (result.status === 'autorizado') statusNota = 'Emitida';
     else if (result.status === 'erro_autorizacao' || result.status === 'rejeitado') {
-      // Detecta erro E0160 (delay do Portal Nacional)
       if (mensagemSefaz.includes('E0160')) {
         statusNota = 'Erro de Sincronia Governamental';
       } else {
@@ -244,6 +255,8 @@ Deno.serve(async (req) => {
 
     const notaData = {
       tipo,
+      numero: tipo === 'NFSe' ? String(proximoRps) : (body.numero ? String(body.numero) : ''),
+      serie: tipo === 'NFSe' ? '900' : (serie_manual || '1'),
       status: statusNota,
       spedy_id: ref,
       cliente_id: cliente_id || '',
@@ -270,19 +283,19 @@ Deno.serve(async (req) => {
 
     const mensagem = tipo === 'NFCe'
       ? 'NFCe autorizada com sucesso!'
-      : 'Nota enviada para processamento. Aguarde autorização da SEFAZ.';
+      : 'Nota enviada para processamento. Aguarde autorizacao da SEFAZ.';
 
-    // Salva o número usado para manter sequência correta
-    const numeroParaSalvar = tipo === 'NFSe' ? proximoRps : (body.numero ? parseInt(body.numero, 10) : null);
-    if (numeroParaSalvar && (statusNota === 'Emitida' || statusNota === 'Processando')) {
-      const chave = tipo === 'NFCe' ? 'nfce_ultimo_numero' : tipo === 'NFSe' ? 'nfse_ultimo_numero' : 'nfe_ultimo_numero';
+    // Para NFe/NFCe, atualiza config de numero se necessario
+    if (tipo !== 'NFSe' && body.numero && (statusNota === 'Emitida' || statusNota === 'Processando')) {
+      const chave = tipo === 'NFCe' ? 'nfce_ultimo_numero' : 'nfe_ultimo_numero';
       const configs = await base44.asServiceRole.entities.Configuracao.filter({ chave });
       const ultimoLocal = parseInt(configs[0]?.valor || '0', 10);
-      if (numeroParaSalvar > ultimoLocal) {
+      const numeroAtual = parseInt(body.numero, 10);
+      if (numeroAtual > ultimoLocal) {
         if (configs.length > 0) {
-          await base44.asServiceRole.entities.Configuracao.update(configs[0].id, { valor: String(numeroParaSalvar) });
+          await base44.asServiceRole.entities.Configuracao.update(configs[0].id, { valor: String(numeroAtual) });
         } else {
-          await base44.asServiceRole.entities.Configuracao.create({ chave, valor: String(numeroParaSalvar), descricao: `Último número ${tipo} autorizado` });
+          await base44.asServiceRole.entities.Configuracao.create({ chave, valor: String(numeroAtual), descricao: `Ultimo numero ${tipo} autorizado` });
         }
       }
     }
