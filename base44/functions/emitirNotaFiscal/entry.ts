@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     const brasiliaDate = new Date(brasiliaMs);
     const hojeStr = `${brasiliaDate.getUTCFullYear()}-${pad(brasiliaDate.getUTCMonth() + 1)}-${pad(brasiliaDate.getUTCDate())}`;
     const dataBase = data_emissao || hojeStr;
-    const dataEmissaoISO = `${dataBase}T08:00:00-03:00`;
+    const dataEmissaoISO = `${dataBase}T00:01:00-03:00`;
 
     const ref = `${(tipo || 'nfe').toLowerCase()}-${Date.now()}`;
 
