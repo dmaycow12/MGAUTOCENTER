@@ -11,7 +11,7 @@ const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
 const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
 
 const CNPJ_EMITENTE = '54043647000120';
-const COD_MUNICIPIO_PATOS = '317020';
+const COD_MUNICIPIO_PATOS = '3148004';
 const INSCRICAO_MUNICIPAL = '2024000738';
 
 const normalizarUrl = (url) => {
