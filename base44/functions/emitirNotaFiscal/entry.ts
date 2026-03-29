@@ -68,10 +68,9 @@ Deno.serve(async (req) => {
     let proximoRps = null;
 
     if (tipo === 'NFSe') {
-      endpoint = `/nfse?ref=${ref}`;
+      endpoint = `/nfsen?ref=${ref}`;
 
-      // Calcula proximo numero RPS: usa APENAS a config salva (fonte da verdade)
-      // Notas com erro NAO contam para a sequencia
+      // Calcula proximo numero DPS: usa APENAS a config salva (fonte da verdade)
       const configsNfse = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_rps' });
       const ultimoRps = parseInt(configsNfse[0]?.valor || '0', 10);
       proximoRps = ultimoRps + 1;
@@ -80,46 +79,47 @@ Deno.serve(async (req) => {
       if (configsNfse.length > 0) {
         await base44.asServiceRole.entities.Configuracao.update(configsNfse[0].id, { valor: String(proximoRps) });
       } else {
-        await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_rps', valor: String(proximoRps), descricao: 'Ultimo numero NFSe autorizado' });
+        await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_rps', valor: String(proximoRps), descricao: 'Ultimo numero DPS/NFSe Nacional autorizado' });
       }
 
       const discriminacao = items && items.length > 0
         ? items.map(i => `${i.descricao} (Qtd: ${i.quantidade})`).join('; ')
         : (observacoes || 'Servicos de manutencao e reparacao mecanica');
+
+      const valorServico = Number(valor_total) || 1.0;
+      const valorIss = parseFloat((valorServico * 0.025).toFixed(2));
+
+      // Payload NFSe Nacional (DPS) - endpoint /nfsen, payload flat
       payload = {
-        provedor: 'nacional',
         data_emissao: dataEmissaoISO,
-        numero_rps: proximoRps,
-        serie_rps: '900',
-        tipo_rps: 'RPS',
-        prestador: {
-          cnpj: CNPJ_EMITENTE,
-          inscricao_municipal: INSCRICAO_MUNICIPAL,
-          codigo_municipio: COD_MUNICIPIO_PATOS,
-          regime_tributario: 1,
-          regime_especial_tributacao: 6,
-          optante_simples_nacional: true,
-        },
-        tomador: {
-          razao_social: (cliente_nome || 'Consumidor Final').substring(0, 100),
-          ...(cpfCnpjLimpo.length === 14 ? { cnpj: cpfCnpjLimpo } : { cpf: cpfCnpjLimpo }),
-          ...(cliente_email ? { email: cliente_email } : {}),
-          endereco: {
-            logradouro: cliente_endereco || 'Rua Rui Barbosa',
-            numero: cliente_numero || '1355',
-            bairro: cliente_bairro || 'Santa Terezinha',
-            codigo_municipio: COD_MUNICIPIO_PATOS,
-            uf: cliente_estado || 'MG',
-            cep: cepLimpo,
-          },
-        },
-        servico: {
-          valor_servicos: Number(valor_total) || 1.0,
-          discriminacao: discriminacao.substring(0, 1000),
-          item_lista_servico: '140101',
-          exigibilidade_iss: 1,
-          iss_retido: false,
-        },
+        data_competencia: dataBase,
+        serie_dps: '900',
+        numero_dps: String(proximoRps),
+        codigo_municipio_emissora: COD_MUNICIPIO_PATOS,
+        cnpj_prestador: CNPJ_EMITENTE,
+        inscricao_municipal_prestador: INSCRICAO_MUNICIPAL,
+        codigo_opcao_simples_nacional: 1,
+        regime_especial_tributacao: 0,
+        ...(cpfCnpjLimpo.length === 14 ? { cnpj_tomador: cpfCnpjLimpo } : (cpfCnpjLimpo.length === 11 ? { cpf_tomador: cpfCnpjLimpo } : {})),
+        razao_social_tomador: (cliente_nome || 'Consumidor Final').substring(0, 100),
+        ...(cliente_email ? { email_tomador: cliente_email } : {}),
+        codigo_municipio_tomador: COD_MUNICIPIO_PATOS,
+        cep_tomador: cepLimpo,
+        logradouro_tomador: cliente_endereco || 'Rua Rui Barbosa',
+        numero_tomador: cliente_numero || '1355',
+        bairro_tomador: cliente_bairro || 'Santa Terezinha',
+        codigo_municipio_prestacao: COD_MUNICIPIO_PATOS,
+        codigo_tributacao_nacional_iss: '140101',
+        descricao_servico: discriminacao.substring(0, 1000),
+        valor_servico: valorServico,
+        valor_iss: valorIss,
+        tributacao_iss: 1,
+        tipo_retencao_iss: 1,
+        situacao_tributaria_pis_cofins: '00',
+        percentual_total_tributos_federais: '10.38',
+        percentual_total_tributos_estaduais: '0.00',
+        percentual_total_tributos_municipais: '2.50',
+        indicador_total_tributacao: null,
       };
     } else if (tipo === 'NFCe') {
       endpoint = `/nfce?ref=${ref}`;
@@ -234,7 +234,7 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: msgErro });
     }
 
-    const pdfUrl = normalizarUrl(result.caminho_pdf_nfse || result.caminho_danfe || '');
+    const pdfUrl = normalizarUrl(result.caminho_pdf_nfsen || result.caminho_pdf_nfse || result.caminho_danfe || '');
     const chaveAcesso = result.chave_nfe || '';
     const mensagemSefaz = result.erros?.[0]?.mensagem || result.mensagem_sefaz || result.mensagem || '';
 
