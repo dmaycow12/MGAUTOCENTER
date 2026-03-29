@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
         cnpj_prestador: CNPJ_EMITENTE,
         inscricao_municipal_prestador: INSCRICAO_MUNICIPAL,
         codigo_opcao_simples_nacional: 1,
-        regime_especial_tributacao: 0,
+        regime_especial_tributacao: 6,
         ...(cpfCnpjLimpo.length === 14 ? { cnpj_tomador: cpfCnpjLimpo } : (cpfCnpjLimpo.length === 11 ? { cpf_tomador: cpfCnpjLimpo } : {})),
         razao_social_tomador: (cliente_nome || 'Consumidor Final').substring(0, 100),
         ...(cliente_email ? { email_tomador: cliente_email } : {}),
