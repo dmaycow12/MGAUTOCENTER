@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
         numero_tomador: cliente_numero || '1355',
         bairro_tomador: cliente_bairro || 'Santa Terezinha',
         codigo_municipio_prestacao: COD_MUNICIPIO_PATOS,
-        codigo_tributacao_nacional_iss: '140101',
+        codigo_tributacao_nacional_iss: '14.01',
         descricao_servico: discriminacao.substring(0, 1000),
         valor_servico: valorServico,
         valor_iss: valorIss,
