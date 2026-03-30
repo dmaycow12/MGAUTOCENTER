@@ -14,6 +14,31 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
   );
 }
 
+function InlineEdit({ value, onSave, placeholder = "", mono = false }) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState(value || "");
+  const inputRef = useRef(null);
+  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+  useEffect(() => { setVal(value || ""); }, [value]);
+  const commit = () => { onSave(val); setEditing(false); };
+  if (editing) return (
+    <input ref={inputRef} type="text" value={val}
+      onChange={e => setVal(e.target.value)}
+      onBlur={commit}
+      onKeyDown={e => { if (e.key === "Enter") commit(); if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
+      className="bg-gray-800 border border-orange-500 text-white rounded px-1.5 py-0.5 text-sm focus:outline-none w-24"
+      style={{MozAppearance:"textfield"}}
+    />
+  );
+  return (
+    <span
+      className={`text-gray-300 text-sm cursor-text hover:opacity-80 border-b border-dashed border-transparent hover:border-gray-500 whitespace-nowrap ${mono ? 'font-mono' : ''}`}
+      onClick={() => setEditing(true)} title="Clique para editar">
+      {val || placeholder || "—"}
+    </span>
+  );
+}
+
 const STATUS_OPTIONS = ["Aberto", "Orçamento", "Concluído"];
 const STATUS_STYLE = {
   "Aberto":    { style: { background: "#cc0000", color: "#fff" } },
@@ -39,6 +64,11 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
   const [showAviso, setShowAviso] = useState(false);
   const [statusPendente, setStatusPendente] = useState(null);
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
+
+  const saveField = async (field, val) => {
+    await base44.entities.OrdemServico.update(os.id, { [field]: val });
+    onRefresh?.();
+  };
 
   const statusRef = useRef(null);
   const statusBtnRef = useRef(null);
@@ -217,10 +247,19 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
         </td>
 
         {/* Veículo */}
-        <td className="px-4 py-3 text-gray-300 text-sm truncate max-w-[140px] whitespace-nowrap">{os.veiculo_modelo || "—"}</td>
+        <td className="px-4 py-3">
+          <InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" />
+        </td>
 
         {/* Placa */}
-        <td className="px-4 py-3 text-gray-300 text-sm font-mono whitespace-nowrap">{os.veiculo_placa?.toUpperCase() || "—"}</td>
+        <td className="px-4 py-3">
+          <InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono />
+        </td>
+
+        {/* KM */}
+        <td className="px-4 py-3">
+          <InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" />
+        </td>
 
         {/* Data */}
         <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>
