@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import {
-  FileText, Plus, Upload, Search, Trash2, Eye, X,
-  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2, Pencil, ClipboardList
+  FileText, Plus, Upload, Search, Trash2, X,
+  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2, Pencil, ClipboardList, Ban
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import JSZip from "jszip";
@@ -325,6 +325,22 @@ export default function NotasFiscais() {
       const total = items.reduce((s, it) => s + (Number(it.valor_total) || 0), 0);
       return { ...f, items, valor_total: total };
     });
+  };
+
+  const cancelarNota = async (nota) => {
+    if (!confirm(`Cancelar a nota ${nota.tipo} nº ${nota.numero || ''}? Esta ação não pode ser desfeita.`)) return;
+    try {
+      feedback('sucesso', 'Solicitando cancelamento...');
+      const res = await base44.functions.invoke('cancelarNota', { nota_id: nota.id, ref: nota.spedy_id, tipo: nota.tipo });
+      if (res.data?.sucesso) {
+        feedback('sucesso', 'Nota cancelada com sucesso.');
+        load();
+      } else {
+        feedback('erro', res.data?.erro || 'Erro ao cancelar.');
+      }
+    } catch (e) {
+      feedback('erro', 'Erro: ' + e.message);
+    }
   };
 
   const excluir = async (id) => {
@@ -772,8 +788,13 @@ export default function NotasFiscais() {
                   <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${STATUS_COLOR[nota.status]||"bg-gray-500/10 text-gray-400"}`}>{nota.status}</span>
                 </div>
                 <div className="flex gap-1">
-                  <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>
+                  {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && (
+                    <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>
+                  )}
                   <button onClick={() => imprimirNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Printer className="w-3.5 h-3.5"/></button>
+                  {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
+                    <button title="Cancelar" onClick={() => cancelarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg transition-all"><Ban className="w-3.5 h-3.5"/></button>
+                  )}
                   <button onClick={() => excluir(nota.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
                 </div>
               </div>
@@ -827,17 +848,18 @@ export default function NotasFiscais() {
                             <ClipboardList className="w-4 h-4" />
                           </button>
                         )}
-                        <button title="Editar" onClick={() => editarNota(nota)} className="p-1 text-gray-500 hover:text-yellow-400 transition-all">
-                          <Pencil className="w-4 h-4" />
-                        </button>
+                        {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && (
+                          <button title="Editar" onClick={() => editarNota(nota)} className="p-1 text-gray-500 hover:text-yellow-400 transition-all">
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        )}
                         <button title="Imprimir" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
                           <Printer className="w-4 h-4" />
                         </button>
-                        {nota.chave_acesso && (
-                          <a href={`https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=completa&tipoConteudo=XbSeqxE8pl8=&nfe=${nota.chave_acesso}`}
-                            target="_blank" rel="noreferrer" title="Consultar DANFE na SEFAZ" className="p-1 text-gray-500 hover:text-green-400 transition-all">
-                            <Eye className="w-4 h-4" />
-                          </a>
+                        {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
+                          <button title="Cancelar Nota" onClick={() => cancelarNota(nota)} className="p-1 text-gray-500 hover:text-orange-400 transition-all">
+                            <Ban className="w-4 h-4" />
+                          </button>
                         )}
                         <button onClick={() => excluir(nota.id)} className="p-1 text-gray-500 hover:text-red-400 transition-all">
                           <Trash2 className="w-4 h-4" />
