@@ -33,6 +33,29 @@ function fmtValor(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function InlineEdit({ value, onSave, placeholder = "" }) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState(value || "");
+  const inputRef = useRef(null);
+  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+  useEffect(() => { setVal(value || ""); }, [value]);
+  const commit = () => { onSave(val); setEditing(false); };
+  if (editing) return (
+    <input ref={inputRef} type="text" value={val}
+      onChange={e => setVal(e.target.value)}
+      onBlur={commit}
+      onKeyDown={e => { if (e.key === "Enter") commit(); if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
+      className="bg-gray-800 border border-orange-500 text-white rounded px-1.5 py-0.5 text-sm focus:outline-none w-full"
+    />
+  );
+  return (
+    <p className="text-white text-sm font-medium cursor-text hover:opacity-80 border-b border-dashed border-transparent hover:border-gray-500 truncate"
+      onClick={() => setEditing(true)} title="Clique para editar">
+      {val || placeholder || "—"}
+    </p>
+  );
+}
+
 export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
@@ -40,6 +63,11 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
   const [showAvisoStatus, setShowAvisoStatus] = useState(false);
   const [statusPendenteCard, setStatusPendenteCard] = useState(null);
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
+
+  const saveField = async (field, val) => {
+    await base44.entities.OrdemServico.update(os.id, { [field]: val });
+    onRefresh?.();
+  };
 
   const statusRef = useRef(null);
   const statusBtnRef = useRef(null);
@@ -289,34 +317,42 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
 
 
         <div className="grid grid-cols-2 border-t border-gray-800">
+          {/* Linha 1: Cliente */}
           <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
             <p className="text-white text-sm font-medium truncate">{os.cliente_nome || "—"}</p>
           </div>
-          <div className="px-3 py-2.5 border-r border-gray-800">
+          {/* Linha 2: Veículo | Data */}
+          <div className="px-3 py-2.5 border-b border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Veículo</p>
-            <p className="text-white text-sm font-medium truncate">{veiculoNome}</p>
+            <InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" />
           </div>
-          <div className="px-3 py-2.5">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Placa</p>
-            <p className="text-white text-sm font-medium">{veiculoPlaca}</p>
-          </div>
-          <div className="px-3 py-2.5 border-t border-r border-gray-800">
+          <div className="px-3 py-2.5 border-b border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Data</p>
             <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
           </div>
-          <div className="px-3 py-2.5 border-t border-gray-800">
+          {/* Linha 3: Placa | KM */}
+          <div className="px-3 py-2.5 border-b border-r border-gray-800">
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Placa</p>
+            <InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" />
+          </div>
+          <div className="px-3 py-2.5 border-b border-gray-800">
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">KM</p>
+            <InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" />
+          </div>
+          {/* Linha 4: Pagamento | Valor */}
+          <div className="px-3 py-2.5 border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Pagamento</p>
             <p className="text-white text-sm font-medium">{(() => {
-            const pd = os.parcelas_detalhes;
-            if (!pd || pd.length === 0) return os.forma_pagamento || "—";
-            const formas = [...new Set(pd.map(p => p.forma_pagamento).filter(Boolean))];
-            if (formas.length === 0) return os.forma_pagamento || "—";
-            if (formas.length === 1) return formas[0];
-            return "Misto";
-          })()}</p>
+              const pd = os.parcelas_detalhes;
+              if (!pd || pd.length === 0) return os.forma_pagamento || "—";
+              const formas = [...new Set(pd.map(p => p.forma_pagamento).filter(Boolean))];
+              if (formas.length === 0) return os.forma_pagamento || "—";
+              if (formas.length === 1) return formas[0];
+              return "Misto";
+            })()}</p>
           </div>
-          <div className="col-span-2 px-3 py-2.5 border-t border-gray-800">
+          <div className="px-3 py-2.5">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>
             <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
           </div>
