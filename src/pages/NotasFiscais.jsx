@@ -697,18 +697,16 @@ export default function NotasFiscais() {
           onClick={async () => {
             setBuscandoSefaz(true);
             try {
-              const dataInicio = '2026-01-01';
-              const dataFim = new Date().toISOString().split('T')[0];
-              const res = await base44.functions.invoke('sincronizarNotasRetroativas', { data_inicio: dataInicio, data_fim: dataFim });
+              // Busca versão salva para consulta incremental
+              const versaoConfig = configsNF.find(c => c.chave === 'nfes_recebidas_versao');
+              const versao = versaoConfig ? parseInt(versaoConfig.valor, 10) : null;
+              const res = await base44.functions.invoke('consultarNotasRecebidas', versao ? { versao } : {});
               const data = res.data;
               if (data?.sucesso) {
-                feedback('sucesso', data.mensagem || 'Sincronização concluída.');
-                if (data.primeiraNotaJaneiro) {
-                  feedback('sucesso', `✓ Primeira nota de janeiro salva: NF ${data.primeiraNotaJaneiro.numero} em ${data.primeiraNotaJaneiro.data}`);
-                }
+                feedback('sucesso', data.mensagem || 'Consulta concluída.');
                 load();
               } else {
-                feedback('erro', data?.erro || 'Erro ao sincronizar notas.');
+                feedback('erro', data?.erro || 'Erro ao buscar notas recebidas.');
               }
             } catch (e) {
               feedback('erro', 'Erro: ' + e.message);
