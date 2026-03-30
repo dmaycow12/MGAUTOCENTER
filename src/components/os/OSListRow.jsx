@@ -32,8 +32,8 @@ function InlineEdit({ value, onSave, placeholder = "", mono = false }) {
   );
   return (
     <span
-      className={`text-gray-300 text-sm cursor-text hover:opacity-80 border-b border-dashed border-transparent hover:border-gray-500 whitespace-nowrap ${mono ? 'font-mono' : ''}`}
-      onClick={() => setEditing(true)} title="Clique para editar">
+      className={`text-gray-300 text-sm cursor-text hover:opacity-80 whitespace-nowrap ${mono ? 'font-mono' : ''}`}
+      onClick={() => setEditing(true)}>
       {val || placeholder || "—"}
     </span>
   );

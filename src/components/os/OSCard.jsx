@@ -49,7 +49,7 @@ function InlineEdit({ value, onSave, placeholder = "" }) {
     />
   );
   return (
-    <p className="text-white text-sm font-medium cursor-text hover:opacity-80 border-b border-dashed border-transparent hover:border-gray-500 truncate"
+    <p className="text-white text-sm font-medium cursor-text hover:opacity-80 truncate"
       onClick={() => setEditing(true)} title="Clique para editar">
       {val || placeholder || "—"}
     </p>
