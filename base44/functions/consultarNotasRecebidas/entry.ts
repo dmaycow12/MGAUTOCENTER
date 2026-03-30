@@ -8,8 +8,6 @@ const CNPJ_EMITENTE = '54043647000120';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
     // versao: se informado, busca apenas notas mais novas que essa versão
