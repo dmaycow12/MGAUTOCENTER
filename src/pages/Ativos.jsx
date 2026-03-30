@@ -25,6 +25,12 @@ function fmt(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function fmtData(d) {
+  if (!d) return "";
+  const [y, m, day] = d.split("-");
+  return `${day}/${m}/${y}`;
+}
+
 export default function Ativos() {
   const [ativos, setAtivos] = useState([]);
   const [loading, setLoading] = useState(true);
