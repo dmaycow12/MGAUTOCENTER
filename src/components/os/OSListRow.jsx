@@ -222,9 +222,6 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
         {/* Placa */}
         <td className="px-4 py-3 text-gray-300 text-sm font-mono whitespace-nowrap">{os.veiculo_placa?.toUpperCase() || "—"}</td>
 
-        {/* KM */}
-        <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{os.quilometragem ? Number(os.quilometragem).toLocaleString('pt-BR') + ' km' : '—'}</td>
-
         {/* Data */}
         <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>
 
