@@ -260,6 +260,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
             )}
           </div>
 
+          <span className="text-gray-500 text-xs flex-shrink-0">{fmtData(os.data_entrada)}</span>
           <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Editar"><Pencil className="w-3.5 h-3.5" /></button>
           <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Imprimir"><Printer className="w-3.5 h-3.5" /></button>
           <button onClick={handleExcluir} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all" title="Excluir"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -302,8 +303,8 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
             <p className="text-white text-sm font-medium">{veiculoPlaca}</p>
           </div>
           <div className="px-3 py-2.5 border-t border-r border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Data</p>
-            <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">KM</p>
+            <p className="text-white text-sm font-medium">{os.quilometragem ? Number(os.quilometragem).toLocaleString('pt-BR') + ' km' : '—'}</p>
           </div>
           <div className="px-3 py-2.5 border-t border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Pagamento</p>
