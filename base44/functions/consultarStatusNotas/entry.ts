@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       let endpoint = '';
       if (tipo === 'NFe') endpoint = `/nfe?ref=${ref}`;
       else if (tipo === 'NFCe') endpoint = `/nfce?ref=${ref}`;
-      else if (tipo === 'NFSe') endpoint = `/nfse?ref=${ref}`;
+      else if (tipo === 'NFSe') endpoint = `/nfsen?ref=${ref}`;
 
       const resp = await fetch(`${baseUrl}${endpoint}`, {
         method: 'GET',
@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
           status_sefaz: statusFocus,
           mensagem_sefaz: result.mensagem_sefaz || result.mensagem || '',
           chave_acesso: result.chave_nfe || result.chave_nfce || result.chave_nfse || nota.chave_acesso || '',
-          pdf_url: result.caminho_danfe || result.caminho_pdf_nfse || nota.pdf_url || '',
+          pdf_url: result.caminho_pdf_nfsen || result.caminho_danfe || result.caminho_pdf_nfse || nota.pdf_url || '',
           xml_url: result.caminho_xml_nota_fiscal || nota.xml_url || '',
         });
         resultados.push({ ref, statusAnterior: 'Processando', statusNovo: statusInterno });

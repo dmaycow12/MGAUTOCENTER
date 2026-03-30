@@ -11,7 +11,7 @@ const normalizarUrl = (url) => {
 };
 
 const endpointPorTipo = (tipo) => {
-  if (tipo === 'NFSe') return 'nfse_nacional';
+  if (tipo === 'NFSe') return 'nfsen';
   if (tipo === 'NFCe') return 'nfce';
   return 'nfe';
 };
@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     const status = data.status || '';
 
     if (status === 'autorizado') {
-      const pdfUrl = normalizarUrl(data.caminho_pdf_nfse || data.caminho_danfe || '');
+      const pdfUrl = normalizarUrl(data.caminho_pdf_nfsen || data.caminho_pdf_nfse || data.caminho_danfe || '');
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
         pdf_url: pdfUrl,
         status: 'Emitida',
