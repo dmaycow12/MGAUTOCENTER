@@ -14,9 +14,9 @@ function limpaIE(ie) { return (ie || "ISENTO").padEnd(14, " ").substring(0, 14);
 
 // Registro 10 - Identificação da empresa
 export function reg10(empresa, periodo) {
-  // IE no Reg.10: apenas dígitos ou espaços — nunca a palavra "ISENTO"
+  // IE no Reg.10: números ou "ISENTO" com espaços (14 chars) — nunca em branco
   const ieNumerica = (empresa.ie || "").replace(/\D/g, "");
-  const ieCampo = ieNumerica ? ieNumerica.padEnd(14, " ").substring(0, 14) : " ".repeat(14);
+  const ieCampo = ieNumerica ? ieNumerica.padEnd(14, " ").substring(0, 14) : "ISENTO        ";
   return (
     "10" +
     limpaCNPJ(empresa.cnpj) +
@@ -24,7 +24,7 @@ export function reg10(empresa, periodo) {
     r(empresa.nome, 35) +
     r(empresa.municipio, 30) +
     r(empresa.uf, 2) +
-    r((empresa.fax || "").replace(/\D/g, ""), 10) +
+    r((empresa.fax || "").replace(/\D/g, "") || "0000000000", 10) +
     rData(periodo.inicio) +
     rData(periodo.fim) +
     "3" + // código identificação estrutura: 3=para fatos a partir de 01/01/2004
