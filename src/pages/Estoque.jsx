@@ -653,28 +653,30 @@ export default function Estoque() {
                 </tr>
               </thead>
               <tbody>
-                {filtrados.map(item => (
+                {filtrados.map((item, idx) => {
+                  const prox = filtrados[idx + 1] || null;
+                  return (
                   <tr key={item.id} className={`border-b border-gray-800 hover:bg-gray-800/50 transition-all ${selecionados.includes(item.id) ? "bg-red-500/5" : item.quantidade <= item.estoque_minimo ? "bg-red-500/5" : ""}`}>
                     <td className="px-4 py-3">
                       <input type="checkbox" checked={selecionados.includes(item.id)} onChange={() => toggleSelecionado(item.id)} className="accent-red-500 cursor-pointer w-4 h-4" />
                     </td>
-                    {colunas.codigo && <td className="px-4 py-3 text-gray-400 font-mono text-xs"><CellEdit item={item} field="codigo" className="text-gray-400 font-mono text-xs" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} /></td>}
+                    {colunas.codigo && <td className="px-4 py-3 text-gray-400 font-mono text-xs"><CellEdit item={item} field="codigo" className="text-gray-400 font-mono text-xs" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {item.quantidade <= item.estoque_minimo && <AlertTriangle className="w-3 h-3 text-red-400 flex-shrink-0" />}
-                        <CellEdit item={item} field="descricao" className="text-white font-medium" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
+                        <CellEdit item={item} field="descricao" className="text-white font-medium" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} />
                       </div>
                     </td>
-                    {colunas.categoria && <td className="px-4 py-3 text-gray-400"><CellEdit item={item} field="categoria" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} /></td>}
-                    {colunas.marca && <td className="px-4 py-3 text-gray-400"><CellEdit item={item} field="marca" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} /></td>}
+                    {colunas.categoria && <td className="px-4 py-3 text-gray-400"><CellEdit item={item} field="categoria" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
+                    {colunas.marca && <td className="px-4 py-3 text-gray-400"><CellEdit item={item} field="marca" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
                     <td className="px-4 py-3 text-center">
                       <span className={`font-bold ${item.quantidade <= item.estoque_minimo ? "text-red-400" : "text-white"}`}>
-                        <CellEdit item={item} field="quantidade" className={item.quantidade <= item.estoque_minimo ? "text-red-400 font-bold" : "text-white font-bold"} editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
+                        <CellEdit item={item} field="quantidade" className={item.quantidade <= item.estoque_minimo ? "text-red-400 font-bold" : "text-white font-bold"} editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} />
                       </span>
                     </td>
-                    {colunas.estoque_minimo && <td className="px-4 py-3 text-center text-gray-500"><CellEdit item={item} field="estoque_minimo" className="text-gray-500" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} /></td>}
-                    {colunas.valor_custo && <td className="px-4 py-3 text-right text-gray-400"><CellEdit item={item} field="valor_custo" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} /></td>}
-                    {colunas.valor_venda && <td className="px-4 py-3 text-right text-green-400 font-medium"><CellEdit item={item} field="valor_venda" className="text-green-400 font-medium" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} /></td>}
+                    {colunas.estoque_minimo && <td className="px-4 py-3 text-center text-gray-500"><CellEdit item={item} field="estoque_minimo" className="text-gray-500" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
+                    {colunas.valor_custo && <td className="px-4 py-3 text-right text-gray-400"><CellEdit item={item} field="valor_custo" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
+                    {colunas.valor_venda && <td className="px-4 py-3 text-right text-green-400 font-medium"><CellEdit item={item} field="valor_venda" className="text-green-400 font-medium" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
                         <button onClick={() => editar(item)} className="p-1 text-gray-500 hover:text-blue-400 transition-all"><Edit className="w-4 h-4"/></button>
@@ -682,7 +684,8 @@ export default function Estoque() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -835,7 +838,7 @@ export default function Estoque() {
 
 const CAMPOS_NUMERICOS = ["quantidade", "estoque_minimo", "valor_custo", "valor_venda"];
 
-function CellEdit({ item, field, className = "", editandoCell, onIniciar, onSalvar, onCancelar }) {
+function CellEdit({ item, field, className = "", editandoCell, onIniciar, onSalvar, onCancelar, proximoItem }) {
   const isEditing = editandoCell?.id === item.id && editandoCell?.field === field;
   const [localVal, setLocalVal] = React.useState("");
 
@@ -855,11 +858,22 @@ function CellEdit({ item, field, className = "", editandoCell, onIniciar, onSalv
             : e.target.value.toUpperCase();
           setLocalVal(v);
         }}
-        onBlur={() => onSalvar(item.id, field, localVal)}
-        onKeyDown={e => {
-          if (e.key === "Enter") onSalvar(item.id, field, localVal);
-          if (e.key === "Escape") onCancelar();
+        onBlur={(e) => {
+          // Não salva no blur se Tab foi pressionado (handled no onKeyDown)
+          if (!e.relatedTarget || !e.relatedTarget.dataset.celltab) {
+            onSalvar(item.id, field, localVal);
+          }
         }}
+        onKeyDown={e => {
+          if (e.key === "Enter") { onSalvar(item.id, field, localVal); }
+          if (e.key === "Escape") { onCancelar(); }
+          if (e.key === "Tab") {
+            e.preventDefault();
+            onSalvar(item.id, field, localVal);
+            if (proximoItem) setTimeout(() => onIniciar(proximoItem, field), 50);
+          }
+        }}
+        data-celltab="true"
         className={`bg-gray-700 border border-green-500 text-white rounded px-2 py-0.5 text-sm focus:outline-none w-full ${className}`}
         style={{textTransform: CAMPOS_NUMERICOS.includes(field) ? "none" : "uppercase"}}
       />
