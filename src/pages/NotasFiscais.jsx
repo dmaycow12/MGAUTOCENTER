@@ -5,6 +5,7 @@ import {
   CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2, Pencil, ClipboardList, Ban
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
+import ModalSintegra from "@/components/notas/ModalSintegra";
 import JSZip from "jszip";
 
 const STATUS_COLOR = {
@@ -74,6 +75,7 @@ export default function NotasFiscais() {
   const [filtroTipo, setFiltroTipo] = useState("Todos");
   const [filtroModeloNF, setFiltroModeloNF] = useState("Todos");
   const [gerandoZip, setGerandoZip] = useState(false);
+  const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
   const [gerandoSintegra, setGerandoSintegra] = useState(false);
 
@@ -746,8 +748,8 @@ export default function NotasFiscais() {
           <button onClick={() => exportarRelatorio()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             {gerandoZip ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Archive className="w-3 h-3" />} Exportar
           </button>
-          <button onClick={gerarSintegra} disabled={gerandoSintegra} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-            {gerandoSintegra ? <RefreshCw className="w-3 h-3 animate-spin" /> : <BarChart2 className="w-3 h-3" />} Sintegra
+          <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+            <BarChart2 className="w-3 h-3" /> Sintegra
           </button>
           <div className={`flex-1 flex items-center h-8 rounded-lg text-[11px] font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
             <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>< ChevronLeft className="w-3 h-3" /></button>
@@ -1190,6 +1192,15 @@ export default function NotasFiscais() {
             </div>
           </div>
         </div>
+      )}
+
+      {showSintegra && (
+        <ModalSintegra
+          notas={notas}
+          estoque={estoque}
+          configs={configsNF}
+          onClose={() => setShowSintegra(false)}
+        />
       )}
 
       {showEntrada && xmlParaEntrada && (
