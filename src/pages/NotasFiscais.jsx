@@ -702,10 +702,7 @@ export default function NotasFiscais() {
           onClick={async () => {
             setBuscandoSefaz(true);
             try {
-              // Busca versão salva para consulta incremental
-              const versaoConfig = configsNF.find(c => c.chave === 'nfes_recebidas_versao');
-              const versao = versaoConfig ? parseInt(versaoConfig.valor, 10) : null;
-              const res = await base44.functions.invoke('consultarNotasRecebidas', versao ? { versao } : {});
+              const res = await base44.functions.invoke('consultarNotasRecebidas', {});
               const data = res.data;
               if (data?.sucesso) {
                 feedback('sucesso', data.mensagem || 'Consulta concluída.');

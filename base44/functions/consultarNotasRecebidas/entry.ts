@@ -9,12 +9,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    const body = await req.json().catch(() => ({}));
-    // versao: se informado, busca apenas notas mais novas que essa versão
-    const versao = body.versao || null;
-
-    let url = `${FOCUSNFE_BASE}/nfes_recebidas?cnpj=${CNPJ_EMITENTE}`;
-    if (versao) url += `&versao=${versao}`;
+    // Sempre busca todas as notas sem filtro de versão
+    // para permitir reimportar notas deletadas acidentalmente
+    const url = `${FOCUSNFE_BASE}/nfes_recebidas?cnpj=${CNPJ_EMITENTE}`;
 
     const resp = await fetch(url, {
       method: 'GET',
@@ -41,9 +38,6 @@ Deno.serve(async (req) => {
     for (const nf of notas) {
       const chave = nf.chave_nfe;
       if (!chave) continue;
-
-      // Rastreia a versão máxima para a próxima consulta
-      if (nf.versao && nf.versao > maxVersao) maxVersao = nf.versao;
 
       if (chavesExistentes.has(chave)) continue;
 
@@ -103,22 +97,6 @@ Deno.serve(async (req) => {
       chavesExistentes.add(chave);
     }
 
-    // Salva a versão máxima para próximas consultas incrementais
-    if (maxVersao > 0) {
-      const configs = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfes_recebidas_versao' });
-      const versaoAtual = parseInt(configs[0]?.valor || '0', 10);
-      if (maxVersao > versaoAtual) {
-        if (configs.length > 0) {
-          await base44.asServiceRole.entities.Configuracao.update(configs[0].id, { valor: String(maxVersao) });
-        } else {
-          await base44.asServiceRole.entities.Configuracao.create({
-            chave: 'nfes_recebidas_versao',
-            valor: String(maxVersao),
-            descricao: 'Versão máxima das NFes recebidas (MDe)',
-          });
-        }
-      }
-    }
 
     return Response.json({
       sucesso: true,
@@ -127,7 +105,6 @@ Deno.serve(async (req) => {
         : `Nenhuma nota nova. Total consultado: ${notas.length}.`,
       importadas,
       total_consultadas: notas.length,
-      max_versao: maxVersao,
     });
 
   } catch (error) {
