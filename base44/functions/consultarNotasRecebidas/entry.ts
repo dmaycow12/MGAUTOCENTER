@@ -62,38 +62,61 @@ Deno.serve(async (req) => {
       const data_emissao = (nf.data_emissao || '').substring(0, 10);
       const status_nf = nf.situacao === 'cancelada' ? 'Cancelada' : 'Importada';
 
-      // Buscar XML completo da nota para extrair itens e pagamento
+      // Passo 1: fazer manifestação para liberar o XML completo na SEFAZ
+      if (chave) {
+        try {
+          await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}/manifestacoes`, {
+            method: 'POST',
+            headers: { 'Authorization': AUTH_HEADER, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tipo: 'ciencia_operacao' }),
+          });
+        } catch (_) {}
+        // Aguarda processamento da manifestação
+        await new Promise(r => setTimeout(r, 1000));
+      }
+
+      // Passo 2: buscar XML completo tentando múltiplos endpoints
       let xmlContent = '';
       let numeroNF = '';
       let serieNF = '1';
       let formasPagamento = '';
-      try {
-        const xmlResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}`, {
-          headers: { 'Authorization': AUTH_HEADER },
-        });
-        if (xmlResp.ok) {
-          const contentType = xmlResp.headers.get('content-type') || '';
-          let xmlStr = '';
-          if (contentType.includes('xml')) {
-            xmlStr = await xmlResp.text();
-          } else {
-            const xmlData = await xmlResp.json().catch(() => ({}));
-            xmlStr = xmlData.xml || xmlData.xml_nota || xmlData.xml_nfe || '';
-          }
-          if (xmlStr) {
-            xmlContent = xmlStr;
-            // Extrair número e série do XML
-            const numMatch = xmlStr.match(/<nNF>(\d+)<\/nNF>/);
-            const serieMatch = xmlStr.match(/<serie>(\d+)<\/serie>/);
-            if (numMatch) numeroNF = numMatch[1];
-            if (serieMatch) serieNF = serieMatch[1];
-            // Extrair forma de pagamento
-            const tPagMatch = xmlStr.match(/<tPag>(\d+)<\/tPag>/);
-            const tPagMap = { '01':'Dinheiro','02':'Cheque','03':'Cart\u00e3o de Cr\u00e9dito','04':'Cart\u00e3o de D\u00e9bito','15':'Boleto','90':'Sem Pagamento','99':'Outros' };
-            if (tPagMatch) formasPagamento = tPagMap[tPagMatch[1]] || 'Boleto';
-          }
+      if (chave) {
+        const endpointsXml = [
+          `${FOCUSNFE_BASE}/nfes_recebidas/${chave}.xml`,
+          `${FOCUSNFE_BASE}/nfes_recebidas/${chave}/xml`,
+          `${FOCUSNFE_BASE}/download_nfe/${chave}`,
+          `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
+        ];
+        for (const url of endpointsXml) {
+          try {
+            const xmlResp = await fetch(url, { headers: { 'Authorization': AUTH_HEADER } });
+            if (!xmlResp.ok) continue;
+            const ct = xmlResp.headers.get('content-type') || '';
+            let xmlStr = '';
+            if (ct.includes('xml')) {
+              xmlStr = await xmlResp.text();
+            } else {
+              const xmlData = await xmlResp.json().catch(() => ({}));
+              xmlStr = xmlData.xml || xmlData.xml_nota || xmlData.xml_nfe || '';
+              if (!xmlStr && xmlData.caminho_xml_nota_fiscal) {
+                const r2 = await fetch(xmlData.caminho_xml_nota_fiscal, { headers: { 'Authorization': AUTH_HEADER } });
+                if (r2.ok) xmlStr = await r2.text();
+              }
+            }
+            if (xmlStr && xmlStr.includes('<det')) {
+              xmlContent = xmlStr;
+              const numMatch = xmlStr.match(/<nNF>(\d+)<\/nNF>/);
+              const serieMatch = xmlStr.match(/<serie>(\d+)<\/serie>/);
+              if (numMatch) numeroNF = numMatch[1];
+              if (serieMatch) serieNF = serieMatch[1];
+              const tPagMatch = xmlStr.match(/<tPag>(\d+)<\/tPag>/);
+              const tPagMap = { '01':'Dinheiro','02':'Cheque','03':'Cartão de Crédito','04':'Cartão de Débito','15':'Boleto','90':'Sem Pagamento','99':'Outros' };
+              if (tPagMatch) formasPagamento = tPagMap[tPagMatch[1]] || 'Boleto';
+              break; // XML completo encontrado
+            }
+          } catch (_) {}
         }
-      } catch (_) {}
+      }
 
       await base44.asServiceRole.entities.NotaFiscal.create({
         tipo: 'NFe',
