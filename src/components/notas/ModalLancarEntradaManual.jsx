@@ -8,9 +8,29 @@ function defaultItem() {
 
 const FORMAS = ["Boleto", "PIX", "Dinheiro", "Cartão de Crédito", "Cartão de Débito", "Transferência", "A Prazo"];
 
+function parseItemsFromNota(nota) {
+  if (!nota.xml_content) return [defaultItem()];
+  try {
+    const parsed = JSON.parse(nota.xml_content);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed.map(i => ({
+        descricao: i.descricao || "",
+        codigo: i.codigo || "",
+        estoque_id: "",
+        quantidade: Number(i.quantidade) || 1,
+        valor_unitario: Number(i.valor_unitario) || 0,
+        valor_total: Number(i.valor_total) || 0,
+        ncm: i.ncm || "",
+        cfop: i.cfop || "",
+      }));
+    }
+  } catch {}
+  return [defaultItem()];
+}
+
 export default function ModalLancarEntradaManual({ nota, estoque, onClose, onSalvo }) {
   const [aba, setAba] = useState("produtos");
-  const [items, setItems] = useState([defaultItem()]);
+  const [items, setItems] = useState(() => parseItemsFromNota(nota));
   const [formaPagamento, setFormaPagamento] = useState("Boleto");
   const [dataVencimento, setDataVencimento] = useState(new Date().toISOString().split("T")[0]);
   const [parcelas, setParcelas] = useState(1);
