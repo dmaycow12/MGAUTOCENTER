@@ -40,8 +40,10 @@ export default function Estoque() {
   const [filtroCategorias, setFiltroCategorias] = useState([]);
   const [showMarcaDropdown, setShowMarcaDropdown] = useState(false);
   const [showCatDropdown, setShowCatDropdown] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
   const marcaDropdownRef = useRef(null);
   const catDropdownRef = useRef(null);
+  const filterRef = useRef(null);
 
   useEffect(() => { load(); }, []);
 
@@ -49,6 +51,7 @@ export default function Estoque() {
     const handleClick = (e) => {
       if (marcaDropdownRef.current && !marcaDropdownRef.current.contains(e.target)) setShowMarcaDropdown(false);
       if (catDropdownRef.current && !catDropdownRef.current.contains(e.target)) setShowCatDropdown(false);
+      if (filterRef.current && !filterRef.current.contains(e.target)) setFilterOpen(false);
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -358,7 +361,7 @@ export default function Estoque() {
 
       {/* Header */}
       <div className="flex flex-col gap-2">
-        {/* Linha 1: busca + toggle */}
+        {/* Linha 1: busca + filtro + toggle */}
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -369,6 +372,38 @@ export default function Estoque() {
               onChange={e => setSearch(e.target.value)}
               className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500"
             />
+          </div>
+          <div ref={filterRef} className="relative">
+            <button
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="px-4 py-3 bg-gray-800 border text-white rounded-xl text-sm font-medium hover:bg-gray-700 transition-all flex items-center gap-2"
+              style={{borderColor: filtroCategorias.length > 0 ? "#3b82f6" : "#374151"}}
+            >
+              ⚙️ {filtroCategorias.length > 0 ? `Categoria (${filtroCategorias.length})` : "Filtro"}
+            </button>
+            {filterOpen && (
+              <div className="absolute right-0 top-full mt-2 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 z-50 w-64 space-y-2">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs text-gray-400 font-semibold">FILTRAR POR CATEGORIA</p>
+                  {filtroCategorias.length > 0 && (
+                    <button onClick={() => setFiltroCategorias([])} className="text-xs text-blue-400 hover:text-blue-300">Limpar</button>
+                  )}
+                </div>
+                {Array.from(new Set(items.map(i => i.categoria).filter(Boolean))).sort().map(cat => (
+                  <label key={cat} className="flex items-center gap-2 cursor-pointer hover:bg-gray-800 p-2 rounded transition-all">
+                    <input
+                      type="checkbox"
+                      checked={filtroCategorias.includes(cat)}
+                      onChange={() => setFiltroCategorias(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-xs text-gray-300 flex-1">{cat}</span>
+                    <span className="text-xs text-gray-600">{items.filter(i => i.categoria === cat).length}</span>
+                  </label>
+                ))}
+                {items.filter(i => i.categoria).length === 0 && <p className="text-gray-500 text-xs text-center py-3">Sem categorias cadastradas</p>}
+              </div>
+            )}
           </div>
           <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
             <button onClick={() => setViewMode("table")} className="px-3 py-2 transition-all" style={{background:viewMode==="table"?"#062C9B":"transparent",color:viewMode==="table"?"#fff":"#6b7280"}}><List className="w-5 h-5"/></button>
