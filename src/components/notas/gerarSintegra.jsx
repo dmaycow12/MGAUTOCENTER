@@ -24,9 +24,9 @@ export function reg10(empresa, periodo) {
     r((empresa.fax || "").replace(/\D/g, ""), 10) +
     rData(periodo.inicio) +
     rData(periodo.fim) +
-    "1" + // código finalidade: 1=normal
+    "3" + // código identificação estrutura: 3=para fatos a partir de 01/01/2004
     "1" + // natureza da operação: 1=normal
-    "2"   // tipo de demonstrativo: 2=por mercadoria
+    "1"   // finalidade do arquivo: 1=normal
   );
 }
 
