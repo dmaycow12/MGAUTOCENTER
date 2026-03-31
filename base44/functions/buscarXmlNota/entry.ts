@@ -14,8 +14,7 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: 'chave_acesso é obrigatória' });
     }
 
-    // Busca XML da nota recebida na Focus NFe
-    const resp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}.json`, {
+    const resp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}`, {
       headers: { 'Authorization': AUTH_HEADER },
     });
 
@@ -24,11 +23,21 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: `Erro Focus NFe (${resp.status}): ${txt.substring(0, 200)}` });
     }
 
-    const data = await resp.json();
-    const xml = data.xml || '';
+    let xml = '';
+    const contentType = resp.headers.get('content-type') || '';
+    if (contentType.includes('xml')) {
+      xml = await resp.text();
+    } else {
+      const data = await resp.json().catch(() => ({}));
+      xml = data.xml || data.xml_nota || data.xml_nfe || '';
+    }
 
-    // Salva o XML na nota para evitar buscar novamente
-    if (xml && nota_id) {
+    if (!xml) {
+      return Response.json({ sucesso: false, erro: 'XML não disponível na Focus NFe. Importe o arquivo XML manualmente.' });
+    }
+
+    // Salva o XML na nota para não precisar buscar novamente
+    if (nota_id) {
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { xml_content: xml });
     }
 

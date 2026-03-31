@@ -56,12 +56,18 @@ Deno.serve(async (req) => {
       let serieNF = '1';
       let formasPagamento = '';
       try {
-        const xmlResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.json`, {
+        const xmlResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}`, {
           headers: { 'Authorization': AUTH_HEADER },
         });
         if (xmlResp.ok) {
-          const xmlData = await xmlResp.json();
-          const xmlStr = xmlData.xml || '';
+          const contentType = xmlResp.headers.get('content-type') || '';
+          let xmlStr = '';
+          if (contentType.includes('xml')) {
+            xmlStr = await xmlResp.text();
+          } else {
+            const xmlData = await xmlResp.json().catch(() => ({}));
+            xmlStr = xmlData.xml || xmlData.xml_nota || xmlData.xml_nfe || '';
+          }
           if (xmlStr) {
             xmlContent = xmlStr;
             // Extrair número e série do XML
@@ -71,7 +77,7 @@ Deno.serve(async (req) => {
             if (serieMatch) serieNF = serieMatch[1];
             // Extrair forma de pagamento
             const tPagMatch = xmlStr.match(/<tPag>(\d+)<\/tPag>/);
-            const tPagMap = { '01':'Dinheiro','02':'Cheque','03':'Cartão de Crédito','04':'Cartão de Débito','05':'Cartão da Loja','10':'Vale Alimentação','11':'Vale Refeição','12':'Vale Presente','13':'Vale Combustível','15':'Boleto','90':'Sem Pagamento','99':'Outros' };
+            const tPagMap = { '01':'Dinheiro','02':'Cheque','03':'Cart\u00e3o de Cr\u00e9dito','04':'Cart\u00e3o de D\u00e9bito','15':'Boleto','90':'Sem Pagamento','99':'Outros' };
             if (tPagMatch) formasPagamento = tPagMap[tPagMatch[1]] || 'Boleto';
           }
         }
