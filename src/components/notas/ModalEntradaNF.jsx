@@ -255,7 +255,6 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
   ];
 
   const finalizarImportacao = async () => {
-    if (erroDuplicada) return setErro(erroDuplicada);
     setSalvando(true);
     setErro("");
     try {
@@ -414,11 +413,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                   <p className="text-xs text-gray-300 font-mono break-all">{dados.chave}</p>
                 </div>
               )}
-              {erroDuplicada && (
-                <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" /> {erroDuplicada}
-                </p>
-              )}
+
 
               {!fornecedorJaCadastrado ? (
                 <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-4 space-y-3">
@@ -633,7 +628,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                   style={{ background: GREEN }}
                   onMouseEnter={e => { if (!salvando) e.currentTarget.style.background = GREEN_DARK; }}
                   onMouseLeave={e => e.currentTarget.style.background = GREEN}>
-                  {salvando ? "Salvando..." : "Finalizar Importação"}
+                  {salvando ? "Salvando..." : "Lançar"}
                   {!salvando && <CheckCircle className="w-4 h-4" />}
                 </button>
               </div>
