@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
-import ModalLancarEntradaManual from "@/components/notas/ModalLancarEntradaManual";
+
 import JSZip from "jszip";
 
 const STATUS_COLOR = {
@@ -79,7 +79,7 @@ export default function NotasFiscais() {
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
   const [gerandoSintegra, setGerandoSintegra] = useState(false);
-  const [notaParaLancar, setNotaParaLancar] = useState(null);
+
   const [notaIdParaEntrada, setNotaIdParaEntrada] = useState(null);
 
   const hoje = new Date();
@@ -845,32 +845,28 @@ export default function NotasFiscais() {
                         )}
                         {(nota.status === "Importada") && (
                           <button title="Lançar Entrada" onClick={async () => {
-                            // Verifica se tem XML com produtos
                             const xmlDisponivel = nota.xml_content && nota.xml_content.includes('<det');
                             if (xmlDisponivel) {
                               setNotaIdParaEntrada(nota.id);
                               setXmlParaEntrada(nota.xml_content);
                               setShowEntrada(true);
                             } else if (nota.chave_acesso) {
-                              feedback('sucesso', 'Buscando XML da SEFAZ...');
+                              feedback('sucesso', 'Buscando XML completo na SEFAZ...');
                               try {
                                 const res = await base44.functions.invoke('buscarXmlNota', { chave_acesso: nota.chave_acesso, nota_id: nota.id });
-                                if (res.data?.sucesso && res.data?.xml && res.data.xml.includes('<det')) {
+                                if (res.data?.sucesso && res.data?.xml) {
                                   setMsgFeedback(null);
                                   setNotaIdParaEntrada(nota.id);
                                   setXmlParaEntrada(res.data.xml);
                                   setShowEntrada(true);
                                 } else {
-                                  // XML sem produtos — usa lançamento manual com dados pré-preenchidos
-                                  setMsgFeedback(null);
-                                  setNotaParaLancar(nota);
+                                  feedback('erro', res.data?.erro || 'XML não disponível. Importe o arquivo XML manualmente.');
                                 }
                               } catch (e) {
-                                setMsgFeedback(null);
-                                setNotaParaLancar(nota);
+                                feedback('erro', 'Erro ao buscar XML: ' + e.message);
                               }
                             } else {
-                              setNotaParaLancar(nota);
+                              feedback('erro', 'Nota sem chave de acesso. Importe o arquivo XML manualmente.');
                             }
                           }} className="p-1 text-blue-400 hover:text-blue-300 transition-all" title="Lançar Entrada">
                             <LogIn className="w-4 h-4" />
@@ -1224,18 +1220,7 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      {notaParaLancar && (
-        <ModalLancarEntradaManual
-          nota={notaParaLancar}
-          estoque={estoque}
-          onClose={() => setNotaParaLancar(null)}
-          onSalvo={() => {
-            setNotaParaLancar(null);
-            feedback("sucesso", "Lançamento realizado! Financeiro e estoque atualizados.");
-            load();
-          }}
-        />
-      )}
+
 
       {showSintegra && (
         <ModalSintegra
