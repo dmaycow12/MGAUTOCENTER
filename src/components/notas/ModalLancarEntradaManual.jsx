@@ -8,8 +8,15 @@ function defaultItem() {
 
 const FORMAS = ["Boleto", "PIX", "Dinheiro", "Cartão de Crédito", "Cartão de Débito", "Transferência", "A Prazo"];
 
+function getTagValue(el, tag) {
+  const found = el.getElementsByTagName(tag)[0];
+  return found ? found.textContent.trim() : "";
+}
+
 function parseItemsFromNota(nota) {
   if (!nota.xml_content) return [defaultItem()];
+
+  // Tentar JSON primeiro
   try {
     const parsed = JSON.parse(nota.xml_content);
     if (Array.isArray(parsed) && parsed.length > 0) {
@@ -20,11 +27,36 @@ function parseItemsFromNota(nota) {
         quantidade: Number(i.quantidade) || 1,
         valor_unitario: Number(i.valor_unitario) || 0,
         valor_total: Number(i.valor_total) || 0,
-        ncm: i.ncm || "",
-        cfop: i.cfop || "",
       }));
     }
   } catch {}
+
+  // Tentar XML
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(nota.xml_content, "text/xml");
+    const dets = doc.getElementsByTagName("det");
+    if (dets.length > 0) {
+      return Array.from(dets).map(det => {
+        const prod = det.getElementsByTagName("prod")[0];
+        if (!prod) return defaultItem();
+        const qCom = parseFloat(getTagValue(prod, "qCom")) || 1;
+        const vUnCom = parseFloat(getTagValue(prod, "vUnCom")) || 0;
+        const vProd = parseFloat(getTagValue(prod, "vProd")) || (qCom * vUnCom);
+        return {
+          descricao: getTagValue(prod, "xProd"),
+          codigo: getTagValue(prod, "cProd"),
+          estoque_id: "",
+          quantidade: qCom,
+          valor_unitario: vUnCom,
+          valor_total: vProd,
+          ncm: getTagValue(prod, "NCM"),
+          cfop: getTagValue(prod, "CFOP"),
+        };
+      });
+    }
+  } catch {}
+
   return [defaultItem()];
 }
 
