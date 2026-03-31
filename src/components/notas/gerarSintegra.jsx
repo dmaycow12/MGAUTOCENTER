@@ -47,13 +47,12 @@ export function reg11(empresa) {
 }
 
 // Registro 50 - Notas fiscais (cabeçalho)
+// NFSe NÃO entra no SINTEGRA — apenas NFe (55) e NFCe (65)
 export function reg50(nota, empresa) {
   const isEntrada = nota.status === "Importada";
   const codSit = nota.status === "Cancelada" ? "S" : "N";
-  const tipo = isEntrada ? "E" : "S";
   const modelo = nota.tipo === "NFCe" ? "65" : "55";
   const cfop = isEntrada ? "1102" : "5405";
-  const aliq = "0000";
 
   return (
     "50" +
@@ -62,16 +61,16 @@ export function reg50(nota, empresa) {
     rData(nota.data_emissao) +
     r(nota.cliente_estado || empresa.uf, 2) +
     r(modelo, 2) +
-    r(nota.serie || "1", 3) +
+    rZ(nota.serie || "1", 3) +  // zero-preenchido: "001" e não "1  "
     rZ(nota.numero, 6) +
     r(cfop, 5) +
     r(nota.emitente_uf || empresa.uf, 2) +
     rN(nota.valor_total, 13) +
-    rN(0, 13) + // base ICMS
-    rN(0, 12) + // valor ICMS
-    rN(nota.valor_total, 13) + // isentas/outras (simplificado)
+    rN(0, 13) + // base de cálculo ICMS
+    rN(0, 12) + // valor do ICMS
+    rN(nota.valor_total, 13) + // valor das operações isentas/outras
     rN(0, 13) + // outras
-    r(aliq, 4) +
+    r("0000", 4) + // alíquota ICMS
     r(codSit, 1)
   );
 }
@@ -181,8 +180,9 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     return d >= periodoInicio && d <= periodoFim && n.status !== "Rascunho";
   });
 
-  // Reg 50 (e 54 se tiver itens)
-  for (const nota of notasPeriodo) {
+  // Reg 50 e 54 — apenas NFe e NFCe (NFSe não entra no SINTEGRA)
+  const notasSintegra = notasPeriodo.filter(n => n.tipo === "NFe" || n.tipo === "NFCe");
+  for (const nota of notasSintegra) {
     addLinha("50", reg50(nota, empresa));
 
     // Tentar extrair itens do xml_content
