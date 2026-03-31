@@ -14,10 +14,13 @@ function limpaIE(ie) { return (ie || "ISENTO").padEnd(14, " ").substring(0, 14);
 
 // Registro 10 - Identificação da empresa
 export function reg10(empresa, periodo) {
+  // IE no Reg.10: apenas dígitos ou espaços — nunca a palavra "ISENTO"
+  const ieNumerica = (empresa.ie || "").replace(/\D/g, "");
+  const ieCampo = ieNumerica ? ieNumerica.padEnd(14, " ").substring(0, 14) : " ".repeat(14);
   return (
     "10" +
     limpaCNPJ(empresa.cnpj) +
-    limpaIE(empresa.ie) +
+    ieCampo +
     r(empresa.nome, 35) +
     r(empresa.municipio, 30) +
     r(empresa.uf, 2) +
