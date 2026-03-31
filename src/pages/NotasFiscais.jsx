@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import {
   FileText, Plus, Upload, Search, Trash2, X,
-  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2, Pencil, ClipboardList, Ban
+  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2, Pencil, ClipboardList, Ban, LogIn
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
@@ -80,6 +80,7 @@ export default function NotasFiscais() {
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
   const [gerandoSintegra, setGerandoSintegra] = useState(false);
   const [notaParaLancar, setNotaParaLancar] = useState(null);
+  const [notaIdParaEntrada, setNotaIdParaEntrada] = useState(null);
 
   const hoje = new Date();
   const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -845,46 +846,44 @@ export default function NotasFiscais() {
                             {transmitindo === nota.id ? "..." : "Transmitir"}
                           </button>
                         )}
-                        {nota.status === "Importada" && (
-                          <>
-                            <button title="Lançar Entrada" onClick={async () => {
-                              if (nota.xml_content) {
-                                setXmlParaEntrada(nota.xml_content);
-                                setShowEntrada(true);
-                              } else if (nota.chave_acesso) {
-                                feedback('sucesso', 'Buscando XML da SEFAZ...');
-                                try {
-                                  const res = await base44.functions.invoke('buscarXmlNota', { chave_acesso: nota.chave_acesso, nota_id: nota.id });
-                                  if (res.data?.sucesso && res.data?.xml) {
-                                    setMsgFeedback(null);
-                                    setXmlParaEntrada(res.data.xml);
-                                    setShowEntrada(true);
-                                  } else {
-                                    feedback('erro', res.data?.erro || 'XML não encontrado na SEFAZ.');
-                                  }
-                                } catch (e) {
-                                  feedback('erro', 'Erro ao buscar XML: ' + e.message);
+                        {(nota.status === "Importada") && (
+                          <button title="Lançar Entrada" onClick={async () => {
+                            if (nota.xml_content) {
+                              setNotaIdParaEntrada(nota.id);
+                              setXmlParaEntrada(nota.xml_content);
+                              setShowEntrada(true);
+                            } else if (nota.chave_acesso) {
+                              feedback('sucesso', 'Buscando XML da SEFAZ...');
+                              try {
+                                const res = await base44.functions.invoke('buscarXmlNota', { chave_acesso: nota.chave_acesso, nota_id: nota.id });
+                                if (res.data?.sucesso && res.data?.xml) {
+                                  setMsgFeedback(null);
+                                  setNotaIdParaEntrada(nota.id);
+                                  setXmlParaEntrada(res.data.xml);
+                                  setShowEntrada(true);
+                                } else {
+                                  feedback('erro', res.data?.erro || 'XML não encontrado na SEFAZ.');
                                 }
-                              } else {
-                                setNotaParaLancar(nota);
+                              } catch (e) {
+                                feedback('erro', 'Erro ao buscar XML: ' + e.message);
                               }
-                            }}
-                              className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-all">
-                              Lançar
-                            </button>
-                            <button title="Gerar PDF de Conferência" onClick={() => gerarPdfConferencia(nota)} className="p-1 text-gray-500 hover:text-purple-400 transition-all">
-                              <ClipboardList className="w-4 h-4" />
-                            </button>
-                          </>
+                            } else {
+                              setNotaParaLancar(nota);
+                            }
+                          }} className="p-1 text-blue-400 hover:text-blue-300 transition-all" title="Lançar Entrada">
+                            <LogIn className="w-4 h-4" />
+                          </button>
                         )}
-                        {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && (
+                        {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Importada' && nota.status !== 'Lançada' && (
                           <button title="Editar" onClick={() => editarNota(nota)} className="p-1 text-gray-500 hover:text-yellow-400 transition-all">
                             <Pencil className="w-4 h-4" />
                           </button>
                         )}
-                        <button title="Imprimir" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
-                          <Printer className="w-4 h-4" />
-                        </button>
+                        {nota.status !== 'Importada' && nota.status !== 'Lançada' && (
+                          <button title="Imprimir" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
+                            <Printer className="w-4 h-4" />
+                          </button>
+                        )}
                         {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
                           <button title="Cancelar Nota" onClick={() => cancelarNota(nota)} className="p-1 text-gray-500 hover:text-orange-400 transition-all">
                             <Ban className="w-4 h-4" />
@@ -1248,10 +1247,12 @@ export default function NotasFiscais() {
       {showEntrada && xmlParaEntrada && (
         <ModalEntradaNF
           xmlTexto={xmlParaEntrada}
-          onClose={() => { setShowEntrada(false); setXmlParaEntrada(""); }}
+          notaId={notaIdParaEntrada}
+          onClose={() => { setShowEntrada(false); setXmlParaEntrada(""); setNotaIdParaEntrada(null); }}
           onSalvo={() => {
             setShowEntrada(false);
             setXmlParaEntrada("");
+            setNotaIdParaEntrada(null);
             feedback("sucesso", "Nota importada! Estoque e financeiro atualizados.");
             load();
           }}

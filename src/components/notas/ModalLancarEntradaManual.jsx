@@ -144,6 +144,7 @@ export default function ModalLancarEntradaManual({ nota, estoque, onClose, onSal
 
       // Salvar itens na nota e marcar como processada
       await base44.entities.NotaFiscal.update(nota.id, {
+        status: "Lançada",
         xml_content: JSON.stringify(items),
         observacoes: (nota.observacoes || "") + " [Lançada manualmente]",
       });

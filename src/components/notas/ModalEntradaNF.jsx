@@ -177,7 +177,7 @@ function CampoDescricaoBusca({ estoqueExistente, item, onChange }) {
   );
 }
 
-export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
+export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
   const [aba, setAba] = useState("fiscal");
   const [dados, setDados] = useState(null);
   const [itens, setItens] = useState([]);
@@ -274,12 +274,21 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
       }
 
       const itensParaSalvar = itens.map(i => ({ descricao: i.descricao, quantidade: i.quantidade, codigo: i.codigo }));
-      await base44.entities.NotaFiscal.create({
-        tipo: "NFe", numero: dados.numero, serie: dados.serie, status: "Importada",
-        cliente_nome: dados.emitente, valor_total: dados.valor, chave_acesso: dados.chave,
-        xml_content: JSON.stringify(itensParaSalvar), data_emissao: dados.dataEmissao,
-        observacoes: `CNPJ Fornecedor: ${dados.cnpjEmit}`,
-      });
+      if (notaId) {
+        await base44.entities.NotaFiscal.update(notaId, {
+          status: "Lançada",
+          xml_content: JSON.stringify(itensParaSalvar),
+          numero: dados.numero || "",
+          serie: dados.serie || "",
+        });
+      } else {
+        await base44.entities.NotaFiscal.create({
+          tipo: "NFe", numero: dados.numero, serie: dados.serie, status: "Lançada",
+          cliente_nome: dados.emitente, valor_total: dados.valor, chave_acesso: dados.chave,
+          xml_content: JSON.stringify(itensParaSalvar), data_emissao: dados.dataEmissao,
+          observacoes: `CNPJ Fornecedor: ${dados.cnpjEmit}`,
+        });
+      }
 
       let estoqueAtual = await base44.entities.Estoque.list("-created_date", 500);
       const idsUsados = new Set();
@@ -604,7 +613,7 @@ export default function ModalEntradaNF({ xmlTexto, onClose, onSalvo }) {
 
               <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 space-y-2 text-sm">
                 <p className="text-white font-medium mb-2">Resumo da operação:</p>
-                <div className="flex items-center gap-2 text-gray-400"><FileText className="w-4 h-4 text-blue-400" /> NF importada como <span className="text-white font-medium">Importada</span></div>
+                <div className="flex items-center gap-2 text-gray-400"><FileText className="w-4 h-4 text-blue-400" /> NF será marcada como <span className="text-white font-medium">Lançada</span></div>
                 <div className="flex items-center gap-2 text-gray-400"><Package className="w-4 h-4 text-green-400" />{itens.filter(i => i.dar_entrada_estoque).length} iten(s) entram no estoque</div>
                 <div className="flex items-center gap-2 text-gray-400"><DollarSign className="w-4 h-4" style={{ color: GREEN }} /> Lançamento de <span className="text-red-400 font-medium">Despesa</span> no financeiro — {financeiro.status}</div>
               </div>
