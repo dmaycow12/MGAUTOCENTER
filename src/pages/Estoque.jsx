@@ -41,9 +41,28 @@ export default function Estoque() {
   const [showMarcaDropdown, setShowMarcaDropdown] = useState(false);
   const [showCatDropdown, setShowCatDropdown] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [colunas, setColunas] = useState(() => {
+    const saved = localStorage.getItem("estoque_colunas");
+    return saved ? JSON.parse(saved) : { codigo: true, categoria: true, marca: true, estoque_minimo: true, valor_custo: true, valor_venda: true };
+  });
   const marcaDropdownRef = useRef(null);
   const catDropdownRef = useRef(null);
   const filterRef = useRef(null);
+
+  const toggleColuna = (col) => {
+    const updated = { ...colunas, [col]: !colunas[col] };
+    setColunas(updated);
+    localStorage.setItem("estoque_colunas", JSON.stringify(updated));
+  };
+
+  const colunasDisponiveis = [
+    { key: "codigo", label: "CÓDIGO" },
+    { key: "categoria", label: "CATEGORIA" },
+    { key: "marca", label: "MARCA" },
+    { key: "estoque_minimo", label: "MÍN. ESTOQUE" },
+    { key: "valor_custo", label: "CUSTO" },
+    { key: "valor_venda", label: "VENDA" },
+  ];
 
   useEffect(() => { load(); }, []);
 
@@ -376,32 +395,19 @@ export default function Estoque() {
           <div ref={filterRef} className="relative">
             <button
               onClick={() => setFilterOpen(!filterOpen)}
-              className="px-4 py-3 bg-gray-800 border text-white rounded-xl text-sm font-medium hover:bg-gray-700 transition-all flex items-center gap-2"
-              style={{borderColor: filtroCategorias.length > 0 ? "#3b82f6" : "#374151"}}
+              className="px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-xl text-sm font-medium hover:bg-gray-700 transition-all flex items-center gap-2"
             >
-              ⚙️ {filtroCategorias.length > 0 ? `Categoria (${filtroCategorias.length})` : "Filtro"}
+              ⚙️ Colunas
             </button>
             {filterOpen && (
-              <div className="absolute right-0 top-full mt-2 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 z-50 w-64 space-y-2">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs text-gray-400 font-semibold">FILTRAR POR CATEGORIA</p>
-                  {filtroCategorias.length > 0 && (
-                    <button onClick={() => setFiltroCategorias([])} className="text-xs text-blue-400 hover:text-blue-300">Limpar</button>
-                  )}
-                </div>
-                {Array.from(new Set(items.map(i => i.categoria).filter(Boolean))).sort().map(cat => (
-                  <label key={cat} className="flex items-center gap-2 cursor-pointer hover:bg-gray-800 p-2 rounded transition-all">
-                    <input
-                      type="checkbox"
-                      checked={filtroCategorias.includes(cat)}
-                      onChange={() => setFiltroCategorias(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
-                      className="w-4 h-4"
-                    />
-                    <span className="text-xs text-gray-300 flex-1">{cat}</span>
-                    <span className="text-xs text-gray-600">{items.filter(i => i.categoria === cat).length}</span>
+              <div className="absolute right-0 top-full mt-2 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 z-50 w-56 space-y-2">
+                <p className="text-xs text-gray-400 font-semibold mb-3">COLUNAS VISÍVEIS</p>
+                {colunasDisponiveis.map(col => (
+                  <label key={col.key} className="flex items-center gap-2 cursor-pointer hover:bg-gray-800 p-2 rounded transition-all">
+                    <input type="checkbox" checked={colunas[col.key]} onChange={() => toggleColuna(col.key)} className="w-4 h-4" />
+                    <span className="text-xs text-gray-300">{col.label}</span>
                   </label>
                 ))}
-                {items.filter(i => i.categoria).length === 0 && <p className="text-gray-500 text-xs text-center py-3">Sem categorias cadastradas</p>}
               </div>
             )}
           </div>
@@ -631,30 +637,18 @@ export default function Estoque() {
                   <th className="px-4 py-3 w-8">
                     <input type="checkbox" checked={filtrados.length > 0 && selecionados.length === filtrados.length} onChange={toggleTodos} className="accent-red-500 cursor-pointer w-4 h-4" />
                   </th>
-                  <th className="px-4 py-3 cursor-pointer hover:text-white transition-all" onClick={() => handleSort("codigo")}>
-                    <div className="flex items-center gap-1">Código {ordenacao.campo === "codigo" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
-                  </th>
+                  {colunas.codigo && <th className="px-4 py-3 cursor-pointer hover:text-white transition-all" onClick={() => handleSort("codigo")}><div className="flex items-center gap-1">Código {ordenacao.campo === "codigo" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
                   <th className="px-4 py-3 cursor-pointer hover:text-white transition-all" onClick={() => handleSort("descricao")}>
                     <div className="flex items-center gap-1">Descrição {ordenacao.campo === "descricao" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
                   </th>
-                  <th className="px-4 py-3 hidden md:table-cell cursor-pointer hover:text-white transition-all" onClick={() => handleSort("categoria")}>
-                    <div className="flex items-center gap-1">Categoria {ordenacao.campo === "categoria" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
-                  </th>
-                  <th className="px-4 py-3 hidden lg:table-cell cursor-pointer hover:text-white transition-all" onClick={() => handleSort("marca")}>
-                    <div className="flex items-center gap-1">Marca {ordenacao.campo === "marca" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
-                  </th>
+                  {colunas.categoria && <th className="px-4 py-3 cursor-pointer hover:text-white transition-all" onClick={() => handleSort("categoria")}><div className="flex items-center gap-1">Categoria {ordenacao.campo === "categoria" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
+                  {colunas.marca && <th className="px-4 py-3 cursor-pointer hover:text-white transition-all" onClick={() => handleSort("marca")}><div className="flex items-center gap-1">Marca {ordenacao.campo === "marca" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
                   <th className="px-4 py-3 text-center cursor-pointer hover:text-white transition-all" onClick={() => handleSort("quantidade")}>
                     <div className="flex items-center justify-center gap-1">Qtd {ordenacao.campo === "quantidade" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
                   </th>
-                  <th className="px-4 py-3 text-center hidden sm:table-cell cursor-pointer hover:text-white transition-all" onClick={() => handleSort("estoque_minimo")}>
-                    <div className="flex items-center justify-center gap-1">Mín. {ordenacao.campo === "estoque_minimo" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
-                  </th>
-                  <th className="px-4 py-3 text-right hidden md:table-cell cursor-pointer hover:text-white transition-all" onClick={() => handleSort("valor_custo")}>
-                    <div className="flex items-center justify-end gap-1">Custo {ordenacao.campo === "valor_custo" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
-                  </th>
-                  <th className="px-4 py-3 text-right cursor-pointer hover:text-white transition-all" onClick={() => handleSort("valor_venda")}>
-                    <div className="flex items-center justify-end gap-1">Venda {ordenacao.campo === "valor_venda" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
-                  </th>
+                  {colunas.estoque_minimo && <th className="px-4 py-3 text-center cursor-pointer hover:text-white transition-all" onClick={() => handleSort("estoque_minimo")}><div className="flex items-center justify-center gap-1">Mín. {ordenacao.campo === "estoque_minimo" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
+                  {colunas.valor_custo && <th className="px-4 py-3 text-right cursor-pointer hover:text-white transition-all" onClick={() => handleSort("valor_custo")}><div className="flex items-center justify-end gap-1">Custo {ordenacao.campo === "valor_custo" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
+                  {colunas.valor_venda && <th className="px-4 py-3 text-right cursor-pointer hover:text-white transition-all" onClick={() => handleSort("valor_venda")}><div className="flex items-center justify-end gap-1">Venda {ordenacao.campo === "valor_venda" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
                   <th className="px-4 py-3 text-center">Ações</th>
                 </tr>
               </thead>
@@ -664,35 +658,23 @@ export default function Estoque() {
                     <td className="px-4 py-3">
                       <input type="checkbox" checked={selecionados.includes(item.id)} onChange={() => toggleSelecionado(item.id)} className="accent-red-500 cursor-pointer w-4 h-4" />
                     </td>
-                    <td className="px-4 py-3 text-gray-400 font-mono text-xs">
-                      <CellEdit item={item} field="codigo" className="text-gray-400 font-mono text-xs" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
-                    </td>
+                    {colunas.codigo && <td className="px-4 py-3 text-gray-400 font-mono text-xs"><CellEdit item={item} field="codigo" className="text-gray-400 font-mono text-xs" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} /></td>}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {item.quantidade <= item.estoque_minimo && <AlertTriangle className="w-3 h-3 text-red-400 flex-shrink-0" />}
                         <CellEdit item={item} field="descricao" className="text-white font-medium" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-gray-400 hidden md:table-cell">
-                      <CellEdit item={item} field="categoria" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
-                    </td>
-                    <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">
-                      <CellEdit item={item} field="marca" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
-                    </td>
+                    {colunas.categoria && <td className="px-4 py-3 text-gray-400"><CellEdit item={item} field="categoria" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} /></td>}
+                    {colunas.marca && <td className="px-4 py-3 text-gray-400"><CellEdit item={item} field="marca" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} /></td>}
                     <td className="px-4 py-3 text-center">
                       <span className={`font-bold ${item.quantidade <= item.estoque_minimo ? "text-red-400" : "text-white"}`}>
                         <CellEdit item={item} field="quantidade" className={item.quantidade <= item.estoque_minimo ? "text-red-400 font-bold" : "text-white font-bold"} editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center text-gray-500 hidden sm:table-cell">
-                      <CellEdit item={item} field="estoque_minimo" className="text-gray-500" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
-                    </td>
-                    <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">
-                      <CellEdit item={item} field="valor_custo" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
-                    </td>
-                    <td className="px-4 py-3 text-right text-green-400 font-medium">
-                      <CellEdit item={item} field="valor_venda" className="text-green-400 font-medium" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} />
-                    </td>
+                    {colunas.estoque_minimo && <td className="px-4 py-3 text-center text-gray-500"><CellEdit item={item} field="estoque_minimo" className="text-gray-500" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} /></td>}
+                    {colunas.valor_custo && <td className="px-4 py-3 text-right text-gray-400"><CellEdit item={item} field="valor_custo" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} /></td>}
+                    {colunas.valor_venda && <td className="px-4 py-3 text-right text-green-400 font-medium"><CellEdit item={item} field="valor_venda" className="text-green-400 font-medium" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} /></td>}
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
                         <button onClick={() => editar(item)} className="p-1 text-gray-500 hover:text-blue-400 transition-all"><Edit className="w-4 h-4"/></button>
