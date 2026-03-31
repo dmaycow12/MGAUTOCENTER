@@ -865,9 +865,8 @@ function CellEdit({ item, field, className = "", editandoCell, onIniciar, onSalv
           }
         }}
         onKeyDown={e => {
-          if (e.key === "Enter") { onSalvar(item.id, field, localVal); }
           if (e.key === "Escape") { onCancelar(); }
-          if (e.key === "Tab") {
+          if (e.key === "Enter" || e.key === "Tab") {
             e.preventDefault();
             onSalvar(item.id, field, localVal);
             if (proximoItem) setTimeout(() => onIniciar(proximoItem, field), 50);
