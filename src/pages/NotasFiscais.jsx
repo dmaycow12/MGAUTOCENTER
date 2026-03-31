@@ -845,7 +845,9 @@ export default function NotasFiscais() {
                         )}
                         {(nota.status === "Importada") && (
                           <button title="Lançar Entrada" onClick={async () => {
-                            if (nota.xml_content) {
+                            // Verifica se tem XML com produtos
+                            const xmlDisponivel = nota.xml_content && nota.xml_content.includes('<det');
+                            if (xmlDisponivel) {
                               setNotaIdParaEntrada(nota.id);
                               setXmlParaEntrada(nota.xml_content);
                               setShowEntrada(true);
@@ -853,16 +855,19 @@ export default function NotasFiscais() {
                               feedback('sucesso', 'Buscando XML da SEFAZ...');
                               try {
                                 const res = await base44.functions.invoke('buscarXmlNota', { chave_acesso: nota.chave_acesso, nota_id: nota.id });
-                                if (res.data?.sucesso && res.data?.xml) {
+                                if (res.data?.sucesso && res.data?.xml && res.data.xml.includes('<det')) {
                                   setMsgFeedback(null);
                                   setNotaIdParaEntrada(nota.id);
                                   setXmlParaEntrada(res.data.xml);
                                   setShowEntrada(true);
                                 } else {
-                                  feedback('erro', res.data?.erro || 'XML não encontrado na SEFAZ.');
+                                  // XML sem produtos — usa lançamento manual com dados pré-preenchidos
+                                  setMsgFeedback(null);
+                                  setNotaParaLancar(nota);
                                 }
                               } catch (e) {
-                                feedback('erro', 'Erro ao buscar XML: ' + e.message);
+                                setMsgFeedback(null);
+                                setNotaParaLancar(nota);
                               }
                             } else {
                               setNotaParaLancar(nota);
