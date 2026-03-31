@@ -841,9 +841,10 @@ const CAMPOS_NUMERICOS = ["quantidade", "estoque_minimo", "valor_custo", "valor_
 function CellEdit({ item, field, className = "", editandoCell, onIniciar, onSalvar, onCancelar, proximoItem }) {
   const isEditing = editandoCell?.id === item.id && editandoCell?.field === field;
   const [localVal, setLocalVal] = React.useState("");
+  const navegandoRef = React.useRef(false);
 
   React.useEffect(() => {
-    if (isEditing) setLocalVal(editandoCell.valorInicial || "");
+    if (isEditing) { setLocalVal(editandoCell.valorInicial || ""); navegandoRef.current = false; }
   }, [isEditing]);
 
   if (isEditing) {
@@ -858,21 +859,18 @@ function CellEdit({ item, field, className = "", editandoCell, onIniciar, onSalv
             : e.target.value.toUpperCase();
           setLocalVal(v);
         }}
-        onBlur={(e) => {
-          // Não salva no blur se Tab foi pressionado (handled no onKeyDown)
-          if (!e.relatedTarget || !e.relatedTarget.dataset.celltab) {
-            onSalvar(item.id, field, localVal);
-          }
+        onBlur={() => {
+          if (!navegandoRef.current) onSalvar(item.id, field, localVal);
         }}
         onKeyDown={e => {
           if (e.key === "Escape") { onCancelar(); }
           if (e.key === "Enter" || e.key === "Tab") {
             e.preventDefault();
+            navegandoRef.current = true;
             onSalvar(item.id, field, localVal);
             if (proximoItem) setTimeout(() => onIniciar(proximoItem, field), 50);
           }
         }}
-        data-celltab="true"
         className={`bg-gray-700 border border-green-500 text-white rounded px-2 py-0.5 text-sm focus:outline-none w-full ${className}`}
         style={{textTransform: CAMPOS_NUMERICOS.includes(field) ? "none" : "uppercase"}}
       />
