@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
+import ModalLancarEntradaManual from "@/components/notas/ModalLancarEntradaManual";
 import JSZip from "jszip";
 
 const STATUS_COLOR = {
@@ -78,6 +79,7 @@ export default function NotasFiscais() {
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
   const [gerandoSintegra, setGerandoSintegra] = useState(false);
+  const [notaParaLancar, setNotaParaLancar] = useState(null);
 
   const hoje = new Date();
   const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -844,9 +846,15 @@ export default function NotasFiscais() {
                           </button>
                         )}
                         {nota.status === "Importada" && (
-                          <button title="Gerar PDF de Conferência" onClick={() => gerarPdfConferencia(nota)} className="p-1 text-gray-500 hover:text-purple-400 transition-all">
-                            <ClipboardList className="w-4 h-4" />
-                          </button>
+                          <>
+                            <button title="Lançar Entrada" onClick={() => setNotaParaLancar(nota)}
+                              className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-all">
+                              Lançar
+                            </button>
+                            <button title="Gerar PDF de Conferência" onClick={() => gerarPdfConferencia(nota)} className="p-1 text-gray-500 hover:text-purple-400 transition-all">
+                              <ClipboardList className="w-4 h-4" />
+                            </button>
+                          </>
                         )}
                         {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && (
                           <button title="Editar" onClick={() => editarNota(nota)} className="p-1 text-gray-500 hover:text-yellow-400 transition-all">
@@ -1192,6 +1200,19 @@ export default function NotasFiscais() {
             </div>
           </div>
         </div>
+      )}
+
+      {notaParaLancar && (
+        <ModalLancarEntradaManual
+          nota={notaParaLancar}
+          estoque={estoque}
+          onClose={() => setNotaParaLancar(null)}
+          onSalvo={() => {
+            setNotaParaLancar(null);
+            feedback("sucesso", "Lançamento realizado! Financeiro e estoque atualizados.");
+            load();
+          }}
+        />
       )}
 
       {showSintegra && (
