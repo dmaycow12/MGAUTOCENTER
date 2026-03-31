@@ -104,23 +104,19 @@ export function reg54(nota, item, numItem, empresa) {
 }
 
 // Registro 75 - Cadastro de produtos
-// Layout: 2+14+14+8+8+14+8+53+6+5+4+13+13 = 162 chars
-export function reg75(produto, periodoInicio, periodoFim, empresa) {
+// Layout exato: 2+8+8+14+8+53+6+13+13 = 125 chars (padrão SINTEGRA)
+export function reg75(produto, periodoInicio, periodoFim) {
   const ncm = (produto.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
   return (
     "75" +
-    limpaCNPJ(empresa.cnpj) +          // 14 — CNPJ obrigatório
-    limpaIE(empresa.ie) +               // 14 — IE obrigatória
-    rData(periodoInicio) +              //  8
-    rData(periodoFim) +                 //  8
-    r(produto.codigo || "000", 14) +    // 14 — código do produto
-    r(ncm, 8) +                         //  8 — NCM/NBM
-    r(produto.descricao, 53) +          // 53 — descrição
-    r(produto.unidade || "UN", 6) +     //  6 — unidade
-    rZ(0, 5) +                          //  5 — alíquota IPI (sem decimais, ex: 00000 = 0%)
-    rZ(0, 4) +                          //  4 — alíquota ICMS (ex: 1200 = 12%)
-    rZ(0, 13) +                         // 13 — redução base cálculo ICMS
-    rZ(0, 13)                           // 13 — redução base cálculo ICMS-ST
+    rData(periodoInicio) +           //  8 — data início período
+    rData(periodoFim) +              //  8 — data fim período
+    r(produto.codigo || "000", 14) + // 14 — código do produto/serviço
+    r(ncm, 8) +                      //  8 — código NCM
+    r(produto.descricao, 53) +       // 53 — descrição
+    r(produto.unidade || "UN", 6) +  //  6 — unidade de medida
+    rN(produto.valor_venda || 0, 13) + // 13 — valor unitário (2 dec. embutidos)
+    rN(0, 13)                        // 13 — valor IPI (0 se não aplica)
   );
 }
 
@@ -209,7 +205,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     }
   });
   for (const produto of produtosUnicos.values()) {
-    addLinha("75", reg75(produto, periodoInicio, periodoFim, empresa));
+    addLinha("75", reg75(produto, periodoInicio, periodoFim));
   }
 
   // Reg 90 - encerramento
