@@ -50,16 +50,45 @@ Deno.serve(async (req) => {
       const data_emissao = (nf.data_emissao || '').substring(0, 10);
       const status_nf = nf.situacao === 'cancelada' ? 'Cancelada' : 'Importada';
 
+      // Buscar XML completo da nota para extrair itens e pagamento
+      let xmlContent = '';
+      let numeroNF = '';
+      let serieNF = '1';
+      let formasPagamento = '';
+      try {
+        const xmlResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.json`, {
+          headers: { 'Authorization': AUTH_HEADER },
+        });
+        if (xmlResp.ok) {
+          const xmlData = await xmlResp.json();
+          const xmlStr = xmlData.xml || '';
+          if (xmlStr) {
+            xmlContent = xmlStr;
+            // Extrair número e série do XML
+            const numMatch = xmlStr.match(/<nNF>(\d+)<\/nNF>/);
+            const serieMatch = xmlStr.match(/<serie>(\d+)<\/serie>/);
+            if (numMatch) numeroNF = numMatch[1];
+            if (serieMatch) serieNF = serieMatch[1];
+            // Extrair forma de pagamento
+            const tPagMatch = xmlStr.match(/<tPag>(\d+)<\/tPag>/);
+            const tPagMap = { '01':'Dinheiro','02':'Cheque','03':'Cartão de Crédito','04':'Cartão de Débito','05':'Cartão da Loja','10':'Vale Alimentação','11':'Vale Refeição','12':'Vale Presente','13':'Vale Combustível','15':'Boleto','90':'Sem Pagamento','99':'Outros' };
+            if (tPagMatch) formasPagamento = tPagMap[tPagMatch[1]] || 'Boleto';
+          }
+        }
+      } catch (_) {}
+
       await base44.asServiceRole.entities.NotaFiscal.create({
         tipo: 'NFe',
-        numero: '',
-        serie: '1',
+        numero: numeroNF,
+        serie: serieNF,
         status: status_nf,
         cliente_nome: nf.nome_emitente || 'Fornecedor',
         cliente_cpf_cnpj: nf.documento_emitente || '',
         chave_acesso: chave,
         valor_total: parseFloat(nf.valor_total || '0'),
         data_emissao,
+        xml_content: xmlContent,
+        forma_pagamento: formasPagamento || 'Boleto',
         observacoes: `Nota recebida via SEFAZ | Manifesto: ${nf.manifestacao_destinatario || 'pendente'}`,
         mensagem_sefaz: nf.situacao || '',
       });

@@ -63,7 +63,7 @@ function parseItemsFromNota(nota) {
 export default function ModalLancarEntradaManual({ nota, estoque, onClose, onSalvo }) {
   const [aba, setAba] = useState("produtos");
   const [items, setItems] = useState(() => parseItemsFromNota(nota));
-  const [formaPagamento, setFormaPagamento] = useState("Boleto");
+  const [formaPagamento, setFormaPagamento] = useState(nota.forma_pagamento || "Boleto");
   const [dataVencimento, setDataVencimento] = useState(new Date().toISOString().split("T")[0]);
   const [parcelas, setParcelas] = useState(1);
   const [salvando, setSalvando] = useState(false);
