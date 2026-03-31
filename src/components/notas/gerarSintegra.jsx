@@ -104,7 +104,7 @@ export function reg54(nota, item, numItem, empresa) {
 }
 
 // Registro 75 - Cadastro de produtos
-// Layout exato: 2+8+8+14+8+54+6+13+13 = 126 chars (padrão SINTEGRA)
+// Layout exato: 2+8+8+14+8+53+6+13+13 = 125 chars (padrão SINTEGRA IN 68/95)
 export function reg75(produto, periodoInicio, periodoFim) {
   const ncm = (produto.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
   return (
@@ -113,7 +113,7 @@ export function reg75(produto, periodoInicio, periodoFim) {
     rData(periodoFim) +              //  8 — data fim período
     r(produto.codigo || "000", 14) + // 14 — código do produto/serviço
     r(ncm, 8) +                      //  8 — código NCM
-    r(produto.descricao, 54) +       // 54 — descrição
+    r(produto.descricao, 53) +       // 53 — descrição
     r(produto.unidade || "UN", 6) +  //  6 — unidade de medida
     rN(produto.valor_venda || 0, 13) + // 13 — valor unitário (2 dec. embutidos)
     rN(0, 13)                        // 13 — valor IPI (0 se não aplica)
@@ -200,8 +200,13 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
   // Reg 75 - produtos do estoque
   const produtosUnicos = new Map();
   estoque.forEach(p => {
-    if (!produtosUnicos.has(p.codigo || p.id)) {
-      produtosUnicos.set(p.codigo || p.id, p);
+    const desc = (p.descricao || "").trim();
+    const cod = (p.codigo || "").trim();
+    // Ignorar produtos sem descrição válida ou com dados inválidos
+    if (!desc || desc === "." || desc.length < 2) return;
+    if (!cod || cod === "X" || cod === "x") return;
+    if (!produtosUnicos.has(cod || p.id)) {
+      produtosUnicos.set(cod || p.id, p);
     }
   });
   for (const produto of produtosUnicos.values()) {
