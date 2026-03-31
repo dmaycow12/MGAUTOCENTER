@@ -482,7 +482,11 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                           onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, dar_entrada_estoque: e.target.checked } : it))}
                           className="mt-1 accent-green-500 w-4 h-4 flex-shrink-0 cursor-pointer" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm font-medium truncate">{item.descricao}</p>
+                          <p className="text-white text-sm font-medium truncate">
+                            {item.estoqueVinculado
+                              ? `${item.estoqueVinculado.descricao}${item.codigo ? ` (${item.codigo})` : ""}`
+                              : item.descricao}
+                          </p>
                           <div className="flex flex-wrap gap-3 mt-1 text-xs text-gray-400">
                             <span>Qtd: <span className="text-white">{item.quantidade}</span></span>
                             <span>Unit: <span className="text-white">R$ {Number(item.valor_unitario).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></span>
