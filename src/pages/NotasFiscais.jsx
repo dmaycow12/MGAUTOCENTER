@@ -859,10 +859,14 @@ export default function NotasFiscais() {
                                   setXmlParaEntrada(res.data.xml);
                                   setShowEntrada(true);
                                 } else {
-                                  feedback('erro', res.data?.erro || 'XML não encontrado na SEFAZ.');
+                                  // XML não disponível — abre lançamento manual
+                                  setMsgFeedback(null);
+                                  setNotaParaLancar(nota);
                                 }
                               } catch (e) {
-                                feedback('erro', 'Erro ao buscar XML: ' + e.message);
+                                // Fallback para lançamento manual
+                                setMsgFeedback(null);
+                                setNotaParaLancar(nota);
                               }
                             } else {
                               setNotaParaLancar(nota);
