@@ -103,21 +103,24 @@ export function reg54(nota, item, numItem, empresa) {
   );
 }
 
-// Registro 75 - Produtos e serviços
-export function reg75(produto, periodoInicio, periodoFim) {
+// Registro 75 - Cadastro de produtos
+// Layout: 2+14+14+8+8+14+8+53+6+5+4+13+13 = 162 chars
+export function reg75(produto, periodoInicio, periodoFim, empresa) {
   const ncm = (produto.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
   return (
     "75" +
-    rData(periodoInicio) +
-    rData(periodoFim) +
-    r(produto.codigo || "000", 14) +
-    r(ncm, 8) +
-    r(produto.descricao, 53) +
-    r(produto.unidade || "UN", 6) +
-    r("", 4) + // alíq IPI
-    r("0000", 4) + // alíq ICMS
-    r("0000000000000", 13) + // redução BC ICMS
-    r("0000000000000", 13)  // redução BC ICMS-ST
+    limpaCNPJ(empresa.cnpj) +          // 14 — CNPJ obrigatório
+    limpaIE(empresa.ie) +               // 14 — IE obrigatória
+    rData(periodoInicio) +              //  8
+    rData(periodoFim) +                 //  8
+    r(produto.codigo || "000", 14) +    // 14 — código do produto
+    r(ncm, 8) +                         //  8 — NCM/NBM
+    r(produto.descricao, 53) +          // 53 — descrição
+    r(produto.unidade || "UN", 6) +     //  6 — unidade
+    rZ(0, 5) +                          //  5 — alíquota IPI (sem decimais, ex: 00000 = 0%)
+    rZ(0, 4) +                          //  4 — alíquota ICMS (ex: 1200 = 12%)
+    rZ(0, 13) +                         // 13 — redução base cálculo ICMS
+    rZ(0, 13)                           // 13 — redução base cálculo ICMS-ST
   );
 }
 
@@ -206,7 +209,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     }
   });
   for (const produto of produtosUnicos.values()) {
-    addLinha("75", reg75(produto, periodoInicio, periodoFim));
+    addLinha("75", reg75(produto, periodoInicio, periodoFim, empresa));
   }
 
   // Reg 90 - encerramento
