@@ -847,7 +847,14 @@ export default function NotasFiscais() {
                         )}
                         {nota.status === "Importada" && (
                           <>
-                            <button title="Lançar Entrada" onClick={() => setNotaParaLancar(nota)}
+                            <button title="Lançar Entrada" onClick={() => {
+                              if (nota.xml_content) {
+                                setXmlParaEntrada(nota.xml_content);
+                                setShowEntrada(true);
+                              } else {
+                                setNotaParaLancar(nota);
+                              }
+                            }}
                               className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-all">
                               Lançar
                             </button>
