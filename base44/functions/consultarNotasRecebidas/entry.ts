@@ -9,11 +9,14 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Busca todas as páginas para permitir reimportar notas deletadas
+    // Paginação correta da Focus NFe: usa 'versao' como cursor
+    // Inicia do versao=0 para buscar TODAS as notas (permite reimportar deletadas)
     let todasNotas = [];
-    let pagina = 1;
-    while (true) {
-      const url = `${FOCUSNFE_BASE}/nfes_recebidas?cnpj=${CNPJ_EMITENTE}&pagina=${pagina}`;
+    let versaoCursor = 0;
+    let tentativas = 0;
+    while (tentativas < 40) {
+      tentativas++;
+      const url = `${FOCUSNFE_BASE}/nfes_recebidas?cnpj=${CNPJ_EMITENTE}&versao=${versaoCursor}`;
       const resp = await fetch(url, { method: 'GET', headers: { 'Authorization': AUTH_HEADER } });
       if (!resp.ok) {
         const txt = await resp.text();
@@ -22,9 +25,11 @@ Deno.serve(async (req) => {
       const lote = await resp.json();
       if (!Array.isArray(lote) || lote.length === 0) break;
       todasNotas = todasNotas.concat(lote);
+      // Avança cursor para a maior versão do lote
+      const maxVersaoLote = Math.max(...lote.map(n => n.versao || 0));
+      if (maxVersaoLote <= versaoCursor) break; // não avançou, fim
+      versaoCursor = maxVersaoLote;
       if (lote.length < 50) break; // última página
-      pagina++;
-      if (pagina > 20) break; // limite de segurança
     }
 
     const notas = todasNotas;
