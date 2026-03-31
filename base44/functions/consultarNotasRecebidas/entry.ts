@@ -9,22 +9,26 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Sempre busca todas as notas sem filtro de versão
-    // para permitir reimportar notas deletadas acidentalmente
-    const url = `${FOCUSNFE_BASE}/nfes_recebidas?cnpj=${CNPJ_EMITENTE}`;
-
-    const resp = await fetch(url, {
-      method: 'GET',
-      headers: { 'Authorization': AUTH_HEADER },
-    });
-
-    if (!resp.ok) {
-      const txt = await resp.text();
-      return Response.json({ sucesso: false, erro: `Erro Focus NFe (${resp.status}): ${txt.substring(0, 200)}` });
+    // Busca todas as páginas para permitir reimportar notas deletadas
+    let todasNotas = [];
+    let pagina = 1;
+    while (true) {
+      const url = `${FOCUSNFE_BASE}/nfes_recebidas?cnpj=${CNPJ_EMITENTE}&pagina=${pagina}`;
+      const resp = await fetch(url, { method: 'GET', headers: { 'Authorization': AUTH_HEADER } });
+      if (!resp.ok) {
+        const txt = await resp.text();
+        return Response.json({ sucesso: false, erro: `Erro Focus NFe (${resp.status}): ${txt.substring(0, 200)}` });
+      }
+      const lote = await resp.json();
+      if (!Array.isArray(lote) || lote.length === 0) break;
+      todasNotas = todasNotas.concat(lote);
+      if (lote.length < 50) break; // última página
+      pagina++;
+      if (pagina > 20) break; // limite de segurança
     }
 
-    const notas = await resp.json();
-    if (!Array.isArray(notas) || notas.length === 0) {
+    const notas = todasNotas;
+    if (notas.length === 0) {
       return Response.json({ sucesso: true, mensagem: 'Nenhuma nota recebida encontrada.', importadas: 0 });
     }
 
@@ -36,10 +40,19 @@ Deno.serve(async (req) => {
     let maxVersao = 0;
 
     for (const nf of notas) {
-      const chave = nf.chave_nfe;
-      if (!chave) continue;
+      const chave = nf.chave_nfe || '';
 
-      if (chavesExistentes.has(chave)) continue;
+      // Pular duplicatas por chave (se tiver chave)
+      if (chave && chavesExistentes.has(chave)) continue;
+
+      // Se não tem chave, deduplica por data+valor+fornecedor
+      if (!chave) {
+        const jaExiste = (await base44.asServiceRole.entities.NotaFiscal.filter({
+          data_emissao: (nf.data_emissao || '').substring(0, 10),
+          cliente_nome: nf.nome_emitente || 'Fornecedor',
+        })).some(n => Math.abs((n.valor_total || 0) - parseFloat(nf.valor_total || '0')) < 0.01);
+        if (jaExiste) continue;
+      }
 
       const data_emissao = (nf.data_emissao || '').substring(0, 10);
       const status_nf = nf.situacao === 'cancelada' ? 'Cancelada' : 'Importada';
