@@ -847,10 +847,24 @@ export default function NotasFiscais() {
                         )}
                         {nota.status === "Importada" && (
                           <>
-                            <button title="Lançar Entrada" onClick={() => {
+                            <button title="Lançar Entrada" onClick={async () => {
                               if (nota.xml_content) {
                                 setXmlParaEntrada(nota.xml_content);
                                 setShowEntrada(true);
+                              } else if (nota.chave_acesso) {
+                                feedback('sucesso', 'Buscando XML da SEFAZ...');
+                                try {
+                                  const res = await base44.functions.invoke('buscarXmlNota', { chave_acesso: nota.chave_acesso, nota_id: nota.id });
+                                  if (res.data?.sucesso && res.data?.xml) {
+                                    setMsgFeedback(null);
+                                    setXmlParaEntrada(res.data.xml);
+                                    setShowEntrada(true);
+                                  } else {
+                                    feedback('erro', res.data?.erro || 'XML não encontrado na SEFAZ.');
+                                  }
+                                } catch (e) {
+                                  feedback('erro', 'Erro ao buscar XML: ' + e.message);
+                                }
                               } else {
                                 setNotaParaLancar(nota);
                               }
