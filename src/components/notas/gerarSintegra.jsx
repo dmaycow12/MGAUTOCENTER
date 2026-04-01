@@ -44,17 +44,23 @@ export function reg10(empresa, periodo) {
 
 // Registro 11 - Dados do estabelecimento
 export function reg11(empresa) {
+  const numero = (empresa.numero || "1355").substring(0, 5).padEnd(5, " ");
+  // Telefone deve ter exatamente 10 dígitos (sem o 9 extra do celular)
+  const foneDigitos = (empresa.fone || "3438225092").replace(/\D/g, "");
+  const fone10 = foneDigitos.length >= 11
+    ? foneDigitos.substring(foneDigitos.length - 10) // pega os últimos 10
+    : foneDigitos.padEnd(10, "0").substring(0, 10);
   return (
     "11" +
-    r(empresa.logradouro, 34) +
-    r(empresa.numero, 5) +
+    r(empresa.logradouro || "RUA RUI BARBOSA", 34) +
+    numero +
     r(empresa.complemento, 22) +
-    r(empresa.bairro, 15) +
-    r((empresa.cep || "").replace(/\D/g, ""), 8) +
-    r(empresa.municipio, 34) +
-    r((empresa.fone || "").replace(/\D/g, ""), 10) +
+    r(empresa.bairro || "CENTRO", 15) +
+    r((empresa.cep || "38700327").replace(/\D/g, ""), 8) +
+    r(empresa.municipio || "Patos de Minas", 34) +
+    fone10 +
     r(empresa.ie_sub || "ISENTO", 14) +
-    r(empresa.responsavel, 28)
+    r(empresa.responsavel || "MAYCOW", 28)
   );
 }
 
