@@ -174,14 +174,14 @@ export function reg90(empresa, totais, totalLinhas) {
   const IE = (empresa.ie || "").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
   // Tipos 10 e 11 NÃO devem aparecer no Reg.90 (exigência do validador)
   const tiposValidos = Object.entries(totais).filter(([reg]) => reg !== "10" && reg !== "11");
-  const linhas = tiposValidos.map(([reg, qtd]) =>
-    "90" + CNPJ + IE + r(reg, 2) + rZ(qtd, 8) + BR + "1"
-  );
-  // "99": total = TODOS os registros do arquivo (incluindo 10, 11 e as próprias linhas do reg90)
+  const linhas = [];
+  // Gera uma linha 90 para CADA tipo (exceto 10, 11)
+  for (const [reg, qtd] of tiposValidos) {
+    linhas.push("90" + CNPJ + IE + r(reg, 2) + rZ(qtd, 8) + BR + "1");
+  }
+  // Linha 90 final com tipo "99" = total geral (inclui 10, 11, linhas 90, e o próprio 99)
   const totalGeral = totalLinhas + linhas.length + 1;
-  linhas.push(
-    "90" + CNPJ + IE + "99" + rZ(totalGeral, 8) + BR + "9"
-  );
+  linhas.push("90" + CNPJ + IE + "99" + rZ(totalGeral, 8) + BR + "9");
   return linhas; // array, não string
 }
 
