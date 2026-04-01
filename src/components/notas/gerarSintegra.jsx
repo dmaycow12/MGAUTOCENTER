@@ -62,31 +62,36 @@ export function reg11(empresa) {
 }
 
 // Registro 50 - Notas fiscais (cabeçalho)
-// NFSe NÃO entra no SINTEGRA — apenas NFe (55) e NFCe (65)
+// Layout: 2+14+14+8+2+2+3+6+4+1+13+13+12+13+13+4+1 = 125 chars + \n = 126
 export function reg50(nota, empresa) {
   const isEntrada = nota.status === "Importada";
   const codSit = nota.status === "Cancelada" ? "S" : "N";
   const modelo = nota.tipo === "NFCe" ? "65" : "55";
   const cfop = isEntrada ? "1102" : "5405";
+  // Emitente: P = próprio (saída), T = terceiros (entrada)
+  const emitente = isEntrada ? "T" : "P";
+  // CNPJ: usar empresa quando cliente não tem CNPJ válido (saídas próprias)
+  const cnpjDoc = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
+  const cnpjUsar = cnpjDoc.length >= 11 ? cnpjDoc.padEnd(14,"0").substring(0,14) : limpaCNPJ(empresa.cnpj);
 
   return (
     "50" +
-    limpaCNPJ(nota.cliente_cpf_cnpj || empresa.cnpj) +
-    limpaIE(nota.cliente_ie || "") +
-    rData(nota.data_emissao) +
-    r(nota.cliente_estado || empresa.uf, 2) +
-    r(modelo, 2) +
-    rZ(nota.serie || "1", 3) +  // zero-preenchido: "001" e não "1  "
-    rZ(nota.numero, 6) +
-    r(cfop, 5) +
-    r(nota.emitente_uf || empresa.uf, 2) +
-    rN(nota.valor_total, 13) +
-    rN(0, 13) + // base de cálculo ICMS
-    rN(0, 12) + // valor do ICMS
-    rN(nota.valor_total, 13) + // valor das operações isentas/outras
-    rN(0, 13) + // outras
-    r("0000", 4) + // alíquota ICMS
-    r(codSit, 1)
+    cnpjUsar +                           // 14
+    limpaIE(nota.cliente_ie || "") +     // 14
+    rData(nota.data_emissao) +           //  8
+    r(nota.cliente_estado || empresa.uf, 2) + //  2
+    r(modelo, 2) +                       //  2
+    rZ(nota.serie || "1", 3) +           //  3
+    rZ(nota.numero, 6) +                 //  6
+    r(cfop, 4) +                         //  4 — CFOP são 4 chars
+    emitente +                           //  1 — P ou T
+    rN(nota.valor_total, 13) +           // 13
+    rN(0, 13) +                          // 13 base ICMS
+    rN(0, 13) +                          // 13 valor ICMS (13, não 12!)
+    rN(nota.valor_total, 13) +           // 13 isentas
+    rN(0, 13) +                          // 13 outras
+    r("0000", 4) +                       //  4 alíquota
+    r(codSit, 1)                         //  1 situação
   );
 }
 
@@ -97,11 +102,9 @@ export function reg54(nota, item, numItem, empresa) {
   const cfop = nota.status === "Importada" ? "1102" : "5405";
   const cst = "060"; // Tributado com substituição tributária
   const ncm = (item.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
-  // CNPJ do cliente — nunca usar CNPJ da empresa como fallback
-  const cnpjCliente = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
-  const cnpjCampo = cnpjCliente && cnpjCliente !== empresa.cnpj.replace(/\D/g, "")
-    ? cnpjCliente.padEnd(14, "0").substring(0, 14)
-    : "00000000000000";
+  // CNPJ: mesma lógica do Reg.50 (para que o validador encontre o correspondente)
+  const cnpjDoc54 = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
+  const cnpjCampo = cnpjDoc54.length >= 11 ? cnpjDoc54.padEnd(14, "0").substring(0, 14) : limpaCNPJ(empresa.cnpj);
   // Código do produto: justificado à direita com zeros (14 chars)
   const codigoProd = r(item.codigo || "000", 14, "R", "0");
 
@@ -125,27 +128,49 @@ export function reg54(nota, item, numItem, empresa) {
   );
 }
 
-// Registro 75 removido: não necessário (arquivo de referência aceito não contém Reg.75)
-// Produtos sem correspondente em Reg.54 causam rejeição em massa
-export function reg75() { return null; }
+// Registro 75 - Cadastro de produtos
+// Layout: 2+8+8+14+8+53+6+13+13 = 125 chars + \n = 126
+// Apenas emitir produtos que aparecem nos Reg.54
+export function reg75(produto, periodoInicio, periodoFim) {
+  const ncm = (produto.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
+  return (
+    "75" +
+    rData(periodoInicio) +           //  8
+    rData(periodoFim) +              //  8
+    r(produto.codigo || "000", 14) + // 14
+    r(ncm, 8) +                      //  8
+    r(produto.descricao, 53) +       // 53
+    r(produto.unidade || "UN", 6) +  //  6
+    rN(produto.valor_venda || 0, 13) + // 13
+    rN(0, 13)                        // 13 IPI
+  );
+}
 
 // Registro 90 - Encerramento
+// Layout: 2+14+14+2+8+85+1 = 126 chars
+// Não incluir tipos 10 e 11 nos totais
 export function reg90(empresa, totais, totalLinhas) {
-  const linhas = Object.entries(totais).map(([reg, qtd]) =>
+  const BR = r("", 85); // 85 espaços em branco obrigatórios
+  // Filtrar tipos que não devem aparecer no Reg90 (10 e 11)
+  const tiposValidos = Object.entries(totais).filter(([reg]) => reg !== "10" && reg !== "11");
+  const linhas = tiposValidos.map(([reg, qtd]) =>
     "90" +
     limpaCNPJ(empresa.cnpj) +
     limpaIE(empresa.ie) +
     r(reg, 2) +
     rZ(qtd, 8) +
-    r("1", 1)
+    BR +
+    "1"
   );
+  // Última linha: tipo 99 com total geral de registros
   linhas.push(
     "90" +
     limpaCNPJ(empresa.cnpj) +
     limpaIE(empresa.ie) +
-    r("99", 2) +
+    "99" +
     rZ(totalLinhas + linhas.length + 1, 8) +
-    r("9", 1)
+    BR +
+    "9"
   );
   return linhas.join("\r\n");
 }
@@ -196,7 +221,8 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     addLinha("50", reg50(nota, empresa));
   }
 
-  // Depois: todos os Reg.54
+  // Depois: todos os Reg.54 — coletar códigos de produtos para Reg.75
+  const codigosNosItens = new Set();
   for (const nota of notasSintegra) {
     let itens = [];
     if (nota.xml_content) {
@@ -207,28 +233,26 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     }
     itens.forEach((item, idx) => {
       addLinha("54", reg54(nota, item, idx, empresa));
+      if (item.codigo) codigosNosItens.add(item.codigo);
     });
   }
 
-  // Reg 75 - removido (causa rejeição em massa se produtos sem Reg.54 correspondente)
-  // Não necessário: arquivo de referência aceito não contém Reg.75
+  // Reg 75 — apenas produtos que têm Reg.54 correspondente
   const produtosUnicos = new Map();
   estoque.forEach(p => {
-    const desc = (p.descricao || "").trim();
     const cod = (p.codigo || "").trim();
-    // Ignorar produtos sem descrição válida ou com dados inválidos
-    if (!desc || desc === "." || desc.length < 2) return;
-    if (!cod || cod === "X" || cod === "x") return;
-    if (!produtosUnicos.has(cod || p.id)) {
-      produtosUnicos.set(cod || p.id, p);
-    }
+    const desc = (p.descricao || "").trim();
+    if (!cod || !desc || desc.length < 2) return;
+    if (!codigosNosItens.has(cod)) return; // só produtos que aparecem no Reg.54
+    if (!produtosUnicos.has(cod)) produtosUnicos.set(cod, p);
   });
-  // Reg.75 desativado — não gerar
-  // for (const produto of produtosUnicos.values()) { ... }
+  for (const produto of produtosUnicos.values()) {
+    addLinha("75", reg75(produto, periodoInicio, periodoFim));
+  }
 
   // Reg 90 - encerramento
   const fechamento = reg90(empresa, totais, linhas.length);
-  const todasLinhas = [...linhas, fechamento].join("\r\n");
+  const todasLinhas = [...linhas, fechamento].join("\r\n"); // CRLF padrão Windows; validador conta só os 126 chars de dados
 
   return { conteudo: todasLinhas, totalNotas: notasPeriodo.length };
 }
