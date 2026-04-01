@@ -11,6 +11,31 @@ function rZ(v, n) { return r(String(Number(v || 0)), n, "R", "0"); }
 function rData(d) { return d ? d.replace(/-/g, "") : "        "; }
 function limpaCNPJ(c) { return (c || "").replace(/\D/g, "").padEnd(14, "0").substring(0, 14); }
 function limpaIE(ie) { return (ie || "ISENTO").padEnd(14, " ").substring(0, 14); }
+function parseXmlItens(xmlStr) {
+  if (!xmlStr || typeof xmlStr !== 'string') return [];
+  const itens = [];
+  const detRegex = /<det[\s\S]*?<\/det>/g;
+  const matches = xmlStr.match(detRegex) || [];
+  for (const det of matches) {
+    const codMatch = det.match(/<code>([^<]+)<\/code>/) || det.match(/<XFCI>([^<]+)<\/XFCI>/);
+    const xprodMatch = det.match(/<xProd>([^<]+)<\/xProd>/);
+    const ncmMatch = det.match(/<NCM>([^<]+)<\/NCM>/) || det.match(/<ncm>([^<]+)<\/ncm>/);
+    const qComMatch = det.match(/<qCom>([^<]+)<\/qCom>/) || det.match(/<qcom>([^<]+)<\/qcom>/);
+    const vUnComMatch = det.match(/<vUnCom>([^<]+)<\/vUnCom>/) || det.match(/<vuncom>([^<]+)<\/vuncom>/);
+    const vItemMatch = det.match(/<vItem>([^<]+)<\/vItem>/) || det.match(/<vitem>([^<]+)<\/vitem>/);
+    const unMatch = det.match(/<uCom>([^<]+)<\/uCom>/) || det.match(/<ucom>([^<]+)<\/ucom>/);
+    itens.push({
+      codigo: (codMatch ? codMatch[1] : '000').substring(0, 14),
+      descricao: xprodMatch ? xprodMatch[1].substring(0, 120) : 'PRODUTO',
+      ncm: ncmMatch ? ncmMatch[1].replace(/\D/g, '').padEnd(8, '0').substring(0, 8) : '87089990',
+      quantidade: parseFloat(qComMatch ? qComMatch[1] : '1'),
+      valor_unitario: parseFloat(vUnComMatch ? vUnComMatch[1] : '0'),
+      valor_total: parseFloat(vItemMatch ? vItemMatch[1] : '0'),
+      unidade: unMatch ? unMatch[1].substring(0, 6) : 'UN',
+    });
+  }
+  return itens;
+}
 
 // Registro 10 - Identificação da empresa
 export function reg10(empresa, periodo) {
@@ -215,8 +240,14 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     if (nota.xml_content) {
       try {
         const parsed = JSON.parse(nota.xml_content);
-        if (Array.isArray(parsed)) itens = parsed;
-      } catch {}
+        if (Array.isArray(parsed)) {
+          itens = parsed;
+        } else {
+          itens = parseXmlItens(nota.xml_content);
+        }
+      } catch {
+        itens = parseXmlItens(nota.xml_content);
+      }
     }
     // Se não há itens, criar item padrão com valor total da nota
     if (itens.length === 0) {
