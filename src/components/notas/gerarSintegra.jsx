@@ -43,12 +43,12 @@ export function reg10(empresa, periodo) {
 }
 
 // Registro 11 - Dados do estabelecimento
-// Layout real (baseado em arquivo homologado): 2+34+5+22+15+8+28+12 = 126 chars
 export function reg11(empresa) {
+  // Número: somente dígitos, justificado à direita com zeros (5 chars)
   const numeroDigitos = (empresa.numero || "1355").replace(/\D/g, "") || "1355";
   const numero = numeroDigitos.padStart(5, "0").slice(-5);
-  const foneDigitos = (empresa.fone || "34998791260").replace(/\D/g, "") || "34998791260";
-  const foneCampo = foneDigitos.padStart(12, "0").slice(-12);
+  // Reg.11 layout: 2+34+5+22+15+8+34+2+12+14+28 = 176 chars
+  const foneDigitos = (empresa.fone || "3438225092").replace(/\D/g, "") || "3438225092";
   return (
     "11" +
     r(empresa.logradouro || "RUA RUI BARBOSA", 34) + // 34
@@ -56,8 +56,11 @@ export function reg11(empresa) {
     r(empresa.complemento, 22) +                      // 22
     r(empresa.bairro || "CENTRO", 15) +               // 15
     r((empresa.cep || "38700327").replace(/\D/g, ""), 8) + //  8
-    r(empresa.responsavel || "MAYCOW", 28) +          // 28
-    foneCampo                                         // 12
+    r(empresa.municipio || "Patos de Minas", 34) +   // 34
+    r(empresa.uf || "MG", 2) +                        //  2
+    r(foneDigitos, 12) +                              // 12 — alinhado à esquerda, sem zero à frente
+    r(empresa.ie_sub || "ISENTO", 14) +               // 14
+    r(empresa.responsavel || "MAYCOW", 28)            // 28
   );
 }
 
