@@ -38,7 +38,6 @@ function App() {
   return (
     <QueryClientProvider client={queryClientInstance}>
       <Router>
-        <NavigationTracker />
         <AppRoutes />
       </Router>
       <Toaster />
