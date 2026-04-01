@@ -265,6 +265,97 @@ export function reg75(produto, periodoInicio, periodoFim) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// REGISTRO 85 — Informações de Exportações (Convênio ICMS 20/04)
+// Obrigatório somente para Empresas Comerciais Exportadoras e Trading Companies
+// Pos   1-  2: Tipo "85"                        X  2
+// Pos   3- 13: Nº Declaração de Exportação      N 11
+// Pos  14- 21: Data da Declaração (AAAAMMDD)    N  8
+// Pos  22- 22: Averbação (S/N)                  X  1
+// Pos  23- 34: Nº Registro de Exportação        N 12
+// Pos  35- 42: Data do Registro (AAAAMMDD)      N  8
+// Pos  43- 58: Nº Conhecimento de Embarque      X 16
+// Pos  59- 66: Data do Conhecimento (AAAAMMDD)  N  8
+// Pos  67- 68: Tipo do Conhecimento (SISCOMEX)  N  2
+// Pos  69- 72: País de destino (SISCOMEX)       N  4
+// Pos  73- 80: Nº Comprovante de Exportação     N  8
+// Pos  81- 88: Data do Comprovante (AAAAMMDD)   N  8
+// Pos  89- 94: Nº NF de Exportação              N  6
+// Pos  95-102: Data de emissão NF (AAAAMMDD)    N  8
+// Pos 103-104: Modelo da NF                     N  2
+// Pos 105-107: Série da NF                      N  3
+// Pos 108-126: Brancos                          X 19
+// Total: 2+11+8+1+12+8+16+8+2+4+8+8+6+8+2+3+19 = 126 ✓
+// ─────────────────────────────────────────────────────────────────────────────
+export function reg85(exp) {
+  const linha =
+    "85" +
+    N(exp.numDeclaracao || 0, 11) +         // N 11
+    DATA(exp.dataDeclaracao) +              // N  8
+    X(exp.averbacao || "N", 1) +            // X  1
+    N(exp.numRegistroExport || 0, 12) +     // N 12
+    DATA(exp.dataRegistro) +               // N  8
+    X(exp.conhecimentoEmbarque, 16) +       // X 16
+    DATA(exp.dataConhecimento) +           // N  8
+    N(exp.tipoConhecimento || 99, 2) +      // N  2
+    N(exp.paisDestino || 0, 4) +            // N  4
+    N(exp.numComprovante || 0, 8) +         // N  8
+    DATA(exp.dataComprovante) +            // N  8
+    N(exp.numNFExportacao || 0, 6) +        // N  6
+    DATA(exp.dataEmissaoNF) +              // N  8
+    N(exp.modeloNF || 55, 2) +             // N  2
+    N(exp.serieNF || 1, 3) +               // N  3
+    " ".repeat(19);                         // X 19 — brancos
+  if (linha.length !== 126) throw new Error(`REG85 tem ${linha.length} posições (esperado 126)`);
+  return linha;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REGISTRO 86 — Informações Complementares de Exportações (Convênio ICMS 20/04)
+// Obrigatório somente para Empresas Comerciais Exportadoras e Trading Companies
+// Pos   1-  2: Tipo "86"                        X  2
+// Pos   3- 14: Nº Registro de Exportação        N 12
+// Pos  15- 22: Data do Registro (AAAAMMDD)      N  8
+// Pos  23- 36: CNPJ do remetente               N 14
+// Pos  37- 50: IE do remetente                  X 14
+// Pos  51- 52: UF do remetente                  X  2
+// Pos  53- 58: Nº NF de remessa                 N  6
+// Pos  59- 66: Data de emissão NF (AAAAMMDD)    N  8
+// Pos  67- 68: Modelo do documento              N  2
+// Pos  69- 71: Série da NF                      N  3
+// Pos  72- 85: Código do produto (= Reg.75)     X 14
+// Pos  86- 96: Quantidade exportada (3 dec)     N 11
+// Pos  97-108: Valor unitário (2 dec)           N 12
+// Pos 109-120: Valor total do produto (2 dec)   N 12
+// Pos 121-121: Código de relacionamento         N  1
+// Pos 122-126: Brancos                          X  5
+// Total: 2+12+8+14+14+2+6+8+2+3+14+11+12+12+1+5 = 126 ✓
+// ─────────────────────────────────────────────────────────────────────────────
+export function reg86(exp) {
+  const qtdInt  = Math.round(Number(exp.quantidade  || 0) * 1000);
+  const vUnitInt = Math.round(Number(exp.valorUnitario || 0) * 100);
+  const vTotalInt = Math.round(Number(exp.valorTotal || 0) * 100);
+  const linha =
+    "86" +
+    N(exp.numRegistroExport || 0, 12) +  // N 12
+    DATA(exp.dataRegistro) +             // N  8
+    CNPJ(exp.cnpjRemetente) +            // N 14
+    IE(exp.ieRemetente) +                // X 14
+    X(exp.ufRemetente || "", 2) +        // X  2
+    N(exp.numNFRemessa || 0, 6) +        // N  6
+    DATA(exp.dataEmissaoNF) +           // N  8
+    N(exp.modeloNF || 55, 2) +           // N  2
+    N(exp.serieNF || 1, 3) +             // N  3
+    X(exp.codigoProduto || "", 14) +     // X 14
+    String(qtdInt).padStart(11, "0").slice(-11) +   // N 11
+    String(vUnitInt).padStart(12, "0").slice(-12) + // N 12
+    String(vTotalInt).padStart(12, "0").slice(-12) + // N 12
+    N(exp.relacionamento ?? 0, 1) +      // N  1
+    " ".repeat(5);                        // X  5 — brancos
+  if (linha.length !== 126) throw new Error(`REG86 tem ${linha.length} posições (esperado 126)`);
+  return linha;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // REGISTRO 90 — Encerramento (totalizadores)
 // Pos   1-  2: Tipo "90"                        N  2
 // Pos   3- 16: CNPJ                             N 14
