@@ -218,6 +218,18 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
         if (Array.isArray(parsed)) itens = parsed;
       } catch {}
     }
+    // Se não há itens, criar item padrão com valor total da nota
+    if (itens.length === 0) {
+      itens = [{
+        codigo: "000",
+        descricao: "PRODUTO",
+        ncm: "87089990",
+        unidade: "UN",
+        quantidade: 1,
+        valor_unitario: nota.valor_total || 0,
+        valor_total: nota.valor_total || 0,
+      }];
+    }
     itens.forEach((item, idx) => {
       addLinha("54", reg54(nota, item, idx, empresa));
       if (item.codigo) {
