@@ -47,9 +47,9 @@ export function reg11(empresa) {
   // Número: somente dígitos, justificado à direita com zeros (5 chars)
   const numeroDigitos = (empresa.numero || "1355").replace(/\D/g, "") || "1355";
   const numero = numeroDigitos.padStart(5, "0").slice(-5);
-  // Telefone: exatamente 10 dígitos — pega os primeiros 10 dígitos do número
+  // Telefone: 10 ou 11 dígitos (fixo ou celular) — usar todos os dígitos disponíveis
   const foneDigitos = (empresa.fone || "3438225092").replace(/\D/g, "");
-  const fone10 = foneDigitos.substring(0, 10).padEnd(10, "0");
+  const fone10 = foneDigitos.substring(0, 11).padEnd(10, "0");
   return (
     "11" +
     r(empresa.logradouro || "RUA RUI BARBOSA", 34) +
