@@ -90,50 +90,44 @@ export function reg50(nota, empresa) {
   );
 }
 
-// Registro 54 - Itens das notas (se disponível)
+// Registro 54 - Itens das notas
+// Layout exato: 2+14+2+3+6+4+3+3+14+11+12+12+12+12+12+4 = 126 chars
 export function reg54(nota, item, numItem, empresa) {
   const modelo = nota.tipo === "NFCe" ? "65" : "55";
   const cfop = nota.status === "Importada" ? "1102" : "5405";
+  const cst = "060"; // Tributado com substituição tributária
   const ncm = (item.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
+  // CNPJ do cliente — nunca usar CNPJ da empresa como fallback
+  const cnpjCliente = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
+  const cnpjCampo = cnpjCliente && cnpjCliente !== empresa.cnpj.replace(/\D/g, "")
+    ? cnpjCliente.padEnd(14, "0").substring(0, 14)
+    : "00000000000000";
+  // Código do produto: justificado à direita com zeros (14 chars)
+  const codigoProd = r(item.codigo || "000", 14, "R", "0");
 
   return (
     "54" +
-    limpaCNPJ(nota.cliente_cpf_cnpj || empresa.cnpj) +
-    r(modelo, 2) +
-    r(nota.serie || "1", 3) +
-    rZ(nota.numero, 6) +
-    r(cfop, 5) +
-    r(ncm, 8) +
-    rZ(numItem + 1, 3) +
-    r(item.codigo || "000", 14) +
-    rN(item.quantidade || 1, 11) +
-    rN(item.valor_unitario || item.valor_total / (item.quantidade || 1), 12) +
-    rN(0, 12) + // desconto
-    rN(0, 12) + // base ICMS
-    rN(0, 12) + // valor ICMS
-    rN(0, 12) + // base ICMS-ST
-    rN(0, 12) + // valor ICMS-ST
-    rN(item.valor_total, 12) + // valor total
-    r("0", 4)   // alíquota ICMS
+    cnpjCampo +                   // 14
+    r(modelo, 2) +                // 2
+    r(nota.serie || "1", 3) +     // 3
+    rZ(nota.numero, 6) +          // 6
+    r(cfop, 4) +                  // 4 — cfop são 4 chars
+    r(cst, 3) +                   // 3 — CST
+    rZ(numItem + 1, 3) +          // 3
+    codigoProd +                  // 14
+    rN(item.quantidade || 1, 11) + // 11
+    rN(item.valor_unitario || (item.valor_total / (item.quantidade || 1)), 12) + // 12
+    rN(0, 12) +                   // 12 — desconto
+    rN(0, 12) +                   // 12 — base ICMS
+    rN(0, 12) +                   // 12 — valor ICMS
+    rN(0, 12) +                   // 12 — IPI
+    r("0000", 4)                  //  4 — alíquota ICMS
   );
 }
 
-// Registro 75 - Cadastro de produtos
-// Layout exato: 2+8+8+14+8+53+6+13+13 = 125 chars (padrão SINTEGRA IN 68/95)
-export function reg75(produto, periodoInicio, periodoFim) {
-  const ncm = (produto.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
-  return (
-    "75" +
-    rData(periodoInicio) +           //  8 — data início período
-    rData(periodoFim) +              //  8 — data fim período
-    r(produto.codigo || "000", 14) + // 14 — código do produto/serviço
-    r(ncm, 8) +                      //  8 — código NCM
-    r(produto.descricao, 53) +       // 53 — descrição
-    r(produto.unidade || "UN", 6) +  //  6 — unidade de medida
-    rN(produto.valor_venda || 0, 13) + // 13 — valor unitário (2 dec. embutidos)
-    rN(0, 13)                        // 13 — valor IPI (0 se não aplica)
-  );
-}
+// Registro 75 removido: não necessário (arquivo de referência aceito não contém Reg.75)
+// Produtos sem correspondente em Reg.54 causam rejeição em massa
+export function reg75() { return null; }
 
 // Registro 90 - Encerramento
 export function reg90(empresa, totais, totalLinhas) {
@@ -194,12 +188,16 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     return d >= periodoInicio && d <= periodoFim && n.status !== "Rascunho";
   });
 
-  // Reg 50 e 54 — apenas NFe e NFCe (NFSe não entra no SINTEGRA)
+  // Reg 50 — todos primeiro, depois Reg 54 (SINTEGRA exige ordem crescente de tipo)
   const notasSintegra = notasPeriodo.filter(n => n.tipo === "NFe" || n.tipo === "NFCe");
+
+  // Primeiro: todos os Reg.50
   for (const nota of notasSintegra) {
     addLinha("50", reg50(nota, empresa));
+  }
 
-    // Tentar extrair itens do xml_content
+  // Depois: todos os Reg.54
+  for (const nota of notasSintegra) {
     let itens = [];
     if (nota.xml_content) {
       try {
@@ -212,7 +210,8 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     });
   }
 
-  // Reg 75 - produtos do estoque
+  // Reg 75 - removido (causa rejeição em massa se produtos sem Reg.54 correspondente)
+  // Não necessário: arquivo de referência aceito não contém Reg.75
   const produtosUnicos = new Map();
   estoque.forEach(p => {
     const desc = (p.descricao || "").trim();
@@ -224,9 +223,8 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
       produtosUnicos.set(cod || p.id, p);
     }
   });
-  for (const produto of produtosUnicos.values()) {
-    addLinha("75", reg75(produto, periodoInicio, periodoFim));
-  }
+  // Reg.75 desativado — não gerar
+  // for (const produto of produtosUnicos.values()) { ... }
 
   // Reg 90 - encerramento
   const fechamento = reg90(empresa, totais, linhas.length);
