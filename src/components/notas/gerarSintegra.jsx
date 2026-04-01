@@ -14,9 +14,18 @@ function limpaIE(ie) { return (ie || "ISENTO").padEnd(14, " ").substring(0, 14);
 
 // Registro 10 - Identificação da empresa
 export function reg10(empresa, periodo) {
-  // IE no Reg.10: números ou "ISENTO" com espaços (14 chars) — nunca em branco
-  const ieNumerica = (empresa.ie || "").replace(/\D/g, "");
-  const ieCampo = ieNumerica ? ieNumerica.padEnd(14, " ").substring(0, 14) : "ISENTO        ";
+  // IE: pega somente dígitos; se vazio usa a IE padrão da MG AUTOCENTER
+  const ieSoDigitos = (empresa.ie || "").replace(/\D/g, "");
+  const ieUsar = ieSoDigitos || "0048295510070";
+  const ieCampo = ieUsar.padEnd(14, " ").substring(0, 14);
+  const fax = (empresa.fax || "").replace(/\D/g, "") || "0000000000";
+  // Campos fixos do layout:
+  // pos 124 = código identificação estrutura: "3" = Convênio 76/03 e 20/04
+  // pos 125 = natureza das operações: "3" = Totalidade das operações do informante
+  // pos 126 = finalidade: "1" = Normal
+  const COD_ESTRUTURA = "3";
+  const NATUREZA = "3";
+  const FINALIDADE = "1";
   return (
     "10" +
     limpaCNPJ(empresa.cnpj) +
@@ -24,12 +33,12 @@ export function reg10(empresa, periodo) {
     r(empresa.nome, 35) +
     r(empresa.municipio, 30) +
     r(empresa.uf, 2) +
-    r((empresa.fax || "").replace(/\D/g, "") || "0000000000", 10) +
+    r(fax.substring(0, 10).padEnd(10, "0"), 10) +
     rData(periodo.inicio) +
     rData(periodo.fim) +
-    "3" + // código identificação estrutura: 3=para fatos a partir de 01/01/2004
-    "3" + // natureza da operação: 3=totalidade das operações do informante
-    "1"   // finalidade do arquivo: 1=normal
+    COD_ESTRUTURA +
+    NATUREZA +
+    FINALIDADE
   );
 }
 
