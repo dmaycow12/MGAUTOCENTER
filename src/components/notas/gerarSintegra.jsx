@@ -116,8 +116,7 @@ export function reg54(nota, item, numItem, empresa) {
 }
 
 // Registro 75 - Cadastro de produtos
-// Layout CORRETO Convênio 76/03 item 20: 2+8+8+14+8+53+6+5+4+5+13 = 126 chars
-// Campo 08: Alíq. IPI (5), Campo 09: Alíq. ICMS (4), Campo 10: Red. BC (5), Campo 11: BC ST (13)
+// Layout: 2+8+8+14+8+53+6+13+13 = 125 chars + \n = 126
 export function reg75(produto, periodoInicio, periodoFim) {
   const ncm = (produto.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
   // Código LEFT-align (igual ao Reg.54) para match do validador
@@ -129,10 +128,8 @@ export function reg75(produto, periodoInicio, periodoFim) {
     r(ncm, 8) +                      //  8
     r(produto.descricao, 53) +       // 53
     r(produto.unidade || "UN", 6) +  //  6
-    rZ(0, 5) +                       //  5 — alíquota IPI (00000 = 0,00%)
-    rZ(0, 4) +                       //  4 — alíquota ICMS (0000 = 0,00%)
-    rZ(0, 5) +                       //  5 — redução BC ICMS (00000)
-    rN(0, 13)                        // 13 — BC ICMS substituição tributária
+    rN(produto.valor_venda || 0, 13) + // 13
+    rN(0, 13)                        // 13 IPI
   );
 }
 
