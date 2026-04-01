@@ -28,7 +28,7 @@ export function reg10(empresa, periodo) {
     rData(periodo.inicio) +
     rData(periodo.fim) +
     "3" + // código identificação estrutura: 3=para fatos a partir de 01/01/2004
-    "1" + // natureza da operação: 1=normal
+    "3" + // natureza da operação: 3=totalidade das operações do informante
     "1"   // finalidade do arquivo: 1=normal
   );
 }
@@ -150,7 +150,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
 
   const empresa = {
     cnpj: cfg("cnpj") || "54043647000120",
-    ie: cfg("inscricao_estadual") || "",
+    ie: cfg("inscricao_estadual") || "0048295510070",
     nome: cfg("razao_social") || "MG AUTOCENTER LTDA",
     municipio: cfg("municipio") || "Patos de Minas",
     uf: cfg("uf") || "MG",
