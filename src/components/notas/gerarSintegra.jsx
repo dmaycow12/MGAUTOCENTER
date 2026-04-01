@@ -61,7 +61,7 @@ export function reg50(nota, empresa) {
   const cfop = isEntrada ? "1102" : "5405";
   const emitente = isEntrada ? "T" : "P";
   const cnpjDoc = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
-  const cnpjUsar = cnpjDoc.length >= 11 ? cnpjDoc.padEnd(14, "0").substring(0, 14) : limpaCNPJ(empresa.cnpj);
+  const cnpjUsar = cnpjDoc.length >= 11 ? cnpjDoc.padEnd(14, "0").substring(0, 14) : "00000000000000";
 
   return (
     "50" +
@@ -91,7 +91,7 @@ export function reg54(nota, item, numItem, empresa) {
   const cst = "060";
   const ncm = (item.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
   const cnpjDoc54 = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
-  const cnpjCampo = cnpjDoc54.length >= 11 ? cnpjDoc54.padEnd(14, "0").substring(0, 14) : limpaCNPJ(empresa.cnpj);
+  const cnpjCampo = cnpjDoc54.length >= 11 ? cnpjDoc54.padEnd(14, "0").substring(0, 14) : "00000000000000";
   // Código LEFT-align (igual ao Reg.75) para que o validador faça o match
   const codigoProd = r(item.codigo || "000", 14);
 
@@ -140,27 +140,18 @@ export function reg75(produto, periodoInicio, periodoFim) {
 // Retorna ARRAY de strings (não joined) — quem une é o gerarArquivoSintegra
 export function reg90(empresa, totais, totalLinhas) {
   const BR = r("", 85);
+  const CNPJ = limpaCNPJ(empresa.cnpj);
+  // IE: apenas dígitos para garantir alinhamento correto dos campos
+  const IE = (empresa.ie || "").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
   // Tipos 10 e 11 NÃO devem aparecer no Reg.90 (exigência do validador)
   const tiposValidos = Object.entries(totais).filter(([reg]) => reg !== "10" && reg !== "11");
   const linhas = tiposValidos.map(([reg, qtd]) =>
-    "90" +
-    limpaCNPJ(empresa.cnpj) +
-    limpaIE(empresa.ie) +
-    r(reg, 2) +
-    rZ(qtd, 8) +
-    BR +
-    "1"
+    "90" + CNPJ + IE + r(reg, 2) + rZ(qtd, 8) + BR + "1"
   );
   // "99": total = TODOS os registros do arquivo (incluindo 10, 11 e as próprias linhas do reg90)
   const totalGeral = totalLinhas + linhas.length + 1;
   linhas.push(
-    "90" +
-    limpaCNPJ(empresa.cnpj) +
-    limpaIE(empresa.ie) +
-    "99" +
-    rZ(totalGeral, 8) +
-    BR +
-    "9"
+    "90" + CNPJ + IE + "99" + rZ(totalGeral, 8) + BR + "9"
   );
   return linhas; // array, não string
 }
@@ -196,7 +187,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
   addLinha("11", reg11(empresa));
 
   const notasPeriodo = notas.filter(n => {
-    const d = n.data_emissao || "";
+    const d = (n.data_emissao || "").substring(0, 10); // suporta datetime com hora
     return d >= periodoInicio && d <= periodoFim && n.status !== "Rascunho";
   });
 
