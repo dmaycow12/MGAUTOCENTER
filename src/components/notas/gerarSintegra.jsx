@@ -57,8 +57,8 @@ export function reg11(empresa) {
     r(empresa.bairro || "CENTRO", 15) +               // 15
     r((empresa.cep || "38700327").replace(/\D/g, ""), 8) + //  8
     r(empresa.municipio || "Patos de Minas", 34) +   // 34
-    r(empresa.uf || "MG", 2) +                        //  2 — UF (estava faltando!)
-    r(foneDigitos, 12, "R", "0") +                    // 12
+    r(empresa.uf || "MG", 2) +                        //  2
+    r(foneDigitos, 12) +                              // 12 — alinhado à esquerda, sem zero à frente
     r(empresa.ie_sub || "ISENTO", 14) +               // 14
     r(empresa.responsavel || "MAYCOW", 28)            // 28
   );
