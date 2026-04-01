@@ -139,7 +139,7 @@ export function reg75(produto, periodoInicio, periodoFim) {
 // Layout: 2+14+14+2+8+85+1 = 126 chars
 // Retorna ARRAY de strings (não joined) — quem une é o gerarArquivoSintegra
 export function reg90(empresa, totais, totalLinhas) {
-  const BR = r("", 87); // 2 chars extras para alinhar com posição 128
+  const BR = r("", 85);
   const CNPJ = limpaCNPJ(empresa.cnpj);
   // IE: apenas dígitos para garantir alinhamento correto dos campos
   const IE = (empresa.ie || "").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
