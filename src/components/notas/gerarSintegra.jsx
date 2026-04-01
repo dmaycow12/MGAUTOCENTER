@@ -8,7 +8,11 @@ function r(str, n, dir = "L", pad = " ") {
 }
 function rN(v, n) { return r(Math.round(Number(v || 0) * 100), n, "R", "0"); }
 function rZ(v, n) { return r(String(Number(v || 0)), n, "R", "0"); }
-function rData(d) { return d ? d.replace(/-/g, "") : "        "; }
+function rData(d) {
+  if (!d) return "00000000"; // data inválida vira zeros
+  const clean = String(d).substring(0, 10).replace(/-/g, "");
+  return clean.length === 8 ? clean : "00000000";
+}
 function limpaCNPJ(c) { return (c || "").replace(/\D/g, "").padEnd(14, "0").substring(0, 14); }
 function limpaIE(ie) { return (ie || "ISENTO").padEnd(14, " ").substring(0, 14); }
 function parseXmlItens(xmlStr) {
