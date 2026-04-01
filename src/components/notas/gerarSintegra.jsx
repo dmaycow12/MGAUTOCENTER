@@ -70,7 +70,7 @@ export function reg10(empresa, periodo) {
     fax +                          // N 10
     DATA(periodo.inicio) +         // N  8
     DATA(periodo.fim) +            // N  8
-    "2" +                          // X  1 — versão atual do convênio
+    "3" +                          // X  1 — código 3 obrigatório a partir de 01/01/2004
     "3" +                          // X  1 — totalidade das operações
     "1";                           // X  1 — normal
   if (linha.length !== 126) throw new Error(`REG10 tem ${linha.length} posições (esperado 126)`);
