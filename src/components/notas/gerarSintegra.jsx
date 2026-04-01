@@ -140,8 +140,11 @@ export function reg75(produto, periodoInicio, periodoFim) {
 // Retorna ARRAY de strings (não joined) — quem une é o gerarArquivoSintegra
 export function reg90(empresa, totais, totalLinhas) {
   const BR = r("", 85);
-  // Tipos 10 e 11 NÃO devem aparecer no Reg.90 (exigência do validador)
+  // Tipos 10 e 11 NÃO devem aparecer no Reg.90
   const tiposValidos = Object.entries(totais).filter(([reg]) => reg !== "10" && reg !== "11");
+  // totalReg90 = linhas dos tipos válidos + linha do próprio tipo "90" + linha "99"
+  const totalReg90 = tiposValidos.length + 2;
+
   const linhas = tiposValidos.map(([reg, qtd]) =>
     "90" +
     limpaCNPJ(empresa.cnpj) +
@@ -151,8 +154,20 @@ export function reg90(empresa, totais, totalLinhas) {
     BR +
     "1"
   );
-  // "99": total = TODOS os registros do arquivo (incluindo 10, 11 e as próprias linhas do reg90)
-  const totalGeral = totalLinhas + linhas.length + 1;
+
+  // Linha obrigatória: tipo "90" informa a contagem das próprias linhas do Reg.90
+  linhas.push(
+    "90" +
+    limpaCNPJ(empresa.cnpj) +
+    limpaIE(empresa.ie) +
+    "90" +
+    rZ(totalReg90, 8) +
+    BR +
+    "1"
+  );
+
+  // "99": total geral = todos os registros do arquivo incluindo o próprio Reg.90
+  const totalGeral = totalLinhas + totalReg90;
   linhas.push(
     "90" +
     limpaCNPJ(empresa.cnpj) +
@@ -162,6 +177,7 @@ export function reg90(empresa, totais, totalLinhas) {
     BR +
     "9"
   );
+
   return linhas; // array, não string
 }
 
