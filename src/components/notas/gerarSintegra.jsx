@@ -47,20 +47,20 @@ export function reg11(empresa) {
   // Número: somente dígitos, justificado à direita com zeros (5 chars)
   const numeroDigitos = (empresa.numero || "1355").replace(/\D/g, "") || "1355";
   const numero = numeroDigitos.padStart(5, "0").slice(-5);
-  // Telefone: 10 ou 11 dígitos (fixo ou celular) — usar todos os dígitos disponíveis
-  const foneDigitos = (empresa.fone || "3438225092").replace(/\D/g, "");
-  const fone10 = foneDigitos.substring(0, 11).padEnd(10, "0");
+  // Reg.11 layout: 2+34+5+22+15+8+34+2+12+14+28 = 176 chars
+  const foneDigitos = (empresa.fone || "3438225092").replace(/\D/g, "") || "3438225092";
   return (
     "11" +
-    r(empresa.logradouro || "RUA RUI BARBOSA", 34) +
-    numero +
-    r(empresa.complemento, 22) +
-    r(empresa.bairro || "CENTRO", 15) +
-    r((empresa.cep || "38700327").replace(/\D/g, ""), 8) +
-    r(empresa.municipio || "Patos de Minas", 34) +
-    fone10 +
-    r(empresa.ie_sub || "ISENTO", 14) +
-    r(empresa.responsavel || "MAYCOW", 28)
+    r(empresa.logradouro || "RUA RUI BARBOSA", 34) + // 34
+    numero +                                          //  5
+    r(empresa.complemento, 22) +                      // 22
+    r(empresa.bairro || "CENTRO", 15) +               // 15
+    r((empresa.cep || "38700327").replace(/\D/g, ""), 8) + //  8
+    r(empresa.municipio || "Patos de Minas", 34) +   // 34
+    r(empresa.uf || "MG", 2) +                        //  2 — UF (estava faltando!)
+    r(foneDigitos, 12, "R", "0") +                    // 12
+    r(empresa.ie_sub || "ISENTO", 14) +               // 14
+    r(empresa.responsavel || "MAYCOW", 28)            // 28
   );
 }
 
