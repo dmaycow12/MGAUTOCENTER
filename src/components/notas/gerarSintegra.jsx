@@ -140,8 +140,8 @@ export function reg75(produto, periodoInicio, periodoFim) {
 // Retorna ARRAY de strings (não joined) — quem une é o gerarArquivoSintegra
 export function reg90(empresa, totais, totalLinhas) {
   const BR = r("", 85);
-  const tiposValidos = Object.entries(totais).filter(([reg]) => reg !== "10" && reg !== "11");
-  const linhas = tiposValidos.map(([reg, qtd]) =>
+  // Gerar uma linha por tipo (TODOS os tipos, inclusive 10 e 11)
+  const linhas = Object.entries(totais).map(([reg, qtd]) =>
     "90" +
     limpaCNPJ(empresa.cnpj) +
     limpaIE(empresa.ie) +
@@ -150,8 +150,8 @@ export function reg90(empresa, totais, totalLinhas) {
     BR +
     "1"
   );
-  // Última linha: tipo 99 com total geral (todos os registros incluindo as linhas do Reg.90)
-  const totalGeral = totalLinhas + linhas.length + 1; // +1 pela própria linha 99
+  // Linha "99": total geral = todos os registros de dados + linhas do próprio reg90 (inclusive esta)
+  const totalGeral = totalLinhas + linhas.length + 1;
   linhas.push(
     "90" +
     limpaCNPJ(empresa.cnpj) +
@@ -215,8 +215,9 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     addLinha("50", reg50(nota, empresa));
   }
 
-  // Reg.54 — depois, coletar códigos para Reg.75
+  // Reg.54 — depois, coletar dados dos produtos para Reg.75
   const codigosNosItens = new Set();
+  const itensPorCodigo = new Map(); // fallback para Reg.75 quando não há estoque
   for (const nota of notasSintegra) {
     let itens = [];
     if (nota.xml_content) {
@@ -227,12 +228,16 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     }
     itens.forEach((item, idx) => {
       addLinha("54", reg54(nota, item, idx, empresa));
-      if (item.codigo) codigosNosItens.add(item.codigo);
+      if (item.codigo) {
+        codigosNosItens.add(item.codigo);
+        if (!itensPorCodigo.has(item.codigo)) itensPorCodigo.set(item.codigo, item);
+      }
     });
   }
 
-  // Reg.75 — apenas produtos que aparecem nos Reg.54
+  // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
   const produtosUnicos = new Map();
+  // Prioridade 1: estoque cadastrado
   estoque.forEach(p => {
     const cod = (p.codigo || "").trim();
     const desc = (p.descricao || "").trim();
@@ -240,6 +245,17 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     if (!codigosNosItens.has(cod)) return;
     if (!produtosUnicos.has(cod)) produtosUnicos.set(cod, p);
   });
+  // Prioridade 2: item da própria NF (fallback para produtos não cadastrados)
+  for (const [cod, item] of itensPorCodigo.entries()) {
+    if (produtosUnicos.has(cod)) continue; // já tem no estoque
+    produtosUnicos.set(cod, {
+      codigo: cod,
+      descricao: item.descricao || "PRODUTO",
+      ncm: item.ncm || "87089990",
+      unidade: item.unidade || "UN",
+      valor_venda: item.valor_unitario || 0,
+    });
+  }
   for (const produto of produtosUnicos.values()) {
     addLinha("75", reg75(produto, periodoInicio, periodoFim));
   }
