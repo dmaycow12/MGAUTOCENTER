@@ -116,20 +116,22 @@ export function reg54(nota, item, numItem, empresa) {
 }
 
 // Registro 75 - Cadastro de produtos
-// Layout: 2+8+8+14+8+53+6+13+13 = 125 chars + \n = 126
+// Layout Conv. ICMS 76/03 item 20: 2+8+8+14+8+53+6+5+4+5+13 = 126 chars
+// Campos: tipo+dtIni+dtFim+codProd+NCM+desc+unid+aliqIPI+aliqICMS+reducBC+baseST
 export function reg75(produto, periodoInicio, periodoFim) {
   const ncm = (produto.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
-  // Código LEFT-align (igual ao Reg.54) para match do validador
   return (
     "75" +
-    rData(periodoInicio) +           //  8
-    rData(periodoFim) +              //  8
-    r(produto.codigo || "000", 14) + // 14 — left-align igual ao Reg.54
-    r(ncm, 8) +                      //  8
-    r(produto.descricao, 53) +       // 53
-    r(produto.unidade || "UN", 6) +  //  6
-    rN(produto.valor_venda || 0, 13) + // 13
-    rN(0, 13)                        // 13 IPI
+    rData(periodoInicio) +            //  8 data inicial
+    rData(periodoFim) +               //  8 data final
+    r(produto.codigo || "000", 14) +  // 14 código left-align (igual Reg.54)
+    r(ncm, 8) +                       //  8 NCM
+    r(produto.descricao, 53) +        // 53 descrição
+    r(produto.unidade || "UN", 6) +   //  6 unidade
+    rZ(0, 5) +                        //  5 alíquota IPI (com 2 decimais, ex: 00000)
+    r("0000", 4) +                    //  4 alíquota ICMS (com 2 decimais, ex: 0000)
+    rZ(0, 5) +                        //  5 % redução BC ICMS (com 2 decimais)
+    rZ(0, 13)                         // 13 base cálculo ICMS ST
   );
 }
 
