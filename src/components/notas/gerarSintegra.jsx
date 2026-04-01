@@ -166,23 +166,15 @@ export function reg75(produto, periodoInicio, periodoFim) {
 
 // Registro 90 - Encerramento
 // Layout: 2+14+14+2+8+85+1 = 126 chars
-// Retorna ARRAY de strings (não joined) — quem une é o gerarArquivoSintegra
+// SINTEGRA exige uma ÚNICA linha 90 com tipo "99"
 export function reg90(empresa, totais, totalLinhas) {
   const BR = r("", 85);
   const CNPJ = limpaCNPJ(empresa.cnpj);
   // IE: apenas dígitos para garantir alinhamento correto dos campos
   const IE = (empresa.ie || "").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
-  // Tipos 10 e 11 NÃO devem aparecer no Reg.90 (exigência do validador)
-  const tiposValidos = Object.entries(totais).filter(([reg]) => reg !== "10" && reg !== "11");
-  const linhas = [];
-  // Gera uma linha 90 para CADA tipo (exceto 10, 11)
-  for (const [reg, qtd] of tiposValidos) {
-    linhas.push("90" + CNPJ + IE + r(reg, 2) + rZ(qtd, 8) + BR + "1");
-  }
-  // Linha 90 final com tipo "99" = total geral (inclui 10, 11, linhas 90, e o próprio 99)
-  const totalGeral = totalLinhas + linhas.length + 1;
-  linhas.push("90" + CNPJ + IE + "99" + rZ(totalGeral, 8) + BR + "9");
-  return linhas; // array, não string
+  // Única linha 90: tipo "99" com total geral de TODOS os registros (10, 11, 50, 54, 75, 90, 99)
+  const totalGeral = totalLinhas + 1; // totalLinhas já inclui Reg.10, 11, 50, 54, 75; +1 é o próprio 90
+  return ["90" + CNPJ + IE + "99" + rZ(totalGeral, 8) + BR + "9"];
 }
 
 export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, periodoFim }) {
