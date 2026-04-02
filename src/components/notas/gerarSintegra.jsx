@@ -173,15 +173,14 @@ export function reg90(empresa, totais, linhasAnteriores) {
   const IE = (empresa.ie || "").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
 
   const tiposReg90 = ["50", "54", "75"].filter(t => totais[t] > 0);
-  // Total de linhas reg90 = uma por tipo + a linha "99"
-  const totalLinhasReg90 = tiposReg90.length + 1;
-  // Total geral = todas as linhas (10,11,50,54,75) + todas as linhas reg90
-  const totalGeral = linhasAnteriores + totalLinhasReg90;
+  // Linhas do Reg.90: uma por tipo + a linha "99" (que informa quantas linhas Reg.90 existem)
+  const totalLinhasReg90 = tiposReg90.length + 1; // inclui o próprio "99"
 
   const linhas = tiposReg90.map(tipo =>
     "90" + CNPJ + IE + tipo + rZ(totais[tipo], 8) + BR + "9"
   );
-  linhas.push("90" + CNPJ + IE + "99" + rZ(totalGeral, 8) + BR + "9");
+  // A linha "99" informa o total de linhas Reg.90 no arquivo (não o total geral)
+  linhas.push("90" + CNPJ + IE + "99" + rZ(totalLinhasReg90, 8) + BR + "9");
   return linhas;
 }
 
