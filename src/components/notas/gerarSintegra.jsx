@@ -177,12 +177,14 @@ export function reg90(empresa, totais, linhasAnteriores) {
   const totalLinhasReg90 = tiposReg90.length + 1;
   // Total GERAL = todas as linhas anteriores (10,11,50,54,75) + todas as linhas do reg90
   const totalGeral = linhasAnteriores + totalLinhasReg90;
+  // Campo 07 do Reg.90 = Número de registros tipo 90 no arquivo (não é o literal "9"!)
+  const numReg90 = String(totalLinhasReg90);
 
   const linhas = tiposReg90.map(tipo =>
-    "90" + CNPJ + IE + tipo + rZ(totais[tipo], 8) + BR + "9"
+    "90" + CNPJ + IE + tipo + rZ(totais[tipo], 8) + BR + numReg90
   );
-  // A linha "99" deve informar o total GERAL de todas as linhas do arquivo
-  linhas.push("90" + CNPJ + IE + "99" + rZ(totalGeral, 8) + BR + "9");
+  // A linha "99" informa o total GERAL de todas as linhas do arquivo
+  linhas.push("90" + CNPJ + IE + "99" + rZ(totalGeral, 8) + BR + numReg90);
   return linhas;
 }
 
