@@ -166,26 +166,14 @@ export function reg75(produto, periodoInicio, periodoFim) {
 
 // Registro 90 - Encerramento
 // Layout: 2+14+14+2+8+85+1 = 126 chars
-// SINTEGRA exige uma linha 90 para cada tipo de registro + linha final "99" com total geral
+// SINTEGRA MG: uma única linha 90 com tipo "99" e total de TODOS os registros (incluindo o próprio 90)
 export function reg90(empresa, totais, linhasAnteriores) {
   const BR = r("", 85);
   const CNPJ = limpaCNPJ(empresa.cnpj);
   const IE = (empresa.ie || "").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
-
-  const linhas90 = [];
-  // Uma linha por tipo de registro presente
-  const tiposOrdem = ["10", "11", "50", "54", "75"];
-  for (const tipo of tiposOrdem) {
-    if (totais[tipo]) {
-      linhas90.push("90" + CNPJ + IE + tipo + rZ(totais[tipo], 8) + BR + "9");
-    }
-  }
-  // Linha final "90" com tipo "99" e total geral de TODOS os registros
-  const totalLinhas90 = linhas90.length + 1; // +1 pela própria linha 99
-  const totalGeral = linhasAnteriores + totalLinhas90;
-  linhas90.push("90" + CNPJ + IE + "99" + rZ(totalGeral, 8) + BR + "9");
-
-  return linhas90;
+  // totalGeral = todas as linhas anteriores + esta linha 90
+  const totalGeral = linhasAnteriores + 1;
+  return ["90" + CNPJ + IE + "99" + rZ(totalGeral, 8) + BR + "9"];
 }
 
 export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, periodoFim }) {
