@@ -28,8 +28,9 @@ export default function Configuracoes() {
   const [feedbackUsuario, setFeedbackUsuario] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
   const [avisoUltimoGerente, setAvisoUltimoGerente] = useState(false);
-  const [buscandoNotasForaDoBanco, setBuscandoNotasForaDoBanco] = useState(false);
-  const [notasForaDoBanco, setNotasForaDoBanco] = useState([]);
+  const [nfceNumero, setNfceNumero] = useState('');
+  const [nfceSerie, setNfceSerie] = useState('1');
+  const [buscandoNFCe, setBuscandoNFCe] = useState(false);
   const [feedbackNFCe, setFeedbackNFCe] = useState(null);
 
   useEffect(() => { loadAll(); }, []);
@@ -356,77 +357,61 @@ export default function Configuracoes() {
       </Section>
 
       <Section title="Recuperar NFCes Deletadas" icon={RefreshCw}>
-        <p className="text-gray-400 text-sm mb-4">Se você cancelou uma NFCe mas ela desapareceu do banco de dados, procure aqui e restaure:</p>
+        <p className="text-gray-400 text-sm mb-4">Informe o número e série da NFCe que foi cancelada mas desapareceu do banco:</p>
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <F label="Número da NFCe">
+            <input
+              type="text"
+              value={nfceNumero}
+              onChange={e => setNfceNumero(e.target.value)}
+              className="input-dark"
+              placeholder="Ex: 155"
+            />
+          </F>
+          <F label="Série">
+            <input
+              type="text"
+              value={nfceSerie}
+              onChange={e => setNfceSerie(e.target.value)}
+              className="input-dark"
+              placeholder="Ex: 1"
+            />
+          </F>
+        </div>
         <button
           onClick={async () => {
-            setBuscandoNotasForaDoBanco(true);
+            if (!nfceNumero.trim()) return setFeedbackNFCe({ tipo: 'erro', msg: 'Informe o número da NFCe' });
+            setBuscandoNFCe(true);
             setFeedbackNFCe(null);
             try {
-              const res = await base44.functions.invoke('buscarNotasForaDoBanco', {});
+              const res = await base44.functions.invoke('buscarERestaurarNFCe', {
+                numero: nfceNumero,
+                serie: nfceSerie,
+              });
               if (res.data?.sucesso) {
-                setNotasForaDoBanco(res.data.notas_fora_do_banco || []);
-                if (res.data.quantidade === 0) {
-                  setFeedbackNFCe({ tipo: 'info', msg: 'Nenhuma NFCe fora do banco encontrada.' });
-                } else {
-                  setFeedbackNFCe({ tipo: 'sucesso', msg: `${res.data.quantidade} NFCe(s) encontrada(s) na Focus NFe!` });
-                }
+                setFeedbackNFCe({ tipo: 'sucesso', msg: res.data.mensagem || 'NFCe restaurada com sucesso!' });
+                setNfceNumero('');
+                setNfceSerie('1');
+                setTimeout(() => window.location.reload(), 2000);
               } else {
-                setFeedbackNFCe({ tipo: 'erro', msg: res.data?.erro || 'Erro ao buscar' });
+                setFeedbackNFCe({ tipo: 'erro', msg: res.data?.erro || 'Erro ao restaurar' });
               }
             } catch (e) {
               setFeedbackNFCe({ tipo: 'erro', msg: 'Erro: ' + e.message });
             }
-            setBuscandoNotasForaDoBanco(false);
+            setBuscandoNFCe(false);
           }}
-          disabled={buscandoNotasForaDoBanco}
+          disabled={buscandoNFCe || !nfceNumero.trim()}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
           style={{background:"#00ff00", color:"#000"}}
         >
-          {buscandoNotasForaDoBanco ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          {buscandoNotasForaDoBanco ? 'Buscando...' : 'Buscar NFCes'}
+          {buscandoNFCe ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+          {buscandoNFCe ? 'Buscando...' : 'Restaurar NFCe'}
         </button>
         {feedbackNFCe && (
           <div className={`mt-4 p-3 rounded-lg text-sm flex items-start gap-2 ${feedbackNFCe.tipo === 'sucesso' ? 'bg-green-500/10 text-green-400' : feedbackNFCe.tipo === 'erro' ? 'bg-red-500/10 text-red-400' : 'bg-blue-500/10 text-blue-400'}`}>
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span>{feedbackNFCe.msg}</span>
-          </div>
-        )}
-        {notasForaDoBanco.length > 0 && (
-          <div className="mt-4 space-y-2">
-            {notasForaDoBanco.map((nfce, i) => (
-              <div key={i} className="bg-gray-800 border border-gray-700 rounded-lg p-3 flex items-center justify-between">
-                <div className="text-sm">
-                  <p className="text-white font-semibold">NFCe #{nfce.numero || nfce.id}</p>
-                  <p className="text-gray-400 text-xs">Status na Focus: {nfce.status}</p>
-                </div>
-                <button
-                  onClick={async () => {
-                    try {
-                      await base44.entities.NotaFiscal.create({
-                        tipo: 'NFCe',
-                        numero: nfce.numero || '',
-                        serie: nfce.serie || '1',
-                        status: 'Emitida',
-                        cliente_nome: nfce.emitente_nome || 'CONSUMIDOR',
-                        data_emissao: nfce.data_emissao || new Date().toISOString().split('T')[0],
-                        valor_total: nfce.valor || 0,
-                        reference_id: nfce.id,
-                        chave_acesso: nfce.chave_acesso || '',
-                        pdf_url: nfce.pdf_url || '',
-                      });
-                      setFeedbackNFCe({ tipo: 'sucesso', msg: 'NFCe restaurada com sucesso!' });
-                      setNotasForaDoBanco(prev => prev.filter((_, idx) => idx !== i));
-                      setTimeout(() => window.location.reload(), 2000);
-                    } catch (e) {
-                      setFeedbackNFCe({ tipo: 'erro', msg: 'Erro ao restaurar: ' + e.message });
-                    }
-                  }}
-                  className="px-3 py-1.5 text-xs rounded bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-all"
-                >
-                  Restaurar
-                </button>
-              </div>
-            ))}
           </div>
         )}
       </Section>
