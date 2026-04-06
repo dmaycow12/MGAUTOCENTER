@@ -124,9 +124,6 @@ export default function OrdemServico() {
     setLoading(false);
   };
 
-  // Todas as ordens concluídas disponíveis para emissão em massa
-  const ordensParaMassa = filtradas;
-
   const excluir = async (id) => {
     if (!confirm("Excluir esta Ordem de Serviço?")) return;
     await base44.entities.OrdemServico.delete(id);
@@ -151,6 +148,8 @@ export default function OrdemServico() {
     .sort((a, b) => Number(a.numero || 0) - Number(b.numero || 0));
 
   if (loading) return <Loader />;
+
+  const ordensParaMassa = filtradas;
 
   return (
     <div className="space-y-4">
