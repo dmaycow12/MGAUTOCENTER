@@ -301,6 +301,12 @@ export default function NotasFiscais() {
   };
 
   const atualizarItem = (idx, campo, valor) => {
+    setErrosForm(e => {
+      if (!e.items) return e;
+      const novosItemErros = [...(e.items || [])];
+      if (novosItemErros[idx]) { novosItemErros[idx] = { ...novosItemErros[idx], [campo]: undefined }; }
+      return { ...e, items: novosItemErros };
+    });
     setForm(f => {
       const items = [...f.items];
       items[idx] = { ...items[idx], [campo]: valor };
