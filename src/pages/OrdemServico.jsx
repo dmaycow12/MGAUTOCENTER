@@ -255,7 +255,7 @@ export default function OrdemServico() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
               type="text"
-              placeholder="Buscar por OS, cliente, placa..."
+              placeholder=""
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500"
