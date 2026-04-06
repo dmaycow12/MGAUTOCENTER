@@ -235,17 +235,54 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: msgErro });
     }
 
-    const pdfUrl = normalizarUrl(result.caminho_pdf_nfsen || result.caminho_pdf_nfse || result.caminho_danfe || '');
-    const chaveAcesso = result.chave_nfe || '';
-    const mensagemSefaz = result.erros?.[0]?.mensagem || result.mensagem_sefaz || result.mensagem || '';
+    // Determina endpoint de consulta por tipo
+    const epConsulta = tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfe';
 
+    // Polling até autorizar (até 10 tentativas × 3s = 30s)
     let statusNota = 'Processando';
-    if (result.status === 'autorizado') statusNota = 'Emitida';
-    else if (result.status === 'erro_autorizacao' || result.status === 'rejeitado') {
-      if (mensagemSefaz.includes('E0160')) {
-        statusNota = 'Erro de Sincronia Governamental';
-      } else {
-        statusNota = 'Erro';
+    let pdfUrl = '';
+    let chaveAcesso = result.chave_nfe || '';
+    let mensagemSefaz = result.erros?.[0]?.mensagem || result.mensagem_sefaz || result.mensagem || '';
+    let resultFinal = result;
+
+    for (let i = 0; i < 10; i++) {
+      const st = resultFinal.status || '';
+      if (st === 'autorizado') {
+        statusNota = 'Emitida';
+        const rawPdf = resultFinal.caminho_pdf_nfsen || resultFinal.caminho_pdf_nfse || resultFinal.caminho_danfe || '';
+        const pdfUrlFull = normalizarUrl(rawPdf);
+        // Baixa o PDF e faz upload para nosso storage
+        if (pdfUrlFull) {
+          try {
+            const pdfResp = await fetch(pdfUrlFull, { headers: { 'Authorization': AUTH_HEADER } });
+            if (pdfResp.ok) {
+              const pdfBlob = await pdfResp.blob();
+              const uploaded = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfBlob });
+              pdfUrl = uploaded.file_url || pdfUrlFull;
+            } else {
+              pdfUrl = pdfUrlFull;
+            }
+          } catch {
+            pdfUrl = pdfUrlFull;
+          }
+        }
+        chaveAcesso = resultFinal.chave_nfe || resultFinal.chave_nfse || chaveAcesso;
+        mensagemSefaz = resultFinal.mensagem_sefaz || resultFinal.mensagem || '';
+        break;
+      } else if (st === 'erro_autorizacao' || st === 'rejeitado' || st === 'erro') {
+        mensagemSefaz = resultFinal.erros ? resultFinal.erros.map(e => e.mensagem).join('; ') : (resultFinal.mensagem || st);
+        statusNota = mensagemSefaz.includes('E0160') ? 'Erro de Sincronia Governamental' : 'Erro';
+        break;
+      }
+      // Ainda processando - aguarda e consulta de novo
+      if (i < 9) {
+        await new Promise(r => setTimeout(r, 3000));
+        const consultaResp = await fetch(`${FOCUSNFE_BASE}/${epConsulta}/${ref}?completo=1`, {
+          headers: { 'Authorization': AUTH_HEADER },
+        });
+        if (consultaResp.ok) {
+          resultFinal = await consultaResp.json();
+        }
       }
     }
 
@@ -277,9 +314,11 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.NotaFiscal.create(notaData);
     }
 
-    const mensagem = tipo === 'NFCe'
-      ? 'NFCe autorizada com sucesso!'
-      : 'Nota enviada para processamento. Aguarde autorizacao da SEFAZ.';
+    const mensagem = statusNota === 'Emitida'
+      ? 'Nota fiscal autorizada com sucesso!'
+      : statusNota === 'Processando'
+        ? 'Nota enviada para processamento. Aguarde autorizacao da SEFAZ.'
+        : `Erro na emissão: ${mensagemSefaz}`;
 
     // Para NFe/NFCe, atualiza config de numero se necessario
     if (tipo !== 'NFSe' && body.numero && (statusNota === 'Emitida' || statusNota === 'Processando')) {
@@ -296,7 +335,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return Response.json({ sucesso: true, mensagem, pdf: pdfUrl, status: statusNota, mensagem_sefaz: mensagemSefaz });
+    return Response.json({ sucesso: statusNota !== 'Erro', mensagem, pdf: pdfUrl, status: statusNota, mensagem_sefaz: mensagemSefaz });
 
   } catch (error) {
     return Response.json({ sucesso: false, erro: error.message });

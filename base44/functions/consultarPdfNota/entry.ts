@@ -45,7 +45,22 @@ Deno.serve(async (req) => {
     const status = data.status || '';
 
     if (status === 'autorizado') {
-      const pdfUrl = normalizarUrl(data.caminho_pdf_nfsen || data.caminho_pdf_nfse || data.caminho_danfe || '');
+      const rawPdf = data.caminho_pdf_nfsen || data.caminho_pdf_nfse || data.caminho_danfe || '';
+      const pdfUrlFull = normalizarUrl(rawPdf);
+      let pdfUrl = pdfUrlFull;
+      // Baixa e faz upload para nosso storage
+      if (pdfUrlFull) {
+        try {
+          const pdfResp = await fetch(pdfUrlFull, { headers: { 'Authorization': AUTH_HEADER } });
+          if (pdfResp.ok) {
+            const pdfBlob = await pdfResp.blob();
+            const uploaded = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfBlob });
+            pdfUrl = uploaded.file_url || pdfUrlFull;
+          }
+        } catch {
+          pdfUrl = pdfUrlFull;
+        }
+      }
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
         pdf_url: pdfUrl,
         status: 'Emitida',

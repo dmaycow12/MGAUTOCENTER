@@ -60,12 +60,31 @@ Deno.serve(async (req) => {
       else if (['erro', 'rejeitado', 'denegado', 'cancelado'].includes(statusFocus)) statusInterno = 'Erro';
 
       if (statusInterno !== 'Processando') {
+        let pdfUrl = nota.pdf_url || '';
+        if (statusInterno === 'Emitida') {
+          const rawPdf = result.caminho_pdf_nfsen || result.caminho_danfe || result.caminho_pdf_nfse || '';
+          const pdfUrlFull = rawPdf ? (rawPdf.startsWith('http') ? rawPdf : `https://api.focusnfe.com.br${rawPdf}`) : '';
+          if (pdfUrlFull && !pdfUrl) {
+            try {
+              const pdfResp = await fetch(pdfUrlFull, { headers: { 'Authorization': authHeader } });
+              if (pdfResp.ok) {
+                const pdfBlob = await pdfResp.blob();
+                const uploaded = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfBlob });
+                pdfUrl = uploaded.file_url || pdfUrlFull;
+              } else {
+                pdfUrl = pdfUrlFull;
+              }
+            } catch {
+              pdfUrl = pdfUrlFull;
+            }
+          }
+        }
         await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
           status: statusInterno,
           status_sefaz: statusFocus,
           mensagem_sefaz: result.mensagem_sefaz || result.mensagem || '',
           chave_acesso: result.chave_nfe || result.chave_nfce || result.chave_nfse || nota.chave_acesso || '',
-          pdf_url: result.caminho_pdf_nfsen || result.caminho_danfe || result.caminho_pdf_nfse || nota.pdf_url || '',
+          pdf_url: pdfUrl,
           xml_url: result.caminho_xml_nota_fiscal || nota.xml_url || '',
         });
         resultados.push({ ref, statusAnterior: 'Processando', statusNovo: statusInterno });
