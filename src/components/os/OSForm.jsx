@@ -371,7 +371,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     try {
       const parcelasNormalizadas = parcelasRef.current.map(p => ({ ...p, valor: Number(p.valor) || 0 }));
       console.log("PARCELAS AO SALVAR:", JSON.stringify(parcelasNormalizadas));
-      let formFinal = { ...form, parcelas_detalhes: parcelasNormalizadas };
+      const formaPrincipal = parcelasNormalizadas[0]?.forma_pagamento || form.forma_pagamento || "A Combinar";
+      let formFinal = { ...form, parcelas_detalhes: parcelasNormalizadas, forma_pagamento: formaPrincipal };
 
       if (!os) {
         const todas = await base44.entities.OrdemServico.list("-created_date", 500);
@@ -654,7 +655,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
                           onChange={e => updateParcela(i, "forma_pagamento", e.target.value)}
                           className="input-dark text-xs py-1.5"
                         >
-                          {["A Combinar","Boleto","Cartão","Dinheiro","PIX"].map(s => <option key={s}>{s}</option>)}
+                          {["A Combinar","Boleto","Cartão","Cheque","Dinheiro","PIX"].map(s => <option key={s}>{s}</option>)}
                         </select>
                       </div>
                     ))}

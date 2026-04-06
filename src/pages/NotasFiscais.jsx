@@ -17,7 +17,7 @@ const STATUS_COLOR = {
   Importada: "bg-blue-500/10 text-blue-400",
 };
 
-const FORMAS_PAGAMENTO = ["Dinheiro", "Cartão de Crédito", "Cartão de Débito", "PIX", "Boleto", "Transferência", "A Prazo"];
+const FORMAS_PAGAMENTO = ["A Combinar", "Boleto", "Cartão", "Cheque", "Dinheiro", "PIX"];
 
 function defaultItem() {
   return { descricao: "", quantidade: 1, valor_unitario: 0, valor_total: 0 };
