@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
@@ -57,7 +57,7 @@ function fmtValor(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export default function OSListRow({ os, notas = [], onEdit, onDelete, onRefresh }) {
+export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefresh }) {
   const temNota = notas.some(n => n.ordem_servico_id === os.id && n.status !== 'Rascunho');
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
@@ -163,7 +163,7 @@ export default function OSListRow({ os, notas = [], onEdit, onDelete, onRefresh 
     const telefone = os.cliente_telefone?.replace(/\D/g, "");
     if (!telefone) return alert("Telefone do cliente não cadastrado.");
     const linkOrcamento = `${window.location.origin}/OrcamentoPublico?id=${os.id}`;
-    let texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da OS #${os.numero}:\n`;
+    let texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da Venda #${os.numero}:\n`;
     texto += `Veículo: ${os.veiculo_modelo || ""}\nPlaca: ${os.veiculo_placa || ""}\n`;
     texto += `\n💰 *Total: ${fmtValor(os.valor_total)}*`;
     texto += `\n\n🔗 Acesse o orçamento completo:\n${linkOrcamento}`;
@@ -239,38 +239,25 @@ export default function OSListRow({ os, notas = [], onEdit, onDelete, onRefresh 
       )}
 
       <tr className="border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
-        {/* OS # */}
         <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">
           <div className="flex items-center gap-2">
             <span>#{os.numero || "—"}</span>
             {temNota && <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">✓</span>}
           </div>
         </td>
-
-        {/* Cliente */}
         <td className="px-4 py-3">
           <p className="text-white text-sm font-medium">{os.cliente_nome || "—"}</p>
         </td>
-
-        {/* Veículo */}
         <td className="px-4 py-3">
           <InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" />
         </td>
-
-        {/* Placa */}
         <td className="px-4 py-3">
           <InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono />
         </td>
-
-        {/* KM */}
         <td className="px-4 py-3">
           <InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" />
         </td>
-
-        {/* Data */}
         <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>
-
-        {/* Status dropdown */}
         <td className="px-4 py-3">
           <div className="relative inline-block">
             <button
@@ -295,8 +282,6 @@ export default function OSListRow({ os, notas = [], onEdit, onDelete, onRefresh 
             )}
           </div>
         </td>
-
-        {/* Pagamento */}
         <td className="px-4 py-3 text-gray-300 text-sm whitespace-nowrap">{(() => {
           const pd = os.parcelas_detalhes;
           if (!pd || pd.length === 0) return os.forma_pagamento || "—";
@@ -305,11 +290,7 @@ export default function OSListRow({ os, notas = [], onEdit, onDelete, onRefresh 
           if (formas.length === 1) return formas[0];
           return "Misto";
         })()}</td>
-
-        {/* Valor */}
         <td className="px-4 py-3 text-right text-green-400 font-bold text-sm whitespace-nowrap">{fmtValor(os.valor_total)}</td>
-
-        {/* Ações */}
         <td className="px-4 py-3">
           <div className="flex gap-1 justify-end">
             <button onClick={() => onEdit?.()} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all" title="Editar">

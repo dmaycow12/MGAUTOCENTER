@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
@@ -56,7 +56,7 @@ function InlineEdit({ value, onSave, placeholder = "" }) {
   );
 }
 
-export default function OSCard({ os, notas = [], onEdit, onDelete, onRefresh }) {
+export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRefresh }) {
   const temNota = notas.some(n => n.ordem_servico_id === os.id && n.status !== 'Rascunho');
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
@@ -128,12 +128,9 @@ export default function OSCard({ os, notas = [], onEdit, onDelete, onRefresh }) 
 
   const confirmarMudancaStatus = async () => {
     try {
-      // Busca dados atuais da OS antes de restaurar estoque
       const todasOS = await base44.entities.OrdemServico.list("-created_date", 1000);
       const osAtualizada = todasOS.find(o => o.id === os.id);
       const osData = osAtualizada || os;
-      
-      console.log("OS para restaurar:", osData.id, "Peças:", osData.pecas);
       
       await excluirLancamentosOS(os.id);
       await restaurarEstoque(osData.pecas || []);
@@ -142,7 +139,6 @@ export default function OSCard({ os, notas = [], onEdit, onDelete, onRefresh }) 
       setStatusPendenteCard(null);
       onRefresh?.();
     } catch (err) {
-      console.error("Erro ao reabrir OS:", err);
       alert("Erro: " + err.message);
     }
   };
@@ -153,8 +149,6 @@ export default function OSCard({ os, notas = [], onEdit, onDelete, onRefresh }) 
         const todasOS = await base44.entities.OrdemServico.list("-created_date", 1000);
         const osAtualizada = todasOS.find(o => o.id === os.id);
         const osData = osAtualizada || os;
-        
-        console.log("Excluindo OS:", osData.id, "Peças:", osData.pecas);
         
         await excluirLancamentosOS(os.id);
         await restaurarEstoque(osData.pecas || []);
@@ -179,7 +173,7 @@ export default function OSCard({ os, notas = [], onEdit, onDelete, onRefresh }) 
     const linkOrcamento = `${window.location.origin}/OrcamentoPublico?id=${os.id}`;
     const servicosList = (os.servicos || []).map((s, i) => `  ${i+1}. ${s.descricao || "Serviço"} (x${s.quantidade || 1}) — ${fmtValor(Number(s.valor||0)*Number(s.quantidade||1))}`).join("\n");
     const pecasList = (os.pecas || []).map((p, i) => `  ${i+1}. ${p.descricao || "Peça"} (x${p.quantidade || 1}) — ${fmtValor(p.valor_total)}`).join("\n");
-    let texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da OS #${os.numero}:\nVeículo: ${os.veiculo_modelo || ""}\nPlaca: ${os.veiculo_placa || ""}\n`;
+    let texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da Venda #${os.numero}:\nVeículo: ${os.veiculo_modelo || ""}\nPlaca: ${os.veiculo_placa || ""}\n`;
     if (pecasList) texto += `\n⚙️ *Peças:*\n${pecasList}\nSubtotal: ${fmtValor(os.valor_pecas)}\n`;
     if (servicosList) texto += `\n🔧 *Serviços:*\n${servicosList}\nSubtotal: ${fmtValor(os.valor_servicos)}\n`;
     if (os.desconto > 0) texto += `\nDesconto: -${fmtValor(os.desconto)}\n`;
@@ -316,15 +310,11 @@ export default function OSCard({ os, notas = [], onEdit, onDelete, onRefresh }) 
           </div>
         </div>
 
-
-
         <div className="grid grid-cols-2 border-t border-gray-800">
-          {/* Linha 1: Cliente */}
           <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
             <p className="text-white text-sm font-medium truncate">{os.cliente_nome || "—"}</p>
           </div>
-          {/* Linha 2: Veículo | Data */}
           <div className="px-3 py-2.5 border-b border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Veículo</p>
             <InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" />
@@ -333,7 +323,6 @@ export default function OSCard({ os, notas = [], onEdit, onDelete, onRefresh }) 
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Data</p>
             <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
           </div>
-          {/* Linha 3: Placa | KM */}
           <div className="px-3 py-2.5 border-b border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Placa</p>
             <InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" />
@@ -342,7 +331,6 @@ export default function OSCard({ os, notas = [], onEdit, onDelete, onRefresh }) 
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">KM</p>
             <InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" />
           </div>
-          {/* Linha 4: Pagamento | Valor */}
           <div className="px-3 py-2.5 border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Pagamento</p>
             <p className="text-white text-sm font-medium">{(() => {
