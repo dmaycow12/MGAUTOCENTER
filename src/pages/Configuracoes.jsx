@@ -140,7 +140,9 @@ export default function Configuracoes() {
   if (loading) return null;
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <form autoComplete="off" onSubmit={e => e.preventDefault()} className="space-y-6 max-w-5xl mx-auto">
+    {/* Trick to prevent Chrome autocomplete */}
+    <input type="text" name="prevent_autofill" style={{display:"none"}} autoComplete="new-password" readOnly />
       {salvo && (
         <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-sm">
           <CheckCircle className="w-5 h-5" />
@@ -151,28 +153,28 @@ export default function Configuracoes() {
       <Section title="Dados da Oficina" icon={Settings}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <F label="Nome da Oficina">
-            <input autoComplete="off" value={config.nome_oficina} onChange={e => setConfig({ ...config, nome_oficina: e.target.value })} className="input-dark" placeholder="Ex: Auto Mecânica Silva" />
+            <input autoComplete="new-password" value={config.nome_oficina} onChange={e => setConfig({ ...config, nome_oficina: e.target.value })} className="input-dark" placeholder="Ex: Auto Mecânica Silva" />
           </F>
           <F label="CNPJ">
-            <input autoComplete="off" value={config.cnpj} onChange={e => setConfig({ ...config, cnpj: e.target.value })} className="input-dark" placeholder="00.000.000/0001-00" />
+            <input autoComplete="new-password" value={config.cnpj} onChange={e => setConfig({ ...config, cnpj: e.target.value })} className="input-dark" placeholder="00.000.000/0001-00" />
           </F>
           <F label="Telefone">
-            <input autoComplete="off" value={config.telefone} onChange={e => setConfig({ ...config, telefone: e.target.value })} className="input-dark" />
+            <input autoComplete="new-password" value={config.telefone} onChange={e => setConfig({ ...config, telefone: e.target.value })} className="input-dark" />
           </F>
           <F label="E-mail">
-            <input autoComplete="off" value={config.email} onChange={e => setConfig({ ...config, email: e.target.value })} className="input-dark" />
+            <input autoComplete="new-password" value={config.email} onChange={e => setConfig({ ...config, email: e.target.value })} className="input-dark" />
           </F>
           <F label="Endereço" className="col-span-1 md:col-span-2">
-            <input autoComplete="off" value={config.endereco} onChange={e => setConfig({ ...config, endereco: e.target.value })} className="input-dark" />
+            <input autoComplete="new-password" value={config.endereco} onChange={e => setConfig({ ...config, endereco: e.target.value })} className="input-dark" />
           </F>
           <F label="CEP">
-            <input autoComplete="off" value={config.cep} onChange={e => setConfig({ ...config, cep: e.target.value })} className="input-dark" />
+            <input autoComplete="new-password" value={config.cep} onChange={e => setConfig({ ...config, cep: e.target.value })} className="input-dark" />
           </F>
           <F label="Cidade">
-            <input autoComplete="off" value={config.cidade} onChange={e => setConfig({ ...config, cidade: e.target.value })} className="input-dark" />
+            <input autoComplete="new-password" value={config.cidade} onChange={e => setConfig({ ...config, cidade: e.target.value })} className="input-dark" />
           </F>
           <F label="Estado">
-            <input autoComplete="off" value={config.estado} onChange={e => setConfig({ ...config, estado: e.target.value })} className="input-dark" maxLength={2} />
+            <input autoComplete="new-password" value={config.estado} onChange={e => setConfig({ ...config, estado: e.target.value })} className="input-dark" maxLength={2} />
           </F>
         </div>
       </Section>
@@ -357,7 +359,7 @@ export default function Configuracoes() {
       </Section>
 
       <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#22c55e; } .input-dark::placeholder { color:#6b7280; }`}</style>
-    </div>
+    </form>
   );
 }
 
