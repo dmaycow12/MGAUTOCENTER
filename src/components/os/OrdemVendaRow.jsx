@@ -282,8 +282,8 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
               </div>
             )}
           </div>
-        </td>
-        <td className="px-4 py-3 text-gray-300 text-sm whitespace-nowrap">{(() => {
+        </td>}
+        {colunas.pagamento && <td className="px-4 py-3 text-gray-300 text-sm whitespace-nowrap">{(() => {
           const pd = os.parcelas_detalhes;
           if (!pd || pd.length === 0) return os.forma_pagamento || "—";
           const formas = [...new Set(pd.map(p => p.forma_pagamento).filter(Boolean))];
