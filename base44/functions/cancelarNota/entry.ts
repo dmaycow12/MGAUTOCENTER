@@ -37,13 +37,19 @@ Deno.serve(async (req) => {
     try {
       resultFinal = JSON.parse(text);
     } catch (_) {
-      return Response.json({ sucesso: false, erro: 'Resposta inválida da Focus NFe' }, { status: 400 });
+      console.error('[FOCUS ERRO] Resposta não-JSON:', text, 'Status:', resp.status);
+      return Response.json({ sucesso: false, erro: 'Resposta inválida da Focus NFe', debug: text }, { status: 400 });
     }
+
+    console.log('[FOCUS RESPONSE]', JSON.stringify(resultFinal));
 
     // Se retornar status HTTP >= 400, é erro
     if (!resp.ok) {
-      const msgErro = resultFinal.erros ? resultFinal.erros.map(e => e.mensagem || '').filter(Boolean).join('; ') : (resultFinal.mensagem || `Erro ${resp.status}`);
-      return Response.json({ sucesso: false, erro: msgErro || 'Falha ao cancelar' }, { status: 400 });
+      const msgErro = resultFinal.erros 
+        ? resultFinal.erros.map(e => e.mensagem || '').filter(Boolean).join('; ') 
+        : (resultFinal.mensagem || resultFinal.erro || `Erro ${resp.status}`);
+      console.error('[FOCUS ERROR]', msgErro);
+      return Response.json({ sucesso: false, erro: msgErro || 'Falha ao cancelar', debug: resultFinal }, { status: 400 });
     }
 
     // Polling para confirmar cancelamento (até 12 tentativas × 2s = 24s)
