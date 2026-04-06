@@ -264,7 +264,7 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
             <button
               ref={statusBtnRef}
               onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
-              className="flex items-center justify-center gap-1 h-8 text-xs px-3 rounded-md font-semibold hover:opacity-90 transition-all whitespace-nowrap"
+              className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-md font-semibold hover:opacity-90 transition-all whitespace-nowrap"
               style={style.style}
             >
               {os.status || "—"}
