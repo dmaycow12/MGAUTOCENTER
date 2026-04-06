@@ -15,7 +15,7 @@ import {
 
 const navItems = [
   { name: "DASHBOARD", page: "Dashboard", icon: BarChart3 },
-  { name: "VENDAS", page: "OrdemServico", icon: ClipboardList },
+  { name: "ORDEM DE VENDA", page: "OrdemServico", icon: ClipboardList },
   { name: "CADASTRO", page: "Clientes", icon: Users },
   { name: "PRODUTOS", page: "Estoque", icon: Package },
   { name: "SERVIÇOS", page: "Servicos", icon: Wrench },
