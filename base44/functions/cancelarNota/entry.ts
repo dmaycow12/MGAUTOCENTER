@@ -23,28 +23,45 @@ Deno.serve(async (req) => {
     });
 
     const text = await resp.text();
-    let result;
-    try { result = JSON.parse(text); } catch { result = {}; }
+    let result = {};
+    try {
+      result = JSON.parse(text);
+    } catch (_) {
+      // Resposta não é JSON, tentar interpretar como HTML de erro
+      if (text.includes('erro') || text.includes('error')) {
+        return Response.json({ sucesso: false, erro: 'Focus NFe: ' + text.substring(0, 200) }, { status: 400 });
+      }
+    }
 
     // Polling para confirmar cancelamento (até 10 tentativas × 3s = 30s)
     let statusCancelamento = result.status || '';
     let resultFinal = result;
     
-    for (let i = 0; i < 10 && statusCancelamento !== 'cancelado'; i++) {
+    for (let i = 0; i < 10; i++) {
       if (statusCancelamento === 'cancelado') break;
       if (i < 9) {
         await new Promise(r => setTimeout(r, 3000));
-        const consultaResp = await fetch(`${FOCUSNFE_BASE}${endpoint}?completo=1`, {
-          headers: { 'Authorization': AUTH_HEADER },
-        });
-        if (consultaResp.ok) {
-          resultFinal = await consultaResp.json();
-          statusCancelamento = resultFinal.status || '';
-        }
+        try {
+          const consultaResp = await fetch(`${FOCUSNFE_BASE}${endpoint}?completo=1`, {
+            headers: { 'Authorization': AUTH_HEADER },
+          });
+          if (consultaResp.ok) {
+            const consultaText = await consultaResp.text();
+            try {
+              resultFinal = JSON.parse(consultaText);
+              statusCancelamento = resultFinal.status || '';
+            } catch (_) {}
+          }
+        } catch (_) {}
       }
     }
 
-    if (statusCancelamento === 'cancelado') {
+    // Aceita cancelado ou resposta com erro de cancelamento já feito
+    const jaFoiCancelado = statusCancelamento === 'cancelado' || 
+                           (resultFinal.mensagem && resultFinal.mensagem.includes('já foi cancelada')) ||
+                           (resultFinal.erros && resultFinal.erros.some(e => e.mensagem && e.mensagem.includes('já foi cancelada')));
+    
+    if (jaFoiCancelado) {
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
         status: 'Cancelada',
         mensagem_sefaz: resultFinal.mensagem || resultFinal.mensagem_sefaz || 'Cancelada com sucesso',
