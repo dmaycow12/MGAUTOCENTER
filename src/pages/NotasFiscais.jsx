@@ -607,6 +607,11 @@ export default function NotasFiscais() {
   };
 
   const imprimirNota = async (nota) => {
+    // NFCe: a URL do DANFCE é HTML, abrir direto
+    if (nota.tipo === 'NFCe' && nota.pdf_url) {
+      window.open(nota.pdf_url, '_blank');
+      return;
+    }
     feedback('sucesso', 'Carregando PDF...');
     try {
       const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
