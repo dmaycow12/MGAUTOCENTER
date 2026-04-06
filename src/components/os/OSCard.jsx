@@ -56,7 +56,8 @@ function InlineEdit({ value, onSave, placeholder = "" }) {
   );
 }
 
-export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
+export default function OSCard({ os, notas = [], onEdit, onDelete, onRefresh }) {
+  const temNota = notas.some(n => n.ordem_servico_id === os.id && n.status !== 'Rascunho');
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -267,6 +268,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all">
         <div className="flex items-center gap-2 px-3 py-2.5">
           <span className="text-white font-bold text-sm tracking-wide flex-shrink-0">#{os.numero || "—"}</span>
+          {temNota && <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-500/20 text-green-400">✓ NF Emitida</span>}
 
           <div className="relative flex-1">
             <button ref={statusBtnRef} onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}

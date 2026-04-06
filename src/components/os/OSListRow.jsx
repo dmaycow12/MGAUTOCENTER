@@ -57,7 +57,8 @@ function fmtValor(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
+export default function OSListRow({ os, notas = [], onEdit, onDelete, onRefresh }) {
+  const temNota = notas.some(n => n.ordem_servico_id === os.id && n.status !== 'Rascunho');
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -239,7 +240,12 @@ export default function OSListRow({ os, onEdit, onDelete, onRefresh }) {
 
       <tr className="border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
         {/* OS # */}
-        <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">#{os.numero || "—"}</td>
+        <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">
+          <div className="flex items-center gap-2">
+            <span>#{os.numero || "—"}</span>
+            {temNota && <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">✓</span>}
+          </div>
+        </td>
 
         {/* Cliente */}
         <td className="px-4 py-3">

@@ -277,9 +277,9 @@ export default function OrdemServico() {
           <p className="text-gray-400">Nenhuma Ordem de Venda encontrada</p>
         </div>
       ) : viewMode === "cards" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtradas.map(os => (
-            <OSCard key={os.id} os={os} clientes={clientes} veiculos={veiculos} onEdit={() => { setEditando(os); setShowForm(true); }} onDelete={() => excluir(os.id)} onRefresh={load} />
+       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+         {filtradas.map(os => (
+           <OSCard key={os.id} os={os} clientes={clientes} veiculos={veiculos} notas={notas} onEdit={() => { setEditando(os); setShowForm(true); }} onDelete={() => excluir(os.id)} onRefresh={load} />
           ))}
         </div>
       ) : (
@@ -305,6 +305,7 @@ export default function OrdemServico() {
                   <OSListRow
                     key={os.id}
                     os={os}
+                    notas={notas}
                     onEdit={() => { setEditando(os); setShowForm(true); }}
                     onDelete={() => excluir(os.id)}
                     onRefresh={load}
