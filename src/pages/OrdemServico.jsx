@@ -124,8 +124,8 @@ export default function OrdemServico() {
     setLoading(false);
   };
 
-  // Ordens que já tiveram NF emitida
-  const ordensComNF = ordens.filter(os => notas.some(n => n.ordem_servico_id === os.id && (n.status === 'Emitida' || n.status === 'Processando')));
+  // Todas as ordens concluídas disponíveis para emissão em massa
+  const ordensParaMassa = filtradas;
 
   const excluir = async (id) => {
     if (!confirm("Excluir esta Ordem de Serviço?")) return;
@@ -169,12 +169,12 @@ export default function OrdemServico() {
           </button>
           <button
             onClick={() => setShowEmissaoMassa(true)}
-            disabled={ordensComNF.length === 0}
+            disabled={ordensParaMassa.length === 0}
             className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
             style={{background: "#062C9B", color: "#fff"}}
-            title="Emitir NF em massa para ordens já com NF emitida"
+            title="Emitir NF em massa para as ordens filtradas"
           >
-            <FileText className="w-4 h-4" /> NF Massa {ordensComNF.length > 0 ? `(${ordensComNF.length})` : ''}
+            <FileText className="w-4 h-4" /> NF Massa ({ordensParaMassa.length})
           </button>
         </div>
 
@@ -327,7 +327,7 @@ export default function OrdemServico() {
 
       {showEmissaoMassa && (
         <ModalEmissaoMassa
-          ordens={ordensComNF}
+          ordens={ordensParaMassa}
           onClose={() => setShowEmissaoMassa(false)}
           onConcluido={() => { setShowEmissaoMassa(false); load(); }}
         />
