@@ -16,63 +16,33 @@ Deno.serve(async (req) => {
     else if (tipo === 'NFCe') endpoint = `/nfce/${ref}`;
     else endpoint = `/nfe/${ref}`;
 
-    // 1. Primeiro, consulta o status atual da nota
-    let statusAtual = '';
-    try {
-      const consultaResp = await fetch(`${FOCUSNFE_BASE}${endpoint}?completo=1`, {
-        headers: { 'Authorization': AUTH_HEADER },
-      });
-      if (consultaResp.ok) {
-        const consultaText = await consultaResp.text();
-        try {
-          const consultaData = JSON.parse(consultaText);
-          statusAtual = consultaData.status || '';
-        } catch (_) {}
-      }
-    } catch (_) {}
+    // Tenta cancelar na Focus NFe
+    const resp = await fetch(`${FOCUSNFE_BASE}${endpoint}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': AUTH_HEADER, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ justificativa: 'Cancelamento solicitado pelo emitente.' }),
+    });
 
-    // Se não está autorizado, retorna erro
-    if (statusAtual && statusAtual !== 'autorizado' && statusAtual !== 'cancelado') {
-      return Response.json({ 
-        sucesso: false, 
-        erro: `Nota em status "${statusAtual}" - só notas autorizadas podem ser canceladas` 
-      }, { status: 400 });
-    }
-
-    // Se já está cancelado, retorna sucesso
-    if (statusAtual === 'cancelado') {
-      await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { status: 'Cancelada' });
-      return Response.json({ sucesso: true, mensagem: 'Nota já estava cancelada' });
-    }
-
-    // 2. Tenta cancelar
+    const text = await resp.text();
     let resultFinal = {};
     try {
-      const resp = await fetch(`${FOCUSNFE_BASE}${endpoint}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': AUTH_HEADER, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ justificativa: 'Cancelamento solicitado pelo emitente.' }),
-      });
-
-      const text = await resp.text();
-      try {
-        resultFinal = JSON.parse(text);
-      } catch (_) {
-        resultFinal = { status: resp.status };
-      }
-
-      if (!resp.ok && resp.status !== 200) {
-        const msgErro = resultFinal.erros ? resultFinal.erros.map(e => e.mensagem || '').filter(Boolean).join('; ') : (resultFinal.mensagem || `Erro ${resp.status}`);
-        return Response.json({ sucesso: false, erro: msgErro }, { status: 400 });
-      }
-    } catch (fetchErr) {
-      return Response.json({ sucesso: false, erro: 'Falha ao conectar com Focus NFe: ' + fetchErr.message }, { status: 500 });
+      resultFinal = JSON.parse(text);
+    } catch (_) {
+      return Response.json({ sucesso: false, erro: 'Resposta inválida da Focus NFe' }, { status: 400 });
     }
 
-    // 3. Polling para confirmar cancelamento (até 15 tentativas × 2s = 30s)
-    let statusCancelamento = resultFinal.status || 'pendente';
-    for (let i = 0; i < 15 && statusCancelamento !== 'cancelado'; i++) {
-      await new Promise(r => setTimeout(r, 2000));
+    // Se retornar status HTTP >= 400, é erro
+    if (!resp.ok) {
+      const msgErro = resultFinal.erros ? resultFinal.erros.map(e => e.mensagem || '').filter(Boolean).join('; ') : (resultFinal.mensagem || `Erro ${resp.status}`);
+      return Response.json({ sucesso: false, erro: msgErro || 'Falha ao cancelar' }, { status: 400 });
+    }
+
+    // Polling para confirmar cancelamento (até 12 tentativas × 2s = 24s)
+    let statusCancelamento = resultFinal.status || 'processando';
+    for (let i = 0; i < 12 && statusCancelamento !== 'cancelado'; i++) {
+      if (i > 0) {
+        await new Promise(r => setTimeout(r, 2000));
+      }
       try {
         const consultaResp = await fetch(`${FOCUSNFE_BASE}${endpoint}?completo=1`, {
           headers: { 'Authorization': AUTH_HEADER },
@@ -87,14 +57,15 @@ Deno.serve(async (req) => {
       } catch (_) {}
     }
 
-    // 4. Confirma cancelamento no banco local
+    // Atualiza status local
     if (statusCancelamento === 'cancelado') {
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
         status: 'Cancelada',
         mensagem_sefaz: resultFinal.mensagem || resultFinal.mensagem_sefaz || 'Cancelada com sucesso',
       });
+      
       // Devolver estoque se NFe/NFCe
-      if (tipo === 'NFe' || tipo === 'NFCe') {
+      if ((tipo === 'NFe' || tipo === 'NFCe') && resultFinal.xml_url) {
         const notas = await base44.asServiceRole.entities.NotaFiscal.filter({ id: nota_id });
         if (notas[0]?.xml_content) {
           try {
@@ -117,10 +88,11 @@ Deno.serve(async (req) => {
           } catch (_) {}
         }
       }
+      
       return Response.json({ sucesso: true, mensagem: 'Nota cancelada com sucesso' });
     }
 
-    return Response.json({ sucesso: false, erro: `Cancelamento não confirmado - status atual: ${statusCancelamento}` }, { status: 400 });
+    return Response.json({ sucesso: false, erro: `Cancelamento não confirmado - status: ${statusCancelamento}` }, { status: 400 });
 
   } catch (error) {
     return Response.json({ sucesso: false, erro: 'Erro ao cancelar: ' + error.message }, { status: 500 });
