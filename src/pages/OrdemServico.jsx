@@ -11,7 +11,7 @@ const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Ag
 export default function OrdemServico() {
   const [ordens, setOrdens] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState(() => localStorage.getItem("os_search") || "");
+  const [search, setSearch] = useState("");
   const [filtroStatus, setFiltroStatus] = useState(() => {
     const saved = localStorage.getItem("os_filtroStatus");
     return saved ? JSON.parse(saved) : [];
