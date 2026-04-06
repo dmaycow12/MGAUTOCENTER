@@ -271,10 +271,10 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
               <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </button>
             {statusOpen && (
-              <div ref={statusRef} className="absolute left-0 top-full mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full p-1 z-[100] space-y-1" style={{minWidth: '160px'}}>
+              <div ref={statusRef} className="absolute left-0 top-full mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-[100] space-y-1 p-1" style={{width: '140px'}}>
                 {STATUS_OPTIONS.map(s => (
                   <button key={s} onClick={() => alterarStatus(s)}
-                    className="w-full flex items-center justify-center h-8 text-xs font-semibold rounded-md transition-all hover:opacity-90"
+                    className="w-full flex items-center justify-center h-8 text-xs font-semibold rounded-md transition-all hover:opacity-90 whitespace-nowrap"
                     style={{ background: STATUS_STYLE[s].style.background, color: "#fff" }}>
                     {s}
                   </button>
