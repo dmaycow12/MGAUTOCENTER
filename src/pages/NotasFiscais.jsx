@@ -842,6 +842,17 @@ export default function NotasFiscais() {
                   {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
                     <button title="Cancelar" onClick={() => cancelarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg transition-all"><Ban className="w-3.5 h-3.5"/></button>
                   )}
+                  {nota.status === 'Cancelada' && (
+                    <button title="Reativar para Emitida" onClick={async () => {
+                      try {
+                        await base44.entities.NotaFiscal.update(nota.id, { status: 'Emitida' });
+                        feedback('sucesso', 'Status alterado para Emitida');
+                        load();
+                      } catch (e) {
+                        feedback('erro', 'Erro ao alterar status: ' + e.message);
+                      }
+                    }} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-green-400 rounded-lg transition-all"><RefreshCw className="w-3.5 h-3.5"/></button>
+                  )}
                   <button onClick={() => excluir(nota.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
                 </div>
               </div>
@@ -932,6 +943,19 @@ export default function NotasFiscais() {
                         {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
                           <button title="Cancelar Nota" onClick={() => cancelarNota(nota)} className="p-1 text-gray-500 hover:text-orange-400 transition-all">
                             <Ban className="w-4 h-4" />
+                          </button>
+                        )}
+                        {nota.status === 'Cancelada' && (
+                          <button title="Reativar para Emitida" onClick={async () => {
+                            try {
+                              await base44.entities.NotaFiscal.update(nota.id, { status: 'Emitida' });
+                              feedback('sucesso', 'Status alterado para Emitida');
+                              load();
+                            } catch (e) {
+                              feedback('erro', 'Erro ao alterar status: ' + e.message);
+                            }
+                          }} className="p-1 text-gray-500 hover:text-green-400 transition-all">
+                            <RefreshCw className="w-4 h-4" />
                           </button>
                         )}
                         <button onClick={() => excluir(nota.id)} className="p-1 text-gray-500 hover:text-red-400 transition-all">
