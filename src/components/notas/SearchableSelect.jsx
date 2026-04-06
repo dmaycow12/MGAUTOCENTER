@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 export default function SearchableSelect({ options = [], onSelect, placeholder = 'Digite para buscar...' }) {
@@ -39,14 +39,13 @@ export default function SearchableSelect({ options = [], onSelect, placeholder =
   return (
     <div data-searchable="1">
       <div className="relative" ref={inputRef}>
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 pointer-events-none" />
         <input
           type="text"
           value={query}
           onChange={e => { setQuery(e.target.value); setOpen(true); updatePos(); }}
           onFocus={() => { setOpen(true); updatePos(); }}
           placeholder={placeholder}
-          className="input-dark pl-9 pr-8"
+          className="input-dark pr-8"
           autoComplete="off"
           autoCorrect="off"
           spellCheck="false"
