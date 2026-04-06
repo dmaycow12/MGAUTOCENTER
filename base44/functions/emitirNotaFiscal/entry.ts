@@ -124,6 +124,19 @@ Deno.serve(async (req) => {
       };
     } else if (tipo === 'NFCe') {
       endpoint = `/nfce?ref=${ref}`;
+      
+      // Calcula proximo numero NFCe: usa APENAS a config salva (fonte da verdade)
+      const configsNfce = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfce_ultimo_numero' });
+      const ultimoNfce = parseInt(configsNfce[0]?.valor || '0', 10);
+      const proximoNfce = ultimoNfce + 1;
+      
+      // Reserva o numero ANTES de enviar a Focus NFe
+      if (configsNfce.length > 0) {
+        await base44.asServiceRole.entities.Configuracao.update(configsNfce[0].id, { valor: String(proximoNfce) });
+      } else {
+        await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfce_ultimo_numero', valor: String(proximoNfce), descricao: 'Ultimo numero NFCe autorizado' });
+      }
+      
       const prodItems = (items && items.length > 0) ? items : [
         { descricao: 'Peças e serviços', quantidade: 1, valor_unitario: Number(valor_total) || 1.0, valor_total: Number(valor_total) || 1.0, ncm: '87089990', cfop: '5102' }
       ];
@@ -134,10 +147,10 @@ Deno.serve(async (req) => {
         modalidade_frete: '9',
         local_destino: '1',
         presenca_comprador: '1',
-        ...(body.numero ? { numero: Number(body.numero) } : {}),
+        numero: proximoNfce,
         ...(cpfCnpjLimpo.length === 11 ? { cpf_destinatario: cpfCnpjLimpo } : {}),
         ...(cpfCnpjLimpo.length === 14 ? { cnpj_destinatario: cpfCnpjLimpo } : {}),
-        ...(serie_manual ? { serie: serie_manual } : {}),
+        ...(serie_manual ? { serie: serie_manual } : { serie: '1' }),
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
           codigo_produto: it.codigo || `REF${idx + 1}`,
@@ -163,6 +176,19 @@ Deno.serve(async (req) => {
     } else {
       // NFe
       endpoint = `/nfe?ref=${ref}`;
+      
+      // Calcula proximo numero NFe: usa APENAS a config salva (fonte da verdade)
+      const configsNfe = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfe_ultimo_numero' });
+      const ultimoNfe = parseInt(configsNfe[0]?.valor || '0', 10);
+      const proximoNfe = ultimoNfe + 1;
+      
+      // Reserva o numero ANTES de enviar a Focus NFe
+      if (configsNfe.length > 0) {
+        await base44.asServiceRole.entities.Configuracao.update(configsNfe[0].id, { valor: String(proximoNfe) });
+      } else {
+        await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfe_ultimo_numero', valor: String(proximoNfe), descricao: 'Ultimo numero NFe autorizado' });
+      }
+      
       const prodItems = (items && items.length > 0) ? items : [
         { descricao: 'Peças de Automóveis', quantidade: 1, valor_unitario: Number(valor_total) || 1.0, valor_total: Number(valor_total) || 1.0, ncm: '87089990', cfop: '5102' }
       ];
@@ -176,6 +202,7 @@ Deno.serve(async (req) => {
         presenca_comprador: '1',
         local_destino: '1',
         nome_destinatario: (cliente_nome || 'Consumidor Final').substring(0, 60),
+        numero: proximoNfe,
         ...(cpfCnpjLimpo.length === 11 ? { cpf_destinatario: cpfCnpjLimpo } : {}),
         ...(cpfCnpjLimpo.length === 14 ? { cnpj_destinatario: cpfCnpjLimpo } : {}),
         logradouro_destinatario: cliente_endereco || 'Rua Rui Barbosa',
@@ -190,8 +217,7 @@ Deno.serve(async (req) => {
         ...(cpfCnpjLimpo.length === 14 && body.cliente_ie && body.cliente_ie.trim() ? { inscricao_estadual_destinatario: body.cliente_ie.trim() } : {}),
         consumidor_final: cpfCnpjLimpo.length === 11 || !(body.cliente_ie && body.cliente_ie.trim()) ? '1' : '0',
         modalidade_frete: '9',
-        ...(body.numero ? { numero: Number(body.numero) } : {}),
-        ...(serie_manual ? { serie: serie_manual } : {}),
+        ...(serie_manual ? { serie: serie_manual } : { serie: '1' }),
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
           codigo_produto: it.codigo || `REF${idx + 1}`,
@@ -296,6 +322,15 @@ Deno.serve(async (req) => {
       }
     }
 
+    let numeroFinal = '';
+    if (tipo === 'NFSe') {
+      numeroFinal = String(proximoRps);
+    } else if (tipo === 'NFCe') {
+      numeroFinal = String(proximoNfce);
+    } else {
+      numeroFinal = String(proximoNfe);
+    }
+    
     const notaData = {
       tipo,
       xml_content: JSON.stringify(items || []),
@@ -309,7 +344,7 @@ Deno.serve(async (req) => {
       cliente_cidade: cliente_cidade || '',
       cliente_estado: cliente_estado || '',
       forma_pagamento: forma_pagamento || '',
-      numero: tipo === 'NFSe' ? String(proximoRps) : (body.numero ? String(body.numero) : ''),
+      numero: numeroFinal,
       serie: tipo === 'NFSe' ? '900' : (serie_manual || '1'),
       status: statusNota,
       spedy_id: ref,
@@ -341,20 +376,7 @@ Deno.serve(async (req) => {
         ? 'Nota enviada para processamento. Aguarde autorizacao da SEFAZ.'
         : `Erro na emissão: ${mensagemSefaz}`;
 
-    // Para NFe/NFCe, atualiza config de numero se necessario
-    if (tipo !== 'NFSe' && body.numero && (statusNota === 'Emitida' || statusNota === 'Processando')) {
-      const chave = tipo === 'NFCe' ? 'nfce_ultimo_numero' : 'nfe_ultimo_numero';
-      const configs = await base44.asServiceRole.entities.Configuracao.filter({ chave });
-      const ultimoLocal = parseInt(configs[0]?.valor || '0', 10);
-      const numeroAtual = parseInt(body.numero, 10);
-      if (numeroAtual > ultimoLocal) {
-        if (configs.length > 0) {
-          await base44.asServiceRole.entities.Configuracao.update(configs[0].id, { valor: String(numeroAtual) });
-        } else {
-          await base44.asServiceRole.entities.Configuracao.create({ chave, valor: String(numeroAtual), descricao: `Ultimo numero ${tipo} autorizado` });
-        }
-      }
-    }
+    // Numero ja foi reservado no inicio, nao precisa atualizar novamente
 
     return Response.json({ sucesso: statusNota !== 'Erro', mensagem, pdf: pdfUrl, status: statusNota, mensagem_sefaz: mensagemSefaz });
 
