@@ -170,6 +170,7 @@ export default function NotasFiscais() {
                 cliente_bairro: os.cliente_bairro || "",
                 cliente_cidade: os.cliente_cidade || "",
                 cliente_estado: os.cliente_estado || "",
+                forma_pagamento: os.forma_pagamento || "PIX",
               };
               if (tipo === "NFSe") {
                 const servicos = os.servicos || [];
