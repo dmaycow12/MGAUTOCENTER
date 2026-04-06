@@ -278,13 +278,20 @@ Deno.serve(async (req) => {
     // Baixar estoque se NFe/NFCe e emitida com sucesso
     if (statusNota === 'Emitida' && (tipo === 'NFe' || tipo === 'NFCe')) {
       for (const it of (items || [])) {
+        const qtd = Number(it.quantidade) || 1;
+        let estoqueItem = null;
         if (it.estoque_id) {
-          const estoqueItems = await base44.asServiceRole.entities.Estoque.filter({ id: it.estoque_id });
-          if (estoqueItems.length > 0) {
-            const atual = Number(estoqueItems[0].quantidade || 0);
-            const qtd = Number(it.quantidade) || 1;
-            await base44.asServiceRole.entities.Estoque.update(it.estoque_id, { quantidade: Math.max(0, atual - qtd) });
-          }
+          const found = await base44.asServiceRole.entities.Estoque.filter({ id: it.estoque_id });
+          estoqueItem = found[0] || null;
+        }
+        // Fallback: busca pelo código se não achou por id
+        if (!estoqueItem && it.codigo) {
+          const found = await base44.asServiceRole.entities.Estoque.filter({ codigo: it.codigo });
+          estoqueItem = found[0] || null;
+        }
+        if (estoqueItem) {
+          const atual = Number(estoqueItem.quantidade || 0);
+          await base44.asServiceRole.entities.Estoque.update(estoqueItem.id, { quantidade: Math.max(0, atual - qtd) });
         }
       }
     }
