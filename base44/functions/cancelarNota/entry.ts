@@ -17,10 +17,19 @@ Deno.serve(async (req) => {
     else endpoint = `/nfe/${ref}`;
 
     // Tenta cancelar na Focus NFe
+    let bodyPayload = {};
+    if (tipo === 'NFCe') {
+      // NFCe usa padrão diferente: justificativa diretamente
+      bodyPayload = { justificativa: 'Cancelamento solicitado pelo emitente.' };
+    } else {
+      // NFe e NFSe usam mesmo padrão
+      bodyPayload = { justificativa: 'Cancelamento solicitado pelo emitente.' };
+    }
+    
     const resp = await fetch(`${FOCUSNFE_BASE}${endpoint}`, {
       method: 'DELETE',
       headers: { 'Authorization': AUTH_HEADER, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ justificativa: 'Cancelamento solicitado pelo emitente.' }),
+      body: JSON.stringify(bodyPayload),
     });
 
     const text = await resp.text();
@@ -38,7 +47,8 @@ Deno.serve(async (req) => {
     }
 
     // Polling para confirmar cancelamento (até 12 tentativas × 2s = 24s)
-    let statusCancelamento = resultFinal.status || 'processando';
+    // Para NFCe, o status pode vir como 'cancelado' ou em um objeto 'cancelamento'
+    let statusCancelamento = resultFinal.status || resultFinal.cancelamento?.status || 'processando';
     for (let i = 0; i < 12 && statusCancelamento !== 'cancelado'; i++) {
       if (i > 0) {
         await new Promise(r => setTimeout(r, 2000));
@@ -51,7 +61,8 @@ Deno.serve(async (req) => {
           const consultaText = await consultaResp.text();
           try {
             resultFinal = JSON.parse(consultaText);
-            statusCancelamento = resultFinal.status || statusCancelamento;
+            // Para NFCe, verificar em resultFinal.cancelamento.status
+            statusCancelamento = resultFinal.status || resultFinal.cancelamento?.status || statusCancelamento;
           } catch (_) {}
         }
       } catch (_) {}
