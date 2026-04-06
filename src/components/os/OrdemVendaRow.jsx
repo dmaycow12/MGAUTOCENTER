@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { ChevronDown, Pencil, Printer, Trash2, FileText, MoreVertical, AlertTriangle } from "lucide-react";
+import { ChevronDown, Pencil, Printer, Trash2, FileText, MoreVertical, AlertTriangle, CheckCircle } from "lucide-react";
 import { gerarHTMLImpressao } from "./osImpressao";
 import { reduzirEstoque, restaurarEstoque, excluirLancamentosOS } from "./estoqueUtils";
 
@@ -241,16 +241,12 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
       )}
 
       <tr className="border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
-        <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">
-          <div className="flex items-center gap-2">
-            <span>#{os.numero || "—"}</span>
-          </div>
+        <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">#{os.numero || "—"}</td>
+        <td className="px-4 py-3 text-center">
+          {temNfeProduto && <CheckCircle className="w-4 h-4 text-green-400 inline" />}
         </td>
-        <td className="px-4 py-3">
-          <div className="flex items-center gap-1">
-            {temNfeProduto && <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">✓ NFe/NFCe</span>}
-            {temNfServico && <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">✓ NFSe</span>}
-          </div>
+        <td className="px-4 py-3 text-center">
+          {temNfServico && <CheckCircle className="w-4 h-4 text-blue-400 inline" />}
         </td>
         <td className="px-4 py-3">
           <p className="text-white text-sm font-medium">{os.cliente_nome || "—"}</p>
