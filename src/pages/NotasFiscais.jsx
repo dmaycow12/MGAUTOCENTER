@@ -843,13 +843,18 @@ export default function NotasFiscais() {
                     <button title="Cancelar" onClick={() => cancelarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg transition-all"><Ban className="w-3.5 h-3.5"/></button>
                   )}
                   {nota.status === 'Cancelada' && (
-                    <button title="Reativar para Emitida" onClick={async () => {
+                    <button title="Restaurar para Emitida" onClick={async () => {
                       try {
-                        await base44.entities.NotaFiscal.update(nota.id, { status: 'Emitida' });
-                        feedback('sucesso', 'Status alterado para Emitida');
-                        load();
+                        feedback('sucesso', 'Restaurando nota...');
+                        const res = await base44.functions.invoke('restaurarNotaCancelada', { nota_id: nota.id });
+                        if (res.data?.sucesso) {
+                          feedback('sucesso', res.data.mensagem);
+                          load();
+                        } else {
+                          feedback('erro', res.data?.erro || 'Erro ao restaurar');
+                        }
                       } catch (e) {
-                        feedback('erro', 'Erro ao alterar status: ' + e.message);
+                        feedback('erro', 'Erro: ' + e.message);
                       }
                     }} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-green-400 rounded-lg transition-all"><RefreshCw className="w-3.5 h-3.5"/></button>
                   )}
@@ -958,9 +963,25 @@ export default function NotasFiscais() {
                             <RefreshCw className="w-4 h-4" />
                           </button>
                         )}
+                        {nota.status === 'Cancelada' && (
+                          <button title="Restaurar para Emitida" onClick={async () => {
+                            try {
+                              feedback('sucesso', 'Restaurando nota...');
+                              const res = await base44.functions.invoke('restaurarNotaCancelada', { nota_id: nota.id });
+                              if (res.data?.sucesso) {
+                                feedback('sucesso', res.data.mensagem);
+                                load();
+                              } else {
+                                feedback('erro', res.data?.erro || 'Erro ao restaurar');
+                              }
+                            } catch (e) {
+                              feedback('erro', 'Erro: ' + e.message);
+                            }
+                          }} className="p-1 text-gray-500 hover:text-green-400 transition-all"><RefreshCw className="w-4 h-4" /></button>
+                        )}
                         <button onClick={() => excluir(nota.id)} className="p-1 text-gray-500 hover:text-red-400 transition-all">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                       </div>
                     </td>
                   </tr>
