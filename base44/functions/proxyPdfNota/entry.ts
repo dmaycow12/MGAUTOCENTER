@@ -39,7 +39,10 @@ Deno.serve(async (req) => {
         headers: { 'Authorization': AUTH_HEADER },
       });
 
-      if (!resp.ok) return Response.json({ processando: true, mensagem: 'Nota ainda em processamento.' });
+      if (!resp.ok) {
+        const errTxt = await resp.text();
+        return Response.json({ erro: `Focus NFe ${resp.status}: ${errTxt.substring(0, 200)}` });
+      }
 
       const data = await resp.json();
       const status = data.status || '';
@@ -53,8 +56,11 @@ Deno.serve(async (req) => {
         return Response.json({ processando: true, mensagem: 'A SEFAZ ainda está processando a nota.' });
       }
 
-      const rawPdf = data.caminho_pdf_nfsen || data.caminho_pdf_nfse || data.caminho_danfe || '';
+      // NFSe Nacional usa url_danfse, NFe usa caminho_danfe, NFSe municipal usa caminho_pdf_nfse
+      const rawPdf = data.caminho_pdf_nfsen || data.url_danfse || data.caminho_pdf_nfse || data.caminho_danfe || '';
       pdfUrlFull = normalizarUrl(rawPdf);
+      // Se ainda vazio, usa a URL pública de consulta (fallback)
+      if (!pdfUrlFull && data.url) pdfUrlFull = data.url;
 
       // Salva a URL e atualiza status
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
@@ -67,12 +73,22 @@ Deno.serve(async (req) => {
 
     if (!pdfUrlFull) return Response.json({ erro: 'PDF não disponível' });
 
-    // Baixa o PDF da Focus NFe com auth e retorna como base64
+    // NFSe Nacional: url_danfse é público, não precisa de auth
+    // Focus NFe API paths: precisam de auth
+    const precisaAuth = pdfUrlFull.includes('focusnfe.com.br') && !pdfUrlFull.includes('nfse.gov.br');
     const pdfResp = await fetch(pdfUrlFull, {
-      headers: { 'Authorization': AUTH_HEADER },
+      headers: precisaAuth ? { 'Authorization': AUTH_HEADER } : {},
     });
 
-    if (!pdfResp.ok) return Response.json({ erro: 'Não foi possível baixar o PDF da Focus NFe' });
+    if (!pdfResp.ok) {
+      // Se falhou com auth, tenta sem auth (url_danfse é público)
+      const pdfResp2 = await fetch(pdfUrlFull);
+      if (!pdfResp2.ok) return Response.json({ erro: `PDF indisponível (${pdfResp.status}): ${pdfUrlFull.substring(0, 100)}` });
+      const ab2 = await pdfResp2.arrayBuffer();
+      const b2 = new Uint8Array(ab2);
+      let bin2 = ''; for (let i = 0; i < b2.byteLength; i++) bin2 += String.fromCharCode(b2[i]);
+      return Response.json({ sucesso: true, pdf_base64: btoa(bin2) });
+    }
 
     const arrayBuffer = await pdfResp.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
