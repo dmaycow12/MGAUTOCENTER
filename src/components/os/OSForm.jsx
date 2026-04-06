@@ -555,21 +555,37 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
               <Section title="Produtos">
                 {(form.pecas || []).map((p, i) => (
                   <div key={i} className="bg-gray-800/50 rounded-xl p-3 mb-2">
-                    <div className="mb-2">
-                      <label className="text-xs text-gray-500 mb-1 block">Produto</label>
+                    {!p.descricao ? (
                       <SearchableSelect
                         placeholder="Selecionar produto do estoque..."
-                        options={estoque.map(e => ({ value: e.id, label: e.descricao, sublabel: [e.codigo, e.valor_venda ? `R$ ${Number(e.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : ''].filter(Boolean).join(' — ') }))}
+                        options={estoque.map(e => ({ value: e.id, label: `[${e.codigo || ''}] ${e.descricao}`, sublabel: e.valor_venda ? `R$ ${Number(e.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
                         onSelect={opt => { const item = estoque.find(e => e.id === opt.value); if (item) selecionarProduto(i, item); }}
                       />
-                      {p.descricao && <p className="text-xs text-green-400 mt-1">✓ {p.codigo ? `[${p.codigo}] ` : ''}{p.descricao}</p>}
-                    </div>
-                    <div className="flex flex-wrap gap-2 items-end">
-                      <div className="w-20 flex-shrink-0"><label className="text-xs text-gray-500 mb-1 block">Qtd</label><input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" /></div>
-                      <div className="flex-1 min-w-[70px]"><label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label><input value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" autoComplete="off" /></div>
-                      <div className="flex-1 min-w-[70px]"><label className="text-xs text-gray-500 mb-1 block">Total</label><div className="input-dark text-gray-300 text-sm">R$ {Number(p.valor_total || 0).toFixed(2)}</div></div>
-                      <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2 mb-0.5"><Trash2 className="w-4 h-4" /></button>
-                    </div>
+                    ) : (
+                      <div className="flex flex-wrap md:flex-nowrap gap-2 items-end">
+                        <div className="w-20 flex-shrink-0">
+                          <label className="text-xs text-gray-500 mb-1 block">Código</label>
+                          <div className="input-dark text-gray-400 text-sm truncate">{p.codigo || '—'}</div>
+                        </div>
+                        <div className="flex-1 min-w-[120px]">
+                          <label className="text-xs text-gray-500 mb-1 block">Produto</label>
+                          <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
+                        </div>
+                        <div className="w-16 flex-shrink-0">
+                          <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
+                          <input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
+                        </div>
+                        <div className="w-24 flex-shrink-0">
+                          <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
+                          <input value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" autoComplete="off" />
+                        </div>
+                        <div className="w-24 flex-shrink-0">
+                          <label className="text-xs text-gray-500 mb-1 block">Total</label>
+                          <div className="input-dark text-gray-300 text-sm">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
+                        </div>
+                        <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2 mb-0.5"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                    )}
                   </div>
                 ))}
                 <button onClick={addPeca} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
@@ -581,21 +597,37 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
               <Section title="Serviços">
                 {(form.servicos || []).map((s, i) => (
                   <div key={i} className="bg-gray-800/50 rounded-xl p-3 mb-2">
-                    <div className="mb-2">
-                      <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
+                    {!s.descricao ? (
                       <SearchableSelect
                         placeholder="Selecionar serviço cadastrado..."
-                        options={servicosCad.map(sv => ({ value: sv.id, label: sv.descricao, sublabel: sv.valor ? `R$ ${Number(sv.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
+                        options={servicosCad.map(sv => ({ value: sv.id, label: `[${sv.codigo || ''}] ${sv.descricao}`, sublabel: sv.valor ? `R$ ${Number(sv.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
                         onSelect={opt => { const item = servicosCad.find(sv => sv.id === opt.value); if (item) selecionarServico(i, item); }}
                       />
-                      {s.descricao && <p className="text-xs text-green-400 mt-1">✓ {s.codigo ? `[${s.codigo}] ` : ''}{s.descricao}</p>}
-                    </div>
-                    <div className="flex flex-wrap gap-2 items-end">
-                      <div className="w-20 flex-shrink-0"><label className="text-xs text-gray-500 mb-1 block">Qtd</label><input value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" /></div>
-                      <div className="flex-1 min-w-[70px]"><label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label><input value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" autoComplete="off" /></div>
-                      <div className="flex-1 min-w-[70px]"><label className="text-xs text-gray-500 mb-1 block">Total</label><div className="input-dark text-gray-300 text-sm">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div></div>
-                      <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2 mb-0.5"><Trash2 className="w-4 h-4" /></button>
-                    </div>
+                    ) : (
+                      <div className="flex flex-wrap md:flex-nowrap gap-2 items-end">
+                        <div className="w-20 flex-shrink-0">
+                          <label className="text-xs text-gray-500 mb-1 block">Código</label>
+                          <div className="input-dark text-gray-400 text-sm truncate">{s.codigo || '—'}</div>
+                        </div>
+                        <div className="flex-1 min-w-[120px]">
+                          <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
+                          <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
+                        </div>
+                        <div className="w-16 flex-shrink-0">
+                          <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
+                          <input value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
+                        </div>
+                        <div className="w-24 flex-shrink-0">
+                          <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
+                          <input value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" autoComplete="off" />
+                        </div>
+                        <div className="w-24 flex-shrink-0">
+                          <label className="text-xs text-gray-500 mb-1 block">Total</label>
+                          <div className="input-dark text-gray-300 text-sm">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
+                        </div>
+                        <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2 mb-0.5"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                    )}
                   </div>
                 ))}
                 <button onClick={addServico} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
