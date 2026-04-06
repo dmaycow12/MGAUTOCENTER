@@ -51,7 +51,7 @@ export default function Servicos() {
     i.categoria?.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading) return <Loader />;
+  if (loading) return null;
 
   return (
     <div className="space-y-4">
@@ -174,6 +174,4 @@ function F({ label, children }) {
   );
 }
 
-function Loader() {
-  return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" /></div>;
-}
+function Loader() { return null; }

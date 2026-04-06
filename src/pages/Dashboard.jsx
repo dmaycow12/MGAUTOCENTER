@@ -121,11 +121,7 @@ export default function Dashboard() {
     });
   }, []);
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: RED, borderTopColor: "transparent" }} />
-    </div>
-  );
+  if (loading) return null;
 
   // KPIs OS
   const osAbertas = ordens.filter(o => o.status === "Aberto").length;

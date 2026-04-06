@@ -106,11 +106,7 @@ export default function Ativos() {
   const totalValorAtual = filtrados.reduce((acc, a) => acc + Number(a.valor_atual || 0), 0);
   const totalValorCompra = filtrados.reduce((acc, a) => acc + Number(a.valor_aquisicao || 0) * Number(a.quantidade || 1), 0);
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: "#cc0000", borderTopColor: "transparent" }} />
-    </div>
-  );
+  if (loading) return null;
 
   return (
     <div className="space-y-4">

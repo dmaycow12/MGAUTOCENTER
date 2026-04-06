@@ -137,7 +137,7 @@ export default function Configuracoes() {
     window.location.reload();
   };
 
-  if (loading) return <Loader />;
+  if (loading) return null;
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -403,9 +403,7 @@ function UserRow({ nome, usuario, tipo, onEdit, onDelete }) {
   );
 }
 
-function Loader() {
-  return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-t-transparent rounded-full animate-spin" style={{border:"2px solid #00ff00", borderTopColor:"transparent"}} /></div>;
-}
+function Loader() { return null; }
 
 function TokenField({ label, value, onChange }) {
   const [visible, setVisible] = React.useState(false);
