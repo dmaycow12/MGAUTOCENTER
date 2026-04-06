@@ -31,6 +31,23 @@ Deno.serve(async (req) => {
         status: 'Cancelada',
         mensagem_sefaz: result.mensagem || 'Cancelada com sucesso',
       });
+      // Devolver estoque se NFe/NFCe
+      if (tipo === 'NFe' || tipo === 'NFCe') {
+        const notas = await base44.asServiceRole.entities.NotaFiscal.filter({ id: nota_id });
+        if (notas[0]?.xml_content) {
+          try {
+            const items = JSON.parse(notas[0].xml_content);
+            for (const it of items) {
+              if (it.estoque_id) {
+                const estoqueItems = await base44.asServiceRole.entities.Estoque.filter({ id: it.estoque_id });
+                if (estoqueItems.length > 0) {
+                  await base44.asServiceRole.entities.Estoque.update(it.estoque_id, { quantidade: (Number(estoqueItems[0].quantidade) || 0) + (Number(it.quantidade) || 1) });
+                }
+              }
+            }
+          } catch (_) {}
+        }
+      }
       return Response.json({ sucesso: true });
     }
 

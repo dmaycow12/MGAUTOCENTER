@@ -275,9 +275,33 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Baixar estoque se NFe/NFCe e emitida com sucesso
+    if (statusNota === 'Emitida' && (tipo === 'NFe' || tipo === 'NFCe')) {
+      for (const it of (items || [])) {
+        if (it.estoque_id) {
+          const estoqueItems = await base44.asServiceRole.entities.Estoque.filter({ id: it.estoque_id });
+          if (estoqueItems.length > 0) {
+            const atual = Number(estoqueItems[0].quantidade || 0);
+            const qtd = Number(it.quantidade) || 1;
+            await base44.asServiceRole.entities.Estoque.update(it.estoque_id, { quantidade: Math.max(0, atual - qtd) });
+          }
+        }
+      }
+    }
+
     const notaData = {
       tipo,
       xml_content: JSON.stringify(items || []),
+      cliente_cpf_cnpj: cliente_cpf_cnpj || '',
+      cliente_email: cliente_email || '',
+      cliente_telefone: body.cliente_telefone || '',
+      cliente_endereco: cliente_endereco || '',
+      cliente_numero: cliente_numero || '',
+      cliente_bairro: cliente_bairro || '',
+      cliente_cep: body.cliente_cep || '',
+      cliente_cidade: cliente_cidade || '',
+      cliente_estado: cliente_estado || '',
+      forma_pagamento: forma_pagamento || '',
       numero: tipo === 'NFSe' ? String(proximoRps) : (body.numero ? String(body.numero) : ''),
       serie: tipo === 'NFSe' ? '900' : (serie_manual || '1'),
       status: statusNota,
