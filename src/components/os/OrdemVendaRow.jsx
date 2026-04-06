@@ -274,7 +274,7 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
               <div ref={statusRef} className="absolute left-0 top-full mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-36 p-1 z-[100] space-y-1">
                 {STATUS_OPTIONS.map(s => (
                   <button key={s} onClick={() => alterarStatus(s)}
-                    className="w-full text-left px-2.5 py-1 text-xs font-semibold rounded-md transition-all hover:opacity-90"
+                    className="w-full flex items-center justify-center h-8 text-xs font-semibold rounded-md transition-all hover:opacity-90"
                     style={{ background: STATUS_STYLE[s].style.background, color: "#fff" }}>
                     {s}
                   </button>
