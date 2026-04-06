@@ -56,8 +56,8 @@ Deno.serve(async (req) => {
         return Response.json({ processando: true, mensagem: 'A SEFAZ ainda está processando a nota.' });
       }
 
-      // NFSe Nacional usa url_danfse, NFe usa caminho_danfe, NFSe municipal usa caminho_pdf_nfse
-      const rawPdf = data.caminho_pdf_nfsen || data.url_danfse || data.caminho_pdf_nfse || data.caminho_danfe || '';
+      // NFSe Nacional usa url_danfse, NFCe usa caminho_danfce, NFe usa caminho_danfe
+      const rawPdf = data.caminho_pdf_nfsen || data.url_danfse || data.caminho_pdf_nfse || data.caminho_danfce || data.caminho_danfe || '';
       pdfUrlFull = normalizarUrl(rawPdf);
       // Se ainda vazio, usa a URL pública de consulta (fallback)
       if (!pdfUrlFull && data.url) pdfUrlFull = data.url;
