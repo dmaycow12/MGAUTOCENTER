@@ -17,14 +17,33 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: 'Nota fiscal não encontrada' }, { status: 404 });
     }
     const nota = notas[0];
+    
+    console.log('[CANCEL] Nota encontrada:', { id: nota.id, tipo: nota.tipo, numero: nota.numero, spedy_id: nota.spedy_id, ref });
 
-    // Para NFCe, o ref pode ser spedy_id (UUID) ou reference_id
-    // Tentar usar reference_id primeiro, depois spedy_id
+    // Para NFCe, tentar primeiro consultar na Focus para pegar a referência exata
     let referenceId = ref;
-    if (tipo === 'NFCe') {
-      // NFCe: preferir spedy_id que é o UUID da Focus
-      referenceId = nota.spedy_id || ref;
-      console.log('[NFCE CANCEL] Usando referenceId:', referenceId, 'spedy_id:', nota.spedy_id, 'ref passado:', ref);
+    
+    if (tipo === 'NFCe' && nota.spedy_id) {
+      // Primeiro tenta usar o spedy_id que temos
+      referenceId = nota.spedy_id;
+      console.log('[NFCE CANCEL] Tentando com spedy_id:', referenceId);
+    } else if (tipo === 'NFCe' && nota.chave_acesso) {
+      // Se não temos spedy_id mas temos chave_acesso, consulta na Focus
+      console.log('[NFCE CANCEL] Consultando Focus para obter referência com chave:', nota.chave_acesso);
+      try {
+        const consultaInitial = await fetch(`${FOCUSNFE_BASE}/nfce?chave_acesso=${nota.chave_acesso}`, {
+          headers: { 'Authorization': AUTH_HEADER },
+        });
+        if (consultaInitial.ok) {
+          const dataInitial = await consultaInitial.json();
+          if (dataInitial.referencia) {
+            referenceId = dataInitial.referencia;
+            console.log('[NFCE CANCEL] Referência obtida da Focus:', referenceId);
+          }
+        }
+      } catch (e) {
+        console.warn('[NFCE CANCEL] Erro ao consultar Focus para ref:', e.message);
+      }
     }
     
     let endpoint = '';
@@ -46,6 +65,18 @@ Deno.serve(async (req) => {
 
     const text = await resp.text();
     let resultFinal = {};
+    
+    // Validar resposta HTTP
+    if (resp.status === 401) {
+      console.error('[AUTH ERROR] API Key inválida ou expirada');
+      return Response.json({ sucesso: false, erro: 'Autenticação falhou - verifique a API Key da Focus NFe', debug: text }, { status: 401 });
+    }
+    
+    if (resp.status === 404) {
+      console.error('[NOT FOUND] Referência não encontrada na Focus:', referenceId);
+      return Response.json({ sucesso: false, erro: `NFCe não encontrada na Focus com referência: ${referenceId}`, debug: text }, { status: 404 });
+    }
+    
     try {
       resultFinal = JSON.parse(text);
     } catch (_) {
@@ -53,15 +84,15 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: 'Resposta inválida da Focus NFe', debug: text }, { status: 400 });
     }
 
-    console.log('[FOCUS RESPONSE]', JSON.stringify(resultFinal));
+    console.log('[FOCUS RESPONSE]', JSON.stringify(resultFinal), 'Status HTTP:', resp.status);
 
     // Se retornar status HTTP >= 400, é erro
     if (!resp.ok) {
       const msgErro = resultFinal.erros 
         ? resultFinal.erros.map(e => e.mensagem || '').filter(Boolean).join('; ') 
-        : (resultFinal.mensagem || resultFinal.erro || `Erro ${resp.status}`);
-      console.error('[FOCUS ERROR]', msgErro);
-      return Response.json({ sucesso: false, erro: msgErro || 'Falha ao cancelar', debug: resultFinal }, { status: 400 });
+        : (resultFinal.mensagem || resultFinal.erro || resultFinal.mensagem_sefaz || `Erro ${resp.status}`);
+      console.error('[FOCUS ERROR] MSG:', msgErro);
+      return Response.json({ sucesso: false, erro: msgErro || 'Falha ao cancelar', debug: { status: resp.status, response: resultFinal } }, { status: 400 });
     }
 
     // Para NFCe, o status retornado é simples: "cancelado" ou "erro_cancelamento"
@@ -88,9 +119,10 @@ Deno.serve(async (req) => {
 
     // Atualiza status local
     if (statusCancelamento === 'cancelado') {
+      console.log('[SUCCESS] Nota cancelada! Atualizando banco...');
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
         status: 'Cancelada',
-        mensagem_sefaz: resultFinal.mensagem || resultFinal.mensagem_sefaz || 'Cancelada com sucesso',
+        mensagem_sefaz: resultFinal.mensagem_sefaz || resultFinal.mensagem || 'Cancelada com sucesso',
       });
       
       // Devolver estoque se NFe/NFCe
@@ -120,9 +152,11 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: true, mensagem: 'Nota cancelada com sucesso' });
     }
 
+    console.error('[TIMEOUT] Cancelamento não confirmado após polling - status:', statusCancelamento);
     return Response.json({ sucesso: false, erro: `Cancelamento não confirmado - status: ${statusCancelamento}` }, { status: 400 });
 
   } catch (error) {
-    return Response.json({ sucesso: false, erro: 'Erro ao cancelar: ' + error.message }, { status: 500 });
+    console.error('[EXCEPTION]', error);
+    return Response.json({ sucesso: false, erro: 'Erro ao cancelar: ' + error.message, debug: error.toString() }, { status: 500 });
   }
 });
