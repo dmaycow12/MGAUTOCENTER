@@ -58,7 +58,9 @@ function fmtValor(v) {
 }
 
 export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefresh }) {
-  const temNota = notas.some(n => n.ordem_servico_id === os.id && n.status !== 'Rascunho');
+  const notasOs = notas.filter(n => n.ordem_servico_id === os.id && n.status !== 'Rascunho');
+  const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe') && n.status === 'Emitida');
+  const temNfServico = notasOs.some(n => n.tipo === 'NFSe' && n.status === 'Emitida');
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -242,7 +244,12 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
         <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">
           <div className="flex items-center gap-2">
             <span>#{os.numero || "—"}</span>
-            {temNota && <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">✓</span>}
+          </div>
+        </td>
+        <td className="px-4 py-3">
+          <div className="flex items-center gap-1">
+            {temNfeProduto && <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">✓ NFe/NFCe</span>}
+            {temNfServico && <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">✓ NFSe</span>}
           </div>
         </td>
         <td className="px-4 py-3">
