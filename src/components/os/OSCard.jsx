@@ -100,8 +100,8 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
       const forma = p.forma_pagamento || "A Combinar";
       const pago = ["Dinheiro", "PIX"].includes(forma);
       await base44.entities.Financeiro.create({
-        tipo: "Receita", categoria: "Ordem de Serviço",
-        descricao: "OS #" + osData.numero + " — " + (osData.cliente_nome || "") + " — Parcela " + p.numero + "/" + parcelas.length,
+        tipo: "Receita", categoria: "Ordem de Venda",
+        descricao: "Venda #" + osData.numero + " — " + (osData.cliente_nome || "") + " — Parcela " + p.numero + "/" + parcelas.length,
         valor: p.valor,
         data_vencimento: p.vencimento,
         status: pago ? "Pago" : "Pendente",
@@ -229,10 +229,10 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
           <div className="bg-gray-900 border border-red-500/30 rounded-2xl w-full max-w-md p-6 space-y-4">
             <div className="flex items-center gap-3 text-red-400">
               <AlertTriangle className="w-7 h-7 flex-shrink-0" />
-              <h3 className="text-lg font-bold">Excluir OS Concluída</h3>
+              <h3 className="text-lg font-bold">Excluir Venda Concluída</h3>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">
-              Esta OS está <strong className="text-green-400">Concluída</strong>. Ao excluir:<br />
+              Esta Venda está <strong className="text-green-400">Concluída</strong>. Ao excluir:<br />
               • <strong className="text-red-400">Lançamentos financeiros</strong> serão excluídos<br />
               • <strong className="text-yellow-400">Peças usadas</strong> serão devolvidas ao estoque
             </p>
@@ -252,7 +252,7 @@ export default function OSCard({ os, onEdit, onDelete, onRefresh }) {
               <h3 className="text-lg font-bold">Atenção!</h3>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">
-              Ao alterar o status desta OS:<br />
+              Ao alterar o status desta Venda:<br />
               • <strong className="text-red-400">Lançamentos financeiros</strong> serão excluídos<br />
               • <strong className="text-yellow-400">Peças usadas</strong> serão devolvidas ao estoque
             </p>
