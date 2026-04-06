@@ -26,10 +26,28 @@ Deno.serve(async (req) => {
     let result;
     try { result = JSON.parse(text); } catch { result = {}; }
 
-    if (resp.ok || result.status === 'cancelado') {
+    // Polling para confirmar cancelamento (até 10 tentativas × 3s = 30s)
+    let statusCancelamento = result.status || '';
+    let resultFinal = result;
+    
+    for (let i = 0; i < 10 && statusCancelamento !== 'cancelado'; i++) {
+      if (statusCancelamento === 'cancelado') break;
+      if (i < 9) {
+        await new Promise(r => setTimeout(r, 3000));
+        const consultaResp = await fetch(`${FOCUSNFE_BASE}${endpoint}?completo=1`, {
+          headers: { 'Authorization': AUTH_HEADER },
+        });
+        if (consultaResp.ok) {
+          resultFinal = await consultaResp.json();
+          statusCancelamento = resultFinal.status || '';
+        }
+      }
+    }
+
+    if (statusCancelamento === 'cancelado') {
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
         status: 'Cancelada',
-        mensagem_sefaz: result.mensagem || 'Cancelada com sucesso',
+        mensagem_sefaz: resultFinal.mensagem || resultFinal.mensagem_sefaz || 'Cancelada com sucesso',
       });
       // Devolver estoque se NFe/NFCe
       if (tipo === 'NFe' || tipo === 'NFCe') {
@@ -58,7 +76,7 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: true });
     }
 
-    const msgErro = result.erros ? result.erros.map(e => e.mensagem).join('; ') : (result.mensagem || JSON.stringify(result));
+    const msgErro = resultFinal.erros ? resultFinal.erros.map(e => e.mensagem).join('; ') : (resultFinal.mensagem || JSON.stringify(resultFinal));
     return Response.json({ sucesso: false, erro: msgErro });
 
   } catch (error) {
