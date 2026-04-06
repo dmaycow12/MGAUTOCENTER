@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
+import SearchableSelect from "@/components/notas/SearchableSelect";
 
 import JSZip from "jszip";
 
@@ -1019,11 +1020,12 @@ export default function NotasFiscais() {
               {abaForm === "cliente" && (
                 <div className="space-y-4">
 
-                  <F label="Selecionar Cliente Cadastrado">
-                    <select value={form.cliente_id} onChange={e => selecionarCliente(e.target.value)} className="input-dark">
-                      <option value="">— Selecione ou preencha abaixo —</option>
-                      {clientesFiltrados.map(c => <option key={c.id} value={c.id}>{c.nome} {c.cpf_cnpj ? `(${c.cpf_cnpj})` : ""}</option>)}
-                    </select>
+                  <F label="Buscar Cliente">
+                    <SearchableSelect
+                      placeholder="Digite o nome ou CPF/CNPJ..."
+                      options={clientesFiltrados.map(c => ({ value: c.id, label: c.nome, sublabel: c.cpf_cnpj || '' }))}
+                      onSelect={opt => selecionarCliente(opt.value)}
+                    />
                   </F>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <F label="Nome / Razão Social *" className="col-span-2">
@@ -1101,24 +1103,23 @@ export default function NotasFiscais() {
                           )}
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          <F label={form.tipo === 'NFSe' ? 'Selecionar Serviço Cadastrado' : 'Selecionar Produto do Estoque'} className="col-span-2 md:col-span-4">
-                            <select className="input-dark" value="" onChange={e => {
-                              const id = e.target.value;
-                              if (!id) return;
-                              if (form.tipo === 'NFSe') {
-                                const srv = servicos.find(s => s.id === id);
-                                if (srv) atualizarItemCompleto(idx, { descricao: srv.descricao, quantidade: 1, valor_unitario: srv.valor || 0, valor_total: srv.valor || 0 });
-                              } else {
-                                const prod = estoque.find(p => p.id === id);
-                                if (prod) atualizarItemCompleto(idx, { descricao: prod.descricao, quantidade: 1, valor_unitario: prod.valor_venda || 0, valor_total: prod.valor_venda || 0, ncm: prod.ncm || '', cfop: prod.cfop || '', cest: prod.cest || '', unidade: prod.unidade || 'UN', codigo: prod.codigo || '' });
+                          <F label={form.tipo === 'NFSe' ? 'Buscar Serviço' : 'Buscar Produto'} className="col-span-2 md:col-span-4">
+                            <SearchableSelect
+                              placeholder={form.tipo === 'NFSe' ? 'Digite o nome do serviço...' : 'Digite o nome ou código do produto...'}
+                              options={form.tipo === 'NFSe'
+                                ? servicos.map(s => ({ value: s.id, label: s.descricao, sublabel: s.valor ? `R$ ${Number(s.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))
+                                : estoque.map(p => ({ value: p.id, label: p.descricao, sublabel: [p.codigo, p.valor_venda ? `R$ ${Number(p.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : ''].filter(Boolean).join(' — ') }))
                               }
-                            }}>
-                              <option value="">— Selecione para preencher automaticamente —</option>
-                              {form.tipo === 'NFSe'
-                                ? servicos.map(s => <option key={s.id} value={s.id}>{s.descricao}{s.valor ? ` — R$ ${Number(s.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}` : ''}</option>)
-                                : estoque.map(p => <option key={p.id} value={p.id}>{p.descricao}{p.codigo ? ` (${p.codigo})` : ''}{p.valor_venda ? ` — R$ ${Number(p.valor_venda).toLocaleString('pt-BR', {minimumFractionDigits:2})}` : ''}</option>)
-                              }
-                            </select>
+                              onSelect={opt => {
+                                if (form.tipo === 'NFSe') {
+                                  const srv = servicos.find(s => s.id === opt.value);
+                                  if (srv) atualizarItemCompleto(idx, { descricao: srv.descricao, quantidade: 1, valor_unitario: srv.valor || 0, valor_total: srv.valor || 0 });
+                                } else {
+                                  const prod = estoque.find(p => p.id === opt.value);
+                                  if (prod) atualizarItemCompleto(idx, { descricao: prod.descricao, quantidade: 1, valor_unitario: prod.valor_venda || 0, valor_total: prod.valor_venda || 0, ncm: prod.ncm || '', cfop: prod.cfop || '', cest: prod.cest || '', unidade: prod.unidade || 'UN', codigo: prod.codigo || '' });
+                                }
+                              }}
+                            />
                           </F>
                           <F label="Descrição" className="col-span-2 md:col-span-4">
                             <NoACInput value={item.descricao} onChange={e => atualizarItem(idx, "descricao", e.target.value)} placeholder={form.tipo === "NFSe" ? "Ex: Troca de óleo, Alinhamento..." : "Ex: Filtro de óleo, Pastilha de freio..."} className={`input-dark ${errosForm.items?.[idx]?.descricao ? 'border-red-500' : ''}`} />
@@ -1182,12 +1183,6 @@ export default function NotasFiscais() {
                     <F label="Forma de Pagamento">
                       <select value={form.forma_pagamento} onChange={e => setForm(f => ({ ...f, forma_pagamento: e.target.value }))} className="input-dark">
                         {FORMAS_PAGAMENTO.map(fp => <option key={fp} value={fp}>{fp}</option>)}
-                      </select>
-                    </F>
-                    <F label="Ordem de Venda Vinculada (opcional)">
-                      <select value={form.ordem_servico_id} onChange={e => setForm(f => ({ ...f, ordem_servico_id: e.target.value }))} className="input-dark">
-                        <option value="">— Nenhuma —</option>
-                        {ordensVenda.map(ov => <option key={ov.id} value={ov.id}>{ov.numero ? `Nº ${ov.numero}` : `OS ${ov.id.slice(-6)}`} — {ov.cliente_nome || "sem cliente"}</option>)}
                       </select>
                     </F>
                   </div>

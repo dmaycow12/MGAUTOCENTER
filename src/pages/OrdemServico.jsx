@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List } from "lucide-react";
+import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, FileText } from "lucide-react";
+import ModalEmissaoMassa from "@/components/notas/ModalEmissaoMassa";
 import OSForm from "@/components/os/OSForm";
 import OSCard from "@/components/os/OSCard";
 import OSListRow from "@/components/os/OSListRow";
@@ -17,6 +18,8 @@ export default function OrdemServico() {
   });
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
+  const [showEmissaoMassa, setShowEmissaoMassa] = useState(false);
+  const [notas, setNotas] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [veiculos, setVeiculos] = useState([]);
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("os_viewmode") || "cards");
@@ -108,16 +111,21 @@ export default function OrdemServico() {
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const [o, c, v] = await Promise.all([
+    const [o, c, v, n] = await Promise.all([
       base44.entities.OrdemServico.list("-created_date", 200),
       base44.entities.Cliente.list("-created_date", 200),
       base44.entities.Veiculo.list("-created_date", 500),
+      base44.entities.NotaFiscal.list("-created_date", 500),
     ]);
     setOrdens(o);
     setClientes(c);
     setVeiculos(v);
+    setNotas(n);
     setLoading(false);
   };
+
+  // Ordens que já tiveram NF emitida
+  const ordensComNF = ordens.filter(os => notas.some(n => n.ordem_servico_id === os.id && (n.status === 'Emitida' || n.status === 'Processando')));
 
   const excluir = async (id) => {
     if (!confirm("Excluir esta Ordem de Serviço?")) return;
@@ -149,15 +157,26 @@ export default function OrdemServico() {
       {/* Controles — mesmo padrão do Financeiro */}
       <div className="flex flex-col gap-2">
         {/* Linha 1: Nova OS — ocupa linha toda */}
-        <button
-          onClick={() => { setShowForm(true); setEditando(null); }}
-          className="w-full flex items-center justify-center gap-2 text-white py-3 rounded-xl text-sm font-semibold transition-all"
-          style={{background: "#00ff00", color: "#000"}}
-          onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
-          onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
-        >
-          <Plus className="w-4 h-4" /> Nova Ordem de Venda
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => { setShowForm(true); setEditando(null); }}
+            className="flex-1 flex items-center justify-center gap-2 text-white py-3 rounded-xl text-sm font-semibold transition-all"
+            style={{background: "#00ff00", color: "#000"}}
+            onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
+            onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
+          >
+            <Plus className="w-4 h-4" /> Nova Ordem de Venda
+          </button>
+          <button
+            onClick={() => setShowEmissaoMassa(true)}
+            disabled={ordensComNF.length === 0}
+            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
+            style={{background: "#062C9B", color: "#fff"}}
+            title="Emitir NF em massa para ordens já com NF emitida"
+          >
+            <FileText className="w-4 h-4" /> NF Massa {ordensComNF.length > 0 ? `(${ordensComNF.length})` : ''}
+          </button>
+        </div>
 
         {/* Linha 2: filtro status — multi-select */}
         <div className="flex gap-2">
@@ -303,6 +322,14 @@ export default function OrdemServico() {
           veiculos={veiculos}
           onClose={() => { setShowForm(false); setEditando(null); }}
           onSave={() => { setShowForm(false); setEditando(null); load(); }}
+        />
+      )}
+
+      {showEmissaoMassa && (
+        <ModalEmissaoMassa
+          ordens={ordensComNF}
+          onClose={() => setShowEmissaoMassa(false)}
+          onConcluido={() => { setShowEmissaoMassa(false); load(); }}
         />
       )}
     </div>
