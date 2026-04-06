@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import {
   FileText, Plus, Upload, Search, Trash2, X,
-  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2, Pencil, ClipboardList, Ban, LogIn
+  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2, Pencil, ClipboardList, Ban, LogIn, Code
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
@@ -143,6 +143,7 @@ export default function NotasFiscais() {
   const [abaForm, setAbaForm] = useState("cliente");
   const [errosForm, setErrosForm] = useState({});
   const [configsNF, setConfigsNF] = useState([]);
+  const [debugModal, setDebugModal] = useState(null);
 
   useEffect(() => {
     load().then(async ({ estoque: estoqueData }) => {
@@ -941,9 +942,21 @@ export default function NotasFiscais() {
                           </button>
                         )}
                         {nota.status !== 'Importada' && nota.status !== 'Lançada' && (
-                          <button title="Imprimir" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
-                            <Printer className="w-4 h-4" />
-                          </button>
+                          <>
+                            <button title="Imprimir" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
+                              <Printer className="w-4 h-4" />
+                            </button>
+                            <button title="Debug - Ver dados" onClick={async () => {
+                          try {
+                            const res = await base44.functions.invoke('inspecionarNotaFiscal', { nota_id: nota.id });
+                            setDebugModal(res.data);
+                          } catch (e) {
+                            alert('Erro: ' + e.message);
+                          }
+                        }} className="p-1 text-gray-500 hover:text-purple-400 transition-all">
+                          <Code className="w-4 h-4" />
+                        </button>
+                        </>
                         )}
                         {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
                           <button title="Cancelar Nota" onClick={() => cancelarNota(nota)} className="p-1 text-gray-500 hover:text-orange-400 transition-all">
@@ -1321,6 +1334,45 @@ export default function NotasFiscais() {
           configs={configsNF}
           onClose={() => setShowSintegra(false)}
         />
+      )}
+
+      {debugModal && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-auto">
+            <div className="flex items-center justify-between p-5 border-b border-gray-800 sticky top-0 bg-gray-900">
+              <h2 className="text-white font-semibold">Debug da Nota</h2>
+              <button onClick={() => setDebugModal(null)} className="text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h3 className="text-white font-semibold mb-3">Campos Principais:</h3>
+                <pre className="text-xs text-gray-300 overflow-x-auto font-mono">{JSON.stringify({
+                  id: debugModal.nota.id,
+                  tipo: debugModal.nota.tipo,
+                  numero: debugModal.nota.numero,
+                  serie: debugModal.nota.serie,
+                  status: debugModal.nota.status,
+                  spedy_id: debugModal.nota.spedy_id,
+                  reference_id: debugModal.nota.reference_id,
+                  chave_acesso: debugModal.nota.chave_acesso,
+                  pdf_url: debugModal.nota.pdf_url,
+                }, null, 2)}</pre>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h3 className="text-white font-semibold mb-3">Todos os Dados (JSON completo):</h3>
+                <details className="cursor-pointer">
+                  <summary className="text-yellow-400 hover:text-yellow-300 text-sm">Expandir para ver tudo...</summary>
+                  <pre className="text-xs text-gray-300 overflow-x-auto font-mono mt-2 bg-gray-900 p-3 rounded">{JSON.stringify(debugModal.nota.todos_campos, null, 2)}</pre>
+                </details>
+              </div>
+              <div className="text-center">
+                <button onClick={() => setDebugModal(null)} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{background: '#00ff00', color: '#000'}}>
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {showEntrada && xmlParaEntrada && (
