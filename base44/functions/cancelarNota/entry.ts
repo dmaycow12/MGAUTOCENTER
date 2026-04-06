@@ -10,11 +10,27 @@ Deno.serve(async (req) => {
     const { nota_id, ref, tipo } = await req.json();
 
     if (!nota_id || !ref) return Response.json({ sucesso: false, erro: 'nota_id e ref são obrigatórios' }, { status: 400 });
+    
+    // Buscar a nota para ter todos os dados
+    const notas = await base44.asServiceRole.entities.NotaFiscal.filter({ id: nota_id });
+    if (!notas || notas.length === 0) {
+      return Response.json({ sucesso: false, erro: 'Nota fiscal não encontrada' }, { status: 404 });
+    }
+    const nota = notas[0];
 
+    // Para NFCe, o ref pode ser spedy_id (UUID) ou reference_id
+    // Tentar usar reference_id primeiro, depois spedy_id
+    let referenceId = ref;
+    if (tipo === 'NFCe') {
+      // NFCe: preferir spedy_id que é o UUID da Focus
+      referenceId = nota.spedy_id || ref;
+      console.log('[NFCE CANCEL] Usando referenceId:', referenceId, 'spedy_id:', nota.spedy_id, 'ref passado:', ref);
+    }
+    
     let endpoint = '';
-    if (tipo === 'NFSe') endpoint = `/nfsen/${ref}`;
-    else if (tipo === 'NFCe') endpoint = `/nfce/${ref}`;
-    else endpoint = `/nfe/${ref}`;
+    if (tipo === 'NFSe') endpoint = `/nfsen/${referenceId}`;
+    else if (tipo === 'NFCe') endpoint = `/nfce/${referenceId}`;
+    else endpoint = `/nfe/${referenceId}`;
 
     // Tenta cancelar na Focus NFe
     let bodyPayload = {};
@@ -83,8 +99,7 @@ Deno.serve(async (req) => {
       
       // Devolver estoque se NFe/NFCe
       if ((tipo === 'NFe' || tipo === 'NFCe') && resultFinal.xml_url) {
-        const notas = await base44.asServiceRole.entities.NotaFiscal.filter({ id: nota_id });
-        if (notas[0]?.xml_content) {
+        if (nota?.xml_content) {
           try {
             const items = JSON.parse(notas[0].xml_content);
             for (const it of items) {
