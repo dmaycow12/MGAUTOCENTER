@@ -69,7 +69,7 @@ export const PAGES = {
     "Financeiro": Financeiro,
     "NotasFiscais": NotasFiscais,
     "OrcamentoPublico": OrcamentoPublico,
-    "OrdemServico": OrdemServico,
+    "Vendas": OrdemServico,
     "Servicos": Servicos,
 }
 
