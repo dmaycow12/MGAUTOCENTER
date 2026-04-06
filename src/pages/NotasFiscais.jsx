@@ -1083,21 +1083,7 @@ export default function NotasFiscais() {
               {/* ABA ITENS */}
               {abaForm === "itens" && (
                 <div className="space-y-4">
-                  {form.tipo === "NFSe" && (
-                    <p className="text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2">
-                      ⚠️ NFSe lança apenas <strong>serviços</strong> — não inclua produtos
-                    </p>
-                  )}
-                  {form.tipo === "NFe" && (
-                    <p className="text-xs text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
-                      ℹ️ NFe lança apenas <strong>produtos</strong> e exige cliente com CPF/CNPJ — não aceita CONSUMIDOR
-                    </p>
-                  )}
-                  {form.tipo === "NFCe" && (
-                    <p className="text-xs text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2">
-                      ℹ️ NFCe é para venda ao <strong>consumidor final</strong> — CPF/CNPJ opcional — não inclua serviços
-                    </p>
-                  )}
+
                   <div className="space-y-3">
                     {form.items.map((item, idx) => (
                       <div key={idx} className="bg-gray-800 border border-gray-700 rounded-xl p-4">
