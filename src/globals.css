@@ -110,6 +110,10 @@ body, body * {
   font-variant: normal;
 }
 
+svg, svg * {
+  text-transform: none !important;
+}
+
 input, input::placeholder, textarea, textarea::placeholder, code, pre, code *, pre * {
   text-transform: none !important;
 }
