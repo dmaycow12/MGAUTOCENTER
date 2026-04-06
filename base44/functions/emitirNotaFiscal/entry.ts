@@ -361,15 +361,21 @@ Deno.serve(async (req) => {
       mensagem_sefaz: mensagemSefaz,
     };
 
-    // Tenta atualizar nota existente; se não existir, cria nova
-    if (nota_id) {
-      try {
+    // Atualiza ou cria a nota com o status correto (Emitida, Processando ou Erro)
+    try {
+      if (nota_id) {
+        // Atualizar nota existente (a que foi salva como rascunho)
         await base44.asServiceRole.entities.NotaFiscal.update(nota_id, notaData);
-      } catch (_) {
-        await base44.asServiceRole.entities.NotaFiscal.create(notaData);
+        console.log('[NOTA UPDATE] Nota atualizada com sucesso:', nota_id, 'Status:', statusNota);
+      } else {
+        // Criar nota nova se não existir
+        const novaNota = await base44.asServiceRole.entities.NotaFiscal.create(notaData);
+        console.log('[NOTA CREATE] Nota criada:', novaNota.id, 'Status:', statusNota);
       }
-    } else {
-      await base44.asServiceRole.entities.NotaFiscal.create(notaData);
+    } catch (updateError) {
+      console.error('[NOTA ERROR] Erro ao atualizar/criar nota:', updateError);
+      // Mesmo com erro na atualização, retorna o sucesso da emissão
+      return Response.json({ sucesso: statusNota !== 'Erro', mensagem: `${statusNota} na SEFAZ, mas erro ao salvar no banco: ${updateError.message}`, status: statusNota });
     }
 
     const mensagem = statusNota === 'Emitida'
