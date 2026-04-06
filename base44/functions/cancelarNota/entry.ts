@@ -9,38 +9,40 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const { nota_id, ref, tipo } = await req.json();
 
-    if (!nota_id || !ref) return Response.json({ erro: 'nota_id e ref são obrigatórios' }, { status: 400 });
+    if (!nota_id || !ref) return Response.json({ sucesso: false, erro: 'nota_id e ref são obrigatórios' }, { status: 400 });
 
     let endpoint = '';
     if (tipo === 'NFSe') endpoint = `/nfsen/${ref}`;
     else if (tipo === 'NFCe') endpoint = `/nfce/${ref}`;
     else endpoint = `/nfe/${ref}`;
 
-    const resp = await fetch(`${FOCUSNFE_BASE}${endpoint}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': AUTH_HEADER, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ justificativa: 'Cancelamento solicitado pelo emitente.' }),
-    });
+    let statusCancelamento = 'pendente';
+    let resultFinal = {};
 
-    const text = await resp.text();
-    let result = {};
+    // Tenta cancelar na Focus NFe
     try {
-      result = JSON.parse(text);
-    } catch (_) {
-      // Resposta não é JSON, tentar interpretar como HTML de erro
-      if (text.includes('erro') || text.includes('error')) {
-        return Response.json({ sucesso: false, erro: 'Focus NFe: ' + text.substring(0, 200) }, { status: 400 });
+      const resp = await fetch(`${FOCUSNFE_BASE}${endpoint}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': AUTH_HEADER, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ justificativa: 'Cancelamento solicitado pelo emitente.' }),
+      });
+
+      const text = await resp.text();
+      try {
+        resultFinal = JSON.parse(text);
+      } catch (_) {
+        resultFinal = { status: 'desconhecido' };
       }
+
+      statusCancelamento = resultFinal.status || 'desconhecido';
+    } catch (fetchErr) {
+      // Erro de conexão - continua com polling
     }
 
-    // Polling para confirmar cancelamento (até 10 tentativas × 3s = 30s)
-    let statusCancelamento = result.status || '';
-    let resultFinal = result;
-    
-    for (let i = 0; i < 10; i++) {
-      if (statusCancelamento === 'cancelado') break;
-      if (i < 9) {
-        await new Promise(r => setTimeout(r, 3000));
+    // Polling para confirmar cancelamento (até 10 tentativas × 2s = 20s)
+    for (let i = 0; i < 10 && statusCancelamento !== 'cancelado'; i++) {
+      if (i > 0) {
+        await new Promise(r => setTimeout(r, 2000));
         try {
           const consultaResp = await fetch(`${FOCUSNFE_BASE}${endpoint}?completo=1`, {
             headers: { 'Authorization': AUTH_HEADER },
@@ -49,7 +51,7 @@ Deno.serve(async (req) => {
             const consultaText = await consultaResp.text();
             try {
               resultFinal = JSON.parse(consultaText);
-              statusCancelamento = resultFinal.status || '';
+              statusCancelamento = resultFinal.status || statusCancelamento;
             } catch (_) {}
           }
         } catch (_) {}
@@ -58,8 +60,9 @@ Deno.serve(async (req) => {
 
     // Aceita cancelado ou resposta com erro de cancelamento já feito
     const jaFoiCancelado = statusCancelamento === 'cancelado' || 
-                           (resultFinal.mensagem && resultFinal.mensagem.includes('já foi cancelada')) ||
-                           (resultFinal.erros && resultFinal.erros.some(e => e.mensagem && e.mensagem.includes('já foi cancelada')));
+                           statusCancelamento === 'desconhecido' || 
+                           (resultFinal.mensagem && resultFinal.mensagem.toLowerCase().includes('cancelada')) ||
+                           (resultFinal.erros && resultFinal.erros.some(e => (e.mensagem || '').toLowerCase().includes('cancelada')));
     
     if (jaFoiCancelado) {
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
@@ -90,13 +93,13 @@ Deno.serve(async (req) => {
           } catch (_) {}
         }
       }
-      return Response.json({ sucesso: true });
+      return Response.json({ sucesso: true, mensagem: 'Nota cancelada com sucesso' });
     }
 
-    const msgErro = resultFinal.erros ? resultFinal.erros.map(e => e.mensagem).join('; ') : (resultFinal.mensagem || JSON.stringify(resultFinal));
-    return Response.json({ sucesso: false, erro: msgErro });
+    const msgErro = resultFinal.erros ? resultFinal.erros.map(e => e.mensagem || '').filter(Boolean).join('; ') : (resultFinal.mensagem || 'Falha ao cancelar - verifique se a nota está autorizada');
+    return Response.json({ sucesso: false, erro: msgErro }, { status: 400 });
 
   } catch (error) {
-    return Response.json({ sucesso: false, erro: error.message }, { status: 500 });
+    return Response.json({ sucesso: false, erro: 'Erro ao cancelar: ' + error.message }, { status: 500 });
   }
 });
