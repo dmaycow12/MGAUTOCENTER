@@ -61,23 +61,9 @@ Deno.serve(async (req) => {
 
       if (statusInterno !== 'Processando') {
         let pdfUrl = nota.pdf_url || '';
-        if (statusInterno === 'Emitida') {
+        if (statusInterno === 'Emitida' && !pdfUrl) {
           const rawPdf = result.caminho_pdf_nfsen || result.caminho_danfe || result.caminho_pdf_nfse || '';
-          const pdfUrlFull = rawPdf ? (rawPdf.startsWith('http') ? rawPdf : `https://api.focusnfe.com.br${rawPdf}`) : '';
-          if (pdfUrlFull && !pdfUrl) {
-            try {
-              const pdfResp = await fetch(pdfUrlFull, { headers: { 'Authorization': authHeader } });
-              if (pdfResp.ok) {
-                const pdfBlob = await pdfResp.blob();
-                const uploaded = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfBlob });
-                pdfUrl = uploaded.file_url || pdfUrlFull;
-              } else {
-                pdfUrl = pdfUrlFull;
-              }
-            } catch {
-              pdfUrl = pdfUrlFull;
-            }
-          }
+          pdfUrl = rawPdf ? (rawPdf.startsWith('http') ? rawPdf : `https://api.focusnfe.com.br${rawPdf}`) : '';
         }
         await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
           status: statusInterno,

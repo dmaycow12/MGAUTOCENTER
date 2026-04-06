@@ -580,15 +580,20 @@ export default function NotasFiscais() {
   };
 
   const imprimirNota = async (nota) => {
-    if (nota.pdf_url) { window.open(nota.pdf_url, '_blank'); return; }
-    feedback('sucesso', 'Consultando PDF na Focus NFe...');
+    feedback('sucesso', 'Carregando PDF...');
     try {
-      const res = await base44.functions.invoke('consultarPdfNota', { nota_id: nota.id });
+      const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
       const data = res.data;
-      if (data?.sucesso && data?.pdf_url) {
-        setNotas(prev => prev.map(n => n.id === nota.id ? { ...n, pdf_url: data.pdf_url, status: 'Emitida' } : n));
-        window.open(data.pdf_url, '_blank');
+      if (data?.sucesso && data?.pdf_base64) {
+        setNotas(prev => prev.map(n => n.id === nota.id ? { ...n, status: 'Emitida' } : n));
         setMsgFeedback(null);
+        const byteChars = atob(data.pdf_base64);
+        const byteNums = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+        const blob = new Blob([new Uint8Array(byteNums)], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
       } else if (data?.processando) {
         feedback('erro', data.mensagem || 'A SEFAZ ainda está processando a nota.');
       } else {

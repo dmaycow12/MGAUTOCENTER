@@ -251,20 +251,9 @@ Deno.serve(async (req) => {
         statusNota = 'Emitida';
         const rawPdf = resultFinal.caminho_pdf_nfsen || resultFinal.caminho_pdf_nfse || resultFinal.caminho_danfe || '';
         const pdfUrlFull = normalizarUrl(rawPdf);
-        // Baixa o PDF e faz upload para nosso storage
+        // Salva a URL do PDF da Focus NFe (será baixado via proxy na hora de imprimir)
         if (pdfUrlFull) {
-          try {
-            const pdfResp = await fetch(pdfUrlFull, { headers: { 'Authorization': AUTH_HEADER } });
-            if (pdfResp.ok) {
-              const pdfBlob = await pdfResp.blob();
-              const uploaded = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfBlob });
-              pdfUrl = uploaded.file_url || pdfUrlFull;
-            } else {
-              pdfUrl = pdfUrlFull;
-            }
-          } catch {
-            pdfUrl = pdfUrlFull;
-          }
+          pdfUrl = pdfUrlFull;
         }
         chaveAcesso = resultFinal.chave_nfe || resultFinal.chave_nfse || chaveAcesso;
         mensagemSefaz = resultFinal.mensagem_sefaz || resultFinal.mensagem || '';
