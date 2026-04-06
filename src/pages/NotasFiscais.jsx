@@ -1120,7 +1120,7 @@ export default function NotasFiscais() {
                               placeholder={form.tipo === 'NFSe' ? 'Digite o nome do serviço...' : 'Digite o nome ou código do produto...'}
                               options={form.tipo === 'NFSe'
                                 ? servicos.map(s => ({ value: s.id, label: s.descricao, sublabel: s.valor ? `R$ ${Number(s.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))
-                                : estoque.map(p => ({ value: p.id, label: p.descricao, sublabel: [p.codigo, p.valor_venda ? `R$ ${Number(p.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : ''].filter(Boolean).join(' — ') }))
+                                : estoque.map(p => ({ value: p.id, label: p.descricao, sublabel: p.valor_venda ? `R$ ${Number(p.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))
                               }
                               onSelect={opt => {
                                 if (form.tipo === 'NFSe') {
