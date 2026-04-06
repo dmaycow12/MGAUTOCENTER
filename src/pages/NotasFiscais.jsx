@@ -31,7 +31,7 @@ function defaultForm() {
     natureza_operacao: "Venda de mercadoria",
     tipo_documento: "1",
     data_emissao: new Date().toISOString().split("T")[0],
-    forma_pagamento: "PIX",
+    forma_pagamento: "A Combinar",
     observacoes: "",
     cliente_id: "",
     cliente_nome: "",
@@ -170,7 +170,7 @@ export default function NotasFiscais() {
                 cliente_bairro: os.cliente_bairro || "",
                 cliente_cidade: os.cliente_cidade || "",
                 cliente_estado: os.cliente_estado || "",
-                forma_pagamento: os.forma_pagamento || "PIX",
+                forma_pagamento: os.forma_pagamento || os.parcelas_detalhes?.[0]?.forma_pagamento || "A Combinar",
               };
               if (tipo === "NFSe") {
                 const servicos = os.servicos || [];
@@ -562,7 +562,7 @@ export default function NotasFiscais() {
       ordem_servico_id: nota.ordem_servico_id || '',
       valor_total: nota.valor_total || 0,
       observacoes: nota.observacoes || '',
-      forma_pagamento: nota.forma_pagamento || 'PIX',
+      forma_pagamento: nota.forma_pagamento || 'A Combinar',
       items: itensSalvos,
       _editId: nota.id,
     });
