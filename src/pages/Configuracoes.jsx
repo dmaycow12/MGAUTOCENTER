@@ -151,28 +151,28 @@ export default function Configuracoes() {
       <Section title="Dados da Oficina" icon={Settings}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <F label="Nome da Oficina">
-            <input value={config.nome_oficina} onChange={e => setConfig({ ...config, nome_oficina: e.target.value })} className="input-dark" placeholder="Ex: Auto Mecânica Silva" />
+            <input autoComplete="off" value={config.nome_oficina} onChange={e => setConfig({ ...config, nome_oficina: e.target.value })} className="input-dark" placeholder="Ex: Auto Mecânica Silva" />
           </F>
           <F label="CNPJ">
-            <input value={config.cnpj} onChange={e => setConfig({ ...config, cnpj: e.target.value })} className="input-dark" placeholder="00.000.000/0001-00" />
+            <input autoComplete="off" value={config.cnpj} onChange={e => setConfig({ ...config, cnpj: e.target.value })} className="input-dark" placeholder="00.000.000/0001-00" />
           </F>
           <F label="Telefone">
-            <input value={config.telefone} onChange={e => setConfig({ ...config, telefone: e.target.value })} className="input-dark" />
+            <input autoComplete="off" value={config.telefone} onChange={e => setConfig({ ...config, telefone: e.target.value })} className="input-dark" />
           </F>
           <F label="E-mail">
-            <input value={config.email} onChange={e => setConfig({ ...config, email: e.target.value })} className="input-dark" />
+            <input autoComplete="off" value={config.email} onChange={e => setConfig({ ...config, email: e.target.value })} className="input-dark" />
           </F>
           <F label="Endereço" className="col-span-1 md:col-span-2">
-            <input value={config.endereco} onChange={e => setConfig({ ...config, endereco: e.target.value })} className="input-dark" />
+            <input autoComplete="off" value={config.endereco} onChange={e => setConfig({ ...config, endereco: e.target.value })} className="input-dark" />
           </F>
           <F label="CEP">
-            <input value={config.cep} onChange={e => setConfig({ ...config, cep: e.target.value })} className="input-dark" />
+            <input autoComplete="off" value={config.cep} onChange={e => setConfig({ ...config, cep: e.target.value })} className="input-dark" />
           </F>
           <F label="Cidade">
-            <input value={config.cidade} onChange={e => setConfig({ ...config, cidade: e.target.value })} className="input-dark" />
+            <input autoComplete="off" value={config.cidade} onChange={e => setConfig({ ...config, cidade: e.target.value })} className="input-dark" />
           </F>
           <F label="Estado">
-            <input value={config.estado} onChange={e => setConfig({ ...config, estado: e.target.value })} className="input-dark" maxLength={2} />
+            <input autoComplete="off" value={config.estado} onChange={e => setConfig({ ...config, estado: e.target.value })} className="input-dark" maxLength={2} />
           </F>
         </div>
       </Section>
