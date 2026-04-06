@@ -291,8 +291,20 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
           if (formas.length === 1) return formas[0];
           return "Misto";
         })()}</td>}
-        {colunas.nfe && <td className="px-4 py-3">{temNfeProduto && <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">✓ NFe/NFCe</span>}</td>}
-        {colunas.nfse && <td className="px-4 py-3">{temNfServico && <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">✓ NFSe</span>}</td>}
+        {colunas.nfe && <td className="px-4 py-3">{temNfeProduto && (() => {
+          const nfes = notasOs.filter(n => n.tipo === 'NFe' && n.status === 'Emitida');
+          const nfces = notasOs.filter(n => n.tipo === 'NFCe' && n.status === 'Emitida');
+          const nfe = nfes[0];
+          const nfce = nfces[0];
+          if (nfe) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">NFe({nfe.numero})</span>;
+          if (nfce) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">NFCe({nfce.numero})</span>;
+          return null;
+        })()}</td>}
+        {colunas.nfse && <td className="px-4 py-3">{temNfServico && (() => {
+          const nfse = notasOs.find(n => n.tipo === 'NFSe' && n.status === 'Emitida');
+          if (nfse) return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">NFSe({nfse.numero})</span>;
+          return null;
+        })()}</td>}
         <td className="px-4 py-3">
           <div className="flex gap-1 justify-end" style={{whiteSpace:'nowrap'}}>
             <button onClick={() => onEdit?.()} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all" title="Editar">
