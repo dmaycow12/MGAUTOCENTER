@@ -351,8 +351,8 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
       const pago = ["Dinheiro", "PIX"].includes(formaParc);
       await base44.entities.Financeiro.create({
         tipo: "Receita",
-        categoria: "Ordem de Serviço",
-        descricao: `OS #${osData.numero} — ${osData.cliente_nome || ""} — Parcela ${p.numero}/${lista.length}`,
+        categoria: "Ordem de Venda",
+        descricao: `Venda #${osData.numero} — ${osData.cliente_nome || ""} — Parcela ${p.numero}/${lista.length}`,
         valor: p.valor,
         data_vencimento: p.vencimento,
         status: pago ? "Pago" : "Pendente",
@@ -439,14 +439,14 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
           <input type="email" name="email" autoComplete="email" tabIndex={-1} />
         </div>
         <div className="flex items-center justify-between p-5 border-b border-gray-800">
-          <h2 className="text-white font-semibold">{os ? `Ordem de Venda #${os.numero}` : "Ordem de Venda"}</h2>
+          <h2 className="text-white font-semibold">{os ? `Venda #${os.numero}` : "Nova Venda"}</h2>
           <button type="button" onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
         </div>
 
         {isConcluida && (
           <div className="mx-5 mt-4 flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-3 text-yellow-400 text-sm">
             <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-            <span>OS Concluído — apenas o status pode ser alterado. Para editar, mude o status para <b>Aberto</b>.</span>
+            <span>Venda Concluída — apenas o status pode ser alterado. Para editar, mude o status para <b>Aberto</b>.</span>
           </div>
         )}
 
@@ -729,7 +729,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
             <h3 className="text-lg font-bold">Atenção!</h3>
           </div>
           <p className="text-gray-300 text-sm leading-relaxed">
-            Ao reabrir esta OS, <strong className="text-red-400">todos os lançamentos financeiros</strong> serão <strong className="text-red-400">excluídos automaticamente</strong>.
+            Ao reabrir esta Venda, <strong className="text-red-400">todos os lançamentos financeiros</strong> serão <strong className="text-red-400">excluídos automaticamente</strong>.
           </p>
           <div className="flex gap-3 justify-end">
             <button onClick={() => { setShowAvisoReabrir(false); setStatusPendente(null); }} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg">Cancelar</button>
