@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, FileText } from "lucide-react";
+import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, FileText, Settings } from "lucide-react";
 import ModalEmissaoMassa from "@/components/notas/ModalEmissaoMassa";
 import OSForm from "@/components/os/OSForm";
 import OrdemVendaCard from "@/components/os/OrdemVendaCard";
-import OrdemVendaRow from "@/components/os/OrdemVendaRow";
+import OrdemVendaRow, { COLUNAS_PADRAO } from "@/components/os/OrdemVendaRow";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
@@ -23,6 +23,12 @@ export default function OrdemServico() {
   const [clientes, setClientes] = useState([]);
   const [veiculos, setVeiculos] = useState([]);
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("os_viewmode") || "cards");
+  const [colunasVisiveis, setColunasVisiveis] = useState(() => {
+    const saved = localStorage.getItem("os_colunasVisiveis");
+    return saved ? JSON.parse(saved) : COLUNAS_PADRAO;
+  });
+  const [showColunasFilter, setShowColunasFilter] = useState(false);
+  const filtroRef = useRef(null);
 
   const hoje = new Date();
   const [filtroMes, setFiltroMes] = useState(() => {
@@ -60,6 +66,15 @@ export default function OrdemServico() {
   useEffect(() => { localStorage.setItem("os_outroPeriodoInicio", outroPeriodoInicio); }, [outroPeriodoInicio]);
   useEffect(() => { localStorage.setItem("os_outroPeriodoFim", outroPeriodoFim); }, [outroPeriodoFim]);
   useEffect(() => { localStorage.setItem("os_customRange", JSON.stringify(customRange)); }, [customRange]);
+  useEffect(() => { localStorage.setItem("os_colunasVisiveis", JSON.stringify(colunasVisiveis)); }, [colunasVisiveis]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (filtroRef.current && !filtroRef.current.contains(e.target)) setShowColunasFilter(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const navegarMes = (dir) => {
     setUsandoOutroPeriodo(false);
@@ -249,8 +264,8 @@ export default function OrdemServico() {
           </div>
         </div>
 
-        {/* Linha 4: busca + toggle */}
-        <div className="flex gap-2">
+        {/* Linha 4: busca + toggle + filtro colunas */}
+         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
@@ -262,10 +277,48 @@ export default function OrdemServico() {
             />
           </div>
           <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
-            <button onClick={() => { setViewMode("list"); localStorage.setItem("os_viewmode","list"); }} className="px-3 py-2 transition-all" style={{background: viewMode==="list"?"#062C9B":"transparent",color:viewMode==="list"?"#fff":"#6b7280"}}><List className="w-5 h-5"/></button>
-            <button onClick={() => { setViewMode("cards"); localStorage.setItem("os_viewmode","cards"); }} className="px-3 py-2 transition-all" style={{background: viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-5 h-5"/></button>
+           <button onClick={() => { setViewMode("list"); localStorage.setItem("os_viewmode","list"); }} className="px-3 py-2 transition-all" style={{background: viewMode==="list"?"#062C9B":"transparent",color:viewMode==="list"?"#fff":"#6b7280"}}><List className="w-5 h-5"/></button>
+           <button onClick={() => { setViewMode("cards"); localStorage.setItem("os_viewmode","cards"); }} className="px-3 py-2 transition-all" style={{background: viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-5 h-5"/></button>
           </div>
-        </div>
+          {viewMode === "list" && (
+           <div className="relative" ref={filtroRef}>
+             <button
+               onClick={() => setShowColunasFilter(!showColunasFilter)}
+               className="flex items-center justify-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"
+             >
+               <Settings className="w-4 h-4" /> Filtro
+             </button>
+             {showColunasFilter && (
+               <div className="absolute right-0 top-full mt-1 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-56 z-50">
+                 <p className="text-xs text-gray-400 font-semibold mb-3 uppercase">Colunas Adicionais</p>
+                 <div className="space-y-2">
+                   {[
+                     { key: 'data', label: 'Data' },
+                     { key: 'cliente', label: 'Cliente' },
+                     { key: 'veiculo', label: 'Veículo' },
+                     { key: 'placa', label: 'Placa' },
+                     { key: 'km', label: 'KM' },
+                     { key: 'status', label: 'Status' },
+                     { key: 'pagamento', label: 'Pagamento' },
+                     { key: 'nfe', label: 'NFe/NFCe' },
+                     { key: 'nfse', label: 'NFSe' },
+                   ].map(({ key, label }) => (
+                     <label key={key} className="flex items-center gap-2 cursor-pointer">
+                       <input
+                         type="checkbox"
+                         checked={colunasVisiveis[key]}
+                         onChange={(e) => setColunasVisiveis(prev => ({ ...prev, [key]: e.target.checked }))}
+                         className="w-4 h-4 rounded border-gray-600 accent-blue-600"
+                       />
+                       <span className="text-sm text-gray-300">{label}</span>
+                     </label>
+                   ))}
+                 </div>
+               </div>
+             )}
+           </div>
+          )}
+          </div>
       </div>
 
       {/* Lista */}
@@ -287,18 +340,19 @@ export default function OrdemServico() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[700px]">
               <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">OS</th>
-                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Cliente</th>
-                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-36">Veículo</th>
-                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Placa</th>
-                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-24">KM</th>
-                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-24">Data</th>
-                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Status</th>
-                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Pagamento</th>
-                  <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Valor</th>
-                  <th className="px-4 py-2.5 w-36"></th>
-                </tr>
+               <tr className="border-b border-gray-800">
+                 <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-12">Nº</th>
+                 {colunasVisiveis.data && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">Data</th>}
+                 {colunasVisiveis.cliente && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider flex-1">Cliente</th>}
+                 {colunasVisiveis.veiculo && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Veículo</th>}
+                 {colunasVisiveis.placa && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">Placa</th>}
+                 {colunasVisiveis.km && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">KM</th>}
+                 {colunasVisiveis.status && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Status</th>}
+                 {colunasVisiveis.pagamento && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-24">Pgto</th>}
+                 {colunasVisiveis.nfe && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">NFe/NFCe</th>}
+                 {colunasVisiveis.nfse && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">NFSe</th>}
+                 <th className="px-4 py-2.5 w-32"></th>
+               </tr>
               </thead>
               <tbody>
                 {filtradas.map(os => (
@@ -306,6 +360,7 @@ export default function OrdemServico() {
                     key={os.id}
                     os={os}
                     notas={notas}
+                    colunas={colunasVisiveis}
                     onEdit={() => { setEditando(os); setShowForm(true); }}
                     onDelete={() => excluir(os.id)}
                     onRefresh={load}

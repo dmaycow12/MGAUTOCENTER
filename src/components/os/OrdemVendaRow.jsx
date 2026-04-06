@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { ChevronDown, Pencil, Printer, Trash2, FileText, MoreVertical, AlertTriangle } from "lucide-react";
+import { ChevronDown, Pencil, Printer, Trash2, FileText, MoreVertical, AlertTriangle, Settings } from "lucide-react";
 import { gerarHTMLImpressao } from "./osImpressao";
 import { reduzirEstoque, restaurarEstoque, excluirLancamentosOS } from "./estoqueUtils";
 
@@ -13,6 +13,18 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
     </svg>
   );
 }
+
+const COLUNAS_PADRAO = {
+  data: true,
+  cliente: true,
+  veiculo: true,
+  placa: true,
+  km: true,
+  status: true,
+  pagamento: true,
+  nfe: true,
+  nfse: true,
+};
 
 function InlineEdit({ value, onSave, placeholder = "", mono = false }) {
   const [editing, setEditing] = useState(false);
@@ -57,7 +69,7 @@ function fmtValor(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefresh }) {
+export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefresh, colunas = COLUNAS_PADRAO, onSaveColumns }) {
   const notasOs = notas.filter(n => n.ordem_servico_id === os.id && n.status !== 'Rascunho');
   const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe') && n.status === 'Emitida');
   const temNfServico = notasOs.some(n => n.tipo === 'NFSe' && n.status === 'Emitida');
@@ -241,31 +253,13 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
       )}
 
       <tr className="border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
-        <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">
-          <div className="flex items-center gap-2">
-            <span>#{os.numero || "—"}</span>
-          </div>
-        </td>
-        <td className="px-4 py-3">
-          <div className="flex items-center gap-1">
-            {temNfeProduto && <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">✓ NFe/NFCe</span>}
-            {temNfServico && <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">✓ NFSe</span>}
-          </div>
-        </td>
-        <td className="px-4 py-3">
-          <p className="text-white text-sm font-medium">{os.cliente_nome || "—"}</p>
-        </td>
-        <td className="px-4 py-3">
-          <InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" />
-        </td>
-        <td className="px-4 py-3">
-          <InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono />
-        </td>
-        <td className="px-4 py-3">
-          <InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" />
-        </td>
-        <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>
-        <td className="px-4 py-3">
+        <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">#{os.numero || "—"}</td>
+        {colunas.data && <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>}
+        {colunas.cliente && <td className="px-4 py-3"><p className="text-white text-sm font-medium">{os.cliente_nome || "—"}</p></td>}
+        {colunas.veiculo && <td className="px-4 py-3"><InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" /></td>}
+        {colunas.placa && <td className="px-4 py-3"><InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono /></td>}
+        {colunas.km && <td className="px-4 py-3"><InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" /></td>}
+        {colunas.status && <td className="px-4 py-3">
           <div className="relative inline-block">
             <button
               ref={statusBtnRef}
@@ -296,10 +290,11 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
           if (formas.length === 0) return os.forma_pagamento || "—";
           if (formas.length === 1) return formas[0];
           return "Misto";
-        })()}</td>
-        <td className="px-4 py-3 text-right text-green-400 font-bold text-sm whitespace-nowrap">{fmtValor(os.valor_total)}</td>
+        })()}</td>}
+        {colunas.nfe && <td className="px-4 py-3">{temNfeProduto && <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">✓ NFe/NFCe</span>}</td>}
+        {colunas.nfse && <td className="px-4 py-3">{temNfServico && <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">✓ NFSe</span>}</td>}
         <td className="px-4 py-3">
-          <div className="flex gap-1 justify-end">
+          <div className="flex gap-1 justify-end" style={{whiteSpace:'nowrap'}}>
             <button onClick={() => onEdit?.()} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all" title="Editar">
               <Pencil className="w-4 h-4" />
             </button>
@@ -335,3 +330,5 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
     </>
   );
 }
+
+export { COLUNAS_PADRAO };
