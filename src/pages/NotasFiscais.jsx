@@ -135,6 +135,7 @@ export default function NotasFiscais() {
   const [form, setForm] = useState(defaultForm());
   const [emitindo, setEmitindo] = useState(false);
   const [transmitindo, setTransmitindo] = useState(null);
+  const [aguardandoEmissao, setAguardandoEmissao] = useState(false);
   const currentEditIdRef = useRef(null);
   const [msgFeedback, setMsgFeedback] = useState(null);
   const [temSpedy, setTemSpedy] = useState(false);
@@ -470,7 +471,11 @@ export default function NotasFiscais() {
     }
 
     if (rascunhoNota) setTransmitindo(rascunhoNota.id);
-    else setEmitindo(true);
+    else {
+      setEmitindo(true);
+      setShowForm(false);
+      setAguardandoEmissao(true);
+    }
 
     if (!rascunhoNota && !currentEditIdRef.current) {
       const { _editId, ...dadosForm } = f;
@@ -498,7 +503,6 @@ export default function NotasFiscais() {
       if (response.data?.sucesso) {
         feedback('sucesso', `Nota ${f.tipo} transmitida com sucesso! ${response.data.mensagem || ''}`);
         currentEditIdRef.current = null;
-        setShowForm(false);
         setForm(defaultForm());
       } else {
         feedback("erro", response.data?.erro || "Erro ao emitir.");
@@ -508,6 +512,7 @@ export default function NotasFiscais() {
       feedback("erro", "Erro: " + e.message);
     }
     setEmitindo(false);
+    setAguardandoEmissao(false);
     setTransmitindo(null);
   };
 
@@ -1226,6 +1231,17 @@ export default function NotasFiscais() {
       )}
 
 
+
+      {/* Overlay aguardando emissão */}
+      {aguardandoEmissao && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center gap-6">
+          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+          <div className="text-center">
+            <p className="text-white text-xl font-bold">Transmitindo nota fiscal...</p>
+            <p className="text-gray-400 text-sm mt-2">Aguardando autorização da SEFAZ</p>
+          </div>
+        </div>
+      )}
 
       {showSintegra && (
         <ModalSintegra
