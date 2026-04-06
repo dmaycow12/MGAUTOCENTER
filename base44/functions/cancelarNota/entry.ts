@@ -33,20 +33,16 @@ Deno.serve(async (req) => {
     else endpoint = `/nfe/${referenceId}`;
 
     // Tenta cancelar na Focus NFe
-    let bodyPayload = {};
-    if (tipo === 'NFCe') {
-      // NFCe usa padrão diferente: justificativa diretamente
-      bodyPayload = { justificativa: 'Cancelamento solicitado pelo emitente.' };
-    } else {
-      // NFe e NFSe usam mesmo padrão
-      bodyPayload = { justificativa: 'Cancelamento solicitado pelo emitente.' };
-    }
+    // Para NFCe: DELETE /v2/nfce/{referencia} com justificativa no body (15-255 chars)
+    const justificativa = 'Cancelamento solicitado pelo emitente.';
     
     const resp = await fetch(`${FOCUSNFE_BASE}${endpoint}`, {
       method: 'DELETE',
       headers: { 'Authorization': AUTH_HEADER, 'Content-Type': 'application/json' },
-      body: JSON.stringify(bodyPayload),
+      body: JSON.stringify({ justificativa }),
     });
+    
+    console.log('[CANCEL REQUEST] Endpoint:', endpoint, 'Tipo:', tipo);
 
     const text = await resp.text();
     let resultFinal = {};
@@ -68,9 +64,9 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: msgErro || 'Falha ao cancelar', debug: resultFinal }, { status: 400 });
     }
 
-    // Polling para confirmar cancelamento (até 12 tentativas × 2s = 24s)
-    // Para NFCe, o status pode vir como 'cancelado' ou em um objeto 'cancelamento'
-    let statusCancelamento = resultFinal.status || resultFinal.cancelamento?.status || 'processando';
+    // Para NFCe, o status retornado é simples: "cancelado" ou "erro_cancelamento"
+    // Para NFe/NFSe, é igual
+    let statusCancelamento = resultFinal.status || 'processando';
     for (let i = 0; i < 12 && statusCancelamento !== 'cancelado'; i++) {
       if (i > 0) {
         await new Promise(r => setTimeout(r, 2000));
@@ -83,8 +79,8 @@ Deno.serve(async (req) => {
           const consultaText = await consultaResp.text();
           try {
             resultFinal = JSON.parse(consultaText);
-            // Para NFCe, verificar em resultFinal.cancelamento.status
-            statusCancelamento = resultFinal.status || resultFinal.cancelamento?.status || statusCancelamento;
+            statusCancelamento = resultFinal.status || statusCancelamento;
+            console.log('[POLLING]', i, 'Status:', statusCancelamento);
           } catch (_) {}
         }
       } catch (_) {}
