@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
       data_emissao, serie_manual,
     } = body;
 
-    // Monta timestamp de emissão sempre no passado para evitar E0008
+    // Monta timestamp de emissão
     const pad = (n) => String(n).padStart(2, '0');
     const agora = new Date();
     const brasiliaMs = agora.getTime() - (3 * 60 * 60 * 1000);
@@ -43,11 +43,11 @@ Deno.serve(async (req) => {
 
     let dataEmissaoISO;
     if (dataBase >= hojeStr) {
-      // Data de hoje ou futura: usa hora atual de Brasília menos 10 minutos
-      const dezMinAtras = new Date(brasiliaMs - 10 * 60 * 1000);
-      const h = pad(dezMinAtras.getUTCHours());
-      const m = pad(dezMinAtras.getUTCMinutes());
-      dataEmissaoISO = `${hojeStr}T${h}:${m}:00-03:00`;
+      // NFCe é muito sensível a atraso — usa horário atual de Brasília exato
+      const h = pad(brasiliaDate.getUTCHours());
+      const m = pad(brasiliaDate.getUTCMinutes());
+      const s = pad(brasiliaDate.getUTCSeconds());
+      dataEmissaoISO = `${hojeStr}T${h}:${m}:${s}-03:00`;
     } else {
       // Data passada: usa meio-dia (sempre seguro)
       dataEmissaoISO = `${dataBase}T12:00:00-03:00`;
