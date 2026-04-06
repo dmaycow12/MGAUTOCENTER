@@ -487,7 +487,7 @@ export default function NotasFiscais() {
 
     if (!rascunhoNota && !currentEditIdRef.current) {
       const { _editId, ...dadosForm } = f;
-      const novoRascunho = await base44.entities.NotaFiscal.create({ ...dadosForm, status: 'Rascunho' });
+      const novoRascunho = await base44.entities.NotaFiscal.create({ ...dadosForm, status: 'Rascunho', xml_content: JSON.stringify(f.items || []) });
       currentEditIdRef.current = novoRascunho.id;
       setForm(prev => ({ ...prev, _editId: novoRascunho.id }));
     }
@@ -581,9 +581,9 @@ export default function NotasFiscais() {
     const editId = currentEditIdRef.current || form._editId;
     if (editId) {
       const { _editId, ...dados } = form;
-      await base44.entities.NotaFiscal.update(editId, { ...dados, status: 'Rascunho' });
+      await base44.entities.NotaFiscal.update(editId, { ...dados, status: 'Rascunho', xml_content: JSON.stringify(form.items || []) });
     } else {
-      await base44.entities.NotaFiscal.create({ ...form, status: 'Rascunho' });
+      await base44.entities.NotaFiscal.create({ ...form, status: 'Rascunho', xml_content: JSON.stringify(form.items || []) });
     }
     currentEditIdRef.current = null;
     setShowForm(false);

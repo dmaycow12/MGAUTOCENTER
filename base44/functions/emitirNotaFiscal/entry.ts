@@ -277,6 +277,7 @@ Deno.serve(async (req) => {
 
     const notaData = {
       tipo,
+      xml_content: JSON.stringify(items || []),
       numero: tipo === 'NFSe' ? String(proximoRps) : (body.numero ? String(body.numero) : ''),
       serie: tipo === 'NFSe' ? '900' : (serie_manual || '1'),
       status: statusNota,
