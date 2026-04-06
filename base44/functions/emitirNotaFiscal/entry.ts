@@ -66,6 +66,8 @@ Deno.serve(async (req) => {
     let endpoint = '';
     let payload = null;
     let proximoRps = null;
+    let proximoNfce = null;
+    let proximoNfe = null;
 
     if (tipo === 'NFSe') {
       endpoint = `/nfsen?ref=${ref}`;
@@ -128,7 +130,7 @@ Deno.serve(async (req) => {
       // Calcula proximo numero NFCe: usa APENAS a config salva (fonte da verdade)
       const configsNfce = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfce_ultimo_numero' });
       const ultimoNfce = parseInt(configsNfce[0]?.valor || '0', 10);
-      const proximoNfce = ultimoNfce + 1;
+      proximoNfce = ultimoNfce + 1;
       
       // Reserva o numero ANTES de enviar a Focus NFe
       if (configsNfce.length > 0) {
@@ -180,7 +182,7 @@ Deno.serve(async (req) => {
       // Calcula proximo numero NFe: usa APENAS a config salva (fonte da verdade)
       const configsNfe = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfe_ultimo_numero' });
       const ultimoNfe = parseInt(configsNfe[0]?.valor || '0', 10);
-      const proximoNfe = ultimoNfe + 1;
+      proximoNfe = ultimoNfe + 1;
       
       // Reserva o numero ANTES de enviar a Focus NFe
       if (configsNfe.length > 0) {
