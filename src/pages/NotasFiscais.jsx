@@ -145,7 +145,7 @@ export default function NotasFiscais() {
   const [configsNF, setConfigsNF] = useState([]);
 
   useEffect(() => {
-    load().then(async () => {
+    load().then(async ({ estoque: estoqueData }) => {
       const params = new URLSearchParams(window.location.search);
       if (params.get("emitir") === "1") {
         const tipo = params.get("tipo") || "NFSe";
@@ -173,9 +173,9 @@ export default function NotasFiscais() {
                 forma_pagamento: os.forma_pagamento || os.parcelas_detalhes?.[0]?.forma_pagamento || "A Combinar",
               };
               if (tipo === "NFSe") {
-                const servicos = os.servicos || [];
-                if (servicos.length > 0) {
-                  items = servicos.map(s => ({
+                const servs = os.servicos || [];
+                if (servs.length > 0) {
+                  items = servs.map(s => ({
                     descricao: s.descricao || "",
                     quantidade: Number(s.quantidade ?? 1),
                     valor_unitario: Number(s.valor || 0),
@@ -186,12 +186,21 @@ export default function NotasFiscais() {
               } else {
                 const pecas = os.pecas || [];
                 if (pecas.length > 0) {
-                  items = pecas.map(p => ({
-                    descricao: p.descricao || "",
-                    quantidade: Number(p.quantidade || 1),
-                    valor_unitario: Number(p.valor_unitario || 0),
-                    valor_total: Number(p.valor_total || 0),
-                  }));
+                  items = pecas.map(p => {
+                    const estoqueItem = estoqueData.find(e => e.id === p.estoque_id);
+                    return {
+                      descricao: p.descricao || "",
+                      codigo: p.codigo || estoqueItem?.codigo || "",
+                      estoque_id: p.estoque_id || "",
+                      quantidade: Number(p.quantidade || 1),
+                      valor_unitario: Number(p.valor_unitario || 0),
+                      valor_total: Number(p.valor_total || 0),
+                      ncm: estoqueItem?.ncm || "87089990",
+                      cfop: estoqueItem?.cfop || "5405",
+                      cest: estoqueItem?.cest || "",
+                      unidade: estoqueItem?.unidade || "UN",
+                    };
+                  });
                 }
                 valor_total = items.reduce((sum, it) => sum + it.valor_total, 0);
               }
@@ -258,6 +267,7 @@ export default function NotasFiscais() {
     setConfigsNF(configs);
     setTemSpedy(true);
     setLoading(false);
+    return { clientes: c, estoque: est };
   };
 
   const filtradas = notas.filter(n => {
