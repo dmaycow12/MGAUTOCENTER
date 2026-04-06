@@ -264,7 +264,7 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
             <button
               ref={statusBtnRef}
               onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
-              className="flex items-center justify-center gap-1 text-xs h-8 px-3 rounded-md font-semibold hover:opacity-90 transition-all whitespace-nowrap w-40"
+              className="flex items-center justify-center gap-1 text-xs h-6 px-3 rounded-md font-semibold hover:opacity-90 transition-all whitespace-nowrap w-40"
               style={style.style}
             >
               {os.status || "—"}
@@ -274,7 +274,7 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
               <div ref={statusRef} className="absolute left-0 top-full mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-[100] space-y-1 p-1" style={{width: '140px'}}>
                 {STATUS_OPTIONS.map(s => (
                   <button key={s} onClick={() => alterarStatus(s)}
-                    className="w-full flex items-center justify-center h-8 text-xs font-semibold rounded-md transition-all hover:opacity-90 whitespace-nowrap"
+                    className="w-full flex items-center justify-center h-6 text-xs font-semibold rounded-md transition-all hover:opacity-90 whitespace-nowrap"
                     style={{ background: STATUS_STYLE[s].style.background, color: "#fff" }}>
                     {s}
                   </button>
