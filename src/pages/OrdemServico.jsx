@@ -137,12 +137,15 @@ export default function OrdemServico() {
 
   const filtradas = ordens
     .filter(o => {
+      const s = search.toLowerCase();
       const matchSearch = !search ||
-        o.numero?.toLowerCase().includes(search.toLowerCase()) ||
-        o.cliente_nome?.toLowerCase().includes(search.toLowerCase()) ||
-        o.veiculo_placa?.toLowerCase().includes(search.toLowerCase());
+        o.numero?.toLowerCase().includes(s) ||
+        o.cliente_nome?.toLowerCase().includes(s) ||
+        o.veiculo_placa?.toLowerCase().includes(s) ||
+        o.veiculo_modelo?.toLowerCase().includes(s);
       const matchStatus = filtroStatus.length === 0 || filtroStatus.includes(o.status);
-      const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
+      // Se há busca por texto, ignora filtro de período para encontrar qualquer OS
+      const matchPeriodo = search.trim() ? true : (!periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim));
       return matchSearch && matchStatus && matchPeriodo;
     })
     .sort((a, b) => Number(a.numero || 0) - Number(b.numero || 0));
