@@ -331,19 +331,17 @@ export default function Configuracoes() {
               {feedbackUsuario.msg}
             </div>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
            <F label="Nome">
              <input autoComplete="new-password" value={novoUsuario.nome} onChange={e => setNovoUsuario(u => ({ ...u, nome: e.target.value }))} className="input-dark" />
            </F>
            <F label="Senha">
              <input type="password" autoComplete="new-password" value={novoUsuario.senha} onChange={e => setNovoUsuario(u => ({ ...u, senha: e.target.value }))} className="input-dark" />
            </F>
-          </div>
-          <div className="mt-5">
-            <button onClick={criarUsuario} disabled={salvandoUsuario} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold" style={{background:"#00ff00", color:"#000"}}>
-              <UserPlus className="w-4 h-4" />
-              {salvandoUsuario ? "Criando..." : "Criar Usuário"}
-            </button>
+           <button onClick={criarUsuario} disabled={salvandoUsuario} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold" style={{background:"#00ff00", color:"#000"}}>
+             <UserPlus className="w-4 h-4" />
+             {salvandoUsuario ? "Criando..." : "Criar Usuário"}
+           </button>
           </div>
         </div>
       </Section>
