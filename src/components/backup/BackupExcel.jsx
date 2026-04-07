@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Download, Loader, CheckCircle2, AlertTriangle } from "lucide-react";
 import * as XLSX from "xlsx";
 
-const ENTIDADES = ["Cliente", "Veiculo", "Estoque", "NotaFiscal", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
+const ENTIDADES = ["Cliente", "Estoque", "NotaFiscal", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
 
 export default function BackupExcel() {
   const [fazendo, setFazendo] = useState(false);
