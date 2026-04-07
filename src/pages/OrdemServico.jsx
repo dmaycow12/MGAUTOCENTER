@@ -130,12 +130,14 @@ export default function OrdemServico() {
     try {
       console.log("Iniciando carregamento de Vendas...");
       const [o, c, v, n] = await Promise.all([
-        base44.entities.Vendas.list("-created_date", 200),
+        base44.entities.Vendas.list("-created_date", 500),
       base44.entities.Cliente.list("-created_date", 200),
       base44.entities.Veiculo.list("-created_date", 500),
-      base44.entities.NotaFiscal.list("-created_date", 500),
+      base44.entities.NotaFiscal.list("-created_date", 1000),
     ]);
       console.log("Vendas carregadas:", o?.length || 0);
+      console.log("Notas carregadas:", n?.length || 0);
+      console.log("Primeiras 3 notas:", n?.slice(0, 3).map(nf => ({ id: nf.id, numero: nf.numero, tipo: nf.tipo, ordem_servico_id: nf.ordem_servico_id, status: nf.status })));
       setOrdens(o);
       setClientes(c);
       setVeiculos(v);
