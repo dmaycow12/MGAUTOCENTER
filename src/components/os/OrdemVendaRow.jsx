@@ -74,6 +74,7 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
   const notasOs = notas.filter(n => n.ordem_servico_id === os.id && n.status !== 'Rascunho');
   const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe') && n.status === 'Emitida');
   const temNfServico = notasOs.some(n => n.tipo === 'NFSe' && n.status === 'Emitida');
+  const temNFEmitida = temNfeProduto || temNfServico; // bloqueia edição e status
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -264,7 +265,9 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
           <div className="relative inline-block">
             <button
               ref={statusBtnRef}
-              onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
+              onClick={() => { if (temNFEmitida) return; setMenuOpen(false); setStatusOpen(v => !v); }}
+            disabled={temNFEmitida}
+            title={temNFEmitida ? 'Nota fiscal emitida — status bloqueado' : undefined}
               className="flex items-center justify-center gap-1 text-xs h-6 px-3 rounded-md font-semibold hover:opacity-90 transition-all whitespace-nowrap w-40"
               style={style.style}
             >
@@ -309,7 +312,7 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
         })()}</td>}
         <td className="px-4 py-3">
           <div className="flex gap-1 justify-end" style={{whiteSpace:'nowrap'}}>
-            <button onClick={() => onEdit?.()} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all" title="Editar">
+            <button onClick={() => { if (temNFEmitida) return; onEdit?.(); }} disabled={temNFEmitida} className={`w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all ${temNFEmitida ? 'text-gray-700 cursor-not-allowed' : 'text-gray-500 hover:text-blue-400'}`} title={temNFEmitida ? 'NF emitida — edição bloqueada' : 'Editar'}>
               <Pencil className="w-4 h-4" />
             </button>
             <button onClick={imprimir} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white rounded-lg hover:bg-gray-700 transition-all" title="Imprimir">

@@ -11,6 +11,7 @@ export default function ModalEmissaoMassa({ ordens, notas = [], onClose, onConcl
 
   // Filtra ordens elegíveis para o tipo de NF selecionado
   const ordensElegiveis = ordens.filter(os => {
+    if (os.status !== 'Concluído') return false; // apenas ordens concluídas
     // Verifica notas já emitidas para esta OS
     const notasOS = notas.filter(n => n.ordem_servico_id === os.id && n.status === 'Emitida');
     const temNFe = notasOS.some(n => n.tipo === 'NFe');
