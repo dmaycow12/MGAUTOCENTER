@@ -10,13 +10,21 @@ Deno.serve(async (req) => {
     let user = null;
     try { user = await base44.auth.me(); } catch (_) {}
 
-    if (!user || user?.role !== 'admin') {
-      return Response.json({ sucesso: false, erro: 'Acesso restrito a administradores' }, { status: 403 });
+    if (!user) {
+      return Response.json({ sucesso: false, erro: 'Usuário não autenticado' }, { status: 401 });
     }
 
-    const { numero, serie } = await req.json();
+    let { numero, serie } = await req.json();
 
     if (!numero) return Response.json({ sucesso: false, erro: 'Número é obrigatório' }, { status: 400 });
+
+    // Se for uma chave de acesso (44 dígitos), extrai número e série
+    const chaveInput = String(numero).replace(/\D/g, '');
+    if (chaveInput.length === 44) {
+      serie = chaveInput.substring(22, 25).replace(/^0+/, '') || '1';
+      numero = chaveInput.substring(25, 34).replace(/^0+/, '') || numero;
+      console.log('[CHAVE] Extraído da chave — número:', numero, 'série:', serie);
+    }
 
     // A Focus NFe usa referências no formato nfce-XXXX
     // Para encontrar por número, buscamos as notas recentes e filtramos
