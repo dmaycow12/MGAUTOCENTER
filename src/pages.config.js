@@ -55,7 +55,7 @@ import Estoque from './pages/Estoque';
 import Financeiro from './pages/Financeiro';
 import NotasFiscais from './pages/NotasFiscais';
 
-import OrdemServico from './pages/OrdemServico';
+import Vendas from './pages/Vendas';
 import Servicos from './pages/Servicos';
 import __Layout from './Layout.jsx';
 
@@ -69,7 +69,7 @@ export const PAGES = {
     "Financeiro": Financeiro,
     "NotasFiscais": NotasFiscais,
 
-    "Vendas": OrdemServico,
+    "Vendas": Vendas,
     "Servicos": Servicos,
 }
 

@@ -130,16 +130,14 @@ export default function Vendas() {
   const load = async () => {
     try {
       console.log("Iniciando carregamento de Vendas...");
-      const [o, c, v, n] = await Promise.all([
+      const [o, c, n] = await Promise.all([
         base44.entities.Vendas.list("-created_date", 500),
       base44.entities.Cliente.list("-created_date", 200),
-      base44.entities.Veiculo.list("-created_date", 500),
       base44.entities.NotaFiscal.list("-created_date", 1000),
     ]);
       console.log("Vendas carregadas:", o?.length || 0);
       setOrdens(o);
       setClientes(c);
-      setVeiculos(v);
       setNotas(n);
     } catch (err) {
       console.error("Erro ao carregar Vendas:", err);
@@ -368,7 +366,7 @@ export default function Vendas() {
       ) : viewMode === "cards" ? (
        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
          {filtradas.map(os => (
-           <OrdemVendaCard key={os.id} os={os} clientes={clientes} veiculos={veiculos} notas={notas} onEdit={() => { setEditando(os); setShowForm(true); }} onDelete={() => excluir(os.id)} onRefresh={load} />
+           <OrdemVendaCard key={os.id} os={os} clientes={clientes} notas={notas} onEdit={() => { setEditando(os); setShowForm(true); }} onDelete={() => excluir(os.id)} onRefresh={load} />
           ))}
         </div>
       ) : (
@@ -412,12 +410,11 @@ export default function Vendas() {
       {/* Form Modal */}
       {showForm && (
        <VendaForm
-         os={editando}
-          clientes={clientes}
-          veiculos={veiculos}
-          onClose={() => { setShowForm(false); setEditando(null); }}
-          onSave={() => { setShowForm(false); setEditando(null); load(); }}
-        />
+          os={editando}
+           clientes={clientes}
+           onClose={() => { setShowForm(false); setEditando(null); }}
+           onSave={() => { setShowForm(false); setEditando(null); load(); }}
+         />
       )}
 
       {showEmissaoMassa && (
