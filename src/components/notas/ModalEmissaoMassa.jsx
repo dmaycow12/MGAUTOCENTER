@@ -12,21 +12,16 @@ export default function ModalEmissaoMassa({ ordens, notas = [], onClose, onConcl
   // Filtra ordens elegíveis para o tipo de NF selecionado
   const ordensElegiveis = ordens.filter(os => {
     if (os.status !== 'Concluído') return false; // apenas ordens concluídas
-    const isConsumidor = os.cliente_nome?.toUpperCase() === 'CONSUMIDOR';
     // Verifica notas já emitidas para esta OS
     const notasOS = notas.filter(n => n.ordem_servico_id === os.id && n.status === 'Emitida');
     const temNFe = notasOS.some(n => n.tipo === 'NFe');
     const temNFCe = notasOS.some(n => n.tipo === 'NFCe');
     const temNFSe = notasOS.some(n => n.tipo === 'NFSe');
-    // CONSUMIDOR só emite NFCe
-    if (isConsumidor && tipoNF !== 'NFCe') return false;
     if (tipoNF === 'NFSe') {
-      if (isConsumidor) return false; // CONSUMIDOR não emite NFSe
       if (temNFSe) return false; // já emitiu NFSe
       return (os.servicos || []).length > 0; // só mostra se tem serviços
     }
     if (tipoNF === 'NFe') {
-      if (isConsumidor) return false; // CONSUMIDOR não emite NFe
       if (temNFe || temNFCe) return false; // já emitiu NFe ou NFCe
       return (os.pecas || []).length > 0; // só mostra se tem produtos
     }

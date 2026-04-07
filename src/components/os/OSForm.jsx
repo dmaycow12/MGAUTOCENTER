@@ -62,10 +62,11 @@ function recalcular(servicos, pecas, desconto) {
   return { valor_servicos: vs, valor_pecas: vp, valor_total: Math.max(0, total) };
 }
 
-export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
+export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   const isConcluida = os?.status === "Concluído";
   const [form, setForm] = useState(() => {
     const base = os ? { ...defaultForm(), ...os, fotos: os.fotos || [] } : defaultForm();
+    // Apenas preenche data_entrada com hoje se for uma OS nova
     if (!os && !base.data_entrada) {
       base.data_entrada = new Date().toISOString().split("T")[0];
     }
@@ -139,7 +140,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   useEffect(() => {
     if (!os) {
-      base44.entities.Vendas.list("-created_date", 500).then(all => {
+      base44.entities.OrdemServico.list("-created_date", 500).then(all => {
         const nums = all.map(o => parseInt(o.numero, 10)).filter(n => !isNaN(n));
         const proximo = nums.length > 0 ? Math.max(...nums) + 1 : 1;
         setForm(f => ({ ...f, numero: String(proximo) }));
@@ -171,6 +172,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       const n = Math.max(1, Number(form.parcelas) || 1);
       const valorParcela = parseFloat((form.valor_total / n).toFixed(2));
       const base = form.data_entrada ? new Date(form.data_entrada + "T00:00:00") : new Date();
+      // Ao mudar quantidade: recria parcelas preservando formas já definidas
       setParcelas(prev => Array.from({ length: n }, (_, i) => {
         const d = new Date(base);
         d.setMonth(d.getMonth() + i);
@@ -184,6 +186,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     } else if (totalMudou) {
       const n = Math.max(1, Number(form.parcelas) || 1);
       const valorParcela = parseFloat((form.valor_total / n).toFixed(2));
+      // Ao mudar total: só atualiza valor, PRESERVA forma_pagamento
       setParcelas(prev => prev.map(p => ({ ...p, valor: valorParcela })));
     }
   }, [form.valor_total, form.parcelas]);
@@ -338,6 +341,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       setParcelas(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: val } : p));
       return;
     }
+    // Rebalanceia as outras parcelas
     setParcelas(prev => {
       const novoValor = Number(val) || 0;
       const totalGeral = form.valor_total;
@@ -361,6 +365,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const confirmarReabrir = async () => {
+    // Nota: A restauração de estoque é feita em OSCard ao alterar status
+    // Aqui apenas atualizamos o form para permitir edição
     setForm(f => ({ ...f, status: statusPendente }));
     setShowAvisoReabrir(false);
     setStatusPendente(null);
@@ -385,7 +391,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         status: pago ? "Pago" : "Pendente",
         data_pagamento: pago ? new Date().toISOString().split("T")[0] : "",
         forma_pagamento: formaParc,
-        ordem_venda_id: osData.id || "",
+        ordem_servico_id: osData.id || "",
         cliente_id: osData.cliente_id || "",
       });
     }
@@ -403,7 +409,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       let formFinal = { ...form, parcelas_detalhes: parcelasNormalizadas, forma_pagamento: formaPrincipal };
 
       if (!os) {
-        const todas = await base44.entities.Vendas.list("-created_date", 500);
+        const todas = await base44.entities.OrdemServico.list("-created_date", 500);
         const numerosUsados = new Set(todas.map(o => String(o.numero).trim()));
         let numeroTentativa = parseInt(formFinal.numero, 10) || 1;
         while (numerosUsados.has(String(numeroTentativa))) numeroTentativa++;
@@ -422,9 +428,9 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       };
 
       if (os) {
-        await base44.entities.Vendas.update(os.id, formToSave);
+        await base44.entities.OrdemServico.update(os.id, formToSave);
       } else {
-        const criada = await base44.entities.Vendas.create(formToSave);
+        const criada = await base44.entities.OrdemServico.create(formToSave);
         savedId = criada.id;
         if (formFinal.veiculo_placa && formFinal.cliente_id && formFinal.cliente_nome?.toUpperCase() !== "CONSUMIDOR") {
           const veiculo_marca = formFinal.veiculo_modelo?.split(" ")[0] || "";

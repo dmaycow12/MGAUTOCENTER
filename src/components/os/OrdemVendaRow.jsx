@@ -71,9 +71,9 @@ function fmtValor(v) {
 }
 
 export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefresh, colunas = COLUNAS_PADRAO, onSaveColumns }) {
-  const notasOs = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Rascunho');
-  const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
-  const temNfServico = notasOs.some(n => n.tipo === 'NFSe');
+  const notasOs = notas.filter(n => n.ordem_servico_id === os.id && n.status !== 'Rascunho');
+  const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe') && n.status === 'Emitida');
+  const temNfServico = notasOs.some(n => n.tipo === 'NFSe' && n.status === 'Emitida');
   const temNFEmitida = temNfeProduto || temNfServico; // bloqueia edição e status
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
@@ -83,7 +83,7 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
 
   const saveField = async (field, val) => {
-    await base44.entities.Vendas.update(os.id, { [field]: val });
+    await base44.entities.OrdemServico.update(os.id, { [field]: val });
     onRefresh?.();
   };
 
@@ -135,7 +135,7 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
     const eraConcluido = os.status === "Concluído";
     const ficaConcluido = novoStatus === "Concluído";
     if (eraConcluido && !ficaConcluido) { setStatusPendente(novoStatus); setShowAviso(true); return; }
-    await base44.entities.Vendas.update(os.id, { status: novoStatus });
+    await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
     if (!eraConcluido && ficaConcluido) {
       await gerarLancamentosFinanceiros(os);
       await reduzirEstoque(os.pecas);
@@ -146,7 +146,7 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
   const confirmarMudancaStatus = async () => {
     await excluirLancamentosOS(os.id);
     await restaurarEstoque(os.pecas);
-    await base44.entities.Vendas.update(os.id, { status: statusPendente });
+    await base44.entities.OrdemServico.update(os.id, { status: statusPendente });
     setShowAviso(false);
     setStatusPendente(null);
     onRefresh?.();
@@ -157,7 +157,7 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
       await excluirLancamentosOS(os.id);
       await restaurarEstoque(os.pecas);
     }
-    await base44.entities.Vendas.delete(os.id);
+    await base44.entities.OrdemServico.delete(os.id);
     setShowAvisoExcluir(false);
     onRefresh?.();
   };
@@ -296,14 +296,18 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
           if (formas.length === 1) return formas[0];
           return "Misto";
         })()}</td>}
-        {colunas?.nfe && <td className="px-4 py-3">{(() => {
-          const nfe = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
-          if (nfe) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">{nfe.tipo}(#{nfe.numero})</span>;
+        {colunas.nfe && <td className="px-4 py-3">{temNfeProduto && (() => {
+          const nfes = notasOs.filter(n => n.tipo === 'NFe' && n.status === 'Emitida');
+          const nfces = notasOs.filter(n => n.tipo === 'NFCe' && n.status === 'Emitida');
+          const nfe = nfes[0];
+          const nfce = nfces[0];
+          if (nfe) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">NFe({nfe.numero})</span>;
+          if (nfce) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">NFCe({nfce.numero})</span>;
           return null;
         })()}</td>}
-        {colunas.nfse && <td className="px-4 py-3">{(() => {
-          const nfse = notasOs.find(n => n.tipo === 'NFSe');
-          if (nfse) return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">NFSe(#{nfse.numero})</span>;
+        {colunas.nfse && <td className="px-4 py-3">{temNfServico && (() => {
+          const nfse = notasOs.find(n => n.tipo === 'NFSe' && n.status === 'Emitida');
+          if (nfse) return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">NFSe({nfse.numero})</span>;
           return null;
         })()}</td>}
         <td className="px-4 py-3">

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, FileText, Settings, RefreshCw } from "lucide-react";
+import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, FileText, Settings } from "lucide-react";
 import ModalEmissaoMassa from "@/components/notas/ModalEmissaoMassa";
-import VendaForm from "@/components/os/VendaForm";
+import OSForm from "@/components/os/OSForm";
 import OrdemVendaCard from "@/components/os/OrdemVendaCard";
 import OrdemVendaRow, { COLUNAS_PADRAO } from "@/components/os/OrdemVendaRow";
 
@@ -25,11 +25,9 @@ export default function OrdemServico() {
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("os_viewmode") || "cards");
   const [colunasVisiveis, setColunasVisiveis] = useState(() => {
     const saved = localStorage.getItem("os_colunasVisiveis");
-    const parsed = saved ? JSON.parse(saved) : {};
-    return { ...COLUNAS_PADRAO, ...parsed };
+    return saved ? JSON.parse(saved) : COLUNAS_PADRAO;
   });
   const [showColunasFilter, setShowColunasFilter] = useState(false);
-  const [restaurando, setRestaurando] = useState(false);
   const filtroRef = useRef(null);
 
   const hoje = new Date();
@@ -128,31 +126,22 @@ export default function OrdemServico() {
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    try {
-      console.log("Iniciando carregamento de Vendas...");
-      const [o, c, v, n] = await Promise.all([
-        base44.entities.Vendas.list("-created_date", 500),
+    const [o, c, v, n] = await Promise.all([
+      base44.entities.OrdemServico.list("-created_date", 200),
       base44.entities.Cliente.list("-created_date", 200),
       base44.entities.Veiculo.list("-created_date", 500),
-      base44.entities.NotaFiscal.list("-created_date", 1000),
+      base44.entities.NotaFiscal.list("-created_date", 500),
     ]);
-      console.log("Vendas carregadas:", o?.length || 0);
-      setOrdens(o);
-      setClientes(c);
-      setVeiculos(v);
-      setNotas(n);
-    } catch (err) {
-      console.error("Erro ao carregar Vendas:", err);
-      console.error("Stack:", err.stack);
-      alert("Erro ao carregar vendas: " + err.message);
-    } finally {
-      setLoading(false);
-    }
+    setOrdens(o);
+    setClientes(c);
+    setVeiculos(v);
+    setNotas(n);
+    setLoading(false);
   };
 
   const excluir = async (id) => {
     if (!confirm("Excluir esta Ordem de Serviço?")) return;
-    await base44.entities.Vendas.delete(id);
+    await base44.entities.OrdemServico.delete(id);
     load();
   };
 
@@ -202,29 +191,6 @@ export default function OrdemServico() {
             title="Emitir NF em massa para as ordens filtradas"
           >
             <FileText className="w-4 h-4" /> NF Massa ({ordensParaMassa.length})
-          </button>
-          <button
-            onClick={async () => {
-              setRestaurando(true);
-              try {
-                const res = await base44.functions.invoke('restaurarNFVendasAgressivo', {});
-                if (res.data?.sucesso) {
-                  alert(`✅ ${res.data.restauradas} notas de venda restauradas!`);
-                  load();
-                } else {
-                  alert('❌ ' + (res.data?.erro || 'Erro ao restaurar'));
-                }
-              } catch (e) {
-                alert('❌ Erro: ' + e.message);
-              }
-              setRestaurando(false);
-            }}
-            disabled={restaurando}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-            style={{background: "#00ff00", color: "#000"}}
-          >
-            {restaurando ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            {restaurando ? 'Restaurando...' : 'Restaurar Histórico'}
           </button>
         </div>
 
@@ -411,8 +377,8 @@ export default function OrdemServico() {
 
       {/* Form Modal */}
       {showForm && (
-       <VendaForm
-         os={editando}
+        <OSForm
+          os={editando}
           clientes={clientes}
           veiculos={veiculos}
           onClose={() => { setShowForm(false); setEditando(null); }}
@@ -432,13 +398,4 @@ export default function OrdemServico() {
   );
 }
 
-function Loader() {
-  return (
-    <div className="flex items-center justify-center min-h-96">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-gray-700 border-t-orange-500 rounded-full animate-spin" />
-        <p className="text-gray-400 text-sm">Carregando vendas...</p>
-      </div>
-    </div>
-  );
-}
+function Loader() { return null; }
