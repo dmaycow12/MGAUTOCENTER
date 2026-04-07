@@ -3,63 +3,76 @@ import { base44 } from "@/api/base44Client";
 import { Download, Loader } from "lucide-react";
 
 export default function BackupCreator() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(null);
   const [status, setStatus] = useState(null);
 
-  const handleBackup = async () => {
-    setLoading(true);
+  const downloadFile = async (type) => {
+    setLoading(type);
     setStatus(null);
     
     try {
-      console.log("Iniciando backup...");
-      const response = await base44.functions.invoke("downloadBackupZip", {});
-      console.log("Response:", response);
+      const funcName = type === "json" ? "downloadBackupJson" : "downloadBackupXlsx";
+      const response = await base44.functions.invoke(funcName, {});
       
       if (response.status !== 200) {
-        throw new Error(`Erro ${response.status}: ${response.data?.error || "Desconhecido"}`);
+        throw new Error(`Erro: ${response.data?.error || "Desconhecido"}`);
       }
 
-      // Response.data é o blob do ZIP
-      const blob = new Blob([response.data], { type: 'application/zip' });
+      const blob = new Blob([response.data], { 
+        type: type === "json" ? "application/json" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
+      });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `backup-${new Date().toISOString().split('T')[0]}.zip`;
+      const dataStr = new Date().toISOString().split('T')[0];
+      a.download = `backup-${dataStr}.${type === "json" ? "json" : "xlsx"}`;
       
-      console.log("Baixando arquivo...", a.download);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       
-      setStatus({ type: "success", msg: "Backup criado com sucesso!" });
+      setStatus({ type: "success", msg: `Backup ${type.toUpperCase()} baixado com sucesso!` });
     } catch (err) {
-      console.error("Erro no backup:", err);
+      console.error("Erro:", err);
       setStatus({ type: "error", msg: `Erro: ${err.message}` });
     } finally {
-      setLoading(false);
+      setLoading(null);
       setTimeout(() => setStatus(null), 4000);
     }
   };
 
   return (
-    <div>
-      <button
-        onClick={handleBackup}
-        disabled={loading}
-        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all text-black disabled:opacity-50"
-        style={{ background: loading ? "#ccff00" : "#00ff00" }}
-        onMouseEnter={(e) => !loading && (e.currentTarget.style.background = "#00dd00")}
-        onMouseLeave={(e) => e.currentTarget.style.background = "#00ff00"}
-      >
-        {loading ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-        {loading ? "Criando..." : "Criar Backup"}
-      </button>
+    <div className="space-y-3">
+      <div className="flex gap-3">
+        <button
+          onClick={() => downloadFile("json")}
+          disabled={loading !== null}
+          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all text-black disabled:opacity-50"
+          style={{ background: loading === "json" ? "#ccff00" : "#00ff00" }}
+          onMouseEnter={(e) => loading === null && (e.currentTarget.style.background = "#00dd00")}
+          onMouseLeave={(e) => loading === null && (e.currentTarget.style.background = "#00ff00")}
+        >
+          {loading === "json" ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+          {loading === "json" ? "Baixando..." : "JSON"}
+        </button>
+        
+        <button
+          onClick={() => downloadFile("xlsx")}
+          disabled={loading !== null}
+          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all text-black disabled:opacity-50"
+          style={{ background: loading === "xlsx" ? "#ccff00" : "#00ff00" }}
+          onMouseEnter={(e) => loading === null && (e.currentTarget.style.background = "#00dd00")}
+          onMouseLeave={(e) => loading === null && (e.currentTarget.style.background = "#00ff00")}
+        >
+          {loading === "xlsx" ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+          {loading === "xlsx" ? "Baixando..." : "XLSX"}
+        </button>
+      </div>
       
       {status && (
         <div
           style={{
-            marginTop: "12px",
             padding: "10px 12px",
             borderRadius: "8px",
             fontSize: "12px",
