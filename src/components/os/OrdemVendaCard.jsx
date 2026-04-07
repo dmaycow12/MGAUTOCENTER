@@ -68,7 +68,7 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
 
   const saveField = async (field, val) => {
-    await base44.entities.OrdemVenda.update(os.id, { [field]: val });
+    await base44.entities.OrdemServico.update(os.id, { [field]: val });
     onRefresh?.();
   };
 
@@ -120,7 +120,7 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
     const eraConcluido = os.status === "Concluído";
     const ficaConcluido = novoStatus === "Concluído";
     if (eraConcluido && !ficaConcluido) { setStatusPendenteCard(novoStatus); setShowAvisoStatus(true); return; }
-    await base44.entities.OrdemVenda.update(os.id, { status: novoStatus });
+    await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
     if (!eraConcluido && ficaConcluido) {
       await gerarLancamentosFinanceiros(os);
       await reduzirEstoque(os.pecas);
@@ -130,13 +130,13 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
 
   const confirmarMudancaStatus = async () => {
     try {
-      const todasOS = await base44.entities.OrdemVenda.list("-created_date", 1000);
+      const todasOS = await base44.entities.OrdemServico.list("-created_date", 1000);
       const osAtualizada = todasOS.find(o => o.id === os.id);
       const osData = osAtualizada || os;
       
       await excluirLancamentosOS(os.id);
       await restaurarEstoque(osData.pecas || []);
-      await base44.entities.OrdemVenda.update(os.id, { status: statusPendenteCard });
+      await base44.entities.OrdemServico.update(os.id, { status: statusPendenteCard });
       setShowAvisoStatus(false);
       setStatusPendenteCard(null);
       onRefresh?.();
@@ -148,7 +148,7 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
   const confirmarExcluir = async () => {
     if (os.status === "Concluído") {
       try {
-        const todasOS = await base44.entities.OrdemVenda.list("-created_date", 1000);
+        const todasOS = await base44.entities.OrdemServico.list("-created_date", 1000);
         const osAtualizada = todasOS.find(o => o.id === os.id);
         const osData = osAtualizada || os;
         
@@ -158,7 +158,7 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
         console.error("Erro ao restaurar estoque na exclusão:", err);
       }
     }
-    await base44.entities.OrdemVenda.delete(os.id);
+    await base44.entities.OrdemServico.delete(os.id);
     setShowAvisoExcluir(false);
     onRefresh?.();
   };

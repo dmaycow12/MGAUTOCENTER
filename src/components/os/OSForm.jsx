@@ -140,7 +140,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
 
   useEffect(() => {
     if (!os) {
-      base44.entities.OrdemVenda.list("-created_date", 500).then(all => {
+      base44.entities.OrdemServico.list("-created_date", 500).then(all => {
         const nums = all.map(o => parseInt(o.numero, 10)).filter(n => !isNaN(n));
         const proximo = nums.length > 0 ? Math.max(...nums) + 1 : 1;
         setForm(f => ({ ...f, numero: String(proximo) }));
@@ -409,7 +409,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
       let formFinal = { ...form, parcelas_detalhes: parcelasNormalizadas, forma_pagamento: formaPrincipal };
 
       if (!os) {
-        const todas = await base44.entities.OrdemVenda.list("-created_date", 500);
+        const todas = await base44.entities.OrdemServico.list("-created_date", 500);
         const numerosUsados = new Set(todas.map(o => String(o.numero).trim()));
         let numeroTentativa = parseInt(formFinal.numero, 10) || 1;
         while (numerosUsados.has(String(numeroTentativa))) numeroTentativa++;
@@ -428,9 +428,9 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
       };
 
       if (os) {
-        await base44.entities.OrdemVenda.update(os.id, formToSave);
+        await base44.entities.OrdemServico.update(os.id, formToSave);
       } else {
-        const criada = await base44.entities.OrdemVenda.create(formToSave);
+        const criada = await base44.entities.OrdemServico.create(formToSave);
         savedId = criada.id;
         if (formFinal.veiculo_placa && formFinal.cliente_id && formFinal.cliente_nome?.toUpperCase() !== "CONSUMIDOR") {
           const veiculo_marca = formFinal.veiculo_modelo?.split(" ")[0] || "";
