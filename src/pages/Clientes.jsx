@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, User, Phone, Mail, ChevronDown, ChevronUp, Car, X, LayoutGrid, List } from "lucide-react";
+import { Plus, Search, Edit, Trash2, User, Phone, Mail, ChevronDown, ChevronUp, Car, X, LayoutGrid, List, Loader2 } from "lucide-react";
 
 export default function Clientes() {
   const [clientes, setClientes] = useState([]);
@@ -18,6 +18,39 @@ export default function Clientes() {
     };
   });
   const [form, setForm] = useState(defaultForm());
+  const [buscandoCnpj, setBuscandoCnpj] = useState(false);
+
+  const buscarCnpj = async () => {
+    const cnpj = form.cpf_cnpj.replace(/\D/g, '');
+    if (cnpj.length !== 14) return alert('Digite um CNPJ válido com 14 dígitos.');
+    setBuscandoCnpj(true);
+    try {
+      const resp = await fetch(`https://www.cnpj.ws/cnpj/${cnpj}`);
+      if (!resp.ok) throw new Error('CNPJ não encontrado.');
+      const d = await resp.json();
+      const est = d.estabelecimento;
+      const ie = est?.inscricoes_estaduais?.find(i => i.ativo)?.inscricao_estadual || '';
+      setForm(f => ({
+        ...f,
+        tipo: 'Pessoa Jurídica',
+        nome: d.razao_social || f.nome,
+        nome_fantasia: est?.nome_fantasia || f.nome_fantasia,
+        rg_ie: ie,
+        email: est?.email || f.email,
+        telefone: est?.ddd1 && est?.telefone1 ? `(${est.ddd1}) ${est.telefone1}` : f.telefone,
+        cep: est?.cep || f.cep,
+        endereco: est?.logradouro || f.endereco,
+        numero: est?.numero || f.numero,
+        complemento: est?.complemento || f.complemento,
+        bairro: est?.bairro || f.bairro,
+        cidade: est?.cidade?.nome || f.cidade,
+        estado: est?.estado?.sigla || f.estado,
+      }));
+    } catch (e) {
+      alert('Erro ao buscar CNPJ: ' + e.message);
+    }
+    setBuscandoCnpj(false);
+  };
 
   function defaultForm() {
     return { nome: "", nome_fantasia: "", tipo: "Pessoa Física", cpf_cnpj: "", rg_ie: "", telefone: "", email: "", cep: "", endereco: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", observacoes: "" };
@@ -242,7 +275,16 @@ export default function Clientes() {
                   </select>
                 </FormGroup>
                 <FormGroup label="CPF / CNPJ">
-                   <input value={form.cpf_cnpj} onChange={e => setForm({ ...form, cpf_cnpj: e.target.value })} className="input-dark" autoComplete="new-password" />
+                  <div className="flex gap-2">
+                    <input value={form.cpf_cnpj} onChange={e => setForm({ ...form, cpf_cnpj: e.target.value })} className="input-dark" autoComplete="new-password" />
+                    {form.tipo === 'Pessoa Jurídica' && (
+                      <button type="button" onClick={buscarCnpj} disabled={buscandoCnpj}
+                        className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-white flex-shrink-0 disabled:opacity-50"
+                        style={{background:'#062C9B'}}>
+                        {buscandoCnpj ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : '🔍'} Buscar
+                      </button>
+                    )}
+                  </div>
                  </FormGroup>
                 <FormGroup label="Nome / Razão Social *">
                    <input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} className="input-dark" autoComplete="new-password" />
