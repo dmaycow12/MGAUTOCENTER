@@ -272,16 +272,6 @@ export default function NotasFiscais() {
     return { clientes: c, estoque: est };
   };
 
-  const notasPeriodo = notas.filter(n => {
-    const data = n.data_emissao || "";
-    return data >= periodoRange.inicio && data <= periodoRange.fim;
-  });
-  const totalNFeEmitida = filtradas.filter(n => n.tipo === 'NFe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
-  const totalNFCeEmitida = filtradas.filter(n => n.tipo === 'NFCe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
-  const totalNFSeEmitida = filtradas.filter(n => n.tipo === 'NFSe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
-  const totalNFeLancada = filtradas.filter(n => n.tipo === 'NFe' && n.status === 'Lançada').reduce((s, n) => s + Number(n.valor_total || 0), 0);
-  const totalNFSeLancada = filtradas.filter(n => n.tipo === 'NFSe' && n.status === 'Lançada').reduce((s, n) => s + Number(n.valor_total || 0), 0);
-
   const filtradas = notas.filter(n => {
     const isEntrada = n.status === "Importada" || n.status === "Lançada";
     if (filtroTipo === "Entrada" && !isEntrada) return false;
@@ -295,6 +285,12 @@ export default function NotasFiscais() {
     }
     return true;
   });
+
+  const totalNFeEmitida = filtradas.filter(n => n.tipo === 'NFe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
+  const totalNFCeEmitida = filtradas.filter(n => n.tipo === 'NFCe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
+  const totalNFSeEmitida = filtradas.filter(n => n.tipo === 'NFSe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
+  const totalNFeLancada = filtradas.filter(n => n.tipo === 'NFe' && n.status === 'Lançada').reduce((s, n) => s + Number(n.valor_total || 0), 0);
+  const totalNFSeLancada = filtradas.filter(n => n.tipo === 'NFSe' && n.status === 'Lançada').reduce((s, n) => s + Number(n.valor_total || 0), 0);
 
   const clientesFiltrados = clientes.filter(c => {
     const isConsumidor = c.nome?.toUpperCase() === "CONSUMIDOR";
