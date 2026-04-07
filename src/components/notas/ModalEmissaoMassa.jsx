@@ -110,7 +110,7 @@ export default function ModalEmissaoMassa({ ordens, notas = [], onClose, onConcl
                       <input type="checkbox" checked={selecionadas.length === ordensElegiveis.length && ordensElegiveis.length > 0}
                         onChange={toggleAll} className="rounded" />
                     </th>
-                    <th className="px-4 py-3 text-left">OS</th>
+                    <th className="px-4 py-3 text-left">Nº</th>
                     <th className="px-4 py-3 text-left">Cliente</th>
                     <th className="px-4 py-3 text-right">Valor</th>
                   </tr>
@@ -153,7 +153,7 @@ export default function ModalEmissaoMassa({ ordens, notas = [], onClose, onConcl
                 <div key={i} className={`flex items-start gap-3 p-3 rounded-lg border text-sm ${r.sucesso ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
                   {r.sucesso ? <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
                   <div>
-                    <span className="font-medium">OS Nº {r.os.numero || r.os.id.slice(-6)} — {r.os.cliente_nome}</span>
+                    <span className="font-medium">Nº {r.os.numero || r.os.id.slice(-6)} — {r.os.cliente_nome}</span>
                     {r.mensagem && <p className="text-xs mt-0.5 opacity-80">{r.mensagem}</p>}
                   </div>
                 </div>
