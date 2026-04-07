@@ -805,16 +805,12 @@ export default function NotasFiscais() {
             <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
             <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}><ChevronRight className="w-3 h-3" /></button>
           </div>
-          <div className="flex-1 flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
-            <button onClick={() => { setViewMode("table"); localStorage.setItem("notas_viewmode","table"); }} className="flex-1 px-3 py-2 transition-all" style={{background:viewMode==="table"?"#062C9B":"transparent",color:viewMode==="table"?"#fff":"#6b7280"}} title="Lista"><List className="w-5 h-5"/></button>
-            <button onClick={() => { setViewMode("cards"); localStorage.setItem("notas_viewmode","cards"); }} className="flex-1 px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}} title="Cards"><LayoutGrid className="w-5 h-5"/></button>
-          </div>
         </div>
       </div>
 
-      {/* Busca */}
+      {/* Busca + Toggle View */}
       <div className="flex gap-2">
-        <div className="relative flex-1 max-w-xs">
+        <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
@@ -823,6 +819,10 @@ export default function NotasFiscais() {
             onChange={e => setSearch(e.target.value)}
             className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-orange-500"
           />
+        </div>
+        <div className="flex bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+          <button onClick={() => { setViewMode("table"); localStorage.setItem("notas_viewmode","table"); }} className="px-3 py-2 transition-all" style={{background:viewMode==="table"?"#062C9B":"transparent",color:viewMode==="table"?"#fff":"#6b7280"}} title="Lista"><List className="w-5 h-5"/></button>
+          <button onClick={() => { setViewMode("cards"); localStorage.setItem("notas_viewmode","cards"); }} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}} title="Cards"><LayoutGrid className="w-5 h-5"/></button>
         </div>
       </div>
 
