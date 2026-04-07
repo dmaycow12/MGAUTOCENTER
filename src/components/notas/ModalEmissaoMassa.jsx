@@ -2,15 +2,37 @@ import { useState } from 'react';
 import { X, RefreshCw, CheckCircle, AlertCircle, FileText } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-export default function ModalEmissaoMassa({ ordens, onClose, onConcluido }) {
+export default function ModalEmissaoMassa({ ordens, notas = [], onClose, onConcluido }) {
   const [selecionadas, setSelecionadas] = useState([]);
   const [tipoNF, setTipoNF] = useState('NFSe');
   const [emitindo, setEmitindo] = useState(false);
   const [resultados, setResultados] = useState([]);
   const [concluido, setConcluido] = useState(false);
 
+  // Filtra ordens elegíveis para o tipo de NF selecionado
+  const ordensElegiveis = ordens.filter(os => {
+    // Verifica notas já emitidas para esta OS
+    const notasOS = notas.filter(n => n.ordem_servico_id === os.id && n.status === 'Emitida');
+    const temNFe = notasOS.some(n => n.tipo === 'NFe');
+    const temNFCe = notasOS.some(n => n.tipo === 'NFCe');
+    const temNFSe = notasOS.some(n => n.tipo === 'NFSe');
+    if (tipoNF === 'NFSe') {
+      if (temNFSe) return false; // já emitiu NFSe
+      return (os.servicos || []).length > 0; // só mostra se tem serviços
+    }
+    if (tipoNF === 'NFe') {
+      if (temNFe || temNFCe) return false; // já emitiu NFe ou NFCe
+      return (os.pecas || []).length > 0; // só mostra se tem produtos
+    }
+    if (tipoNF === 'NFCe') {
+      if (temNFCe || temNFe) return false; // já emitiu NFCe ou NFe
+      return (os.pecas || []).length > 0; // só mostra se tem produtos
+    }
+    return true;
+  });
+
   const toggle = (id) => setSelecionadas(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
-  const toggleAll = () => setSelecionadas(selecionadas.length === ordens.length ? [] : ordens.map(o => o.id));
+  const toggleAll = () => setSelecionadas(selecionadas.length === ordensElegiveis.length ? [] : ordensElegiveis.map(o => o.id));
 
   const emitir = async () => {
     if (selecionadas.length === 0) return;
@@ -85,7 +107,7 @@ export default function ModalEmissaoMassa({ ordens, onClose, onConcluido }) {
                 <thead>
                   <tr className="border-b border-gray-800 text-xs text-gray-500">
                     <th className="px-4 py-3 text-left w-10">
-                      <input type="checkbox" checked={selecionadas.length === ordens.length && ordens.length > 0}
+                      <input type="checkbox" checked={selecionadas.length === ordensElegiveis.length && ordensElegiveis.length > 0}
                         onChange={toggleAll} className="rounded" />
                     </th>
                     <th className="px-4 py-3 text-left">OS</th>
@@ -94,7 +116,7 @@ export default function ModalEmissaoMassa({ ordens, onClose, onConcluido }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {ordens.map(os => (
+                  {ordensElegiveis.map(os => (
                     <tr key={os.id} className="border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer" onClick={() => toggle(os.id)}>
                       <td className="px-4 py-3">
                         <input type="checkbox" checked={selecionadas.includes(os.id)} onChange={() => toggle(os.id)} onClick={e => e.stopPropagation()} className="rounded" />
@@ -103,7 +125,7 @@ export default function ModalEmissaoMassa({ ordens, onClose, onConcluido }) {
                       <td className="px-4 py-3 text-white">{os.cliente_nome || '—'}</td>
                       <td className="px-4 py-3 text-right font-bold" style={{color:'#00ff00'}}>R$ {Number(os.valor_total||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
                     </tr>
-                  ))}
+                 ))}
                 </tbody>
               </table>
             </div>

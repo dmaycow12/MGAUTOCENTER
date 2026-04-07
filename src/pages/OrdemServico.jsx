@@ -387,6 +387,7 @@ export default function OrdemServico() {
       {showEmissaoMassa && (
         <ModalEmissaoMassa
           ordens={ordensParaMassa}
+          notas={notas}
           onClose={() => setShowEmissaoMassa(false)}
           onConcluido={() => { setShowEmissaoMassa(false); load(); }}
         />
