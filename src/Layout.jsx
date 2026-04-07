@@ -22,7 +22,6 @@ const navItems = [
   { name: "ATIVOS", page: "Ativos", icon: Box },
   { name: "NOTAS", page: "NotasFiscais", icon: FileText },
   { name: "FINANCEIRO", page: "Financeiro", icon: DollarSign },
-  { name: "BACKUP", page: "Backup", icon: Settings },
   { name: "CONFIGURAÇÕES", page: "Configuracoes", icon: Settings },
 ];
 
