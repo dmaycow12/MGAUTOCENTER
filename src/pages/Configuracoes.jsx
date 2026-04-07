@@ -347,9 +347,9 @@ export default function Configuracoes() {
 
       <Section title="Backup de Dados" icon={null}>
         <p className="text-gray-400 text-sm mb-4">Faça backup regularmente. Restaure apenas o arquivo JSON para recuperar todos os dados.</p>
-        <div className="space-y-4">
-          <BackupCreator />
-          <BackupRestorer />
+        <div className="flex gap-4">
+          <div className="flex-1"><BackupCreator /></div>
+          <div className="flex-1"><BackupRestorer /></div>
         </div>
       </Section>
 
