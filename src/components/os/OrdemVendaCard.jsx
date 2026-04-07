@@ -57,9 +57,10 @@ function InlineEdit({ value, onSave, placeholder = "" }) {
 }
 
 export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRefresh }) {
-  const notasOs = notas.filter(n => n.ordem_servico_id === os.id && n.status !== 'Rascunho');
-  const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe') && n.status === 'Emitida');
-  const temNfServico = notasOs.some(n => n.tipo === 'NFSe' && n.status === 'Emitida');
+  const notasOs = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Rascunho');
+  const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
+  const temNfServico = notasOs.some(n => n.tipo === 'NFSe');
+  const notaEmitida = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe' || n.tipo === 'NFSe'));
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -68,7 +69,7 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
 
   const saveField = async (field, val) => {
-    await base44.entities.OrdemServico.update(os.id, { [field]: val });
+    await base44.entities.Vendas.update(os.id, { [field]: val });
     onRefresh?.();
   };
 
@@ -110,7 +111,7 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
         status: pago ? "Pago" : "Pendente",
         data_pagamento: pago ? new Date().toISOString().split("T")[0] : "",
         forma_pagamento: forma,
-        ordem_servico_id: osData.id || "", cliente_id: osData.cliente_id || "",
+        ordem_venda_id: osData.id || "", cliente_id: osData.cliente_id || "",
       });
     }
   };
@@ -120,7 +121,7 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
     const eraConcluido = os.status === "Concluído";
     const ficaConcluido = novoStatus === "Concluído";
     if (eraConcluido && !ficaConcluido) { setStatusPendenteCard(novoStatus); setShowAvisoStatus(true); return; }
-    await base44.entities.OrdemServico.update(os.id, { status: novoStatus });
+    await base44.entities.Vendas.update(os.id, { status: novoStatus });
     if (!eraConcluido && ficaConcluido) {
       await gerarLancamentosFinanceiros(os);
       await reduzirEstoque(os.pecas);
@@ -130,13 +131,13 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
 
   const confirmarMudancaStatus = async () => {
     try {
-      const todasOS = await base44.entities.OrdemServico.list("-created_date", 1000);
+      const todasOS = await base44.entities.Vendas.list("-created_date", 1000);
       const osAtualizada = todasOS.find(o => o.id === os.id);
       const osData = osAtualizada || os;
       
       await excluirLancamentosOS(os.id);
       await restaurarEstoque(osData.pecas || []);
-      await base44.entities.OrdemServico.update(os.id, { status: statusPendenteCard });
+      await base44.entities.Vendas.update(os.id, { status: statusPendenteCard });
       setShowAvisoStatus(false);
       setStatusPendenteCard(null);
       onRefresh?.();
@@ -148,7 +149,7 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
   const confirmarExcluir = async () => {
     if (os.status === "Concluído") {
       try {
-        const todasOS = await base44.entities.OrdemServico.list("-created_date", 1000);
+        const todasOS = await base44.entities.Vendas.list("-created_date", 1000);
         const osAtualizada = todasOS.find(o => o.id === os.id);
         const osData = osAtualizada || os;
         
@@ -158,7 +159,7 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
         console.error("Erro ao restaurar estoque na exclusão:", err);
       }
     }
-    await base44.entities.OrdemServico.delete(os.id);
+    await base44.entities.Vendas.delete(os.id);
     setShowAvisoExcluir(false);
     onRefresh?.();
   };
@@ -265,8 +266,16 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
         <div className="flex items-center gap-2 px-3 py-2.5">
           <span className="text-white font-bold text-sm tracking-wide flex-shrink-0">#{os.numero || "—"}</span>
           <div className="flex items-center gap-2">
-            {temNfeProduto && <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 flex items-center gap-1">✓ NFe/NFCe</span>}
-            {temNfServico && <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 flex items-center gap-1">✓ NFSe</span>}
+            {(() => {
+              const nfeProduto = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
+              const nfeServico = notasOs.find(n => n.tipo === 'NFSe');
+              return (
+                <>
+                  {nfeProduto && <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">NFe/NFCe #{nfeProduto.numero}</span>}
+                  {nfeServico && <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">NFSe #{nfeServico.numero}</span>}
+                </>
+              );
+            })()}
           </div>
 
           <div className="relative flex-1">
@@ -349,7 +358,9 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
           </div>
           <div className="px-3 py-2.5">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>
-            <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
+            </div>
           </div>
         </div>
       </div>

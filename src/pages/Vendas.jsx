@@ -8,7 +8,7 @@ import OrdemVendaRow, { COLUNAS_PADRAO } from "@/components/os/OrdemVendaRow";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
-export default function OrdemServico() {
+export default function Vendas() {
   const [ordens, setOrdens] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");

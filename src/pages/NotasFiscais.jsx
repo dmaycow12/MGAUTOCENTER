@@ -45,7 +45,7 @@ function defaultForm() {
     cliente_cep: "",
     cliente_cidade: "",
     cliente_estado: "",
-    ordem_servico_id: "",
+    ordem_venda_id: "",
     items: [defaultItem()],
     valor_total: 0,
   };
@@ -71,7 +71,7 @@ function NoACInput({ value, onChange, placeholder, maxLength, className = "input
 export default function NotasFiscais() {
   const [notas, setNotas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [ordensVenda, setOrdensVenda] = useState([]);
+  const [vendas, setVendas] = useState([]);
   const [estoque, setEstoque] = useState([]);
   const [servicos, setServicos] = useState([]);
   const [search, setSearch] = useState("");
@@ -161,7 +161,7 @@ export default function NotasFiscais() {
         let clienteExtra = {};
         if (os_id) {
           try {
-            const osData = await base44.entities.OrdemServico.filter({ id: os_id }, "-created_date", 1);
+            const osData = await base44.entities.Vendas.filter({ id: os_id }, "-created_date", 1);
             const os = osData[0];
             if (os) {
               clienteExtra = {
@@ -213,7 +213,7 @@ export default function NotasFiscais() {
         setForm({
           ...defaultForm(),
           tipo,
-          ordem_servico_id: os_id,
+          ordem_venda_id: os_id,
           cliente_id,
           cliente_nome,
           ...clienteExtra,
@@ -257,13 +257,13 @@ export default function NotasFiscais() {
       base44.entities.NotaFiscal.list("-created_date", 200),
       base44.entities.Cliente.list("-created_date", 200),
       base44.entities.Configuracao.list("-created_date", 100),
-      base44.entities.OrdemServico.list("-created_date", 500),
+      base44.entities.Vendas.list("-created_date", 500),
       base44.entities.Estoque.list("-created_date", 500),
       base44.entities.Servico.list("-created_date", 500),
     ]);
     setNotas(n);
     setClientes(c);
-    setOrdensVenda(os);
+    setVendas(os);
     setEstoque(est);
     setServicos(srv);
     setConfigsNF(configs);
@@ -475,7 +475,7 @@ export default function NotasFiscais() {
         cliente_cep: clienteVinculado?.cep || '',
         cliente_cidade: clienteVinculado?.cidade || '',
         cliente_estado: clienteVinculado?.estado || '',
-        ordem_servico_id: rascunhoNota.ordem_servico_id,
+        ordem_venda_id: rascunhoNota.ordem_venda_id,
         valor_total: rascunhoNota.valor_total,
         observacoes: rascunhoNota.observacoes,
         data_emissao: rascunhoNota.data_emissao,
@@ -597,7 +597,7 @@ export default function NotasFiscais() {
       cliente_cep: nota.cliente_cep || '',
       cliente_cidade: nota.cliente_cidade || '',
       cliente_estado: nota.cliente_estado || '',
-      ordem_servico_id: nota.ordem_servico_id || '',
+      ordem_venda_id: nota.ordem_venda_id || '',
       valor_total: nota.valor_total || 0,
       observacoes: nota.observacoes || '',
       forma_pagamento: nota.forma_pagamento || 'A Combinar',
@@ -748,10 +748,36 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      {/* Botões - 3 Colunas Compactas */}
-      <div className="grid grid-cols-3 gap-2">
+      {/* Botões - 4 Colunas Compactas */}
+      <div className="grid grid-cols-4 gap-2">
         <button onClick={() => setShowImport(true)} className="flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
           <Upload className="w-3 h-3" /> Importar XML
+        </button>
+        <button
+          onClick={async () => {
+            setGerandoZip(true);
+            try {
+              const res = await base44.functions.invoke('restaurarNFVendasAgressivo', {});
+              const data = res.data;
+              if (data?.sucesso) {
+                feedback('sucesso', `${data.restauradas} notas restauradas nas vendas!`);
+                load();
+              } else {
+                feedback('erro', data?.erro || 'Erro ao restaurar.');
+              }
+            } catch (e) {
+              feedback('erro', 'Erro: ' + e.message);
+            }
+            setGerandoZip(false);
+          }}
+          disabled={gerandoZip}
+          className="flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50"
+          style={{background: "#00cc44", color: "#000"}}
+          onMouseEnter={e => { if (!gerandoZip) e.currentTarget.style.background = "#00aa33"; }}
+          onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}
+        >
+          {gerandoZip ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+          {gerandoZip ? 'Restaurando...' : 'Restaurar Histórico'}
         </button>
         <button
           onClick={async () => {
@@ -977,9 +1003,9 @@ export default function NotasFiscais() {
                           </button>
                       </div>
                     </td>
-                  </tr>
-                ))}
-              </tbody>
+                    </tr>
+                    ))}
+                    </tbody>
             </table>
           </div>
         </div>

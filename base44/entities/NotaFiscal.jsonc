@@ -36,9 +36,9 @@
       ],
       "default": "Rascunho"
     },
-    "ordem_servico_id": {
+    "ordem_venda_id": {
       "type": "string",
-      "title": "Ordem de Servi\u00e7o ID"
+      "title": "Ordem de Venda ID"
     },
     "cliente_id": {
       "type": "string",
