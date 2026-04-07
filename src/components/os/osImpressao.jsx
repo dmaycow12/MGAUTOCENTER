@@ -8,12 +8,14 @@ export function gerarHTMLImpressao(os) {
   }
 
   const servicosRows = (os.servicos || []).map((s, i) =>
-    "<tr><td style='text-align:center'>" + (i+1) + "</td><td>" + (s.descricao||"") + "</td><td style='text-align:right'>R$ " + fmt(s.valor) + "</td><td style='text-align:right'>R$ " + fmt(Number(s.valor||0)*Number(s.quantidade||1)) + "</td></tr>"
+    "<tr><td>" + (s.descricao||"") + "</td><td style='text-align:center'>" + (s.quantidade||1) + "</td><td style='text-align:right'>R$ " + fmt(s.valor) + "</td><td style='text-align:right'>R$ " + fmt(Number(s.valor||0)*Number(s.quantidade||1)) + "</td></tr>"
   ).join("");
 
   const pecasRows = (os.pecas || []).map((p, i) =>
-    "<tr><td style='text-align:center'>" + (i+1) + "</td><td>" + (p.descricao||"") + "</td><td style='text-align:center'>" + (p.quantidade||1) + "</td><td style='text-align:right'>R$ " + fmt(p.valor_unitario) + "</td><td style='text-align:right'>R$ " + fmt(p.valor_total) + "</td></tr>"
+    "<tr><td>" + (p.descricao||"") + "</td><td style='text-align:center'>" + (p.quantidade||1) + "</td><td style='text-align:right'>R$ " + fmt(p.valor_unitario) + "</td><td style='text-align:right'>R$ " + fmt(p.valor_total) + "</td></tr>"
   ).join("");
+
+
 
   const totalProdutos = Number(os.valor_pecas || 0);
   const totalServicos = Number(os.valor_servicos || 0);
@@ -169,12 +171,12 @@ export function gerarHTMLImpressao(os) {
     : "") +
     tecSection +
     (pecasRows ?
-      "<div class='section'><div class='section-title'>Produtos</div><table><thead><tr><th class='col-num'>Item</th><th>Nome</th><th class='col-qty'>Qtd.</th><th class='col-val'>Vl. Unit.</th><th class='col-sub'>Subtotal</th></tr></thead><tbody>" +
+      "<div class='section'><div class='section-title'>Produtos</div><table><thead><tr><th>Nome</th><th class='col-qty'>Qtd.</th><th class='col-val'>Valor</th><th class='col-sub'>Subtotal</th></tr></thead><tbody>" +
       pecasRows +
-      "<tr style='font-weight:bold;background:#f0f0f0'><td colspan='4' style='text-align:right'>TOTAL</td><td style='text-align:right'>R$ " + fmt(os.valor_pecas) + "</td></tr></tbody></table></div>"
+      "<tr style='font-weight:bold;background:#f0f0f0'><td colspan='3' style='text-align:right'>TOTAL</td><td style='text-align:right'>R$ " + fmt(os.valor_pecas) + "</td></tr></tbody></table></div>"
     : "") +
-    (servicosRows ? 
-      "<div class='section'><div class='section-title'>Servicos</div><table><thead><tr><th class='col-num'>Item</th><th>Nome</th><th class='col-val'>Vl. Unit.</th><th class='col-sub'>Subtotal</th></tr></thead><tbody>" +
+    (servicosRows ?
+      "<div class='section'><div class='section-title'>Servicos</div><table><thead><tr><th>Nome</th><th class='col-qty'>Qtd.</th><th class='col-val'>Valor</th><th class='col-sub'>Subtotal</th></tr></thead><tbody>" +
       servicosRows +
       "<tr style='font-weight:bold;background:#f0f0f0'><td colspan='3' style='text-align:right'>TOTAL</td><td style='text-align:right'>R$ " + fmt(os.valor_servicos) + "</td></tr></tbody></table></div>"
     : "") +
