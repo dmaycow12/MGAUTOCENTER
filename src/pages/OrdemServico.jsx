@@ -255,7 +255,7 @@ export default function OrdemServico() {
                       Cancelar
                     </button>
                     <button onClick={aplicarOutroPeriodo}
-                      className="flex-1 py-2 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-all">
+                      className="flex-1 py-2 text-xs text-white rounded-lg font-medium transition-all" style={{background: "#062C9B"}} onMouseEnter={e => e.currentTarget.style.background = "#041a4d"} onMouseLeave={e => e.currentTarget.style.background = "#062C9B"}>
                       Aplicar
                     </button>
                   </div>
