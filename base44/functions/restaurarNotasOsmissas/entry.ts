@@ -18,8 +18,10 @@ Deno.serve(async (req) => {
     const vendaIds = new Set(todasVendas.map(v => v.id));
 
     for (const nota of todasNotas) {
-      // Só processa notas emitidas sem venda
+      // Só processa notas emitidas
       if (nota.status === 'Rascunho' || nota.status === 'Cancelada') continue;
+      
+      // Se já tem venda válida, pula
       if (nota.ordem_venda_id && vendaIds.has(nota.ordem_venda_id)) continue;
 
       let vendaSelecionada = null;
@@ -45,9 +47,36 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Estratégia 3: Por cliente_nome (match parcial)
+      // Estratégia 3: Por cliente_nome em vendas (match direto, mesmo sem cliente_id)
       if (!vendaSelecionada && nota.cliente_nome) {
-        const nomeNota = nota.cliente_nome.toUpperCase().split(' ')[0]; // Primeiro nome
+        const vendasMesmoCliente = todasVendas.filter(v => 
+          v.cliente_nome && v.cliente_nome.toUpperCase() === nota.cliente_nome.toUpperCase()
+        );
+        if (vendasMesmoCliente.length > 0) {
+          vendaSelecionada = vendasMesmoCliente[0];
+        }
+      }
+
+      // Estratégia 4: Por cliente_nome (match parcial com tolerância)
+      if (!vendaSelecionada && nota.cliente_nome) {
+        const notaUpper = nota.cliente_nome.toUpperCase();
+        const vendasProximas = todasVendas.filter(v => {
+          if (!v.cliente_nome) return false;
+          const vendaUpper = v.cliente_nome.toUpperCase();
+          // Match se 70% do nome coincide
+          const palavrasNota = notaUpper.split(' ');
+          const palavrasVenda = vendaUpper.split(' ');
+          const matches = palavrasNota.filter(p => palavrasVenda.some(pv => pv === p));
+          return matches.length >= Math.ceil(palavrasNota.length * 0.7);
+        });
+        if (vendasProximas.length > 0) {
+          vendaSelecionada = vendasProximas[0];
+        }
+      }
+
+      // Estratégia 5: Por cliente_nome (qualquer palavra em comum)
+      if (!vendaSelecionada && nota.cliente_nome) {
+        const nomeNota = nota.cliente_nome.toUpperCase().split(' ')[0];
         const vendasProximas = todasVendas.filter(v => 
           v.cliente_nome && v.cliente_nome.toUpperCase().includes(nomeNota)
         );
