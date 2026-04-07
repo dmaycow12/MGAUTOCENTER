@@ -8,25 +8,25 @@ Deno.serve(async (req) => {
     const entidades = ["Cliente", "Estoque", "NotaFiscal", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
     const backup = {};
 
-    // Ignora autenticação e pega dados direto
+    console.log("[BACKUP] Iniciando backup de entidades...");
+
+    // Busca dados de cada entidade
     for (const entidade of entidades) {
       try {
+        console.log(`[BACKUP] Buscando ${entidade}...`);
         const dados = await base44.asServiceRole.entities[entidade].list('-created_date', 10000);
         backup[entidade] = Array.isArray(dados) ? dados : [];
+        console.log(`[BACKUP] ${entidade}: ${backup[entidade].length} registros`);
       } catch (err) {
-        console.error(`Erro ao buscar ${entidade}:`, err);
+        console.error(`[BACKUP] Erro ao buscar ${entidade}:`, err.message);
         backup[entidade] = [];
       }
     }
 
     const dataStr = new Date().toISOString().split("T")[0];
-    const hasData = Object.values(backup).some(arr => Array.isArray(arr) && arr.length > 0);
-
-    if (!hasData) {
-      return Response.json({ backup }, { status: 200 });
-    }
 
     // Criar XLSX
+    console.log("[BACKUP] Criando arquivo XLSX...");
     const wb = XLSX.utils.book_new();
     for (const [entidade, dados] of Object.entries(backup)) {
       if (Array.isArray(dados) && dados.length > 0) {
@@ -35,26 +35,30 @@ Deno.serve(async (req) => {
       }
     }
     const xlsxBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    console.log(`[BACKUP] XLSX criado: ${xlsxBuffer.length} bytes`);
 
     // Criar ZIP
+    console.log("[BACKUP] Criando arquivo ZIP...");
     const zip = new JSZip();
     zip.file(`backup-${dataStr}.json`, JSON.stringify(backup, null, 2));
     zip.file(`backup-${dataStr}.xlsx`, new Uint8Array(xlsxBuffer));
 
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
-    const zipBuffer = await zipBlob.arrayBuffer();
+    const zipBlob = await zip.generateAsync({ type: 'arraybuffer' });
+    console.log(`[BACKUP] ZIP criado: ${zipBlob.byteLength} bytes`);
 
-    return new Response(zipBuffer, {
+    return new Response(zipBlob, {
       status: 200,
       headers: {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="backup-${dataStr}.zip"`,
+        'Content-Length': zipBlob.byteLength.toString(),
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
       }
     });
   } catch (error) {
-    console.error('Backup error:', error);
+    console.error('[BACKUP] Erro:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
