@@ -6,32 +6,30 @@ Deno.serve(async (req) => {
     const entidades = ["Cliente", "Estoque", "NotaFiscal", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
     const backup = {};
 
-    console.log("[BACKUP JSON] Iniciando...");
-
     for (const entidade of entidades) {
       try {
         const dados = await base44.asServiceRole.entities[entidade].list('-created_date', 10000);
         backup[entidade] = Array.isArray(dados) ? dados : [];
-        console.log(`[BACKUP JSON] ${entidade}: ${backup[entidade].length} registros`);
       } catch (err) {
-        console.error(`[BACKUP JSON] Erro ${entidade}:`, err.message);
         backup[entidade] = [];
       }
     }
 
-    const jsonStr = JSON.stringify(backup, null, 2);
-    const jsonBytes = new TextEncoder().encode(jsonStr);
+    const jsonStr = JSON.stringify(backup);
+    const encoder = new TextEncoder();
+    const jsonBytes = encoder.encode(jsonStr);
+    
+    let base64 = '';
+    for (let i = 0; i < jsonBytes.length; i += 65535) {
+      const chunk = jsonBytes.slice(i, i + 65535);
+      base64 += btoa(String.fromCharCode(...chunk));
+    }
 
-    return new Response(jsonBytes, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Content-Disposition': `attachment; filename="backup-${new Date().toISOString().split('T')[0]}.json"`,
-        'Content-Length': jsonBytes.byteLength.toString()
-      }
+    return Response.json({ 
+      file: base64,
+      filename: `backup-${new Date().toISOString().split('T')[0]}.json`
     });
   } catch (error) {
-    console.error('[BACKUP JSON] Erro:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

@@ -13,14 +13,11 @@ Deno.serve(async (req) => {
       try {
         const dados = await base44.asServiceRole.entities[entidade].list('-created_date', 10000);
         backup[entidade] = Array.isArray(dados) ? dados : [];
-        console.log(`[BACKUP XLSX] ${entidade}: ${backup[entidade].length} registros`);
       } catch (err) {
-        console.error(`[BACKUP XLSX] Erro ${entidade}:`, err.message);
         backup[entidade] = [];
       }
     }
 
-    console.log("[BACKUP XLSX] Criando XLSX...");
     const wb = XLSX.utils.book_new();
     
     for (const [entidade, dados] of Object.entries(backup)) {
@@ -32,16 +29,16 @@ Deno.serve(async (req) => {
 
     const xlsxBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     const xlsxBytes = new Uint8Array(xlsxBuffer);
+    
+    let base64 = '';
+    for (let i = 0; i < xlsxBytes.length; i++) {
+      base64 += String.fromCharCode(xlsxBytes[i]);
+    }
+    base64 = btoa(base64);
 
-    console.log(`[BACKUP XLSX] Arquivo criado: ${xlsxBytes.byteLength} bytes`);
-
-    return new Response(xlsxBytes, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="backup-${new Date().toISOString().split('T')[0]}.xlsx"`,
-        'Content-Length': xlsxBytes.byteLength.toString()
-      }
+    return Response.json({ 
+      file: base64,
+      filename: `backup-${new Date().toISOString().split('T')[0]}.xlsx`
     });
   } catch (error) {
     console.error('[BACKUP XLSX] Erro:', error);

@@ -14,18 +14,23 @@ export default function BackupCreator() {
       const funcName = type === "json" ? "downloadBackupJson" : "downloadBackupXlsx";
       const response = await base44.functions.invoke(funcName, {});
       
-      if (response.status !== 200) {
+      if (response.status !== 200 || !response.data.file) {
         throw new Error(`Erro: ${response.data?.error || "Desconhecido"}`);
       }
 
-      const blob = new Blob([response.data], { 
+      const binaryStr = atob(response.data.file);
+      const bytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+      }
+      
+      const blob = new Blob([bytes], { 
         type: type === "json" ? "application/json" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
       });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const dataStr = new Date().toISOString().split('T')[0];
-      a.download = `backup-${dataStr}.${type === "json" ? "json" : "xlsx"}`;
+      a.download = response.data.filename;
       
       document.body.appendChild(a);
       a.click();
