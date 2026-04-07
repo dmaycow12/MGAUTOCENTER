@@ -1,5 +1,5 @@
 {
-  "name": "Vendas",
+  "name": "OrdemVenda",
   "type": "object",
   "required": [],
   "properties": {
