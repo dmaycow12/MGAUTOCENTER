@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
       cliente_numero, cliente_endereco, cliente_bairro, cliente_cep,
       cliente_cidade, cliente_estado, items, valor_total,
       forma_pagamento, observacoes, nota_id, cliente_id,
-      data_emissao, serie_manual,
+      data_emissao, serie_manual, ordem_venda_id,
     } = body;
 
     // Monta timestamp de emissão

@@ -57,10 +57,10 @@ function InlineEdit({ value, onSave, placeholder = "" }) {
 }
 
 export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRefresh }) {
-  const notasOs = notas.filter(n => n.ordem_venda_id === os.id && (n.status === 'Emitida' || n.status === 'Lançada'));
-  const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe') && (n.status === 'Emitida' || n.status === 'Lançada'));
-  const temNfServico = notasOs.some(n => n.tipo === 'NFSe' && (n.status === 'Emitida' || n.status === 'Lançada'));
-  const notaEmitida = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe' || n.tipo === 'NFSe') && (n.status === 'Emitida' || n.status === 'Lançada'));
+  const notasOs = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Rascunho');
+  const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
+  const temNfServico = notasOs.some(n => n.tipo === 'NFSe');
+  const notaEmitida = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe' || n.tipo === 'NFSe'));
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -111,7 +111,7 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
         status: pago ? "Pago" : "Pendente",
         data_pagamento: pago ? new Date().toISOString().split("T")[0] : "",
         forma_pagamento: forma,
-        ordem_servico_id: osData.id || "", cliente_id: osData.cliente_id || "",
+        ordem_venda_id: osData.id || "", cliente_id: osData.cliente_id || "",
       });
     }
   };
