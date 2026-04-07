@@ -25,7 +25,8 @@ export default function OrdemServico() {
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("os_viewmode") || "cards");
   const [colunasVisiveis, setColunasVisiveis] = useState(() => {
     const saved = localStorage.getItem("os_colunasVisiveis");
-    return saved ? JSON.parse(saved) : COLUNAS_PADRAO;
+    const parsed = saved ? JSON.parse(saved) : {};
+    return { ...COLUNAS_PADRAO, ...parsed };
   });
   const [showColunasFilter, setShowColunasFilter] = useState(false);
   const filtroRef = useRef(null);
