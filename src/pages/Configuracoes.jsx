@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Settings, Save, CheckCircle, UserPlus, LogOut, User, Pencil, Trash2, RefreshCw, AlertCircle } from "lucide-react";
+import { Settings, Save, CheckCircle, UserPlus, LogOut, User, Pencil, Trash2, AlertCircle } from "lucide-react";
+import BackupCreator from "../components/backup/BackupCreator";
+import BackupRestorer from "../components/backup/BackupRestorer";
+import BackupExcel from "../components/backup/BackupExcel";
 
 export default function Configuracoes() {
   const CHAVES = ["nome_oficina", "cnpj", "telefone", "email", "endereco", "cidade", "estado", "cep",
@@ -28,10 +31,7 @@ export default function Configuracoes() {
   const [feedbackUsuario, setFeedbackUsuario] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
   const [avisoUltimoGerente, setAvisoUltimoGerente] = useState(false);
-  const [nfceNumero, setNfceNumero] = useState('');
-  const [nfceSerie, setNfceSerie] = useState('1');
-  const [buscandoNFCe, setBuscandoNFCe] = useState(false);
-  const [feedbackNFCe, setFeedbackNFCe] = useState(null);
+
 
   useEffect(() => { loadAll(); }, []);
 
@@ -356,64 +356,13 @@ export default function Configuracoes() {
         </div>
       </Section>
 
-      <Section title="Recuperar NFCes Deletadas" icon={RefreshCw}>
-        <p className="text-gray-400 text-sm mb-4">Informe o número e série da NFCe que foi cancelada mas desapareceu do banco:</p>
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <F label="Número da NFCe">
-            <input
-              type="text"
-              value={nfceNumero}
-              onChange={e => setNfceNumero(e.target.value)}
-              className="input-dark"
-              placeholder="Ex: 155"
-            />
-          </F>
-          <F label="Série">
-            <input
-              type="text"
-              value={nfceSerie}
-              onChange={e => setNfceSerie(e.target.value)}
-              className="input-dark"
-              placeholder="Ex: 1"
-            />
-          </F>
+      <Section title="Backup de Dados" icon={null}>
+        <p className="text-gray-400 text-sm mb-4">Faça backup regularmente de todos os dados da aplicação. Suporte a JSON, Excel e restauração.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <BackupCreator />
+          <BackupRestorer />
+          <BackupExcel />
         </div>
-        <button
-          onClick={async () => {
-            if (!nfceNumero.trim()) return setFeedbackNFCe({ tipo: 'erro', msg: 'Informe o número da NFCe' });
-            setBuscandoNFCe(true);
-            setFeedbackNFCe(null);
-            try {
-              const res = await base44.functions.invoke('buscarERestaurarNFCe', {
-                numero: nfceNumero,
-                serie: nfceSerie,
-              });
-              if (res.data?.sucesso) {
-                setFeedbackNFCe({ tipo: 'sucesso', msg: res.data.mensagem || 'NFCe restaurada com sucesso!' });
-                setNfceNumero('');
-                setNfceSerie('1');
-                setTimeout(() => window.location.reload(), 2000);
-              } else {
-                setFeedbackNFCe({ tipo: 'erro', msg: res.data?.erro || 'Erro ao restaurar' });
-              }
-            } catch (e) {
-              setFeedbackNFCe({ tipo: 'erro', msg: 'Erro: ' + e.message });
-            }
-            setBuscandoNFCe(false);
-          }}
-          disabled={buscandoNFCe || !nfceNumero.trim()}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
-          style={{background:"#00ff00", color:"#000"}}
-        >
-          {buscandoNFCe ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          {buscandoNFCe ? 'Buscando...' : 'Restaurar NFCe'}
-        </button>
-        {feedbackNFCe && (
-          <div className={`mt-4 p-3 rounded-lg text-sm flex items-start gap-2 ${feedbackNFCe.tipo === 'sucesso' ? 'bg-green-500/10 text-green-400' : feedbackNFCe.tipo === 'erro' ? 'bg-red-500/10 text-red-400' : 'bg-blue-500/10 text-blue-400'}`}>
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span>{feedbackNFCe.msg}</span>
-          </div>
-        )}
       </Section>
 
       <Section title="Sessão" icon={LogOut}>
