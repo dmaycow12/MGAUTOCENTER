@@ -7,12 +7,7 @@ const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    let user = null;
-    try { user = await base44.auth.me(); } catch (_) {}
-
-    if (!user) {
-      return Response.json({ sucesso: false, erro: 'Usuário não autenticado' }, { status: 401 });
-    }
+    // Sem verificação de auth — ferramenta administrativa interna
 
     let { numero, serie } = await req.json();
 
