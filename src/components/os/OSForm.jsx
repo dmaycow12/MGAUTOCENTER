@@ -181,7 +181,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     setClienteSearch(val);
     if (val.length > 0) {
       const filtro = clientes
-        .filter(c => c.id !== form.cliente_id && c.nome?.toLowerCase().includes(val.toLowerCase()))
+        .filter(c => c.nome?.toLowerCase().includes(val.toLowerCase()))
         .slice(0, 6);
       setClienteSugestoes(filtro);
     } else {
