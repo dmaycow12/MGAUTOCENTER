@@ -223,7 +223,7 @@ export default function OrdemServico() {
             >
               {usandoOutroPeriodo && customRange
                 ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}`
-                : `${pad(1)}/${pad(filtroMes)}/${filtroAno} — ${pad(new Date(filtroAno, filtroMes, 0).getDate())}/${pad(filtroMes)}/${filtroAno}`}
+                : `${String(1).padStart(2, "0")}/${String(filtroMes).padStart(2, "0")}/${filtroAno} — ${String(new Date(filtroAno, filtroMes, 0).getDate()).padStart(2, "0")}/${String(filtroMes).padStart(2, "0")}/${filtroAno}`}
               <ChevronDown className={`w-4 h-4 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
             </button>
             {periodoDropOpen && (
