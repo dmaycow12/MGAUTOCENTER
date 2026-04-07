@@ -13,6 +13,7 @@ import JSZip from "jszip";
 const STATUS_COLOR = {
   Rascunho: "bg-gray-500/10 text-gray-400",
   Emitida: "bg-green-500/10 text-green-400",
+  Lançada: "bg-green-500/10 text-green-400",
   Cancelada: "bg-red-500/10 text-red-400",
   Importada: "bg-blue-500/10 text-blue-400",
 };
@@ -74,7 +75,7 @@ export default function NotasFiscais() {
   const [estoque, setEstoque] = useState([]);
   const [servicos, setServicos] = useState([]);
   const [search, setSearch] = useState("");
-  const [filtroTipo, setFiltroTipo] = useState("Todos");
+  const [filtroTipo, setFiltroTipo] = useState("Saída");
   const [filtroModeloNF, setFiltroModeloNF] = useState("Todos");
   const [gerandoZip, setGerandoZip] = useState(false);
   const [showSintegra, setShowSintegra] = useState(false);
@@ -271,8 +272,18 @@ export default function NotasFiscais() {
     return { clientes: c, estoque: est };
   };
 
+  const notasPeriodo = notas.filter(n => {
+    const data = n.data_emissao || "";
+    return data >= periodoRange.inicio && data <= periodoRange.fim;
+  });
+  const totalNFeEmitida = notasPeriodo.filter(n => n.tipo === 'NFe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
+  const totalNFCeEmitida = notasPeriodo.filter(n => n.tipo === 'NFCe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
+  const totalNFSeEmitida = notasPeriodo.filter(n => n.tipo === 'NFSe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
+  const totalNFeLancada = notasPeriodo.filter(n => n.tipo === 'NFe' && n.status === 'Lançada').reduce((s, n) => s + Number(n.valor_total || 0), 0);
+  const totalNFSeLancada = notasPeriodo.filter(n => n.tipo === 'NFSe' && n.status === 'Lançada').reduce((s, n) => s + Number(n.valor_total || 0), 0);
+
   const filtradas = notas.filter(n => {
-    const isEntrada = n.status === "Importada";
+    const isEntrada = n.status === "Importada" || n.status === "Lançada";
     if (filtroTipo === "Entrada" && !isEntrada) return false;
     if (filtroTipo === "Saída" && isEntrada) return false;
     if (filtroModeloNF !== "Todos" && n.tipo !== filtroModeloNF) return false;
@@ -781,7 +792,7 @@ export default function NotasFiscais() {
       <div className="flex flex-col gap-2">
         {/* Entrada/Saída + NFe/NFSe/NFCe */}
         <div className="flex gap-2">
-          <button onClick={() => setFiltroTipo("Todos")} className={`flex-1 h-8 rounded-lg text-[11px] font-medium transition-all ${filtroTipo === "Todos" ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
+          <button onClick={() => setFiltroTipo("Saída")} className={`flex-1 h-8 rounded-lg text-[11px] font-medium transition-all ${filtroTipo === "Saída" ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
           <button onClick={() => setFiltroTipo("Entrada")} className={`flex-1 h-8 rounded-lg text-[11px] font-medium transition-all ${filtroTipo === "Entrada" ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
           {["Todos", "NFe", "NFSe", "NFCe"].map(m => (
             <button key={m} onClick={() => setFiltroModeloNF(m)}
@@ -818,6 +829,22 @@ export default function NotasFiscais() {
             <button onClick={() => { setViewMode("cards"); localStorage.setItem("notas_viewmode","cards"); }} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}} title="Cards"><LayoutGrid className="w-5 h-5"/></button>
           </div>
         </div>
+      </div>
+
+      {/* Relatórios */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        {[
+          { label: 'NFe Emitida', value: totalNFeEmitida, color: '#00ff00' },
+          { label: 'NFCe Emitida', value: totalNFCeEmitida, color: '#00ff00' },
+          { label: 'NFSe Emitida', value: totalNFSeEmitida, color: '#00ff00' },
+          { label: 'NFe Entrada', value: totalNFeLancada, color: '#3b82f6' },
+          { label: 'NFSe Entrada', value: totalNFSeLancada, color: '#3b82f6' },
+        ].map(({ label, value, color }) => (
+          <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1">
+            <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
+            <p className="font-bold text-sm" style={{ color }}>R$ {Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+          </div>
+        ))}
       </div>
 
       {/* Tabela/Cards */}
