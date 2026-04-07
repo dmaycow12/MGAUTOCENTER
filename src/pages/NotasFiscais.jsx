@@ -836,29 +836,14 @@ export default function NotasFiscais() {
                   <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${STATUS_COLOR[nota.status]||"bg-gray-500/10 text-gray-400"}`}>{nota.status}</span>
                 </div>
                 <div className="flex gap-1">
-                  {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && (
+                  {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Cancelada' && (
                     <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>
                   )}
                   <button onClick={() => imprimirNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Printer className="w-3.5 h-3.5"/></button>
                   {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
                     <button title="Cancelar" onClick={() => cancelarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg transition-all"><Ban className="w-3.5 h-3.5"/></button>
                   )}
-                  {nota.status === 'Cancelada' && (
-                    <button title="Restaurar para Emitida" onClick={async () => {
-                      try {
-                        feedback('sucesso', 'Restaurando nota...');
-                        const res = await base44.functions.invoke('restaurarNotaCancelada', { nota_id: nota.id });
-                        if (res.data?.sucesso) {
-                          feedback('sucesso', res.data.mensagem);
-                          load();
-                        } else {
-                          feedback('erro', res.data?.erro || 'Erro ao restaurar');
-                        }
-                      } catch (e) {
-                        feedback('erro', 'Erro: ' + e.message);
-                      }
-                    }} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-green-400 rounded-lg transition-all"><RefreshCw className="w-3.5 h-3.5"/></button>
-                  )}
+
                   <button onClick={() => excluir(nota.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
                 </div>
               </div>
@@ -936,7 +921,7 @@ export default function NotasFiscais() {
                             <LogIn className="w-4 h-4" />
                           </button>
                         )}
-                        {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Importada' && nota.status !== 'Lançada' && (
+                             {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Importada' && nota.status !== 'Lançada' && nota.status !== 'Cancelada' && (
                           <button title="Editar" onClick={() => editarNota(nota)} className="p-1 text-gray-500 hover:text-yellow-400 transition-all">
                             <Pencil className="w-4 h-4" />
                           </button>
@@ -963,35 +948,7 @@ export default function NotasFiscais() {
                             <Ban className="w-4 h-4" />
                           </button>
                         )}
-                        {nota.status === 'Cancelada' && (
-                          <button title="Reativar para Emitida" onClick={async () => {
-                            try {
-                              await base44.entities.NotaFiscal.update(nota.id, { status: 'Emitida' });
-                              feedback('sucesso', 'Status alterado para Emitida');
-                              load();
-                            } catch (e) {
-                              feedback('erro', 'Erro ao alterar status: ' + e.message);
-                            }
-                          }} className="p-1 text-gray-500 hover:text-green-400 transition-all">
-                            <RefreshCw className="w-4 h-4" />
-                          </button>
-                        )}
-                        {nota.status === 'Cancelada' && (
-                          <button title="Restaurar para Emitida" onClick={async () => {
-                            try {
-                              feedback('sucesso', 'Restaurando nota...');
-                              const res = await base44.functions.invoke('restaurarNotaCancelada', { nota_id: nota.id });
-                              if (res.data?.sucesso) {
-                                feedback('sucesso', res.data.mensagem);
-                                load();
-                              } else {
-                                feedback('erro', res.data?.erro || 'Erro ao restaurar');
-                              }
-                            } catch (e) {
-                              feedback('erro', 'Erro: ' + e.message);
-                            }
-                          }} className="p-1 text-gray-500 hover:text-green-400 transition-all"><RefreshCw className="w-4 h-4" /></button>
-                        )}
+
                         <button onClick={() => excluir(nota.id)} className="p-1 text-gray-500 hover:text-red-400 transition-all">
                             <Trash2 className="w-4 h-4" />
                           </button>
