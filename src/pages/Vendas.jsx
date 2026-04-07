@@ -172,8 +172,6 @@ export default function Vendas() {
     })
     .sort((a, b) => Number(a.numero || 0) - Number(b.numero || 0));
 
-  if (loading) return <Loader />;
-
   const ordensParaMassa = filtradas;
 
   return (
@@ -401,17 +399,6 @@ export default function Vendas() {
           onConcluido={() => { setShowEmissaoMassa(false); load(); }}
         />
       )}
-    </div>
-  );
-}
-
-function Loader() {
-  return (
-    <div className="flex items-center justify-center min-h-96">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-gray-700 border-t-orange-500 rounded-full animate-spin" />
-        <p className="text-gray-400 text-sm">Carregando vendas...</p>
-      </div>
     </div>
   );
 }
