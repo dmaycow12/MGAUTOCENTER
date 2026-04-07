@@ -296,13 +296,10 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
           if (formas.length === 1) return formas[0];
           return "Misto";
         })()}</td>}
-        {colunas.nfe && <td className="px-4 py-3">{(() => {
-          const nfes = notasOs.filter(n => n.tipo === 'NFe' && n.status === 'Emitida');
-          const nfces = notasOs.filter(n => n.tipo === 'NFCe' && n.status === 'Emitida');
+        {colunas?.nfe && <td className="px-4 py-3">{(() => {
+          const nfes = notasOs.filter(n => (n.tipo === 'NFe' || n.tipo === 'NFCe') && (n.status === 'Emitida' || n.status === 'Lançada'));
           const nfe = nfes[0];
-          const nfce = nfces[0];
-          if (nfe) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">NFe({nfe.numero})</span>;
-          if (nfce) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">NFCe({nfce.numero})</span>;
+          if (nfe) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">{nfe.tipo}({nfe.numero})</span>;
           return null;
         })()}</td>}
         {colunas.nfse && <td className="px-4 py-3">{(() => {
