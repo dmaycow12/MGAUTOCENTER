@@ -750,7 +750,7 @@ export default function NotasFiscais() {
 
       {/* Botões - 3 Colunas Flexíveis */}
       <div className="flex gap-0.5">
-        <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
+        <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
           <Upload className="w-4 h-4" /> Importar XML
         </button>
         <button
@@ -771,7 +771,7 @@ export default function NotasFiscais() {
             setBuscandoSefaz(false);
           }}
           disabled={buscandoSefaz}
-          className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
           style={{background: "#00cc44", color: "#000"}}
           onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00aa33"; }}
           onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}
@@ -779,7 +779,7 @@ export default function NotasFiscais() {
           {buscandoSefaz ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
           {buscandoSefaz ? 'Buscando...' : 'Buscar da SEFAZ'}
         </button>
-        <button onClick={() => { setForm(f => ({ ...f, numero: proximoNumero(notas, f.tipo), serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
+        <button onClick={() => { setForm(f => ({ ...f, numero: proximoNumero(notas, f.tipo), serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
           <Plus className="w-4 h-4" /> Emitir Nota
         </button>
       </div>
@@ -787,20 +787,20 @@ export default function NotasFiscais() {
       {/* Filtros Simplificados */}
       <div className="flex flex-col gap-2">
         <div className="flex gap-0.5">
-          <button onClick={() => setFiltroTipo(prev => prev.includes("Saída") ? prev.filter(x => x !== "Saída") : [...prev, "Saída"])} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Saída") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
-          <button onClick={() => setFiltroTipo(prev => prev.includes("Entrada") ? prev.filter(x => x !== "Entrada") : [...prev, "Entrada"])} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Entrada") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
-          <button onClick={() => setFiltroModeloNF(prev => prev.includes("NFe") ? prev.filter(x => x !== "NFe") : [...prev, "NFe"])} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFe</button>
-          <button onClick={() => setFiltroModeloNF(prev => prev.includes("NFCe") ? prev.filter(x => x !== "NFCe") : [...prev, "NFCe"])} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFCe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFCe</button>
-          <button onClick={() => setFiltroModeloNF(prev => prev.includes("NFSe") ? prev.filter(x => x !== "NFSe") : [...prev, "NFSe"])} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
+          <button onClick={() => setFiltroTipo(prev => prev.includes("Saída") ? prev.filter(x => x !== "Saída") : [...prev, "Saída"])} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Saída") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
+          <button onClick={() => setFiltroTipo(prev => prev.includes("Entrada") ? prev.filter(x => x !== "Entrada") : [...prev, "Entrada"])} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Entrada") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
+          <button onClick={() => setFiltroModeloNF(prev => prev.includes("NFe") ? prev.filter(x => x !== "NFe") : [...prev, "NFe"])} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFe</button>
+          <button onClick={() => setFiltroModeloNF(prev => prev.includes("NFCe") ? prev.filter(x => x !== "NFCe") : [...prev, "NFCe"])} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFCe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFCe</button>
+          <button onClick={() => setFiltroModeloNF(prev => prev.includes("NFSe") ? prev.filter(x => x !== "NFSe") : [...prev, "NFSe"])} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
         </div>
         <div className="flex gap-0.5">
-          <button onClick={() => exportarRelatorio()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+          <button onClick={() => exportarRelatorio()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />} Exportar
           </button>
-          <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+          <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             <BarChart2 className="w-4 h-4" /> Sintegra
           </button>
-          <div className={`flex-1 flex items-center h-10 rounded-lg text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
+          <div className={`flex-1 flex items-center h-9 rounded-lg text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
             <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}><ChevronLeft className="w-3 h-3" /></button>
             <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
             <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}><ChevronRight className="w-3 h-3" /></button>
@@ -809,7 +809,7 @@ export default function NotasFiscais() {
       </div>
 
       {/* Busca + Toggle View */}
-      <div className="flex gap-2">
+      <div className="flex gap-0.5">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
@@ -817,12 +817,12 @@ export default function NotasFiscais() {
             placeholder="Buscar nota..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-orange-500"
+            className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-orange-500"
           />
         </div>
         <div className="flex bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-          <button onClick={() => { setViewMode("table"); localStorage.setItem("notas_viewmode","table"); }} className="px-3 py-2 transition-all" style={{background:viewMode==="table"?"#062C9B":"transparent",color:viewMode==="table"?"#fff":"#6b7280"}} title="Lista"><List className="w-5 h-5"/></button>
-          <button onClick={() => { setViewMode("cards"); localStorage.setItem("notas_viewmode","cards"); }} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}} title="Cards"><LayoutGrid className="w-5 h-5"/></button>
+          <button onClick={() => { setViewMode("table"); localStorage.setItem("notas_viewmode","table"); }} className="px-2 py-1.5 transition-all" style={{background:viewMode==="table"?"#062C9B":"transparent",color:viewMode==="table"?"#fff":"#6b7280"}} title="Lista"><List className="w-5 h-5"/></button>
+          <button onClick={() => { setViewMode("cards"); localStorage.setItem("notas_viewmode","cards"); }} className="px-2 py-1.5 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}} title="Cards"><LayoutGrid className="w-5 h-5"/></button>
         </div>
       </div>
 
