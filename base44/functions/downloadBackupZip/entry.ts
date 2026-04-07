@@ -10,7 +10,6 @@ Deno.serve(async (req) => {
 
     console.log("[BACKUP] Iniciando backup de entidades...");
 
-    // Busca dados de cada entidade
     for (const entidade of entidades) {
       try {
         console.log(`[BACKUP] Buscando ${entidade}...`);
@@ -43,18 +42,17 @@ Deno.serve(async (req) => {
     zip.file(`backup-${dataStr}.json`, JSON.stringify(backup, null, 2));
     zip.file(`backup-${dataStr}.xlsx`, new Uint8Array(xlsxBuffer));
 
-    const zipBlob = await zip.generateAsync({ type: 'arraybuffer' });
-    console.log(`[BACKUP] ZIP criado: ${zipBlob.byteLength} bytes`);
+    const zipBuffer = await zip.generateAsync({ type: 'arraybuffer' });
+    console.log(`[BACKUP] ZIP criado: ${zipBuffer.byteLength} bytes`);
 
-    return new Response(zipBlob, {
+    const zipBytes = new Uint8Array(zipBuffer);
+    
+    return new Response(zipBytes, {
       status: 200,
       headers: {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="backup-${dataStr}.zip"`,
-        'Content-Length': zipBlob.byteLength.toString(),
-        'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
+        'Content-Length': zipBytes.byteLength.toString()
       }
     });
   } catch (error) {
