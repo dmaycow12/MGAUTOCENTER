@@ -7,8 +7,6 @@ Deno.serve(async (req) => {
     const entidades = ["Cliente", "Estoque", "NotaFiscal", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
     const backup = {};
 
-    console.log("[BACKUP XLSX] Iniciando...");
-
     for (const entidade of entidades) {
       try {
         const dados = await base44.asServiceRole.entities[entidade].list('-created_date', 10000);
@@ -27,14 +25,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    const xlsxBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const xlsxBytes = new Uint8Array(xlsxBuffer);
-    
-    let base64 = '';
-    for (let i = 0; i < xlsxBytes.length; i++) {
-      base64 += String.fromCharCode(xlsxBytes[i]);
-    }
-    base64 = btoa(base64);
+    const xlsxBinary = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+    const base64 = btoa(xlsxBinary);
 
     return Response.json({ 
       file: base64,

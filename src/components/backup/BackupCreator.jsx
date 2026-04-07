@@ -24,9 +24,8 @@ export default function BackupCreator() {
         bytes[i] = binaryStr.charCodeAt(i);
       }
       
-      const blob = new Blob([bytes], { 
-        type: type === "json" ? "application/json" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
-      });
+      const mimeType = type === "json" ? "application/json" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+      const blob = new Blob([bytes], { type: mimeType });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
