@@ -75,8 +75,7 @@ Deno.serve(async (req) => {
         } catch (_) {}
       }
 
-      // Buscar XML completo
-      let xmlContent = '';
+      // Extrair número e série do XML sem salvar o conteúdo completo
       let numeroNF = '';
       let serieNF = '1';
       if (chave) {
@@ -100,7 +99,6 @@ Deno.serve(async (req) => {
               }
             }
             if (xmlStr && xmlStr.includes('<det')) {
-              xmlContent = xmlStr;
               const numMatch = xmlStr.match(/<nNF>(\d+)<\/nNF>/);
               const serieMatch = xmlStr.match(/<serie>(\d+)<\/serie>/);
               if (numMatch) numeroNF = numMatch[1];
@@ -123,7 +121,6 @@ Deno.serve(async (req) => {
         cliente_cpf_cnpj: nf.documento_emitente || '',
         valor_total: parseFloat(nf.valor_total || '0'),
         data_emissao,
-        xml_content: xmlContent,
         observacoes: `Nota recebida via SEFAZ | Manifesto: ${nf.manifestacao_destinatario || 'pendente'}`,
         mensagem_sefaz: nf.situacao || '',
       });
@@ -144,15 +141,6 @@ Deno.serve(async (req) => {
       const data_emissao = (nf.data_emissao || '').substring(0, 10);
       const valorTotal = parseFloat(nf.valor_servicos || '0');
 
-      // Buscar dados completos via url_xml se disponível
-      let xmlContent = '';
-      if (nf.url_xml) {
-        try {
-          const r = await fetch(nf.url_xml);
-          if (r.ok) xmlContent = await r.text();
-        } catch (_) {}
-      }
-
       await base44.asServiceRole.entities.NotaFiscal.create({
         tipo: 'NFSe',
         numero: nf.numero || nf.numero_rps || '',
@@ -164,7 +152,7 @@ Deno.serve(async (req) => {
         cliente_cpf_cnpj: nf.documento_prestador || '',
         valor_total: valorTotal,
         data_emissao,
-        xml_content: xmlContent,
+        pdf_url: nf.url || '',
         observacoes: `NFSe recebida via SEFAZ | Município: ${nf.nome_municipio || ''} ${nf.sigla_uf || ''}`,
         mensagem_sefaz: nf.status || '',
       });
