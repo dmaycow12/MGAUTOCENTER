@@ -25,9 +25,9 @@ export default function Clientes() {
     if (cnpj.length !== 14) return alert('Digite um CNPJ válido com 14 dígitos.');
     setBuscandoCnpj(true);
     try {
-      const resp = await fetch(`https://www.cnpj.ws/cnpj/${cnpj}`);
-      if (!resp.ok) throw new Error('CNPJ não encontrado.');
-      const d = await resp.json();
+      const resp = await base44.functions.invoke('buscarCnpj', { cnpj });
+      if (!resp.data?.sucesso) throw new Error(resp.data?.error || 'CNPJ não encontrado.');
+      const d = resp.data.data;
       const est = d.estabelecimento;
       const ie = est?.inscricoes_estaduais?.find(i => i.ativo)?.inscricao_estadual || '';
       setForm(f => ({
