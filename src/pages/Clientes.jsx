@@ -4,7 +4,6 @@ import { Plus, Search, Edit, Trash2, User, Phone, Mail, ChevronDown, ChevronUp, 
 
 export default function Clientes() {
   const [clientes, setClientes] = useState([]);
-  const [veiculos, setVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -61,12 +60,8 @@ export default function Clientes() {
   }, []);
 
   const load = async () => {
-    const [c, v] = await Promise.all([
-      base44.entities.Cliente.list("-created_date", 200),
-      base44.entities.Veiculo.list("-created_date", 500),
-    ]);
+    const c = await base44.entities.Cliente.list("-created_date", 200);
     setClientes(c);
-    setVeiculos(v);
     setLoading(false);
   };
 
@@ -102,11 +97,7 @@ export default function Clientes() {
     load();
   };
 
-  const excluirVeiculo = async (veiculoId) => {
-    if (!confirm("Excluir este veículo?")) return;
-    await base44.entities.Veiculo.delete(veiculoId);
-    load();
-  };
+
 
   const editarCliente = (c) => {
     if (isConsumidor(c)) return alert("O cliente CONSUMIDOR não pode ser alterado.");
@@ -122,7 +113,7 @@ export default function Clientes() {
     c.email?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const veiculosDoCliente = (id) => veiculos.filter(v => v.cliente_id === id);
+
 
   const toggleColuna = (col) => {
     const updated = { ...colunas, [col]: !colunas[col] };
