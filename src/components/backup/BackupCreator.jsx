@@ -43,14 +43,7 @@ export default function BackupCreator() {
   };
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
-      <div className="flex items-center gap-2">
-        <Download className="w-5 h-5 text-green-400" />
-        <h3 className="text-white font-semibold">Criar Backup</h3>
-      </div>
-
-      <p className="text-gray-400 text-sm">Baixa dois arquivos: JSON e Excel com todos os dados atuais</p>
-
+    <div className="space-y-4">
       <button
         onClick={fazer}
         disabled={fazendo}

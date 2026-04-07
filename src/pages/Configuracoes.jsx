@@ -346,8 +346,8 @@ export default function Configuracoes() {
       </Section>
 
       <Section title="Backup de Dados" icon={null}>
-        <p className="text-gray-400 text-sm mb-4">Faça backup regularmente de todos os dados da aplicação em JSON e Excel.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <p className="text-gray-400 text-sm mb-4">Faça backup regularmente. Restaure apenas o arquivo JSON para recuperar todos os dados.</p>
+        <div className="space-y-4">
           <BackupCreator />
           <BackupRestorer />
         </div>

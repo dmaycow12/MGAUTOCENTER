@@ -30,14 +30,7 @@ export default function BackupRestorer() {
   };
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
-      <div className="flex items-center gap-2">
-        <Upload className="w-5 h-5 text-blue-400" />
-        <h3 className="text-white font-semibold">Restaurar Backup</h3>
-      </div>
-
-      <p className="text-gray-400 text-sm">Carrega um arquivo de backup anteriormente salvo (ATENÇÃO: substitui todos os dados!)</p>
-
+    <div className="space-y-4">
       <button
         onClick={restaurar}
         disabled={restaurando}
