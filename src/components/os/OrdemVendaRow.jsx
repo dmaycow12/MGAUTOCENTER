@@ -83,7 +83,7 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
 
   const saveField = async (field, val) => {
-    await base44.entities.Venda.update(os.id, { [field]: val });
+    await base44.entities.Vendas.update(os.id, { [field]: val });
     onRefresh?.();
   };
 
@@ -135,7 +135,7 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
     const eraConcluido = os.status === "Concluído";
     const ficaConcluido = novoStatus === "Concluído";
     if (eraConcluido && !ficaConcluido) { setStatusPendente(novoStatus); setShowAviso(true); return; }
-    await base44.entities.Venda.update(os.id, { status: novoStatus });
+    await base44.entities.Vendas.update(os.id, { status: novoStatus });
     if (!eraConcluido && ficaConcluido) {
       await gerarLancamentosFinanceiros(os);
       await reduzirEstoque(os.pecas);
@@ -146,7 +146,7 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
   const confirmarMudancaStatus = async () => {
     await excluirLancamentosOS(os.id);
     await restaurarEstoque(os.pecas);
-    await base44.entities.Venda.update(os.id, { status: statusPendente });
+    await base44.entities.Vendas.update(os.id, { status: statusPendente });
     setShowAviso(false);
     setStatusPendente(null);
     onRefresh?.();
@@ -157,7 +157,7 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
       await excluirLancamentosOS(os.id);
       await restaurarEstoque(os.pecas);
     }
-    await base44.entities.Venda.delete(os.id);
+    await base44.entities.Vendas.delete(os.id);
     setShowAvisoExcluir(false);
     onRefresh?.();
   };

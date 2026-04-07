@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, FileText, Settings } from "lucide-react";
 import ModalEmissaoMassa from "@/components/notas/ModalEmissaoMassa";
-import OSForm from "@/components/os/OSForm";
+import VendaForm from "@/components/os/VendaForm";
 import OrdemVendaCard from "@/components/os/OrdemVendaCard";
 import OrdemVendaRow, { COLUNAS_PADRAO } from "@/components/os/OrdemVendaRow";
 
@@ -127,7 +127,7 @@ export default function OrdemServico() {
 
   const load = async () => {
     const [o, c, v, n] = await Promise.all([
-      base44.entities.Venda.list("-created_date", 200),
+      base44.entities.Vendas.list("-created_date", 200),
       base44.entities.Cliente.list("-created_date", 200),
       base44.entities.Veiculo.list("-created_date", 500),
       base44.entities.NotaFiscal.list("-created_date", 500),
@@ -141,7 +141,7 @@ export default function OrdemServico() {
 
   const excluir = async (id) => {
     if (!confirm("Excluir esta Ordem de Serviço?")) return;
-    await base44.entities.Venda.delete(id);
+    await base44.entities.Vendas.delete(id);
     load();
   };
 
@@ -377,8 +377,8 @@ export default function OrdemServico() {
 
       {/* Form Modal */}
       {showForm && (
-        <OSForm
-          os={editando}
+       <VendaForm
+         os={editando}
           clientes={clientes}
           veiculos={veiculos}
           onClose={() => { setShowForm(false); setEditando(null); }}
