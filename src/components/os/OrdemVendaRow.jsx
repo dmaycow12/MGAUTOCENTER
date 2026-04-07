@@ -71,9 +71,9 @@ function fmtValor(v) {
 }
 
 export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefresh, colunas = COLUNAS_PADRAO, onSaveColumns }) {
-  const notasOs = notas.filter(n => n.ordem_servico_id === os.id && n.status !== 'Rascunho');
-  const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe') && n.status === 'Emitida');
-  const temNfServico = notasOs.some(n => n.tipo === 'NFSe' && n.status === 'Emitida');
+  const notasOs = notas.filter(n => n.ordem_venda_id === os.id && (n.status === 'Emitida' || n.status === 'Lançada'));
+  const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe') && (n.status === 'Emitida' || n.status === 'Lançada'));
+  const temNfServico = notasOs.some(n => n.tipo === 'NFSe' && (n.status === 'Emitida' || n.status === 'Lançada'));
   const temNFEmitida = temNfeProduto || temNfServico; // bloqueia edição e status
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);

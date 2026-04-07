@@ -136,8 +136,6 @@ export default function OrdemServico() {
       base44.entities.NotaFiscal.list("-created_date", 1000),
     ]);
       console.log("Vendas carregadas:", o?.length || 0);
-      console.log("Notas carregadas:", n?.length || 0);
-      console.log("Primeiras 3 notas:", n?.slice(0, 3).map(nf => ({ id: nf.id, numero: nf.numero, tipo: nf.tipo, ordem_servico_id: nf.ordem_servico_id, status: nf.status })));
       setOrdens(o);
       setClientes(c);
       setVeiculos(v);

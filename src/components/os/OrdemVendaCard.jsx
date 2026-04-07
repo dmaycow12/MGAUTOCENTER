@@ -57,7 +57,7 @@ function InlineEdit({ value, onSave, placeholder = "" }) {
 }
 
 export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRefresh }) {
-  const notasOs = notas.filter(n => n.ordem_servico_id === os.id && (n.status === 'Emitida' || n.status === 'Lançada'));
+  const notasOs = notas.filter(n => n.ordem_venda_id === os.id && (n.status === 'Emitida' || n.status === 'Lançada'));
   const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe') && (n.status === 'Emitida' || n.status === 'Lançada'));
   const temNfServico = notasOs.some(n => n.tipo === 'NFSe' && (n.status === 'Emitida' || n.status === 'Lançada'));
   const notaEmitida = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe' || n.tipo === 'NFSe') && (n.status === 'Emitida' || n.status === 'Lançada'));

@@ -385,7 +385,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         status: pago ? "Pago" : "Pendente",
         data_pagamento: pago ? new Date().toISOString().split("T")[0] : "",
         forma_pagamento: formaParc,
-        ordem_servico_id: osData.id || "",
+        ordem_venda_id: osData.id || "",
         cliente_id: osData.cliente_id || "",
       });
     }
