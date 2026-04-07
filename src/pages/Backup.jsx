@@ -1,6 +1,7 @@
 import React from "react";
 import BackupCreator from "../components/backup/BackupCreator";
 import BackupRestorer from "../components/backup/BackupRestorer";
+import BackupExcel from "../components/backup/BackupExcel";
 import { AlertTriangle } from "lucide-react";
 
 export default function Backup() {
@@ -16,9 +17,10 @@ export default function Backup() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <BackupCreator />
         <BackupRestorer />
+        <BackupExcel />
       </div>
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-2">
