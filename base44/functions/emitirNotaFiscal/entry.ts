@@ -305,7 +305,7 @@ Deno.serve(async (req) => {
 
     // Baixar estoque se NFe/NFCe e emitida com sucesso
     // Se a nota está vinculada a uma Ordem de Venda, o estoque JÁ foi baixado ao concluir a Ordem de Venda — não baixar novamente
-    const vinculadaAOS = !!(body.ordem_servico_id);
+    const vinculadaAOS = !!(body.ordem_venda_id);
     if (statusNota === 'Emitida' && (tipo === 'NFe' || tipo === 'NFCe') && !vinculadaAOS) {
       for (const it of (items || [])) {
         const qtd = Number(it.quantidade) || 1;
@@ -358,7 +358,7 @@ Deno.serve(async (req) => {
       valor_total: Number(valor_total) || 0,
       pdf_url: pdfUrl,
       chave_acesso: chaveAcesso,
-      ordem_servico_id: body.ordem_servico_id || '',
+      ordem_venda_id: body.ordem_venda_id || '',
       observacoes: observacoes || '',
       mensagem_sefaz: mensagemSefaz,
     };
