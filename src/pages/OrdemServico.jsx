@@ -34,7 +34,7 @@ export default function OrdemServico() {
   const hoje = new Date();
   const [filtroMes, setFiltroMes] = useState(() => {
     const saved = localStorage.getItem("os_filtroMes");
-    return saved ? parseInt(saved) : 1; // Começa em janeiro para ver histórico
+    return saved ? parseInt(saved) : hoje.getMonth() + 1;
   });
   const [filtroAno, setFiltroAno] = useState(() => {
     const saved = localStorage.getItem("os_filtroAno");
