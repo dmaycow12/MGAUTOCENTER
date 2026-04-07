@@ -748,10 +748,36 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      {/* Botões - 3 Colunas Compactas */}
-      <div className="grid grid-cols-3 gap-2">
+      {/* Botões - 4 Colunas Compactas */}
+      <div className="grid grid-cols-4 gap-2">
         <button onClick={() => setShowImport(true)} className="flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
           <Upload className="w-3 h-3" /> Importar XML
+        </button>
+        <button
+          onClick={async () => {
+            setGerandoZip(true);
+            try {
+              const res = await base44.functions.invoke('recuperarNotasAntigas', {});
+              const data = res.data;
+              if (data?.sucesso) {
+                feedback('sucesso', `${data.atualizadas} notas antigas recuperadas!`);
+                load();
+              } else {
+                feedback('erro', data?.erro || 'Erro ao recuperar notas.');
+              }
+            } catch (e) {
+              feedback('erro', 'Erro: ' + e.message);
+            }
+            setGerandoZip(false);
+          }}
+          disabled={gerandoZip}
+          className="flex items-center justify-center gap-2 h-8 rounded-lg text-[11px] font-semibold transition-all disabled:opacity-50"
+          style={{background: "#00cc44", color: "#000"}}
+          onMouseEnter={e => { if (!gerandoZip) e.currentTarget.style.background = "#00aa33"; }}
+          onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}
+        >
+          {gerandoZip ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+          {gerandoZip ? 'Recup...' : 'Recuperar Antigas'}
         </button>
         <button
           onClick={async () => {
