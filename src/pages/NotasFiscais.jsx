@@ -911,6 +911,7 @@ export default function NotasFiscais() {
                   <th className="px-4 py-3">Tipo</th>
                   <th className="px-4 py-3">Número</th>
                   <th className="px-4 py-3">Cliente</th>
+                  <th className="px-4 py-3">Venda</th>
                   <th className="px-4 py-3 hidden md:table-cell">Emissão</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Valor</th>
@@ -918,13 +919,16 @@ export default function NotasFiscais() {
                 </tr>
               </thead>
               <tbody>
-                {filtradas.map(nota => (
+                {filtradas.map(nota => {
+                  const vendaVinculada = vendas.find(v => v.id === nota.ordem_venda_id);
+                  return (
                   <tr key={nota.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-all">
                     <td className="px-4 py-3">
                       <span className="bg-orange-500/10 text-orange-400 text-xs px-2 py-1 rounded-full font-medium">{nota.tipo}</span>
                     </td>
                     <td className="px-4 py-3 text-white font-mono text-xs">{nota.numero || "—"}</td>
                     <td className="px-4 py-3 text-white">{nota.cliente_nome || "—"}</td>
+                    <td className="px-4 py-3 text-white font-mono text-xs">{vendaVinculada ? `#${vendaVinculada.numero}` : "—"}</td>
                     <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{nota.data_emissao || "—"}</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-1 rounded-full ${STATUS_COLOR[nota.status] || "bg-gray-500/10 text-gray-400"}`}>{nota.status}</span>
@@ -1004,7 +1008,8 @@ export default function NotasFiscais() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
