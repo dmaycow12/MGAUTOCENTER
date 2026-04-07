@@ -377,7 +377,7 @@ export default function Financeiro() {
               </F>
             </div>
             <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
-              <button onClick={() => { setShowForm(false); setEditando(null); }} className="px-4 py-2 text-sm text-white rounded-lg transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>Cancelar</button>
+              <button onClick={() => { setShowForm(false); setEditando(null); }} className="px-4 py-2 text-sm text-white rounded-lg transition-all font-medium" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>Cancelar</button>
               <button onClick={salvar} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all" style={{background: "#062C9B"}} onMouseEnter={e => e.currentTarget.style.background = "#041a4d"} onMouseLeave={e => e.currentTarget.style.background = "#062C9B"}>
                 {editando ? "Salvar" : "Lançar"}
               </button>
