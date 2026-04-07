@@ -21,13 +21,8 @@ export default function BackupCreator() {
       const jsonA = document.createElement("a");
       jsonA.href = jsonUrl;
       jsonA.download = `backup-${dataStr}.json`;
-      document.body.appendChild(jsonA);
       jsonA.click();
-      document.body.removeChild(jsonA);
       URL.revokeObjectURL(jsonUrl);
-      
-      // Delay para evitar bloqueio do navegador
-      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Baixar XLSX
       const wb = XLSX.utils.book_new();
