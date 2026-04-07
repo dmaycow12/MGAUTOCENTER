@@ -126,17 +126,23 @@ export default function OrdemServico() {
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const [o, c, v, n] = await Promise.all([
-      base44.entities.Vendas.list("-created_date", 200),
+    try {
+      const [o, c, v, n] = await Promise.all([
+        base44.entities.Vendas.list("-created_date", 200),
       base44.entities.Cliente.list("-created_date", 200),
       base44.entities.Veiculo.list("-created_date", 500),
       base44.entities.NotaFiscal.list("-created_date", 500),
     ]);
-    setOrdens(o);
-    setClientes(c);
-    setVeiculos(v);
-    setNotas(n);
-    setLoading(false);
+      setOrdens(o);
+      setClientes(c);
+      setVeiculos(v);
+      setNotas(n);
+    } catch (err) {
+      console.error("Erro ao carregar Vendas:", err);
+      alert("Erro ao carregar vendas: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const excluir = async (id) => {
@@ -398,4 +404,13 @@ export default function OrdemServico() {
   );
 }
 
-function Loader() { return null; }
+function Loader() {
+  return (
+    <div className="flex items-center justify-center min-h-96">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-gray-700 border-t-orange-500 rounded-full animate-spin" />
+        <p className="text-gray-400 text-sm">Carregando vendas...</p>
+      </div>
+    </div>
+  );
+}
