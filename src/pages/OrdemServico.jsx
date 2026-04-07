@@ -131,7 +131,7 @@ export default function OrdemServico() {
     try {
       console.log("Iniciando carregamento de Vendas...");
       const [o, c, v, n] = await Promise.all([
-        base44.entities.Vendas.list("-created_date", 500),
+       base44.entities.Venda.list("-created_date", 500),
       base44.entities.Cliente.list("-created_date", 200),
       base44.entities.Veiculo.list("-created_date", 500),
       base44.entities.NotaFiscal.list("-created_date", 1000),
@@ -151,8 +151,8 @@ export default function OrdemServico() {
   };
 
   const excluir = async (id) => {
-    if (!confirm("Excluir esta Ordem de Serviço?")) return;
-    await base44.entities.Vendas.delete(id);
+   if (!confirm("Excluir esta Ordem de Serviço?")) return;
+   await base44.entities.Venda.delete(id);
     load();
   };
 
