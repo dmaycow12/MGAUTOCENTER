@@ -24,19 +24,25 @@ async function buscarNFesRecebidas() {
   return todas;
 }
 
-// Busca paginada NFSe recebidas usando cursor de versão
+// Busca paginada NFSe recebidas usando X-Max-Version header
 async function buscarNFSesRecebidas() {
   let todas = [];
   let versaoCursor = 0;
   for (let i = 0; i < 40; i++) {
     const url = `${FOCUSNFE_BASE}/nfses_recebidas?cnpj=${CNPJ_EMITENTE}&versao=${versaoCursor}`;
     const resp = await fetch(url, { method: 'GET', headers: { 'Authorization': AUTH_HEADER } });
-    if (!resp.ok) break;
+    if (!resp.ok) {
+      // 400 pode significar município não integrado - retorna vazio sem erro
+      break;
+    }
     const lote = await resp.json().catch(() => []);
     if (!Array.isArray(lote) || lote.length === 0) break;
     todas = todas.concat(lote);
-    const maxVersao = Math.max(...lote.map(n => n.versao || 0));
-    if (maxVersao <= versaoCursor) break;
+    // Usar X-Max-Version conforme documentação
+    const maxVersionHeader = resp.headers.get('X-Max-Version');
+    if (!maxVersionHeader) break;
+    const maxVersao = parseInt(maxVersionHeader, 10);
+    if (isNaN(maxVersao) || maxVersao <= versaoCursor) break;
     versaoCursor = maxVersao;
     if (lote.length < 100) break;
   }
