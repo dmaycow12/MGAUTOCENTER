@@ -304,7 +304,9 @@ Deno.serve(async (req) => {
     }
 
     // Baixar estoque se NFe/NFCe e emitida com sucesso
-    if (statusNota === 'Emitida' && (tipo === 'NFe' || tipo === 'NFCe')) {
+    // Se a nota está vinculada a uma OS, o estoque JÁ foi baixado ao concluir a OS — não baixar novamente
+    const vinculadaAOS = !!(body.ordem_servico_id);
+    if (statusNota === 'Emitida' && (tipo === 'NFe' || tipo === 'NFCe') && !vinculadaAOS) {
       for (const it of (items || [])) {
         const qtd = Number(it.quantidade) || 1;
         let estoqueItem = null;
