@@ -6,14 +6,24 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    // Tenta autenticar, mas continua mesmo sem autenticação
+    let user = null;
+    try {
+      user = await base44.auth.me();
+    } catch (e) {
+      // Ignora erro de autenticação
+    }
+
     const entidades = ["Cliente", "Estoque", "NotaFiscal", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
     const backup = {};
 
     for (const entidade of entidades) {
       try {
+        // Usa serviceRole para ignorar RLS
         const dados = await base44.asServiceRole.entities[entidade].list('-created_date', 10000);
-        backup[entidade] = dados;
+        backup[entidade] = dados || [];
       } catch (err) {
+        // Se entidade não existe, adiciona vazio
         backup[entidade] = [];
       }
     }
@@ -23,7 +33,7 @@ Deno.serve(async (req) => {
     // Criar XLSX
     const wb = XLSX.utils.book_new();
     for (const [entidade, dados] of Object.entries(backup)) {
-      if (dados && dados.length > 0) {
+      if (Array.isArray(dados) && dados.length > 0) {
         const ws = XLSX.utils.json_to_sheet(dados);
         XLSX.utils.book_append_sheet(wb, ws, entidade);
       }
@@ -44,10 +54,12 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="backup-${dataStr}.zip"`,
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'no-store'
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
       }
     });
   } catch (error) {
+    console.error('Backup error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
