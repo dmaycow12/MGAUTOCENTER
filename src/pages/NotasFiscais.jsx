@@ -749,7 +749,7 @@ export default function NotasFiscais() {
       )}
 
       {/* Botões - 3 Colunas Flexíveis */}
-      <div className="flex gap-1">
+      <div className="flex gap-0.5">
         <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
           <Upload className="w-4 h-4" /> Importar XML
         </button>
@@ -786,14 +786,14 @@ export default function NotasFiscais() {
 
       {/* Filtros Simplificados */}
       <div className="flex flex-col gap-2">
-        <div className="flex gap-1">
+        <div className="flex gap-0.5">
           <button onClick={() => setFiltroTipo(prev => prev.includes("Saída") ? prev.filter(x => x !== "Saída") : [...prev, "Saída"])} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Saída") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
           <button onClick={() => setFiltroTipo(prev => prev.includes("Entrada") ? prev.filter(x => x !== "Entrada") : [...prev, "Entrada"])} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Entrada") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
           <button onClick={() => setFiltroModeloNF(prev => prev.includes("NFe") ? prev.filter(x => x !== "NFe") : [...prev, "NFe"])} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFe</button>
           <button onClick={() => setFiltroModeloNF(prev => prev.includes("NFCe") ? prev.filter(x => x !== "NFCe") : [...prev, "NFCe"])} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFCe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFCe</button>
           <button onClick={() => setFiltroModeloNF(prev => prev.includes("NFSe") ? prev.filter(x => x !== "NFSe") : [...prev, "NFSe"])} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-0.5">
           <button onClick={() => exportarRelatorio()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />} Exportar
           </button>
