@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Download, Loader, CheckCircle2, AlertTriangle } from "lucide-react";
+import * as XLSX from "xlsx";
 
 export default function BackupCreator() {
   const [fazendo, setFazendo] = useState(false);
@@ -12,17 +13,29 @@ export default function BackupCreator() {
     try {
       const response = await base44.functions.invoke("criarBackup", {});
       const backup = response.data;
+      const dataStr = new Date().toISOString().split("T")[0];
       
-      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `backup-${new Date().toISOString().split("T")[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      // Baixar JSON
+      const jsonBlob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+      const jsonUrl = URL.createObjectURL(jsonBlob);
+      const jsonA = document.createElement("a");
+      jsonA.href = jsonUrl;
+      jsonA.download = `backup-${dataStr}.json`;
+      jsonA.click();
+      URL.revokeObjectURL(jsonUrl);
       
-      const total = Object.keys(backup).reduce((acc, e) => acc + backup[e].length, 0);
-      setResultado({ sucesso: true, msg: `Backup criado! ${total} registros salvos.` });
+      // Baixar XLSX
+      const wb = XLSX.utils.book_new();
+      for (const [entidade, dados] of Object.entries(backup)) {
+        if (dados && dados.length > 0) {
+          const ws = XLSX.utils.json_to_sheet(dados);
+          XLSX.utils.book_append_sheet(wb, ws, entidade);
+        }
+      }
+      XLSX.writeFile(wb, `backup-${dataStr}.xlsx`);
+      
+      const total = Object.values(backup).reduce((acc, e) => acc + (Array.isArray(e) ? e.length : 0), 0);
+      setResultado({ sucesso: true, msg: `Backup criado! ${total} registros em 2 arquivos (JSON + XLSX).` });
     } catch (err) {
       setResultado({ sucesso: false, msg: `Erro: ${err.message}` });
     }
@@ -36,7 +49,7 @@ export default function BackupCreator() {
         <h3 className="text-white font-semibold">Criar Backup</h3>
       </div>
 
-      <p className="text-gray-400 text-sm">Baixa um arquivo com todos os dados atuais da aplicação</p>
+      <p className="text-gray-400 text-sm">Baixa dois arquivos: JSON e Excel com todos os dados atuais</p>
 
       <button
         onClick={fazer}
@@ -47,7 +60,7 @@ export default function BackupCreator() {
         onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
       >
         {fazendo ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-        {fazendo ? "Criando..." : "Baixar Backup"}
+        {fazendo ? "Criando..." : "Criar Backup"}
       </button>
 
       {resultado && (
