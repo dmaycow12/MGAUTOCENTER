@@ -266,8 +266,16 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
         <div className="flex items-center gap-2 px-3 py-2.5">
           <span className="text-white font-bold text-sm tracking-wide flex-shrink-0">#{os.numero || "—"}</span>
           <div className="flex items-center gap-2">
-            {temNfeProduto && <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 flex items-center gap-1">✓ NFe/NFCe</span>}
-            {temNfServico && <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 flex items-center gap-1">✓ NFSe</span>}
+            {(() => {
+              const nfeProduto = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
+              const nfeServico = notasOs.find(n => n.tipo === 'NFSe');
+              return (
+                <>
+                  {nfeProduto && <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">NFe/NFCe #{nfeProduto.numero}</span>}
+                  {nfeServico && <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">NFSe #{nfeServico.numero}</span>}
+                </>
+              );
+            })()}
           </div>
 
           <div className="relative flex-1">
@@ -352,7 +360,6 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>
             <div className="flex items-center gap-2">
               <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
-              {notaEmitida && <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">{notaEmitida.tipo}({notaEmitida.numero})</span>}
             </div>
           </div>
         </div>
