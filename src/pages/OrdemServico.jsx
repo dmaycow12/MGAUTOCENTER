@@ -127,7 +127,7 @@ export default function OrdemServico() {
 
   const load = async () => {
     const [o, c, v, n] = await Promise.all([
-      base44.entities.OrdemServico.list("-created_date", 200),
+      base44.entities.Venda.list("-created_date", 200),
       base44.entities.Cliente.list("-created_date", 200),
       base44.entities.Veiculo.list("-created_date", 500),
       base44.entities.NotaFiscal.list("-created_date", 500),
@@ -141,7 +141,7 @@ export default function OrdemServico() {
 
   const excluir = async (id) => {
     if (!confirm("Excluir esta Ordem de Serviço?")) return;
-    await base44.entities.OrdemServico.delete(id);
+    await base44.entities.Venda.delete(id);
     load();
   };
 
