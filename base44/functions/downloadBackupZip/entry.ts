@@ -5,30 +5,26 @@ import XLSX from 'npm:xlsx@0.18.5';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-
-    // Tenta autenticar, mas continua mesmo sem autenticação
-    let user = null;
-    try {
-      user = await base44.auth.me();
-    } catch (e) {
-      // Ignora erro de autenticação
-    }
-
     const entidades = ["Cliente", "Estoque", "NotaFiscal", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
     const backup = {};
 
+    // Ignora autenticação e pega dados direto
     for (const entidade of entidades) {
       try {
-        // Usa serviceRole para ignorar RLS
         const dados = await base44.asServiceRole.entities[entidade].list('-created_date', 10000);
-        backup[entidade] = dados || [];
+        backup[entidade] = Array.isArray(dados) ? dados : [];
       } catch (err) {
-        // Se entidade não existe, adiciona vazio
+        console.error(`Erro ao buscar ${entidade}:`, err);
         backup[entidade] = [];
       }
     }
 
     const dataStr = new Date().toISOString().split("T")[0];
+    const hasData = Object.values(backup).some(arr => Array.isArray(arr) && arr.length > 0);
+
+    if (!hasData) {
+      return Response.json({ backup }, { status: 200 });
+    }
 
     // Criar XLSX
     const wb = XLSX.utils.book_new();
@@ -54,8 +50,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="backup-${dataStr}.zip"`,
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
       }
     });
   } catch (error) {
