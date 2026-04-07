@@ -57,9 +57,10 @@ function InlineEdit({ value, onSave, placeholder = "" }) {
 }
 
 export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRefresh }) {
-  const notasOs = notas.filter(n => n.ordem_servico_id === os.id && n.status !== 'Rascunho');
-  const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe') && n.status === 'Emitida');
-  const temNfServico = notasOs.some(n => n.tipo === 'NFSe' && n.status === 'Emitida');
+  const notasOs = notas.filter(n => n.ordem_servico_id === os.id && (n.status === 'Emitida' || n.status === 'Lançada'));
+  const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe') && (n.status === 'Emitida' || n.status === 'Lançada'));
+  const temNfServico = notasOs.some(n => n.tipo === 'NFSe' && (n.status === 'Emitida' || n.status === 'Lançada'));
+  const notaEmitida = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe' || n.tipo === 'NFSe') && (n.status === 'Emitida' || n.status === 'Lançada'));
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -349,7 +350,10 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
           </div>
           <div className="px-3 py-2.5">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>
-            <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
+              {notaEmitida && <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">{notaEmitida.tipo}({notaEmitida.numero})</span>}
+            </div>
           </div>
         </div>
       </div>
