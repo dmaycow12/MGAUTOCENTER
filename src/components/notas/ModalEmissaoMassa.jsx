@@ -124,7 +124,7 @@ export default function ModalEmissaoMassa({ ordens, notas = [], onClose, onConcl
                       </td>
                       <td className="px-4 py-3 text-white font-mono text-xs">Nº {os.numero || os.id.slice(-6)}</td>
                       <td className="px-4 py-3 text-white">{os.cliente_nome || '—'}</td>
-                      <td className="px-4 py-3 text-right font-bold" style={{color:'#00ff00'}}>R$ {Number(os.valor_total||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                      <td className="px-4 py-3 text-right font-bold" style={{color:'#00ff00'}}>R$ {Number(tipoNF === 'NFSe' ? (os.valor_servicos||0) : (os.valor_pecas||0)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
                     </tr>
                  ))}
                 </tbody>
