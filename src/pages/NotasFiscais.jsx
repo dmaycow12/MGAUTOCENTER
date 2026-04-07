@@ -71,7 +71,7 @@ function NoACInput({ value, onChange, placeholder, maxLength, className = "input
 export default function NotasFiscais() {
   const [notas, setNotas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [ordensVenda, setOrdensVenda] = useState([]);
+  const [vendas, setVendas] = useState([]);
   const [estoque, setEstoque] = useState([]);
   const [servicos, setServicos] = useState([]);
   const [search, setSearch] = useState("");
@@ -161,7 +161,7 @@ export default function NotasFiscais() {
         let clienteExtra = {};
         if (os_id) {
           try {
-            const osData = await base44.entities.OrdemServico.filter({ id: os_id }, "-created_date", 1);
+            const osData = await base44.entities.Vendas.filter({ id: os_id }, "-created_date", 1);
             const os = osData[0];
             if (os) {
               clienteExtra = {
@@ -257,13 +257,13 @@ export default function NotasFiscais() {
       base44.entities.NotaFiscal.list("-created_date", 200),
       base44.entities.Cliente.list("-created_date", 200),
       base44.entities.Configuracao.list("-created_date", 100),
-      base44.entities.OrdemServico.list("-created_date", 500),
+      base44.entities.Vendas.list("-created_date", 500),
       base44.entities.Estoque.list("-created_date", 500),
       base44.entities.Servico.list("-created_date", 500),
     ]);
     setNotas(n);
     setClientes(c);
-    setOrdensVenda(os);
+    setVendas(os);
     setEstoque(est);
     setServicos(srv);
     setConfigsNF(configs);
