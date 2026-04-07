@@ -749,8 +749,8 @@ export default function NotasFiscais() {
       )}
 
       {/* Botões - 3 Colunas Flexíveis */}
-      <div className="flex gap-0">
-        <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
+      <div className="flex gap-0.5">
+        <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
           <Upload className="w-4 h-4" /> Importar XML
         </button>
         <button
@@ -771,7 +771,7 @@ export default function NotasFiscais() {
             setBuscandoSefaz(false);
           }}
           disabled={buscandoSefaz}
-          className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
           style={{background: "#00cc44", color: "#000"}}
           onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00aa33"; }}
           onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}
@@ -779,7 +779,7 @@ export default function NotasFiscais() {
           {buscandoSefaz ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
           {buscandoSefaz ? 'Buscando...' : 'Buscar da SEFAZ'}
         </button>
-        <button onClick={() => { setForm(f => ({ ...f, numero: proximoNumero(notas, f.tipo), serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-8 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
+        <button onClick={() => { setForm(f => ({ ...f, numero: proximoNumero(notas, f.tipo), serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
           <Plus className="w-4 h-4" /> Emitir Nota
         </button>
       </div>
