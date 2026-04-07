@@ -75,8 +75,8 @@ export default function NotasFiscais() {
   const [estoque, setEstoque] = useState([]);
   const [servicos, setServicos] = useState([]);
   const [search, setSearch] = useState("");
-  const [filtroTipo, setFiltroTipo] = useState("Saída");
-  const [filtroModeloNF, setFiltroModeloNF] = useState("Todos");
+  const [filtroTipo, setFiltroTipo] = useState(["Saída"]);
+  const [filtroModeloNF, setFiltroModeloNF] = useState([]);
   const [gerandoZip, setGerandoZip] = useState(false);
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
@@ -274,9 +274,9 @@ export default function NotasFiscais() {
 
   const filtradas = notas.filter(n => {
     const isEntrada = n.status === "Importada" || n.status === "Lançada";
-    if (filtroTipo === "Entrada" && !isEntrada) return false;
-    if (filtroTipo === "Saída" && isEntrada) return false;
-    if (filtroModeloNF !== "Todos" && n.tipo !== filtroModeloNF) return false;
+    const matchTipo = filtroTipo.length === 0 || (filtroTipo.includes("Saída") && !isEntrada) || (filtroTipo.includes("Entrada") && isEntrada);
+    const matchModelo = filtroModeloNF.length === 0 || filtroModeloNF.includes(n.tipo);
+    if (!matchTipo || !matchModelo) return false;
     const data = n.data_emissao || "";
     if (data < periodoRange.inicio || data > periodoRange.fim) return false;
     if (search) {
@@ -787,11 +787,11 @@ export default function NotasFiscais() {
       {/* Filtros Simplificados */}
       <div className="flex flex-col gap-2">
         <div className="flex gap-2">
-          <button onClick={() => setFiltroTipo("Saída")} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroTipo === "Saída" ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
-          <button onClick={() => setFiltroTipo("Entrada")} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroTipo === "Entrada" ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
-          <button onClick={() => setFiltroModeloNF("NFe")} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroModeloNF === "NFe" ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFe</button>
-          <button onClick={() => setFiltroModeloNF("NFCe")} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroModeloNF === "NFCe" ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFCe</button>
-          <button onClick={() => setFiltroModeloNF("NFSe")} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroModeloNF === "NFSe" ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
+          <button onClick={() => setFiltroTipo(prev => prev.includes("Saída") ? prev.filter(x => x !== "Saída") : [...prev, "Saída"])} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Saída") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
+          <button onClick={() => setFiltroTipo(prev => prev.includes("Entrada") ? prev.filter(x => x !== "Entrada") : [...prev, "Entrada"])} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Entrada") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
+          <button onClick={() => setFiltroModeloNF(prev => prev.includes("NFe") ? prev.filter(x => x !== "NFe") : [...prev, "NFe"])} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFe</button>
+          <button onClick={() => setFiltroModeloNF(prev => prev.includes("NFCe") ? prev.filter(x => x !== "NFCe") : [...prev, "NFCe"])} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFCe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFCe</button>
+          <button onClick={() => setFiltroModeloNF(prev => prev.includes("NFSe") ? prev.filter(x => x !== "NFSe") : [...prev, "NFSe"])} className={`flex-1 h-10 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
         </div>
         <div className="flex gap-2">
           <button onClick={() => exportarRelatorio()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
