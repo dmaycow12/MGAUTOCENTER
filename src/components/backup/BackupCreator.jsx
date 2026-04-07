@@ -1,92 +1,63 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Download, Loader } from "lucide-react";
+import { Download, Loader, CheckCircle2, AlertTriangle } from "lucide-react";
 
 export default function BackupCreator() {
-  const [loading, setLoading] = useState(null);
-  const [status, setStatus] = useState(null);
+  const [fazendo, setFazendo] = useState(false);
+  const [resultado, setResultado] = useState(null);
 
-  const downloadFile = async (type) => {
-    setLoading(type);
-    setStatus(null);
-    
+  const fazer = async () => {
+    setFazendo(true);
+    setResultado(null);
     try {
-      const funcName = type === "json" ? "downloadBackupJson" : "downloadBackupXlsx";
-      const response = await base44.functions.invoke(funcName, {});
+      const response = await base44.functions.invoke("criarBackup", {});
+      const backup = response.data;
       
-      if (response.status !== 200 || !response.data.file) {
-        throw new Error(`Erro: ${response.data?.error || "Desconhecido"}`);
-      }
-
-      const binaryStr = atob(response.data.file);
-      const bytes = new Uint8Array(binaryStr.length);
-      for (let i = 0; i < binaryStr.length; i++) {
-        bytes[i] = binaryStr.charCodeAt(i);
-      }
-      
-      const mimeType = type === "json" ? "application/json" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-      const blob = new Blob([bytes], { type: mimeType });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
       a.href = url;
-      a.download = response.data.filename;
-      
-      document.body.appendChild(a);
+      a.download = `backup-${new Date().toISOString().split("T")[0]}.json`;
       a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      URL.revokeObjectURL(url);
       
-      setStatus({ type: "success", msg: `Backup ${type.toUpperCase()} baixado com sucesso!` });
+      const total = Object.keys(backup).reduce((acc, e) => acc + backup[e].length, 0);
+      setResultado({ sucesso: true, msg: `Backup criado! ${total} registros salvos.` });
     } catch (err) {
-      console.error("Erro:", err);
-      setStatus({ type: "error", msg: `Erro: ${err.message}` });
-    } finally {
-      setLoading(null);
-      setTimeout(() => setStatus(null), 4000);
+      setResultado({ sucesso: false, msg: `Erro: ${err.message}` });
     }
+    setFazendo(false);
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex gap-3">
-        <button
-          onClick={() => downloadFile("json")}
-          disabled={loading !== null}
-          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all text-black disabled:opacity-50"
-          style={{ background: loading === "json" ? "#ccff00" : "#00ff00" }}
-          onMouseEnter={(e) => loading === null && (e.currentTarget.style.background = "#00dd00")}
-          onMouseLeave={(e) => loading === null && (e.currentTarget.style.background = "#00ff00")}
-        >
-          {loading === "json" ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-          {loading === "json" ? "Baixando..." : "JSON"}
-        </button>
-        
-        <button
-          onClick={() => downloadFile("xlsx")}
-          disabled={loading !== null}
-          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all text-black disabled:opacity-50"
-          style={{ background: loading === "xlsx" ? "#ccff00" : "#00ff00" }}
-          onMouseEnter={(e) => loading === null && (e.currentTarget.style.background = "#00dd00")}
-          onMouseLeave={(e) => loading === null && (e.currentTarget.style.background = "#00ff00")}
-        >
-          {loading === "xlsx" ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-          {loading === "xlsx" ? "Baixando..." : "XLSX"}
-        </button>
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
+      <div className="flex items-center gap-2">
+        <Download className="w-5 h-5 text-green-400" />
+        <h3 className="text-white font-semibold">Criar Backup</h3>
       </div>
-      
-      {status && (
-        <div
-          style={{
-            padding: "10px 12px",
-            borderRadius: "8px",
-            fontSize: "12px",
-            fontWeight: 500,
-            background: status.type === "success" ? "rgba(0,255,0,0.1)" : "rgba(255,0,0,0.1)",
-            color: status.type === "success" ? "#00ff00" : "#ff3333",
-            border: `1px solid ${status.type === "success" ? "rgba(0,255,0,0.3)" : "rgba(255,0,0,0.3)"}`,
-          }}
-        >
-          {status.msg}
+
+      <p className="text-gray-400 text-sm">Baixa um arquivo com todos os dados atuais da aplicação</p>
+
+      <button
+        onClick={fazer}
+        disabled={fazendo}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all text-white disabled:opacity-50"
+        style={{ background: "#00ff00" }}
+        onMouseEnter={e => !fazendo && (e.currentTarget.style.background = "#00dd00")}
+        onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
+      >
+        {fazendo ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+        {fazendo ? "Criando..." : "Baixar Backup"}
+      </button>
+
+      {resultado && (
+        <div className={`flex items-start gap-3 p-4 rounded-lg ${resultado.sucesso ? "bg-green-500/10 border border-green-500/30" : "bg-red-500/10 border border-red-500/30"}`}>
+          {resultado.sucesso ? (
+            <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+          ) : (
+            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+          )}
+          <p className={`text-sm ${resultado.sucesso ? "text-green-400" : "text-red-400"}`}>{resultado.msg}</p>
         </div>
       )}
     </div>

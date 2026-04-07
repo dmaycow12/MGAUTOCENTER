@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Settings, Save, CheckCircle, UserPlus, LogOut, User, Pencil, Trash2, AlertCircle } from "lucide-react";
 import BackupCreator from "../components/backup/BackupCreator";
 import BackupRestorer from "../components/backup/BackupRestorer";
+import BackupExcel from "../components/backup/BackupExcel";
 
 export default function Configuracoes() {
   const CHAVES = ["nome_oficina", "cnpj", "telefone", "email", "endereco", "cidade", "estado", "cep",
@@ -346,10 +347,11 @@ export default function Configuracoes() {
       </Section>
 
       <Section title="Backup de Dados" icon={null}>
-        <p className="text-gray-400 text-sm mb-4">Faça backup regularmente. Restaure apenas o arquivo JSON para recuperar todos os dados.</p>
-        <div className="flex gap-4">
-          <div className="flex-1"><BackupCreator /></div>
-          <div className="flex-1"><BackupRestorer /></div>
+        <p className="text-gray-400 text-sm mb-4">Faça backup regularmente de todos os dados da aplicação. Suporte a JSON, Excel e restauração.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <BackupCreator />
+          <BackupRestorer />
+          <BackupExcel />
         </div>
       </Section>
 
