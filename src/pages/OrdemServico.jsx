@@ -127,18 +127,21 @@ export default function OrdemServico() {
 
   const load = async () => {
     try {
+      console.log("Iniciando carregamento de Vendas...");
       const [o, c, v, n] = await Promise.all([
         base44.entities.Vendas.list("-created_date", 200),
       base44.entities.Cliente.list("-created_date", 200),
       base44.entities.Veiculo.list("-created_date", 500),
       base44.entities.NotaFiscal.list("-created_date", 500),
     ]);
+      console.log("Vendas carregadas:", o?.length || 0);
       setOrdens(o);
       setClientes(c);
       setVeiculos(v);
       setNotas(n);
     } catch (err) {
       console.error("Erro ao carregar Vendas:", err);
+      console.error("Stack:", err.stack);
       alert("Erro ao carregar vendas: " + err.message);
     } finally {
       setLoading(false);
