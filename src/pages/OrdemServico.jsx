@@ -299,6 +299,7 @@ export default function OrdemServico() {
                      { key: 'placa', label: 'Placa' },
                      { key: 'km', label: 'KM' },
                      { key: 'status', label: 'Status' },
+                     { key: 'valor', label: 'Valor' },
                      { key: 'pagamento', label: 'Pagamento' },
                      { key: 'nfe', label: 'NFe/NFCe' },
                      { key: 'nfse', label: 'NFSe' },
@@ -348,6 +349,7 @@ export default function OrdemServico() {
                  {colunasVisiveis.placa && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">Placa</th>}
                  {colunasVisiveis.km && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">KM</th>}
                  {colunasVisiveis.status && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Status</th>}
+                 {colunasVisiveis.valor && <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Valor</th>}
                  {colunasVisiveis.pagamento && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-24">Pgto</th>}
                  {colunasVisiveis.nfe && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">NFe/NFCe</th>}
                  {colunasVisiveis.nfse && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">NFSe</th>}

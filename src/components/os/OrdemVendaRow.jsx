@@ -21,6 +21,7 @@ const COLUNAS_PADRAO = {
   placa: true,
   km: true,
   status: true,
+  valor: true,
   pagamento: true,
   nfe: true,
   nfse: true,
@@ -283,6 +284,7 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
             )}
           </div>
         </td>}
+        {colunas.valor && <td className="px-4 py-3 text-right font-bold whitespace-nowrap" style={{color:'#00ff00'}}>{fmtValor(os.valor_total)}</td>}
         {colunas.pagamento && <td className="px-4 py-3 text-gray-300 text-sm whitespace-nowrap">{(() => {
           const pd = os.parcelas_detalhes;
           if (!pd || pd.length === 0) return os.forma_pagamento || "—";
