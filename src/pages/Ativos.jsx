@@ -590,11 +590,8 @@ function AtivoForm({ ativo, categorias, onClose, onSave }) {
           </F>
         </div>
         <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-all">Cancelar</button>
-          <button onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50"
-            style={{ background: "#22c55e" }}
-            onMouseEnter={e => e.currentTarget.style.background = "#16a34a"}
-            onMouseLeave={e => e.currentTarget.style.background = "#22c55e"}>
+          <button onClick={onClose} className="px-4 py-2 text-sm text-white rounded-lg transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>Cancelar</button>
+          <button onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50" style={{background: "#062C9B"}} onMouseEnter={e => !saving && (e.currentTarget.style.background = "#041a4d")} onMouseLeave={e => e.currentTarget.style.background = "#062C9B"}>
             {saving ? "Salvando..." : ativo ? "Salvar" : "Cadastrar Ativo"}
           </button>
         </div>

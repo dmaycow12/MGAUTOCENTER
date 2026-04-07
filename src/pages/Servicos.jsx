@@ -153,8 +153,8 @@ export default function Servicos() {
               <F label="Observações"><textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} className="inp" rows={2} /></F>
             </div>
             <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
-              <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-all">Cancelar</button>
-              <button onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50" style={{background: "#cc0000"}} onMouseEnter={e => !saving && (e.currentTarget.style.background = "#aa0000")} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
+              <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-white rounded-lg transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>Cancelar</button>
+              <button onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50" style={{background: "#062C9B"}} onMouseEnter={e => !saving && (e.currentTarget.style.background = "#041a4d")} onMouseLeave={e => e.currentTarget.style.background = "#062C9B"}>
                 {saving ? "Salvando..." : editando ? "Salvar Alterações" : "Cadastrar"}
               </button>
             </div>
