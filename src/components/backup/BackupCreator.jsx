@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Download, Loader, CheckCircle2, AlertTriangle } from "lucide-react";
 import * as XLSX from "xlsx";
+import JSZip from "jszip";
 
 export default function BackupCreator() {
   const [fazendo, setFazendo] = useState(false);
@@ -15,28 +16,31 @@ export default function BackupCreator() {
       const backup = response.data;
       const dataStr = new Date().toISOString().split("T")[0];
       
-      // Baixar JSON
-      const jsonBlob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-      const jsonUrl = URL.createObjectURL(jsonBlob);
-      const jsonA = document.createElement("a");
-      jsonA.href = jsonUrl;
-      jsonA.download = `backup-${dataStr}.json`;
-      document.body.appendChild(jsonA);
-      jsonA.click();
-      document.body.removeChild(jsonA);
-      URL.revokeObjectURL(jsonUrl);
-      
-      // Preparar XLSX
-      setTimeout(() => {
-        const wb = XLSX.utils.book_new();
-        for (const [entidade, dados] of Object.entries(backup)) {
-          if (dados && dados.length > 0) {
-            const ws = XLSX.utils.json_to_sheet(dados);
-            XLSX.utils.book_append_sheet(wb, ws, entidade);
-          }
+      // Criar arquivo XLSX
+      const wb = XLSX.utils.book_new();
+      for (const [entidade, dados] of Object.entries(backup)) {
+        if (dados && dados.length > 0) {
+          const ws = XLSX.utils.json_to_sheet(dados);
+          XLSX.utils.book_append_sheet(wb, ws, entidade);
         }
-        XLSX.writeFile(wb, `backup-${dataStr}.xlsx`);
-      }, 300);
+      }
+      const xlsxBlob = new Blob([XLSX.write(wb, { bookType: 'xlsx', type: 'array' })], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      
+      // Criar ZIP com JSON + XLSX
+      const zip = new JSZip();
+      zip.file(`backup-${dataStr}.json`, JSON.stringify(backup, null, 2));
+      zip.file(`backup-${dataStr}.xlsx`, xlsxBlob);
+      
+      zip.generateAsync({ type: 'blob' }).then(zipBlob => {
+        const zipUrl = URL.createObjectURL(zipBlob);
+        const zipA = document.createElement('a');
+        zipA.href = zipUrl;
+        zipA.download = `backup-${dataStr}.zip`;
+        document.body.appendChild(zipA);
+        zipA.click();
+        document.body.removeChild(zipA);
+        URL.revokeObjectURL(zipUrl);
+      });
       
       const total = Object.values(backup).reduce((acc, e) => acc + (Array.isArray(e) ? e.length : 0), 0);
       setResultado({ sucesso: true, msg: `Backup criado! ${total} registros em 2 arquivos (JSON + XLSX).` });
