@@ -3,149 +3,159 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
 const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
 const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
-const CNPJ_EMITENTE = '54043647000120';
+
+// Busca paginada de um endpoint FocusNFe com cursor por página
+async function buscarPaginado(endpoint, maxPaginas = 40) {
+  let todas = [];
+  let pagina = 1;
+  for (let i = 0; i < maxPaginas; i++) {
+    const url = `${FOCUSNFE_BASE}/${endpoint}?pagina=${pagina}`;
+    const resp = await fetch(url, { method: 'GET', headers: { 'Authorization': AUTH_HEADER } });
+    if (!resp.ok) break;
+    const lote = await resp.json().catch(() => []);
+    if (!Array.isArray(lote) || lote.length === 0) break;
+    todas = todas.concat(lote);
+    if (lote.length < 50) break;
+    pagina++;
+  }
+  return todas;
+}
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Paginação correta da Focus NFe: usa 'versao' como cursor
-    // Inicia do versao=0 para buscar TODAS as notas (permite reimportar deletadas)
-    let todasNotas = [];
-    let versaoCursor = 0;
-    let tentativas = 0;
-    while (tentativas < 40) {
-      tentativas++;
-      const url = `${FOCUSNFE_BASE}/nfes_recebidas?cnpj=${CNPJ_EMITENTE}&versao=${versaoCursor}`;
-      const resp = await fetch(url, { method: 'GET', headers: { 'Authorization': AUTH_HEADER } });
-      if (!resp.ok) {
-        const txt = await resp.text();
-        return Response.json({ sucesso: false, erro: `Erro Focus NFe (${resp.status}): ${txt.substring(0, 200)}` });
-      }
-      const lote = await resp.json();
-      if (!Array.isArray(lote) || lote.length === 0) break;
-      todasNotas = todasNotas.concat(lote);
-      // Avança cursor para a maior versão do lote
-      const maxVersaoLote = Math.max(...lote.map(n => n.versao || 0));
-      if (maxVersaoLote <= versaoCursor) break; // não avançou, fim
-      versaoCursor = maxVersaoLote;
-      if (lote.length < 50) break; // última página
-    }
-
-    const notas = todasNotas;
-    if (notas.length === 0) {
-      return Response.json({ sucesso: true, mensagem: 'Nenhuma nota recebida encontrada.', importadas: 0 });
-    }
-
     // Busca notas já existentes para evitar duplicatas
     const notasExistentes = await base44.asServiceRole.entities.NotaFiscal.list('-created_date', 2000);
+    const refsExistentes = new Set(notasExistentes.map(n => n.spedy_id).filter(Boolean));
     const chavesExistentes = new Set(notasExistentes.map(n => n.chave_acesso).filter(Boolean));
 
     let importadas = 0;
-    let maxVersao = 0;
 
-    for (const nf of notas) {
+    // ===== BUSCAR NFe EMITIDAS =====
+    const nfes = await buscarPaginado('nfes');
+    for (const nf of nfes) {
+      const ref = nf.ref || '';
       const chave = nf.chave_nfe || '';
 
-      // Pular duplicatas por chave (se tiver chave)
+      // Pular canceladas e que já existem
+      if (refsExistentes.has(ref)) continue;
       if (chave && chavesExistentes.has(chave)) continue;
 
-      // Se não tem chave, deduplica por data+valor+fornecedor
-      if (!chave) {
-        const jaExiste = (await base44.asServiceRole.entities.NotaFiscal.filter({
-          data_emissao: (nf.data_emissao || '').substring(0, 10),
-          cliente_nome: nf.nome_emitente || 'Fornecedor',
-        })).some(n => Math.abs((n.valor_total || 0) - parseFloat(nf.valor_total || '0')) < 0.01);
-        if (jaExiste) continue;
-      }
+      const situacao = nf.situacao || '';
+      // Apenas notas autorizadas ou canceladas
+      if (!['autorizado', 'cancelado', 'cancelada'].includes(situacao.toLowerCase())) continue;
 
-      const data_emissao = (nf.data_emissao || '').substring(0, 10);
-      const status_nf = nf.situacao === 'cancelada' ? 'Cancelada' : 'Importada';
+      const status = situacao.toLowerCase().includes('cancel') ? 'Cancelada' : 'Emitida';
 
-      // Passo 1: fazer manifestação para liberar o XML completo na SEFAZ
-      if (chave) {
-        try {
-          await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}/manifestacoes`, {
-            method: 'POST',
-            headers: { 'Authorization': AUTH_HEADER, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tipo: 'ciencia_operacao' }),
-          });
-        } catch (_) {}
-        // Aguarda processamento da manifestação
-        await new Promise(r => setTimeout(r, 1000));
-      }
-
-      // Passo 2: buscar XML completo tentando múltiplos endpoints
+      // Buscar detalhes completos
+      let numero = '';
+      let serie = '1';
+      let clienteNome = '';
+      let clienteCpfCnpj = '';
+      let valorTotal = 0;
+      let dataEmissao = '';
       let xmlContent = '';
-      let numeroNF = '';
-      let serieNF = '1';
-      let formasPagamento = '';
-      if (chave) {
-        const endpointsXml = [
-          `${FOCUSNFE_BASE}/nfes_recebidas/${chave}.xml`,
-          `${FOCUSNFE_BASE}/nfes_recebidas/${chave}/xml`,
-          `${FOCUSNFE_BASE}/download_nfe/${chave}`,
-          `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
-        ];
-        for (const url of endpointsXml) {
-          try {
-            const xmlResp = await fetch(url, { headers: { 'Authorization': AUTH_HEADER } });
-            if (!xmlResp.ok) continue;
-            const ct = xmlResp.headers.get('content-type') || '';
-            let xmlStr = '';
-            if (ct.includes('xml')) {
-              xmlStr = await xmlResp.text();
-            } else {
-              const xmlData = await xmlResp.json().catch(() => ({}));
-              xmlStr = xmlData.xml || xmlData.xml_nota || xmlData.xml_nfe || '';
-              if (!xmlStr && xmlData.caminho_xml_nota_fiscal) {
-                const r2 = await fetch(xmlData.caminho_xml_nota_fiscal, { headers: { 'Authorization': AUTH_HEADER } });
-                if (r2.ok) xmlStr = await r2.text();
-              }
+
+      if (ref) {
+        try {
+          const detResp = await fetch(`${FOCUSNFE_BASE}/nfes/${ref}`, { headers: { 'Authorization': AUTH_HEADER } });
+          if (detResp.ok) {
+            const det = await detResp.json();
+            numero = det.numero_nfe || det.numero || '';
+            serie = det.serie || '1';
+            clienteNome = det.nome_destinatario || det.destinatario?.nome || '';
+            clienteCpfCnpj = det.cpf_destinatario || det.cnpj_destinatario || det.destinatario?.cnpj || det.destinatario?.cpf || '';
+            valorTotal = parseFloat(det.valor_total || nf.valor_total || '0');
+            dataEmissao = (det.data_emissao || nf.data_emissao || '').substring(0, 10);
+            // Tenta pegar XML
+            const xmlResp = await fetch(`${FOCUSNFE_BASE}/nfes/${ref}.xml`, { headers: { 'Authorization': AUTH_HEADER } });
+            if (xmlResp.ok) {
+              const ct = xmlResp.headers.get('content-type') || '';
+              if (ct.includes('xml')) xmlContent = await xmlResp.text();
             }
-            if (xmlStr && xmlStr.includes('<det')) {
-              xmlContent = xmlStr;
-              const numMatch = xmlStr.match(/<nNF>(\d+)<\/nNF>/);
-              const serieMatch = xmlStr.match(/<serie>(\d+)<\/serie>/);
-              if (numMatch) numeroNF = numMatch[1];
-              if (serieMatch) serieNF = serieMatch[1];
-              const tPagMatch = xmlStr.match(/<tPag>(\d+)<\/tPag>/);
-              const tPagMap = { '01':'Dinheiro','02':'Cheque','03':'Cartão de Crédito','04':'Cartão de Débito','15':'Boleto','90':'Sem Pagamento','99':'Outros' };
-              if (tPagMatch) formasPagamento = tPagMap[tPagMatch[1]] || 'Boleto';
-              break; // XML completo encontrado
-            }
-          } catch (_) {}
-        }
+          }
+        } catch (_) {}
       }
 
       await base44.asServiceRole.entities.NotaFiscal.create({
         tipo: 'NFe',
-        numero: numeroNF,
-        serie: serieNF,
-        status: status_nf,
-        cliente_nome: nf.nome_emitente || 'Fornecedor',
-        cliente_cpf_cnpj: nf.documento_emitente || '',
+        numero,
+        serie,
+        status,
+        spedy_id: ref,
         chave_acesso: chave,
-        valor_total: parseFloat(nf.valor_total || '0'),
-        data_emissao,
+        cliente_nome: clienteNome,
+        cliente_cpf_cnpj: clienteCpfCnpj,
+        valor_total: valorTotal,
+        data_emissao: dataEmissao,
         xml_content: xmlContent,
-        forma_pagamento: formasPagamento || 'Boleto',
-        observacoes: `Nota recebida via SEFAZ | Manifesto: ${nf.manifestacao_destinatario || 'pendente'}`,
-        mensagem_sefaz: nf.situacao || '',
+        observacoes: `Importado via Buscar da SEFAZ`,
+        mensagem_sefaz: situacao,
       });
 
       importadas++;
-      chavesExistentes.add(chave);
+      if (ref) refsExistentes.add(ref);
+      if (chave) chavesExistentes.add(chave);
     }
 
+    // ===== BUSCAR NFSe EMITIDAS =====
+    const nfses = await buscarPaginado('nfses');
+    for (const nf of nfses) {
+      const ref = nf.ref || '';
+      if (refsExistentes.has(ref)) continue;
+
+      const situacao = nf.situacao || '';
+      if (!['autorizado', 'cancelado', 'cancelada', 'emitida'].includes(situacao.toLowerCase())) continue;
+
+      const status = situacao.toLowerCase().includes('cancel') ? 'Cancelada' : 'Emitida';
+
+      let numero = '';
+      let clienteNome = '';
+      let clienteCpfCnpj = '';
+      let valorTotal = 0;
+      let dataEmissao = '';
+
+      if (ref) {
+        try {
+          const detResp = await fetch(`${FOCUSNFE_BASE}/nfses/${ref}`, { headers: { 'Authorization': AUTH_HEADER } });
+          if (detResp.ok) {
+            const det = await detResp.json();
+            numero = det.numero_rps || det.numero || '';
+            clienteNome = det.nome_tomador || det.tomador?.nome || '';
+            clienteCpfCnpj = det.cpf_tomador || det.cnpj_tomador || det.tomador?.cnpj || det.tomador?.cpf || '';
+            valorTotal = parseFloat(det.valor_servicos || det.valor_total || nf.valor_total || '0');
+            dataEmissao = (det.data_emissao || nf.data_emissao || '').substring(0, 10);
+          }
+        } catch (_) {}
+      }
+
+      await base44.asServiceRole.entities.NotaFiscal.create({
+        tipo: 'NFSe',
+        numero,
+        serie: '1',
+        status,
+        spedy_id: ref,
+        cliente_nome: clienteNome,
+        cliente_cpf_cnpj: clienteCpfCnpj,
+        valor_total: valorTotal,
+        data_emissao: dataEmissao,
+        observacoes: `Importado via Buscar da SEFAZ`,
+        mensagem_sefaz: situacao,
+      });
+
+      importadas++;
+      if (ref) refsExistentes.add(ref);
+    }
 
     return Response.json({
       sucesso: true,
       mensagem: importadas > 0
-        ? `${importadas} nota(s) recebida(s) importada(s) da SEFAZ.`
-        : `Nenhuma nota nova. Total consultado: ${notas.length}.`,
+        ? `${importadas} nota(s) importada(s) da SEFAZ (NFe + NFSe).`
+        : `Nenhuma nota nova encontrada.`,
       importadas,
-      total_consultadas: notas.length,
+      nfes_consultadas: nfes.length,
+      nfses_consultadas: nfses.length,
     });
 
   } catch (error) {
