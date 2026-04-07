@@ -87,8 +87,41 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
   const [clienteSearch, setClienteSearch] = useState("");
   const [clienteSugestoes, setClienteSugestoes] = useState([]);
   const [showNovoCliente, setShowNovoCliente] = useState(false);
-  const [novoClienteForm, setNovoClienteForm] = useState({ nome: "", telefone: "", cpf_cnpj: "" });
+  const [novoClienteForm, setNovoClienteForm] = useState({ tipo: "Pessoa Física", nome: "", nome_fantasia: "", cpf_cnpj: "", rg_ie: "", telefone: "", email: "", cep: "", endereco: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", observacoes: "" });
   const [salvandoCliente, setSalvandoCliente] = useState(false);
+  const [buscandoCnpj, setBuscandoCnpj] = useState(false);
+
+  const buscarCnpjNovoCliente = async () => {
+    const cnpj = novoClienteForm.cpf_cnpj.replace(/\D/g, '');
+    if (cnpj.length !== 14) return alert('Digite um CNPJ válido com 14 dígitos.');
+    setBuscandoCnpj(true);
+    try {
+      const resp = await base44.functions.invoke('buscarCnpj', { cnpj });
+      if (!resp.data?.sucesso) throw new Error(resp.data?.error || 'CNPJ não encontrado.');
+      const d = resp.data.data;
+      const est = d.estabelecimento;
+      const ie = est?.inscricoes_estaduais?.find(i => i.ativo)?.inscricao_estadual || '';
+      setNovoClienteForm(f => ({
+        ...f,
+        tipo: 'Pessoa Jurídica',
+        nome: d.razao_social || f.nome,
+        nome_fantasia: est?.nome_fantasia || f.nome_fantasia,
+        rg_ie: ie,
+        email: est?.email || f.email,
+        telefone: est?.ddd1 && est?.telefone1 ? `(${est.ddd1}) ${est.telefone1}` : f.telefone,
+        cep: est?.cep || f.cep,
+        endereco: est?.logradouro || f.endereco,
+        numero: est?.numero || f.numero,
+        complemento: est?.complemento || f.complemento,
+        bairro: est?.bairro || f.bairro,
+        cidade: est?.cidade?.nome || f.cidade,
+        estado: est?.estado?.sigla || f.estado,
+      }));
+    } catch (e) {
+      alert('Erro ao buscar CNPJ: ' + e.message);
+    }
+    setBuscandoCnpj(false);
+  };
 
   const [veiculosCliente, setVeiculosCliente] = useState([]);
   const [estoque, setEstoque] = useState([]);
@@ -196,7 +229,7 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
     clientes.push(criado);
     onClienteChange(criado.id);
     setShowNovoCliente(false);
-    setNovoClienteForm({ nome: "", telefone: "", cpf_cnpj: "" });
+    setNovoClienteForm({ tipo: "Pessoa Física", nome: "", nome_fantasia: "", cpf_cnpj: "", rg_ie: "", telefone: "", email: "", cep: "", endereco: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", observacoes: "" });
     setSalvandoCliente(false);
   };
 
@@ -701,20 +734,76 @@ export default function OSForm({ os, clientes, veiculos, onClose, onSave }) {
 
     {showNovoCliente && (
       <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
-        <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-white font-semibold text-sm">Novo Cliente</h3>
-            <button onClick={() => setShowNovoCliente(false)}><X className="w-4 h-4 text-gray-400" /></button>
+        <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between p-5 border-b border-gray-800">
+            <h3 className="text-white font-semibold">Novo Cadastro</h3>
+            <button onClick={() => setShowNovoCliente(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
           </div>
-          <div className="space-y-3">
-            <Field label="Nome *"><input value={novoClienteForm.nome} onChange={e => setNovoClienteForm(f => ({ ...f, nome: e.target.value }))} className="input-dark" autoComplete="off" /></Field>
-            <Field label="Telefone"><input value={novoClienteForm.telefone} onChange={e => setNovoClienteForm(f => ({ ...f, telefone: e.target.value }))} className="input-dark" autoComplete="off" /></Field>
-            <Field label="CPF / CNPJ"><input value={novoClienteForm.cpf_cnpj} onChange={e => setNovoClienteForm(f => ({ ...f, cpf_cnpj: e.target.value }))} className="input-dark" autoComplete="off" /></Field>
+          <div className="p-5 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Tipo">
+                <select value={novoClienteForm.tipo} onChange={e => setNovoClienteForm(f => ({ ...f, tipo: e.target.value }))} className="input-dark">
+                  <option>Pessoa Física</option>
+                  <option>Pessoa Jurídica</option>
+                </select>
+              </Field>
+              <Field label="CPF / CNPJ">
+                <div className="flex gap-2">
+                  <input value={novoClienteForm.cpf_cnpj} onChange={e => setNovoClienteForm(f => ({ ...f, cpf_cnpj: e.target.value }))} className="input-dark" autoComplete="off" />
+                  {novoClienteForm.tipo === 'Pessoa Jurídica' && (
+                    <button type="button" onClick={buscarCnpjNovoCliente} disabled={buscandoCnpj}
+                      className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-white flex-shrink-0 disabled:opacity-50"
+                      style={{background:'#062C9B'}}>
+                      {buscandoCnpj ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" /> : '🔍'} Buscar
+                    </button>
+                  )}
+                </div>
+              </Field>
+              <Field label="Nome / Razão Social *">
+                <input value={novoClienteForm.nome} onChange={e => setNovoClienteForm(f => ({ ...f, nome: e.target.value }))} className="input-dark" autoComplete="off" />
+              </Field>
+              <Field label="Nome Social / Nome Fantasia">
+                <input value={novoClienteForm.nome_fantasia} onChange={e => setNovoClienteForm(f => ({ ...f, nome_fantasia: e.target.value }))} className="input-dark" autoComplete="off" />
+              </Field>
+              <Field label="Inscrição Estadual">
+                <input value={novoClienteForm.rg_ie} onChange={e => setNovoClienteForm(f => ({ ...f, rg_ie: e.target.value }))} className="input-dark" autoComplete="off" />
+              </Field>
+              <Field label="Telefone Contato">
+                <input value={novoClienteForm.telefone} onChange={e => setNovoClienteForm(f => ({ ...f, telefone: e.target.value }))} className="input-dark" autoComplete="off" />
+              </Field>
+              <Field label="E-mail">
+                <input value={novoClienteForm.email} onChange={e => setNovoClienteForm(f => ({ ...f, email: e.target.value }))} className="input-dark" autoComplete="off" />
+              </Field>
+              <Field label="CEP">
+                <input value={novoClienteForm.cep} onChange={e => setNovoClienteForm(f => ({ ...f, cep: e.target.value }))} className="input-dark" autoComplete="off" />
+              </Field>
+              <Field label="Endereço">
+                <input value={novoClienteForm.endereco} onChange={e => setNovoClienteForm(f => ({ ...f, endereco: e.target.value }))} className="input-dark" autoComplete="off" />
+              </Field>
+              <Field label="Número">
+                <input value={novoClienteForm.numero} onChange={e => setNovoClienteForm(f => ({ ...f, numero: e.target.value }))} className="input-dark" autoComplete="off" />
+              </Field>
+              <Field label="Complemento">
+                <input value={novoClienteForm.complemento} onChange={e => setNovoClienteForm(f => ({ ...f, complemento: e.target.value }))} className="input-dark" autoComplete="off" />
+              </Field>
+              <Field label="Bairro">
+                <input value={novoClienteForm.bairro} onChange={e => setNovoClienteForm(f => ({ ...f, bairro: e.target.value }))} className="input-dark" autoComplete="off" />
+              </Field>
+              <Field label="Cidade">
+                <input value={novoClienteForm.cidade} onChange={e => setNovoClienteForm(f => ({ ...f, cidade: e.target.value }))} className="input-dark" autoComplete="off" />
+              </Field>
+              <Field label="Estado">
+                <input value={novoClienteForm.estado} onChange={e => setNovoClienteForm(f => ({ ...f, estado: e.target.value }))} className="input-dark" maxLength={2} autoComplete="off" />
+              </Field>
+            </div>
+            <Field label="Observações">
+              <textarea value={novoClienteForm.observacoes} onChange={e => setNovoClienteForm(f => ({ ...f, observacoes: e.target.value }))} className="input-dark" rows={2} />
+            </Field>
           </div>
-          <div className="flex gap-3 justify-end">
+          <div className="flex gap-3 justify-end p-5 border-t border-gray-800">
             <button onClick={() => setShowNovoCliente(false)} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg">Cancelar</button>
-            <button onClick={salvarNovoCliente} disabled={salvandoCliente} className="px-4 py-2 text-sm text-white rounded-lg disabled:opacity-50" style={{background:"#062C9B"}}>
-              {salvandoCliente ? "Salvando..." : "Cadastrar"}
+            <button onClick={salvarNovoCliente} disabled={salvandoCliente} className="px-4 py-2 text-sm text-white rounded-lg font-medium disabled:opacity-50" style={{background:'#00ff00'}}>
+              {salvandoCliente ? 'Salvando...' : 'Cadastrar'}
             </button>
           </div>
         </div>
