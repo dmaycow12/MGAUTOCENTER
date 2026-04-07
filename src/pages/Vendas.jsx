@@ -29,7 +29,6 @@ export default function Vendas() {
     return { ...COLUNAS_PADRAO, ...parsed };
   });
   const [showColunasFilter, setShowColunasFilter] = useState(false);
-  const [restaurando, setRestaurando] = useState(false);
   const filtroRef = useRef(null);
 
   const hoje = new Date();
@@ -200,29 +199,6 @@ export default function Vendas() {
             title="Emitir NF em massa para as ordens filtradas"
           >
             <FileText className="w-4 h-4" /> NF Massa ({ordensParaMassa.length})
-          </button>
-          <button
-            onClick={async () => {
-              setRestaurando(true);
-              try {
-                const res = await base44.functions.invoke('restaurarNFVendasAgressivo', {});
-                if (res.data?.sucesso) {
-                  alert(`✅ ${res.data.restauradas} notas de venda restauradas!`);
-                  load();
-                } else {
-                  alert('❌ ' + (res.data?.erro || 'Erro ao restaurar'));
-                }
-              } catch (e) {
-                alert('❌ Erro: ' + e.message);
-              }
-              setRestaurando(false);
-            }}
-            disabled={restaurando}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-            style={{background: "#00ff00", color: "#000"}}
-          >
-            {restaurando ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            {restaurando ? 'Restaurando...' : 'Restaurar Histórico'}
           </button>
         </div>
 
