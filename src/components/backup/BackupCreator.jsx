@@ -22,9 +22,8 @@ export default function BackupCreator() {
       jsonA.href = jsonUrl;
       jsonA.download = `backup-${dataStr}.json`;
       jsonA.click();
-      URL.revokeObjectURL(jsonUrl);
       
-      // Baixar XLSX
+      // Preparar XLSX em paralelo
       const wb = XLSX.utils.book_new();
       for (const [entidade, dados] of Object.entries(backup)) {
         if (dados && dados.length > 0) {
@@ -32,7 +31,12 @@ export default function BackupCreator() {
           XLSX.utils.book_append_sheet(wb, ws, entidade);
         }
       }
-      XLSX.writeFile(wb, `backup-${dataStr}.xlsx`);
+      
+      // Liberar URL antes de baixar XLSX
+      setTimeout(() => {
+        URL.revokeObjectURL(jsonUrl);
+        XLSX.writeFile(wb, `backup-${dataStr}.xlsx`);
+      }, 100);
       
       const total = Object.values(backup).reduce((acc, e) => acc + (Array.isArray(e) ? e.length : 0), 0);
       setResultado({ sucesso: true, msg: `Backup criado! ${total} registros em 2 arquivos (JSON + XLSX).` });
