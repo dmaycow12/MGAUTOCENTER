@@ -276,11 +276,11 @@ export default function NotasFiscais() {
     const data = n.data_emissao || "";
     return data >= periodoRange.inicio && data <= periodoRange.fim;
   });
-  const totalNFeEmitida = notasPeriodo.filter(n => n.tipo === 'NFe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
-  const totalNFCeEmitida = notasPeriodo.filter(n => n.tipo === 'NFCe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
-  const totalNFSeEmitida = notasPeriodo.filter(n => n.tipo === 'NFSe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
-  const totalNFeLancada = notasPeriodo.filter(n => n.tipo === 'NFe' && n.status === 'Lançada').reduce((s, n) => s + Number(n.valor_total || 0), 0);
-  const totalNFSeLancada = notasPeriodo.filter(n => n.tipo === 'NFSe' && n.status === 'Lançada').reduce((s, n) => s + Number(n.valor_total || 0), 0);
+  const totalNFeEmitida = filtradas.filter(n => n.tipo === 'NFe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
+  const totalNFCeEmitida = filtradas.filter(n => n.tipo === 'NFCe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
+  const totalNFSeEmitida = filtradas.filter(n => n.tipo === 'NFSe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
+  const totalNFeLancada = filtradas.filter(n => n.tipo === 'NFe' && n.status === 'Lançada').reduce((s, n) => s + Number(n.valor_total || 0), 0);
+  const totalNFSeLancada = filtradas.filter(n => n.tipo === 'NFSe' && n.status === 'Lançada').reduce((s, n) => s + Number(n.valor_total || 0), 0);
 
   const filtradas = notas.filter(n => {
     const isEntrada = n.status === "Importada" || n.status === "Lançada";
