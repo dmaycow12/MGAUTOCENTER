@@ -785,7 +785,7 @@ export default function NotasFiscais() {
       </div>
 
       {/* Filtros Simplificados */}
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-3">
         <div className="flex gap-0.5">
           <button onClick={() => setFiltroTipo(prev => prev.includes("Saída") ? prev.filter(x => x !== "Saída") : [...prev, "Saída"])} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Saída") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
           <button onClick={() => setFiltroTipo(prev => prev.includes("Entrada") ? prev.filter(x => x !== "Entrada") : [...prev, "Entrada"])} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Entrada") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
