@@ -71,9 +71,9 @@ function fmtValor(v) {
 }
 
 export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefresh, colunas = COLUNAS_PADRAO, onSaveColumns }) {
-  const notasOs = notas.filter(n => n.ordem_venda_id === os.id && (n.status === 'Emitida' || n.status === 'Lançada'));
-  const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe') && (n.status === 'Emitida' || n.status === 'Lançada'));
-  const temNfServico = notasOs.some(n => n.tipo === 'NFSe' && (n.status === 'Emitida' || n.status === 'Lançada'));
+  const notasOs = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Rascunho');
+  const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
+  const temNfServico = notasOs.some(n => n.tipo === 'NFSe');
   const temNFEmitida = temNfeProduto || temNfServico; // bloqueia edição e status
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
@@ -297,14 +297,13 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
           return "Misto";
         })()}</td>}
         {colunas?.nfe && <td className="px-4 py-3">{(() => {
-          const nfes = notasOs.filter(n => (n.tipo === 'NFe' || n.tipo === 'NFCe') && (n.status === 'Emitida' || n.status === 'Lançada'));
-          const nfe = nfes[0];
-          if (nfe) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">{nfe.tipo}({nfe.numero})</span>;
+          const nfe = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
+          if (nfe) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">{nfe.tipo}(#{nfe.numero})</span>;
           return null;
         })()}</td>}
         {colunas.nfse && <td className="px-4 py-3">{(() => {
-          const nfse = notasOs.find(n => n.tipo === 'NFSe' && n.status === 'Emitida');
-          if (nfse) return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">NFSe({nfse.numero})</span>;
+          const nfse = notasOs.find(n => n.tipo === 'NFSe');
+          if (nfse) return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">NFSe(#{nfse.numero})</span>;
           return null;
         })()}</td>}
         <td className="px-4 py-3">
