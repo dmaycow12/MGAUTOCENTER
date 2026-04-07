@@ -10,12 +10,19 @@ Deno.serve(async (req) => {
     const cnpjLimpo = cnpj.replace(/\D/g, '');
     if (cnpjLimpo.length !== 14) return Response.json({ error: 'CNPJ inválido' }, { status: 400 });
 
-    const resp = await fetch(`https://www.cnpj.ws/cnpj/${cnpjLimpo}`, {
+    // Tenta cnpj.ws primeiro (tem inscrição estadual)
+    let resp = await fetch(`https://publica.cnpj.ws/cnpj/${cnpjLimpo}`, {
       headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' }
     });
 
+    // Fallback para BrasilAPI se cnpj.ws falhar
     if (!resp.ok) {
-      const txt = await resp.text();
+      resp = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`, {
+        headers: { 'Accept': 'application/json' }
+      });
+    }
+
+    if (!resp.ok) {
       return Response.json({ error: `CNPJ não encontrado (${resp.status})` }, { status: 404 });
     }
 
