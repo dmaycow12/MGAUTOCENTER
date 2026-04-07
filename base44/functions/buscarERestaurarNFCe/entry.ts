@@ -7,113 +7,154 @@ const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    // Sem verificação de auth — ferramenta administrativa interna
 
     let { numero, serie } = await req.json();
-
     if (!numero) return Response.json({ sucesso: false, erro: 'Número é obrigatório' }, { status: 400 });
 
-    // Se for uma chave de acesso (44 dígitos), extrai número e série
+    // Detecta se é chave de acesso (44 dígitos)
     const chaveInput = String(numero).replace(/\D/g, '');
+    let chaveAcesso = null;
+    let tipoNota = 'NFCe';
+    let epBase = 'nfce';
+
     if (chaveInput.length === 44) {
+      chaveAcesso = chaveInput;
+      const mod = chaveInput.substring(20, 22); // 55=NFe, 65=NFCe
+      if (mod === '55') { tipoNota = 'NFe'; epBase = 'nfe'; }
       serie = chaveInput.substring(22, 25).replace(/^0+/, '') || '1';
       numero = chaveInput.substring(25, 34).replace(/^0+/, '') || numero;
-      console.log('[CHAVE] Extraído da chave — número:', numero, 'série:', serie);
+      console.log('[CHAVE] tipo:', tipoNota, 'numero:', numero, 'serie:', serie);
     }
 
-    // A Focus NFe usa referências no formato nfce-XXXX
-    // Para encontrar por número, buscamos as notas recentes e filtramos
-    let nfceFocus = null;
+    let notaFocus = null;
 
-    // Tenta múltiplas páginas para encontrar a nota pelo número
-    for (let offset = 0; offset <= 200 && !nfceFocus; offset += 50) {
-      const listResp = await fetch(`${FOCUSNFE_BASE}/nfce?limit=50&offset=${offset}`, {
-        headers: { 'Authorization': AUTH_HEADER },
-      });
-
-      if (!listResp.ok) break;
-
-      let items = [];
-      try {
-        const data = await listResp.json();
-        items = Array.isArray(data) ? data : (data.nfce || data.nfces || []);
-      } catch (_) { break; }
-
-      if (items.length === 0) break;
-
-      // Busca pelo número e série
-      nfceFocus = items.find(n => {
-        const nNumero = String(n.numero || '').trim();
-        const nSerie = String(n.serie || '').trim();
-        const bNumero = String(numero).trim();
-        const bSerie = serie ? String(serie).trim() : null;
-        return nNumero === bNumero && (!bSerie || nSerie === bSerie);
-      });
-
-      // Se a lista tem menos de 50, não há mais páginas
-      if (items.length < 50) break;
-    }
-
-    // Se ainda não encontrou, tenta buscar pela referência direta nfce-{numero}
-    if (!nfceFocus) {
-      // Tenta referências comuns
-      const refs = [`nfce-${numero}`, `nfce${numero}`];
-      for (const ref of refs) {
-        const resp = await fetch(`${FOCUSNFE_BASE}/nfce/${ref}`, {
-          headers: { 'Authorization': AUTH_HEADER },
-        });
-        if (resp.ok) {
-          try { nfceFocus = await resp.json(); break; } catch (_) {}
+    // 1. Tenta buscar pela chave de acesso em vários endpoints
+    if (chaveAcesso) {
+      const urls = [
+        `${FOCUSNFE_BASE}/${epBase}/${chaveAcesso}?completo=1`,
+        `${FOCUSNFE_BASE}/${epBase}/chave/${chaveAcesso}?completo=1`,
+        `${FOCUSNFE_BASE}/${epBase}?chave_nfe=${chaveAcesso}`,
+      ];
+      for (const url of urls) {
+        const r = await fetch(url, { headers: { 'Authorization': AUTH_HEADER } });
+        const txt = await r.text();
+        console.log('[URL]', url.replace(FOCUSNFE_BASE, ''), 'status:', r.status, 'body:', txt.substring(0, 200));
+        if (r.ok) {
+          try {
+            const data = JSON.parse(txt);
+            const c = Array.isArray(data) ? data[0] : data;
+            if (c && (c.chave_nfe || c.numero || c.status)) { notaFocus = c; break; }
+          } catch (_) {}
         }
       }
     }
 
-    if (!nfceFocus) {
-      return Response.json({ 
-        sucesso: false, 
-        erro: `NFCe nº ${numero}${serie ? ` série ${serie}` : ''} não encontrada na Focus NFe. Verifique o número e a série.` 
+    // 2. Tenta referência direta nfe-{numero} / nfce-{numero}
+    if (!notaFocus) {
+      const numPadded = String(numero).padStart(9, '0');
+      const refs = [`${epBase}-${numero}`, `${epBase}-${numPadded}`, `${epBase}${numero}`];
+      for (const ref of refs) {
+        const r = await fetch(`${FOCUSNFE_BASE}/${epBase}/${ref}?completo=1`, {
+          headers: { 'Authorization': AUTH_HEADER },
+        });
+        console.log('[REF]', ref, 'status:', r.status);
+        if (r.ok) {
+          try { notaFocus = await r.json(); break; } catch (_) {}
+        }
+      }
+    }
+
+    // 3. Varre listagem paginada como último recurso
+    if (!notaFocus) {
+      for (let offset = 0; offset <= 500 && !notaFocus; offset += 50) {
+        const r = await fetch(`${FOCUSNFE_BASE}/${epBase}?limit=50&offset=${offset}`, {
+          headers: { 'Authorization': AUTH_HEADER },
+        });
+        if (!r.ok) { console.log('[LIST] erro status:', r.status); break; }
+        let items = [];
+        try {
+          const data = await r.json();
+          items = Array.isArray(data) ? data : [];
+          console.log('[LIST] offset:', offset, 'itens:', items.length, 'primeiro_num:', items[0]?.numero);
+        } catch (_) { break; }
+        if (items.length === 0) break;
+        notaFocus = items.find(n => {
+          if (chaveAcesso) return (n.chave_nfe || n.chave_acesso || '') === chaveAcesso;
+          const nNum = String(n.numero || '').replace(/^0+/, '');
+          const bNum = String(numero).replace(/^0+/, '');
+          return nNum === bNum && (!serie || String(n.serie || '') === String(serie));
+        });
+        if (items.length < 50) break;
+      }
+    }
+
+    // 4. Fallback: se temos a chave de acesso e não encontrou na Focus, cria manualmente no banco
+    if (!notaFocus && chaveAcesso) {
+      console.log('[FALLBACK] Nota não encontrada na Focus. Criando no banco com dados da chave.');
+      const existentes2 = await base44.asServiceRole.entities.NotaFiscal.filter({ numero: String(numero) });
+      const duplo2 = existentes2.find(e => e.tipo === tipoNota);
+      if (duplo2) {
+        return Response.json({ sucesso: false, erro: `${tipoNota} nº ${numero} já existe no banco` }, { status: 400 });
+      }
+      const nova2 = await base44.asServiceRole.entities.NotaFiscal.create({
+        tipo: tipoNota,
+        numero: String(numero),
+        serie: String(serie || '1'),
+        status: 'Importada',
+        cliente_nome: 'CONSUMIDOR',
+        data_emissao: new Date().toISOString().split('T')[0],
+        valor_total: 0,
+        chave_acesso: chaveAcesso,
+        spedy_id: '',
+        status_sefaz: 'importado_manualmente',
+        mensagem_sefaz: 'Restaurado manualmente via chave de acesso (nota não encontrada na Focus NFe)',
+      });
+      return Response.json({
+        sucesso: true,
+        mensagem: `${tipoNota} nº ${numero} importada manualmente no banco! Edite para preencher os dados completos.`,
+        nota_id: nova2.id,
+        aviso: 'Nota não encontrada na Focus NFe — apenas a chave de acesso foi salva.',
+      });
+    }
+
+    if (!notaFocus) {
+      return Response.json({
+        sucesso: false,
+        erro: `${tipoNota} nº ${numero} série ${serie} não encontrada na Focus NFe e nenhuma chave de acesso foi fornecida.`,
       }, { status: 404 });
     }
 
-    // Verifica se já existe no banco
+    // Verifica duplicata no banco
     const existentes = await base44.asServiceRole.entities.NotaFiscal.filter({
-      tipo: 'NFCe',
       numero: String(numero),
     });
-
-    if (existentes.length > 0) {
-      return Response.json({
-        sucesso: false,
-        erro: `NFCe nº ${numero} já existe no banco de dados`,
-      }, { status: 400 });
+    const duplo = existentes.find(e => e.tipo === tipoNota);
+    if (duplo) {
+      return Response.json({ sucesso: false, erro: `${tipoNota} nº ${numero} já existe no banco de dados` }, { status: 400 });
     }
 
-    console.log('[RESTORE] Dados da Focus:', JSON.stringify(nfceFocus));
+    console.log('[RESTORE] dados:', JSON.stringify(notaFocus));
 
-    // Restaura no banco — campos conforme retorno real da Focus NFe
-    const novaNotaFiscal = await base44.asServiceRole.entities.NotaFiscal.create({
-      tipo: 'NFCe',
-      numero: String(nfceFocus.numero || numero),
-      serie: String(nfceFocus.serie || serie || '1'),
-      status: 'Emitida',
-      cliente_nome: nfceFocus.destinatario_nome || nfceFocus.emitente_nome || 'CONSUMIDOR',
-      data_emissao: (nfceFocus.data_emissao || nfceFocus.data_emissao_info || new Date().toISOString()).split('T')[0],
-      valor_total: Number(nfceFocus.valor_total || nfceFocus.valor || 0),
-      spedy_id: nfceFocus.referencia || nfceFocus.reference || nfceFocus.id || '',
-      chave_acesso: nfceFocus.chave_nfe || nfceFocus.chave_acesso || nfceFocus.chave || '',
-      pdf_url: nfceFocus.caminho_danfe || nfceFocus.pdf_url || nfceFocus.danfe_url || '',
-      xml_url: nfceFocus.caminho_xml_nota_fiscal || nfceFocus.xml_url || '',
-      status_sefaz: nfceFocus.status || 'autorizado',
-      mensagem_sefaz: nfceFocus.mensagem_sefaz || '',
+    const nova = await base44.asServiceRole.entities.NotaFiscal.create({
+      tipo: tipoNota,
+      numero: String(notaFocus.numero || numero),
+      serie: String(notaFocus.serie || serie || '1'),
+      status: notaFocus.status === 'cancelado' ? 'Cancelada' : 'Emitida',
+      cliente_nome: notaFocus.destinatario_nome || notaFocus.nome_destinatario || 'CONSUMIDOR',
+      data_emissao: (notaFocus.data_emissao || new Date().toISOString()).split('T')[0],
+      valor_total: Number(notaFocus.valor_total || notaFocus.valor || 0),
+      spedy_id: notaFocus.referencia || notaFocus.reference || notaFocus.id || '',
+      chave_acesso: notaFocus.chave_nfe || notaFocus.chave_acesso || notaFocus.chave || chaveAcesso || '',
+      pdf_url: notaFocus.caminho_danfe || notaFocus.pdf_url || notaFocus.danfe_url || '',
+      xml_url: notaFocus.caminho_xml_nota_fiscal || notaFocus.xml_url || '',
+      status_sefaz: notaFocus.status || 'autorizado',
+      mensagem_sefaz: notaFocus.mensagem_sefaz || '',
     });
 
-    return Response.json({
-      sucesso: true,
-      mensagem: `NFCe nº ${numero} restaurada com sucesso!`,
-      nota_id: novaNotaFiscal.id,
-    });
+    return Response.json({ sucesso: true, mensagem: `${tipoNota} nº ${numero} restaurada com sucesso!`, nota_id: nova.id });
 
   } catch (error) {
+    console.error('[ERRO]', error.message);
     return Response.json({ sucesso: false, erro: error.message }, { status: 500 });
   }
 });
