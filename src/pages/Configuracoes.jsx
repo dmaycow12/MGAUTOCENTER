@@ -25,7 +25,7 @@ export default function Configuracoes() {
   const [salvo, setSalvo] = useState(false);
   const [loading, setLoading] = useState(true);
   const [configIds, setConfigIds] = useState({});
-  const [novoUsuario, setNovoUsuario] = useState({ nome: "", usuario: "", senha: "", confirmarSenha: "", tipo: "gerente" });
+  const [novoUsuario, setNovoUsuario] = useState({ nome: "", senha: "" });
   const [editandoUsuario, setEditandoUsuario] = useState(null);
   const [salvandoUsuario, setSalvandoUsuario] = useState(false);
   const [feedbackUsuario, setFeedbackUsuario] = useState(null);
@@ -102,18 +102,16 @@ export default function Configuracoes() {
 
   const criarUsuario = async () => {
     setFeedbackUsuario(null);
-    if (!novoUsuario.nome || !novoUsuario.usuario || !novoUsuario.senha)
-      return setFeedbackUsuario({ tipo: "erro", msg: "Preencha todos os campos obrigatórios." });
-    if (novoUsuario.senha !== novoUsuario.confirmarSenha)
-      return setFeedbackUsuario({ tipo: "erro", msg: "As senhas não coincidem." });
+    if (!novoUsuario.nome || !novoUsuario.senha)
+      return setFeedbackUsuario({ tipo: "erro", msg: "Preencha nome e senha." });
     setSalvandoUsuario(true);
     const res = await base44.functions.invoke("authSaveUser", {
-      action: "create", nome: novoUsuario.nome, usuario: novoUsuario.usuario,
-      senha: novoUsuario.senha, tipo: novoUsuario.tipo,
+      action: "create", nome: novoUsuario.nome, usuario: novoUsuario.nome,
+      senha: novoUsuario.senha, tipo: "gerente",
     });
     if (res.data?.sucesso) {
-      setNovoUsuario({ nome: "", usuario: "", senha: "", confirmarSenha: "", tipo: "gerente" });
-      setFeedbackUsuario({ tipo: "sucesso", msg: `Usuário "${novoUsuario.usuario}" criado com sucesso!` });
+      setNovoUsuario({ nome: "", senha: "" });
+      setFeedbackUsuario({ tipo: "sucesso", msg: `Usuário "${novoUsuario.nome}" criado com sucesso!` });
       await loadAll();
     } else {
       setFeedbackUsuario({ tipo: "erro", msg: res.data?.erro || "Erro ao criar usuário." });
@@ -334,18 +332,12 @@ export default function Configuracoes() {
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <F label="Nome *">
-              <input autoComplete="new-password" value={novoUsuario.nome} onChange={e => setNovoUsuario(u => ({ ...u, nome: e.target.value }))} className="input-dark" />
-            </F>
-            <F label="Nome de usuário *">
-              <input autoComplete="new-password" value={novoUsuario.usuario} onChange={e => setNovoUsuario(u => ({ ...u, usuario: e.target.value }))} className="input-dark" />
-            </F>
-            <F label="Senha *">
-              <input type="password" autoComplete="new-password" value={novoUsuario.senha} onChange={e => setNovoUsuario(u => ({ ...u, senha: e.target.value }))} className="input-dark" />
-            </F>
-            <F label="Confirmar senha *">
-              <input type="password" autoComplete="new-password" value={novoUsuario.confirmarSenha} onChange={e => setNovoUsuario(u => ({ ...u, confirmarSenha: e.target.value }))} className="input-dark" />
-            </F>
+           <F label="Nome">
+             <input autoComplete="new-password" value={novoUsuario.nome} onChange={e => setNovoUsuario(u => ({ ...u, nome: e.target.value }))} className="input-dark" />
+           </F>
+           <F label="Senha">
+             <input type="password" autoComplete="new-password" value={novoUsuario.senha} onChange={e => setNovoUsuario(u => ({ ...u, senha: e.target.value }))} className="input-dark" />
+           </F>
           </div>
           <div className="mt-5">
             <button onClick={criarUsuario} disabled={salvandoUsuario} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold" style={{background:"#00ff00", color:"#000"}}>
