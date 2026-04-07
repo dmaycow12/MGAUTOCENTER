@@ -224,7 +224,7 @@ export default function Dashboard() {
             <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 hover:bg-white/20 transition-all" style={{borderRight:"1px solid rgba(255,255,255,0.15)"}}>
               <ChevronLeft className="w-3 h-3" />
             </button>
-            <span className="flex-1 text-center">{MESES[filtroMes - 1]} - {filtroAno}</span>
+            <button onClick={() => { setUsandoOutroPeriodo(false); setCustomRange(null); }} className="flex-1 text-center h-full hover:bg-white/10 transition-all cursor-pointer">{MESES[filtroMes - 1]} - {filtroAno}</button>
             <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 hover:bg-white/20 transition-all" style={{borderLeft:"1px solid rgba(255,255,255,0.15)"}}>
               <ChevronRight className="w-3 h-3" />
             </button>
@@ -232,12 +232,48 @@ export default function Dashboard() {
           <div className="relative flex-1" ref={periodoDropRef}>
             <button onClick={() => setPeriodoDropOpen(v => !v)}
               className={`w-full flex items-center justify-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}>
-              {usandoOutroPeriodo && customRange ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}` : "Período"}
+              {usandoOutroPeriodo && customRange
+                ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}`
+                : `${String(1).padStart(2, "0")}/${String(filtroMes).padStart(2, "0")}/${filtroAno} — ${String(new Date(filtroAno, filtroMes, 0).getDate()).padStart(2, "0")}/${String(filtroMes).padStart(2, "0")}/${filtroAno}`}
               <ChevronDown className={`w-4 h-4 transition-transform ${periodoDropOpen ? "rotate-180" : ""}`} />
             </button>
             {periodoDropOpen && (
               <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
-                <p className="text-xs text-gray-400 font-medium">Selecione o período</p>
+                <p className="text-xs text-gray-400 font-medium">Atalhos</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {[['hoje','Hoje'],['semana','Semana'],['mes','Mês'],['ano','Ano']].map(([tipo, label]) => (
+                    <button key={tipo} onClick={() => {
+                      const hoje = new Date();
+                      const pad = n => String(n).padStart(2, '0');
+                      const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+                      if (tipo === 'hoje') {
+                        const d = fmt(hoje);
+                        setCustomRange({ inicio: d, fim: d });
+                        setUsandoOutroPeriodo(true);
+                      } else if (tipo === 'semana') {
+                        const dow = hoje.getDay();
+                        const ini = new Date(hoje); ini.setDate(hoje.getDate() - dow);
+                        const fim = new Date(hoje); fim.setDate(hoje.getDate() + (6 - dow));
+                        setCustomRange({ inicio: fmt(ini), fim: fmt(fim) });
+                        setUsandoOutroPeriodo(true);
+                      } else if (tipo === 'mes') {
+                        setUsandoOutroPeriodo(false);
+                        setCustomRange(null);
+                        setFiltroMes(hoje.getMonth() + 1);
+                        setFiltroAno(hoje.getFullYear());
+                      } else if (tipo === 'ano') {
+                        setCustomRange({ inicio: `${hoje.getFullYear()}-01-01`, fim: `${hoje.getFullYear()}-12-31` });
+                        setUsandoOutroPeriodo(true);
+                      }
+                      setPeriodoDropOpen(false);
+                    }}
+                      className="py-2 text-xs text-white bg-gray-800 hover:bg-[#062C9B] border border-gray-700 rounded-lg font-medium transition-all">
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="border-t border-gray-700 pt-3 space-y-3">
+                <p className="text-xs text-gray-400 font-medium">Período personalizado</p>
                 <div><label className="block text-xs text-gray-500 mb-1">De</label>
                   <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none" /></div>
                 <div><label className="block text-xs text-gray-500 mb-1">Até</label>
@@ -246,7 +282,8 @@ export default function Dashboard() {
                   <button onClick={() => setPeriodoDropOpen(false)} className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white">Cancelar</button>
                   <button onClick={aplicarOutroPeriodo} className="flex-1 py-2 text-xs text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium">Aplicar</button>
                 </div>
-              </div>
+                </div>
+                </div>
             )}
           </div>
         </div>
