@@ -7,10 +7,11 @@ const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    let user = null;
+    try { user = await base44.auth.me(); } catch (_) {}
 
-    if (user?.role !== 'admin') {
-      return Response.json({ sucesso: false, erro: 'Apenas admins' }, { status: 403 });
+    if (!user || user?.role !== 'admin') {
+      return Response.json({ sucesso: false, erro: 'Acesso restrito a administradores' }, { status: 403 });
     }
 
     const { numero, serie } = await req.json();
