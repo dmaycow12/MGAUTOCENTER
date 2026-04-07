@@ -228,7 +228,7 @@ export default function OrdemServico() {
               <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
                 <p className="text-xs text-gray-400 font-medium">Atalhos</p>
                 <div className="grid grid-cols-2 gap-2">
-                  {[['hoje','Hoje'],['semana','Semana'],['mes','Mês Atual'],['ano','Ano Inteiro']].map(([tipo, label]) => (
+                  {[['hoje','Hoje'],['semana','Semana'],['mes','Mês'],['ano','Ano']].map(([tipo, label]) => (
                     <button key={tipo} onClick={() => aplicarAtalho(tipo)}
                       className="py-2 text-xs text-white bg-gray-800 hover:bg-[#062C9B] border border-gray-700 rounded-lg font-medium transition-all">
                       {label}
