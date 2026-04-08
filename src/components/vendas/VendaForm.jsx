@@ -591,7 +591,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                         </div>
                         <div className="flex-1 min-w-[120px]">
                           <label className="text-xs text-gray-500 mb-1 block">Produto</label>
-                          <div className="input-dark text-gray-300 text-sm truncate">{p.descricao}</div>
+                          <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
                         </div>
                         <div className="w-16 flex-shrink-0">
                           <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
@@ -637,7 +637,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                         </div>
                         <div className="flex-1 min-w-[120px]">
                           <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
-                          <div className="input-dark text-gray-300 text-sm truncate">{s.descricao}</div>
+                          <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
                         </div>
                         <div className="w-16 flex-shrink-0">
                           <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
