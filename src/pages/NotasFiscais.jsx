@@ -1137,82 +1137,77 @@ export default function NotasFiscais() {
 
             <div className="flex-1 overflow-y-auto p-5">
               {/* ABA CLIENTE */}
-              {abaForm === "cliente" && (
-                <div className="space-y-4">
+               {abaForm === "cliente" && (
+                 <div className="space-y-4">
+                   <F label="Nome / Razão Social *">
+                     <SearchableSelect
+                       placeholder="Digite o nome ou CPF/CNPJ..."
+                       options={clientesFiltrados.map(c => ({ value: c.id, label: c.nome, sublabel: c.cpf_cnpj || '' }))}
+                       onSelect={opt => selecionarCliente(opt.value)}
+                     />
+                   </F>
 
-                  <F label="Buscar Cliente">
-                    <SearchableSelect
-                      placeholder="Digite o nome ou CPF/CNPJ..."
-                      options={clientesFiltrados.map(c => ({ value: c.id, label: c.nome, sublabel: c.cpf_cnpj || '' }))}
-                      onSelect={opt => selecionarCliente(opt.value)}
-                    />
-                  </F>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <F label="Nome / Razão Social *" className="col-span-2">
-                      <NoACInput value={form.cliente_nome} onChange={e => { setForm(f => ({ ...f, cliente_nome: e.target.value })); setErrosForm(e2 => ({...e2, cliente_nome: undefined})); }} placeholder="Nome completo ou razão social" className={`input-dark ${errosForm.cliente_nome ? 'border-red-500' : ''}`} />
-                      {errosForm.cliente_nome && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_nome}</p>}
-                    </F>
-                    <F label="CPF / CNPJ">
-                      <NoACInput value={form.cliente_cpf_cnpj} onChange={e => { setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cpf_cnpj: undefined})); }} placeholder="000.000.000-00" className={`input-dark ${errosForm.cliente_cpf_cnpj ? 'border-red-500' : ''}`} />
-                      {errosForm.cliente_cpf_cnpj && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cpf_cnpj}</p>}
-                    </F>
-                    {(form.cliente_cpf_cnpj || '').replace(/\D/g, '').length === 14 && (
-                      <F label="Inscrição Estadual (IE)">
-                        <NoACInput value={form.cliente_ie || ''} onChange={e => setForm(f => ({ ...f, cliente_ie: e.target.value }))} placeholder="Deixe em branco se não contribuinte" />
-                      </F>
-                    )}
-                    <F label="E-mail">
-                      <NoACInput value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} placeholder="email@cliente.com" />
-                    </F>
-                    <F label="Telefone">
-                      <NoACInput value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} placeholder="(00) 00000-0000" />
-                    </F>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <F label="CEP">
-                        <NoACInput value={form.cliente_cep} onChange={e => { setForm(f => ({ ...f, cliente_cep: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cep: undefined})); }} placeholder="00000-000" className={`input-dark ${errosForm.cliente_cep ? 'border-red-500' : ''}`} />
-                        {errosForm.cliente_cep && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cep}</p>}
-                      </F>
-                      {form.tipo === 'NFSe' && (
-                        <F label="Código de Município (NFSe)">
-                          <NoACInput value={form.codigo_municipio_tomador || ""} onChange={e => setForm(f => ({ ...f, codigo_municipio_tomador: e.target.value }))} placeholder="" />
-                        </F>
-                      )}
-                    </div>
-                    <F label="Endereço" className="col-span-2">
-                      <NoACInput value={form.cliente_endereco} onChange={e => { setForm(f => ({ ...f, cliente_endereco: e.target.value })); setErrosForm(e2 => ({...e2, cliente_endereco: undefined})); }} placeholder="Rua, Avenida..." className={`input-dark ${errosForm.cliente_endereco ? 'border-red-500' : ''}`} />
-                      {errosForm.cliente_endereco && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_endereco}</p>}
-                    </F>
-                    <F label="Número">
-                      <NoACInput value={form.cliente_numero} onChange={e => setForm(f => ({ ...f, cliente_numero: e.target.value }))} placeholder="123" />
-                    </F>
-                    <F label="Bairro">
-                      <NoACInput value={form.cliente_bairro} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} placeholder="" />
-                    </F>
-                    <F label="Cidade">
-                      <NoACInput value={form.cliente_cidade} onChange={e => { 
-                        const novaCidade = e.target.value;
-                        setForm(f => ({ ...f, cliente_cidade: novaCidade })); 
-                        setErrosForm(e2 => ({...e2, cliente_cidade: undefined}));
-                        // Buscar código de município quando cidade mudar
-                        if (novaCidade && form.cliente_estado) {
-                          preencherCodigoMunicipio(novaCidade, form.cliente_estado);
-                        }
-                      }} placeholder="Nome da cidade" className={`input-dark ${errosForm.cliente_cidade ? 'border-red-500' : ''}`} />
-                      {errosForm.cliente_cidade && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cidade}</p>}
-                    </F>
-                    <F label="Estado (UF)">
-                      <NoACInput value={form.cliente_estado} onChange={e => { 
-                        const novoEstado = e.target.value.toUpperCase();
-                        setForm(f => ({ ...f, cliente_estado: novoEstado })); 
-                        setErrosForm(e2 => ({...e2, cliente_estado: undefined}));
-                        // Buscar código de município quando estado mudar
-                        if (form.cliente_cidade && novoEstado) {
-                          preencherCodigoMunicipio(form.cliente_cidade, novoEstado);
-                        }
-                      }} placeholder="MG" maxLength={2} className={`input-dark ${errosForm.cliente_estado ? 'border-red-500' : ''}`} />
-                      {errosForm.cliente_estado && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_estado}</p>}
-                    </F>
-                  </div>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <F label="CPF / CNPJ">
+                       <NoACInput value={form.cliente_cpf_cnpj} onChange={e => { setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cpf_cnpj: undefined})); }} placeholder="000.000.000-00" className={`input-dark ${errosForm.cliente_cpf_cnpj ? 'border-red-500' : ''}`} />
+                       {errosForm.cliente_cpf_cnpj && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cpf_cnpj}</p>}
+                     </F>
+                     {(form.cliente_cpf_cnpj || '').replace(/\D/g, '').length === 14 && (
+                       <F label="Inscrição Estadual (IE)">
+                         <NoACInput value={form.cliente_ie || ''} onChange={e => setForm(f => ({ ...f, cliente_ie: e.target.value }))} placeholder="Deixe em branco se não contribuinte" />
+                       </F>
+                     )}
+                     <F label="Telefone">
+                       <NoACInput value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} placeholder="(00) 00000-0000" />
+                     </F>
+                     <F label="E-mail">
+                       <NoACInput value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} placeholder="email@cliente.com" />
+                     </F>
+                     <F label="Endereço" className="col-span-1">
+                       <NoACInput value={form.cliente_endereco} onChange={e => { setForm(f => ({ ...f, cliente_endereco: e.target.value })); setErrosForm(e2 => ({...e2, cliente_endereco: undefined})); }} placeholder="Rua, Avenida..." className={`input-dark ${errosForm.cliente_endereco ? 'border-red-500' : ''}`} />
+                       {errosForm.cliente_endereco && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_endereco}</p>}
+                     </F>
+                     <F label="Complemento">
+                       <NoACInput value={form.cliente_numero} onChange={e => setForm(f => ({ ...f, cliente_numero: e.target.value }))} placeholder="Apto, número, complemento..." />
+                     </F>
+                     <F label="Bairro">
+                       <NoACInput value={form.cliente_bairro} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} placeholder="" />
+                     </F>
+                     <F label="Cidade">
+                       <NoACInput value={form.cliente_cidade} onChange={e => { 
+                         const novaCidade = e.target.value;
+                         setForm(f => ({ ...f, cliente_cidade: novaCidade })); 
+                         setErrosForm(e2 => ({...e2, cliente_cidade: undefined}));
+                         // Buscar código de município quando cidade mudar
+                         if (novaCidade && form.cliente_estado) {
+                           preencherCodigoMunicipio(novaCidade, form.cliente_estado);
+                         }
+                       }} placeholder="Nome da cidade" className={`input-dark ${errosForm.cliente_cidade ? 'border-red-500' : ''}`} />
+                       {errosForm.cliente_cidade && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cidade}</p>}
+                     </F>
+                     <F label="CEP">
+                       <NoACInput value={form.cliente_cep} onChange={e => { setForm(f => ({ ...f, cliente_cep: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cep: undefined})); }} placeholder="00000-000" className={`input-dark ${errosForm.cliente_cep ? 'border-red-500' : ''}`} />
+                       {errosForm.cliente_cep && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cep}</p>}
+                     </F>
+                     {form.tipo === 'NFSe' && (
+                       <F label="Código de Município (NFSe)">
+                         <NoACInput value={form.codigo_municipio_tomador || ""} onChange={e => setForm(f => ({ ...f, codigo_municipio_tomador: e.target.value }))} placeholder="" />
+                       </F>
+                     )}
+                     {form.tipo === 'NFe' && (
+                       <F label="Estado (UF)">
+                         <NoACInput value={form.cliente_estado} onChange={e => { 
+                           const novoEstado = e.target.value.toUpperCase();
+                           setForm(f => ({ ...f, cliente_estado: novoEstado })); 
+                           setErrosForm(e2 => ({...e2, cliente_estado: undefined}));
+                           if (form.cliente_cidade && novoEstado) {
+                             preencherCodigoMunicipio(form.cliente_cidade, novoEstado);
+                           }
+                         }} placeholder="MG" maxLength={2} className={`input-dark ${errosForm.cliente_estado ? 'border-red-500' : ''}`} />
+                         {errosForm.cliente_estado && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_estado}</p>}
+                       </F>
+                     )}
+                   </div>
                   <div className="flex justify-end">
                     <button onClick={() => setAbaForm("itens")} className="text-black px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#00ff00"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
                       Próximo: Itens →
