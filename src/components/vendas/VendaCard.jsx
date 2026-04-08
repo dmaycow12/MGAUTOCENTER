@@ -65,6 +65,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
   const [statusPendenteCard, setStatusPendenteCard] = useState(null);
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
   const [manualNFModal, setManualNFModal] = useState(null);
+  const normalizarNF = (v) => v ? v.replace(/\(#?(\d+)\)/, '$1') : v;
 
   const saveField = async (field, val) => {
     await base44.entities.Vendas.update(os.id, { [field]: val });
@@ -268,13 +269,13 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
                   {nfeProduto
                     ? <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfe_manual', tipo: nfeProduto.tipo, numero: nfeProduto.numero || '' })}>{nfeProduto.tipo}(#{nfeProduto.numero})</span>
                     : os.nfe_manual
-                      ? <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfe_manual', tipo: os.nfe_manual.replace(/\d+$/, '') || 'NFCe', numero: (os.nfe_manual.match(/(\d+)$/) || [])[1] || '' })}>{os.nfe_manual}</span>
+                      ? <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => { const n = normalizarNF(os.nfe_manual); setManualNFModal({ campo: 'nfe_manual', tipo: n.replace(/\d+$/, '') || 'NFCe', numero: (n.match(/(\d+)$/) || [])[1] || '' }); }}>{normalizarNF(os.nfe_manual)}</span>
                       : <button onClick={() => setManualNFModal({ campo: 'nfe_manual', tipo: 'NFCe', numero: '' })} className="text-gray-600 hover:text-green-400 text-xs transition-all">+ NF</button>
                   }
                   {nfeServico
                     ? <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: nfeServico.numero || '' })}>NFSe(#{nfeServico.numero})</span>
                     : os.nfse_manual
-                      ? <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: (os.nfse_manual.match(/(\d+)$/) || [])[1] || '' })}>{os.nfse_manual}</span>
+                      ? <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => { const n = normalizarNF(os.nfse_manual); setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: (n.match(/(\d+)$/) || [])[1] || '' }); }}>{normalizarNF(os.nfse_manual)}</span>
                       : <button onClick={() => setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: '' })} className="text-gray-600 hover:text-blue-400 text-xs transition-all">+ NFSe</button>
                   }
                 </>
