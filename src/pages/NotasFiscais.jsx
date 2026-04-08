@@ -164,15 +164,27 @@ export default function NotasFiscais() {
             const osData = await base44.entities.Vendas.filter({ id: os_id }, "-created_date", 1);
             const os = osData[0];
             if (os) {
+              // Busca dados completos do cliente no cadastro
+              let clienteCadastro = null;
+              if (os.cliente_id) {
+                try {
+                  const cRes = await base44.entities.Cliente.filter({ id: os.cliente_id }, "-created_date", 1);
+                  clienteCadastro = cRes[0] || null;
+                } catch {}
+              }
+              const enderecoCompleto = os.cliente_endereco || (clienteCadastro ? [clienteCadastro.endereco, clienteCadastro.numero].filter(Boolean).join(', ') : '');
               clienteExtra = {
-                cliente_cpf_cnpj: os.cliente_cpf_cnpj || "",
-                cliente_email: os.cliente_email || "",
-                cliente_telefone: os.cliente_telefone || "",
-                cliente_endereco: os.cliente_endereco || "",
-                cliente_bairro: os.cliente_bairro || "",
-                cliente_cidade: os.cliente_cidade || "",
-                cliente_estado: os.cliente_estado || "",
-                forma_pagamento: os.forma_pagamento || os.parcelas_detalhes?.[0]?.forma_pagamento || "A Combinar",
+                cliente_cpf_cnpj: os.cliente_cpf_cnpj || clienteCadastro?.cpf_cnpj || "",
+                cliente_ie: clienteCadastro?.rg_ie || "",
+                cliente_email: os.cliente_email || clienteCadastro?.email || "",
+                cliente_telefone: os.cliente_telefone || clienteCadastro?.telefone || "",
+                cliente_endereco: enderecoCompleto,
+                cliente_numero: clienteCadastro?.numero || "",
+                cliente_bairro: os.cliente_bairro || clienteCadastro?.bairro || "",
+                cliente_cep: clienteCadastro?.cep || "",
+                cliente_cidade: os.cliente_cidade || clienteCadastro?.cidade || "",
+                cliente_estado: os.cliente_estado || clienteCadastro?.estado || "",
+                forma_pagamento: os.parcelas_detalhes?.[0]?.forma_pagamento || os.forma_pagamento || "A Combinar",
               };
               if (tipo === "NFSe") {
                 const servs = os.servicos || [];
@@ -308,9 +320,10 @@ export default function NotasFiscais() {
       cliente_id: c.id,
       cliente_nome: c.nome || "",
       cliente_cpf_cnpj: c.cpf_cnpj || "",
+      cliente_ie: c.rg_ie || "",
       cliente_email: c.email || "",
       cliente_telefone: c.telefone || "",
-      cliente_endereco: c.endereco || "",
+      cliente_endereco: [c.endereco, c.numero].filter(Boolean).join(', '),
       cliente_numero: c.numero || "",
       cliente_bairro: c.bairro || "",
       cliente_cep: c.cep || "",

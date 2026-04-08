@@ -69,24 +69,31 @@ Deno.serve(async (req) => {
     let proximoNfce = null;
     let proximoNfe = null;
 
+    // Se nota_id fornecido, verifica se já tem número reservado (retry após erro)
+    let notaExistente = null;
+    if (nota_id) {
+      try {
+        const lista = await base44.asServiceRole.entities.NotaFiscal.filter({ id: nota_id });
+        notaExistente = lista[0] || null;
+      } catch {}
+    }
+
     if (tipo === 'NFSe') {
       endpoint = `/nfsen?ref=${ref}`;
 
-      // Calcula proximo numero DPS: usa APENAS a config salva (fonte da verdade)
-      const configsNfse = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_rps' });
-      const ultimoRps = parseInt(configsNfse[0]?.valor || '0', 10);
-      proximoRps = ultimoRps + 1;
-
-      // Reserva o numero ANTES de enviar a Focus NFe
-      if (configsNfse.length > 0) {
-        await base44.asServiceRole.entities.Configuracao.update(configsNfse[0].id, { valor: String(proximoRps) });
+      if (notaExistente?.numero) {
+        // Retry: reusa o número já reservado
+        proximoRps = parseInt(notaExistente.numero, 10);
       } else {
-        await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_rps', valor: String(proximoRps), descricao: 'Ultimo numero DPS/NFSe Nacional autorizado' });
+        const configsNfse = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_rps' });
+        const ultimoRps = parseInt(configsNfse[0]?.valor || '0', 10);
+        proximoRps = ultimoRps + 1;
+        if (configsNfse.length > 0) {
+          await base44.asServiceRole.entities.Configuracao.update(configsNfse[0].id, { valor: String(proximoRps) });
+        } else {
+          await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_rps', valor: String(proximoRps), descricao: 'Ultimo numero DPS/NFSe Nacional autorizado' });
+        }
       }
-
-      const discriminacao = items && items.length > 0
-        ? items.map(i => `${i.descricao} (Qtd: ${i.quantidade})`).join('; ')
-        : (observacoes || 'Servicos de manutencao e reparacao mecanica');
 
       const valorServico = Number(valor_total) || 1.0;
       const valorIss = parseFloat((valorServico * 0.025).toFixed(2));
@@ -126,17 +133,18 @@ Deno.serve(async (req) => {
       };
     } else if (tipo === 'NFCe') {
       endpoint = `/nfce?ref=${ref}`;
-      
-      // Calcula proximo numero NFCe: usa APENAS a config salva (fonte da verdade)
-      const configsNfce = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfce_ultimo_numero' });
-      const ultimoNfce = parseInt(configsNfce[0]?.valor || '0', 10);
-      proximoNfce = ultimoNfce + 1;
-      
-      // Reserva o numero ANTES de enviar a Focus NFe
-      if (configsNfce.length > 0) {
-        await base44.asServiceRole.entities.Configuracao.update(configsNfce[0].id, { valor: String(proximoNfce) });
+
+      if (notaExistente?.numero) {
+        proximoNfce = parseInt(notaExistente.numero, 10);
       } else {
-        await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfce_ultimo_numero', valor: String(proximoNfce), descricao: 'Ultimo numero NFCe autorizado' });
+        const configsNfce = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfce_ultimo_numero' });
+        const ultimoNfce = parseInt(configsNfce[0]?.valor || '0', 10);
+        proximoNfce = ultimoNfce + 1;
+        if (configsNfce.length > 0) {
+          await base44.asServiceRole.entities.Configuracao.update(configsNfce[0].id, { valor: String(proximoNfce) });
+        } else {
+          await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfce_ultimo_numero', valor: String(proximoNfce), descricao: 'Ultimo numero NFCe autorizado' });
+        }
       }
       
       const prodItems = (items && items.length > 0) ? items : [
@@ -178,17 +186,18 @@ Deno.serve(async (req) => {
     } else {
       // NFe
       endpoint = `/nfe?ref=${ref}`;
-      
-      // Calcula proximo numero NFe: usa APENAS a config salva (fonte da verdade)
-      const configsNfe = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfe_ultimo_numero' });
-      const ultimoNfe = parseInt(configsNfe[0]?.valor || '0', 10);
-      proximoNfe = ultimoNfe + 1;
-      
-      // Reserva o numero ANTES de enviar a Focus NFe
-      if (configsNfe.length > 0) {
-        await base44.asServiceRole.entities.Configuracao.update(configsNfe[0].id, { valor: String(proximoNfe) });
+
+      if (notaExistente?.numero) {
+        proximoNfe = parseInt(notaExistente.numero, 10);
       } else {
-        await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfe_ultimo_numero', valor: String(proximoNfe), descricao: 'Ultimo numero NFe autorizado' });
+        const configsNfe = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfe_ultimo_numero' });
+        const ultimoNfe = parseInt(configsNfe[0]?.valor || '0', 10);
+        proximoNfe = ultimoNfe + 1;
+        if (configsNfe.length > 0) {
+          await base44.asServiceRole.entities.Configuracao.update(configsNfe[0].id, { valor: String(proximoNfe) });
+        } else {
+          await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfe_ultimo_numero', valor: String(proximoNfe), descricao: 'Ultimo numero NFe autorizado' });
+        }
       }
       
       const prodItems = (items && items.length > 0) ? items : [
