@@ -156,7 +156,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   useEffect(() => {
     if (form.cliente_id) {
-      setVeiculosCliente(veiculos.filter(v => v.cliente_id === form.cliente_id));
+      setVeiculosCliente((veiculos || []).filter(v => v.cliente_id === form.cliente_id));
     }
   }, [form.cliente_id, veiculos]);
 
