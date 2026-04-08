@@ -48,6 +48,50 @@
       "type": "string",
       "title": "Cliente"
     },
+    "cliente_cpf_cnpj": {
+      "type": "string",
+      "title": "CPF/CNPJ Cliente"
+    },
+    "cliente_ie": {
+      "type": "string",
+      "title": "Inscri\u00e7\u00e3o Estadual Cliente"
+    },
+    "cliente_email": {
+      "type": "string",
+      "title": "E-mail Cliente"
+    },
+    "cliente_telefone": {
+      "type": "string",
+      "title": "Telefone Cliente"
+    },
+    "cliente_endereco": {
+      "type": "string",
+      "title": "Endere\u00e7o Cliente"
+    },
+    "cliente_numero": {
+      "type": "string",
+      "title": "N\u00famero Endere\u00e7o Cliente"
+    },
+    "cliente_bairro": {
+      "type": "string",
+      "title": "Bairro Cliente"
+    },
+    "cliente_cep": {
+      "type": "string",
+      "title": "CEP Cliente"
+    },
+    "cliente_cidade": {
+      "type": "string",
+      "title": "Cidade Cliente"
+    },
+    "cliente_estado": {
+      "type": "string",
+      "title": "Estado Cliente"
+    },
+    "forma_pagamento": {
+      "type": "string",
+      "title": "Forma de Pagamento"
+    },
     "data_emissao": {
       "type": "string",
       "title": "Data de Emiss\u00e3o"
