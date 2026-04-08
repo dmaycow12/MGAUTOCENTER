@@ -273,10 +273,11 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const selecionarServico = (i, item) => {
-    const novos = form.servicos.map((s, idx) => idx === i ? { ...s, _new: false, codigo: item.codigo || "", descricao: item.descricao || "", valor: Number(item.valor || 0) } : s);
     setServicoSugestoes({ idx: null, lista: [] });
-    const calc = recalcular(novos, form.pecas, form.desconto);
-    setForm(f => ({ ...f, servicos: novos, ...calc }));
+    setForm(f => {
+      const novos = f.servicos.map((s, idx) => idx === i ? { ...s, _new: false, codigo: item.codigo || "", descricao: item.descricao || "", valor: Number(item.valor || 0) } : s);
+      return { ...f, servicos: novos, ...recalcular(novos, f.pecas, f.desconto) };
+    });
   };
 
   const removeServico = (i) => {
@@ -310,15 +311,16 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const selecionarProduto = (i, item) => {
-    const novos = form.pecas.map((p, idx) => {
-      if (idx !== i) return p;
-      const updated = { ...p, _new: false, estoque_id: item.id, codigo: item.codigo || "", descricao: item.descricao || "", valor_unitario: Number(item.valor_venda || 0) };
-      updated.valor_total = Number(updated.quantidade || 1) * updated.valor_unitario;
-      return updated;
-    });
     setProdutoSugestoes({ idx: null, lista: [] });
-    const calc = recalcular(form.servicos, novos, form.desconto);
-    setForm(f => ({ ...f, pecas: novos, ...calc }));
+    setForm(f => {
+      const novos = f.pecas.map((p, idx) => {
+        if (idx !== i) return p;
+        const updated = { ...p, _new: false, estoque_id: item.id, codigo: item.codigo || "", descricao: item.descricao || "", valor_unitario: Number(item.valor_venda || 0) };
+        updated.valor_total = Number(updated.quantidade || 1) * updated.valor_unitario;
+        return updated;
+      });
+      return { ...f, pecas: novos, ...recalcular(f.servicos, novos, f.desconto) };
+    });
   };
 
   const removePeca = (i) => {
