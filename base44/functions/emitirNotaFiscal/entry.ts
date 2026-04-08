@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
       endpoint = `/nfsen?ref=${ref}`;
 
       if (notaExistente?.numero) {
-        // Retry: reusa o número já reservado
+        // Retry: reusa o número já salvo na nota (não incrementa mais)
         proximoRps = parseInt(notaExistente.numero, 10);
       } else {
         const configsNfse = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_dps' });

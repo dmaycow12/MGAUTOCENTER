@@ -11,7 +11,7 @@ export default function Configuracoes() {
     "focusnfe_api_key_homologacao", "focusnfe_api_key_producao",
     "nfe_serie", "nfe_ultimo_numero", "nfe_versao", "nfe_ambiente",
     "nfce_serie", "nfce_ultimo_numero", "nfce_versao", "nfce_token", "nfce_csc", "nfce_ambiente",
-    "nfse_serie_rps", "nfse_ultimo_rps", "nfse_natureza_operacao", "nfse_layout", "nfse_apuracao", "nfse_imunidade", "nfse_tipo_operacao", "nfse_ambiente"];
+    "nfse_serie_dps", "nfse_ultimo_dps", "nfse_natureza_operacao", "nfse_layout", "nfse_apuracao", "nfse_imunidade", "nfse_tipo_operacao", "nfse_ambiente"];
 
   const [config, setConfig] = useState({
     nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
@@ -19,7 +19,7 @@ export default function Configuracoes() {
     focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
     nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00", nfe_ambiente: "producao",
     nfce_serie: "1", nfce_ultimo_numero: "0", nfce_versao: "4.00", nfce_token: "", nfce_csc: "", nfce_ambiente: "producao",
-    nfse_serie_rps: "1", nfse_ultimo_rps: "0", nfse_natureza_operacao: "", nfse_layout: "Nacional", nfse_apuracao: "", nfse_imunidade: "", nfse_tipo_operacao: "", nfse_ambiente: "producao",
+    nfse_serie_dps: "900", nfse_ultimo_dps: "0", nfse_natureza_operacao: "", nfse_layout: "Nacional", nfse_apuracao: "", nfse_imunidade: "", nfse_tipo_operacao: "", nfse_ambiente: "producao",
   });
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
@@ -38,12 +38,12 @@ export default function Configuracoes() {
   const loadAll = async () => {
     const todos = await base44.entities.Configuracao.list("-created_date", 200);
     const c = {
-      nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
-      logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
-      focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
-      nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00", nfe_ambiente: "producao",
-      nfce_serie: "1", nfce_ultimo_numero: "0", nfce_versao: "4.00", nfce_token: "", nfce_csc: "", nfce_ambiente: "producao",
-      nfse_serie_rps: "1", nfse_ultimo_rps: "0", nfse_natureza_operacao: "", nfse_layout: "Nacional", nfse_apuracao: "", nfse_imunidade: "", nfse_tipo_operacao: "", nfse_ambiente: "producao",
+     nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
+     logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
+     focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
+     nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00", nfe_ambiente: "producao",
+     nfce_serie: "1", nfce_ultimo_numero: "0", nfce_versao: "4.00", nfce_token: "", nfce_csc: "", nfce_ambiente: "producao",
+     nfse_serie_dps: "900", nfse_ultimo_dps: "0", nfse_natureza_operacao: "", nfse_layout: "Nacional", nfse_apuracao: "", nfse_imunidade: "", nfse_tipo_operacao: "", nfse_ambiente: "producao",
     };
     const ids = {};
     const extras = [];
@@ -243,13 +243,13 @@ export default function Configuracoes() {
       </Section>
 
       <Section title="NFS-e — Nota Fiscal de Serviço" icon={null}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <F label="Último RPS NFS-e">
-            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfse_ultimo_rps} onChange={e => setConfig({ ...config, nfse_ultimo_rps: e.target.value })} className="input-dark" />
-          </F>
-          <F label="Série do RPS">
-            <input value={config.nfse_serie_rps} onChange={e => setConfig({ ...config, nfse_serie_rps: e.target.value })} className="input-dark" />
-          </F>
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+         <F label="Último DPS NFS-e">
+           <input type="text" inputMode="numeric" autoComplete="off" value={config.nfse_ultimo_dps} onChange={e => setConfig({ ...config, nfse_ultimo_dps: e.target.value })} className="input-dark" />
+         </F>
+         <F label="Série do DPS">
+           <input value={config.nfse_serie_dps} onChange={e => setConfig({ ...config, nfse_serie_dps: e.target.value })} className="input-dark" />
+         </F>
           <F label="Natureza de operação">
             <input value={config.nfse_natureza_operacao} onChange={e => setConfig({ ...config, nfse_natureza_operacao: e.target.value })} className="input-dark" />
           </F>
