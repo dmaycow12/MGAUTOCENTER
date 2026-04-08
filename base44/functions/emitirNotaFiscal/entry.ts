@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
 
     const {
-      tipo, cliente_nome, cliente_cpf_cnpj, cliente_email,
+      tipo, cliente_nome, cliente_cpf_cnpj, cliente_ie, cliente_email,
       cliente_numero, cliente_endereco, cliente_bairro, cliente_cep,
       cliente_cidade, cliente_estado, items, valor_total,
       forma_pagamento, observacoes, nota_id, cliente_id,
@@ -223,10 +223,10 @@ Deno.serve(async (req) => {
         uf_destinatario: cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
         indicador_inscricao_estadual_destinatario: cpfCnpjLimpo.length === 14
-          ? ((body.cliente_ie && body.cliente_ie.trim()) ? '1' : '9')
+          ? ((cliente_ie && cliente_ie.trim()) ? '1' : '9')
           : '9',
-        ...(cpfCnpjLimpo.length === 14 && body.cliente_ie && body.cliente_ie.trim() ? { inscricao_estadual_destinatario: body.cliente_ie.trim() } : {}),
-        consumidor_final: cpfCnpjLimpo.length === 11 || !(body.cliente_ie && body.cliente_ie.trim()) ? '1' : '0',
+        ...(cpfCnpjLimpo.length === 14 && cliente_ie && cliente_ie.trim() ? { inscricao_estadual_destinatario: cliente_ie.replace(/\D/g, '') } : {}),
+        consumidor_final: cpfCnpjLimpo.length === 11 || !(cliente_ie && cliente_ie.trim()) ? '1' : '0',
         modalidade_frete: '9',
         ...(serie_manual ? { serie: serie_manual } : { serie: '1' }),
         items: prodItems.map((it, idx) => ({
@@ -348,6 +348,7 @@ Deno.serve(async (req) => {
       tipo,
       xml_content: JSON.stringify(items || []),
       cliente_cpf_cnpj: cliente_cpf_cnpj || '',
+      cliente_ie: cliente_ie || '',
       cliente_email: cliente_email || '',
       cliente_telefone: body.cliente_telefone || '',
       cliente_endereco: cliente_endereco || '',
