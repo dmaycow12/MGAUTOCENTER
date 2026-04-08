@@ -1159,7 +1159,6 @@ export default function NotasFiscais() {
                     {(form.cliente_cpf_cnpj || '').replace(/\D/g, '').length === 14 && (
                       <F label="Inscrição Estadual (IE)">
                         <NoACInput value={form.cliente_ie || ''} onChange={e => setForm(f => ({ ...f, cliente_ie: e.target.value }))} placeholder="Deixe em branco se não contribuinte" />
-                        <p className="text-gray-500 text-xs mt-1">Sem IE = não contribuinte (indicador 9)</p>
                       </F>
                     )}
                     <F label="E-mail">
@@ -1168,10 +1167,17 @@ export default function NotasFiscais() {
                     <F label="Telefone">
                       <NoACInput value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} placeholder="(00) 00000-0000" />
                     </F>
-                    <F label="CEP">
-                      <NoACInput value={form.cliente_cep} onChange={e => { setForm(f => ({ ...f, cliente_cep: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cep: undefined})); }} placeholder="00000-000" className={`input-dark ${errosForm.cliente_cep ? 'border-red-500' : ''}`} />
-                      {errosForm.cliente_cep && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cep}</p>}
-                    </F>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <F label="CEP">
+                        <NoACInput value={form.cliente_cep} onChange={e => { setForm(f => ({ ...f, cliente_cep: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cep: undefined})); }} placeholder="00000-000" className={`input-dark ${errosForm.cliente_cep ? 'border-red-500' : ''}`} />
+                        {errosForm.cliente_cep && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cep}</p>}
+                      </F>
+                      {form.tipo === 'NFSe' && (
+                        <F label="Código de Município (NFSe)">
+                          <NoACInput value={form.codigo_municipio_tomador || ""} onChange={e => setForm(f => ({ ...f, codigo_municipio_tomador: e.target.value }))} placeholder="" />
+                        </F>
+                      )}
+                    </div>
                     <F label="Endereço" className="col-span-2">
                       <NoACInput value={form.cliente_endereco} onChange={e => { setForm(f => ({ ...f, cliente_endereco: e.target.value })); setErrosForm(e2 => ({...e2, cliente_endereco: undefined})); }} placeholder="Rua, Avenida..." className={`input-dark ${errosForm.cliente_endereco ? 'border-red-500' : ''}`} />
                       {errosForm.cliente_endereco && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_endereco}</p>}
@@ -1205,10 +1211,6 @@ export default function NotasFiscais() {
                         }
                       }} placeholder="MG" maxLength={2} className={`input-dark ${errosForm.cliente_estado ? 'border-red-500' : ''}`} />
                       {errosForm.cliente_estado && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_estado}</p>}
-                    </F>
-                    <F label="Código de Município (NFSe)" className="col-span-2">
-                      <NoACInput value={form.codigo_municipio_tomador || ""} onChange={e => setForm(f => ({ ...f, codigo_municipio_tomador: e.target.value }))} placeholder="Ex: 3170750 (Varjão de Minas)" />
-                      <p className="text-gray-500 text-xs mt-1">Deixe em branco para usar o município do cliente cadastrado</p>
                     </F>
                   </div>
                   <div className="flex justify-end">
@@ -1254,21 +1256,23 @@ export default function NotasFiscais() {
                             />
                           </F>
                         ) : (
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <F label="Código">
-                              <div className="input-dark text-gray-400 text-sm">{item.codigo || '—'}</div>
-                            </F>
-                            <F label={form.tipo === 'NFSe' ? 'Serviço' : 'Produto'} className="col-span-2 md:col-span-3">
+                          <div className={`grid gap-3 ${form.tipo === 'NFSe' ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4'}` }>
+                            {form.tipo !== 'NFSe' && (
+                              <F label="Código">
+                                <div className="input-dark text-gray-400 text-sm">{item.codigo || '—'}</div>
+                              </F>
+                            )}
+                            <F label={form.tipo === 'NFSe' ? 'Serviço' : 'Produto'} className={form.tipo === 'NFSe' ? 'col-span-1 md:col-span-2' : 'col-span-2 md:col-span-3'}>
                               <NoACInput value={item.descricao} onChange={e => atualizarItem(idx, 'descricao', e.target.value)} placeholder="Descrição" className={`input-dark ${errosForm.items?.[idx]?.descricao ? 'border-red-500' : ''}`} />
                               {errosForm.items?.[idx]?.descricao && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].descricao}</p>}
                             </F>
                             <F label="Quantidade">
                               <NoACInput value={item.quantidade} onChange={e => atualizarItem(idx, 'quantidade', e.target.value)} placeholder="1" />
                             </F>
-                            <F label="Valor Unitário (R$)">
+                            <F label={form.tipo === 'NFSe' ? 'Valor' : 'Valor Unitário (R$)'}>
                               <NoACInput value={item.valor_unitario} onChange={e => atualizarItem(idx, 'valor_unitario', e.target.value)} placeholder="0" />
                             </F>
-                            <F label="Total (R$)" className="col-span-2">
+                            <F label={form.tipo === 'NFSe' ? 'Total' : 'Total (R$)'} className={form.tipo === 'NFSe' ? '' : 'col-span-2'}>
                               <NoACInput value={item.valor_total} onChange={e => atualizarItem(idx, 'valor_total', e.target.value)} placeholder="0" />
                             </F>
                             {form.tipo !== 'NFSe' && (
