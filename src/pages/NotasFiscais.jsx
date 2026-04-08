@@ -549,6 +549,11 @@ export default function NotasFiscais() {
     }
 
     try {
+      // Buscar código de município do cliente
+      const clienteVinculado = clientes.find(c => c.id === f.cliente_id);
+      const codigoMunicipioTomador = f.codigo_municipio_tomador || 
+        (clienteVinculado?.codigo_municipio ? clienteVinculado.codigo_municipio : undefined);
+
       const payload = {
         ...f,
         nota_id: rascunhoNota?.id || currentEditIdRef.current || null,
@@ -561,6 +566,7 @@ export default function NotasFiscais() {
           valor_total: Number(it.valor_total) || 0,
         })),
         valor_total: Number(f.valor_total) || 0,
+        ...(codigoMunicipioTomador ? { codigo_municipio_tomador: codigoMunicipioTomador } : {}),
       };
       const response = await base44.functions.invoke("emitirNotaFiscal", payload);
 
@@ -1167,6 +1173,10 @@ export default function NotasFiscais() {
                     <F label="Estado (UF)">
                       <NoACInput value={form.cliente_estado} onChange={e => { setForm(f => ({ ...f, cliente_estado: e.target.value.toUpperCase() })); setErrosForm(e2 => ({...e2, cliente_estado: undefined})); }} placeholder="MG" maxLength={2} className={`input-dark ${errosForm.cliente_estado ? 'border-red-500' : ''}`} />
                       {errosForm.cliente_estado && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_estado}</p>}
+                    </F>
+                    <F label="Código de Município (NFSe)" className="col-span-2">
+                      <NoACInput value={form.codigo_municipio_tomador || ""} onChange={e => setForm(f => ({ ...f, codigo_municipio_tomador: e.target.value }))} placeholder="Ex: 3170750 (Varjão de Minas)" />
+                      <p className="text-gray-500 text-xs mt-1">Deixe em branco para usar o município do cliente cadastrado</p>
                     </F>
                   </div>
                   <div className="flex justify-end">
