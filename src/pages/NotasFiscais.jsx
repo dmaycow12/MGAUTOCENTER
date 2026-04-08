@@ -273,7 +273,7 @@ export default function NotasFiscais() {
   };
 
   const filtradas = notas.filter(n => {
-    if (filtroTipo.length === 0 && filtroModeloNF.length === 0) return false;
+    if (filtroTipo.length === 0 || filtroModeloNF.length === 0) return false;
     const isEntrada = n.status === "Importada" || n.status === "Lançada";
     const matchTipo = filtroTipo.length === 0 || (filtroTipo.includes("Saída") && !isEntrada) || (filtroTipo.includes("Entrada") && isEntrada);
     const matchModelo = filtroModeloNF.length === 0 || filtroModeloNF.includes(n.tipo);
