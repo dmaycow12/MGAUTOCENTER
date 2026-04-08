@@ -495,7 +495,15 @@ export default function NotasFiscais() {
         valor_total: rascunhoNota.valor_total,
         observacoes: rascunhoNota.observacoes,
         data_emissao: rascunhoNota.data_emissao,
-        items: [{ descricao: rascunhoNota.observacoes || 'Serviços', quantidade: 1, valor_unitario: rascunhoNota.valor_total, valor_total: rascunhoNota.valor_total }],
+        items: (() => {
+          if (rascunhoNota.xml_content) {
+            try {
+              const p = JSON.parse(rascunhoNota.xml_content);
+              if (Array.isArray(p) && p.length > 0 && p[0].descricao) return p;
+            } catch {}
+          }
+          return [{ descricao: rascunhoNota.observacoes || 'Serviço/Produto', quantidade: 1, valor_unitario: rascunhoNota.valor_total, valor_total: rascunhoNota.valor_total }];
+        })(),
       };
     }
 
