@@ -170,7 +170,7 @@ export default function Vendas() {
       const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
       return matchSearch && matchStatus && matchPeriodo;
     })
-    .sort((a, b) => Number(a.numero || 0) - Number(b.numero || 0));
+    .sort((a, b) => (Number(a.numero || 0) || Number.MAX_VALUE) - (Number(b.numero || 0) || Number.MAX_VALUE));
 
   const ordensParaMassa = filtradas;
 
