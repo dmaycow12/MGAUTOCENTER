@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, FileText, Settings, RefreshCw } from "lucide-react";
 import ModalEmissaoMassa from "@/components/notas/ModalEmissaoMassa";
-import VendaForm from "@/components/os/VendaForm";
-import OrdemVendaCard from "@/components/os/OrdemVendaCard";
-import OrdemVendaRow, { COLUNAS_PADRAO } from "@/components/os/OrdemVendaRow";
+import VendaForm from "@/components/vendas/VendaForm";
+import VendaCard from "@/components/vendas/VendaCard";
+import VendaRow, { COLUNAS_PADRAO } from "@/components/vendas/VendaRow";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
@@ -340,7 +340,7 @@ export default function Vendas() {
       ) : viewMode === "cards" ? (
        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
          {filtradas.map(os => (
-           <OrdemVendaCard key={os.id} os={os} clientes={clientes} notas={notas} onEdit={() => { setEditando(os); setShowForm(true); }} onDelete={() => excluir(os.id)} onRefresh={load} />
+           <VendaCard key={os.id} os={os} clientes={clientes} notas={notas} onEdit={() => { setEditando(os); setShowForm(true); }} onDelete={() => excluir(os.id)} onRefresh={load} />
           ))}
         </div>
       ) : (
@@ -365,7 +365,7 @@ export default function Vendas() {
               </thead>
               <tbody>
                 {filtradas.map(os => (
-                  <OrdemVendaRow
+                  <VendaRow
                     key={os.id}
                     os={os}
                     notas={notas}

@@ -5,18 +5,15 @@ function normalize(str) {
 }
 
 function encontrarItemEstoque(estoqueList, peca) {
-  // 1. Por estoque_id (mais confiável)
   if (peca.estoque_id) {
     const item = estoqueList.find(e => e.id === peca.estoque_id);
     if (item) return item;
   }
-  // 2. Por código
   if (peca.codigo) {
     const cod = normalize(peca.codigo);
     const item = estoqueList.find(e => e.codigo && normalize(e.codigo) === cod);
     if (item) return item;
   }
-  // 3. Por descrição (exato, depois parcial)
   if (peca.descricao) {
     const desc = normalize(peca.descricao);
     const exato = estoqueList.find(e => normalize(e.descricao) === desc);

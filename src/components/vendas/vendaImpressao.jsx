@@ -15,8 +15,6 @@ export function gerarHTMLImpressao(os) {
     "<tr><td>" + (p.descricao||"") + "</td><td style='text-align:center'>" + (p.quantidade||1) + "</td><td style='text-align:right'>R$ " + fmt(p.valor_unitario) + "</td><td style='text-align:right'>R$ " + fmt(p.valor_total) + "</td></tr>"
   ).join("");
 
-
-
   const totalProdutos = Number(os.valor_pecas || 0);
   const totalServicos = Number(os.valor_servicos || 0);
   const desconto = Number(os.desconto || 0);
@@ -89,7 +87,7 @@ export function gerarHTMLImpressao(os) {
     "@media print { @page { size: A4; margin: 8mm; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; padding-top: 0; } .toolbar { display: none; } }",
   ].join(" ");
 
-  return "<!DOCTYPE html><html lang='pt-BR'><head><meta charset='UTF-8'/><title>OS #" + (os.numero||"") + "</title><style>" + css + "</style></head><body>" +
+  return "<!DOCTYPE html><html lang='pt-BR'><head><meta charset='UTF-8'/><title>Venda #" + (os.numero||"") + "</title><style>" + css + "</style></head><body>" +
     "<div class='toolbar'>" +
     "<span class='tb-title'>IMPRESSAO</span>" +
     "<div class='tb-sep'></div>" +
@@ -109,7 +107,7 @@ export function gerarHTMLImpressao(os) {
     "function zoomIn(){if(z<2){z=Math.round((z+0.1)*10)/10;applyZoom();}}" +
     "function zoomOut(){if(z>0.5){z=Math.round((z-0.1)*10)/10;applyZoom();}}" +
     "function salvarPDF(){" +
-    "  var nomeArquivo='OS_" + (os.numero||"") + ".pdf';" +
+    "  var nomeArquivo='Venda_" + (os.numero||"") + ".pdf';" +
     "  var toolbar=document.querySelector('.toolbar');" +
     "  if(toolbar) toolbar.style.display='none';" +
     "  document.querySelector('.page').style.transform='';" +

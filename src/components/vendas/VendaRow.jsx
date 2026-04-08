@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { ChevronDown, Pencil, Printer, Trash2, FileText, MoreVertical, AlertTriangle, Settings } from "lucide-react";
-import { gerarHTMLImpressao } from "./osImpressao";
+import { ChevronDown, Pencil, Printer, Trash2, FileText, MoreVertical, AlertTriangle } from "lucide-react";
+import { gerarHTMLImpressao } from "./vendaImpressao";
 import { reduzirEstoque, restaurarEstoque, excluirLancamentosOS } from "./estoqueUtils";
 
 function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
@@ -14,17 +14,9 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
   );
 }
 
-const COLUNAS_PADRAO = {
-  data: true,
-  cliente: true,
-  veiculo: true,
-  placa: true,
-  km: true,
-  status: true,
-  valor: true,
-  pagamento: true,
-  nfe: true,
-  nfse: true,
+export const COLUNAS_PADRAO = {
+  data: true, cliente: true, veiculo: true, placa: true, km: true,
+  status: true, valor: true, pagamento: true, nfe: true, nfse: true,
 };
 
 function InlineEdit({ value, onSave, placeholder = "", mono = false }) {
@@ -70,11 +62,9 @@ function fmtValor(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefresh, colunas = COLUNAS_PADRAO, onSaveColumns }) {
+export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, colunas = COLUNAS_PADRAO }) {
   const notasOs = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Rascunho');
-  const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
-  const temNfServico = notasOs.some(n => n.tipo === 'NFSe');
-  const temNFEmitida = temNfeProduto || temNfServico; // bloqueia edição e status
+  const temNFEmitida = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe' || n.tipo === 'NFSe'));
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -263,14 +253,12 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
         {colunas.km && <td className="px-4 py-3"><InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" /></td>}
         {colunas.status && <td className="px-4 py-3">
           <div className="relative inline-block">
-            <button
-              ref={statusBtnRef}
+            <button ref={statusBtnRef}
               onClick={() => { if (temNFEmitida) return; setMenuOpen(false); setStatusOpen(v => !v); }}
-            disabled={temNFEmitida}
-            title={temNFEmitida ? 'Nota fiscal emitida — status bloqueado' : undefined}
+              disabled={temNFEmitida}
+              title={temNFEmitida ? 'Nota fiscal emitida — status bloqueado' : undefined}
               className="flex items-center justify-center gap-1 text-xs h-6 px-3 rounded-md font-semibold hover:opacity-90 transition-all whitespace-nowrap w-40"
-              style={style.style}
-            >
+              style={style.style}>
               {os.status || "—"}
               <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </button>
@@ -343,5 +331,3 @@ export default function OrdemVendaRow({ os, notas = [], onEdit, onDelete, onRefr
     </>
   );
 }
-
-export { COLUNAS_PADRAO };

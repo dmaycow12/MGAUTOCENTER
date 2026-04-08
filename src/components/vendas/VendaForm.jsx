@@ -367,14 +367,12 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const gerarLancamentosFinanceiros = async (osData, parcelasData) => {
-    console.log("GERAR LANCAMENTOS - parcelasData:", JSON.stringify(parcelasData));
     const lista = parcelasData && parcelasData.length > 0
       ? parcelasData
       : gerarParcelas(osData.valor_total, Number(osData.parcelas) || 1, osData.data_entrada);
 
     for (const p of lista) {
       const formaParc = p.forma_pagamento || "A Combinar";
-      console.log(`Parcela ${p.numero}: forma=${formaParc}`);
       const pago = ["Dinheiro", "PIX"].includes(formaParc);
       await base44.entities.Financeiro.create({
         tipo: "Receita",
@@ -398,7 +396,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
     try {
       const parcelasNormalizadas = parcelasRef.current.map(p => ({ ...p, valor: Number(p.valor) || 0 }));
-      console.log("PARCELAS AO SALVAR:", JSON.stringify(parcelasNormalizadas));
       const formaPrincipal = parcelasNormalizadas[0]?.forma_pagamento || form.forma_pagamento || "A Combinar";
       let formFinal = { ...form, parcelas_detalhes: parcelasNormalizadas, forma_pagamento: formaPrincipal };
 
@@ -458,7 +455,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto">
       <div className="min-h-full flex items-start justify-center p-4 pt-8">
       <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-3xl my-4">
-        {/* Honeypot para bloquear autocomplete do browser */}
         <div style={{display:"none"}} aria-hidden="true">
           <input type="text" name="username" autoComplete="username" tabIndex={-1} />
           <input type="password" name="password" autoComplete="current-password" tabIndex={-1} />
@@ -478,7 +474,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         )}
 
         <div className="p-5 space-y-5">
-          {/* Header Info */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <Field label="Número Venda">
               <input value={form.numero} disabled={isConcluida} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} className={`input-dark ${isConcluida ? "opacity-50 cursor-not-allowed" : ""}`} autoComplete="off" />
@@ -495,7 +490,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
           {!isConcluida && (
             <>
-              {/* Cliente */}
               <Section title="Cliente">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="col-span-1 md:col-span-2">
@@ -534,7 +528,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 </div>
               </Section>
 
-              {/* Veículo */}
               <Section title="Veículo">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {form.cliente_id && veiculosCliente.length > 0 && (
@@ -551,13 +544,11 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 </div>
               </Section>
 
-              {/* Defeito / Diagnóstico */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field label="Defeito Relatado"><textarea value={form.defeito_relatado} onChange={e => setForm(f => ({ ...f, defeito_relatado: e.target.value }))} className="input-dark" rows={2} autoComplete="off" /></Field>
                 <Field label="Diagnóstico"><textarea value={form.diagnostico} onChange={e => setForm(f => ({ ...f, diagnostico: e.target.value }))} className="input-dark" rows={2} autoComplete="off" /></Field>
               </div>
 
-              {/* Fotos */}
               <Section title="Fotos do Veículo / Serviço">
                 <div className="flex flex-wrap gap-2 mb-3">
                   {(form.fotos || []).map((foto, i) => (
@@ -578,7 +569,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { Array.from(e.target.files || []).forEach(f => handleFotoUpload(f)); e.target.value = ""; }} />
               </Section>
 
-              {/* Produtos */}
               <Section title="Produtos">
                 {(form.pecas || []).map((p, i) => (
                   <div key={i} className="bg-gray-800/50 rounded-xl p-3 mb-2">
@@ -620,7 +610,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 </button>
               </Section>
 
-              {/* Serviços */}
               <Section title="Serviços">
                 {(form.servicos || []).map((s, i) => (
                   <div key={i} className="bg-gray-800/50 rounded-xl p-3 mb-2">
@@ -662,7 +651,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 </button>
               </Section>
 
-              {/* Pagamento */}
               <Section title="Pagamento">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                   <Field label="Desconto (R$)">

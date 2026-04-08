@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { ChevronDown, Pencil, Printer, Trash2, FileText, MoreVertical, AlertTriangle } from "lucide-react";
-import { gerarHTMLImpressao } from "./osImpressao";
+import { gerarHTMLImpressao } from "./vendaImpressao";
 import { reduzirEstoque, restaurarEstoque, excluirLancamentosOS } from "./estoqueUtils";
 
 function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
@@ -56,11 +56,8 @@ function InlineEdit({ value, onSave, placeholder = "" }) {
   );
 }
 
-export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRefresh }) {
+export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh }) {
   const notasOs = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Rascunho');
-  const temNfeProduto = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
-  const temNfServico = notasOs.some(n => n.tipo === 'NFSe');
-  const notaEmitida = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe' || n.tipo === 'NFSe'));
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -134,7 +131,6 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
       const todasOS = await base44.entities.Vendas.list("-created_date", 1000);
       const osAtualizada = todasOS.find(o => o.id === os.id);
       const osData = osAtualizada || os;
-      
       await excluirLancamentosOS(os.id);
       await restaurarEstoque(osData.pecas || []);
       await base44.entities.Vendas.update(os.id, { status: statusPendenteCard });
@@ -152,7 +148,6 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
         const todasOS = await base44.entities.Vendas.list("-created_date", 1000);
         const osAtualizada = todasOS.find(o => o.id === os.id);
         const osData = osAtualizada || os;
-        
         await excluirLancamentosOS(os.id);
         await restaurarEstoque(osData.pecas || []);
       } catch (err) {
@@ -209,8 +204,6 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
   };
 
   const style = STATUS_STYLE[os.status] || { badge: "bg-gray-600 text-white", style: { background: "#374151", color: "#fff" } };
-  const veiculoNome = os.veiculo_modelo || "—";
-  const veiculoPlaca = os.veiculo_placa?.toUpperCase() || "—";
 
   const menuItems = [
     { label: "Enviar orçamento", icon: WhatsAppIcon, action: enviarOrcamento },
@@ -358,9 +351,7 @@ export default function OrdemVendaCard({ os, notas = [], onEdit, onDelete, onRef
           </div>
           <div className="px-3 py-2.5">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>
-            <div className="flex items-center gap-2">
-              <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
-            </div>
+            <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
           </div>
         </div>
       </div>
