@@ -1152,11 +1152,9 @@ export default function NotasFiscais() {
                        <NoACInput value={form.cliente_cpf_cnpj} onChange={e => { setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cpf_cnpj: undefined})); }} placeholder="000.000.000-00" className={`input-dark ${errosForm.cliente_cpf_cnpj ? 'border-red-500' : ''}`} />
                        {errosForm.cliente_cpf_cnpj && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cpf_cnpj}</p>}
                      </F>
-                     {(form.cliente_cpf_cnpj || '').replace(/\D/g, '').length === 14 && (
-                       <F label="Inscrição Estadual (IE)">
-                         <NoACInput value={form.cliente_ie || ''} onChange={e => setForm(f => ({ ...f, cliente_ie: e.target.value }))} placeholder="Deixe em branco se não contribuinte" />
-                       </F>
-                     )}
+                     <F label="Inscrição Estadual (IE)">
+                       <NoACInput value={form.cliente_ie || ''} onChange={e => setForm(f => ({ ...f, cliente_ie: e.target.value }))} placeholder="Deixe em branco se não contribuinte" />
+                     </F>
                      <F label="Telefone">
                        <NoACInput value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} placeholder="(00) 00000-0000" />
                      </F>
