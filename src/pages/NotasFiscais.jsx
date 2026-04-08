@@ -145,8 +145,6 @@ export default function NotasFiscais() {
   const [errosForm, setErrosForm] = useState({});
   const [configsNF, setConfigsNF] = useState([]);
   const [debugModal, setDebugModal] = useState(null);
-  const [showHistorico, setShowHistorico] = useState(false);
-  const [historicoForm, setHistoricoForm] = useState(null);
 
   useEffect(() => {
     load().then(async ({ estoque: estoqueData }) => {
@@ -784,9 +782,6 @@ export default function NotasFiscais() {
         <button onClick={() => { setForm(f => ({ ...f, numero: proximoNumero(notas, f.tipo), serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
           <Plus className="w-4 h-4" /> Emitir Nota
         </button>
-        <button onClick={() => setHistoricoForm({ tipo: 'NFCe', numero: '', data_emissao: new Date().toISOString().split('T')[0], status: 'Emitida', cliente_nome: '', valor_total: 0, observacoes: '', _id: null })} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background: "#f97316", color: "#fff"}} onMouseEnter={e => e.currentTarget.style.background = "#ea580c"} onMouseLeave={e => e.currentTarget.style.background = "#f97316"}>
-          <ClipboardList className="w-4 h-4" /> Histórico
-        </button>
       </div>
 
       {/* Filtros Simplificados */}
@@ -900,7 +895,7 @@ export default function NotasFiscais() {
                     <td className="px-4 py-3">
                       <span className="bg-orange-500/10 text-orange-400 text-xs px-2 py-1 rounded-full font-medium">{nota.tipo}</span>
                     </td>
-                    <td className="px-4 py-3 text-white font-mono text-xs">{nota.tipo}{nota.numero || "—"}</td>
+                    <td className="px-4 py-3 text-white font-mono text-xs">{nota.numero || "—"}</td>
                     <td className="px-4 py-3 text-white">{nota.cliente_nome || "—"}</td>
                     <td className="px-4 py-3 text-gray-400 hidden md:table-cell">{nota.data_emissao || "—"}</td>
                     <td className="px-4 py-3">
@@ -952,9 +947,7 @@ export default function NotasFiscais() {
                             <Pencil className="w-4 h-4" />
                           </button>
                         )}
-                        <button title="Editar Histórico" onClick={() => setHistoricoForm({ tipo: nota.tipo, numero: nota.numero || '', data_emissao: nota.data_emissao || '', status: nota.status || 'Emitida', cliente_nome: nota.cliente_nome || '', valor_total: nota.valor_total || 0, observacoes: nota.observacoes || '', _id: nota.id })} className="p-1 text-gray-500 hover:text-orange-400 transition-all">
-                          <ClipboardList className="w-4 h-4" />
-                        </button>
+
                         {nota.status !== 'Importada' && nota.status !== 'Lançada' && (
                           <>
                             <button title="Imprimir" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
@@ -1320,76 +1313,6 @@ export default function NotasFiscais() {
           configs={configsNF}
           onClose={() => setShowSintegra(false)}
         />
-      )}
-
-      {/* Modal Histórico Manual */}
-      {historicoForm && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md">
-            <div className="flex items-center justify-between p-5 border-b border-gray-800">
-              <h2 className="text-white font-semibold">{historicoForm._id ? 'Editar Histórico' : 'Adicionar Histórico'}</h2>
-              <button onClick={() => setHistoricoForm(null)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Tipo</label>
-                  <select value={historicoForm.tipo} onChange={e => setHistoricoForm(f => ({...f, tipo: e.target.value}))} className="input-dark">
-                    <option value="NFCe">NFCe</option>
-                    <option value="NFe">NFe</option>
-                    <option value="NFSe">NFSe</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Número (ex: 170)</label>
-                  <input value={historicoForm.numero} onChange={e => setHistoricoForm(f => ({...f, numero: e.target.value}))} className="input-dark" placeholder="170" autoComplete="off" />
-                  <p className="text-gray-600 text-xs mt-1">Será exibido como: {historicoForm.tipo}{historicoForm.numero || '170'}</p>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Data Emissão</label>
-                  <input type="date" value={historicoForm.data_emissao} onChange={e => setHistoricoForm(f => ({...f, data_emissao: e.target.value}))} className="input-dark" />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Status</label>
-                  <select value={historicoForm.status} onChange={e => setHistoricoForm(f => ({...f, status: e.target.value}))} className="input-dark">
-                    <option value="Emitida">Emitida</option>
-                    <option value="Cancelada">Cancelada</option>
-                    <option value="Rascunho">Rascunho</option>
-                    <option value="Importada">Importada</option>
-                    <option value="Lançada">Lançada</option>
-                  </select>
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-xs text-gray-400 mb-1">Cliente</label>
-                  <input value={historicoForm.cliente_nome} onChange={e => setHistoricoForm(f => ({...f, cliente_nome: e.target.value}))} className="input-dark" placeholder="Nome do cliente" autoComplete="off" />
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-xs text-gray-400 mb-1">Valor Total (R$)</label>
-                  <input type="number" value={historicoForm.valor_total} onChange={e => setHistoricoForm(f => ({...f, valor_total: Number(e.target.value)}))} className="input-dark" placeholder="0.00" autoComplete="off" />
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-xs text-gray-400 mb-1">Observações</label>
-                  <textarea value={historicoForm.observacoes} onChange={e => setHistoricoForm(f => ({...f, observacoes: e.target.value}))} className="input-dark" rows={2} autoComplete="off" />
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-3 justify-end p-5 border-t border-gray-800">
-              <button onClick={() => setHistoricoForm(null)} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg">Cancelar</button>
-              <button onClick={async () => {
-                const { _id, ...dados } = historicoForm;
-                if (_id) {
-                  await base44.entities.NotaFiscal.update(_id, dados);
-                } else {
-                  await base44.entities.NotaFiscal.create(dados);
-                }
-                setHistoricoForm(null);
-                load();
-              }} className="px-5 py-2 text-sm font-semibold rounded-lg" style={{background:'#f97316', color:'#fff'}}>
-                {historicoForm._id ? 'Salvar' : 'Adicionar'}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       {debugModal && (
