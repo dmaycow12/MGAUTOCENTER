@@ -106,12 +106,14 @@ export default function Clientes() {
     setShowForm(true);
   };
 
-  const filtrados = clientes.filter(c =>
-    c.nome?.toLowerCase().includes(search.toLowerCase()) ||
-    c.cpf_cnpj?.includes(search) ||
-    c.telefone?.includes(search) ||
-    c.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtrados = clientes
+    .filter(c =>
+      c.nome?.toLowerCase().includes(search.toLowerCase()) ||
+      c.cpf_cnpj?.includes(search) ||
+      c.telefone?.includes(search) ||
+      c.email?.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR", { sensitivity: "base" }));
 
 
 
