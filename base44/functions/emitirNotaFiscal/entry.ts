@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     const {
       tipo, cliente_nome, cliente_cpf_cnpj, cliente_ie, cliente_email,
       cliente_numero, cliente_endereco, cliente_bairro, cliente_cep,
-      cliente_cidade, cliente_estado, items, valor_total,
+      cliente_cidade, cliente_estado, cliente_codigo_municipio, items, valor_total,
       forma_pagamento, observacoes, nota_id, cliente_id,
       data_emissao, serie_manual, ordem_venda_id,
     } = body;
@@ -116,6 +116,7 @@ Deno.serve(async (req) => {
         ...(cpfCnpjLimpo.length === 14 ? { cnpj_tomador: cpfCnpjLimpo } : (cpfCnpjLimpo.length === 11 ? { cpf_tomador: cpfCnpjLimpo } : {})),
         razao_social_tomador: (cliente_nome || 'Consumidor Final').substring(0, 100),
         ...(cliente_email ? { email_tomador: cliente_email } : {}),
+        ...(cliente_codigo_municipio ? { codigo_municipio_tomador: cliente_codigo_municipio } : {}),
         cep_tomador: cepLimpo,
         logradouro_tomador: cliente_endereco || 'Rua Rui Barbosa',
         numero_tomador: cliente_numero || '1355',
