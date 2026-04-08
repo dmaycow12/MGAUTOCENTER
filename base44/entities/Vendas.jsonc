@@ -5,7 +5,7 @@
   "properties": {
     "numero": {
       "type": "string",
-      "title": "N\u00famero OS"
+      "title": "N\u00famero Venda"
     },
     "status": {
       "type": "string",

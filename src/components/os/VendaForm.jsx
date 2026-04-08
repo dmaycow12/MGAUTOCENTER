@@ -480,7 +480,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         <div className="p-5 space-y-5">
           {/* Header Info */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <Field label="Número">
+            <Field label="Número Venda">
               <input value={form.numero} disabled={isConcluida} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} className={`input-dark ${isConcluida ? "opacity-50 cursor-not-allowed" : ""}`} autoComplete="off" />
             </Field>
             <Field label="Status">
