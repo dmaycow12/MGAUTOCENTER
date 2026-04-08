@@ -14,7 +14,7 @@ export default function ModalEmissaoMassa({ ordens, notas = [], onClose, onConcl
     if (os.status !== 'Concluído') return false; // apenas ordens concluídas
     const isConsumidor = os.cliente_nome?.toUpperCase() === 'CONSUMIDOR';
     // Verifica notas já emitidas para esta OS
-    const notasOS = notas.filter(n => n.ordem_servico_id === os.id && n.status === 'Emitida');
+    const notasOS = notas.filter(n => n.ordem_venda_id === os.id && n.status === 'Emitida');
     const temNFe = notasOS.some(n => n.tipo === 'NFe');
     const temNFCe = notasOS.some(n => n.tipo === 'NFCe');
     const temNFSe = notasOS.some(n => n.tipo === 'NFSe');
