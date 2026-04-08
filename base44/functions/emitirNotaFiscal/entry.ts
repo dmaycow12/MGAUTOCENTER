@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
 
     let cpfCnpjLimpo = (cliente_cpf_cnpj || '').replace(/\D/g, '');
     let cepLimpo = (cliente_cep || '').replace(/\D/g, '');
-    if (cepLimpo.length !== 8) cepLimpo = '38700327';
+    if (cepLimpo.length !== 8) cepLimpo = '';
 
     let endpoint = '';
     let payload = null;
