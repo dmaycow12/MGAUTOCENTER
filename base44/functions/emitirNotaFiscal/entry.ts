@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     const {
       tipo, cliente_nome, cliente_cpf_cnpj, cliente_ie, cliente_email,
       cliente_numero, cliente_endereco, cliente_bairro, cliente_cep,
-      cliente_cidade, cliente_estado, cliente_codigo_municipio, items, valor_total,
+      cliente_cidade, cliente_estado, cliente_codigo_municipio, codigo_municipio_prestacao, items, valor_total,
       forma_pagamento, observacoes, nota_id, cliente_id,
       data_emissao, serie_manual, ordem_venda_id,
     } = body;
@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
         data_competencia: dataBase,
         serie_dps: '900',
         numero_dps: String(proximoRps),
-        codigo_municipio_emissora: COD_MUNICIPIO_PATOS,
+        codigo_municipio_emissora: codigo_municipio_prestacao || COD_MUNICIPIO_PATOS,
         cnpj_prestador: CNPJ_EMITENTE,
         inscricao_municipal_prestador: INSCRICAO_MUNICIPAL,
         codigo_opcao_simples_nacional: 3,
@@ -133,6 +133,7 @@ Deno.serve(async (req) => {
         percentual_total_tributos_estaduais: '0.00',
         percentual_total_tributos_municipais: '2.50',
         indicador_total_tributacao: null,
+        ...(codigo_municipio_prestacao ? { codigo_municipio_prestacao } : { codigo_municipio_prestacao: COD_MUNICIPIO_PATOS }),
       };
     } else if (tipo === 'NFCe') {
       endpoint = `/nfce?ref=${ref}`;
