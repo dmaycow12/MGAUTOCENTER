@@ -285,9 +285,7 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
         {colunas.status && <td className="px-4 py-3">
           <div className="relative inline-block">
             <button ref={statusBtnRef}
-              onClick={() => { if (temNFEmitida) return; setMenuOpen(false); setStatusOpen(v => !v); }}
-              disabled={temNFEmitida}
-              title={temNFEmitida ? 'Nota fiscal emitida — status bloqueado' : undefined}
+              onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
               className="flex items-center justify-center gap-1 text-xs h-6 px-3 rounded-md font-semibold hover:opacity-90 transition-all whitespace-nowrap w-40"
               style={style.style}>
               {os.status || "—"}
@@ -331,7 +329,7 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
         })()}</td>}
         <td className="px-4 py-3">
           <div className="flex gap-1 justify-end" style={{whiteSpace:'nowrap'}}>
-            <button onClick={() => { if (temNFEmitida) return; onEdit?.(); }} disabled={temNFEmitida} className={`w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all ${temNFEmitida ? 'text-gray-700 cursor-not-allowed' : 'text-gray-500 hover:text-blue-400'}`} title={temNFEmitida ? 'NF emitida — edição bloqueada' : 'Editar'}>
+            <button onClick={() => onEdit?.()} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all text-gray-500 hover:text-blue-400" title="Editar">
               <Pencil className="w-4 h-4" />
             </button>
             <button onClick={imprimir} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white rounded-lg hover:bg-gray-700 transition-all" title="Imprimir">
