@@ -92,6 +92,14 @@
         "type": "string"
       }
     },
+    "nfe_manual": {
+      "type": "string",
+      "title": "NFe/NFCe Manual (hist\u00f3rico)"
+    },
+    "nfse_manual": {
+      "type": "string",
+      "title": "NFSe Manual (hist\u00f3rico)"
+    },
     "servicos": {
       "type": "array",
       "title": "Servi\u00e7os",
@@ -99,20 +107,16 @@
         "type": "object",
         "properties": {
           "descricao": {
-            "type": "string",
-            "title": "Descri\u00e7\u00e3o"
+            "type": "string"
           },
           "quantidade": {
-            "type": "number",
-            "title": "Quantidade"
+            "type": "number"
           },
           "valor": {
-            "type": "number",
-            "title": "Valor"
+            "type": "number"
           },
           "tecnico": {
-            "type": "string",
-            "title": "T\u00e9cnico"
+            "type": "string"
           }
         }
       }
@@ -124,28 +128,22 @@
         "type": "object",
         "properties": {
           "estoque_id": {
-            "type": "string",
-            "title": "ID do Estoque"
+            "type": "string"
           },
           "descricao": {
-            "type": "string",
-            "title": "Descri\u00e7\u00e3o"
+            "type": "string"
           },
           "codigo": {
-            "type": "string",
-            "title": "C\u00f3digo"
+            "type": "string"
           },
           "quantidade": {
-            "type": "number",
-            "title": "Quantidade"
+            "type": "number"
           },
           "valor_unitario": {
-            "type": "number",
-            "title": "Valor Unit\u00e1rio"
+            "type": "number"
           },
           "valor_total": {
-            "type": "number",
-            "title": "Valor Total"
+            "type": "number"
           }
         }
       }
@@ -185,20 +183,16 @@
         "type": "object",
         "properties": {
           "numero": {
-            "type": "number",
-            "title": "N\u00famero"
+            "type": "number"
           },
           "vencimento": {
-            "type": "string",
-            "title": "Vencimento"
+            "type": "string"
           },
           "valor": {
-            "type": "number",
-            "title": "Valor"
+            "type": "number"
           },
           "forma_pagamento": {
-            "type": "string",
-            "title": "Forma de Pagamento"
+            "type": "string"
           }
         }
       }

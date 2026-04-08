@@ -64,6 +64,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
   const [showAvisoStatus, setShowAvisoStatus] = useState(false);
   const [statusPendenteCard, setStatusPendenteCard] = useState(null);
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
+  const [manualNFModal, setManualNFModal] = useState(null);
 
   const saveField = async (field, val) => {
     await base44.entities.Vendas.update(os.id, { [field]: val });
@@ -258,18 +259,55 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all">
         <div className="flex items-center gap-2 px-3 py-2.5">
           <span className="text-white font-bold text-sm tracking-wide flex-shrink-0">#{os.numero || "—"}</span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {(() => {
               const nfeProduto = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
               const nfeServico = notasOs.find(n => n.tipo === 'NFSe');
               return (
                 <>
-                  {nfeProduto && <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">NFe/NFCe #{nfeProduto.numero}</span>}
-                  {nfeServico && <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">NFSe #{nfeServico.numero}</span>}
+                  {nfeProduto
+                    ? <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfe_manual', tipo: nfeProduto.tipo, numero: nfeProduto.numero || '' })}>{nfeProduto.tipo}(#{nfeProduto.numero})</span>
+                    : os.nfe_manual
+                      ? <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfe_manual', tipo: os.nfe_manual.split('(')[0] || 'NFCe', numero: (os.nfe_manual.match(/#(\d+)/) || [])[1] || '' })}>{os.nfe_manual}</span>
+                      : <button onClick={() => setManualNFModal({ campo: 'nfe_manual', tipo: 'NFCe', numero: '' })} className="text-gray-600 hover:text-green-400 text-xs transition-all">+ NF</button>
+                  }
+                  {nfeServico
+                    ? <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: nfeServico.numero || '' })}>NFSe(#{nfeServico.numero})</span>
+                    : os.nfse_manual
+                      ? <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: (os.nfse_manual.match(/#(\d+)/) || [])[1] || '' })}>{os.nfse_manual}</span>
+                      : <button onClick={() => setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: '' })} className="text-gray-600 hover:text-blue-400 text-xs transition-all">+ NFSe</button>
+                  }
                 </>
               );
             })()}
           </div>
+          {manualNFModal && (
+            <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
+              <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm p-5 space-y-4">
+                <h3 className="text-white font-semibold">Histórico Manual de NF</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Tipo</label>
+                    <select value={manualNFModal.tipo} onChange={e => setManualNFModal(m => ({...m, tipo: e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm">
+                      {manualNFModal.campo === 'nfe_manual' ? <><option value="NFCe">NFCe</option><option value="NFe">NFe</option></> : <option value="NFSe">NFSe</option>}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Número</label>
+                    <input value={manualNFModal.numero} onChange={e => setManualNFModal(m => ({...m, numero: e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm" placeholder="170" autoFocus autoComplete="off" />
+                  </div>
+                </div>
+                <p className="text-gray-500 text-xs">Prévia: <span className="text-green-400 font-mono">{manualNFModal.tipo}(#{manualNFModal.numero || '170'})</span></p>
+                <div className="flex gap-2 justify-end">
+                  {(manualNFModal.campo === 'nfe_manual' ? os.nfe_manual : os.nfse_manual) && (
+                    <button onClick={async () => { await saveField(manualNFModal.campo, ''); setManualNFModal(null); }} className="px-3 py-1.5 text-xs text-red-400 border border-red-500/30 rounded-lg">Remover</button>
+                  )}
+                  <button onClick={() => setManualNFModal(null)} className="px-3 py-1.5 text-xs text-gray-400 border border-gray-700 rounded-lg">Cancelar</button>
+                  <button onClick={async () => { await saveField(manualNFModal.campo, `${manualNFModal.tipo}(#${manualNFModal.numero})`); setManualNFModal(null); }} className="px-4 py-1.5 text-xs font-semibold rounded-lg" style={{background:'#00ff00',color:'#000'}}>Salvar</button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="relative flex-1">
             <button ref={statusBtnRef} onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
