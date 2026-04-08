@@ -134,7 +134,27 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     Promise.all([
       base44.entities.Estoque.list("-created_date", 500),
       base44.entities.Servico.list("-created_date", 500),
-    ]).then(([e, s]) => { setEstoque(e); setServicosCad(s); });
+    ]).then(([e, s]) => {
+      setEstoque(e);
+      setServicosCad(s);
+      // Auto-preenche codigo faltando nos serviços existentes
+      setForm(f => ({
+        ...f,
+        servicos: f.servicos.map(svc => {
+          if (svc.codigo) return svc;
+          const match = s.find(sc => sc.descricao?.toLowerCase().trim() === svc.descricao?.toLowerCase().trim());
+          return match ? { ...svc, codigo: match.codigo } : svc;
+        }),
+        pecas: f.pecas.map(p => {
+          if (p.codigo) return p;
+          const match = e.find(est =>
+            (p.estoque_id && est.id === p.estoque_id) ||
+            est.descricao?.toLowerCase().trim() === p.descricao?.toLowerCase().trim()
+          );
+          return match ? { ...p, codigo: match.codigo, estoque_id: p.estoque_id || match.id } : p;
+        }),
+      }));
+    });
   }, []);
 
   useEffect(() => {
