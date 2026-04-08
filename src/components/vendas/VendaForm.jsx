@@ -573,12 +573,17 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 {(form.pecas || []).map((p, i) => (
                   <div key={i} className="bg-gray-800/50 rounded-xl p-3 mb-2">
                     {!p.descricao ? (
-                      <SearchableSelect
-                        placeholder="Selecionar produto do estoque..."
-                        options={estoque.map(e => ({ value: e.id, label: `[${e.codigo || ''}] ${e.descricao}`, sublabel: e.valor_venda ? `R$ ${Number(e.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
-                        onSelect={opt => { const item = estoque.find(e => e.id === opt.value); if (item) selecionarProduto(i, item); }}
-                      />
-                    ) : (
+                      <div className="flex gap-2 items-center">
+                        <div className="flex-1">
+                          <SearchableSelect
+                            placeholder="Selecionar produto do estoque..."
+                            options={estoque.map(e => ({ value: e.id, label: `[${e.codigo || ''}] ${e.descricao}`, sublabel: e.valor_venda ? `R$ ${Number(e.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
+                            onSelect={opt => { const item = estoque.find(e => e.id === opt.value); if (item) selecionarProduto(i, item); }}
+                          />
+                        </div>
+                        <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                  ) : (
                       <div className="flex flex-wrap md:flex-nowrap gap-2 items-end">
                         <div className="w-20 flex-shrink-0">
                           <label className="text-xs text-gray-500 mb-1 block">Código</label>
@@ -586,7 +591,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                         </div>
                         <div className="flex-1 min-w-[120px]">
                           <label className="text-xs text-gray-500 mb-1 block">Produto</label>
-                          <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
+                          <div className="input-dark text-gray-300 text-sm truncate">{p.descricao}</div>
                         </div>
                         <div className="w-16 flex-shrink-0">
                           <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
@@ -614,11 +619,16 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 {(form.servicos || []).map((s, i) => (
                   <div key={i} className="bg-gray-800/50 rounded-xl p-3 mb-2">
                     {!s.descricao ? (
-                      <SearchableSelect
-                        placeholder="Selecionar serviço cadastrado..."
-                        options={servicosCad.map(sv => ({ value: sv.id, label: `[${sv.codigo || ''}] ${sv.descricao}`, sublabel: sv.valor ? `R$ ${Number(sv.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
-                        onSelect={opt => { const item = servicosCad.find(sv => sv.id === opt.value); if (item) selecionarServico(i, item); }}
-                      />
+                      <div className="flex gap-2 items-center">
+                        <div className="flex-1">
+                          <SearchableSelect
+                            placeholder="Selecionar serviço cadastrado..."
+                            options={servicosCad.map(sv => ({ value: sv.id, label: `[${sv.codigo || ''}] ${sv.descricao}`, sublabel: sv.valor ? `R$ ${Number(sv.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
+                            onSelect={opt => { const item = servicosCad.find(sv => sv.id === opt.value); if (item) selecionarServico(i, item); }}
+                          />
+                        </div>
+                        <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2"><Trash2 className="w-4 h-4" /></button>
+                      </div>
                     ) : (
                       <div className="flex flex-wrap md:flex-nowrap gap-2 items-end">
                         <div className="w-20 flex-shrink-0">
@@ -627,7 +637,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                         </div>
                         <div className="flex-1 min-w-[120px]">
                           <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
-                          <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
+                          <div className="input-dark text-gray-300 text-sm truncate">{s.descricao}</div>
                         </div>
                         <div className="w-16 flex-shrink-0">
                           <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
