@@ -101,6 +101,8 @@ Deno.serve(async (req) => {
         ? items.map(it => `${it.descricao} - Qtd: ${it.quantidade} - Valor: R$ ${Number(it.valor_total).toFixed(2)}`).join('; ')
         : (observacoes || 'Serviços prestados');
 
+      const codMunTomador = cliente_codigo_municipio || COD_MUNICIPIO_PATOS;
+
       // Payload NFSe Nacional (DPS) - endpoint /nfsen, payload flat
       payload = {
         data_emissao: dataEmissaoISO,
@@ -116,12 +118,12 @@ Deno.serve(async (req) => {
         ...(cpfCnpjLimpo.length === 14 ? { cnpj_tomador: cpfCnpjLimpo } : (cpfCnpjLimpo.length === 11 ? { cpf_tomador: cpfCnpjLimpo } : {})),
         razao_social_tomador: (cliente_nome || 'Consumidor Final').substring(0, 100),
         ...(cliente_email ? { email_tomador: cliente_email } : {}),
-        ...(cliente_codigo_municipio ? { codigo_municipio_tomador: cliente_codigo_municipio } : {}),
-        ...(cepLimpo && cepLimpo.length === 8 ? { cep_tomador: cepLimpo } : {}),
-        logradouro_tomador: cliente_endereco || 'Rua Rui Barbosa',
-        numero_tomador: cliente_numero || '1355',
-        bairro_tomador: cliente_bairro || 'Santa Terezinha',
+        ...(cliente_codigo_municipio ? { codigo_municipio_tomador: cliente_codigo_municipio } : { codigo_municipio_tomador: COD_MUNICIPIO_PATOS }),
+        ...(cliente_endereco ? { logradouro_tomador: cliente_endereco } : {}),
+        ...(cliente_numero ? { numero_tomador: cliente_numero } : {}),
+        ...(cliente_bairro ? { bairro_tomador: cliente_bairro } : {}),
         codigo_municipio_prestacao: codigo_municipio_prestacao || COD_MUNICIPIO_PATOS,
+        codigo_municipio_tomador: codMunTomador,
         codigo_tributacao_nacional_iss: '140101',
         descricao_servico: discriminacao.substring(0, 1000),
         valor_servico: valorServico,
@@ -133,7 +135,7 @@ Deno.serve(async (req) => {
         percentual_total_tributos_estaduais: '0.00',
         percentual_total_tributos_municipais: '2.50',
         indicador_total_tributacao: null,
-        ...(codigo_municipio_prestacao ? { codigo_municipio_prestacao } : { codigo_municipio_prestacao: COD_MUNICIPIO_PATOS }),
+        codigo_municipio_prestacao: codigo_municipio_prestacao || COD_MUNICIPIO_PATOS,
       };
     } else if (tipo === 'NFCe') {
       endpoint = `/nfce?ref=${ref}`;
