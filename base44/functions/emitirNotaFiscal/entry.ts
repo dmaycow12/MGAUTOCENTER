@@ -85,13 +85,13 @@ Deno.serve(async (req) => {
         // Retry: reusa o número já reservado
         proximoRps = parseInt(notaExistente.numero, 10);
       } else {
-        const configsNfse = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_rps' });
-        const ultimoRps = parseInt(configsNfse[0]?.valor || '0', 10);
-        proximoRps = ultimoRps + 1;
+        const configsNfse = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_dps' });
+        const ultimoDps = parseInt(configsNfse[0]?.valor || '0', 10);
+        proximoRps = ultimoDps + 1;
         if (configsNfse.length > 0) {
           await base44.asServiceRole.entities.Configuracao.update(configsNfse[0].id, { valor: String(proximoRps) });
         } else {
-          await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_rps', valor: String(proximoRps), descricao: 'Ultimo numero DPS/NFSe Nacional autorizado' });
+          await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_dps', valor: String(proximoRps), descricao: 'Ultimo numero DPS/NFSe Nacional autorizado' });
         }
       }
 
@@ -375,6 +375,22 @@ Deno.serve(async (req) => {
       observacoes: observacoes || '',
       mensagem_sefaz: mensagemSefaz,
     };
+
+    // Reverter número reservado se erro em nova emissão (não em retry)
+    if (statusNota === 'Erro' && !nota_id && tipo === 'NFSe') {
+      try {
+        const configsNfse = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_dps' });
+        if (configsNfse.length > 0) {
+          const ultimoDps = parseInt(configsNfse[0].valor || '0', 10);
+          if (ultimoDps === proximoRps) {
+            await base44.asServiceRole.entities.Configuracao.update(configsNfse[0].id, { valor: String(ultimoDps - 1) });
+            console.log('[DPS REVERT] DPS revertido de', proximoRps, 'para', ultimoDps - 1);
+          }
+        }
+      } catch (revertError) {
+        console.error('[DPS REVERT ERROR]', revertError);
+      }
+    }
 
     // Atualiza ou cria a nota com o status correto (Emitida, Processando ou Erro)
     try {
