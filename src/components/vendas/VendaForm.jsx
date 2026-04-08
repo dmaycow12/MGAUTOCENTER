@@ -397,7 +397,9 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     try {
       const parcelasNormalizadas = parcelasRef.current.map(p => ({ ...p, valor: Number(p.valor) || 0 }));
       const formaPrincipal = parcelasNormalizadas[0]?.forma_pagamento || form.forma_pagamento || "A Combinar";
-      let formFinal = { ...form, parcelas_detalhes: parcelasNormalizadas, forma_pagamento: formaPrincipal };
+      const pecasLimpas = (form.pecas || []).map(({ _new, ...p }) => p);
+      const servicosLimpos = (form.servicos || []).map(({ _new, ...s }) => s);
+      let formFinal = { ...form, pecas: pecasLimpas, servicos: servicosLimpos, parcelas_detalhes: parcelasNormalizadas, forma_pagamento: formaPrincipal };
 
       if (!os) {
         const todas = await base44.entities.Vendas.list("-created_date", 500);
