@@ -399,34 +399,7 @@ Deno.serve(async (req) => {
         ? 'Nota enviada para processamento. Aguarde autorizacao da SEFAZ.'
         : `Erro na emissão: ${mensagemSefaz}`;
 
-    // Se emissão falhou, desfaz o incremento do número
-    if (statusNota === 'Erro') {
-      if (tipo === 'NFSe' && proximoRps) {
-        const configsNfse = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_rps' });
-        if (configsNfse.length > 0) {
-          const atual = parseInt(configsNfse[0].valor || '0', 10);
-          if (atual === proximoRps) {
-            await base44.asServiceRole.entities.Configuracao.update(configsNfse[0].id, { valor: String(proximoRps - 1) });
-          }
-        }
-      } else if (tipo === 'NFCe' && proximoNfce) {
-        const configsNfce = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfce_ultimo_numero' });
-        if (configsNfce.length > 0) {
-          const atual = parseInt(configsNfce[0].valor || '0', 10);
-          if (atual === proximoNfce) {
-            await base44.asServiceRole.entities.Configuracao.update(configsNfce[0].id, { valor: String(proximoNfce - 1) });
-          }
-        }
-      } else if (tipo === 'NFe' && proximoNfe) {
-        const configsNfe = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfe_ultimo_numero' });
-        if (configsNfe.length > 0) {
-          const atual = parseInt(configsNfe[0].valor || '0', 10);
-          if (atual === proximoNfe) {
-            await base44.asServiceRole.entities.Configuracao.update(configsNfe[0].id, { valor: String(proximoNfe - 1) });
-          }
-        }
-      }
-    }
+    // Numero ja foi reservado no inicio, nao precisa atualizar novamente
 
     return Response.json({ sucesso: statusNota !== 'Erro', mensagem, pdf: pdfUrl, status: statusNota, mensagem_sefaz: mensagemSefaz });
 
