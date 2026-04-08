@@ -25,7 +25,8 @@ export default function Clientes() {
     setBuscandoCnpj(true);
     try {
       const resp = await base44.functions.invoke('buscarCnpj', { cnpj });
-      if (!resp.data?.sucesso) throw new Error(resp.data?.error || 'CNPJ não encontrado.');
+      if (!resp?.data) throw new Error('Resposta inválida do servidor.');
+      if (!resp.data?.sucesso) throw new Error(resp.data?.mensagem || resp.data?.erro || 'CNPJ não encontrado.');
       const d = resp.data.data;
       const est = d.estabelecimento;
       const ie = est?.inscricoes_estaduais?.find(i => i.ativo)?.inscricao_estadual || '';
