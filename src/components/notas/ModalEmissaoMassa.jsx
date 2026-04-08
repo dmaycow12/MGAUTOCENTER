@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, RefreshCw, CheckCircle, AlertCircle, FileText } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-export default function ModalEmissaoMassa({ ordens, notas = [], onClose, onConcluido }) {
+export default function ModalEmissaoMassa({ ordens, notas = [], clientes = [], onClose, onConcluido }) {
   const [selecionadas, setSelecionadas] = useState([]);
   const [tipoNF, setTipoNF] = useState('NFSe');
   const [emitindo, setEmitindo] = useState(false);
@@ -53,18 +53,20 @@ export default function ModalEmissaoMassa({ ordens, notas = [], onClose, onConcl
         const valorTotal = items.reduce((s, it) => s + it.valor_total, 0) || os.valor_total || 0;
         const itensFinal = items.length > 0 ? items : [{ descricao: tipoNF === 'NFSe' ? 'Serviços' : 'Produtos', quantidade: 1, valor_unitario: valorTotal, valor_total: valorTotal }];
 
+        const clienteCadastro = clientes.find(c => c.id === os.cliente_id) || null;
         const payload = {
           tipo: tipoNF,
           cliente_nome: os.cliente_nome || '',
-          cliente_cpf_cnpj: os.cliente_cpf_cnpj || '',
-          cliente_email: os.cliente_email || '',
-          cliente_telefone: os.cliente_telefone || '',
-          cliente_endereco: os.cliente_endereco || '',
-          cliente_numero: '',
-          cliente_bairro: os.cliente_bairro || '',
-          cliente_cep: '',
-          cliente_cidade: os.cliente_cidade || '',
-          cliente_estado: os.cliente_estado || '',
+          cliente_cpf_cnpj: os.cliente_cpf_cnpj || clienteCadastro?.cpf_cnpj || '',
+          cliente_ie: clienteCadastro?.rg_ie || '',
+          cliente_email: os.cliente_email || clienteCadastro?.email || '',
+          cliente_telefone: os.cliente_telefone || clienteCadastro?.telefone || '',
+          cliente_endereco: os.cliente_endereco || clienteCadastro?.endereco || '',
+          cliente_numero: clienteCadastro?.numero || '',
+          cliente_bairro: os.cliente_bairro || clienteCadastro?.bairro || '',
+          cliente_cep: clienteCadastro?.cep || '',
+          cliente_cidade: os.cliente_cidade || clienteCadastro?.cidade || '',
+          cliente_estado: os.cliente_estado || clienteCadastro?.estado || '',
           ordem_venda_id: osId,
           valor_total: valorTotal,
           items: itensFinal,

@@ -395,6 +395,7 @@ export default function Vendas() {
         <ModalEmissaoMassa
           ordens={ordensParaMassa}
           notas={notas}
+          clientes={clientes}
           onClose={() => setShowEmissaoMassa(false)}
           onConcluido={() => { setShowEmissaoMassa(false); load(); }}
         />
