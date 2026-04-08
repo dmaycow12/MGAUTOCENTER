@@ -97,6 +97,9 @@ Deno.serve(async (req) => {
 
       const valorServico = Number(valor_total) || 1.0;
       const valorIss = parseFloat((valorServico * 0.025).toFixed(2));
+      const discriminacao = (items && items.length > 0)
+        ? items.map(it => `${it.descricao} - Qtd: ${it.quantidade} - Valor: R$ ${Number(it.valor_total).toFixed(2)}`).join('; ')
+        : (observacoes || 'Serviços prestados');
 
       // Payload NFSe Nacional (DPS) - endpoint /nfsen, payload flat
       payload = {
