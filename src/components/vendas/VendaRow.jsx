@@ -318,14 +318,14 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
         {colunas?.nfe && <td className="px-4 py-3">{(() => {
           const nfe = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
           const manual = os.nfe_manual;
-          if (nfe) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfe_manual', tipo: nfe.tipo, numero: nfe.numero || '' })}>{nfe.tipo}(#{nfe.numero})</span>;
+          if (nfe) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfe_manual', tipo: nfe.tipo, numero: nfe.numero || '' })}>{nfe.tipo}{nfe.numero}</span>;
           if (manual) { const n = normalizarNF(manual); return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfe_manual', tipo: n.replace(/\d+$/, '') || 'NFCe', numero: (n.match(/(\d+)$/) || [])[1] || '' })}>{n}</span>; }
           return <button onClick={() => setManualNFModal({ campo: 'nfe_manual', tipo: 'NFCe', numero: '' })} className="text-gray-700 hover:text-green-400 text-xs transition-all">+ NF</button>;
         })()}</td>}
         {colunas.nfse && <td className="px-4 py-3">{(() => {
           const nfse = notasOs.find(n => n.tipo === 'NFSe');
           const manual = os.nfse_manual;
-          if (nfse) return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: nfse.numero || '' })}>NFSe(#{nfse.numero})</span>;
+          if (nfse) return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: nfse.numero || '' })}>NFSe{nfse.numero}</span>;
           if (manual) { const n = normalizarNF(manual); return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: (n.match(/(\d+)$/) || [])[1] || '' })}>{n}</span>; }
           return <button onClick={() => setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: '' })} className="text-gray-700 hover:text-blue-400 text-xs transition-all">+ NFSe</button>;
         })()}</td>}
