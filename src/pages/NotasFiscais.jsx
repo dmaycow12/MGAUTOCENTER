@@ -37,6 +37,7 @@ function defaultForm() {
     cliente_id: "",
     cliente_nome: "",
     cliente_cpf_cnpj: "",
+    cliente_ie: "",
     cliente_email: "",
     cliente_telefone: "",
     cliente_endereco: "",
@@ -481,7 +482,8 @@ export default function NotasFiscais() {
         cliente_id: rascunhoNota.cliente_id,
         cliente_nome: rascunhoNota.cliente_nome || clienteVinculado?.nome || '',
         cliente_cpf_cnpj: rascunhoNota.cliente_cpf_cnpj || clienteVinculado?.cpf_cnpj || '',
-        cliente_email: clienteVinculado?.email || '',
+        cliente_ie: rascunhoNota.cliente_ie || clienteVinculado?.rg_ie || '',
+        cliente_email: rascunhoNota.cliente_email || clienteVinculado?.email || '',
         cliente_telefone: clienteVinculado?.telefone || '',
         cliente_endereco: clienteVinculado?.endereco || '',
         cliente_numero: clienteVinculado?.numero || '',
@@ -603,6 +605,7 @@ export default function NotasFiscais() {
       cliente_id: nota.cliente_id || '',
       cliente_nome: nota.cliente_nome || '',
       cliente_cpf_cnpj: nota.cliente_cpf_cnpj || '',
+      cliente_ie: nota.cliente_ie || '',
       cliente_email: nota.cliente_email || '',
       cliente_telefone: nota.cliente_telefone || '',
       cliente_endereco: nota.cliente_endereco || '',
@@ -1123,6 +1126,12 @@ export default function NotasFiscais() {
                       <NoACInput value={form.cliente_cpf_cnpj} onChange={e => { setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cpf_cnpj: undefined})); }} placeholder="000.000.000-00" className={`input-dark ${errosForm.cliente_cpf_cnpj ? 'border-red-500' : ''}`} />
                       {errosForm.cliente_cpf_cnpj && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cpf_cnpj}</p>}
                     </F>
+                    {(form.cliente_cpf_cnpj || '').replace(/\D/g, '').length === 14 && (
+                      <F label="Inscrição Estadual (IE)">
+                        <NoACInput value={form.cliente_ie || ''} onChange={e => setForm(f => ({ ...f, cliente_ie: e.target.value }))} placeholder="Deixe em branco se não contribuinte" />
+                        <p className="text-gray-500 text-xs mt-1">Sem IE = não contribuinte (indicador 9)</p>
+                      </F>
+                    )}
                     <F label="E-mail">
                       <NoACInput value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} placeholder="email@cliente.com" />
                     </F>
