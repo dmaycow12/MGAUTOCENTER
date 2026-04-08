@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
       cliente_numero, cliente_endereco, cliente_bairro, cliente_cep,
       cliente_cidade, cliente_estado, items, valor_total,
       forma_pagamento, observacoes, nota_id, cliente_id,
-      data_emissao, serie_manual, ordem_venda_id,
+      data_emissao, serie_manual, ordem_venda_id, codigo_municipio_tomador,
     } = body;
 
     // Monta timestamp de emissão
@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
         ...(cpfCnpjLimpo.length === 14 ? { cnpj_tomador: cpfCnpjLimpo } : (cpfCnpjLimpo.length === 11 ? { cpf_tomador: cpfCnpjLimpo } : {})),
         razao_social_tomador: (cliente_nome || 'Consumidor Final').substring(0, 100),
         ...(cliente_email ? { email_tomador: cliente_email } : {}),
-        codigo_municipio_tomador: COD_MUNICIPIO_PATOS,
+        codigo_municipio_tomador: codigo_municipio_tomador || COD_MUNICIPIO_PATOS,
         cep_tomador: cepLimpo,
         logradouro_tomador: cliente_endereco || 'Rua Rui Barbosa',
         numero_tomador: cliente_numero || '1355',
