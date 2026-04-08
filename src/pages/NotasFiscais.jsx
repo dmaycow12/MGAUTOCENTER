@@ -1168,15 +1168,17 @@ export default function NotasFiscais() {
                       <NoACInput value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} placeholder="(00) 00000-0000" />
                     </F>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <F label="CEP">
-                        <NoACInput value={form.cliente_cep} onChange={e => { setForm(f => ({ ...f, cliente_cep: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cep: undefined})); }} placeholder="00000-000" className={`input-dark ${errosForm.cliente_cep ? 'border-red-500' : ''}`} />
-                        {errosForm.cliente_cep && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cep}</p>}
-                      </F>
-                      {form.tipo === 'NFSe' && (
-                        <F label="Código de Município (NFSe)">
-                          <NoACInput value={form.codigo_municipio_tomador || ""} onChange={e => setForm(f => ({ ...f, codigo_municipio_tomador: e.target.value }))} placeholder="" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 col-span-2">
+                        <F label="CEP">
+                          <NoACInput value={form.cliente_cep} onChange={e => { setForm(f => ({ ...f, cliente_cep: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cep: undefined})); }} placeholder="00000-000" className={`input-dark ${errosForm.cliente_cep ? 'border-red-500' : ''}`} />
+                          {errosForm.cliente_cep && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cep}</p>}
                         </F>
-                      )}
+                        {form.tipo === 'NFSe' && (
+                          <F label="Código de Município (NFSe)">
+                            <NoACInput value={form.codigo_municipio_tomador || ""} onChange={e => setForm(f => ({ ...f, codigo_municipio_tomador: e.target.value }))} placeholder="" />
+                          </F>
+                        )}
+                      </div>
                     </div>
                     <F label="Endereço" className="col-span-2">
                       <NoACInput value={form.cliente_endereco} onChange={e => { setForm(f => ({ ...f, cliente_endereco: e.target.value })); setErrosForm(e2 => ({...e2, cliente_endereco: undefined})); }} placeholder="Rua, Avenida..." className={`input-dark ${errosForm.cliente_endereco ? 'border-red-500' : ''}`} />
@@ -1225,7 +1227,52 @@ export default function NotasFiscais() {
               {abaForm === "itens" && (
                 <div className="space-y-4">
 
-                  <div className="space-y-3">
+                  {form.tipo === 'NFSe' ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-xs text-gray-400 px-2 py-2 border-b border-gray-800">
+                        <div className="flex-1">Serviço</div>
+                        <div className="w-12 text-center">Qtd</div>
+                        <div className="w-20 text-center">Valor</div>
+                        <div className="w-24 text-center">Total</div>
+                        <div className="w-8"></div>
+                      </div>
+                      {form.items.map((item, idx) => (
+                        <div key={idx} className="flex items-end gap-2 bg-gray-800 border border-gray-700 rounded-lg p-2">
+                          {!item.descricao ? (
+                            <div className="flex-1">
+                              <SearchableSelect
+                                placeholder="Selecionar serviço..."
+                                options={servicos.map(s => ({ value: s.id, label: s.descricao, sublabel: s.valor ? `R$ ${Number(s.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
+                                onSelect={opt => {
+                                  const srv = servicos.find(s => s.id === opt.value);
+                                  if (srv) atualizarItemCompleto(idx, { descricao: srv.descricao, codigo: srv.codigo || '', servico_id: srv.id, quantidade: 1, valor_unitario: srv.valor || 0, valor_total: srv.valor || 0 });
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex-1">
+                                <NoACInput value={item.descricao} onChange={e => atualizarItem(idx, 'descricao', e.target.value)} placeholder="Serviço" className="input-dark text-xs" />
+                              </div>
+                              <div className="w-12">
+                                <NoACInput value={item.quantidade} onChange={e => atualizarItem(idx, 'quantidade', e.target.value)} placeholder="1" className="input-dark text-xs text-center" />
+                              </div>
+                              <div className="w-20">
+                                <NoACInput value={item.valor_unitario} onChange={e => atualizarItem(idx, 'valor_unitario', e.target.value)} placeholder="0" className="input-dark text-xs text-right" />
+                              </div>
+                              <div className="w-24">
+                                <NoACInput value={item.valor_total} onChange={e => atualizarItem(idx, 'valor_total', e.target.value)} placeholder="0" className="input-dark text-xs text-right" />
+                              </div>
+                              <button onClick={() => removeItem(idx)} className="w-8 h-8 flex items-center justify-center text-red-400 hover:text-red-300 transition-all flex-shrink-0">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                              </>
+                              )
+                              </div>
+                              ))}
+                    </div>
+                    ) : (
+                    <div className="space-y-3">
                     {form.items.map((item, idx) => (
                       <div key={idx} className="bg-gray-800 border border-gray-700 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-3">
@@ -1237,62 +1284,48 @@ export default function NotasFiscais() {
                           )}
                         </div>
                         {!item.descricao ? (
-                          <F label={form.tipo === 'NFSe' ? 'Selecionar Serviço' : 'Selecionar Produto'}>
+                          <F label="Selecionar Produto">
                             <SearchableSelect
-                              placeholder={form.tipo === 'NFSe' ? 'Digite o nome do serviço...' : 'Digite o nome ou código do produto...'}
-                              options={form.tipo === 'NFSe'
-                                ? servicos.map(s => ({ value: s.id, label: s.descricao, sublabel: s.valor ? `R$ ${Number(s.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))
-                                : estoque.map(p => ({ value: p.id, label: p.descricao, sublabel: p.valor_venda ? `R$ ${Number(p.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))
-                              }
+                              placeholder="Digite o nome ou código do produto..."
+                              options={estoque.map(p => ({ value: p.id, label: p.descricao, sublabel: p.valor_venda ? `R$ ${Number(p.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
                               onSelect={opt => {
-                                if (form.tipo === 'NFSe') {
-                                  const srv = servicos.find(s => s.id === opt.value);
-                                  if (srv) atualizarItemCompleto(idx, { descricao: srv.descricao, codigo: srv.codigo || '', servico_id: srv.id, quantidade: 1, valor_unitario: srv.valor || 0, valor_total: srv.valor || 0 });
-                                } else {
-                                  const prod = estoque.find(p => p.id === opt.value);
-                                  if (prod) atualizarItemCompleto(idx, { descricao: prod.descricao, codigo: prod.codigo || '', estoque_id: prod.id, quantidade: 1, valor_unitario: prod.valor_venda || 0, valor_total: prod.valor_venda || 0, ncm: prod.ncm || '', cfop: prod.cfop || '', cest: prod.cest || '', unidade: prod.unidade || 'UN' });
-                                }
+                                const prod = estoque.find(p => p.id === opt.value);
+                                if (prod) atualizarItemCompleto(idx, { descricao: prod.descricao, codigo: prod.codigo || '', estoque_id: prod.id, quantidade: 1, valor_unitario: prod.valor_venda || 0, valor_total: prod.valor_venda || 0, ncm: prod.ncm || '', cfop: prod.cfop || '', cest: prod.cest || '', unidade: prod.unidade || 'UN' });
                               }}
                             />
                           </F>
                         ) : (
-                          <div className={`grid gap-3 ${form.tipo === 'NFSe' ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4'}` }>
-                            {form.tipo !== 'NFSe' && (
-                              <F label="Código">
-                                <div className="input-dark text-gray-400 text-sm">{item.codigo || '—'}</div>
-                              </F>
-                            )}
-                            <F label={form.tipo === 'NFSe' ? 'Serviço' : 'Produto'} className={form.tipo === 'NFSe' ? 'col-span-1 md:col-span-2' : 'col-span-2 md:col-span-3'}>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <F label="Código">
+                              <div className="input-dark text-gray-400 text-sm">{item.codigo || '—'}</div>
+                            </F>
+                            <F label="Produto" className="col-span-2 md:col-span-3">
                               <NoACInput value={item.descricao} onChange={e => atualizarItem(idx, 'descricao', e.target.value)} placeholder="Descrição" className={`input-dark ${errosForm.items?.[idx]?.descricao ? 'border-red-500' : ''}`} />
                               {errosForm.items?.[idx]?.descricao && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].descricao}</p>}
                             </F>
                             <F label="Quantidade">
                               <NoACInput value={item.quantidade} onChange={e => atualizarItem(idx, 'quantidade', e.target.value)} placeholder="1" />
                             </F>
-                            <F label={form.tipo === 'NFSe' ? 'Valor' : 'Valor Unitário (R$)'}>
+                            <F label="Valor Unitário (R$)">
                               <NoACInput value={item.valor_unitario} onChange={e => atualizarItem(idx, 'valor_unitario', e.target.value)} placeholder="0" />
                             </F>
-                            <F label={form.tipo === 'NFSe' ? 'Total' : 'Total (R$)'} className={form.tipo === 'NFSe' ? '' : 'col-span-2'}>
+                            <F label="Total (R$)" className="col-span-2">
                               <NoACInput value={item.valor_total} onChange={e => atualizarItem(idx, 'valor_total', e.target.value)} placeholder="0" />
                             </F>
-                            {form.tipo !== 'NFSe' && (
-                              <>
-                                <F label="NCM">
-                                  <NoACInput value={item.ncm || ''} onChange={e => atualizarItem(idx, 'ncm', e.target.value)} placeholder="87089990" className={`input-dark ${errosForm.items?.[idx]?.ncm ? 'border-red-500' : ''}`} />
-                                  {errosForm.items?.[idx]?.ncm && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].ncm}</p>}
-                                </F>
-                                <F label="CFOP">
-                                  <NoACInput value={item.cfop || ''} onChange={e => atualizarItem(idx, 'cfop', e.target.value)} placeholder="5405" className={`input-dark ${errosForm.items?.[idx]?.cfop ? 'border-red-500' : ''}`} />
-                                  {errosForm.items?.[idx]?.cfop && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].cfop}</p>}
-                                </F>
-                                <F label="CEST (opcional)">
-                                  <NoACInput value={item.cest || ''} onChange={e => atualizarItem(idx, 'cest', e.target.value)} placeholder="" />
-                                </F>
-                                <F label="Unidade">
-                                  <NoACInput value={item.unidade || ''} onChange={e => atualizarItem(idx, 'unidade', e.target.value)} placeholder="UN" />
-                                </F>
-                              </>
-                            )}
+                            <F label="NCM">
+                              <NoACInput value={item.ncm || ''} onChange={e => atualizarItem(idx, 'ncm', e.target.value)} placeholder="87089990" className={`input-dark ${errosForm.items?.[idx]?.ncm ? 'border-red-500' : ''}`} />
+                              {errosForm.items?.[idx]?.ncm && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].ncm}</p>}
+                            </F>
+                            <F label="CFOP">
+                              <NoACInput value={item.cfop || ''} onChange={e => atualizarItem(idx, 'cfop', e.target.value)} placeholder="5405" className={`input-dark ${errosForm.items?.[idx]?.cfop ? 'border-red-500' : ''}`} />
+                              {errosForm.items?.[idx]?.cfop && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].cfop}</p>}
+                            </F>
+                            <F label="CEST (opcional)">
+                              <NoACInput value={item.cest || ''} onChange={e => atualizarItem(idx, 'cest', e.target.value)} placeholder="" />
+                            </F>
+                            <F label="Unidade">
+                              <NoACInput value={item.unidade || ''} onChange={e => atualizarItem(idx, 'unidade', e.target.value)} placeholder="UN" />
+                            </F>
                             <div className="col-span-2 md:col-span-4 flex justify-end">
                               <button onClick={() => { atualizarItemCompleto(idx, defaultItem()); }} className="text-xs text-gray-500 hover:text-red-400 transition-all">✕ Trocar produto</button>
                             </div>
@@ -1300,10 +1333,11 @@ export default function NotasFiscais() {
                         )}
                       </div>
                     ))}
-                  </div>
-                  <button onClick={addItem} className="flex items-center gap-2 text-orange-400 hover:text-orange-300 text-sm transition-all">
+                    </div>
+                    )}
+                    <button onClick={addItem} className="flex items-center gap-2 text-orange-400 hover:text-orange-300 text-sm transition-all">
                     <PlusCircle className="w-4 h-4" /> Adicionar item
-                  </button>
+                    </button>
                   <div className="bg-gray-800 rounded-xl p-4 flex justify-between items-center">
                     <span className="text-gray-400 font-medium">Total da Nota</span>
                     <span className="text-2xl font-bold" style={{color:"#00ff00"}}>
