@@ -254,13 +254,13 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const addServico = () => {
-    const novos = [...(form.servicos || []), { codigo: "", descricao: "", quantidade: 1, valor: 0 }];
+    const novos = [...(form.servicos || []), { _new: true, codigo: "", descricao: "", quantidade: 1, valor: 0 }];
     const calc = recalcular(novos, form.pecas, form.desconto);
     setForm(f => ({ ...f, servicos: novos, ...calc }));
   };
 
   const updateServico = (i, field, val) => {
-    const novos = form.servicos.map((s, idx) => idx === i ? { ...s, [field]: field === "valor" ? Number(val) : val } : s);
+    const novos = form.servicos.map((s, idx) => idx === i ? { ...s, _new: false, [field]: field === "valor" ? Number(val) : val } : s);
     if ((field === "codigo" || field === "descricao") && val.length > 0) {
       setServicoSugestoes({ idx: i, lista: servicosCad.filter(s =>
         s.codigo?.toLowerCase().includes(val.toLowerCase()) || s.descricao?.toLowerCase().includes(val.toLowerCase())
@@ -273,7 +273,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const selecionarServico = (i, item) => {
-    const novos = form.servicos.map((s, idx) => idx === i ? { ...s, codigo: item.codigo || "", descricao: item.descricao || "", valor: Number(item.valor || 0) } : s);
+    const novos = form.servicos.map((s, idx) => idx === i ? { ...s, _new: false, codigo: item.codigo || "", descricao: item.descricao || "", valor: Number(item.valor || 0) } : s);
     setServicoSugestoes({ idx: null, lista: [] });
     const calc = recalcular(novos, form.pecas, form.desconto);
     setForm(f => ({ ...f, servicos: novos, ...calc }));
@@ -286,7 +286,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const addPeca = () => {
-    const novos = [...(form.pecas || []), { descricao: "", quantidade: 1, valor_unitario: 0, valor_total: 0 }];
+    const novos = [...(form.pecas || []), { _new: true, descricao: "", quantidade: 1, valor_unitario: 0, valor_total: 0 }];
     const calc = recalcular(form.servicos, novos, form.desconto);
     setForm(f => ({ ...f, pecas: novos, ...calc }));
   };
@@ -294,7 +294,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const updatePeca = (i, field, val) => {
     const novos = form.pecas.map((p, idx) => {
       if (idx !== i) return p;
-      const updated = { ...p, [field]: ["quantidade", "valor_unitario"].includes(field) ? Number(val) : val };
+      const updated = { ...p, _new: false, [field]: ["quantidade", "valor_unitario"].includes(field) ? Number(val) : val };
       updated.valor_total = Number(updated.quantidade || 0) * Number(updated.valor_unitario || 0);
       return updated;
     });
@@ -312,7 +312,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const selecionarProduto = (i, item) => {
     const novos = form.pecas.map((p, idx) => {
       if (idx !== i) return p;
-      const updated = { ...p, estoque_id: item.id, codigo: item.codigo || "", descricao: item.descricao || "", valor_unitario: Number(item.valor_venda || 0) };
+      const updated = { ...p, _new: false, estoque_id: item.id, codigo: item.codigo || "", descricao: item.descricao || "", valor_unitario: Number(item.valor_venda || 0) };
       updated.valor_total = Number(updated.quantidade || 1) * updated.valor_unitario;
       return updated;
     });
@@ -572,12 +572,17 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
               <Section title="Produtos">
                 {(form.pecas || []).map((p, i) => (
                   <div key={i} className="bg-gray-800/50 rounded-xl p-3 mb-2">
-                    {!p.descricao ? (
-                      <SearchableSelect
-                        placeholder="Selecionar produto do estoque..."
-                        options={estoque.map(e => ({ value: e.id, label: `[${e.codigo || ''}] ${e.descricao}`, sublabel: e.valor_venda ? `R$ ${Number(e.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
-                        onSelect={opt => { const item = estoque.find(e => e.id === opt.value); if (item) selecionarProduto(i, item); }}
-                      />
+                    {p._new ? (
+                      <div className="flex gap-2 items-center">
+                        <div className="flex-1">
+                          <SearchableSelect
+                            placeholder="Selecionar produto do estoque..."
+                            options={estoque.map(e => ({ value: e.id, label: `[${e.codigo || ''}] ${e.descricao}`, sublabel: e.valor_venda ? `R$ ${Number(e.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
+                            onSelect={opt => { const item = estoque.find(e => e.id === opt.value); if (item) selecionarProduto(i, item); }}
+                          />
+                        </div>
+                        <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2"><Trash2 className="w-4 h-4" /></button>
+                      </div>
                     ) : (
                       <div className="flex flex-wrap md:flex-nowrap gap-2 items-end">
                         <div className="w-20 flex-shrink-0">
@@ -613,12 +618,17 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
               <Section title="Serviços">
                 {(form.servicos || []).map((s, i) => (
                   <div key={i} className="bg-gray-800/50 rounded-xl p-3 mb-2">
-                    {!s.descricao ? (
-                      <SearchableSelect
-                        placeholder="Selecionar serviço cadastrado..."
-                        options={servicosCad.map(sv => ({ value: sv.id, label: `[${sv.codigo || ''}] ${sv.descricao}`, sublabel: sv.valor ? `R$ ${Number(sv.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
-                        onSelect={opt => { const item = servicosCad.find(sv => sv.id === opt.value); if (item) selecionarServico(i, item); }}
-                      />
+                    {s._new ? (
+                      <div className="flex gap-2 items-center">
+                        <div className="flex-1">
+                          <SearchableSelect
+                            placeholder="Selecionar serviço cadastrado..."
+                            options={servicosCad.map(sv => ({ value: sv.id, label: `[${sv.codigo || ''}] ${sv.descricao}`, sublabel: sv.valor ? `R$ ${Number(sv.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
+                            onSelect={opt => { const item = servicosCad.find(sv => sv.id === opt.value); if (item) selecionarServico(i, item); }}
+                          />
+                        </div>
+                        <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2"><Trash2 className="w-4 h-4" /></button>
+                      </div>
                     ) : (
                       <div className="flex flex-wrap md:flex-nowrap gap-2 items-end">
                         <div className="w-20 flex-shrink-0">
