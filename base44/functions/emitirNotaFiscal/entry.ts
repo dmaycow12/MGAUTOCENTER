@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     const {
       tipo, cliente_nome, cliente_cpf_cnpj, cliente_ie, cliente_email,
       cliente_numero, cliente_endereco, cliente_bairro, cliente_cep,
-      cliente_cidade, cliente_estado, cliente_codigo_municipio, codigo_municipio_prestacao, items, valor_total,
+      cliente_cidade, cliente_estado, items, valor_total,
       forma_pagamento, observacoes, nota_id, cliente_id,
       data_emissao, serie_manual, ordem_venda_id,
     } = body;
@@ -61,12 +61,7 @@ Deno.serve(async (req) => {
 
     let cpfCnpjLimpo = (cliente_cpf_cnpj || '').replace(/\D/g, '');
     let cepLimpo = (cliente_cep || '').replace(/\D/g, '');
-    if (cepLimpo.length !== 8) cepLimpo = '';
-    
-    // Se não tiver CPF/CNPJ válido, envia CPF genérico para consumidor
-    if (!cpfCnpjLimpo || (cpfCnpjLimpo.length !== 11 && cpfCnpjLimpo.length !== 14)) {
-      cpfCnpjLimpo = '00000000000'; // CPF padrão para consumidor sem documentação
-    }
+    if (cepLimpo.length !== 8) cepLimpo = '38700327';
 
     let endpoint = '';
     let payload = null;
@@ -106,29 +101,27 @@ Deno.serve(async (req) => {
         ? items.map(it => `${it.descricao} - Qtd: ${it.quantidade} - Valor: R$ ${Number(it.valor_total).toFixed(2)}`).join('; ')
         : (observacoes || 'Serviços prestados');
 
-      const codMunTomador = cliente_codigo_municipio || COD_MUNICIPIO_PATOS;
-
       // Payload NFSe Nacional (DPS) - endpoint /nfsen, payload flat
       payload = {
         data_emissao: dataEmissaoISO,
         data_competencia: dataBase,
         serie_dps: '900',
         numero_dps: String(proximoRps),
-        codigo_municipio_emissora: codigo_municipio_prestacao || COD_MUNICIPIO_PATOS,
+        codigo_municipio_emissora: COD_MUNICIPIO_PATOS,
         cnpj_prestador: CNPJ_EMITENTE,
         inscricao_municipal_prestador: INSCRICAO_MUNICIPAL,
         codigo_opcao_simples_nacional: 3,
         regime_tributario_simples_nacional: 1,
         regime_especial_tributacao: 0,
-        ...(cpfCnpjLimpo.length === 14 ? { cnpj_tomador: cpfCnpjLimpo } : { cpf_tomador: cpfCnpjLimpo }),
+        ...(cpfCnpjLimpo.length === 14 ? { cnpj_tomador: cpfCnpjLimpo } : (cpfCnpjLimpo.length === 11 ? { cpf_tomador: cpfCnpjLimpo } : {})),
         razao_social_tomador: (cliente_nome || 'Consumidor Final').substring(0, 100),
         ...(cliente_email ? { email_tomador: cliente_email } : {}),
-        ...(cliente_codigo_municipio ? { codigo_municipio_tomador: cliente_codigo_municipio } : { codigo_municipio_tomador: COD_MUNICIPIO_PATOS }),
-        ...(cliente_endereco ? { logradouro_tomador: cliente_endereco } : {}),
-        ...(cliente_numero ? { numero_tomador: cliente_numero } : {}),
-        ...(cliente_bairro ? { bairro_tomador: cliente_bairro } : {}),
-        codigo_municipio_prestacao: codigo_municipio_prestacao || COD_MUNICIPIO_PATOS,
-        codigo_municipio_tomador: codMunTomador,
+        codigo_municipio_tomador: COD_MUNICIPIO_PATOS,
+        cep_tomador: cepLimpo,
+        logradouro_tomador: cliente_endereco || 'Rua Rui Barbosa',
+        numero_tomador: cliente_numero || '1355',
+        bairro_tomador: cliente_bairro || 'Santa Terezinha',
+        codigo_municipio_prestacao: COD_MUNICIPIO_PATOS,
         codigo_tributacao_nacional_iss: '140101',
         descricao_servico: discriminacao.substring(0, 1000),
         valor_servico: valorServico,
@@ -140,7 +133,6 @@ Deno.serve(async (req) => {
         percentual_total_tributos_estaduais: '0.00',
         percentual_total_tributos_municipais: '2.50',
         indicador_total_tributacao: null,
-        codigo_municipio_prestacao: codigo_municipio_prestacao || COD_MUNICIPIO_PATOS,
       };
     } else if (tipo === 'NFCe') {
       endpoint = `/nfce?ref=${ref}`;
@@ -169,8 +161,8 @@ Deno.serve(async (req) => {
         local_destino: '1',
         presenca_comprador: '1',
         numero: proximoNfce,
-        ...(cpfCnpjLimpo.length === 14 ? { cnpj_destinatario: cpfCnpjLimpo } : { cpf_destinatario: cpfCnpjLimpo }),
-        ...(cepLimpo && cepLimpo.length === 8 ? { cep_destinatario: cepLimpo } : {}),
+        ...(cpfCnpjLimpo.length === 11 ? { cpf_destinatario: cpfCnpjLimpo } : {}),
+        ...(cpfCnpjLimpo.length === 14 ? { cnpj_destinatario: cpfCnpjLimpo } : {}),
         ...(serie_manual ? { serie: serie_manual } : { serie: '1' }),
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
@@ -225,7 +217,8 @@ Deno.serve(async (req) => {
         local_destino: '1',
         nome_destinatario: (cliente_nome || 'Consumidor Final').substring(0, 60),
         numero: proximoNfe,
-        ...(cpfCnpjLimpo.length === 14 ? { cnpj_destinatario: cpfCnpjLimpo } : { cpf_destinatario: cpfCnpjLimpo }),
+        ...(cpfCnpjLimpo.length === 11 ? { cpf_destinatario: cpfCnpjLimpo } : {}),
+        ...(cpfCnpjLimpo.length === 14 ? { cnpj_destinatario: cpfCnpjLimpo } : {}),
         logradouro_destinatario: cliente_endereco || 'Rua Rui Barbosa',
         numero_destinatario: cliente_numero || '1355',
         bairro_destinatario: cliente_bairro || 'Santa Terezinha',
@@ -236,7 +229,7 @@ Deno.serve(async (req) => {
           ? ((cliente_ie && cliente_ie.trim()) ? '1' : '9')
           : '9',
         ...(cpfCnpjLimpo.length === 14 && cliente_ie && cliente_ie.trim() ? { inscricao_estadual_destinatario: cliente_ie.replace(/\D/g, '') } : {}),
-        consumidor_final: cpfCnpjLimpo.length === 11 ? '1' : (!(cliente_ie && cliente_ie.trim()) ? '1' : '0'),
+        consumidor_final: cpfCnpjLimpo.length === 11 || !(cliente_ie && cliente_ie.trim()) ? '1' : '0',
         modalidade_frete: '9',
         ...(serie_manual ? { serie: serie_manual } : { serie: '1' }),
         items: prodItems.map((it, idx) => ({
