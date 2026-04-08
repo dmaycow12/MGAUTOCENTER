@@ -1270,8 +1270,8 @@ export default function NotasFiscais() {
                               )
                               </div>
                               ))}
-                    </div>
-                    ) : (
+                              </div>
+                              ) : (
                     <div className="space-y-3">
                     {form.items.map((item, idx) => (
                       <div key={idx} className="bg-gray-800 border border-gray-700 rounded-xl p-4">
