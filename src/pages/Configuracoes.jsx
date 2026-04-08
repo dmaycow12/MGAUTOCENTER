@@ -193,7 +193,7 @@ export default function Configuracoes() {
       <Section title="NF-e — Nota Fiscal de Produto" icon={null}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <F label="Última NF-e">
-            <input type="number" value={config.nfe_ultimo_numero} onChange={e => setConfig({ ...config, nfe_ultimo_numero: e.target.value })} className="input-dark" />
+            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfe_ultimo_numero} onChange={e => setConfig({ ...config, nfe_ultimo_numero: e.target.value })} className="input-dark" />
           </F>
           <F label="Série NF-e">
             <input value={config.nfe_serie} onChange={e => setConfig({ ...config, nfe_serie: e.target.value })} className="input-dark" />
@@ -216,7 +216,7 @@ export default function Configuracoes() {
       <Section title="NFC-e — Nota Fiscal do Consumidor" icon={null}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <F label="Última NFC-e">
-            <input type="number" value={config.nfce_ultimo_numero} onChange={e => setConfig({ ...config, nfce_ultimo_numero: e.target.value })} className="input-dark" />
+            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfce_ultimo_numero} onChange={e => setConfig({ ...config, nfce_ultimo_numero: e.target.value })} className="input-dark" />
           </F>
           <F label="Série NFC-e">
             <input value={config.nfce_serie} onChange={e => setConfig({ ...config, nfce_serie: e.target.value })} className="input-dark" />
@@ -245,7 +245,7 @@ export default function Configuracoes() {
       <Section title="NFS-e — Nota Fiscal de Serviço" icon={null}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <F label="Último RPS NFS-e">
-            <input type="number" value={config.nfse_ultimo_rps} onChange={e => setConfig({ ...config, nfse_ultimo_rps: e.target.value })} className="input-dark" />
+            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfse_ultimo_rps} onChange={e => setConfig({ ...config, nfse_ultimo_rps: e.target.value })} className="input-dark" />
           </F>
           <F label="Série do RPS">
             <input value={config.nfse_serie_rps} onChange={e => setConfig({ ...config, nfse_serie_rps: e.target.value })} className="input-dark" />
