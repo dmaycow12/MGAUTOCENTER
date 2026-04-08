@@ -15,11 +15,9 @@ export default function ModalEmissaoMassa({ ordens, notas = [], onClose, onConcl
     const isConsumidor = os.cliente_nome?.toUpperCase() === 'CONSUMIDOR';
     // Verifica notas já emitidas para esta OS
     const notasOS = notas.filter(n => n.ordem_venda_id === os.id && n.status === 'Emitida');
-    const temNFe = notasOS.some(n => n.tipo === 'NFe');
-    const temNFCe = notasOS.some(n => n.tipo === 'NFCe');
-    const temNFSe = notasOS.some(n => n.tipo === 'NFSe');
-    // CONSUMIDOR só emite NFCe
-    if (isConsumidor && tipoNF !== 'NFCe') return false;
+    const temNFe = notasOS.some(n => n.tipo === 'NFe') || !!(os.nfe_manual);
+    const temNFCe = notasOS.some(n => n.tipo === 'NFCe') || !!(os.nfe_manual);
+    const temNFSe = notasOS.some(n => n.tipo === 'NFSe') || !!(os.nfse_manual);
     if (tipoNF === 'NFSe') {
       if (isConsumidor) return false; // CONSUMIDOR não emite NFSe
       if (temNFSe) return false; // já emitiu NFSe
@@ -67,7 +65,7 @@ export default function ModalEmissaoMassa({ ordens, notas = [], onClose, onConcl
           cliente_cep: '',
           cliente_cidade: os.cliente_cidade || '',
           cliente_estado: os.cliente_estado || '',
-          ordem_servico_id: osId,
+          ordem_venda_id: osId,
           valor_total: valorTotal,
           items: itensFinal,
           data_emissao: new Date().toISOString().split('T')[0],
