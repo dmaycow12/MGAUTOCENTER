@@ -305,6 +305,7 @@ export default function NotasFiscais() {
   const totalNFeEmitida = filtradas.filter(n => n.tipo === 'NFe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
   const totalNFCeEmitida = filtradas.filter(n => n.tipo === 'NFCe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
   const totalNFSeEmitida = filtradas.filter(n => n.tipo === 'NFSe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
+  const totalEmitidas = totalNFeEmitida + totalNFCeEmitida + totalNFSeEmitida;
   const totalNFeLancada = filtradas.filter(n => n.tipo === 'NFe' && n.status === 'Lançada').reduce((s, n) => s + Number(n.valor_total || 0), 0);
   const totalNFSeLancada = filtradas.filter(n => n.tipo === 'NFSe' && n.status === 'Lançada').reduce((s, n) => s + Number(n.valor_total || 0), 0);
 
@@ -875,8 +876,9 @@ export default function NotasFiscais() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         {[
+          { label: 'Total NF Emitidas', value: totalEmitidas, color: '#facc15' },
           { label: 'NFe Emitida', value: totalNFeEmitida, color: '#00ff00' },
           { label: 'NFCe Emitida', value: totalNFCeEmitida, color: '#00ff00' },
           { label: 'NFSe Emitida', value: totalNFSeEmitida, color: '#00ff00' },
