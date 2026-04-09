@@ -1,75 +1,71 @@
 import { useState } from 'react';
-import { X, RefreshCw, CheckCircle, AlertCircle, FileText } from 'lucide-react';
+import { X, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-export default function ModalEmissaoMassa({ ordens, notas = [], clientes = [], onClose, onConcluido }) {
+export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes = [], onClose, onConcluido }) {
   const [selecionadas, setSelecionadas] = useState([]);
   const [tipoNF, setTipoNF] = useState('NFSe');
   const [emitindo, setEmitindo] = useState(false);
   const [resultados, setResultados] = useState([]);
   const [concluido, setConcluido] = useState(false);
 
-  // Filtra ordens elegíveis para o tipo de NF selecionado
-  const ordensElegiveis = ordens.filter(os => {
-    if (os.status !== 'Concluído') return false; // apenas ordens concluídas
-    const isConsumidor = os.cliente_nome?.toUpperCase() === 'CONSUMIDOR';
-    // Verifica notas já emitidas para esta OS
-    // Todas as notas vinculadas à OS (qualquer status exceto cancelada/rascunho)
-    const notasOS = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Cancelada' && n.status !== 'Rascunho');
-    // Considera também campos manuais e valor preenchido
-    const temNFe = notasOS.some(n => n.tipo === 'NFe') || !!(os.nfe_manual?.trim());
-    const temNFCe = notasOS.some(n => n.tipo === 'NFCe') || !!(os.nfe_manual?.trim());
-    const temNFSe = notasOS.some(n => n.tipo === 'NFSe') || !!(os.nfse_manual?.trim());
+  const vendasElegiveis = vendas.filter(venda => {
+    if (venda.status !== 'Concluído') return false;
+    const isConsumidor = venda.cliente_nome?.toUpperCase() === 'CONSUMIDOR';
+    const notasVenda = notas.filter(n => n.ordem_venda_id === venda.id && n.status !== 'Cancelada' && n.status !== 'Rascunho');
+    const temNFe = notasVenda.some(n => n.tipo === 'NFe') || !!(venda.nfe_manual?.trim());
+    const temNFCe = notasVenda.some(n => n.tipo === 'NFCe') || !!(venda.nfe_manual?.trim());
+    const temNFSe = notasVenda.some(n => n.tipo === 'NFSe') || !!(venda.nfse_manual?.trim());
     if (tipoNF === 'NFSe') {
-      if (isConsumidor) return false; // CONSUMIDOR não emite NFSe
-      if (temNFSe) return false; // já emitiu NFSe
-      return (os.servicos || []).length > 0; // só mostra se tem serviços
+      if (isConsumidor) return false;
+      if (temNFSe) return false;
+      return (venda.servicos || []).length > 0;
     }
     if (tipoNF === 'NFe') {
-      if (isConsumidor) return false; // CONSUMIDOR não emite NFe
-      if (temNFe || temNFCe) return false; // já emitiu NFe ou NFCe
-      return (os.pecas || []).length > 0; // só mostra se tem produtos
+      if (isConsumidor) return false;
+      if (temNFe || temNFCe) return false;
+      return (venda.pecas || []).length > 0;
     }
     if (tipoNF === 'NFCe') {
-      if (temNFCe || temNFe) return false; // já emitiu NFCe ou NFe
-      return (os.pecas || []).length > 0; // só mostra se tem produtos
+      if (temNFCe || temNFe) return false;
+      return (venda.pecas || []).length > 0;
     }
     return true;
   });
 
   const toggle = (id) => setSelecionadas(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
-  const toggleAll = () => setSelecionadas(selecionadas.length === ordensElegiveis.length ? [] : ordensElegiveis.map(o => o.id));
+  const toggleAll = () => setSelecionadas(selecionadas.length === vendasElegiveis.length ? [] : vendasElegiveis.map(v => v.id));
 
   const emitir = async () => {
     if (selecionadas.length === 0) return;
     setEmitindo(true);
     const res = [];
-    for (const osId of selecionadas) {
-      const os = ordens.find(o => o.id === osId);
-      if (!os) continue;
+    for (const vendaId of selecionadas) {
+      const venda = vendas.find(v => v.id === vendaId);
+      if (!venda) continue;
       try {
         const items = tipoNF === 'NFSe'
-          ? (os.servicos || []).map(s => ({ descricao: s.descricao || 'Serviço', quantidade: Number(s.quantidade ?? 1), valor_unitario: Number(s.valor || 0), valor_total: Number(s.valor || 0) * Number(s.quantidade ?? 1) }))
-          : (os.pecas || []).map(p => ({ descricao: p.descricao || 'Peça', quantidade: Number(p.quantidade || 1), valor_unitario: Number(p.valor_unitario || 0), valor_total: Number(p.valor_total || 0), ncm: p.ncm || '87089990', cfop: p.cfop || '5405', unidade: p.unidade || 'UN', codigo: p.codigo || '' }));
-        
-        const valorTotal = items.reduce((s, it) => s + it.valor_total, 0) || os.valor_total || 0;
+          ? (venda.servicos || []).map(s => ({ descricao: s.descricao || 'Serviço', quantidade: Number(s.quantidade ?? 1), valor_unitario: Number(s.valor || 0), valor_total: Number(s.valor || 0) * Number(s.quantidade ?? 1) }))
+          : (venda.pecas || []).map(p => ({ descricao: p.descricao || 'Peça', quantidade: Number(p.quantidade || 1), valor_unitario: Number(p.valor_unitario || 0), valor_total: Number(p.valor_total || 0), ncm: p.ncm || '87089990', cfop: p.cfop || '5405', unidade: p.unidade || 'UN', codigo: p.codigo || '' }));
+
+        const valorTotal = items.reduce((s, it) => s + it.valor_total, 0) || venda.valor_total || 0;
         const itensFinal = items.length > 0 ? items : [{ descricao: tipoNF === 'NFSe' ? 'Serviços' : 'Produtos', quantidade: 1, valor_unitario: valorTotal, valor_total: valorTotal }];
 
-        const clienteCadastro = clientes.find(c => c.id === os.cliente_id) || null;
+        const clienteCadastro = clientes.find(c => c.id === venda.cliente_id) || null;
         const payload = {
           tipo: tipoNF,
-          cliente_nome: os.cliente_nome || '',
-          cliente_cpf_cnpj: os.cliente_cpf_cnpj || clienteCadastro?.cpf_cnpj || '',
+          cliente_nome: venda.cliente_nome || '',
+          cliente_cpf_cnpj: venda.cliente_cpf_cnpj || clienteCadastro?.cpf_cnpj || '',
           cliente_ie: clienteCadastro?.rg_ie || '',
-          cliente_email: os.cliente_email || clienteCadastro?.email || '',
-          cliente_telefone: os.cliente_telefone || clienteCadastro?.telefone || '',
-          cliente_endereco: os.cliente_endereco || clienteCadastro?.endereco || '',
+          cliente_email: venda.cliente_email || clienteCadastro?.email || '',
+          cliente_telefone: venda.cliente_telefone || clienteCadastro?.telefone || '',
+          cliente_endereco: venda.cliente_endereco || clienteCadastro?.endereco || '',
           cliente_numero: clienteCadastro?.numero || '',
-          cliente_bairro: os.cliente_bairro || clienteCadastro?.bairro || '',
+          cliente_bairro: venda.cliente_bairro || clienteCadastro?.bairro || '',
           cliente_cep: clienteCadastro?.cep || '',
-          cliente_cidade: os.cliente_cidade || clienteCadastro?.cidade || '',
-          cliente_estado: os.cliente_estado || clienteCadastro?.estado || '',
-          ordem_venda_id: osId,
+          cliente_cidade: venda.cliente_cidade || clienteCadastro?.cidade || '',
+          cliente_estado: venda.cliente_estado || clienteCadastro?.estado || '',
+          ordem_venda_id: vendaId,
           valor_total: valorTotal,
           items: itensFinal,
           data_emissao: new Date().toISOString().split('T')[0],
@@ -77,9 +73,9 @@ export default function ModalEmissaoMassa({ ordens, notas = [], clientes = [], o
         };
 
         const resp = await base44.functions.invoke('emitirNotaFiscal', payload);
-        res.push({ os, sucesso: resp.data?.sucesso, mensagem: resp.data?.mensagem || resp.data?.erro || '' });
+        res.push({ venda, sucesso: resp.data?.sucesso, mensagem: resp.data?.mensagem || resp.data?.erro || '' });
       } catch (e) {
-        res.push({ os, sucesso: false, mensagem: e.message });
+        res.push({ venda, sucesso: false, mensagem: e.message });
       }
     }
     setResultados(res);
@@ -93,7 +89,7 @@ export default function ModalEmissaoMassa({ ordens, notas = [], clientes = [], o
         <div className="flex items-center justify-between p-5 border-b border-gray-800 flex-shrink-0">
           <div>
             <h2 className="text-white font-semibold">Emissão de NF em Massa</h2>
-            <p className="text-gray-500 text-xs mt-0.5">{ordens.length} ordens com notas emitidas disponíveis</p>
+            <p className="text-gray-500 text-xs mt-0.5">{vendas.length} vendas disponíveis</p>
           </div>
           <button onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
         </div>
@@ -115,7 +111,7 @@ export default function ModalEmissaoMassa({ ordens, notas = [], clientes = [], o
                 <thead>
                   <tr className="border-b border-gray-800 text-xs text-gray-500">
                     <th className="px-4 py-3 text-left w-10">
-                      <input type="checkbox" checked={selecionadas.length === ordensElegiveis.length && ordensElegiveis.length > 0}
+                      <input type="checkbox" checked={selecionadas.length === vendasElegiveis.length && vendasElegiveis.length > 0}
                         onChange={toggleAll} className="rounded" />
                     </th>
                     <th className="px-4 py-3 text-left">Nº</th>
@@ -124,16 +120,16 @@ export default function ModalEmissaoMassa({ ordens, notas = [], clientes = [], o
                   </tr>
                 </thead>
                 <tbody>
-                  {ordensElegiveis.map(os => (
-                    <tr key={os.id} className="border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer" onClick={() => toggle(os.id)}>
+                  {vendasElegiveis.map(venda => (
+                    <tr key={venda.id} className="border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer" onClick={() => toggle(venda.id)}>
                       <td className="px-4 py-3">
-                        <input type="checkbox" checked={selecionadas.includes(os.id)} onChange={() => toggle(os.id)} onClick={e => e.stopPropagation()} className="rounded" />
+                        <input type="checkbox" checked={selecionadas.includes(venda.id)} onChange={() => toggle(venda.id)} onClick={e => e.stopPropagation()} className="rounded" />
                       </td>
-                      <td className="px-4 py-3 text-white font-mono text-xs">Nº {os.numero || os.id.slice(-6)}</td>
-                      <td className="px-4 py-3 text-white">{os.cliente_nome || '—'}</td>
-                      <td className="px-4 py-3 text-right font-bold" style={{color:'#00ff00'}}>R$ {Number(tipoNF === 'NFSe' ? (os.valor_servicos||0) : (os.valor_pecas||0)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                      <td className="px-4 py-3 text-white font-mono text-xs">Nº {venda.numero || venda.id.slice(-6)}</td>
+                      <td className="px-4 py-3 text-white">{venda.cliente_nome || '—'}</td>
+                      <td className="px-4 py-3 text-right font-bold" style={{color:'#00ff00'}}>R$ {Number(tipoNF === 'NFSe' ? (venda.valor_servicos||0) : (venda.valor_pecas||0)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
                     </tr>
-                 ))}
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -161,7 +157,7 @@ export default function ModalEmissaoMassa({ ordens, notas = [], clientes = [], o
                 <div key={i} className={`flex items-start gap-3 p-3 rounded-lg border text-sm ${r.sucesso ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
                   {r.sucesso ? <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
                   <div>
-                    <span className="font-medium">Nº {r.os.numero || r.os.id.slice(-6)} — {r.os.cliente_nome}</span>
+                    <span className="font-medium">Nº {r.venda.numero || r.venda.id.slice(-6)} — {r.venda.cliente_nome}</span>
                     {r.mensagem && <p className="text-xs mt-0.5 opacity-80">{r.mensagem}</p>}
                   </div>
                 </div>
