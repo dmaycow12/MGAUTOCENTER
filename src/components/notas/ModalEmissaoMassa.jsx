@@ -14,11 +14,12 @@ export default function ModalEmissaoMassa({ ordens, notas = [], clientes = [], o
     if (os.status !== 'Concluído') return false; // apenas ordens concluídas
     const isConsumidor = os.cliente_nome?.toUpperCase() === 'CONSUMIDOR';
     // Verifica notas já emitidas para esta OS
-    const EMITIDOS = ['Emitida', 'Processando', 'Aguardando Sefin Nacional'];
-    const notasOS = notas.filter(n => n.ordem_venda_id === os.id && EMITIDOS.includes(n.status));
-    const temNFe = notasOS.some(n => n.tipo === 'NFe') || !!(os.nfe_manual);
-    const temNFCe = notasOS.some(n => n.tipo === 'NFCe') || !!(os.nfe_manual);
-    const temNFSe = notasOS.some(n => n.tipo === 'NFSe') || !!(os.nfse_manual);
+    // Todas as notas vinculadas à OS (qualquer status exceto cancelada/rascunho)
+    const notasOS = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Cancelada' && n.status !== 'Rascunho');
+    // Considera também campos manuais e valor preenchido
+    const temNFe = notasOS.some(n => n.tipo === 'NFe') || !!(os.nfe_manual?.trim());
+    const temNFCe = notasOS.some(n => n.tipo === 'NFCe') || !!(os.nfe_manual?.trim());
+    const temNFSe = notasOS.some(n => n.tipo === 'NFSe') || !!(os.nfse_manual?.trim());
     if (tipoNF === 'NFSe') {
       if (isConsumidor) return false; // CONSUMIDOR não emite NFSe
       if (temNFSe) return false; // já emitiu NFSe
