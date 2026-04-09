@@ -605,7 +605,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                         <div className="flex-1">
                           <SearchableSelect
                             placeholder="Selecionar produto do estoque..."
-                            options={estoque.map(e => ({ value: e.id, label: e.descricao, sublabel: e.valor_venda ? `R$ ${Number(e.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
+                            options={estoque.map(e => ({ value: e.id, label: e.descricao, sublabel: [e.codigo ? `Cód: ${e.codigo}` : '', e.valor_venda ? `R$ ${Number(e.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : ''].filter(Boolean).join(' | ') }))}
                             onSelect={opt => { const item = estoque.find(e => e.id === opt.value); if (item) selecionarProduto(i, item); }}
                           />
                         </div>
