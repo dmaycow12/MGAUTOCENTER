@@ -257,7 +257,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
           </div>
         </div>
       )}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-all">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
         <div className="flex items-center gap-2 px-3 py-2.5">
           <span className="text-white font-bold text-sm tracking-wide flex-shrink-0">#{os.numero || "—"}</span>
           <div className="flex items-center gap-2 flex-wrap">
@@ -318,7 +318,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
               <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform ${statusOpen ? 'rotate-180' : ''}`} />
             </button>
             {statusOpen && (
-              <div ref={statusRef} className="absolute left-0 top-full mt-1 z-50 overflow-hidden rounded-lg shadow-2xl w-full">
+              <div ref={statusRef} className="absolute left-0 top-full mt-1 z-[9999] overflow-hidden rounded-lg shadow-2xl w-full">
                 {STATUS_OPTIONS.filter(s => s !== os.status).map(s => (
                   <button key={s} onClick={() => alterarStatus(s)}
                     className="flex items-center justify-center text-sm font-semibold w-full"
@@ -340,7 +340,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
               <MoreVertical className="w-3.5 h-3.5" />
             </button>
             {menuOpen && (
-              <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-50">
+              <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-[9999]">
                 {menuItems.map((item, i) => {
                   const Icon = item.icon;
                   return (

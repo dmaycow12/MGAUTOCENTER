@@ -292,7 +292,7 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
               <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </button>
             {statusOpen && (
-              <div ref={statusRef} className="absolute left-0 top-full mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-[100] space-y-1 p-1" style={{width: '140px'}}>
+              <div ref={statusRef} className="absolute left-0 top-full mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-[9999] space-y-1 p-1" style={{width: '140px'}}>
                 {STATUS_OPTIONS.map(s => (
                   <button key={s} onClick={() => alterarStatus(s)}
                     className="w-full flex items-center justify-center h-6 text-xs font-semibold rounded-md transition-all hover:opacity-90 whitespace-nowrap"
@@ -344,7 +344,7 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
                 <MoreVertical className="w-4 h-4" />
               </button>
               {menuOpen && (
-                <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-[100]">
+                <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-[9999]">
                   {menuItems.map((item, i) => {
                     const Icon = item.icon;
                     return (
