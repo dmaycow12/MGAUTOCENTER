@@ -601,7 +601,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                         <div className="flex-1">
                           <SearchableSelect
                             placeholder="Selecionar produto do estoque..."
-                            options={estoque.map(e => ({ value: e.id, label: `[${e.codigo || ''}] ${e.descricao}`, sublabel: e.valor_venda ? `R$ ${Number(e.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
+                            options={estoque.map(e => ({ value: e.id, label: e.descricao, sublabel: e.valor_venda ? `R$ ${Number(e.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
                             onSelect={opt => { const item = estoque.find(e => e.id === opt.value); if (item) selecionarProduto(i, item); }}
                           />
                         </div>
@@ -647,8 +647,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                         <div className="flex-1">
                           <SearchableSelect
                             placeholder="Selecionar serviço cadastrado..."
-                            options={servicosCad.map(sv => ({ value: sv.id, label: `[${sv.codigo || ''}] ${sv.descricao}`, sublabel: sv.valor ? `R$ ${Number(sv.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
-                            onSelect={opt => { const item = servicosCad.find(sv => sv.id === opt.value); if (item) selecionarServico(i, item); }}
+                            options={servicosCad.map(sv => ({ value: sv.id, label: sv.descricao, sublabel: sv.valor ? `R$ ${Number(sv.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
+                             onSelect={opt => { const item = servicosCad.find(sv => sv.id === opt.value); if (item) selecionarServico(i, item); }}
                           />
                         </div>
                         <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2"><Trash2 className="w-4 h-4" /></button>

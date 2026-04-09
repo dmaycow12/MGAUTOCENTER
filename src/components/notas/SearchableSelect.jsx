@@ -17,6 +17,10 @@ export default function SearchableSelect({ options = [], onSelect, placeholder =
 
   useEffect(() => {
     if (open) updatePos();
+    if (!open) return;
+    const onScroll = () => updatePos();
+    window.addEventListener('scroll', onScroll, true);
+    return () => window.removeEventListener('scroll', onScroll, true);
   }, [open]);
 
   useEffect(() => {
