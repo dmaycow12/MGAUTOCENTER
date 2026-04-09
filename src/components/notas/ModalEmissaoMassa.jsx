@@ -17,7 +17,7 @@ export default function ModalEmissaoMassa({ ordens, notas = [], clientes = [], o
     const EMITIDOS = ['Emitida', 'Processando', 'Aguardando Sefin Nacional'];
     const notasOS = notas.filter(n => n.ordem_venda_id === os.id && EMITIDOS.includes(n.status));
     const temNFe = notasOS.some(n => n.tipo === 'NFe') || !!(os.nfe_manual);
-    const temNFCe = notasOS.some(n => n.tipo === 'NFCe');
+    const temNFCe = notasOS.some(n => n.tipo === 'NFCe') || !!(os.nfe_manual);
     const temNFSe = notasOS.some(n => n.tipo === 'NFSe') || !!(os.nfse_manual);
     if (tipoNF === 'NFSe') {
       if (isConsumidor) return false; // CONSUMIDOR não emite NFSe
