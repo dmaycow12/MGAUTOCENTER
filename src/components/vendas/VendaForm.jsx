@@ -413,6 +413,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const salvar = async () => {
     if (!form.cliente_nome && !form.cliente_id) return alert("Selecione ou informe o cliente.");
+    const pecasPendentes = (form.pecas || []).filter(p => p._new);
+    const servicosPendentes = (form.servicos || []).filter(s => s._new);
+    if (pecasPendentes.length > 0) return alert("Selecione o produto antes de salvar. Há produto(s) adicionados sem seleção.");
+    if (servicosPendentes.length > 0) return alert("Selecione o serviço antes de salvar. Há serviço(s) adicionados sem seleção.");
     if (saving) return;
     setSaving(true);
 
