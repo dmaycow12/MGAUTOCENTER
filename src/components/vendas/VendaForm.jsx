@@ -136,7 +136,14 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       base44.entities.Servico.list("-created_date", 500),
     ]).then(([e, s]) => {
       setEstoque(e);
-      setServicosCad(s);
+      const sortedServicos = s.slice().sort((a, b) => {
+        const aMao = a.descricao?.toUpperCase().includes('MAO DE OBRA');
+        const bMao = b.descricao?.toUpperCase().includes('MAO DE OBRA');
+        if (aMao && !bMao) return -1;
+        if (!aMao && bMao) return 1;
+        return (a.descricao || '').localeCompare(b.descricao || '', 'pt-BR');
+      });
+      setServicosCad(sortedServicos);
       // Auto-preenche codigo faltando nos serviços existentes
       setForm(f => ({
         ...f,

@@ -44,12 +44,20 @@ export default function Servicos() {
     load();
   };
 
-  const filtrados = itens.filter(i =>
+  const sortServicos = (list) => list.slice().sort((a, b) => {
+    const aMao = a.descricao?.toUpperCase().includes('MAO DE OBRA');
+    const bMao = b.descricao?.toUpperCase().includes('MAO DE OBRA');
+    if (aMao && !bMao) return -1;
+    if (!aMao && bMao) return 1;
+    return (a.descricao || '').localeCompare(b.descricao || '', 'pt-BR');
+  });
+
+  const filtrados = sortServicos(itens.filter(i =>
     !search ||
     i.codigo?.toLowerCase().includes(search.toLowerCase()) ||
     i.descricao?.toLowerCase().includes(search.toLowerCase()) ||
     i.categoria?.toLowerCase().includes(search.toLowerCase())
-  );
+  ));
 
   if (loading) return null;
 
