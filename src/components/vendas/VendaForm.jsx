@@ -655,10 +655,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                       </div>
                     ) : (
                       <div className="flex flex-wrap md:flex-nowrap gap-2 items-end">
-                        <div className="w-20 flex-shrink-0">
-                          <label className="text-xs text-gray-500 mb-1 block">Código</label>
-                          <div className="input-dark text-gray-400 text-sm truncate">{s.codigo || '—'}</div>
-                        </div>
                         <div className="flex-1 min-w-[120px]">
                           <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
                           <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />

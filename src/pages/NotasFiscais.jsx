@@ -76,8 +76,8 @@ export default function NotasFiscais() {
   const [estoque, setEstoque] = useState([]);
   const [servicos, setServicos] = useState([]);
   const [search, setSearch] = useState("");
-  const [filtroTipo, setFiltroTipo] = useState(["Saída"]);
-  const [filtroModeloNF, setFiltroModeloNF] = useState([]);
+  const [filtroTipo, setFiltroTipo] = useState(() => { try { const s = localStorage.getItem("nf_filtroTipo"); return s ? JSON.parse(s) : ["Saída"]; } catch { return ["Saída"]; } });
+  const [filtroModeloNF, setFiltroModeloNF] = useState(() => { try { const s = localStorage.getItem("nf_filtroModelo"); return s ? JSON.parse(s) : []; } catch { return []; } });
   const [gerandoZip, setGerandoZip] = useState(false);
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
@@ -87,8 +87,8 @@ export default function NotasFiscais() {
 
   const hoje = new Date();
   const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-  const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
-  const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
+  const [filtroMes, setFiltroMes] = useState(() => { try { const s = localStorage.getItem("nf_filtroMes"); return s ? Number(s) : hoje.getMonth() + 1; } catch { return hoje.getMonth() + 1; } });
+  const [filtroAno, setFiltroAno] = useState(() => { try { const s = localStorage.getItem("nf_filtroAno"); return s ? Number(s) : hoje.getFullYear(); } catch { return hoje.getFullYear(); } });
   const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(false);
   const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
   const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
@@ -110,6 +110,8 @@ export default function NotasFiscais() {
     if (novoMes < 1) { novoMes = 12; novoAno--; }
     setFiltroMes(novoMes);
     setFiltroAno(novoAno);
+    localStorage.setItem("nf_filtroMes", novoMes);
+    localStorage.setItem("nf_filtroAno", novoAno);
   };
 
   const aplicarOutroPeriodo = () => {
@@ -834,11 +836,11 @@ export default function NotasFiscais() {
       {/* Filtros Simplificados */}
       <div className="flex flex-col gap-1.5">
         <div className="flex gap-0.5">
-          <button onClick={() => setFiltroTipo(prev => prev.includes("Saída") ? prev.filter(x => x !== "Saída") : [...prev, "Saída"])} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Saída") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
-          <button onClick={() => setFiltroTipo(prev => prev.includes("Entrada") ? prev.filter(x => x !== "Entrada") : [...prev, "Entrada"])} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Entrada") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
-          <button onClick={() => setFiltroModeloNF(prev => prev.includes("NFe") ? prev.filter(x => x !== "NFe") : [...prev, "NFe"])} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFe</button>
-          <button onClick={() => setFiltroModeloNF(prev => prev.includes("NFCe") ? prev.filter(x => x !== "NFCe") : [...prev, "NFCe"])} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFCe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFCe</button>
-          <button onClick={() => setFiltroModeloNF(prev => prev.includes("NFSe") ? prev.filter(x => x !== "NFSe") : [...prev, "NFSe"])} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
+          <button onClick={() => { const novo = filtroTipo.includes("Saída") ? filtroTipo.filter(x => x !== "Saída") : [...filtroTipo, "Saída"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Saída") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
+          <button onClick={() => { const novo = filtroTipo.includes("Entrada") ? filtroTipo.filter(x => x !== "Entrada") : [...filtroTipo, "Entrada"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Entrada") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
+          <button onClick={() => { const novo = filtroModeloNF.includes("NFe") ? filtroModeloNF.filter(x => x !== "NFe") : [...filtroModeloNF, "NFe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFe</button>
+          <button onClick={() => { const novo = filtroModeloNF.includes("NFCe") ? filtroModeloNF.filter(x => x !== "NFCe") : [...filtroModeloNF, "NFCe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFCe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFCe</button>
+          <button onClick={() => { const novo = filtroModeloNF.includes("NFSe") ? filtroModeloNF.filter(x => x !== "NFSe") : [...filtroModeloNF, "NFSe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
         </div>
         <div className="flex gap-0.5">
           <button onClick={() => exportarRelatorio()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
