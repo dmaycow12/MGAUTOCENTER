@@ -475,6 +475,28 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         await reduzirEstoque(formFinal.pecas);
       }
 
+      // Se já estava concluída, sincronizar lançamentos financeiros existentes
+      if (!eraAberta && !ficouConcluida && os && savedId) {
+        try {
+          const lancamentos = await base44.entities.Financeiro.list("-created_date", 500);
+          const lancamentosOS = lancamentos.filter(f => f.ordem_servico_id === savedId);
+          for (const lanc of lancamentosOS) {
+            const match = lanc.descricao?.match(/Parcela (\d+)\//);
+            const numParcela = match ? parseInt(match[1]) : 1;
+            const parcela = parcelasRef.current.find(p => p.numero === numParcela) || parcelasRef.current[0];
+            if (parcela) {
+              const pago = ["Dinheiro", "PIX"].includes(parcela.forma_pagamento);
+              await base44.entities.Financeiro.update(lanc.id, {
+                valor: parcela.valor,
+                forma_pagamento: parcela.forma_pagamento || lanc.forma_pagamento,
+                data_vencimento: parcela.vencimento || lanc.data_vencimento,
+                ...(pago ? { status: "Pago", data_pagamento: lanc.data_pagamento || new Date().toISOString().split("T")[0] } : {}),
+              });
+            }
+          }
+        } catch (_) {}
+      }
+
       onSave();
     } catch (err) {
       alert("Erro ao salvar: " + (err?.message || "Erro desconhecido"));

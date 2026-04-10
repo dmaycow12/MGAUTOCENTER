@@ -159,6 +159,27 @@ export default function Financeiro() {
       update.data_pagamento = new Date().toISOString().split("T")[0];
     }
     await base44.entities.Financeiro.update(item.id, update);
+
+    // Sincronizar com Vendas
+    if (item.ordem_servico_id) {
+      try {
+        const vendas = await base44.entities.Vendas.filter({ id: item.ordem_servico_id }, "-created_date", 1);
+        const venda = vendas[0];
+        if (venda) {
+          const match = item.descricao?.match(/Parcela (\d+)\//);
+          const numParcela = match ? parseInt(match[1]) : 1;
+          const novasParcelas = (venda.parcelas_detalhes || []).map(p =>
+            p.numero === numParcela ? { ...p, forma_pagamento: novaForma } : p
+          );
+          const formas = [...new Set(novasParcelas.map(p => p.forma_pagamento).filter(Boolean))];
+          await base44.entities.Vendas.update(item.ordem_servico_id, {
+            parcelas_detalhes: novasParcelas,
+            forma_pagamento: formas.length === 1 ? formas[0] : novaForma,
+          });
+        }
+      } catch (_) {}
+    }
+
     load();
   };
 
