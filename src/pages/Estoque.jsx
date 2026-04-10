@@ -41,8 +41,11 @@ export default function Estoque() {
   const [showMarcaDropdown, setShowMarcaDropdown] = useState(false);
   const [showCatDropdown, setShowCatDropdown] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [checklistMode, setChecklistMode] = useState(false);
-  const [conferidos, setConferidos] = useState(new Set());
+  const [checklistMode, setChecklistMode] = useState(() => localStorage.getItem("estoque_checklist_ativo") === "1");
+  const [conferidos, setConferidos] = useState(() => {
+    try { const s = localStorage.getItem("estoque_checklist_ids"); return s ? new Set(JSON.parse(s)) : new Set(); } catch { return new Set(); }
+  });
+  const [checklistSalvoEm, setChecklistSalvoEm] = useState(() => localStorage.getItem("estoque_checklist_salvo") || null);
   const [colunas, setColunas] = useState(() => {
     const saved = localStorage.getItem("estoque_colunas");
     return saved ? JSON.parse(saved) : { codigo: true, categoria: true, marca: true, estoque_minimo: true, valor_custo: true, valor_venda: true };
@@ -50,6 +53,21 @@ export default function Estoque() {
   const marcaDropdownRef = useRef(null);
   const catDropdownRef = useRef(null);
   const filterRef = useRef(null);
+
+  const salvarChecklist = () => {
+    const agora = new Date().toLocaleString("pt-BR");
+    localStorage.setItem("estoque_checklist_ids", JSON.stringify([...conferidos]));
+    localStorage.setItem("estoque_checklist_ativo", "1");
+    localStorage.setItem("estoque_checklist_salvo", agora);
+    setChecklistSalvoEm(agora);
+  };
+
+  const limparChecklist = () => {
+    setConferidos(new Set());
+    localStorage.removeItem("estoque_checklist_ids");
+    localStorage.removeItem("estoque_checklist_salvo");
+    setChecklistSalvoEm(null);
+  };
 
   const toggleColuna = (col) => {
     const updated = { ...colunas, [col]: !colunas[col] };
@@ -497,7 +515,11 @@ export default function Estoque() {
         {/* Linha 3: ações */}
         <div className="flex gap-2">
           <button
-            onClick={() => { setChecklistMode(v => !v); if (checklistMode) setConferidos(new Set()); }}
+            onClick={() => {
+              const novo = !checklistMode;
+              setChecklistMode(novo);
+              localStorage.setItem("estoque_checklist_ativo", novo ? "1" : "0");
+            }}
             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
             style={{background: checklistMode ? "#f97316" : "#062C9B", color: "#fff"}}
           >
@@ -533,9 +555,13 @@ export default function Estoque() {
               </span>
               <div className="flex gap-2">
                 <button onClick={() => setConferidos(new Set(filtrados.map(i => i.id)))} className="text-xs text-green-400 border border-green-500/30 px-3 py-1 rounded-lg hover:bg-green-500/10 transition-all">Marcar Todos</button>
-                <button onClick={() => setConferidos(new Set())} className="text-xs text-gray-400 border border-gray-700 px-3 py-1 rounded-lg hover:text-white transition-all">Limpar</button>
+                <button onClick={salvarChecklist} className="text-xs text-white border border-orange-500/50 px-3 py-1 rounded-lg hover:bg-orange-500/20 transition-all" style={{background:"#f97316", color:"#000"}}>💾 Salvar</button>
+                <button onClick={limparChecklist} className="text-xs text-gray-400 border border-gray-700 px-3 py-1 rounded-lg hover:text-white transition-all">Limpar</button>
               </div>
             </div>
+            {checklistSalvoEm && (
+              <p className="text-xs text-gray-500">💾 Salvo em: <span className="text-orange-400">{checklistSalvoEm}</span></p>
+            )}
             <div className="w-full bg-gray-800 rounded-full h-2">
               <div className="h-2 rounded-full transition-all" style={{background: conferidos.size === filtrados.length && filtrados.length > 0 ? "#00ff00" : "#f97316", width: filtrados.length > 0 ? `${(conferidos.size / filtrados.length) * 100}%` : "0%"}} />
             </div>
