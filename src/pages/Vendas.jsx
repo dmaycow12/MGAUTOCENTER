@@ -95,10 +95,21 @@ export default function Vendas() {
       const d = fmt(hoje);
       setCustomRange({ inicio: d, fim: d });
       setUsandoOutroPeriodo(true);
+    } else if (tipo === 'ontem') {
+      const d = new Date(hoje); d.setDate(hoje.getDate() - 1);
+      const s = fmt(d);
+      setCustomRange({ inicio: s, fim: s });
+      setUsandoOutroPeriodo(true);
     } else if (tipo === 'semana') {
       const dow = hoje.getDay();
       const ini = new Date(hoje); ini.setDate(hoje.getDate() - dow);
       const fim = new Date(hoje); fim.setDate(hoje.getDate() + (6 - dow));
+      setCustomRange({ inicio: fmt(ini), fim: fmt(fim) });
+      setUsandoOutroPeriodo(true);
+    } else if (tipo === 'semana_passada') {
+      const dow = hoje.getDay();
+      const ini = new Date(hoje); ini.setDate(hoje.getDate() - dow - 7);
+      const fim = new Date(hoje); fim.setDate(hoje.getDate() - dow - 1);
       setCustomRange({ inicio: fmt(ini), fim: fmt(fim) });
       setUsandoOutroPeriodo(true);
     } else if (tipo === 'mes') {
@@ -106,8 +117,21 @@ export default function Vendas() {
       setCustomRange(null);
       setFiltroMes(hoje.getMonth() + 1);
       setFiltroAno(hoje.getFullYear());
+    } else if (tipo === 'mes_passado') {
+      const d = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+      setUsandoOutroPeriodo(false);
+      setCustomRange(null);
+      setFiltroMes(d.getMonth() + 1);
+      setFiltroAno(d.getFullYear());
     } else if (tipo === 'ano') {
       setCustomRange({ inicio: `${hoje.getFullYear()}-01-01`, fim: `${hoje.getFullYear()}-12-31` });
+      setUsandoOutroPeriodo(true);
+    } else if (tipo === 'ano_passado') {
+      const a = hoje.getFullYear() - 1;
+      setCustomRange({ inicio: `${a}-01-01`, fim: `${a}-12-31` });
+      setUsandoOutroPeriodo(true);
+    } else if (tipo === 'tudo') {
+      setCustomRange({ inicio: '2000-01-01', fim: '2099-12-31' });
       setUsandoOutroPeriodo(true);
     }
     setPeriodoDropOpen(false);
@@ -235,8 +259,8 @@ export default function Vendas() {
             {periodoDropOpen && (
               <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
                 <p className="text-xs text-gray-400 font-medium">Atalhos</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {[['hoje','Hoje'],['semana','Semana'],['mes','Mês'],['ano','Ano']].map(([tipo, label]) => (
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[['hoje','Hoje'],['ontem','Ontem'],['semana','Semana'],['semana_passada','Sem. Passada'],['mes','Mês'],['mes_passado','Mês Passado'],['ano','Ano'],['ano_passado','Ano Passado'],['tudo','Tudo']].map(([tipo, label]) => (
                     <button key={tipo} onClick={() => aplicarAtalho(tipo)}
                       className="py-2 text-xs text-white bg-gray-800 hover:bg-[#062C9B] border border-gray-700 rounded-lg font-medium transition-all">
                       {label}
