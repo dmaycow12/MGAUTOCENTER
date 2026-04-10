@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, CheckSquare, ChevronUp, ChevronDown, Download, Filter, Tag } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, CheckSquare, ChevronUp, ChevronDown, Download, Filter, Tag, ClipboardCheck } from "lucide-react";
 import ProgressoReajuste from "../components/estoque/ProgressoReajuste";
 
 const arredondarVendaParaCinco = (valor) => {
@@ -41,6 +41,8 @@ export default function Estoque() {
   const [showMarcaDropdown, setShowMarcaDropdown] = useState(false);
   const [showCatDropdown, setShowCatDropdown] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [checklistMode, setChecklistMode] = useState(false);
+  const [conferidos, setConferidos] = useState(new Set());
   const [colunas, setColunas] = useState(() => {
     const saved = localStorage.getItem("estoque_colunas");
     return saved ? JSON.parse(saved) : { codigo: true, categoria: true, marca: true, estoque_minimo: true, valor_custo: true, valor_venda: true };
@@ -495,6 +497,13 @@ export default function Estoque() {
         {/* Linha 3: ações */}
         <div className="flex gap-2">
           <button
+            onClick={() => { setChecklistMode(v => !v); if (checklistMode) setConferidos(new Set()); }}
+            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
+            style={{background: checklistMode ? "#f97316" : "#062C9B", color: "#fff"}}
+          >
+            <ClipboardCheck className="w-4 h-4" /> {checklistMode ? "Sair do Check List" : "Check List"}
+          </button>
+          <button
             onClick={() => setShowReajuste(true)}
             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
             style={{background: "#00ff00", color: "#fff"}}
@@ -513,6 +522,25 @@ export default function Estoque() {
             <Download className="w-4 h-4" /> {selecionados.length > 0 ? `Exportar (${selecionados.length})` : "Exportar"}
           </button>
         </div>
+
+        {/* Barra de progresso check list */}
+        {checklistMode && (
+          <div className="bg-gray-900 border border-orange-500/30 rounded-xl px-4 py-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-orange-400 text-sm font-semibold flex items-center gap-2">
+                <ClipboardCheck className="w-4 h-4" />
+                Check List — {conferidos.size} / {filtrados.length} conferidos
+              </span>
+              <div className="flex gap-2">
+                <button onClick={() => setConferidos(new Set(filtrados.map(i => i.id)))} className="text-xs text-green-400 border border-green-500/30 px-3 py-1 rounded-lg hover:bg-green-500/10 transition-all">Marcar Todos</button>
+                <button onClick={() => setConferidos(new Set())} className="text-xs text-gray-400 border border-gray-700 px-3 py-1 rounded-lg hover:text-white transition-all">Limpar</button>
+              </div>
+            </div>
+            <div className="w-full bg-gray-800 rounded-full h-2">
+              <div className="h-2 rounded-full transition-all" style={{background: conferidos.size === filtrados.length && filtrados.length > 0 ? "#00ff00" : "#f97316", width: filtrados.length > 0 ? `${(conferidos.size / filtrados.length) * 100}%` : "0%"}} />
+            </div>
+          </div>
+        )}
 
         {/* Linha 3: ações de seleção (aparece se houver selecionados) */}
         {selecionados.length > 0 && (
@@ -575,12 +603,18 @@ export default function Estoque() {
         </div>
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filtrados.map(item => (
-            <div key={item.id} className={`bg-gray-900 border rounded-2xl overflow-hidden ${item.quantidade <= item.estoque_minimo ? "border-red-500/40" : "border-gray-800"}`}>
+          {filtrados.map(item => {
+            const isConf = conferidos.has(item.id);
+            return (
+            <div key={item.id}
+              onClick={checklistMode ? () => setConferidos(prev => { const s = new Set(prev); s.has(item.id) ? s.delete(item.id) : s.add(item.id); return s; }) : undefined}
+              className={`bg-gray-900 border rounded-2xl overflow-hidden transition-all ${checklistMode ? "cursor-pointer" : ""} ${isConf ? "border-green-500/60 opacity-60" : item.quantidade <= item.estoque_minimo ? "border-red-500/40" : "border-gray-800"}`}>
               {/* Cabeçalho do card */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
                 <div className="flex items-center gap-2 min-w-0">
-                  <input type="checkbox" checked={selecionados.includes(item.id)} onChange={() => toggleSelecionado(item.id)} className="accent-red-500 cursor-pointer w-4 h-4 flex-shrink-0" />
+                  {checklistMode
+                    ? <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isConf ? "border-green-500 bg-green-500" : "border-gray-600"}`}>{isConf && <span className="text-black text-xs font-bold">✓</span>}</div>
+                    : <input type="checkbox" checked={selecionados.includes(item.id)} onChange={() => toggleSelecionado(item.id)} className="accent-red-500 cursor-pointer w-4 h-4 flex-shrink-0" />}
                   {item.codigo && <span className="text-orange-400 font-mono text-xs font-bold flex-shrink-0">#{item.codigo}</span>}
                   {item.quantidade <= item.estoque_minimo && (
                     <span className="flex items-center gap-1 bg-red-500/10 text-red-400 text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0">
@@ -626,7 +660,8 @@ export default function Estoque() {
                 </div>
               )}
             </div>
-          ))}
+          );
+          })}
         </div>
       ) : (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
@@ -635,7 +670,9 @@ export default function Estoque() {
               <thead>
                 <tr className="text-left text-xs text-gray-500 border-b border-gray-800 bg-gray-900/80">
                   <th className="px-4 py-3 w-8">
-                    <input type="checkbox" checked={filtrados.length > 0 && selecionados.length === filtrados.length} onChange={toggleTodos} className="accent-red-500 cursor-pointer w-4 h-4" />
+                    {checklistMode
+                      ? <ClipboardCheck className="w-4 h-4 text-orange-400" />
+                      : <input type="checkbox" checked={filtrados.length > 0 && selecionados.length === filtrados.length} onChange={toggleTodos} className="accent-red-500 cursor-pointer w-4 h-4" />}
                   </th>
                   {colunas.codigo && <th className="px-4 py-3 cursor-pointer hover:text-white transition-all" onClick={() => handleSort("codigo")}><div className="flex items-center gap-1">Código {ordenacao.campo === "codigo" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
                   <th className="px-4 py-3 cursor-pointer hover:text-white transition-all" onClick={() => handleSort("descricao")}>
@@ -655,10 +692,15 @@ export default function Estoque() {
               <tbody>
                 {filtrados.map((item, idx) => {
                   const prox = filtrados[idx + 1] || null;
+                  const isConferido = conferidos.has(item.id);
                   return (
-                  <tr key={item.id} className={`border-b border-gray-800 hover:bg-gray-800/50 transition-all ${selecionados.includes(item.id) ? "bg-red-500/5" : item.quantidade <= item.estoque_minimo ? "bg-red-500/5" : ""}`}>
+                  <tr key={item.id}
+                    onClick={checklistMode ? () => setConferidos(prev => { const s = new Set(prev); s.has(item.id) ? s.delete(item.id) : s.add(item.id); return s; }) : undefined}
+                    className={`border-b border-gray-800 transition-all ${checklistMode ? "cursor-pointer hover:bg-green-500/5" : "hover:bg-gray-800/50"} ${isConferido ? "bg-green-500/10 opacity-60" : selecionados.includes(item.id) ? "bg-red-500/5" : item.quantidade <= item.estoque_minimo ? "bg-red-500/5" : ""}`}>
                     <td className="px-4 py-3">
-                      <input type="checkbox" checked={selecionados.includes(item.id)} onChange={() => toggleSelecionado(item.id)} className="accent-red-500 cursor-pointer w-4 h-4" />
+                      {checklistMode
+                        ? <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isConferido ? "border-green-500 bg-green-500" : "border-gray-600"}`}>{isConferido && <span className="text-black text-xs font-bold">✓</span>}</div>
+                        : <input type="checkbox" checked={selecionados.includes(item.id)} onChange={() => toggleSelecionado(item.id)} className="accent-red-500 cursor-pointer w-4 h-4" />}
                     </td>
                     {colunas.codigo && <td className="px-4 py-3 text-gray-400 font-mono text-xs"><CellEdit item={item} field="codigo" className="text-gray-400 font-mono text-xs" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
                     <td className="px-4 py-3">
