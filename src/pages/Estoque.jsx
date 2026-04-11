@@ -633,13 +633,12 @@ export default function Estoque() {
             const isConf = conferidos.has(item.id);
             return (
             <div key={item.id}
-              onClick={checklistMode ? () => setConferidos(prev => { const s = new Set(prev); s.has(item.id) ? s.delete(item.id) : s.add(item.id); return s; }) : undefined}
-              className={`bg-gray-900 border rounded-2xl overflow-hidden transition-all ${checklistMode ? "cursor-pointer" : ""} ${isConf ? "border-green-500/60 opacity-60" : item.quantidade <= item.estoque_minimo ? "border-red-500/40" : "border-gray-800"}`}>
+              className={`bg-gray-900 border rounded-2xl overflow-hidden transition-all ${isConf ? "border-green-500/60 opacity-60" : item.quantidade <= item.estoque_minimo ? "border-red-500/40" : "border-gray-800"}`}>
               {/* Cabeçalho do card */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
                 <div className="flex items-center gap-2 min-w-0">
                   {checklistMode
-                    ? <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isConf ? "border-green-500 bg-green-500" : "border-gray-600"}`}>{isConf && <span className="text-black text-xs font-bold">✓</span>}</div>
+                    ? <div onClick={e => { e.stopPropagation(); setConferidos(prev => { const s = new Set(prev); s.has(item.id) ? s.delete(item.id) : s.add(item.id); return s; }); }} className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 cursor-pointer ${isConf ? "border-green-500 bg-green-500" : "border-gray-600 hover:border-green-400"}`}>{isConf && <span className="text-black text-xs font-bold">✓</span>}</div>
                     : <input type="checkbox" checked={selecionados.includes(item.id)} onChange={() => toggleSelecionado(item.id)} className="accent-red-500 cursor-pointer w-4 h-4 flex-shrink-0" />}
                   {item.codigo && <span className="text-orange-400 font-mono text-xs font-bold flex-shrink-0">#{item.codigo}</span>}
                   {item.quantidade <= item.estoque_minimo && (
@@ -721,11 +720,10 @@ export default function Estoque() {
                   const isConferido = conferidos.has(item.id);
                   return (
                   <tr key={item.id}
-                    onClick={checklistMode ? () => setConferidos(prev => { const s = new Set(prev); s.has(item.id) ? s.delete(item.id) : s.add(item.id); return s; }) : undefined}
-                    className={`border-b border-gray-800 transition-all ${checklistMode ? "cursor-pointer hover:bg-green-500/5" : "hover:bg-gray-800/50"} ${isConferido ? "bg-green-500/10 opacity-60" : selecionados.includes(item.id) ? "bg-red-500/5" : item.quantidade <= item.estoque_minimo ? "bg-red-500/5" : ""}`}>
+                    className={`border-b border-gray-800 transition-all hover:bg-gray-800/50 ${isConferido ? "bg-green-500/10 opacity-60" : selecionados.includes(item.id) ? "bg-red-500/5" : item.quantidade <= item.estoque_minimo ? "bg-red-500/5" : ""}`}>
                     <td className="px-4 py-3">
                       {checklistMode
-                        ? <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isConferido ? "border-green-500 bg-green-500" : "border-gray-600"}`}>{isConferido && <span className="text-black text-xs font-bold">✓</span>}</div>
+                        ? <div onClick={() => setConferidos(prev => { const s = new Set(prev); s.has(item.id) ? s.delete(item.id) : s.add(item.id); return s; })} className={`w-5 h-5 rounded-full border-2 flex items-center justify-center cursor-pointer ${isConferido ? "border-green-500 bg-green-500" : "border-gray-600 hover:border-green-400"}`}>{isConferido && <span className="text-black text-xs font-bold">✓</span>}</div>
                         : <input type="checkbox" checked={selecionados.includes(item.id)} onChange={() => toggleSelecionado(item.id)} className="accent-red-500 cursor-pointer w-4 h-4" />}
                     </td>
                     {colunas.codigo && <td className="px-4 py-3 text-gray-400 font-mono text-xs"><CellEdit item={item} field="codigo" className="text-gray-400 font-mono text-xs" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
@@ -739,7 +737,7 @@ export default function Estoque() {
                     {colunas.marca && <td className="px-4 py-3 text-gray-400"><CellEdit item={item} field="marca" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
                     <td className="px-4 py-3 text-center">
                       <span className={`font-bold ${item.quantidade <= item.estoque_minimo ? "text-red-400" : "text-white"}`}>
-                        <CellEdit item={item} field="quantidade" className={item.quantidade <= item.estoque_minimo ? "text-red-400 font-bold" : "text-white font-bold"} editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} />
+                        <CellEdit item={item} field="quantidade" className={item.quantidade <= item.estoque_minimo ? "text-red-400 font-bold" : "text-white font-bold"} editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} checklistMode={checklistMode} onMarcarConferido={() => setConferidos(prev => { const s = new Set(prev); s.add(item.id); return s; })} />
                       </span>
                     </td>
                     {colunas.estoque_minimo && <td className="px-4 py-3 text-center text-gray-500"><CellEdit item={item} field="estoque_minimo" className="text-gray-500" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
@@ -906,7 +904,7 @@ export default function Estoque() {
 
 const CAMPOS_NUMERICOS = ["quantidade", "estoque_minimo", "valor_custo", "valor_venda"];
 
-function CellEdit({ item, field, className = "", editandoCell, onIniciar, onSalvar, onCancelar, proximoItem }) {
+function CellEdit({ item, field, className = "", editandoCell, onIniciar, onSalvar, onCancelar, proximoItem, checklistMode, onMarcarConferido }) {
   const isEditing = editandoCell?.id === item.id && editandoCell?.field === field;
   const [localVal, setLocalVal] = React.useState("");
   const navegandoRef = React.useRef(false);
@@ -936,6 +934,7 @@ function CellEdit({ item, field, className = "", editandoCell, onIniciar, onSalv
             e.preventDefault();
             navegandoRef.current = true;
             onSalvar(item.id, field, localVal);
+            if (checklistMode && field === "quantidade" && onMarcarConferido) onMarcarConferido();
             if (proximoItem) setTimeout(() => onIniciar(proximoItem, field), 50);
           }
         }}
