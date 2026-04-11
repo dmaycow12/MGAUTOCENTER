@@ -42,10 +42,9 @@ export default function Estoque() {
   const [showCatDropdown, setShowCatDropdown] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [checklistMode, setChecklistMode] = useState(() => localStorage.getItem("estoque_checklist_ativo") === "1");
-  const [conferidos, setConferidos] = useState(() => {
-    try { const s = localStorage.getItem("estoque_checklist_ids"); return s ? new Set(JSON.parse(s)) : new Set(); } catch { return new Set(); }
-  });
-  const [checklistSalvoEm, setChecklistSalvoEm] = useState(() => localStorage.getItem("estoque_checklist_salvo") || null);
+  const [conferidos, setConferidos] = useState(new Set());
+  const [checklistSalvoEm, setChecklistSalvoEm] = useState(null);
+  const [checklistConfigId, setChecklistConfigId] = useState(null);
   const [colunas, setColunas] = useState(() => {
     const saved = localStorage.getItem("estoque_colunas");
     return saved ? JSON.parse(saved) : { codigo: true, categoria: true, marca: true, estoque_minimo: true, valor_custo: true, valor_venda: true };
@@ -54,19 +53,24 @@ export default function Estoque() {
   const catDropdownRef = useRef(null);
   const filterRef = useRef(null);
 
-  const salvarChecklist = () => {
+  const salvarChecklist = async () => {
     const agora = new Date().toLocaleString("pt-BR");
-    localStorage.setItem("estoque_checklist_ids", JSON.stringify([...conferidos]));
-    localStorage.setItem("estoque_checklist_ativo", "1");
-    localStorage.setItem("estoque_checklist_salvo", agora);
+    const valor = JSON.stringify([...conferidos]);
+    if (checklistConfigId) {
+      await base44.entities.Configuracao.update(checklistConfigId, { valor, descricao: agora });
+    } else {
+      const novo = await base44.entities.Configuracao.create({ chave: "checklist_estoque_ids", valor, descricao: agora });
+      setChecklistConfigId(novo.id);
+    }
     setChecklistSalvoEm(agora);
   };
 
-  const limparChecklist = () => {
+  const limparChecklist = async () => {
     setConferidos(new Set());
-    localStorage.removeItem("estoque_checklist_ids");
-    localStorage.removeItem("estoque_checklist_salvo");
     setChecklistSalvoEm(null);
+    if (checklistConfigId) {
+      await base44.entities.Configuracao.update(checklistConfigId, { valor: "[]", descricao: "" });
+    }
   };
 
   const toggleColuna = (col) => {
@@ -97,8 +101,17 @@ export default function Estoque() {
   }, []);
 
   const load = async () => {
-    const data = await base44.entities.Estoque.list("-created_date", 500);
+    const [data, configs] = await Promise.all([
+      base44.entities.Estoque.list("-created_date", 500),
+      base44.entities.Configuracao.list("-created_date", 100),
+    ]);
     setItems(data);
+    const cfg = configs.find(c => c.chave === "checklist_estoque_ids");
+    if (cfg) {
+      setChecklistConfigId(cfg.id);
+      try { setConferidos(new Set(JSON.parse(cfg.valor || "[]"))); } catch { setConferidos(new Set()); }
+      if (cfg.descricao) setChecklistSalvoEm(cfg.descricao);
+    }
     setLoading(false);
   };
 
