@@ -222,9 +222,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       ...f,
       cliente_id: clienteId,
       cliente_nome: c?.nome || "",
+      cliente_nome_fantasia: c?.nome_fantasia || "",
       cliente_telefone: c?.telefone || "",
-      cliente_email: c?.email || "",
-      cliente_cpf_cnpj: c?.cpf_cnpj || "",
       cliente_endereco: end,
       cliente_bairro: c?.bairro || "",
       cliente_cidade: c?.cidade || "",
@@ -579,6 +578,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     </div>
                   </div>
                   <Field label="Nome"><input value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} className="input-dark" autoComplete="new-password" placeholder="Ou digite manualmente" /></Field>
+                  <Field label="Nome Social / Nome Fantasia"><input value={form.cliente_nome_fantasia || ""} onChange={e => setForm(f => ({ ...f, cliente_nome_fantasia: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
                   <Field label="Telefone"><input value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
                   <Field label="E-mail"><input value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
                   <Field label="CPF / CNPJ"><input value={form.cliente_cpf_cnpj} onChange={e => setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
