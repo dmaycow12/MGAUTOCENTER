@@ -238,7 +238,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     setClienteSearch(val);
     if (val.length > 0) {
       const filtro = clientes
-        .filter(c => c.nome?.toLowerCase().includes(val.toLowerCase()))
+        .filter(c =>
+          c.nome?.toLowerCase().includes(val.toLowerCase()) ||
+          c.nome_fantasia?.toLowerCase().includes(val.toLowerCase())
+        )
         .slice(0, 6);
       setClienteSugestoes(filtro);
     } else {
@@ -561,7 +564,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                             {clienteSugestoes.map(item => (
                               <button key={item.id} onMouseDown={() => onClienteChange(item.id)}
                                 className="w-full text-left px-3 py-2 text-xs text-gray-200 hover:bg-gray-700 border-b border-gray-700 last:border-0">
-                                {item.nome}
+                                <span className="font-medium">{item.nome}</span>
+                                {item.nome_fantasia && <span className="text-gray-400 ml-1">— {item.nome_fantasia}</span>}
                               </button>
                             ))}
                           </div>
