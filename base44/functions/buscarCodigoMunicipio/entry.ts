@@ -1,38 +1,51 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
-
-// Mapeamento de cidades MG para código de município IBGE
-const MUNICIPIOS_MG = {
-  'PATOS DE MINAS': '3148004',
-  'VARJÃO DE MINAS': '3170750',
-  // Adicione mais cidades conforme necessário
-};
+// Busca código IBGE do município via API do IBGE
+// Não precisa de autenticação - é API pública
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
     const { cidade, estado } = await req.json();
 
     if (!cidade || !estado) {
       return Response.json({ error: 'Cidade e estado são obrigatórios' }, { status: 400 });
     }
 
-    // Normalizar entrada
     const cidadeNormalizada = cidade.trim().toUpperCase();
     const estadoNormalizado = estado.trim().toUpperCase();
 
-    // Se for MG, buscar no mapeamento
-    if (estadoNormalizado === 'MG') {
-      const codigo = MUNICIPIOS_MG[cidadeNormalizada];
-      if (codigo) {
-        return Response.json({ codigo, encontrado: true });
-      }
+    // Busca direto na API do IBGE
+    const url = `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estadoNormalizado}/municipios`;
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      return Response.json({ codigo: null, encontrado: false, mensagem: 'Erro ao consultar API do IBGE' });
     }
 
-    // Se não encontrar, retornar não encontrado
-    return Response.json({ 
-      codigo: null, 
+    const municipios = await resp.json();
+
+    // Normaliza texto para comparação (remove acentos)
+    const normalizar = (str) =>
+      str.toUpperCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+
+    const cidadeNorm = normalizar(cidadeNormalizada);
+
+    const encontrado = municipios.find(m => normalizar(m.nome) === cidadeNorm);
+
+    if (encontrado) {
+      return Response.json({ codigo: String(encontrado.id), encontrado: true });
+    }
+
+    // Tentativa de busca parcial
+    const parcial = municipios.find(m => normalizar(m.nome).includes(cidadeNorm) || cidadeNorm.includes(normalizar(m.nome)));
+    if (parcial) {
+      return Response.json({ codigo: String(parcial.id), encontrado: true, parcial: true });
+    }
+
+    return Response.json({
+      codigo: null,
       encontrado: false,
-      mensagem: `Cidade ${cidade} não encontrada na base de dados. Preencha manualmente.`
+      mensagem: `Município "${cidade}" não encontrado no estado ${estado}.`
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

@@ -101,6 +101,25 @@ Deno.serve(async (req) => {
         ? items.map(it => `${it.descricao} - Qtd: ${it.quantidade} - Valor: R$ ${Number(it.valor_total).toFixed(2)}`).join('; ')
         : (observacoes || 'Serviços prestados');
 
+      // Buscar código do município tomador via API IBGE se não fornecido
+      let codigoMunicipioTomador = codigo_municipio_tomador;
+      if (!codigoMunicipioTomador && cliente_cidade && cliente_estado) {
+        try {
+          const cidadeNorm = cliente_cidade.trim().toUpperCase();
+          const estadoNorm = cliente_estado.trim().toUpperCase();
+          const ibgeResp = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estadoNorm}/municipios`);
+          if (ibgeResp.ok) {
+            const municipios = await ibgeResp.json();
+            const normalizar = (str) => str.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+            const match = municipios.find(m => normalizar(m.nome) === normalizar(cidadeNorm));
+            if (match) codigoMunicipioTomador = String(match.id);
+            console.log('[MUNICIPIO] Buscado para', cliente_cidade, cliente_estado, '->', codigoMunicipioTomador);
+          }
+        } catch (e) {
+          console.error('[MUNICIPIO ERROR]', e.message);
+        }
+      }
+
       // Payload NFSe Nacional (DPS) - endpoint /nfsen, payload flat
       payload = {
         data_emissao: dataEmissaoISO,
@@ -116,7 +135,7 @@ Deno.serve(async (req) => {
         ...(cpfCnpjLimpo.length === 14 ? { cnpj_tomador: cpfCnpjLimpo } : (cpfCnpjLimpo.length === 11 ? { cpf_tomador: cpfCnpjLimpo } : {})),
         razao_social_tomador: (cliente_nome || 'Consumidor Final').substring(0, 100),
         ...(cliente_email ? { email_tomador: cliente_email } : {}),
-        codigo_municipio_tomador: codigo_municipio_tomador || COD_MUNICIPIO_PATOS,
+        codigo_municipio_tomador: codigoMunicipioTomador || COD_MUNICIPIO_PATOS,
         cep_tomador: cepLimpo,
         logradouro_tomador: cliente_endereco || 'Rua Rui Barbosa',
         numero_tomador: cliente_numero || '1355',
@@ -377,7 +396,9 @@ Deno.serve(async (req) => {
     };
 
     // Reverter número reservado se erro em nova emissão (não em retry)
-    if (statusNota === 'Erro' && !nota_id && tipo === 'NFSe') {
+    // NÃO reverter se for E0014 (duplicado) - o número já foi consumido na SEFAZ
+    const erroE0014 = mensagemSefaz?.includes('E0014') || mensagemSefaz?.includes('já existe');
+    if (statusNota === 'Erro' && !nota_id && tipo === 'NFSe' && !erroE0014) {
       try {
         const configsNfse = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_dps' });
         if (configsNfse.length > 0) {
