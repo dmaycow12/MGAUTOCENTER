@@ -1176,38 +1176,38 @@ export default function NotasFiscais() {
                        <NoACInput value={form.cliente_bairro} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} placeholder="" />
                      </F>
                      <F label="Cidade">
-                       <NoACInput value={form.cliente_cidade} onChange={e => { 
-                         const novaCidade = e.target.value;
-                         setForm(f => ({ ...f, cliente_cidade: novaCidade })); 
-                         setErrosForm(e2 => ({...e2, cliente_cidade: undefined}));
-                         // Buscar código de município quando cidade mudar
-                         if (novaCidade && form.cliente_estado) {
-                           preencherCodigoMunicipio(novaCidade, form.cliente_estado);
-                         }
-                       }} placeholder="Nome da cidade" className={`input-dark ${errosForm.cliente_cidade ? 'border-red-500' : ''}`} />
-                       {errosForm.cliente_cidade && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cidade}</p>}
+                      <NoACInput value={form.cliente_cidade} onChange={e => { 
+                        const novaCidade = e.target.value;
+                        setForm(f => {
+                          // Busca código de município com os valores mais atuais
+                          if (novaCidade && f.cliente_estado) {
+                            preencherCodigoMunicipio(novaCidade, f.cliente_estado);
+                          }
+                          return { ...f, cliente_cidade: novaCidade };
+                        }); 
+                        setErrosForm(e2 => ({...e2, cliente_cidade: undefined}));
+                      }} placeholder="Nome da cidade" className={`input-dark ${errosForm.cliente_cidade ? 'border-red-500' : ''}`} />
+                      {errosForm.cliente_cidade && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cidade}</p>}
                      </F>
                      <F label="CEP">
                        <NoACInput value={form.cliente_cep} onChange={e => { setForm(f => ({ ...f, cliente_cep: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cep: undefined})); }} placeholder="00000-000" className={`input-dark ${errosForm.cliente_cep ? 'border-red-500' : ''}`} />
                        {errosForm.cliente_cep && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cep}</p>}
                      </F>
+                     <F label="Estado (UF)">
+                       <NoACInput value={form.cliente_estado} onChange={e => { 
+                         const novoEstado = e.target.value.toUpperCase();
+                         setForm(f => ({ ...f, cliente_estado: novoEstado })); 
+                         setErrosForm(e2 => ({...e2, cliente_estado: undefined}));
+                         if (form.cliente_cidade && novoEstado) {
+                           preencherCodigoMunicipio(form.cliente_cidade, novoEstado);
+                         }
+                       }} placeholder="MG" maxLength={2} className={`input-dark ${errosForm.cliente_estado ? 'border-red-500' : ''}`} />
+                       {errosForm.cliente_estado && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_estado}</p>}
+                     </F>
                      {form.tipo === 'NFSe' && (
-                       <F label="Código de Município (NFSe)">
-                         <NoACInput value={form.codigo_municipio_tomador || ""} onChange={e => setForm(f => ({ ...f, codigo_municipio_tomador: e.target.value }))} placeholder="" />
-                       </F>
-                     )}
-                     {form.tipo === 'NFe' && (
-                       <F label="Estado (UF)">
-                         <NoACInput value={form.cliente_estado} onChange={e => { 
-                           const novoEstado = e.target.value.toUpperCase();
-                           setForm(f => ({ ...f, cliente_estado: novoEstado })); 
-                           setErrosForm(e2 => ({...e2, cliente_estado: undefined}));
-                           if (form.cliente_cidade && novoEstado) {
-                             preencherCodigoMunicipio(form.cliente_cidade, novoEstado);
-                           }
-                         }} placeholder="MG" maxLength={2} className={`input-dark ${errosForm.cliente_estado ? 'border-red-500' : ''}`} />
-                         {errosForm.cliente_estado && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_estado}</p>}
-                       </F>
+                      <F label="Código de Município (NFSe)">
+                        <NoACInput value={form.codigo_municipio_tomador || ""} onChange={e => setForm(f => ({ ...f, codigo_municipio_tomador: e.target.value }))} placeholder="Preenchido automaticamente" />
+                      </F>
                      )}
                    </div>
                   <div className="flex justify-end">
