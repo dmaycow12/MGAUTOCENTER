@@ -1,5 +1,3 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-
 async function fetchCnpjWs(cnpj) {
   const resp = await fetch(`https://publica.cnpj.ws/cnpj/${cnpj}`, {
     headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' }
@@ -38,10 +36,6 @@ async function fetchBrasilApi(cnpj) {
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-
     const { cnpj } = await req.json();
     const cnpjLimpo = cnpj.replace(/\D/g, '');
     if (cnpjLimpo.length !== 14) return Response.json({ error: 'CNPJ inválido' }, { status: 400 });
