@@ -107,7 +107,9 @@ export function gerarHTMLImpressao(os) {
     "function zoomIn(){if(z<2){z=Math.round((z+0.1)*10)/10;applyZoom();}}" +
     "function zoomOut(){if(z>0.5){z=Math.round((z-0.1)*10)/10;applyZoom();}}" +
     "function salvarPDF(){" +
-    "  var nomeArquivo='Venda_" + (os.numero||"") + ".pdf';" +
+    "  var status='" + (os.status||"") + "'.toLowerCase();" +
+    "  var prefixo=(status==='concluído'||status==='concluido')?'venda':'orcamento';" +
+    "  var nomeArquivo=prefixo+'-" + (os.numero||"") + ".pdf';" +
     "  var toolbar=document.querySelector('.toolbar');" +
     "  if(toolbar) toolbar.style.display='none';" +
     "  document.querySelector('.page').style.transform='';" +

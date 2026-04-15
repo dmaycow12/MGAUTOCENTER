@@ -692,7 +692,15 @@ export default function NotasFiscais() {
         for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
         const blob = new Blob([new Uint8Array(byteNums)], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
+        const tipoNome = (nota.tipo || 'nf').toLowerCase().replace('nfse', 'nfse').replace('nfce', 'nfce').replace('nfe', 'nfe');
+        const nomeArquivo = `${tipoNome}-${nota.numero || nota.id}.pdf`;
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nomeArquivo;
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 60000);
       } else if (data?.processando) {
         feedback('erro', data.mensagem || 'A SEFAZ ainda está processando a nota.');
