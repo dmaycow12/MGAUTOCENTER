@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import {
   FileText, Plus, Upload, Search, Trash2, X,
-  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2, Pencil, ClipboardList, Ban, LogIn, Code, Eye
+  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2, Pencil, ClipboardList, Ban, LogIn, Eye
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
@@ -1033,16 +1033,9 @@ export default function NotasFiscais() {
                             <button title="Baixar PDF" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
                               <Download className="w-4 h-4" />
                             </button>
-                            <button title="Debug - Ver dados" onClick={async () => {
-                          try {
-                            const res = await base44.functions.invoke('inspecionarNotaFiscal', { nota_id: nota.id });
-                            setDebugModal(res.data);
-                          } catch (e) {
-                            alert('Erro: ' + e.message);
-                          }
-                        }} className="p-1 text-gray-500 hover:text-purple-400 transition-all">
-                          <Code className="w-4 h-4" />
-                        </button>
+                            <button title="Imprimir" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-yellow-400 transition-all">
+                              <Printer className="w-4 h-4" />
+                            </button>
                         </>
                         )}
                         {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
