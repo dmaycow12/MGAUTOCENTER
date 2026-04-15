@@ -710,20 +710,15 @@ export default function NotasFiscais() {
   };
 
   const imprimirNota = async (nota) => {
-    feedback('sucesso', 'Preparando download...');
+    feedback('sucesso', 'Carregando PDF para impressão...');
     try {
-      const { url, direto } = await obterPdfBlob(nota);
+      const { url } = await obterPdfBlob(nota);
       setMsgFeedback(null);
-      if (direto) { window.open(url, '_blank'); return; }
-      const tipoNome = (nota.tipo || 'nf').toLowerCase();
-      const nomeArquivo = `${tipoNome}-${nota.numero || nota.id}.pdf`;
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = nomeArquivo;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      const win = window.open(url, '_blank');
+      if (win) {
+        win.onload = () => { win.focus(); win.print(); };
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 120000);
     } catch (e) {
       feedback('erro', e.message);
     }
