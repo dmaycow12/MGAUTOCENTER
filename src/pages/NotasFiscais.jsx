@@ -709,16 +709,50 @@ export default function NotasFiscais() {
     }
   };
 
+  const nomeArquivoNota = (nota) => {
+    const tipo = (nota.tipo || 'NF').toUpperCase();
+    const numero = nota.numero || nota.id;
+    return `${tipo}-${numero}.pdf`;
+  };
+
   const imprimirNota = async (nota) => {
     feedback('sucesso', 'Carregando PDF para impressão...');
     try {
-      const { url } = await obterPdfBlob(nota);
+      const { url, direto } = await obterPdfBlob(nota);
       setMsgFeedback(null);
-      const win = window.open(url, '_blank');
-      if (win) {
-        win.onload = () => { win.focus(); win.print(); };
+      if (direto) {
+        const win = window.open(url, '_blank');
+        if (win) { win.onload = () => { win.focus(); win.print(); }; }
+        return;
       }
+      const win = window.open(url, '_blank');
+      if (win) { win.onload = () => { win.focus(); win.print(); }; }
       setTimeout(() => URL.revokeObjectURL(url), 120000);
+    } catch (e) {
+      feedback('erro', e.message);
+    }
+  };
+
+  const baixarNota = async (nota) => {
+    feedback('sucesso', 'Preparando download...');
+    try {
+      const { url, direto } = await obterPdfBlob(nota);
+      setMsgFeedback(null);
+      const nomeArquivo = nomeArquivoNota(nota);
+      if (direto) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nomeArquivo;
+        a.click();
+        return;
+      }
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nomeArquivo;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch (e) {
       feedback('erro', e.message);
     }
@@ -932,7 +966,7 @@ export default function NotasFiscais() {
                     <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>
                   )}
                   <button title="Visualizar PDF" onClick={() => visualizarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-green-400 rounded-lg transition-all"><Eye className="w-3.5 h-3.5"/></button>
-                  <button title="Baixar PDF" onClick={() => imprimirNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Download className="w-3.5 h-3.5"/></button>
+                  <button title="Baixar PDF" onClick={() => baixarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Download className="w-3.5 h-3.5"/></button>
                   {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
                     <button title="Cancelar" onClick={() => cancelarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg transition-all"><Ban className="w-3.5 h-3.5"/></button>
                   )}
@@ -1025,7 +1059,7 @@ export default function NotasFiscais() {
                             <button title="Visualizar PDF" onClick={() => visualizarNota(nota)} className="p-1 text-gray-500 hover:text-green-400 transition-all">
                               <Eye className="w-4 h-4" />
                             </button>
-                            <button title="Baixar PDF" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
+                            <button title="Baixar PDF" onClick={() => baixarNota(nota)} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
                               <Download className="w-4 h-4" />
                             </button>
                             <button title="Imprimir" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-yellow-400 transition-all">
