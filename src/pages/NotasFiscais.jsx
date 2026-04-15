@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import {
   FileText, Plus, Upload, Search, Trash2, X,
-  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2, Pencil, ClipboardList, Ban, LogIn, Code
+  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2, Pencil, ClipboardList, Ban, LogIn, Code, Eye
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
@@ -674,41 +674,58 @@ export default function NotasFiscais() {
     load();
   };
 
-  const imprimirNota = async (nota) => {
-    // NFCe: a URL do DANFCE é HTML, abrir direto
+  const obterPdfBlob = async (nota) => {
+    // NFCe: URL direta
     if (nota.tipo === 'NFCe' && nota.pdf_url) {
-      window.open(nota.pdf_url, '_blank');
-      return;
+      return { url: nota.pdf_url, direto: true };
     }
+    const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
+    const data = res.data;
+    if (data?.processando) throw new Error(data.mensagem || 'A SEFAZ ainda está processando a nota.');
+    if (!data?.sucesso || !data?.pdf_base64) throw new Error(data?.erro || 'PDF não disponível para esta nota.');
+    // Salva a URL pública no banco para acesso rápido futuro
+    if (data?.pdf_url_publica) {
+      setNotas(prev => prev.map(n => n.id === nota.id ? { ...n, pdf_url: data.pdf_url_publica, status: 'Emitida' } : n));
+    } else {
+      setNotas(prev => prev.map(n => n.id === nota.id ? { ...n, status: 'Emitida' } : n));
+    }
+    const byteChars = atob(data.pdf_base64);
+    const byteNums = new Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([new Uint8Array(byteNums)], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    return { url, direto: false };
+  };
+
+  const visualizarNota = async (nota) => {
     feedback('sucesso', 'Carregando PDF...');
     try {
-      const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
-      const data = res.data;
-      if (data?.sucesso && data?.pdf_base64) {
-        setNotas(prev => prev.map(n => n.id === nota.id ? { ...n, status: 'Emitida' } : n));
-        setMsgFeedback(null);
-        const byteChars = atob(data.pdf_base64);
-        const byteNums = new Array(byteChars.length);
-        for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
-        const blob = new Blob([new Uint8Array(byteNums)], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        const tipoNome = (nota.tipo || 'nf').toLowerCase().replace('nfse', 'nfse').replace('nfce', 'nfce').replace('nfe', 'nfe');
-        const nomeArquivo = `${tipoNome}-${nota.numero || nota.id}.pdf`;
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = nomeArquivo;
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 60000);
-      } else if (data?.processando) {
-        feedback('erro', data.mensagem || 'A SEFAZ ainda está processando a nota.');
-      } else {
-        feedback('erro', data?.erro || 'PDF não disponível para esta nota.');
-      }
+      const { url, direto } = await obterPdfBlob(nota);
+      setMsgFeedback(null);
+      window.open(url, '_blank');
+      if (!direto) setTimeout(() => URL.revokeObjectURL(url), 120000);
     } catch (e) {
-      feedback('erro', 'Erro ao consultar PDF: ' + e.message);
+      feedback('erro', e.message);
+    }
+  };
+
+  const imprimirNota = async (nota) => {
+    feedback('sucesso', 'Preparando download...');
+    try {
+      const { url, direto } = await obterPdfBlob(nota);
+      setMsgFeedback(null);
+      if (direto) { window.open(url, '_blank'); return; }
+      const tipoNome = (nota.tipo || 'nf').toLowerCase();
+      const nomeArquivo = `${tipoNome}-${nota.numero || nota.id}.pdf`;
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nomeArquivo;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (e) {
+      feedback('erro', e.message);
     }
   };
 
@@ -919,7 +936,8 @@ export default function NotasFiscais() {
                   {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Cancelada' && (
                     <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>
                   )}
-                  <button onClick={() => imprimirNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Printer className="w-3.5 h-3.5"/></button>
+                  <button title="Visualizar PDF" onClick={() => visualizarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-green-400 rounded-lg transition-all"><Eye className="w-3.5 h-3.5"/></button>
+                  <button title="Baixar PDF" onClick={() => imprimirNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Download className="w-3.5 h-3.5"/></button>
                   {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
                     <button title="Cancelar" onClick={() => cancelarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg transition-all"><Ban className="w-3.5 h-3.5"/></button>
                   )}
@@ -1009,8 +1027,11 @@ export default function NotasFiscais() {
 
                         {nota.status !== 'Importada' && nota.status !== 'Lançada' && (
                           <>
-                            <button title="Imprimir" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
-                              <Printer className="w-4 h-4" />
+                            <button title="Visualizar PDF" onClick={() => visualizarNota(nota)} className="p-1 text-gray-500 hover:text-green-400 transition-all">
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button title="Baixar PDF" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
+                              <Download className="w-4 h-4" />
                             </button>
                             <button title="Debug - Ver dados" onClick={async () => {
                           try {

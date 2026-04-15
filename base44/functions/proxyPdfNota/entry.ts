@@ -98,7 +98,19 @@ Deno.serve(async (req) => {
     }
     const base64 = btoa(binary);
 
-    return Response.json({ sucesso: true, pdf_base64: base64 });
+    // Upload para storage público para acesso rápido futuro
+    let pdfUrlPublica = null;
+    try {
+      const uploadRes = await base44.asServiceRole.integrations.Core.UploadFile({
+        file: new Blob([new Uint8Array(arrayBuffer)], { type: 'application/pdf' })
+      });
+      if (uploadRes?.file_url) {
+        pdfUrlPublica = uploadRes.file_url;
+        await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { pdf_url: pdfUrlPublica });
+      }
+    } catch (_) {}
+
+    return Response.json({ sucesso: true, pdf_base64: base64, pdf_url_publica: pdfUrlPublica });
 
   } catch (error) {
     return Response.json({ erro: error.message }, { status: 500 });
