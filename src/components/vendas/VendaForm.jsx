@@ -460,15 +460,16 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       } else {
         const criada = await base44.entities.Vendas.create(formToSave);
         savedId = criada.id;
+        // Operações secundárias não bloqueiam o salvamento
         if (formFinal.veiculo_placa && formFinal.cliente_id && formFinal.cliente_nome?.toUpperCase() !== "CONSUMIDOR") {
           const veiculo_marca = formFinal.veiculo_modelo?.split(" ")[0] || "";
           const veiculo_modelo = formFinal.veiculo_modelo?.substring(veiculo_marca.length).trim() || "";
-          await base44.functions.invoke('autoRegistrarVeiculo', {
+          base44.functions.invoke('autoRegistrarVeiculo', {
             cliente_id: formFinal.cliente_id,
             veiculo_placa: formFinal.veiculo_placa,
             veiculo_marca, veiculo_modelo,
             veiculo_ano: formFinal.veiculo_ano,
-          });
+          }).catch(() => {}); // silencia erro sem bloquear
         }
       }
 
