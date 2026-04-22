@@ -24,7 +24,9 @@ const normalizarUrl = (url) => {
 const salvarPdfPermanente = async (base44, pdfUrl, nota_id) => {
   if (!pdfUrl) return null;
   try {
-    const resp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER } });
+    // URLs do S3 (amazonaws.com) são públicas — sem auth header
+    const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
+    const resp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER } });
     if (!resp.ok) return null;
     const blob = await resp.blob();
     const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
@@ -397,7 +399,7 @@ Deno.serve(async (req) => {
       const st = resultFinal.status || '';
       if (st === 'autorizado') {
         statusNota = 'Emitida';
-        const rawPdf = resultFinal.caminho_pdf_nfsen || resultFinal.caminho_pdf_nfse || resultFinal.caminho_danfe || '';
+        const rawPdf = resultFinal.url_danfse || resultFinal.caminho_pdf_nfsen || resultFinal.caminho_pdf_nfse || resultFinal.caminho_danfe || '';
         pdfUrl = normalizarUrl(rawPdf);
         chaveAcesso = resultFinal.chave_nfe || resultFinal.chave_nfse || chaveAcesso;
         mensagemSefaz = resultFinal.mensagem_sefaz || resultFinal.mensagem || '';

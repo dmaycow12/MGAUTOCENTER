@@ -13,18 +13,19 @@ const normalizarUrl = (url) => {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const db = base44.asServiceRole; // usa sempre service role, sem precisar de auth de usuário
     const body = await req.json();
     const { nota_id } = body;
 
     if (!nota_id) return Response.json({ sucesso: false, erro: 'nota_id obrigatório' });
 
-    // Busca a nota no banco
-    const lista = await base44.asServiceRole.entities.NotaFiscal.filter({ id: nota_id });
+    // Busca a nota no banco (service role — sem exigir usuário logado)
+    const lista = await db.entities.NotaFiscal.filter({ id: nota_id });
     const nota = lista[0];
     if (!nota) return Response.json({ sucesso: false, erro: 'Nota não encontrada' });
 
-    // Se já tem PDF permanente salvo, retorna direto (rápido!)
-    if (nota.pdf_url && (nota.pdf_url.startsWith('https://files.base44.com') || nota.pdf_url.includes('base44.com'))) {
+    // Se já tem PDF permanente salvo no Base44, retorna direto (rápido!)
+    if (nota.pdf_url && nota.pdf_url.includes('base44.com')) {
       return Response.json({ sucesso: true, pdf_url_publica: nota.pdf_url, fonte: 'cache' });
     }
 
@@ -44,35 +45,38 @@ Deno.serve(async (req) => {
 
     const result = await consultaResp.json();
     const statusFocus = result.status || '';
+    console.log('[STATUS FOCUS]', nota.spedy_id, '->', statusFocus, '| campos PDF:', Object.keys(result).filter(k => k.includes('pdf') || k.includes('danfe')));
 
     if (statusFocus !== 'autorizado') {
       return Response.json({ sucesso: false, processando: true, mensagem: `Status na SEFAZ: ${statusFocus}. Aguarde a autorização.` });
     }
 
-    // Busca URL do PDF
-    const rawPdf = result.caminho_pdf_nfsen || result.caminho_pdf_nfse || result.caminho_danfe || '';
+    // Busca URL do PDF (tenta todos os campos possíveis por tipo)
+    const rawPdf = result.url_danfse || result.caminho_pdf_nfsen || result.caminho_pdf_nfse || result.caminho_danfe || result.url_danfe || result.caminho_pdf || '';
     const pdfUrlFocus = normalizarUrl(rawPdf);
+
+    console.log('[PDF URL]', rawPdf, '->', pdfUrlFocus);
 
     if (!pdfUrlFocus) {
       return Response.json({ sucesso: false, erro: 'PDF não disponível na Focus NFe.' });
     }
 
     // Baixa e salva permanentemente no Base44
-    const pdfResp = await fetch(pdfUrlFocus, { headers: { 'Authorization': AUTH_HEADER } });
+    // URLs do S3 (amazonaws.com) são públicas — sem auth. Outras usam AUTH_HEADER
+    const isS3 = pdfUrlFocus.includes('amazonaws.com') || pdfUrlFocus.includes('s3.');
+    const pdfResp = await fetch(pdfUrlFocus, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER } });
     if (!pdfResp.ok) {
-      return Response.json({ sucesso: false, erro: `Erro ao baixar PDF: ${pdfResp.status}` });
+      return Response.json({ sucesso: false, erro: `Erro ao baixar PDF da Focus NFe: ${pdfResp.status}` });
     }
 
     const blob = await pdfResp.blob();
     const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
-    const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+    const { file_url } = await db.integrations.Core.UploadFile({ file });
 
-    // Atualiza a nota com o PDF permanente + status
+    // Atualiza a nota com o PDF permanente
     const updateData = { pdf_url: file_url, status: 'Emitida' };
-    if (result.chave_nfe || result.chave_nfse) {
-      updateData.chave_acesso = result.chave_nfe || result.chave_nfse;
-    }
-    await base44.asServiceRole.entities.NotaFiscal.update(nota_id, updateData);
+    if (result.chave_nfe || result.chave_nfse) updateData.chave_acesso = result.chave_nfe || result.chave_nfse;
+    await db.entities.NotaFiscal.update(nota_id, updateData);
 
     console.log('[PDF SALVO PERMANENTE]', nota_id, '->', file_url);
 

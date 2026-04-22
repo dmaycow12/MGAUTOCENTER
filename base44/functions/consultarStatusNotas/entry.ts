@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
         let pdfUrlFinal = nota.pdf_url || '';
 
         if (statusInterno === 'Emitida' && !pdfUrlFinal) {
-          const rawPdf = result.caminho_pdf_nfsen || result.caminho_pdf_nfse || result.caminho_danfe || '';
+          const rawPdf = result.url_danfse || result.caminho_pdf_nfsen || result.caminho_pdf_nfse || result.caminho_danfe || '';
           const pdfUrlFocus = normalizarUrl(rawPdf);
           if (pdfUrlFocus) {
             // Tenta salvar permanentemente
