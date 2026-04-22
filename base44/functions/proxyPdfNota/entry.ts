@@ -24,8 +24,8 @@ Deno.serve(async (req) => {
     const nota = lista[0];
     if (!nota) return Response.json({ sucesso: false, erro: 'Nota não encontrada' });
 
-    // Se já tem PDF permanente salvo no Base44, retorna direto (rápido!)
-    if (nota.pdf_url && nota.pdf_url.includes('base44.com')) {
+    // Se já tem PDF permanente salvo no Base44, retorna direto (instantâneo!)
+    if (nota.pdf_url && (nota.pdf_url.includes('base44.app') || nota.pdf_url.includes('base44.com') || nota.pdf_url.startsWith('https://files.'))) {
       return Response.json({ sucesso: true, pdf_url_publica: nota.pdf_url, fonte: 'cache' });
     }
 
