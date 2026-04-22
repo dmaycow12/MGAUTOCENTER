@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const PAYMENT_MAP = {
   'Dinheiro': '01', 'Cheque': '02', 'Cartão de Crédito': '03',
@@ -20,6 +20,33 @@ const normalizarUrl = (url) => {
   return `https://api.focusnfe.com.br${url}`;
 };
 
+// Faz upload do PDF para armazenamento permanente no Base44
+const salvarPdfPermanente = async (base44, pdfUrl, nota_id) => {
+  if (!pdfUrl) return null;
+  try {
+    const resp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER } });
+    if (!resp.ok) return null;
+    const blob = await resp.blob();
+    const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+    const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+    console.log('[PDF SALVO]', file_url);
+    return file_url;
+  } catch (e) {
+    console.error('[PDF ERRO]', e.message);
+    return null;
+  }
+};
+
+// Consulta status na Focus NFe
+const consultarFocusNFe = async (ref, tipo) => {
+  const epConsulta = tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfe';
+  const resp = await fetch(`${FOCUSNFE_BASE}/${epConsulta}/${ref}?completo=1`, {
+    headers: { 'Authorization': AUTH_HEADER },
+  });
+  if (!resp.ok) return null;
+  return await resp.json();
+};
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -33,7 +60,6 @@ Deno.serve(async (req) => {
       data_emissao, serie_manual, ordem_venda_id, codigo_municipio_tomador,
     } = body;
 
-    // Monta timestamp de emissão
     const pad = (n) => String(n).padStart(2, '0');
     const agora = new Date();
     const brasiliaMs = agora.getTime() - (3 * 60 * 60 * 1000);
@@ -43,17 +69,13 @@ Deno.serve(async (req) => {
 
     let dataEmissaoISO;
     if (dataBase >= hojeStr) {
-      // NFCe é muito sensível a atraso — usa horário atual de Brasília exato
       const h = pad(brasiliaDate.getUTCHours());
       const m = pad(brasiliaDate.getUTCMinutes());
       const s = pad(brasiliaDate.getUTCSeconds());
       dataEmissaoISO = `${hojeStr}T${h}:${m}:${s}-03:00`;
     } else {
-      // Data passada: usa meio-dia (sempre seguro)
       dataEmissaoISO = `${dataBase}T12:00:00-03:00`;
     }
-
-    const ref = `${(tipo || 'nfe').toLowerCase()}-${Date.now()}`;
 
     const NCM_PADRAO = '87089990';
     const validarNcm = (ncm) => /^[0-9]{8}$/.test((ncm || '').replace(/\D/g, '')) ? (ncm || '').replace(/\D/g, '') : NCM_PADRAO;
@@ -63,13 +85,9 @@ Deno.serve(async (req) => {
     let cepLimpo = (cliente_cep || '').replace(/\D/g, '');
     if (cepLimpo.length !== 8) cepLimpo = '38700327';
 
-    let endpoint = '';
-    let payload = null;
-    let proximoRps = null;
-    let proximoNfce = null;
-    let proximoNfe = null;
-
-    // Se nota_id fornecido, verifica se já tem número reservado (retry após erro)
+    // ============================================================
+    // PROTEÇÃO ANTI-DUPLICATA: Verifica nota existente
+    // ============================================================
     let notaExistente = null;
     if (nota_id) {
       try {
@@ -78,11 +96,64 @@ Deno.serve(async (req) => {
       } catch {}
     }
 
+    // SE JÁ TEM spedy_id salvo, consulta na Focus NFe ANTES de enviar novamente
+    if (notaExistente?.spedy_id) {
+      console.log('[ANTI-DUPLICATA] Nota tem spedy_id:', notaExistente.spedy_id, '- consultando Focus NFe...');
+      const statusExistente = await consultarFocusNFe(notaExistente.spedy_id, tipo);
+      
+      if (statusExistente) {
+        const st = statusExistente.status || '';
+        console.log('[ANTI-DUPLICATA] Status na Focus NFe:', st);
+        
+        if (st === 'autorizado') {
+          // Já emitida! Só atualiza o banco e retorna
+          const rawPdf = statusExistente.caminho_pdf_nfsen || statusExistente.caminho_pdf_nfse || statusExistente.caminho_danfe || '';
+          const pdfUrlFocus = normalizarUrl(rawPdf);
+          let pdfUrlFinal = notaExistente.pdf_url || '';
+          
+          if (!pdfUrlFinal && pdfUrlFocus) {
+            pdfUrlFinal = await salvarPdfPermanente(base44, pdfUrlFocus, nota_id) || pdfUrlFocus;
+          }
+          
+          await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
+            status: 'Emitida',
+            pdf_url: pdfUrlFinal,
+            chave_acesso: statusExistente.chave_nfe || statusExistente.chave_nfse || notaExistente.chave_acesso || '',
+            mensagem_sefaz: statusExistente.mensagem_sefaz || 'Autorizado',
+          });
+          return Response.json({ sucesso: true, mensagem: 'Nota já estava autorizada na SEFAZ! Status atualizado.', status: 'Emitida', pdf: pdfUrlFinal });
+        }
+        
+        if (st === 'processando_autorizacao' || st === 'recebido') {
+          // Ainda processando - não reenvia, retorna para fazer polling
+          await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { status: 'Processando' });
+          return Response.json({ sucesso: true, mensagem: 'Nota ainda em processamento na SEFAZ.', status: 'Processando' });
+        }
+        
+        if (st === 'erro_autorizacao' || st === 'rejeitado' || st === 'erro') {
+          const msgErro = statusExistente.erros ? statusExistente.erros.map(e => e.mensagem).join('; ') : (statusExistente.mensagem || st);
+          // Se erro permanente (não duplicata), reusa o número e reenvia com novo ref
+          console.log('[ANTI-DUPLICATA] Erro anterior:', msgErro, '- pode reenviar');
+          // Cai no fluxo normal abaixo mas reusa o número já reservado
+        }
+      }
+    }
+
+    // ============================================================
+    // MONTA PAYLOAD E GERA REF ÚNICO
+    // ============================================================
+    const ref = `${(tipo || 'nfe').toLowerCase()}-${Date.now()}`;
+
+    let endpoint = '';
+    let payload = null;
+    let proximoRps = null;
+    let proximoNfce = null;
+    let proximoNfe = null;
+
     if (tipo === 'NFSe') {
       endpoint = `/nfsen?ref=${ref}`;
 
       if (notaExistente?.numero) {
-        // Retry: reusa o número já salvo na nota (não incrementa mais)
         proximoRps = parseInt(notaExistente.numero, 10);
       } else {
         const configsNfse = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_dps' });
@@ -101,7 +172,6 @@ Deno.serve(async (req) => {
         ? items.map(it => `${it.descricao} - Qtd: ${it.quantidade} - Valor: R$ ${Number(it.valor_total).toFixed(2)}`).join('; ')
         : (observacoes || 'Serviços prestados');
 
-      // Buscar código do município tomador via API IBGE se não fornecido
       let codigoMunicipioTomador = codigo_municipio_tomador;
       if (!codigoMunicipioTomador && cliente_cidade && cliente_estado) {
         try {
@@ -113,14 +183,12 @@ Deno.serve(async (req) => {
             const normalizar = (str) => str.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
             const match = municipios.find(m => normalizar(m.nome) === normalizar(cidadeNorm));
             if (match) codigoMunicipioTomador = String(match.id);
-            console.log('[MUNICIPIO] Buscado para', cliente_cidade, cliente_estado, '->', codigoMunicipioTomador);
           }
         } catch (e) {
           console.error('[MUNICIPIO ERROR]', e.message);
         }
       }
 
-      // Payload NFSe Nacional (DPS) - endpoint /nfsen, payload flat
       payload = {
         data_emissao: dataEmissaoISO,
         data_competencia: dataBase,
@@ -168,7 +236,7 @@ Deno.serve(async (req) => {
           await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfce_ultimo_numero', valor: String(proximoNfce), descricao: 'Ultimo numero NFCe autorizado' });
         }
       }
-      
+
       const prodItems = (items && items.length > 0) ? items : [
         { descricao: 'Peças e serviços', quantidade: 1, valor_unitario: Number(valor_total) || 1.0, valor_total: Number(valor_total) || 1.0, ncm: '87089990', cfop: '5102' }
       ];
@@ -221,7 +289,7 @@ Deno.serve(async (req) => {
           await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfe_ultimo_numero', valor: String(proximoNfe), descricao: 'Ultimo numero NFe autorizado' });
         }
       }
-      
+
       const prodItems = (items && items.length > 0) ? items : [
         { descricao: 'Peças de Automóveis', quantidade: 1, valor_unitario: Number(valor_total) || 1.0, valor_total: Number(valor_total) || 1.0, ncm: '87089990', cfop: '5102' }
       ];
@@ -275,6 +343,23 @@ Deno.serve(async (req) => {
       };
     }
 
+    // ============================================================
+    // SALVA spedy_id NO RASCUNHO ANTES DE ENVIAR (anti-duplicata)
+    // ============================================================
+    let numeroFinal = tipo === 'NFSe' ? String(proximoRps) : tipo === 'NFCe' ? String(proximoNfce) : String(proximoNfe);
+
+    if (nota_id) {
+      // Atualiza o rascunho com o ref ANTES de enviar — se a página cair, saberemos que já foi enviado
+      await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
+        spedy_id: ref,
+        numero: numeroFinal,
+        status: 'Processando',
+      });
+    }
+
+    // ============================================================
+    // ENVIA PARA A FOCUS NFE
+    // ============================================================
     const resp = await fetch(`${FOCUSNFE_BASE}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': AUTH_HEADER },
@@ -291,13 +376,17 @@ Deno.serve(async (req) => {
       const msgErro = result.erros
         ? result.erros.map(e => e.mensagem).join('; ')
         : (result.mensagem || JSON.stringify(result));
+      
+      // Marca como Rascunho de volta se falhou antes de chegar na SEFAZ
+      if (nota_id) {
+        await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { status: 'Rascunho', mensagem_sefaz: msgErro });
+      }
       return Response.json({ sucesso: false, erro: msgErro });
     }
 
-    // Determina endpoint de consulta por tipo
-    const epConsulta = tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfe';
-
-    // Polling até autorizar (até 10 tentativas × 3s = 30s)
+    // ============================================================
+    // POLLING ATÉ STATUS DEFINITIVO (até 10 tentativas × 3s = 30s)
+    // ============================================================
     let statusNota = 'Processando';
     let pdfUrl = '';
     let chaveAcesso = result.chave_nfe || '';
@@ -309,11 +398,7 @@ Deno.serve(async (req) => {
       if (st === 'autorizado') {
         statusNota = 'Emitida';
         const rawPdf = resultFinal.caminho_pdf_nfsen || resultFinal.caminho_pdf_nfse || resultFinal.caminho_danfe || '';
-        const pdfUrlFull = normalizarUrl(rawPdf);
-        // Salva a URL do PDF da Focus NFe (será baixado via proxy na hora de imprimir)
-        if (pdfUrlFull) {
-          pdfUrl = pdfUrlFull;
-        }
+        pdfUrl = normalizarUrl(rawPdf);
         chaveAcesso = resultFinal.chave_nfe || resultFinal.chave_nfse || chaveAcesso;
         mensagemSefaz = resultFinal.mensagem_sefaz || resultFinal.mensagem || '';
         break;
@@ -322,10 +407,9 @@ Deno.serve(async (req) => {
         statusNota = mensagemSefaz.includes('E0160') ? 'Erro de Sincronia Governamental' : 'Erro';
         break;
       }
-      // Ainda processando - aguarda e consulta de novo
       if (i < 9) {
         await new Promise(r => setTimeout(r, 3000));
-        const consultaResp = await fetch(`${FOCUSNFE_BASE}/${epConsulta}/${ref}?completo=1`, {
+        const consultaResp = await fetch(`${FOCUSNFE_BASE}/${tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfe'}/${ref}?completo=1`, {
           headers: { 'Authorization': AUTH_HEADER },
         });
         if (consultaResp.ok) {
@@ -334,8 +418,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Baixar estoque se NFe/NFCe e emitida com sucesso
-    // Se a nota está vinculada a uma Ordem de Venda, o estoque JÁ foi baixado ao concluir a Ordem de Venda — não baixar novamente
+    // ============================================================
+    // SE EMITIDA: SALVA PDF PERMANENTEMENTE
+    // ============================================================
+    let pdfUrlFinal = pdfUrl;
+    if (statusNota === 'Emitida' && pdfUrl) {
+      const pdfSalvo = await salvarPdfPermanente(base44, pdfUrl, nota_id || 'nova');
+      if (pdfSalvo) pdfUrlFinal = pdfSalvo;
+    }
+
+    // Baixar estoque se NFe/NFCe e emitida sem OS vinculada
     const vinculadaAOS = !!(body.ordem_venda_id);
     if (statusNota === 'Emitida' && (tipo === 'NFe' || tipo === 'NFCe') && !vinculadaAOS) {
       for (const it of (items || [])) {
@@ -345,7 +437,6 @@ Deno.serve(async (req) => {
           const found = await base44.asServiceRole.entities.Estoque.filter({ id: it.estoque_id });
           estoqueItem = found[0] || null;
         }
-        // Fallback: busca pelo código se não achou por id
         if (!estoqueItem && it.codigo) {
           const found = await base44.asServiceRole.entities.Estoque.filter({ codigo: it.codigo });
           estoqueItem = found[0] || null;
@@ -357,15 +448,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    let numeroFinal = '';
-    if (tipo === 'NFSe') {
-      numeroFinal = String(proximoRps);
-    } else if (tipo === 'NFCe') {
-      numeroFinal = String(proximoNfce);
-    } else {
-      numeroFinal = String(proximoNfe);
-    }
-    
     const notaData = {
       tipo,
       xml_content: JSON.stringify(items || []),
@@ -388,15 +470,14 @@ Deno.serve(async (req) => {
       cliente_nome: cliente_nome || '',
       data_emissao: data_emissao || new Date().toISOString().split('T')[0],
       valor_total: Number(valor_total) || 0,
-      pdf_url: pdfUrl,
+      pdf_url: pdfUrlFinal,
       chave_acesso: chaveAcesso,
       ordem_venda_id: body.ordem_venda_id || '',
       observacoes: observacoes || '',
       mensagem_sefaz: mensagemSefaz,
     };
 
-    // Reverter número reservado se erro em nova emissão (não em retry)
-    // NÃO reverter se for E0014 (duplicado) - o número já foi consumido na SEFAZ
+    // Reverter número reservado se erro em nova emissão
     const erroE0014 = mensagemSefaz?.includes('E0014') || mensagemSefaz?.includes('já existe');
     if (statusNota === 'Erro' && !nota_id && tipo === 'NFSe' && !erroE0014) {
       try {
@@ -405,7 +486,6 @@ Deno.serve(async (req) => {
           const ultimoDps = parseInt(configsNfse[0].valor || '0', 10);
           if (ultimoDps === proximoRps) {
             await base44.asServiceRole.entities.Configuracao.update(configsNfse[0].id, { valor: String(ultimoDps - 1) });
-            console.log('[DPS REVERT] DPS revertido de', proximoRps, 'para', ultimoDps - 1);
           }
         }
       } catch (revertError) {
@@ -413,32 +493,24 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Atualiza ou cria a nota com o status correto (Emitida, Processando ou Erro)
     try {
       if (nota_id) {
-        // Atualizar nota existente (a que foi salva como rascunho)
         await base44.asServiceRole.entities.NotaFiscal.update(nota_id, notaData);
-        console.log('[NOTA UPDATE] Nota atualizada com sucesso:', nota_id, 'Status:', statusNota);
       } else {
-        // Criar nota nova se não existir
-        const novaNota = await base44.asServiceRole.entities.NotaFiscal.create(notaData);
-        console.log('[NOTA CREATE] Nota criada:', novaNota.id, 'Status:', statusNota);
+        await base44.asServiceRole.entities.NotaFiscal.create(notaData);
       }
     } catch (updateError) {
-      console.error('[NOTA ERROR] Erro ao atualizar/criar nota:', updateError);
-      // Mesmo com erro na atualização, retorna o sucesso da emissão
-      return Response.json({ sucesso: statusNota !== 'Erro', mensagem: `${statusNota} na SEFAZ, mas erro ao salvar no banco: ${updateError.message}`, status: statusNota });
+      console.error('[NOTA ERROR]', updateError);
+      return Response.json({ sucesso: statusNota !== 'Erro', mensagem: `${statusNota} na SEFAZ, erro ao salvar: ${updateError.message}`, status: statusNota });
     }
 
     const mensagem = statusNota === 'Emitida'
       ? 'Nota fiscal autorizada com sucesso!'
       : statusNota === 'Processando'
-        ? 'Nota enviada para processamento. Aguarde autorizacao da SEFAZ.'
+        ? 'Nota enviada para processamento. O status será atualizado automaticamente.'
         : `Erro na emissão: ${mensagemSefaz}`;
 
-    // Numero ja foi reservado no inicio, nao precisa atualizar novamente
-
-    return Response.json({ sucesso: statusNota !== 'Erro', mensagem, pdf: pdfUrl, status: statusNota, mensagem_sefaz: mensagemSefaz });
+    return Response.json({ sucesso: statusNota !== 'Erro', mensagem, pdf: pdfUrlFinal, status: statusNota, mensagem_sefaz: mensagemSefaz });
 
   } catch (error) {
     return Response.json({ sucesso: false, erro: error.message });

@@ -1,86 +1,118 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+
+const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
+const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
+const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
+
+const normalizarUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  return `https://api.focusnfe.com.br${url}`;
+};
+
+const salvarPdfPermanente = async (base44, pdfUrl, nota_id) => {
+  if (!pdfUrl) return null;
+  try {
+    const resp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER } });
+    if (!resp.ok) return null;
+    const blob = await resp.blob();
+    const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+    const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+    console.log('[PDF PERMANENTE]', nota_id, '->', file_url);
+    return file_url;
+  } catch (e) {
+    console.error('[PDF ERRO]', e.message);
+    return null;
+  }
+};
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const body = await req.json().catch(() => ({}));
 
-    const configs = await base44.asServiceRole.entities.Configuracao.list('-created_date', 200);
+    // Modo: consulta específica (nota_id + ref) OU varredura geral (Processando + Aguardando)
+    let notasParaConsultar = [];
 
-    // Busca notas em processamento
-    const notas = await base44.asServiceRole.entities.NotaFiscal.filter({ status: 'Processando' });
+    if (body.nota_id && body.ref) {
+      // Consulta específica de uma nota
+      const lista = await base44.asServiceRole.entities.NotaFiscal.filter({ id: body.nota_id });
+      if (lista[0]) notasParaConsultar = [lista[0]];
+    } else {
+      // Varredura: busca todas em Processando ou Aguardando Sefin Nacional
+      const [processando, aguardando] = await Promise.all([
+        base44.asServiceRole.entities.NotaFiscal.filter({ status: 'Processando' }),
+        base44.asServiceRole.entities.NotaFiscal.filter({ status: 'Aguardando Sefin Nacional' }),
+      ]);
+      notasParaConsultar = [...processando, ...aguardando];
+    }
 
-    if (!notas || notas.length === 0) {
-      return Response.json({ sucesso: true, mensagem: 'Nenhuma nota em processamento.' });
+    if (notasParaConsultar.length === 0) {
+      return Response.json({ sucesso: true, mensagem: 'Nenhuma nota pendente.' });
     }
 
     const resultados = [];
 
-    for (const nota of notas) {
+    for (const nota of notasParaConsultar) {
       const tipo = nota.tipo || 'NFe';
       const ref = nota.spedy_id;
-      if (!ref) continue;
-
-      // Define ambiente e API key por tipo
-      let ambiente = 'producao';
-      if (tipo === 'NFe') ambiente = configs.find(c => c.chave === 'nfe_ambiente')?.valor || 'producao';
-      else if (tipo === 'NFCe') ambiente = configs.find(c => c.chave === 'nfce_ambiente')?.valor || 'producao';
-      else if (tipo === 'NFSe') ambiente = configs.find(c => c.chave === 'nfse_ambiente')?.valor || 'producao';
-
-      const chaveAmbiente = ambiente === 'homologacao' ? 'focusnfe_api_key_homologacao' : 'focusnfe_api_key_producao';
-      const apiKey = Deno.env.get('FOCUSNFE_API_KEY') ||
-        configs.find(c => c.chave === chaveAmbiente)?.valor?.trim() ||
-        configs.find(c => c.chave === 'focusnfe_api_key')?.valor?.trim();
-
-      if (!apiKey) continue;
-
-      const baseUrl = ambiente === 'homologacao'
-        ? 'https://homologacao.focusnfe.com.br/v2'
-        : 'https://api.focusnfe.com.br/v2';
-
-      const authHeader = 'Basic ' + btoa(apiKey + ':');
+      if (!ref) {
+        console.log('[SKIP] Nota sem spedy_id:', nota.id);
+        continue;
+      }
 
       // Endpoint de consulta por tipo
-      let endpoint = '';
-      if (tipo === 'NFe') endpoint = `/nfe?ref=${ref}`;
-      else if (tipo === 'NFCe') endpoint = `/nfce?ref=${ref}`;
-      else if (tipo === 'NFSe') endpoint = `/nfsen?ref=${ref}`;
-
-      const resp = await fetch(`${baseUrl}${endpoint}`, {
-        method: 'GET',
-        headers: { 'Authorization': authHeader },
+      const ep = tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfe';
+      const consultaResp = await fetch(`${FOCUSNFE_BASE}/${ep}/${ref}?completo=1`, {
+        headers: { 'Authorization': AUTH_HEADER },
       });
 
-      if (!resp.ok) continue;
+      if (!consultaResp.ok) {
+        console.log('[SKIP] Erro ao consultar Focus NFe para nota:', ref, consultaResp.status);
+        continue;
+      }
 
-      const result = await resp.json();
+      const result = await consultaResp.json();
       const statusFocus = result.status || '';
+      console.log('[STATUS]', ref, '->', statusFocus);
 
-      let statusInterno = 'Processando';
-      if (['autorizado'].includes(statusFocus)) statusInterno = 'Emitida';
-      else if (['erro', 'rejeitado', 'denegado', 'cancelado'].includes(statusFocus)) statusInterno = 'Erro';
+      let statusInterno = nota.status; // mantém se não definitivo
+      if (statusFocus === 'autorizado') statusInterno = 'Emitida';
+      else if (['erro_autorizacao', 'rejeitado', 'denegado', 'cancelado'].includes(statusFocus)) statusInterno = 'Erro';
+      else if (statusFocus === 'cancelado') statusInterno = 'Cancelada';
 
-      if (statusInterno !== 'Processando') {
-        let pdfUrl = nota.pdf_url || '';
-        if (statusInterno === 'Emitida' && !pdfUrl) {
-          const rawPdf = result.caminho_pdf_nfsen || result.caminho_danfe || result.caminho_pdf_nfse || '';
-          pdfUrl = rawPdf ? (rawPdf.startsWith('http') ? rawPdf : `https://api.focusnfe.com.br${rawPdf}`) : '';
+      if (statusInterno !== nota.status) {
+        let pdfUrlFinal = nota.pdf_url || '';
+
+        if (statusInterno === 'Emitida' && !pdfUrlFinal) {
+          const rawPdf = result.caminho_pdf_nfsen || result.caminho_pdf_nfse || result.caminho_danfe || '';
+          const pdfUrlFocus = normalizarUrl(rawPdf);
+          if (pdfUrlFocus) {
+            // Tenta salvar permanentemente
+            const pdfSalvo = await salvarPdfPermanente(base44, pdfUrlFocus, nota.id);
+            pdfUrlFinal = pdfSalvo || pdfUrlFocus;
+          }
         }
+
         await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
           status: statusInterno,
           status_sefaz: statusFocus,
           mensagem_sefaz: result.mensagem_sefaz || result.mensagem || '',
           chave_acesso: result.chave_nfe || result.chave_nfce || result.chave_nfse || nota.chave_acesso || '',
-          pdf_url: pdfUrl,
+          pdf_url: pdfUrlFinal,
           xml_url: result.caminho_xml_nota_fiscal || nota.xml_url || '',
         });
-        resultados.push({ ref, statusAnterior: 'Processando', statusNovo: statusInterno });
-        console.log(`Nota ${ref} atualizada: ${statusInterno}`);
+
+        resultados.push({ ref, nota_id: nota.id, statusAnterior: nota.status, statusNovo: statusInterno });
+        console.log(`[ATUALIZADO] Nota ${ref}: ${nota.status} -> ${statusInterno}`);
       }
     }
 
+    const atualizado = resultados.length > 0 ? resultados[0] : null;
     return Response.json({
       sucesso: true,
       processadas: resultados.length,
+      status: atualizado?.statusNovo || notasParaConsultar[0]?.status || 'Processando',
       detalhes: resultados,
     });
 

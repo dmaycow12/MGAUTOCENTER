@@ -692,26 +692,25 @@ export default function NotasFiscais() {
   };
 
   const obterPdfBlob = async (nota) => {
-    // NFCe: URL direta
-    if (nota.tipo === 'NFCe' && nota.pdf_url) {
+    // Se já tem PDF permanente salvo no Base44, abre direto — sem espera!
+    if (nota.pdf_url && (nota.pdf_url.includes('base44.com') || nota.pdf_url.startsWith('https://files.'))) {
       return { url: nota.pdf_url, direto: true };
     }
+
+    // Solicita ao proxy que busque/salve o PDF
     const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
     const data = res.data;
+
     if (data?.processando) throw new Error(data.mensagem || 'A SEFAZ ainda está processando a nota.');
-    if (!data?.sucesso || !data?.pdf_base64) throw new Error(data?.erro || 'PDF não disponível para esta nota.');
-    // Salva a URL pública no banco para acesso rápido futuro
+    if (!data?.sucesso) throw new Error(data?.erro || 'PDF não disponível para esta nota.');
+
+    // Atualiza state local com a URL permanente
     if (data?.pdf_url_publica) {
       setNotas(prev => prev.map(n => n.id === nota.id ? { ...n, pdf_url: data.pdf_url_publica, status: 'Emitida' } : n));
-    } else {
-      setNotas(prev => prev.map(n => n.id === nota.id ? { ...n, status: 'Emitida' } : n));
+      return { url: data.pdf_url_publica, direto: true };
     }
-    const byteChars = atob(data.pdf_base64);
-    const byteNums = new Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
-    const blob = new Blob([new Uint8Array(byteNums)], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    return { url, direto: false };
+
+    throw new Error('PDF não pôde ser obtido.');
   };
 
   const visualizarNota = async (nota) => {
