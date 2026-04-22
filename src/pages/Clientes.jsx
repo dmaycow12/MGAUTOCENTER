@@ -271,14 +271,14 @@ export default function Clientes() {
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormGroup label="Tipo">
-                  <select value={form.tipo} onChange={e => setForm({ ...form, tipo: e.target.value })} className="input-dark">
+                  <select value={form.tipo} onChange={e => setForm({ ...form, tipo: e.target.value })} className="input-dark" autoComplete="off">
                     <option>Pessoa Física</option>
                     <option>Pessoa Jurídica</option>
                   </select>
                 </FormGroup>
                 <FormGroup label="CPF / CNPJ">
                   <div className="flex gap-2">
-                    <input value={form.cpf_cnpj} onChange={e => setForm({ ...form, cpf_cnpj: e.target.value })} className="input-dark" autoComplete="new-password" />
+                    <input value={form.cpf_cnpj} onChange={e => setForm({ ...form, cpf_cnpj: e.target.value })} className="input-dark" autoComplete="off" name="cpf_cnpj_cliente" />
                     {form.tipo === 'Pessoa Jurídica' && (
                       <button type="button" onClick={buscarCnpj} disabled={buscandoCnpj}
                         className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-white flex-shrink-0 disabled:opacity-50"
@@ -289,44 +289,44 @@ export default function Clientes() {
                   </div>
                  </FormGroup>
                 <FormGroup label="Nome / Razão Social *">
-                   <input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} className="input-dark" autoComplete="new-password" />
+                   <input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} className="input-dark" autoComplete="off" name="nome_cliente_razao" />
                  </FormGroup>
                  <FormGroup label="Nome Social / Nome Fantasia">
-                   <input value={form.nome_fantasia} onChange={e => setForm({ ...form, nome_fantasia: e.target.value })} className="input-dark" autoComplete="new-password" />
+                   <input value={form.nome_fantasia} onChange={e => setForm({ ...form, nome_fantasia: e.target.value })} className="input-dark" autoComplete="off" name="nome_fantasia_cliente" />
                  </FormGroup>
                 <FormGroup label="Inscrição Estadual">
-                  <input value={form.rg_ie} onChange={e => setForm({ ...form, rg_ie: e.target.value.replace(/[.-]/g, '') })} className="input-dark" autoComplete="new-password" />
+                  <input value={form.rg_ie} onChange={e => setForm({ ...form, rg_ie: e.target.value.replace(/[.-]/g, '') })} className="input-dark" autoComplete="off" name="ie_cliente" />
                 </FormGroup>
                 <FormGroup label="Telefone Contato">
-                  <input value={form.telefone} onChange={e => setForm({ ...form, telefone: e.target.value })} className="input-dark" autoComplete="new-password" />
+                  <input value={form.telefone} onChange={e => setForm({ ...form, telefone: e.target.value })} className="input-dark" autoComplete="off" name="tel_cliente" />
                 </FormGroup>
                 <FormGroup label="E-mail">
-                  <input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="input-dark" autoComplete="new-password" />
+                  <input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="input-dark" autoComplete="off" name="email_cliente" />
                 </FormGroup>
                 <FormGroup label="CEP">
-                  <input value={form.cep} onChange={e => setForm({ ...form, cep: e.target.value })} className="input-dark" autoComplete="new-password" />
+                  <input value={form.cep} onChange={e => setForm({ ...form, cep: e.target.value })} className="input-dark" autoComplete="off" name="cep_cliente" />
                 </FormGroup>
                 <FormGroup label="Endereço">
-                  <input value={form.endereco} onChange={e => setForm({ ...form, endereco: e.target.value })} className="input-dark" autoComplete="new-password" />
+                  <input value={form.endereco} onChange={e => setForm({ ...form, endereco: e.target.value })} className="input-dark" autoComplete="off" name="end_cliente" />
                 </FormGroup>
                 <FormGroup label="Número">
-                  <input value={form.numero} onChange={e => setForm({ ...form, numero: e.target.value })} className="input-dark" autoComplete="new-password" />
+                  <input value={form.numero} onChange={e => setForm({ ...form, numero: e.target.value })} className="input-dark" autoComplete="off" name="num_cliente" />
                 </FormGroup>
                 <FormGroup label="Complemento">
-                  <input value={form.complemento} onChange={e => setForm({ ...form, complemento: e.target.value })} className="input-dark" autoComplete="new-password" />
+                  <input value={form.complemento} onChange={e => setForm({ ...form, complemento: e.target.value })} className="input-dark" autoComplete="off" name="comp_cliente" />
                 </FormGroup>
                 <FormGroup label="Bairro">
-                  <input value={form.bairro} onChange={e => setForm({ ...form, bairro: e.target.value })} className="input-dark" autoComplete="new-password" />
+                  <input value={form.bairro} onChange={e => setForm({ ...form, bairro: e.target.value })} className="input-dark" autoComplete="off" name="bairro_cliente" />
                 </FormGroup>
                 <FormGroup label="Cidade">
-                  <input value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} className="input-dark" autoComplete="new-password" />
+                  <input value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} className="input-dark" autoComplete="off" name="cidade_cliente" />
                 </FormGroup>
                 <FormGroup label="Estado">
-                  <input value={form.estado} onChange={e => setForm({ ...form, estado: e.target.value })} className="input-dark" maxLength={2} autoComplete="new-password" />
+                  <input value={form.estado} onChange={e => setForm({ ...form, estado: e.target.value })} className="input-dark" maxLength={2} autoComplete="off" name="estado_cliente" />
                 </FormGroup>
               </div>
               <FormGroup label="Observações">
-                <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} className="input-dark" rows={2} />
+                <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} className="input-dark" rows={2} autoComplete="off" />
               </FormGroup>
             </div>
             <div className="flex justify-between gap-3 p-5 border-t border-gray-800">

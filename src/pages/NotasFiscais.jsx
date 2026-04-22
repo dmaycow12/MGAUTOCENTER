@@ -81,6 +81,7 @@ export default function NotasFiscais() {
   const [gerandoZip, setGerandoZip] = useState(false);
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
+  const [atualizandoStatus, setAtualizandoStatus] = useState(null);
   const [gerandoSintegra, setGerandoSintegra] = useState(false);
 
   const [notaIdParaEntrada, setNotaIdParaEntrada] = useState(null);
@@ -391,6 +392,22 @@ export default function NotasFiscais() {
       const total = items.reduce((s, it) => s + (Number(it.valor_total) || 0), 0);
       return { ...f, items, valor_total: total };
     });
+  };
+
+  const atualizarStatusNota = async (nota) => {
+    setAtualizandoStatus(nota.id);
+    try {
+      const res = await base44.functions.invoke('consultarStatusNotas', { nota_id: nota.id, ref: nota.spedy_id, tipo: nota.tipo });
+      if (res.data?.sucesso) {
+        feedback('sucesso', `Status atualizado: ${res.data.status || 'OK'}`);
+        load();
+      } else {
+        feedback('erro', res.data?.erro || 'Erro ao consultar status.');
+      }
+    } catch (e) {
+      feedback('erro', 'Erro: ' + e.message);
+    }
+    setAtualizandoStatus(null);
   };
 
   const cancelarNota = async (nota) => {
@@ -1066,6 +1083,11 @@ export default function NotasFiscais() {
                               <Printer className="w-4 h-4" />
                             </button>
                         </>
+                        )}
+                        {(nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional' || nota.status === 'Erro de Sincronia Governamental') && (
+                          <button title="Atualizar Status" onClick={() => atualizarStatusNota(nota)} disabled={atualizandoStatus === nota.id} className="p-1 text-gray-500 hover:text-cyan-400 transition-all disabled:opacity-50">
+                            {atualizandoStatus === nota.id ? <RefreshCw className="w-4 h-4 animate-spin text-cyan-400" /> : <RefreshCw className="w-4 h-4" />}
+                          </button>
                         )}
                         {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
                           <button title="Cancelar Nota" onClick={() => cancelarNota(nota)} className="p-1 text-gray-500 hover:text-orange-400 transition-all">
