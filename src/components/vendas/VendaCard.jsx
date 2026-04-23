@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { ChevronDown, Pencil, Printer, Trash2, AlertTriangle } from "lucide-react";
+import { ChevronDown, Pencil, Printer, Trash2, FileText, MoreVertical, AlertTriangle } from "lucide-react";
 import { gerarHTMLImpressao } from "./vendaImpressao";
 import { reduzirEstoque, restaurarEstoque, excluirLancamentosOS } from "./estoqueUtils";
 
@@ -33,7 +33,7 @@ function fmtValor(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function InlineEdit({ value, onSave, placeholder = "", onEnter }) {
+function InlineEdit({ value, onSave, placeholder = "" }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(value || "");
   const inputRef = useRef(null);
@@ -44,14 +44,7 @@ function InlineEdit({ value, onSave, placeholder = "", onEnter }) {
     <input ref={inputRef} type="text" value={val}
       onChange={e => setVal(e.target.value)}
       onBlur={commit}
-      onKeyDown={e => {
-        if (e.key === "Enter" || e.key === "Tab") {
-          e.preventDefault();
-          commit();
-          onEnter?.();
-        }
-        if (e.key === "Escape") { setVal(value || ""); setEditing(false); }
-      }}
+      onKeyDown={e => { if (e.key === "Enter") commit(); if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
       className="bg-gray-800 border border-orange-500 text-white rounded px-1.5 py-0.5 text-sm focus:outline-none w-full"
     />
   );
@@ -67,6 +60,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
   const notasOs = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Rascunho');
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [showAvisoStatus, setShowAvisoStatus] = useState(false);
   const [statusPendenteCard, setStatusPendenteCard] = useState(null);
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
@@ -80,10 +74,13 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
 
   const statusRef = useRef(null);
   const statusBtnRef = useRef(null);
+  const menuRef = useRef(null);
+  const menuBtnRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
       if (statusRef.current && !statusRef.current.contains(e.target) && statusBtnRef.current && !statusBtnRef.current.contains(e.target)) setStatusOpen(false);
+      if (menuRef.current && !menuRef.current.contains(e.target) && menuBtnRef.current && !menuBtnRef.current.contains(e.target)) setMenuOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -169,35 +166,40 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
     onDelete?.();
   };
 
-  const enviarWhatsApp = () => {
+  const enviarOrcamento = () => {
+    setMenuOpen(false);
     const telefone = os.cliente_telefone?.replace(/\D/g, "");
     if (!telefone) return alert("Telefone do cliente não cadastrado.");
-    const isConcluido = os.status === "Concluído";
-    const servicosList = (os.servicos || []).map(s => `  • ${s.descricao || "Serviço"} (x${s.quantidade || 1}) — ${fmtValor(Number(s.valor||0)*Number(s.quantidade||1))}`).join("\n");
-    const pecasList = (os.pecas || []).map(p => `  • ${p.descricao || "Peça"} (x${p.quantidade || 1}) — ${fmtValor(p.valor_total)}`).join("\n");
-    let texto = "";
-    if (isConcluido) {
-      texto = `Olá ${os.cliente_nome || ""}! Seu veículo ${os.veiculo_modelo || ""} está pronto para retirada! 🎉\n`;
-      texto += `Placa: ${os.veiculo_placa || ""}\n`;
-    } else {
-      texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da Venda #${os.numero}:\n`;
-      texto += `Veículo: ${os.veiculo_modelo || ""}\nPlaca: ${os.veiculo_placa || ""}\n`;
-    }
-    if (pecasList) texto += `\n⚙️ *Peças:*\n${pecasList}\n`;
-    if (servicosList) texto += `\n🔧 *Serviços:*\n${servicosList}\n`;
+    const linkOrcamento = `${window.location.origin}/OrcamentoPublico?id=${os.id}`;
+    const servicosList = (os.servicos || []).map((s, i) => `  ${i+1}. ${s.descricao || "Serviço"} (x${s.quantidade || 1}) — ${fmtValor(Number(s.valor||0)*Number(s.quantidade||1))}`).join("\n");
+    const pecasList = (os.pecas || []).map((p, i) => `  ${i+1}. ${p.descricao || "Peça"} (x${p.quantidade || 1}) — ${fmtValor(p.valor_total)}`).join("\n");
+    let texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da Venda #${os.numero}:\nVeículo: ${os.veiculo_modelo || ""}\nPlaca: ${os.veiculo_placa || ""}\n`;
+    if (pecasList) texto += `\n⚙️ *Peças:*\n${pecasList}\nSubtotal: ${fmtValor(os.valor_pecas)}\n`;
+    if (servicosList) texto += `\n🔧 *Serviços:*\n${servicosList}\nSubtotal: ${fmtValor(os.valor_servicos)}\n`;
     if (os.desconto > 0) texto += `\nDesconto: -${fmtValor(os.desconto)}\n`;
     texto += `\n💰 *Total: ${fmtValor(os.valor_total)}*`;
     if (os.observacoes) texto += `\n\n📋 *Observações:*\n${os.observacoes}`;
+    texto += `\n\n🔗 Acesse o orçamento completo com fotos:\n${linkOrcamento}`;
     const fone = telefone.startsWith("55") ? telefone : "55" + telefone;
     window.open("https://wa.me/" + fone + "?text=" + encodeURIComponent(texto), "_blank");
   };
 
+  const chamarWhatsApp = () => {
+    setMenuOpen(false);
+    const telefone = os.cliente_telefone?.replace(/\D/g, "");
+    if (!telefone) return alert("Telefone do cliente não cadastrado.");
+    const fone = telefone.startsWith("55") ? telefone : "55" + telefone;
+    window.open("https://wa.me/" + fone, "_blank");
+  };
+
   const emitirNF = (tipo) => {
+    setMenuOpen(false);
     const params = new URLSearchParams({ emitir: "1", tipo, os_id: os.id, os_numero: os.numero || "", cliente_id: os.cliente_id || "", cliente_nome: encodeURIComponent(os.cliente_nome || ""), valor: String(os.valor_total || 0) });
     navigate(createPageUrl("NotasFiscais") + "?" + params.toString());
   };
 
   const imprimir = () => {
+    setMenuOpen(false);
     const win = window.open("", "_blank");
     win.document.write(gerarHTMLImpressao(os));
     win.document.close();
@@ -205,7 +207,13 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
 
   const style = STATUS_STYLE[os.status] || { badge: "bg-gray-600 text-white", style: { background: "#374151", color: "#fff" } };
 
-
+  const menuItems = [
+    { label: "Enviar orçamento", icon: WhatsAppIcon, action: enviarOrcamento },
+    { label: "Chamar no WhatsApp", icon: WhatsAppIcon, action: chamarWhatsApp },
+    { label: "Emitir NFe (Produtos)", icon: FileText, action: () => emitirNF("NFe") },
+    { label: "Emitir NFSe (Serviços)", icon: FileText, action: () => emitirNF("NFSe") },
+    { label: "Emitir NFCe (Consumidor)", icon: FileText, action: () => emitirNF("NFCe") },
+  ];
 
   return (
     <>
@@ -303,7 +311,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
           )}
 
           <div className="relative flex-1">
-            <button ref={statusBtnRef} onClick={() => { setStatusOpen(v => !v); }}
+            <button ref={statusBtnRef} onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
               className="flex items-center justify-center gap-2 text-sm font-semibold hover:opacity-90 transition-all w-full"
               style={{...style.style, height: "34px", borderRadius: "8px"}}>
               {os.status || "—"}
@@ -322,10 +330,30 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
             )}
           </div>
 
-          <button onClick={enviarWhatsApp} className="p-1.5 text-green-500 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-all" title="WhatsApp"><WhatsAppIcon className="w-3.5 h-3.5" /></button>
           <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Editar"><Pencil className="w-3.5 h-3.5" /></button>
           <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Imprimir"><Printer className="w-3.5 h-3.5" /></button>
           <button onClick={handleExcluir} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all" title="Excluir"><Trash2 className="w-3.5 h-3.5" /></button>
+
+          <div className="relative">
+            <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
+              className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
+              <MoreVertical className="w-3.5 h-3.5" />
+            </button>
+            {menuOpen && (
+              <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-[9999]">
+                {menuItems.map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <button key={i} onClick={item.action}
+                      className="w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-700 transition-all">
+                      <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 border-t border-gray-800">
@@ -335,7 +363,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
           </div>
           <div className="px-3 py-2.5 border-b border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Veículo</p>
-            <InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onEnter={() => emitirNF("NFSe")} />
+            <InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" />
           </div>
           <div className="px-3 py-2.5 border-b border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Data</p>
@@ -343,11 +371,11 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
           </div>
           <div className="px-3 py-2.5 border-b border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Placa</p>
-            <InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" onEnter={() => emitirNF("NFSe")} />
+            <InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" />
           </div>
           <div className="px-3 py-2.5 border-b border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">KM</p>
-            <InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" onEnter={() => emitirNF("NFSe")} />
+            <InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" />
           </div>
           <div className="px-3 py-2.5 border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Pagamento</p>
