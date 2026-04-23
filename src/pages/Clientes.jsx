@@ -348,6 +348,16 @@ export default function Clientes() {
                       {colunas.bairro && renderCell("bairro")}
                       {colunas.cidade && renderCell("cidade")}
                       {colunas.estado && renderCell("estado")}
+                      <td className="px-4 py-1.5 whitespace-nowrap">
+                        <div className="flex gap-1 justify-end">
+                          <button onClick={() => editarCliente(c)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded transition-all" title="Editar">
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+                          <button onClick={() => excluir(c)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded transition-all" title="Excluir">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
