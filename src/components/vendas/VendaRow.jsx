@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { ChevronDown, Pencil, Printer, Trash2, FileText, MoreVertical, AlertTriangle } from "lucide-react";
+import { ChevronDown, Pencil, Printer, Trash2, AlertTriangle } from "lucide-react";
 import { gerarHTMLImpressao } from "./vendaImpressao";
 import { reduzirEstoque, restaurarEstoque, excluirLancamentosOS } from "./estoqueUtils";
 
@@ -69,7 +69,6 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
   const notasOs = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Rascunho');
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [showAviso, setShowAviso] = useState(false);
   const [statusPendente, setStatusPendente] = useState(null);
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
@@ -85,13 +84,10 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
 
   const statusRef = useRef(null);
   const statusBtnRef = useRef(null);
-  const menuRef = useRef(null);
-  const menuBtnRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
       if (statusRef.current && !statusRef.current.contains(e.target) && statusBtnRef.current && !statusBtnRef.current.contains(e.target)) setStatusOpen(false);
-      if (menuRef.current && !menuRef.current.contains(e.target) && menuBtnRef.current && !menuBtnRef.current.contains(e.target)) setMenuOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -164,46 +160,58 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
   };
 
   const imprimir = () => {
-    setMenuOpen(false);
     const win = window.open("", "_blank");
     win.document.write(gerarHTMLImpressao(os));
     win.document.close();
   };
 
-  const enviarOrcamento = () => {
-    setMenuOpen(false);
+  const enviarWhatsApp = () => {
     const telefone = os.cliente_telefone?.replace(/\D/g, "");
     if (!telefone) return alert("Telefone do cliente não cadastrado.");
-    const linkOrcamento = `${window.location.origin}/OrcamentoPublico?id=${os.id}`;
-    let texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da Venda #${os.numero}:\n`;
-    texto += `Veículo: ${os.veiculo_modelo || ""}\nPlaca: ${os.veiculo_placa || ""}\n`;
-    texto += `\n💰 *Total: ${fmtValor(os.valor_total)}*`;
-    texto += `\n\n🔗 Acesse o orçamento completo:\n${linkOrcamento}`;
     const fone = telefone.startsWith("55") ? telefone : "55" + telefone;
+    const concluido = os.status === "Concluído";
+
+    let texto = "";
+    if (concluido) {
+      texto = `Olá ${os.cliente_nome || ""}! Seu veículo ${os.veiculo_modelo || ""} (${os.veiculo_placa || ""}) está pronto para retirada! 🎉\n\n`;
+    } else {
+      texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da Venda #${os.numero}:\n`;
+      if (os.veiculo_modelo || os.veiculo_placa) texto += `Veículo: ${os.veiculo_modelo || ""} ${os.veiculo_placa ? `(${os.veiculo_placa})` : ""}\n`;
+      texto += "\n";
+    }
+
+    const servicos = os.servicos || [];
+    const pecas = os.pecas || [];
+
+    if (servicos.length > 0) {
+      texto += "*Serviços:*\n";
+      servicos.forEach(s => {
+        texto += `• ${s.descricao || "Serviço"} — ${fmtValor(s.valor * (s.quantidade || 1))}\n`;
+      });
+      texto += "\n";
+    }
+
+    if (pecas.length > 0) {
+      texto += "*Peças:*\n";
+      pecas.forEach(p => {
+        texto += `• ${p.descricao || "Peça"} (${p.quantidade || 1}x) — ${fmtValor(p.valor_total || p.valor_unitario * (p.quantidade || 1))}\n`;
+      });
+      texto += "\n";
+    }
+
+    texto += `💰 *Total: ${fmtValor(os.valor_total)}*`;
+
+    if (os.observacoes) texto += `\n\n📝 Obs: ${os.observacoes}`;
+
     window.open("https://wa.me/" + fone + "?text=" + encodeURIComponent(texto), "_blank");
   };
 
-  const chamarWhatsApp = () => {
-    setMenuOpen(false);
-    const telefone = os.cliente_telefone?.replace(/\D/g, "");
-    if (!telefone) return alert("Telefone do cliente não cadastrado.");
-    const fone = telefone.startsWith("55") ? telefone : "55" + telefone;
-    window.open("https://wa.me/" + fone, "_blank");
-  };
-
   const emitirNF = (tipo) => {
-    setMenuOpen(false);
     const params = new URLSearchParams({ emitir: "1", tipo, os_id: os.id, os_numero: os.numero || "", cliente_id: os.cliente_id || "", cliente_nome: encodeURIComponent(os.cliente_nome || ""), valor: String(os.valor_total || 0) });
     navigate(createPageUrl("NotasFiscais") + "?" + params.toString());
   };
 
-  const menuItems = [
-    { label: "Enviar orçamento", icon: WhatsAppIcon, action: enviarOrcamento },
-    { label: "Chamar no WhatsApp", icon: WhatsAppIcon, action: chamarWhatsApp },
-    { label: "Emitir NFe", icon: FileText, action: () => emitirNF("NFe") },
-    { label: "Emitir NFSe", icon: FileText, action: () => emitirNF("NFSe") },
-    { label: "Emitir NFCe", icon: FileText, action: () => emitirNF("NFCe") },
-  ];
+
 
   const style = STATUS_STYLE[os.status] || { style: { background: "#374151", color: "#fff" } };
 
@@ -290,7 +298,7 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
         {colunas.status && <td className="px-4 py-3">
           <div className="relative inline-block">
             <button ref={statusBtnRef}
-              onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
+              onClick={() => setStatusOpen(v => !v)}
               className="flex items-center justify-center gap-1 text-xs h-6 px-3 rounded-md font-semibold hover:opacity-90 transition-all whitespace-nowrap w-40"
               style={style.style}>
               {os.status || "—"}
@@ -343,26 +351,9 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
             <button onClick={handleExcluir} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all" title="Excluir">
               <Trash2 className="w-4 h-4" />
             </button>
-            <div className="relative">
-              <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
-                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white rounded-lg hover:bg-gray-700 transition-all">
-                <MoreVertical className="w-4 h-4" />
-              </button>
-              {menuOpen && (
-                <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-[9999]">
-                  {menuItems.map((item, i) => {
-                    const Icon = item.icon;
-                    return (
-                      <button key={i} onClick={item.action}
-                        className="w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-700 transition-all">
-                        <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <button onClick={enviarWhatsApp} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-green-400 rounded-lg hover:bg-gray-700 transition-all" title={os.status === "Concluído" ? "Avisar que está pronto" : "Enviar orçamento"}>
+              <WhatsAppIcon className="w-4 h-4" />
+            </button>
           </div>
         </td>
       </tr>
