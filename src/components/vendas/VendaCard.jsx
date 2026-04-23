@@ -33,7 +33,7 @@ function fmtValor(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function InlineEdit({ value, onSave, placeholder = "" }) {
+function InlineEdit({ value, onSave, placeholder = "", onNext }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(value || "");
   const inputRef = useRef(null);
@@ -44,7 +44,10 @@ function InlineEdit({ value, onSave, placeholder = "" }) {
     <input ref={inputRef} type="text" value={val}
       onChange={e => setVal(e.target.value)}
       onBlur={commit}
-      onKeyDown={e => { if (e.key === "Enter") commit(); if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
+      onKeyDown={e => {
+        if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); commit(); onNext?.(); }
+        if (e.key === "Escape") { setVal(value || ""); setEditing(false); }
+      }}
       className="bg-gray-800 border border-orange-500 text-white rounded px-1.5 py-0.5 text-sm focus:outline-none w-full"
     />
   );
@@ -59,6 +62,9 @@ function InlineEdit({ value, onSave, placeholder = "" }) {
 export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh }) {
   const notasOs = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Rascunho');
   const navigate = useNavigate();
+  const veiculoEditRef = useRef(null);
+  const placaEditRef = useRef(null);
+  const kmEditRef = useRef(null);
   const [statusOpen, setStatusOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showAvisoStatus, setShowAvisoStatus] = useState(false);
@@ -267,16 +273,16 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
               return (
                 <>
                   {nfeProduto
-                    ? <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfe_manual', tipo: nfeProduto.tipo, numero: nfeProduto.numero || '' })}>{nfeProduto.tipo}(#{nfeProduto.numero})</span>
+                    ? <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => emitirNF(nfeProduto.tipo || 'NFe')}>{nfeProduto.tipo}(#{nfeProduto.numero})</span>
                     : os.nfe_manual
-                      ? <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => { const n = normalizarNF(os.nfe_manual); setManualNFModal({ campo: 'nfe_manual', tipo: n.replace(/\d+$/, '') || 'NFCe', numero: (n.match(/(\d+)$/) || [])[1] || '' }); }}>{normalizarNF(os.nfe_manual)}</span>
-                      : <button onClick={() => setManualNFModal({ campo: 'nfe_manual', tipo: 'NFCe', numero: '' })} className="text-gray-600 hover:text-green-400 text-xs transition-all">+ NF</button>
+                      ? <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => emitirNF('NFe')}>{normalizarNF(os.nfe_manual)}</span>
+                      : <button onClick={() => emitirNF('NFe')} className="text-gray-600 hover:text-green-400 text-xs transition-all">+ NF</button>
                   }
                   {nfeServico
-                    ? <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: nfeServico.numero || '' })}>NFSe(#{nfeServico.numero})</span>
+                    ? <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => emitirNF('NFSe')}>NFSe(#{nfeServico.numero})</span>
                     : os.nfse_manual
-                      ? <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => { const n = normalizarNF(os.nfse_manual); setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: (n.match(/(\d+)$/) || [])[1] || '' }); }}>{normalizarNF(os.nfse_manual)}</span>
-                      : <button onClick={() => setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: '' })} className="text-gray-600 hover:text-blue-400 text-xs transition-all">+ NFSe</button>
+                      ? <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => emitirNF('NFSe')}>{normalizarNF(os.nfse_manual)}</span>
+                      : <button onClick={() => emitirNF('NFSe')} className="text-gray-600 hover:text-blue-400 text-xs transition-all">+ NFSe</button>
                   }
                 </>
               );
@@ -361,9 +367,13 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
             <p className="text-white text-sm font-medium truncate">{os.cliente_nome || "—"}</p>
           </div>
+          <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Contato</p>
+            <p className="text-gray-300 text-sm font-medium truncate">{os.cliente_telefone || "—"}</p>
+          </div>
           <div className="px-3 py-2.5 border-b border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Veículo</p>
-            <InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" />
+            <InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onNext={() => placaEditRef.current?.click()} />
           </div>
           <div className="px-3 py-2.5 border-b border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Data</p>
@@ -371,11 +381,11 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
           </div>
           <div className="px-3 py-2.5 border-b border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Placa</p>
-            <InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" />
+            <div ref={placaEditRef}><InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" onNext={() => kmEditRef.current?.click()} /></div>
           </div>
           <div className="px-3 py-2.5 border-b border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">KM</p>
-            <InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" />
+            <div ref={kmEditRef}><InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" /></div>
           </div>
           <div className="px-3 py-2.5 border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Pagamento</p>

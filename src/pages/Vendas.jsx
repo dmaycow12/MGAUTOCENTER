@@ -326,6 +326,7 @@ export default function Vendas() {
                    {[
                      { key: 'data', label: 'Data' },
                      { key: 'cliente', label: 'Cliente' },
+                     { key: 'contato', label: 'Contato' },
                      { key: 'veiculo', label: 'Veículo' },
                      { key: 'placa', label: 'Placa' },
                      { key: 'km', label: 'KM' },
@@ -376,6 +377,7 @@ export default function Vendas() {
                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-12">Nº</th>
                  {colunasVisiveis.data && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">Data</th>}
                  {colunasVisiveis.cliente && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider flex-1">Cliente</th>}
+                 {colunasVisiveis.contato && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Contato</th>}
                  {colunasVisiveis.veiculo && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Veículo</th>}
                  {colunasVisiveis.placa && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">Placa</th>}
                  {colunasVisiveis.km && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">KM</th>}

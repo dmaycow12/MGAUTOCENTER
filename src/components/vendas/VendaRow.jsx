@@ -15,11 +15,11 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
 }
 
 export const COLUNAS_PADRAO = {
-  data: true, cliente: true, veiculo: true, placa: true, km: true,
+  data: true, cliente: true, contato: false, veiculo: true, placa: true, km: true,
   status: true, valor: true, pagamento: true, nfe: true, nfse: true,
 };
 
-function InlineEdit({ value, onSave, placeholder = "", mono = false }) {
+function InlineEdit({ value, onSave, placeholder = "", mono = false, onNext }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(value || "");
   const inputRef = useRef(null);
@@ -30,7 +30,10 @@ function InlineEdit({ value, onSave, placeholder = "", mono = false }) {
     <input ref={inputRef} type="text" value={val}
       onChange={e => setVal(e.target.value)}
       onBlur={commit}
-      onKeyDown={e => { if (e.key === "Enter") commit(); if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
+      onKeyDown={e => {
+        if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); commit(); onNext?.(); }
+        if (e.key === "Escape") { setVal(value || ""); setEditing(false); }
+      }}
       className="bg-gray-800 border border-orange-500 text-white rounded px-1.5 py-0.5 text-sm focus:outline-none w-24"
       style={{MozAppearance:"textfield"}}
     />
@@ -64,7 +67,6 @@ function fmtValor(v) {
 
 export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, colunas = COLUNAS_PADRAO }) {
   const notasOs = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Rascunho');
-  const temNFEmitida = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe' || n.tipo === 'NFSe'));
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -73,6 +75,8 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
   const [manualNFModal, setManualNFModal] = useState(null);
   const normalizarNF = (v) => v ? v.replace(/\(#?(\d+)\)/, '$1') : v;
+  const placaSpanRef = useRef(null);
+  const kmSpanRef = useRef(null);
 
   const saveField = async (field, val) => {
     await base44.entities.Vendas.update(os.id, { [field]: val });
@@ -279,9 +283,10 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
         <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">#{os.numero || "—"}</td>
         {colunas.data && <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>}
         {colunas.cliente && <td className="px-4 py-3"><p className="text-white text-sm font-medium">{os.cliente_nome || "—"}</p></td>}
-        {colunas.veiculo && <td className="px-4 py-3"><InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" /></td>}
-        {colunas.placa && <td className="px-4 py-3"><InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono /></td>}
-        {colunas.km && <td className="px-4 py-3"><InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" /></td>}
+        {colunas.contato && <td className="px-4 py-3"><p className="text-gray-300 text-sm whitespace-nowrap">{os.cliente_telefone || "—"}</p></td>}
+        {colunas.veiculo && <td className="px-4 py-3"><InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onNext={() => placaSpanRef.current?.click()} /></td>}
+        {colunas.placa && <td className="px-4 py-3"><span ref={placaSpanRef}><InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono onNext={() => kmSpanRef.current?.click()} /></span></td>}
+        {colunas.km && <td className="px-4 py-3"><span ref={kmSpanRef}><InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" /></span></td>}
         {colunas.status && <td className="px-4 py-3">
           <div className="relative inline-block">
             <button ref={statusBtnRef}
@@ -316,16 +321,16 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
         {colunas?.nfe && <td className="px-4 py-3">{(() => {
           const nfe = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
           const manual = os.nfe_manual;
-          if (nfe) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfe_manual', tipo: nfe.tipo, numero: nfe.numero || '' })}>{nfe.tipo}{nfe.numero}</span>;
-          if (manual) { const n = normalizarNF(manual); return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfe_manual', tipo: n.replace(/\d+$/, '') || 'NFCe', numero: (n.match(/(\d+)$/) || [])[1] || '' })}>{n}</span>; }
-          return <button onClick={() => setManualNFModal({ campo: 'nfe_manual', tipo: 'NFCe', numero: '' })} className="text-gray-700 hover:text-green-400 text-xs transition-all">+ NF</button>;
+          if (nfe) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => emitirNF(nfe.tipo || 'NFe')}>{nfe.tipo}{nfe.numero}</span>;
+          if (manual) { const n = normalizarNF(manual); return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => emitirNF('NFe')}>{n}</span>; }
+          return <button onClick={() => emitirNF('NFe')} className="text-gray-700 hover:text-green-400 text-xs transition-all">+ NF</button>;
         })()}</td>}
         {colunas.nfse && <td className="px-4 py-3">{(() => {
           const nfse = notasOs.find(n => n.tipo === 'NFSe');
           const manual = os.nfse_manual;
-          if (nfse) return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: nfse.numero || '' })}>NFSe{nfse.numero}</span>;
-          if (manual) { const n = normalizarNF(manual); return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: (n.match(/(\d+)$/) || [])[1] || '' })}>{n}</span>; }
-          return <button onClick={() => setManualNFModal({ campo: 'nfse_manual', tipo: 'NFSe', numero: '' })} className="text-gray-700 hover:text-blue-400 text-xs transition-all">+ NFSe</button>;
+          if (nfse) return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => emitirNF('NFSe')}>NFSe{nfse.numero}</span>;
+          if (manual) { const n = normalizarNF(manual); return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => emitirNF('NFSe')}>{n}</span>; }
+          return <button onClick={() => emitirNF('NFSe')} className="text-gray-700 hover:text-blue-400 text-xs transition-all">+ NFSe</button>;
         })()}</td>}
         <td className="px-4 py-3">
           <div className="flex gap-1 justify-end" style={{whiteSpace:'nowrap'}}>
