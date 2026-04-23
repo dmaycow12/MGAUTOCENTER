@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { ChevronDown, Pencil, Printer, Trash2, FileText, MoreVertical, AlertTriangle } from "lucide-react";
+import { ChevronDown, Pencil, Printer, Trash2, AlertTriangle } from "lucide-react";
 import { gerarHTMLImpressao } from "./vendaImpressao";
 import { reduzirEstoque, restaurarEstoque, excluirLancamentosOS } from "./estoqueUtils";
 
@@ -19,7 +19,7 @@ export const COLUNAS_PADRAO = {
   status: true, valor: true, pagamento: true, nfe: true, nfse: true,
 };
 
-function InlineEdit({ value, onSave, placeholder = "", mono = false }) {
+function InlineEdit({ value, onSave, placeholder = "", mono = false, onEnter }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(value || "");
   const inputRef = useRef(null);
@@ -30,7 +30,14 @@ function InlineEdit({ value, onSave, placeholder = "", mono = false }) {
     <input ref={inputRef} type="text" value={val}
       onChange={e => setVal(e.target.value)}
       onBlur={commit}
-      onKeyDown={e => { if (e.key === "Enter") commit(); if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
+      onKeyDown={e => {
+        if (e.key === "Enter" || e.key === "Tab") {
+          e.preventDefault();
+          commit();
+          onEnter?.();
+        }
+        if (e.key === "Escape") { setVal(value || ""); setEditing(false); }
+      }}
       className="bg-gray-800 border border-orange-500 text-white rounded px-1.5 py-0.5 text-sm focus:outline-none w-24"
       style={{MozAppearance:"textfield"}}
     />
@@ -67,7 +74,6 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
   const temNFEmitida = notasOs.some(n => (n.tipo === 'NFe' || n.tipo === 'NFCe' || n.tipo === 'NFSe'));
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [showAviso, setShowAviso] = useState(false);
   const [statusPendente, setStatusPendente] = useState(null);
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
@@ -81,13 +87,10 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
 
   const statusRef = useRef(null);
   const statusBtnRef = useRef(null);
-  const menuRef = useRef(null);
-  const menuBtnRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
       if (statusRef.current && !statusRef.current.contains(e.target) && statusBtnRef.current && !statusBtnRef.current.contains(e.target)) setStatusOpen(false);
-      if (menuRef.current && !menuRef.current.contains(e.target) && menuBtnRef.current && !menuBtnRef.current.contains(e.target)) setMenuOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -160,46 +163,38 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
   };
 
   const imprimir = () => {
-    setMenuOpen(false);
     const win = window.open("", "_blank");
     win.document.write(gerarHTMLImpressao(os));
     win.document.close();
   };
 
-  const enviarOrcamento = () => {
-    setMenuOpen(false);
+  const enviarWhatsApp = () => {
     const telefone = os.cliente_telefone?.replace(/\D/g, "");
     if (!telefone) return alert("Telefone do cliente não cadastrado.");
-    const linkOrcamento = `${window.location.origin}/OrcamentoPublico?id=${os.id}`;
-    let texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da Venda #${os.numero}:\n`;
-    texto += `Veículo: ${os.veiculo_modelo || ""}\nPlaca: ${os.veiculo_placa || ""}\n`;
+    const isConcluido = os.status === "Concluído";
+    const servicosList = (os.servicos || []).map(s => `  • ${s.descricao || "Serviço"} (x${s.quantidade || 1}) — ${fmtValor(Number(s.valor||0)*Number(s.quantidade||1))}`).join("\n");
+    const pecasList = (os.pecas || []).map(p => `  • ${p.descricao || "Peça"} (x${p.quantidade || 1}) — ${fmtValor(p.valor_total)}`).join("\n");
+    let texto = "";
+    if (isConcluido) {
+      texto = `Olá ${os.cliente_nome || ""}! Seu veículo ${os.veiculo_modelo || ""} está pronto para retirada! 🎉\n`;
+      texto += `Placa: ${os.veiculo_placa || ""}\n`;
+    } else {
+      texto = `Olá ${os.cliente_nome || ""}! Segue o orçamento da Venda #${os.numero}:\n`;
+      texto += `Veículo: ${os.veiculo_modelo || ""}\nPlaca: ${os.veiculo_placa || ""}\n`;
+    }
+    if (pecasList) texto += `\n⚙️ *Peças:*\n${pecasList}\n`;
+    if (servicosList) texto += `\n🔧 *Serviços:*\n${servicosList}\n`;
+    if (os.desconto > 0) texto += `\nDesconto: -${fmtValor(os.desconto)}\n`;
     texto += `\n💰 *Total: ${fmtValor(os.valor_total)}*`;
-    texto += `\n\n🔗 Acesse o orçamento completo:\n${linkOrcamento}`;
+    if (os.observacoes) texto += `\n\n📋 *Observações:*\n${os.observacoes}`;
     const fone = telefone.startsWith("55") ? telefone : "55" + telefone;
     window.open("https://wa.me/" + fone + "?text=" + encodeURIComponent(texto), "_blank");
   };
 
-  const chamarWhatsApp = () => {
-    setMenuOpen(false);
-    const telefone = os.cliente_telefone?.replace(/\D/g, "");
-    if (!telefone) return alert("Telefone do cliente não cadastrado.");
-    const fone = telefone.startsWith("55") ? telefone : "55" + telefone;
-    window.open("https://wa.me/" + fone, "_blank");
-  };
-
   const emitirNF = (tipo) => {
-    setMenuOpen(false);
     const params = new URLSearchParams({ emitir: "1", tipo, os_id: os.id, os_numero: os.numero || "", cliente_id: os.cliente_id || "", cliente_nome: encodeURIComponent(os.cliente_nome || ""), valor: String(os.valor_total || 0) });
     navigate(createPageUrl("NotasFiscais") + "?" + params.toString());
   };
-
-  const menuItems = [
-    { label: "Enviar orçamento", icon: WhatsAppIcon, action: enviarOrcamento },
-    { label: "Chamar no WhatsApp", icon: WhatsAppIcon, action: chamarWhatsApp },
-    { label: "Emitir NFe", icon: FileText, action: () => emitirNF("NFe") },
-    { label: "Emitir NFSe", icon: FileText, action: () => emitirNF("NFSe") },
-    { label: "Emitir NFCe", icon: FileText, action: () => emitirNF("NFCe") },
-  ];
 
   const style = STATUS_STYLE[os.status] || { style: { background: "#374151", color: "#fff" } };
 
@@ -279,13 +274,13 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
         <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">#{os.numero || "—"}</td>
         {colunas.data && <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>}
         {colunas.cliente && <td className="px-4 py-3"><p className="text-white text-sm font-medium">{os.cliente_nome || "—"}</p></td>}
-        {colunas.veiculo && <td className="px-4 py-3"><InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" /></td>}
-        {colunas.placa && <td className="px-4 py-3"><InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono /></td>}
-        {colunas.km && <td className="px-4 py-3"><InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" /></td>}
+        {colunas.veiculo && <td className="px-4 py-3"><InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onEnter={() => emitirNF("NFSe")} /></td>}
+        {colunas.placa && <td className="px-4 py-3"><InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono onEnter={() => emitirNF("NFSe")} /></td>}
+        {colunas.km && <td className="px-4 py-3"><InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" onEnter={() => emitirNF("NFSe")} /></td>}
         {colunas.status && <td className="px-4 py-3">
           <div className="relative inline-block">
             <button ref={statusBtnRef}
-              onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
+              onClick={() => { setStatusOpen(v => !v); }}
               className="flex items-center justify-center gap-1 text-xs h-6 px-3 rounded-md font-semibold hover:opacity-90 transition-all whitespace-nowrap w-40"
               style={style.style}>
               {os.status || "—"}
@@ -329,6 +324,9 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
         })()}</td>}
         <td className="px-4 py-3">
           <div className="flex gap-1 justify-end" style={{whiteSpace:'nowrap'}}>
+            <button onClick={enviarWhatsApp} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-green-500/20 transition-all text-green-500 hover:text-green-400" title="WhatsApp">
+              <WhatsAppIcon className="w-4 h-4" />
+            </button>
             <button onClick={() => onEdit?.()} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all text-gray-500 hover:text-blue-400" title="Editar">
               <Pencil className="w-4 h-4" />
             </button>
@@ -338,26 +336,6 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
             <button onClick={handleExcluir} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all" title="Excluir">
               <Trash2 className="w-4 h-4" />
             </button>
-            <div className="relative">
-              <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
-                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-white rounded-lg hover:bg-gray-700 transition-all">
-                <MoreVertical className="w-4 h-4" />
-              </button>
-              {menuOpen && (
-                <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-[9999]">
-                  {menuItems.map((item, i) => {
-                    const Icon = item.icon;
-                    return (
-                      <button key={i} onClick={item.action}
-                        className="w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-700 transition-all">
-                        <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
           </div>
         </td>
       </tr>
