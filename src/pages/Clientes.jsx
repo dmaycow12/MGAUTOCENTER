@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Edit, Trash2, User, Phone, Mail, ChevronDown, ChevronUp, Car, X, LayoutGrid, List, Loader2 } from "lucide-react";
 
@@ -18,6 +18,49 @@ export default function Clientes() {
   });
   const [form, setForm] = useState(defaultForm());
   const [buscandoCnpj, setBuscandoCnpj] = useState(false);
+
+  // Inline editing state
+  const [editCell, setEditCell] = useState(null); // { clienteId, field }
+  const [editValue, setEditValue] = useState("");
+  const editInputRef = useRef(null);
+
+  // Ordered list of inline-editable fields (must match column keys)
+  const INLINE_FIELDS = ["nome", "nome_fantasia", "cpf_cnpj", "telefone", "rg_ie", "email", "cep", "endereco", "numero", "bairro", "cidade", "estado"];
+
+  const startEdit = (c, field, e) => {
+    if (isConsumidor(c)) return;
+    e.stopPropagation();
+    setEditCell({ clienteId: c.id, field });
+    setEditValue(c[field] || "");
+    setTimeout(() => { editInputRef.current?.focus(); editInputRef.current?.select(); }, 30);
+  };
+
+  const commitEdit = async (clienteId, field) => {
+    if (!editCell) return;
+    const cliente = clientes.find(c => c.id === clienteId);
+    if (cliente && String(cliente[field] || "") !== String(editValue)) {
+      await base44.entities.Cliente.update(clienteId, { [field]: editValue });
+      setClientes(prev => prev.map(c => c.id === clienteId ? { ...c, [field]: editValue } : c));
+    }
+    setEditCell(null);
+  };
+
+  const handleEditKeyDown = (e, clienteId, field) => {
+    if (e.key === "Escape") { setEditCell(null); return; }
+    if (e.key === "Enter" || e.key === "Tab") {
+      e.preventDefault();
+      commitEdit(clienteId, field).then(() => {
+        // Move to same field in next row
+        const idx = filtrados.findIndex(c => c.id === clienteId);
+        const nextCliente = filtrados[idx + 1];
+        if (nextCliente && !isConsumidor(nextCliente)) {
+          setEditCell({ clienteId: nextCliente.id, field });
+          setEditValue(nextCliente[field] || "");
+          setTimeout(() => { editInputRef.current?.focus(); editInputRef.current?.select(); }, 30);
+        }
+      });
+    }
+  };
 
   const buscarCnpj = async () => {
     const cnpj = form.cpf_cnpj.replace(/\D/g, '');
@@ -235,23 +278,79 @@ export default function Clientes() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
-                {filtrados.map(c => (
-                  <tr key={c.id} className="hover:bg-gray-800/50 transition-all cursor-pointer" onClick={() => editarCliente(c)}>
-                    {colunas.tipo && <td className="px-4 py-1.5 text-gray-300 text-xs whitespace-nowrap">{isConsumidor(c) ? "—" : (["PJ","Pessoa Jurídica"].includes(c.tipo) ? "PJ" : ["PF","Pessoa Física"].includes(c.tipo) ? "PF" : (c.tipo || "—"))}</td>}
-                    {colunas.nome && <td className="px-4 py-1.5 text-white font-medium text-xs whitespace-nowrap">{c.nome}</td>}
-                    {colunas.nome_fantasia && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.nome_fantasia || "—"}</td>}
-                    {colunas.cpf_cnpj && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.cpf_cnpj || "—"}</td>}
-                    {colunas.telefone && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.telefone || "—"}</td>}
-                    {colunas.rg_ie && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.rg_ie || "—"}</td>}
-                    {colunas.email && <td className="px-4 py-1.5 text-gray-400 text-xs truncate">{c.email || "—"}</td>}
-                    {colunas.cep && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.cep || "—"}</td>}
-                    {colunas.endereco && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.endereco || "—"}</td>}
-                    {colunas.numero && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.numero || "—"}</td>}
-                    {colunas.bairro && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.bairro || "—"}</td>}
-                    {colunas.cidade && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.cidade || "—"}</td>}
-                    {colunas.estado && <td className="px-4 py-1.5 text-gray-400 text-xs whitespace-nowrap">{c.estado || "—"}</td>}
-                  </tr>
-                ))}
+                {filtrados.map(c => {
+                  const renderCell = (field, extraClass = "") => {
+                    const isEditing = editCell?.clienteId === c.id && editCell?.field === field;
+                    if (isEditing) {
+                      return (
+                        <td key={field} className={`px-1 py-0.5 ${extraClass}`}>
+                          <input
+                            ref={editInputRef}
+                            value={editValue}
+                            onChange={e => setEditValue(e.target.value)}
+                            onBlur={() => commitEdit(c.id, field)}
+                            onKeyDown={e => handleEditKeyDown(e, c.id, field)}
+                            autoComplete="new-password"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            className="w-full min-w-[80px] bg-gray-700 border border-blue-500 text-white rounded px-2 py-0.5 text-xs outline-none"
+                          />
+                        </td>
+                      );
+                    }
+                    return (
+                      <td
+                        key={field}
+                        className={`px-4 py-1.5 text-xs whitespace-nowrap cursor-text hover:bg-gray-700/60 transition-all ${extraClass} ${isConsumidor(c) ? "text-gray-500" : "text-gray-400"}`}
+                        onClick={e => !isConsumidor(c) && startEdit(c, field, e)}
+                        title={!isConsumidor(c) ? "Clique para editar" : ""}
+                      >
+                        {c[field] || "—"}
+                      </td>
+                    );
+                  };
+
+                  return (
+                    <tr key={c.id} className="hover:bg-gray-800/30 transition-all">
+                      {colunas.tipo && <td className="px-4 py-1.5 text-gray-300 text-xs whitespace-nowrap">{isConsumidor(c) ? "—" : (["PJ","Pessoa Jurídica"].includes(c.tipo) ? "PJ" : ["PF","Pessoa Física"].includes(c.tipo) ? "PF" : (c.tipo || "—"))}</td>}
+                      {colunas.nome && (
+                        editCell?.clienteId === c.id && editCell?.field === "nome" ? (
+                          <td className="px-1 py-0.5 text-white font-medium">
+                            <input
+                              ref={editInputRef}
+                              value={editValue}
+                              onChange={e => setEditValue(e.target.value)}
+                              onBlur={() => commitEdit(c.id, "nome")}
+                              onKeyDown={e => handleEditKeyDown(e, c.id, "nome")}
+                              autoComplete="new-password" autoCorrect="off" autoCapitalize="off" spellCheck="false"
+                              className="w-full min-w-[120px] bg-gray-700 border border-blue-500 text-white font-medium rounded px-2 py-0.5 text-xs outline-none"
+                            />
+                          </td>
+                        ) : (
+                          <td
+                            className={`px-4 py-1.5 text-xs whitespace-nowrap cursor-text hover:bg-gray-700/60 transition-all font-medium ${isConsumidor(c) ? "text-gray-500" : "text-white"}`}
+                            onClick={e => !isConsumidor(c) && startEdit(c, "nome", e)}
+                            title={!isConsumidor(c) ? "Clique para editar" : ""}
+                          >
+                            {c.nome}
+                          </td>
+                        )
+                      )}
+                      {colunas.nome_fantasia && renderCell("nome_fantasia")}
+                      {colunas.cpf_cnpj && renderCell("cpf_cnpj")}
+                      {colunas.telefone && renderCell("telefone")}
+                      {colunas.rg_ie && renderCell("rg_ie")}
+                      {colunas.email && renderCell("email", "truncate")}
+                      {colunas.cep && renderCell("cep")}
+                      {colunas.endereco && renderCell("endereco")}
+                      {colunas.numero && renderCell("numero")}
+                      {colunas.bairro && renderCell("bairro")}
+                      {colunas.cidade && renderCell("cidade")}
+                      {colunas.estado && renderCell("estado")}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
