@@ -238,25 +238,33 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
           ...(itensParaSalvar.length > 0 ? { xml_content: JSON.stringify(itensParaSalvar) } : {}),
         });
 
-        // 4. Lançamento financeiro — forma de pagamento do próprio XML
+        // 4. Lançamento financeiro — SEMPRE lança, independente de ter XML ou não
         const nomeForneced = dadosXml?.emitente || nota.cliente_nome || "Fornecedor";
-        const valorNota = nota.valor_total || dadosXml?.valor || 0;
+        const valorNota = Number(nota.valor_total || dadosXml?.valor || 0);
+        const dataRef = dadosXml?.dataEmissao || nota.data_emissao || new Date().toISOString().split("T")[0];
         const isBoleto = formaPagamentoNota === "Boleto" && dadosXml?.boletos?.length > 1;
+
         if (isBoleto) {
           for (const bol of dadosXml.boletos) {
             await base44.entities.Financeiro.create({
-              tipo: "Despesa", categoria: "Compra de Peças / Materiais",
+              tipo: "Despesa",
+              categoria: "Compra de Peças / Materiais",
               descricao: `NF ${nota.numero} — ${nomeForneced}${bol.nDup ? ` (Bol. ${bol.nDup})` : ""}`,
-              valor: bol.vDup, forma_pagamento: "Boleto",
-              data_vencimento: bol.dVenc || nota.data_emissao || "", data_pagamento: "", status: "Pendente",
+              valor: bol.vDup,
+              forma_pagamento: "Boleto",
+              data_vencimento: bol.dVenc || dataRef,
+              data_pagamento: "",
+              status: "Pendente",
             });
           }
         } else {
           await base44.entities.Financeiro.create({
-            tipo: "Despesa", categoria: "Compra de Peças / Materiais",
+            tipo: "Despesa",
+            categoria: "Compra de Peças / Materiais",
             descricao: `NF ${nota.numero} — ${nomeForneced}`,
-            valor: valorNota, forma_pagamento: formaPagamentoNota,
-            data_vencimento: dadosXml?.dataEmissao || nota.data_emissao || "",
+            valor: valorNota,
+            forma_pagamento: formaPagamentoNota,
+            data_vencimento: dataRef,
             data_pagamento: statusPagamento === "Pago" ? new Date().toISOString().split("T")[0] : "",
             status: statusPagamento,
           });
