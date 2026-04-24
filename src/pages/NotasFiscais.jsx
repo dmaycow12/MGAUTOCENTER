@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
+import ModalLancamentoMassa from "@/components/notas/ModalLancamentoMassa";
 import SearchableSelect from "@/components/notas/SearchableSelect";
 
 import JSZip from "jszip";
@@ -85,6 +86,7 @@ export default function NotasFiscais() {
   const [gerandoSintegra, setGerandoSintegra] = useState(false);
 
   const [notaIdParaEntrada, setNotaIdParaEntrada] = useState(null);
+  const [showLancamentoMassa, setShowLancamentoMassa] = useState(false);
 
   const hoje = new Date();
   const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -902,6 +904,11 @@ export default function NotasFiscais() {
         <button onClick={() => { setForm(f => ({ ...f, numero: proximoNumero(notas, f.tipo), serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
           <Plus className="w-4 h-4" /> Emitir Nota
         </button>
+        {notas.filter(n => n.status === "Importada").length > 0 && (
+          <button onClick={() => setShowLancamentoMassa(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background: "#3b82f6", color: "#fff"}} onMouseEnter={e => e.currentTarget.style.background = "#2563eb"} onMouseLeave={e => e.currentTarget.style.background = "#3b82f6"}>
+            <ClipboardList className="w-4 h-4" /> Lançar em Massa
+          </button>
+        )}
       </div>
 
       {/* Filtros Simplificados */}
@@ -1498,6 +1505,14 @@ export default function NotasFiscais() {
             </div>
           </div>
         </div>
+      )}
+
+      {showLancamentoMassa && (
+        <ModalLancamentoMassa
+          notas={notas.filter(n => n.status === "Importada")}
+          onClose={() => setShowLancamentoMassa(false)}
+          onConcluido={() => { feedback("sucesso", "Lançamento em massa concluído!"); load(); }}
+        />
       )}
 
       {showEntrada && xmlParaEntrada && (
