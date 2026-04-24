@@ -108,7 +108,7 @@ export default function Dashboard() {
    Promise.all([
      base44.entities.Vendas.list("-created_date", 2000),
       base44.entities.Financeiro.list("-created_date", 2000),
-      base44.entities.Cliente.list("-created_date", 2000),
+      base44.entities.Cadastro.list("-created_date", 2000),
       base44.entities.Estoque.list("-created_date", 2000),
       base44.entities.Ativo.list("-created_date", 2000),
     ]).then(([o, f, c, e, a]) => {
