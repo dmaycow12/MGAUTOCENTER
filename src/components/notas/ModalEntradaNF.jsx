@@ -274,10 +274,13 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
       }
 
       const itensParaSalvar = itens.map(i => ({ descricao: i.descricao, quantidade: i.quantidade, codigo: i.codigo }));
+      // Preservar o XML original — xml_content fica com JSON de itens, xml_original guarda o XML bruto
+      const xmlOriginal = xmlTexto && xmlTexto.trim().startsWith("<") ? xmlTexto : null;
       if (notaId) {
         await base44.entities.NotaFiscal.update(notaId, {
           status: "Lançada",
           xml_content: JSON.stringify(itensParaSalvar),
+          ...(xmlOriginal ? { xml_original: xmlOriginal } : {}),
           numero: dados.numero || "",
           serie: dados.serie || "",
           forma_pagamento: financeiro.forma_pagamento || "",
@@ -286,7 +289,9 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
         await base44.entities.NotaFiscal.create({
           tipo: "NFe", numero: dados.numero, serie: dados.serie, status: "Lançada",
           cliente_nome: dados.emitente, valor_total: dados.valor, chave_acesso: dados.chave,
-          xml_content: JSON.stringify(itensParaSalvar), data_emissao: dados.dataEmissao,
+          xml_content: JSON.stringify(itensParaSalvar),
+          ...(xmlOriginal ? { xml_original: xmlOriginal } : {}),
+          data_emissao: dados.dataEmissao,
           observacoes: `CNPJ Fornecedor: ${dados.cnpjEmit}`,
         });
       }

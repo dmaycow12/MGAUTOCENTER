@@ -109,6 +109,10 @@
       "type": "string",
       "title": "XML"
     },
+    "xml_original": {
+      "type": "string",
+      "title": "XML Original"
+    },
     "xml_url": {
       "type": "string",
       "title": "URL do XML"
