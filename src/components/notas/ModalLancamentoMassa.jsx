@@ -66,8 +66,19 @@ function parsearXML(xmlOriginal) {
   return { chave, numero, serie, valor, dataEmissao, emitente, cnpjEmit, emit_logr, emit_nro, emit_bairro, emit_mun, emit_uf, emit_cep, emit_ie, itens, boletos, forma_pagamento_detectada };
 }
 
+// Verifica se a nota tem XML completo válido (não apenas resumo ou JSON de itens)
+function temXmlCompleto(nota) {
+  const xml = nota.xml_content?.trim() || "";
+  if (!xml.startsWith("<")) return false; // JSON ou vazio
+  // resNFe é apenas resumo, não tem itens
+  if (xml.includes("<resNFe") && !xml.includes("infNFe") && !xml.includes("<det")) return false;
+  return true;
+}
+
 export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
-  const [selecionadas, setSelecionadas] = useState(() => new Set(notas.map(n => n.id)));
+  // Apenas notas com XML completo podem ser lançadas
+  const notasSemXml = new Set(notas.filter(n => !temXmlCompleto(n)).map(n => n.id));
+  const [selecionadas, setSelecionadas] = useState(() => new Set(notas.filter(n => temXmlCompleto(n)).map(n => n.id)));
   const [cadastrarFornecedores] = useState(true);
   const [cadastrarProdutos] = useState(false);
   const [processando, setProcessando] = useState(false);
@@ -108,9 +119,9 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
     fornecedoresNotas.filter(f => !f.permite).map(f => f.nome?.toLowerCase())
   );
 
-  // Notas cujo fornecedor está bloqueado (não permitir seleção)
+  // Notas bloqueadas: sem XML completo OU fornecedor bloqueado
   const notasBloqueadas = new Set(
-    notas.filter(n => fornecedoresBloqueados.has(n.cliente_nome?.toLowerCase())).map(n => n.id)
+    notas.filter(n => notasSemXml.has(n.id) || fornecedoresBloqueados.has(n.cliente_nome?.toLowerCase())).map(n => n.id)
   );
 
   const notasSelecionadas = notas.filter(n => selecionadas.has(n.id) && !notasBloqueadas.has(n.id));
@@ -125,7 +136,7 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
   };
 
   const toggleTodas = () => {
-    const disponiveis = notas.filter(n => !notasBloqueadas.has(n.id)).map(n => n.id);
+    const disponiveis = notas.filter(n => !notasBloqueadas.has(n.id) && temXmlCompleto(n)).map(n => n.id);
     if (selecionadas.size === disponiveis.length) setSelecionadas(new Set());
     else setSelecionadas(new Set(disponiveis));
   };
@@ -174,16 +185,18 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
       const resultado = { nota, ok: false, msg: "" };
 
       try {
-        // Parsear XML se disponível (xml_content pode ser XML completo ou JSON de itens)
-        if (nota.xml_content) {
-          const xmlStr = nota.xml_content.trim();
-          if (xmlStr.startsWith("<") || xmlStr.includes("<nfeProc") || xmlStr.includes("<NFe") || xmlStr.includes("<det")) {
-            dadosXml = parsearXML(nota.xml_content);
-          }
+        // Verificar se tem XML completo — obrigatório para lançamento
+        if (!temXmlCompleto(nota)) {
+          resultado.ok = false;
+          resultado.msg = `NF ${nota.numero} — XML não disponível, importe manualmente`;
+          resultadosList.push(resultado);
+          continue;
         }
 
-        // Forma de pagamento: 1) detectado do XML (mais confiável), 2) já salvo na nota, 3) fallback Boleto (mais seguro que PIX)
-        const formaPagamentoNota = dadosXml?.forma_pagamento_detectada || nota.forma_pagamento || "Boleto";
+        dadosXml = parsearXML(nota.xml_content);
+
+        // Forma de pagamento detectada do XML (obrigatório ter XML)
+        const formaPagamentoNota = dadosXml?.forma_pagamento_detectada || "Boleto";
         // Status: Pago se PIX ou Dinheiro, caso contrário Pendente
         const statusPagamento = (formaPagamentoNota === "PIX" || formaPagamentoNota === "Dinheiro") ? "Pago" : "Pendente";
 
@@ -388,12 +401,17 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
                 <div className="max-h-44 overflow-y-auto space-y-1 bg-gray-800/50 rounded-xl p-3">
                   {notas.map(nota => {
                     const bloqueada = notasBloqueadas.has(nota.id);
+                    const semXml = notasSemXml.has(nota.id);
                     return (
                       <label key={nota.id} className={`flex items-center gap-3 rounded-lg px-2 py-1.5 transition-all ${bloqueada ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:bg-gray-800"}`}>
                         <input type="checkbox" checked={selecionadas.has(nota.id) && !bloqueada} onChange={() => toggleNota(nota.id)} disabled={bloqueada} className="accent-green-500 w-4 h-4 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <span className="text-white text-sm truncate block">{nota.cliente_nome || "—"}</span>
-                          <span className="text-gray-500 text-xs">NF {nota.numero} · {nota.data_emissao || "—"}{bloqueada ? " · 🚫 bloqueado" : ""}</span>
+                          <span className="text-gray-500 text-xs">
+                            NF {nota.numero} · {nota.data_emissao || "—"}
+                            {semXml ? " · ⚠️ sem XML — importe manualmente" : ""}
+                            {!semXml && bloqueada ? " · 🚫 bloqueado" : ""}
+                          </span>
                         </div>
                         <span className="text-sm font-bold flex-shrink-0" style={{ color: GREEN }}>
                           R$ {Number(nota.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
@@ -402,7 +420,7 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
                     );
                   })}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{notasSelecionadas.length} selecionada(s) · {notasBloqueadas.size} bloqueada(s)</p>
+                <p className="text-xs text-gray-500 mt-1">{notasSelecionadas.length} selecionada(s) · {notasSemXml.size} sem XML · {notasBloqueadas.size - notasSemXml.size > 0 ? `${notasBloqueadas.size - notasSemXml.size} bloqueada(s) por fornecedor` : ""}</p>
               </div>
 
 
