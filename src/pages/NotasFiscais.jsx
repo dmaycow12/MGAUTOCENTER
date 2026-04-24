@@ -835,28 +835,6 @@ export default function NotasFiscais() {
     }
   };
 
-  const exportarRelatorio = () => {
-    if (filtradas.length === 0) return alert("Nenhuma nota no filtro atual.");
-    setGerandoZip(true);
-    const header = ["Tipo", "Número", "Série", "Status", "Cliente", "Data Emissão", "Valor Total", "Chave Acesso", "Observações"];
-    const rows = filtradas.map(n => [
-      n.tipo || "", n.numero || "", n.serie || "", n.status || "", n.cliente_nome || "",
-      n.data_emissao || "", Number(n.valor_total || 0).toFixed(2).replace(".", ","),
-      n.chave_acesso || "", (n.observacoes || "").replace(/[\r\n;]/g, " "),
-    ]);
-    const sep = ";";
-    const bom = "\uFEFF";
-    const csvContent = bom + [header, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(sep)).join("\r\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `notas_fiscais_${periodoRange.inicio}_${periodoRange.fim}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setGerandoZip(false);
-  };
-
   const exportarXmlsZip = async () => {
     const comXml = filtradas.filter(n => {
       const xml = n.xml_original || n.xml_content || "";
@@ -989,11 +967,8 @@ export default function NotasFiscais() {
           <button onClick={() => { const novo = filtroModeloNF.includes("NFSe") ? filtroModeloNF.filter(x => x !== "NFSe") : [...filtroModeloNF, "NFSe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
         </div>
         <div className="flex gap-0.5">
-          <button onClick={() => exportarRelatorio()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-            {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />} Exportar
-          </button>
           <button onClick={() => exportarXmlsZip()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-            {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} XML ZIP
+            {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Exportar XML
           </button>
           <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             <BarChart2 className="w-4 h-4" /> Sintegra
