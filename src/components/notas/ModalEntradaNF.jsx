@@ -280,6 +280,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
           xml_content: JSON.stringify(itensParaSalvar),
           numero: dados.numero || "",
           serie: dados.serie || "",
+          forma_pagamento: financeiro.forma_pagamento || "",
         });
       } else {
         await base44.entities.NotaFiscal.create({

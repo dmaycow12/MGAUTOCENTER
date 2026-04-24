@@ -175,13 +175,16 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
       const resultado = { nota, ok: false, msg: "" };
 
       try {
-        // Parsear XML se disponível
-        if (nota.xml_content && nota.xml_content.includes("<")) {
-          dadosXml = parsearXML(nota.xml_content);
+        // Parsear XML se disponível (xml_content pode ser XML completo ou JSON de itens)
+        if (nota.xml_content) {
+          const xmlStr = nota.xml_content.trim();
+          if (xmlStr.startsWith("<") || xmlStr.includes("<nfeProc") || xmlStr.includes("<NFe") || xmlStr.includes("<det")) {
+            dadosXml = parsearXML(nota.xml_content);
+          }
         }
 
-        // Forma de pagamento individual do XML
-        const formaPagamentoNota = dadosXml?.forma_pagamento_detectada || "PIX";
+        // Forma de pagamento: 1) já salvo na nota, 2) detectado do XML, 3) fallback PIX
+        const formaPagamentoNota = nota.forma_pagamento || dadosXml?.forma_pagamento_detectada || "PIX";
 
         // 1. Cadastrar fornecedor
         if (cadastrarFornecedores && dadosXml?.cnpjEmit) {
@@ -227,6 +230,7 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
         const itensParaSalvar = dadosXml?.itens?.map(i => ({ descricao: i.descricao, quantidade: i.quantidade, codigo: i.codigo })) || [];
         await base44.entities.NotaFiscal.update(nota.id, {
           status: "Lançada",
+          forma_pagamento: formaPagamentoNota,
           ...(itensParaSalvar.length > 0 ? { xml_content: JSON.stringify(itensParaSalvar) } : {}),
         });
 
