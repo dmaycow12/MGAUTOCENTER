@@ -117,6 +117,9 @@ Deno.serve(async (req) => {
 
       const data_emissao = (nf.data_emissao || '').substring(0, 10);
 
+      // Filtrar notas anteriores a 01/03/2026
+      if (data_emissao && data_emissao < '2026-03-01') continue;
+
       await base44.asServiceRole.entities.NotaFiscal.create({
         tipo: 'NFe',
         numero: numeroNF,
@@ -146,6 +149,9 @@ Deno.serve(async (req) => {
 
       const data_emissao = (nf.data_emissao || '').substring(0, 10);
       const valorTotal = parseFloat(nf.valor_servicos || '0');
+
+      // Filtrar notas anteriores a 01/03/2026
+      if (data_emissao && data_emissao < '2026-03-01') continue;
 
       await base44.asServiceRole.entities.NotaFiscal.create({
         tipo: 'NFSe',
