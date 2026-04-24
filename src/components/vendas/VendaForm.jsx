@@ -251,7 +251,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const salvarNovoCliente = async () => {
     if (!novoClienteForm.nome.trim()) return alert("Informe o nome do cliente.");
     setSalvandoCliente(true);
-    const criado = await base44.entities.Cliente.create(novoClienteForm);
+    const criado = await base44.entities.Cadastro.create({ ...novoClienteForm, categoria: "Cliente" });
     clientes.push(criado);
     onClienteChange(criado.id);
     setShowNovoCliente(false);

@@ -217,7 +217,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
     Promise.all([
       base44.entities.Estoque.list("-created_date", 500),
       base44.entities.NotaFiscal.list("-created_date", 500),
-      base44.entities.Cliente.list("-created_date", 500),
+      base44.entities.Cadastro.list("-created_date", 500),
     ]).then(([est, nfs, clientes]) => {
       setEstoqueExistente(est);
 
@@ -259,11 +259,11 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
     setErro("");
     try {
       if (cadastrarFornecedor && !fornecedorJaCadastrado && nomeFornecedor) {
-        const clientesAtuais = await base44.entities.Cliente.list("-created_date", 500);
+        const clientesAtuais = await base44.entities.Cadastro.list("-created_date", 500);
         const cnpjLimpo = dados.cnpjEmit?.replace(/\D/g, "");
         const jaExiste = cnpjLimpo && clientesAtuais.find(c => c.cpf_cnpj?.replace(/\D/g, "") === cnpjLimpo);
         if (!jaExiste) {
-          await base44.entities.Cliente.create({
+          await base44.entities.Cadastro.create({
             nome: nomeFornecedor, tipo: "Pessoa Jurídica", cpf_cnpj: dados.cnpjEmit || "",
             endereco: dados.emit_logr || "", numero: dados.emit_nro || "", bairro: dados.emit_bairro || "",
             cidade: dados.emit_mun || "", estado: dados.emit_uf || "", cep: dados.emit_cep || "",

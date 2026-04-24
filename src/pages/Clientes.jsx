@@ -42,7 +42,7 @@ export default function Clientes() {
     if (!editCell) return;
     const cliente = clientes.find(c => c.id === clienteId);
     if (cliente && String(cliente[field] || "") !== String(editValue)) {
-      await base44.entities.Cliente.update(clienteId, { [field]: editValue });
+      await base44.entities.Cadastro.update(clienteId, { [field]: editValue });
       setClientes(prev => prev.map(c => c.id === clienteId ? { ...c, [field]: editValue } : c));
     }
     setEditCell(null);
@@ -107,7 +107,7 @@ export default function Clientes() {
   }, []);
 
   const load = async () => {
-    const c = await base44.entities.Cliente.list("-created_date", 200);
+    const c = await base44.entities.Cadastro.list("-created_date", 200);
     setClientes(c);
     setLoading(false);
   };
@@ -135,9 +135,9 @@ export default function Clientes() {
       if (duplicado) return alert(`Já existe um cadastro com este CPF/CNPJ: ${duplicado.nome}`);
     }
     if (editando) {
-      await base44.entities.Cliente.update(editando.id, formNormalizado);
+      await base44.entities.Cadastro.update(editando.id, formNormalizado);
     } else {
-      await base44.entities.Cliente.create(formNormalizado);
+      await base44.entities.Cadastro.create(formNormalizado);
     }
     setShowForm(false);
     setEditando(null);
@@ -148,7 +148,7 @@ export default function Clientes() {
   const excluir = async (c) => {
     if (isConsumidor(c)) { setAvisoConsumidor(true); return; }
     if (!confirm("Excluir este cliente?")) return;
-    await base44.entities.Cliente.delete(c.id);
+    await base44.entities.Cadastro.delete(c.id);
     load();
   };
 

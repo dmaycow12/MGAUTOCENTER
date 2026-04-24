@@ -1,0 +1,83 @@
+{
+  "type": "object",
+  "properties": {
+    "categoria": {
+      "type": "string",
+      "title": "Categoria",
+      "enum": [
+        "Cliente",
+        "Fornecedor",
+        "Funcion\u00e1rio",
+        "Transportadora"
+      ],
+      "default": "Cliente"
+    },
+    "nome": {
+      "type": "string",
+      "title": "Nome / Raz\u00e3o Social"
+    },
+    "nome_fantasia": {
+      "type": "string",
+      "title": "Nome Social / Nome Fantasia"
+    },
+    "tipo": {
+      "type": "string",
+      "title": "Tipo",
+      "enum": [
+        "Pessoa F\u00edsica",
+        "Pessoa Jur\u00eddica"
+      ],
+      "default": "Pessoa F\u00edsica"
+    },
+    "cpf_cnpj": {
+      "type": "string",
+      "title": "CPF / CNPJ"
+    },
+    "rg_ie": {
+      "type": "string",
+      "title": "RG / Inscri\u00e7\u00e3o Estadual"
+    },
+    "telefone": {
+      "type": "string",
+      "title": "Telefone / WhatsApp"
+    },
+    "email": {
+      "type": "string",
+      "title": "E-mail"
+    },
+    "cep": {
+      "type": "string",
+      "title": "CEP"
+    },
+    "endereco": {
+      "type": "string",
+      "title": "Endere\u00e7o"
+    },
+    "numero": {
+      "type": "string",
+      "title": "N\u00famero"
+    },
+    "complemento": {
+      "type": "string",
+      "title": "Complemento"
+    },
+    "bairro": {
+      "type": "string",
+      "title": "Bairro"
+    },
+    "cidade": {
+      "type": "string",
+      "title": "Cidade"
+    },
+    "estado": {
+      "type": "string",
+      "title": "Estado"
+    },
+    "observacoes": {
+      "type": "string",
+      "title": "Observa\u00e7\u00f5es"
+    }
+  },
+  "name": "Cadastro",
+  "required": []
+}

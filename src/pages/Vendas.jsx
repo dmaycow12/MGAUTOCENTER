@@ -155,7 +155,7 @@ export default function Vendas() {
       console.log("Iniciando carregamento de Vendas...");
       const [o, c, n] = await Promise.all([
         base44.entities.Vendas.list("-created_date", 2000),
-      base44.entities.Cliente.list("-created_date", 200),
+      base44.entities.Cadastro.list("-created_date", 200),
       base44.entities.NotaFiscal.list("-created_date", 1000),
     ]);
       console.log("Vendas carregadas:", o?.length || 0);
