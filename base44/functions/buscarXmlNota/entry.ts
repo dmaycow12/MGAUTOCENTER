@@ -49,7 +49,10 @@ Deno.serve(async (req) => {
           if (r2.ok) candidate = await r2.text();
         }
       }
-      if (candidate && candidate.includes('<det')) {
+      // Aceita apenas XML completo com dados de itens (não apenas resumo resNFe)
+      if (candidate && candidate.length > 500 && (
+        candidate.includes('infNFe') || candidate.includes('nfeProc') || candidate.includes('<det') || candidate.includes(':det')
+      )) {
         xml = candidate;
         break;
       }
@@ -63,12 +66,17 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Salva XML na nota para não precisar buscar novamente
+  // Tenta salvar XML na nota (pode falhar se o XML for muito grande — não é erro crítico)
   if (nota_id) {
     try {
-      await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { xml_content: xml });
+      // Usar apenas os primeiros 50KB para não exceder o limite do campo
+      const xmlParaSalvar = xml.length > 50000 ? '' : xml;
+      if (xmlParaSalvar) {
+        await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { xml_content: xmlParaSalvar });
+      }
     } catch (_) {}
   }
 
+  // Sempre retorna o XML completo para o frontend usar, independente de salvar no banco
   return Response.json({ sucesso: true, xml });
 });
