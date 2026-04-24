@@ -8,7 +8,7 @@ const arredondarVendaParaCinco = (valor) => {
 };
 
 const defaultForm = () => ({
-  codigo: "", descricao: "", categoria: "", marca: "",
+  codigo: "", descricao: "", marca: "",
   quantidade: 0, estoque_minimo: 0, valor_custo: 0, valor_venda: 0,
   localizacao: "", fornecedor: "", ncm: "87089990", cfop: "5405", cest: "", observacoes: ""
 });
@@ -37,9 +37,7 @@ export default function Estoque() {
   const [deletando, setDeletando] = useState(false);
   const [progressoReajuste, setProgressoReajuste] = useState({ isOpen: false, progresso: 0, status: 'processando', sucessos: 0, erro: null });
   const [filtroMarcas, setFiltroMarcas] = useState([]);
-  const [filtroCategorias, setFiltroCategorias] = useState([]);
   const [showMarcaDropdown, setShowMarcaDropdown] = useState(false);
-  const [showCatDropdown, setShowCatDropdown] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [checklistMode, setChecklistMode] = useState(() => localStorage.getItem("estoque_checklist_ativo") === "1");
   const [conferidos, setConferidos] = useState(new Set());
@@ -47,7 +45,7 @@ export default function Estoque() {
   const [checklistConfigId, setChecklistConfigId] = useState(null);
   const [colunas, setColunas] = useState(() => {
     const saved = localStorage.getItem("estoque_colunas");
-    return saved ? JSON.parse(saved) : { codigo: true, categoria: true, marca: true, estoque_minimo: true, valor_custo: true, valor_venda: true };
+    return saved ? JSON.parse(saved) : { codigo: true, marca: true, estoque_minimo: true, valor_custo: true, valor_venda: true };
   });
   const marcaDropdownRef = useRef(null);
   const catDropdownRef = useRef(null);
@@ -81,7 +79,6 @@ export default function Estoque() {
 
   const colunasDisponiveis = [
     { key: "codigo", label: "CÓDIGO" },
-    { key: "categoria", label: "CATEGORIA" },
     { key: "marca", label: "MARCA" },
     { key: "estoque_minimo", label: "MÍN. ESTOQUE" },
     { key: "valor_custo", label: "CUSTO" },
@@ -93,7 +90,6 @@ export default function Estoque() {
   useEffect(() => {
     const handleClick = (e) => {
       if (marcaDropdownRef.current && !marcaDropdownRef.current.contains(e.target)) setShowMarcaDropdown(false);
-      if (catDropdownRef.current && !catDropdownRef.current.contains(e.target)) setShowCatDropdown(false);
       if (filterRef.current && !filterRef.current.contains(e.target)) setFilterOpen(false);
     };
     document.addEventListener("mousedown", handleClick);
@@ -202,8 +198,7 @@ export default function Estoque() {
       i.marca?.toLowerCase().includes(search.toLowerCase());
     const matchFiltro = filtro === "Todos" || (filtro === "Estoque Baixo" && i.quantidade <= i.estoque_minimo);
     const matchMarca = filtroMarcas.length === 0 || filtroMarcas.includes(i.marca);
-    const matchCategoria = filtroCategorias.length === 0 || filtroCategorias.includes(i.categoria);
-    return matchSearch && matchFiltro && matchMarca && matchCategoria;
+    return matchSearch && matchFiltro && matchMarca;
   });
 
   // Aplicar ordenação
@@ -247,7 +242,7 @@ export default function Estoque() {
     a.href = url; a.download = "estoque.csv"; a.click();
     URL.revokeObjectURL(url);
   };
-  const grupos = ["Todos", ...Array.from(new Set(items.map(i => i.categoria).filter(Boolean)))];
+  const grupos = ["Todos"];
 
   const aplicarReajuste = async () => {
     if (!reajusteValor || Number(reajusteValor) <= 0) return alert("Informe um valor válido.");
@@ -455,7 +450,7 @@ export default function Estoque() {
           {/* Filtro Marca */}
           <div ref={marcaDropdownRef} className="relative flex-1">
             <button
-              onClick={() => { setShowMarcaDropdown(v => !v); setShowCatDropdown(false); }}
+              onClick={() => setShowMarcaDropdown(v => !v)}
               className="w-full flex items-center justify-center gap-2 h-11 px-3 rounded-xl text-sm font-semibold transition-all relative"
               style={{background: filtroMarcas.length > 0 ? "#0a4fd4" : "#062C9B", color: "#fff", border: "1px solid #1a5ce6"}}
             >
@@ -483,38 +478,8 @@ export default function Estoque() {
             )}
           </div>
 
-          {/* Filtro Categoria */}
-          <div ref={catDropdownRef} className="relative flex-1">
-            <button
-              onClick={() => { setShowCatDropdown(v => !v); setShowMarcaDropdown(false); }}
-              className="w-full flex items-center justify-center gap-2 h-11 px-3 rounded-xl text-sm font-semibold transition-all relative"
-              style={{background: filtroCategorias.length > 0 ? "#0a4fd4" : "#062C9B", color: "#fff", border: "1px solid #1a5ce6"}}
-            >
-              <span className="truncate">{filtroCategorias.length > 0 ? `Categ. (${filtroCategorias.length})` : "Categoria"}</span>
-              {filtroCategorias.length > 0 && (
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 transition-all"
-                  onClick={e => { e.stopPropagation(); setFiltroCategorias([]); }}>
-                  <X className="w-3 h-3" />
-                </span>
-              )}
-            </button>
-            {showCatDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-700 rounded-xl z-20 shadow-xl p-2 max-h-56 overflow-y-auto space-y-0.5">
-                {Array.from(new Set(items.map(i => i.categoria).filter(Boolean))).sort().map(cat => (
-                  <label key={cat} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800 cursor-pointer transition-all">
-                    <input type="checkbox" checked={filtroCategorias.includes(cat)}
-                      onChange={() => setFiltroCategorias(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
-                      className="accent-blue-500 w-4 h-4 cursor-pointer" />
-                    <span className="text-sm text-gray-300 flex-1">{cat}</span>
-                    <span className="text-xs text-gray-600">{items.filter(i => i.categoria === cat).length}</span>
-                  </label>
-                ))}
-                {items.filter(i => i.categoria).length === 0 && <p className="text-gray-500 text-xs text-center py-3">Sem categorias</p>}
-              </div>
-            )}
-          </div>
 
-          {/* Filtro Estoque Baixo */}
+              {/* Filtro Estoque Baixo */}
           <button
             onClick={() => setFiltro(filtro === "Estoque Baixo" ? "Todos" : "Estoque Baixo")}
             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
@@ -692,11 +657,7 @@ export default function Estoque() {
                   <p className="text-green-400 font-bold text-sm">R$ {Number(item.valor_venda||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}</p>
                 </div>
               </div>
-              {item.categoria && (
-                <div className="px-4 pb-3">
-                  <span className="text-gray-500 text-xs bg-gray-800 px-2 py-0.5 rounded-full">{item.categoria}</span>
-                </div>
-              )}
+
             </div>
           );
           })}
@@ -716,7 +677,6 @@ export default function Estoque() {
                   <th className="px-4 py-3 cursor-pointer hover:text-white transition-all" onClick={() => handleSort("descricao")}>
                     <div className="flex items-center gap-1">Descrição {ordenacao.campo === "descricao" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
                   </th>
-                  {colunas.categoria && <th className="px-4 py-3 cursor-pointer hover:text-white transition-all" onClick={() => handleSort("categoria")}><div className="flex items-center gap-1">Categoria {ordenacao.campo === "categoria" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
                   {colunas.marca && <th className="px-4 py-3 cursor-pointer hover:text-white transition-all" onClick={() => handleSort("marca")}><div className="flex items-center gap-1">Marca {ordenacao.campo === "marca" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
                   <th className="px-4 py-3 text-center cursor-pointer hover:text-white transition-all" onClick={() => handleSort("quantidade")}>
                     <div className="flex items-center justify-center gap-1">Qtd {ordenacao.campo === "quantidade" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
@@ -746,7 +706,6 @@ export default function Estoque() {
                         <CellEdit item={item} field="descricao" className="text-white font-medium" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} />
                       </div>
                     </td>
-                    {colunas.categoria && <td className="px-4 py-3 text-gray-400"><CellEdit item={item} field="categoria" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
                     {colunas.marca && <td className="px-4 py-3 text-gray-400"><CellEdit item={item} field="marca" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
                     <td className="px-4 py-3 text-center">
                       <span className={`font-bold ${item.quantidade <= item.estoque_minimo ? "text-red-400" : "text-white"}`}>
@@ -854,7 +813,6 @@ export default function Estoque() {
                 <F label="Descrição *" className="col-span-2">
                   <input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} className="input-dark" />
                 </F>
-                <F label="Categoria"><input value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} className="input-dark" /></F>
                 <F label="Marca"><input value={form.marca} onChange={e => setForm({ ...form, marca: e.target.value })} className="input-dark" /></F>
                 <F label="Estoque Mínimo">
                   <input type="text" value={form.estoque_minimo} onChange={e => setForm({ ...form, estoque_minimo: Number(e.target.value.replace(/[^0-9.]/g, "") || 0) })} className="input-dark" />

@@ -511,7 +511,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                                 onChange={changes => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, ...changes } : it))}
                               />
                               {/* Código, Marca e Categoria — sempre visíveis */}
-                              <div className="grid grid-cols-3 gap-2">
+                              <div className="grid grid-cols-2 gap-2">
                                 <div>
                                   <p className="text-xs text-gray-500 mb-1">Código</p>
                                   <input
@@ -528,15 +528,6 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                                     onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, marca: e.target.value } : it))}
                                     className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
                                     placeholder="Ex: Bosch"
-                                  />
-                                </div>
-                                <div>
-                                  <p className="text-xs text-gray-500 mb-1">Categoria</p>
-                                  <input
-                                    value={item.categoria || ""}
-                                    onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, categoria: e.target.value } : it))}
-                                    className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
-                                    placeholder="Ex: Freios"
                                   />
                                 </div>
                               </div>
