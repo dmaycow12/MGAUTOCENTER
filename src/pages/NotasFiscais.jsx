@@ -151,6 +151,7 @@ export default function NotasFiscais() {
   const [errosForm, setErrosForm] = useState({});
   const [configsNF, setConfigsNF] = useState([]);
   const [debugModal, setDebugModal] = useState(null);
+  const [avisoExclusao, setAvisoExclusao] = useState(null); // nota que tentou excluir mas não pode
 
   useEffect(() => {
     load().then(async ({ estoque: estoqueData }) => {
@@ -428,9 +429,48 @@ export default function NotasFiscais() {
     }
   };
 
+  const cancelarLancamento = async (nota) => {
+    if (!confirm(`Cancelar o lançamento da NF ${nota.numero || ""}? Isso voltará o status para "Importada" para que possa ser relançada.`)) return;
+    try {
+      // Reverter estoque: subtrair o que foi dado entrada
+      if (nota.xml_content) {
+        try {
+          const itens = JSON.parse(nota.xml_content);
+          if (Array.isArray(itens)) {
+            const estoqueAtual = await base44.entities.Estoque.list("-created_date", 1000);
+            for (const item of itens) {
+              if (!item.codigo || !item.quantidade) continue;
+              const prod = estoqueAtual.find(e => e.codigo === item.codigo);
+              if (prod) {
+                const novaQtd = Math.max(0, (prod.quantidade || 0) - item.quantidade);
+                await base44.entities.Estoque.update(prod.id, { quantidade: novaQtd });
+              }
+            }
+          }
+        } catch (_) {}
+      }
+      // Remover lançamento financeiro vinculado
+      try {
+        const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
+        const vinculados = financeiros.filter(f => f.descricao?.includes(`NF ${nota.numero}`));
+        for (const f of vinculados) await base44.entities.Financeiro.delete(f.id);
+      } catch (_) {}
+      // Voltar status para Importada
+      await base44.entities.NotaFiscal.update(nota.id, { status: "Importada" });
+      feedback("sucesso", "Lançamento cancelado. Nota voltou para Importada.");
+      load();
+    } catch (e) {
+      feedback("erro", "Erro ao cancelar lançamento: " + e.message);
+    }
+  };
+
   const excluir = async (id) => {
-    if (!confirm("Excluir esta nota fiscal?")) return;
     const nota = notas.find(n => n.id === id);
+    if (nota?.status === 'Emitida' || nota?.status === 'Lançada') {
+      setAvisoExclusao(nota);
+      return;
+    }
+    if (!confirm("Excluir esta nota fiscal?")) return;
     if (nota?.numero) {
       const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
       const vinculados = financeiros.filter(f => f.descricao?.includes(`NF ${nota.numero}`));
@@ -993,6 +1033,9 @@ export default function NotasFiscais() {
                   {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
                     <button title="Cancelar" onClick={() => cancelarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg transition-all"><Ban className="w-3.5 h-3.5"/></button>
                   )}
+                  {nota.status === 'Lançada' && (
+                    <button title="Cancelar Lançamento" onClick={() => cancelarLancamento(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg transition-all"><Ban className="w-3.5 h-3.5"/></button>
+                  )}
 
                   <button onClick={() => excluir(nota.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
                 </div>
@@ -1097,6 +1140,11 @@ export default function NotasFiscais() {
                         )}
                         {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
                           <button title="Cancelar Nota" onClick={() => cancelarNota(nota)} className="p-1 text-gray-500 hover:text-orange-400 transition-all">
+                            <Ban className="w-4 h-4" />
+                          </button>
+                        )}
+                        {nota.status === 'Lançada' && (
+                          <button title="Cancelar Lançamento" onClick={() => cancelarLancamento(nota)} className="p-1 text-gray-500 hover:text-orange-400 transition-all">
                             <Ban className="w-4 h-4" />
                           </button>
                         )}
@@ -1466,6 +1514,35 @@ export default function NotasFiscais() {
           configs={configsNF}
           onClose={() => setShowSintegra(false)}
         />
+      )}
+
+      {/* Modal aviso não pode excluir */}
+      {avisoExclusao && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-red-500/30 rounded-2xl w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <h2 className="text-white font-semibold">Não é possível excluir</h2>
+                <p className="text-gray-400 text-sm">NF {avisoExclusao.numero} — {avisoExclusao.cliente_nome || "—"}</p>
+              </div>
+            </div>
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-sm text-red-300">
+              Notas com status <span className="font-bold text-white">"{avisoExclusao.status}"</span> não podem ser excluídas.
+              {avisoExclusao.status === 'Lançada' && (
+                <p className="mt-2 text-gray-400">Para corrigir, use o botão <span className="text-orange-400 font-medium">Cancelar Lançamento</span> (ícone <Ban className="w-3 h-3 inline" />) para voltar ao status "Importada" e relançar.</p>
+              )}
+              {avisoExclusao.status === 'Emitida' && (
+                <p className="mt-2 text-gray-400">Para cancelar uma nota emitida, use o botão <span className="text-orange-400 font-medium">Cancelar Nota</span> na SEFAZ.</p>
+              )}
+            </div>
+            <button onClick={() => setAvisoExclusao(null)} className="w-full py-2.5 rounded-xl text-sm font-semibold text-white bg-gray-700 hover:bg-gray-600 transition-all">
+              Entendido
+            </button>
+          </div>
+        </div>
       )}
 
       {debugModal && (

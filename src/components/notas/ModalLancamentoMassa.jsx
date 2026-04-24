@@ -248,7 +248,7 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
             tipo: "Despesa", categoria: "Compra de Peças / Materiais",
             descricao: `NF ${nota.numero} — ${nomeForneced}`,
             valor: valorNota, forma_pagamento: formaPagamentoNota,
-            data_vencimento: nota.data_emissao || "",
+            data_vencimento: dadosXml?.dataEmissao || nota.data_emissao || "",
             data_pagamento: statusPagamento === "Pago" ? new Date().toISOString().split("T")[0] : "",
             status: statusPagamento,
           });
