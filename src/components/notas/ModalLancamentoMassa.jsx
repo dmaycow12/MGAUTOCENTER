@@ -68,9 +68,8 @@ function parsearXML(xmlOriginal) {
 
 export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
   const [selecionadas, setSelecionadas] = useState(() => new Set(notas.map(n => n.id)));
-  const [cadastrarFornecedores, setCadastrarFornecedores] = useState(true);
-  const [cadastrarProdutos, setCadastrarProdutos] = useState(true);
-  const [statusPagamento, setStatusPagamento] = useState("Pendente");
+  const [cadastrarFornecedores] = useState(true);
+  const [cadastrarProdutos] = useState(false);
   const [processando, setProcessando] = useState(false);
   const [resultados, setResultados] = useState(null);
   const [progresso, setProgresso] = useState({ atual: 0, total: 0, label: "" });
@@ -185,6 +184,8 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
 
         // Forma de pagamento: 1) já salvo na nota, 2) detectado do XML, 3) fallback PIX
         const formaPagamentoNota = nota.forma_pagamento || dadosXml?.forma_pagamento_detectada || "PIX";
+        // Status: Pago se PIX ou Dinheiro, caso contrário Pendente
+        const statusPagamento = (formaPagamentoNota === "PIX" || formaPagamentoNota === "Dinheiro") ? "Pago" : "Pendente";
 
         // 1. Cadastrar fornecedor (verifica por CNPJ e por nome para evitar duplicatas)
         if (cadastrarFornecedores && dadosXml?.emitente) {
@@ -404,39 +405,14 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
                 <p className="text-xs text-gray-500 mt-1">{notasSelecionadas.length} selecionada(s) · {notasBloqueadas.size} bloqueada(s)</p>
               </div>
 
-              {/* Opções */}
-              <div className="bg-gray-800 rounded-xl p-4 space-y-3">
-                <p className="text-sm font-medium text-white mb-1">Opções de Lançamento</p>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" checked={cadastrarFornecedores} onChange={e => setCadastrarFornecedores(e.target.checked)} className="accent-green-500 w-4 h-4" />
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-blue-400" />
-                    <span className="text-sm text-gray-300">Cadastrar fornecedores novos automaticamente</span>
-                  </div>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" checked={cadastrarProdutos} onChange={e => setCadastrarProdutos(e.target.checked)} className="accent-green-500 w-4 h-4" />
-                  <div className="flex items-center gap-2">
-                    <Package className="w-4 h-4 text-orange-400" />
-                    <span className="text-sm text-gray-300">Dar entrada dos produtos no estoque</span>
-                  </div>
-                </label>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Status do Pagamento</label>
-                  <select value={statusPagamento} onChange={e => setStatusPagamento(e.target.value)} className="input-dark">
-                    <option value="Pendente">Pendente</option>
-                    <option value="Pago">Pago</option>
-                    <option value="Atrasado">Atrasado</option>
-                  </select>
-                </div>
-              </div>
+
 
               {/* Resumo */}
               <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-3 space-y-1.5 text-xs text-gray-400">
                 <div className="flex items-center gap-2"><FileText className="w-3.5 h-3.5 text-blue-400" /> {notasSelecionadas.length} nota(s) serão marcadas como <span className="text-white font-medium">Lançada</span></div>
-                <div className="flex items-center gap-2"><DollarSign className="w-3.5 h-3.5 text-yellow-400" /> Forma de pagamento <span className="text-white font-medium">detectada individualmente no XML</span> de cada nota</div>
-                {cadastrarFornecedores && <div className="flex items-center gap-2"><Users className="w-3.5 h-3.5 text-blue-400" /> Fornecedores novos serão cadastrados automaticamente</div>}
-                {cadastrarProdutos && <div className="flex items-center gap-2"><Package className="w-3.5 h-3.5 text-orange-400" /> Produtos entrarão no estoque (novos serão criados)</div>}
+                <div className="flex items-center gap-2"><DollarSign className="w-3.5 h-3.5 text-yellow-400" /> Forma de pagamento detectada por XML · PIX/Dinheiro = <span className="text-white font-medium">Pago</span>, demais = <span className="text-white font-medium">Pendente</span></div>
+                <div className="flex items-center gap-2"><Users className="w-3.5 h-3.5 text-blue-400" /> Fornecedores novos cadastrados automaticamente</div>
+                <div className="flex items-center gap-2"><Package className="w-3.5 h-3.5 text-orange-400" /> Produtos <span className="text-white font-medium">não</span> são lançados no estoque</div>
               </div>
 
               <button
