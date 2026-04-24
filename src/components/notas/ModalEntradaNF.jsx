@@ -264,7 +264,8 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
         const jaExiste = cnpjLimpo && clientesAtuais.find(c => c.cpf_cnpj?.replace(/\D/g, "") === cnpjLimpo);
         if (!jaExiste) {
           await base44.entities.Cadastro.create({
-            nome: nomeFornecedor, tipo: "Pessoa Jurídica", cpf_cnpj: dados.cnpjEmit || "",
+            categoria: "Fornecedor", nome: nomeFornecedor, tipo: "Pessoa Jurídica", cpf_cnpj: dados.cnpjEmit || "",
+            rg_ie: dados.emit_ie || "",
             endereco: dados.emit_logr || "", numero: dados.emit_nro || "", bairro: dados.emit_bairro || "",
             cidade: dados.emit_mun || "", estado: dados.emit_uf || "", cep: dados.emit_cep || "",
             observacoes: "Fornecedor cadastrado automaticamente via importação de NF",
