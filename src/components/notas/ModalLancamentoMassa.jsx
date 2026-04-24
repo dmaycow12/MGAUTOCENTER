@@ -280,9 +280,9 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
   const erros = resultados?.filter(r => !r.ok).length || 0;
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl my-4">
-        <div className="flex items-center justify-between p-5 border-b border-gray-800">
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl flex flex-col" style={{maxHeight: "90vh"}}>
+        <div className="flex items-center justify-between p-5 border-b border-gray-800 flex-shrink-0">
           <div>
             <h2 className="text-white font-semibold text-lg">Lançamento em Massa</h2>
             <p className="text-gray-500 text-xs mt-0.5">{notas.length} nota(s) disponíveis · forma de pagamento individual por XML</p>
@@ -290,7 +290,7 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
           <button onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
         </div>
 
-        <div className="p-5 space-y-5">
+        <div className="overflow-y-auto flex-1 p-5 space-y-5">
           {/* RESULTADO FINAL */}
           {resultados && (
             <div className="space-y-3">
