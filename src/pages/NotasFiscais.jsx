@@ -857,6 +857,33 @@ export default function NotasFiscais() {
     setGerandoZip(false);
   };
 
+  const exportarXmlsZip = async () => {
+    const comXml = filtradas.filter(n => {
+      const xml = n.xml_original || n.xml_content || "";
+      return xml.trim().startsWith("<");
+    });
+    if (comXml.length === 0) return alert("Nenhuma nota com XML disponível no filtro atual.");
+    setGerandoZip(true);
+    try {
+      const zip = new JSZip();
+      for (const nota of comXml) {
+        const xml = nota.xml_original || nota.xml_content;
+        const nome = `${nota.tipo || "NF"}-${nota.numero || nota.id}.xml`;
+        zip.file(nome, xml);
+      }
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `XMLs_NF_${periodoRange.inicio}_${periodoRange.fim}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      feedback("erro", "Erro ao gerar ZIP: " + e.message);
+    }
+    setGerandoZip(false);
+  };
+
   const gerarSintegra = () => {
     setGerandoSintegra(true);
     const nfes = filtradas.filter(n => n.tipo === "NFe");
@@ -945,7 +972,7 @@ export default function NotasFiscais() {
         <button onClick={() => { setForm(f => ({ ...f, numero: proximoNumero(notas, f.tipo), serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
           <Plus className="w-4 h-4" /> Emitir Nota
         </button>
-        {notas.filter(n => n.status === "Importada").length > 0 && (
+        {filtradas.filter(n => n.status === "Importada").length > 0 && (
           <button onClick={() => setShowLancamentoMassa(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background: "#3b82f6", color: "#fff"}} onMouseEnter={e => e.currentTarget.style.background = "#2563eb"} onMouseLeave={e => e.currentTarget.style.background = "#3b82f6"}>
             <ClipboardList className="w-4 h-4" /> Lançar em Massa
           </button>
@@ -964,6 +991,9 @@ export default function NotasFiscais() {
         <div className="flex gap-0.5">
           <button onClick={() => exportarRelatorio()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />} Exportar
+          </button>
+          <button onClick={() => exportarXmlsZip()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+            {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} XML ZIP
           </button>
           <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             <BarChart2 className="w-4 h-4" /> Sintegra
@@ -1598,7 +1628,7 @@ export default function NotasFiscais() {
 
       {showLancamentoMassa && (
         <ModalLancamentoMassa
-          notas={notas.filter(n => n.status === "Importada")}
+          notas={filtradas.filter(n => n.status === "Importada")}
           onClose={() => setShowLancamentoMassa(false)}
           onConcluido={() => {
             // Garantir que filtro de Entrada e NFe estejam ativos para ver as notas lançadas
