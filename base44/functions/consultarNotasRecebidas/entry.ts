@@ -66,10 +66,15 @@ Deno.serve(async (req) => {
       const chave = nf.chave_nfe || '';
       if (chave && chavesExistentes.has(chave)) continue;
 
+      const data_emissao = (nf.data_emissao || '').substring(0, 10);
+
+      // Filtrar ANTES de qualquer request extra — notas anteriores a 01/03/2026
+      if (data_emissao && data_emissao < '2026-03-01') continue;
+
       const situacao = (nf.situacao || '').toLowerCase();
       const status = situacao.includes('cancel') ? 'Cancelada' : 'Importada';
 
-      // Manifestação para liberar XML
+      // Manifestação para liberar XML (sem delay)
       if (chave) {
         try {
           await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}/manifestacoes`, {
@@ -77,48 +82,19 @@ Deno.serve(async (req) => {
             headers: { 'Authorization': AUTH_HEADER, 'Content-Type': 'application/json' },
             body: JSON.stringify({ tipo: 'ciencia_operacao' }),
           });
-          await new Promise(r => setTimeout(r, 800));
         } catch (_) {}
       }
 
-      // Extrair número e série do XML sem salvar o conteúdo completo
-      let numeroNF = '';
-      let serieNF = '1';
-      if (chave) {
-        for (const url of [
-          `${FOCUSNFE_BASE}/nfes_recebidas/${chave}.xml`,
-          `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
-        ]) {
-          try {
-            const r = await fetch(url, { headers: { 'Authorization': AUTH_HEADER } });
-            if (!r.ok) continue;
-            const ct = r.headers.get('content-type') || '';
-            let xmlStr = '';
-            if (ct.includes('xml')) {
-              xmlStr = await r.text();
-            } else {
-              const d = await r.json().catch(() => ({}));
-              xmlStr = d.xml || d.xml_nota || '';
-              if (!xmlStr && d.caminho_xml_nota_fiscal) {
-                const r2 = await fetch(d.caminho_xml_nota_fiscal, { headers: { 'Authorization': AUTH_HEADER } });
-                if (r2.ok) xmlStr = await r2.text();
-              }
-            }
-            if (xmlStr && xmlStr.includes('<det')) {
-              const numMatch = xmlStr.match(/<nNF>(\d+)<\/nNF>/);
-              const serieMatch = xmlStr.match(/<serie>(\d+)<\/serie>/);
-              if (numMatch) numeroNF = numMatch[1];
-              if (serieMatch) serieNF = serieMatch[1];
-              break;
-            }
-          } catch (_) {}
-        }
+      // Extrair número e série do JSON da nota (sem baixar XML completo)
+      let numeroNF = nf.numero || '';
+      let serieNF = nf.serie || '1';
+
+      // Tentar extrair número/série da chave de acesso se não veio no JSON
+      // Chave NFe: posições 25-34 = NNNNNNNN (número), 22-24 = série
+      if (!numeroNF && chave && chave.length === 44) {
+        serieNF = String(parseInt(chave.substring(22, 25), 10));
+        numeroNF = String(parseInt(chave.substring(25, 34), 10));
       }
-
-      const data_emissao = (nf.data_emissao || '').substring(0, 10);
-
-      // Filtrar notas anteriores a 01/03/2026
-      if (data_emissao && data_emissao < '2026-03-01') continue;
 
       await base44.asServiceRole.entities.NotaFiscal.create({
         tipo: 'NFe',
