@@ -78,7 +78,7 @@ export default function NotasFiscais() {
   const [servicos, setServicos] = useState([]);
   const [search, setSearch] = useState("");
   const [filtroTipo, setFiltroTipo] = useState(() => { try { const s = localStorage.getItem("nf_filtroTipo"); return s ? JSON.parse(s) : ["Saída"]; } catch { return ["Saída"]; } });
-  const [filtroModeloNF, setFiltroModeloNF] = useState(() => { try { const s = localStorage.getItem("nf_filtroModelo"); return s ? JSON.parse(s) : []; } catch { return []; } });
+  const [filtroModeloNF, setFiltroModeloNF] = useState(() => { try { const s = localStorage.getItem("nf_filtroModelo"); const parsed = s ? JSON.parse(s) : null; return parsed && parsed.length > 0 ? parsed : ["NFe", "NFCe", "NFSe"]; } catch { return ["NFe", "NFCe", "NFSe"]; } });
   const [gerandoZip, setGerandoZip] = useState(false);
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
@@ -1511,7 +1511,13 @@ export default function NotasFiscais() {
         <ModalLancamentoMassa
           notas={notas.filter(n => n.status === "Importada")}
           onClose={() => setShowLancamentoMassa(false)}
-          onConcluido={() => { feedback("sucesso", "Lançamento em massa concluído!"); load(); }}
+          onConcluido={() => {
+            // Garantir que filtro de Entrada e NFe estejam ativos para ver as notas lançadas
+            setFiltroTipo(prev => prev.includes("Entrada") ? prev : [...prev, "Entrada"]);
+            setFiltroModeloNF(prev => prev.includes("NFe") ? prev : [...prev, "NFe"]);
+            feedback("sucesso", "Lançamento em massa concluído!");
+            load();
+          }}
         />
       )}
 
