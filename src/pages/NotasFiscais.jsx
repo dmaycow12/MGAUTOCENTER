@@ -1088,13 +1088,14 @@ export default function NotasFiscais() {
                         {(nota.status === "Importada") && (
                           <button title="Lançar Entrada" onClick={async () => {
                             const xmlStr = nota.xml_content?.trim() || "";
-                            const xmlDisponivel = xmlStr.startsWith("<") && (xmlStr.includes("det") || xmlStr.includes("NFe") || xmlStr.includes("nfeProc"));
+                            // XML válido: começa com < (não é JSON de itens)
+                            const xmlDisponivel = xmlStr.startsWith("<");
                             if (xmlDisponivel) {
                               setNotaIdParaEntrada(nota.id);
                               setXmlParaEntrada(nota.xml_content);
                               setShowEntrada(true);
                             } else if (nota.chave_acesso) {
-                              feedback('sucesso', 'Buscando XML completo na SEFAZ...');
+                              feedback('sucesso', 'Buscando XML na SEFAZ...');
                               try {
                                 const res = await base44.functions.invoke('buscarXmlNota', { chave_acesso: nota.chave_acesso, nota_id: nota.id });
                                 if (res.data?.sucesso && res.data?.xml) {
@@ -1103,13 +1104,14 @@ export default function NotasFiscais() {
                                   setXmlParaEntrada(res.data.xml);
                                   setShowEntrada(true);
                                 } else {
-                                  feedback('erro', res.data?.erro || 'XML não disponível. Importe o arquivo XML manualmente.');
+                                  // XML não disponível na SEFAZ — abrir modal com dados básicos para lançamento manual
+                                  feedback('erro', 'XML não disponível na SEFAZ ainda. Use "Importar XML" para carregar o arquivo manualmente, ou aguarde a manifestação ser processada.');
                                 }
                               } catch (e) {
                                 feedback('erro', 'Erro ao buscar XML: ' + e.message);
                               }
                             } else {
-                              feedback('erro', 'Nota sem chave de acesso. Importe o arquivo XML manualmente.');
+                              feedback('erro', 'Nota sem chave de acesso. Use "Importar XML" para carregar o arquivo manualmente.');
                             }
                           }} className="p-1 text-blue-400 hover:text-blue-300 transition-all" title="Lançar Entrada">
                             <LogIn className="w-4 h-4" />
