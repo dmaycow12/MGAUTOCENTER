@@ -182,8 +182,18 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
           }
         }
 
-        // Forma de pagamento: 1) já salvo na nota, 2) detectado do XML, 3) fallback PIX
-        const formaPagamentoNota = nota.forma_pagamento || dadosXml?.forma_pagamento_detectada || "PIX";
+        // Se não conseguiu parsear o XML e a nota tem chave de acesso, buscar XML na SEFAZ
+        if (!dadosXml && nota.chave_acesso) {
+          try {
+            const resp = await base44.functions.invoke("buscarXmlNota", { chave_acesso: nota.chave_acesso, nota_id: nota.id });
+            if (resp?.data?.sucesso && resp?.data?.xml) {
+              dadosXml = parsearXML(resp.data.xml);
+            }
+          } catch (_) {}
+        }
+
+        // Forma de pagamento: 1) detectado do XML (mais confiável), 2) já salvo na nota, 3) fallback PIX
+        const formaPagamentoNota = dadosXml?.forma_pagamento_detectada || nota.forma_pagamento || "PIX";
         // Status: Pago se PIX ou Dinheiro, caso contrário Pendente
         const statusPagamento = (formaPagamentoNota === "PIX" || formaPagamentoNota === "Dinheiro") ? "Pago" : "Pendente";
 
@@ -243,7 +253,7 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
         const nomeForneced = dadosXml?.emitente || nota.cliente_nome || "Fornecedor";
         const valorNota = Number(nota.valor_total || dadosXml?.valor || 0);
         const dataRef = dadosXml?.dataEmissao || nota.data_emissao || new Date().toISOString().split("T")[0];
-        const isBoleto = formaPagamentoNota === "Boleto" && dadosXml?.boletos?.length > 1;
+        const isBoleto = formaPagamentoNota === "Boleto" && dadosXml?.boletos?.length > 0;
 
         if (isBoleto) {
           for (const bol of dadosXml.boletos) {
