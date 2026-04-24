@@ -186,11 +186,15 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
         // Forma de pagamento: 1) já salvo na nota, 2) detectado do XML, 3) fallback PIX
         const formaPagamentoNota = nota.forma_pagamento || dadosXml?.forma_pagamento_detectada || "PIX";
 
-        // 1. Cadastrar fornecedor
-        if (cadastrarFornecedores && dadosXml?.cnpjEmit) {
-          const cnpjLimpo = dadosXml.cnpjEmit.replace(/\D/g, "");
-          const jaExiste = cadastrosAtual.find(c => c.cpf_cnpj?.replace(/\D/g, "") === cnpjLimpo);
-          if (!jaExiste && cnpjLimpo) {
+        // 1. Cadastrar fornecedor (verifica por CNPJ e por nome para evitar duplicatas)
+        if (cadastrarFornecedores && dadosXml?.emitente) {
+          const cnpjLimpo = dadosXml.cnpjEmit?.replace(/\D/g, "") || "";
+          const nomeEmitente = dadosXml.emitente?.toLowerCase() || "";
+          const jaExiste = cadastrosAtual.find(c =>
+            (cnpjLimpo && c.cpf_cnpj?.replace(/\D/g, "") === cnpjLimpo) ||
+            (nomeEmitente && c.nome?.toLowerCase() === nomeEmitente)
+          );
+          if (!jaExiste) {
             const criado = await base44.entities.Cadastro.create({
               categoria: "Fornecedor", nome: dadosXml.emitente || nota.cliente_nome || "Fornecedor", tipo: "Pessoa Jurídica",
               cpf_cnpj: dadosXml.cnpjEmit, rg_ie: dadosXml.emit_ie || "",
@@ -341,7 +345,7 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
                 {loadingCadastros ? (
                   <div className="flex items-center gap-2 text-gray-500 text-sm py-2"><Loader2 className="w-4 h-4 animate-spin" /> Carregando...</div>
                 ) : (
-                  <div className="space-y-1.5 bg-gray-800/50 rounded-xl p-3">
+                  <div className="max-h-48 overflow-y-auto space-y-1.5 bg-gray-800/50 rounded-xl p-3">
                     {fornecedoresNotas.map((forn, idx) => (
                       <div key={forn.key} className="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-gray-800 transition-all">
                         <button
