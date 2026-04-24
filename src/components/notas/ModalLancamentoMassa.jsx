@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { X, CheckCircle, AlertCircle, Loader2, ChevronRight, Package, Users, DollarSign, FileText } from "lucide-react";
+import { X, CheckCircle, AlertCircle, Loader2, ChevronRight, Package, Users, DollarSign, FileText, ShieldAlert } from "lucide-react";
 
 const GREEN = "#00ff00";
 const GREEN_DARK = "#00dd00";
-const FORMAS_PAGAMENTO = ["Dinheiro", "Cartão de Crédito", "Cartão de Débito", "PIX", "Boleto", "Transferência", "A Prazo"];
 
 function limparNamespaces(xml) {
   return xml.replace(/<(\/?)[a-zA-Z0-9_]+:([a-zA-Z0-9_]+)/g, "<$1$2");
@@ -68,19 +67,57 @@ function parsearXML(xmlOriginal) {
 }
 
 export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
-  // notas = array de objetos NotaFiscal com status "Importada"
   const [selecionadas, setSelecionadas] = useState(() => new Set(notas.map(n => n.id)));
   const [cadastrarFornecedores, setCadastrarFornecedores] = useState(true);
   const [cadastrarProdutos, setCadastrarProdutos] = useState(true);
-  const [formaPagamento, setFormaPagamento] = useState("PIX");
   const [statusPagamento, setStatusPagamento] = useState("Pendente");
   const [processando, setProcessando] = useState(false);
-  const [resultados, setResultados] = useState(null); // null = não iniciou, array = concluído
+  const [resultados, setResultados] = useState(null);
   const [progresso, setProgresso] = useState({ atual: 0, total: 0, label: "" });
 
-  const notasSelecionadas = notas.filter(n => selecionadas.has(n.id));
+  // Cadastros dos fornecedores das notas — para toggle de permite_lancamento_massa
+  const [cadastrosDB, setCadastrosDB] = useState([]);
+  const [fornecedoresNotas, setFornecedoresNotas] = useState([]); // { cnpj, nome, cadastroId, permite }
+  const [loadingCadastros, setLoadingCadastros] = useState(true);
+
+  useEffect(() => {
+    base44.entities.Cadastro.list("-created_date", 500).then(cads => {
+      setCadastrosDB(cads);
+      // Mapear fornecedores únicos das notas (pelo nome do cliente)
+      const vistos = new Set();
+      const lista = [];
+      for (const nota of notas) {
+        const key = nota.cliente_nome || nota.numero;
+        if (vistos.has(key)) continue;
+        vistos.add(key);
+        // Tenta achar no cadastro pelo nome
+        const cad = cads.find(c => c.nome?.toLowerCase() === nota.cliente_nome?.toLowerCase() && c.categoria === "Fornecedor");
+        lista.push({
+          key,
+          nome: nota.cliente_nome || "Fornecedor",
+          cadastroId: cad?.id || null,
+          permite: cad ? (cad.permite_lancamento_massa !== false) : true, // default true
+        });
+      }
+      setFornecedoresNotas(lista);
+      setLoadingCadastros(false);
+    });
+  }, []);
+
+  // CNPJs dos fornecedores que NÃO permitem lançamento em massa
+  const fornecedoresBloqueados = new Set(
+    fornecedoresNotas.filter(f => !f.permite).map(f => f.nome?.toLowerCase())
+  );
+
+  // Notas cujo fornecedor está bloqueado (não permitir seleção)
+  const notasBloqueadas = new Set(
+    notas.filter(n => fornecedoresBloqueados.has(n.cliente_nome?.toLowerCase())).map(n => n.id)
+  );
+
+  const notasSelecionadas = notas.filter(n => selecionadas.has(n.id) && !notasBloqueadas.has(n.id));
 
   const toggleNota = (id) => {
+    if (notasBloqueadas.has(id)) return;
     setSelecionadas(prev => {
       const s = new Set(prev);
       s.has(id) ? s.delete(id) : s.add(id);
@@ -89,8 +126,30 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
   };
 
   const toggleTodas = () => {
-    if (selecionadas.size === notas.length) setSelecionadas(new Set());
-    else setSelecionadas(new Set(notas.map(n => n.id)));
+    const disponiveis = notas.filter(n => !notasBloqueadas.has(n.id)).map(n => n.id);
+    if (selecionadas.size === disponiveis.length) setSelecionadas(new Set());
+    else setSelecionadas(new Set(disponiveis));
+  };
+
+  const togglePermiteFornecedor = async (idx) => {
+    const forn = fornecedoresNotas[idx];
+    const novoPermite = !forn.permite;
+    const novaLista = fornecedoresNotas.map((f, i) => i === idx ? { ...f, permite: novoPermite } : f);
+    setFornecedoresNotas(novaLista);
+
+    // Salvar no banco se o cadastro existe
+    if (forn.cadastroId) {
+      await base44.entities.Cadastro.update(forn.cadastroId, { permite_lancamento_massa: novoPermite });
+    }
+
+    // Se bloqueou, desmarcar as notas desse fornecedor
+    if (!novoPermite) {
+      setSelecionadas(prev => {
+        const s = new Set(prev);
+        notas.filter(n => n.cliente_nome?.toLowerCase() === forn.nome?.toLowerCase()).forEach(n => s.delete(n.id));
+        return s;
+      });
+    }
   };
 
   const processarMassa = async () => {
@@ -98,12 +157,13 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
     setProcessando(true);
     setResultados(null);
 
-    const [estoqueAtualDB, cadastrosDB] = await Promise.all([
+    const [estoqueAtualDB, cadsAtualDB] = await Promise.all([
       base44.entities.Estoque.list("-created_date", 1000),
       base44.entities.Cadastro.list("-created_date", 500),
     ]);
 
     let estoqueAtual = [...estoqueAtualDB];
+    let cadastrosAtual = [...cadsAtualDB];
     const idsUsados = new Set();
     const resultadosList = [];
 
@@ -118,15 +178,15 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
         // Parsear XML se disponível
         if (nota.xml_content && nota.xml_content.includes("<")) {
           dadosXml = parsearXML(nota.xml_content);
-        } else if (nota.xml_content) {
-          // xml_content pode ser JSON de itens
-          try { const parsed = JSON.parse(nota.xml_content); if (Array.isArray(parsed)) dadosXml = null; } catch {}
         }
+
+        // Forma de pagamento individual do XML
+        const formaPagamentoNota = dadosXml?.forma_pagamento_detectada || "PIX";
 
         // 1. Cadastrar fornecedor
         if (cadastrarFornecedores && dadosXml?.cnpjEmit) {
           const cnpjLimpo = dadosXml.cnpjEmit.replace(/\D/g, "");
-          const jaExiste = cadastrosDB.find(c => c.cpf_cnpj?.replace(/\D/g, "") === cnpjLimpo);
+          const jaExiste = cadastrosAtual.find(c => c.cpf_cnpj?.replace(/\D/g, "") === cnpjLimpo);
           if (!jaExiste && cnpjLimpo) {
             const criado = await base44.entities.Cadastro.create({
               categoria: "Fornecedor", nome: dadosXml.emitente || nota.cliente_nome || "Fornecedor", tipo: "Pessoa Jurídica",
@@ -134,8 +194,9 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
               endereco: dadosXml.emit_logr || "", numero: dadosXml.emit_nro || "", bairro: dadosXml.emit_bairro || "",
               cidade: dadosXml.emit_mun || "", estado: dadosXml.emit_uf || "", cep: dadosXml.emit_cep || "",
               observacoes: "Cadastrado automaticamente via lançamento em massa",
+              permite_lancamento_massa: true,
             });
-            if (criado?.id) cadastrosDB.push(criado);
+            if (criado?.id) cadastrosAtual.push(criado);
           }
         }
 
@@ -169,10 +230,10 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
           ...(itensParaSalvar.length > 0 ? { xml_content: JSON.stringify(itensParaSalvar) } : {}),
         });
 
-        // 4. Lançamento financeiro
+        // 4. Lançamento financeiro — forma de pagamento do próprio XML
         const nomeForneced = dadosXml?.emitente || nota.cliente_nome || "Fornecedor";
         const valorNota = nota.valor_total || dadosXml?.valor || 0;
-        const isBoleto = formaPagamento === "Boleto" && dadosXml?.boletos?.length > 1;
+        const isBoleto = formaPagamentoNota === "Boleto" && dadosXml?.boletos?.length > 1;
         if (isBoleto) {
           for (const bol of dadosXml.boletos) {
             await base44.entities.Financeiro.create({
@@ -186,7 +247,7 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
           await base44.entities.Financeiro.create({
             tipo: "Despesa", categoria: "Compra de Peças / Materiais",
             descricao: `NF ${nota.numero} — ${nomeForneced}`,
-            valor: valorNota, forma_pagamento: formaPagamento,
+            valor: valorNota, forma_pagamento: formaPagamentoNota,
             data_vencimento: nota.data_emissao || "",
             data_pagamento: statusPagamento === "Pago" ? new Date().toISOString().split("T")[0] : "",
             status: statusPagamento,
@@ -194,7 +255,7 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
         }
 
         resultado.ok = true;
-        resultado.msg = `NF ${nota.numero} — ${nomeForneced}`;
+        resultado.msg = `NF ${nota.numero} — ${nomeForneced} (${formaPagamentoNota})`;
       } catch (e) {
         resultado.ok = false;
         resultado.msg = `NF ${nota.numero}: ${e.message}`;
@@ -213,11 +274,10 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl my-4">
-        {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-800">
           <div>
             <h2 className="text-white font-semibold text-lg">Lançamento em Massa</h2>
-            <p className="text-gray-500 text-xs mt-0.5">{notas.length} nota(s) disponíveis para lançamento</p>
+            <p className="text-gray-500 text-xs mt-0.5">{notas.length} nota(s) disponíveis · forma de pagamento individual por XML</p>
           </div>
           <button onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
         </div>
@@ -267,35 +327,70 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
           {/* CONFIGURAÇÃO */}
           {!processando && !resultados && (
             <>
+              {/* Controle por Fornecedor */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Users className="w-4 h-4 text-blue-400" />
+                  <p className="text-sm font-medium text-white">Fornecedores</p>
+                  <span className="text-xs text-gray-500">— ative/desative o lançamento em massa por fornecedor</span>
+                </div>
+                {loadingCadastros ? (
+                  <div className="flex items-center gap-2 text-gray-500 text-sm py-2"><Loader2 className="w-4 h-4 animate-spin" /> Carregando...</div>
+                ) : (
+                  <div className="space-y-1.5 bg-gray-800/50 rounded-xl p-3">
+                    {fornecedoresNotas.map((forn, idx) => (
+                      <div key={forn.key} className="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-gray-800 transition-all">
+                        <button
+                          onClick={() => togglePermiteFornecedor(idx)}
+                          className={`w-9 h-5 rounded-full transition-all flex-shrink-0 relative ${forn.permite ? "bg-green-500" : "bg-red-600"}`}
+                          title={forn.permite ? "Clique para bloquear" : "Clique para permitir"}
+                        >
+                          <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${forn.permite ? "left-4" : "left-0.5"}`} />
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <span className={`text-sm truncate block ${forn.permite ? "text-white" : "text-gray-500 line-through"}`}>{forn.nome}</span>
+                          {!forn.permite && <span className="text-xs text-red-400 flex items-center gap-1"><ShieldAlert className="w-3 h-3" /> Bloqueado para lançamento em massa</span>}
+                        </div>
+                        <span className="text-xs text-gray-600 flex-shrink-0">
+                          {notas.filter(n => n.cliente_nome?.toLowerCase() === forn.nome?.toLowerCase()).length} nota(s)
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Seleção de notas */}
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm font-medium text-white">Notas para Lançar</p>
                   <button onClick={toggleTodas} className="text-xs text-gray-400 hover:text-white underline transition-all">
-                    {selecionadas.size === notas.length ? "Desmarcar todas" : "Selecionar todas"}
+                    {notasSelecionadas.length === notas.filter(n => !notasBloqueadas.has(n.id)).length ? "Desmarcar todas" : "Selecionar todas"}
                   </button>
                 </div>
-                <div className="max-h-52 overflow-y-auto space-y-1.5 bg-gray-800/50 rounded-xl p-3">
-                  {notas.map(nota => (
-                    <label key={nota.id} className="flex items-center gap-3 cursor-pointer hover:bg-gray-800 rounded-lg px-2 py-1.5 transition-all">
-                      <input type="checkbox" checked={selecionadas.has(nota.id)} onChange={() => toggleNota(nota.id)} className="accent-green-500 w-4 h-4 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-white text-sm truncate block">{nota.cliente_nome || "—"}</span>
-                        <span className="text-gray-500 text-xs">NF {nota.numero} · {nota.data_emissao || "—"}</span>
-                      </div>
-                      <span className="text-sm font-bold flex-shrink-0" style={{ color: GREEN }}>
-                        R$ {Number(nota.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                      </span>
-                    </label>
-                  ))}
+                <div className="max-h-44 overflow-y-auto space-y-1 bg-gray-800/50 rounded-xl p-3">
+                  {notas.map(nota => {
+                    const bloqueada = notasBloqueadas.has(nota.id);
+                    return (
+                      <label key={nota.id} className={`flex items-center gap-3 rounded-lg px-2 py-1.5 transition-all ${bloqueada ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:bg-gray-800"}`}>
+                        <input type="checkbox" checked={selecionadas.has(nota.id) && !bloqueada} onChange={() => toggleNota(nota.id)} disabled={bloqueada} className="accent-green-500 w-4 h-4 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-white text-sm truncate block">{nota.cliente_nome || "—"}</span>
+                          <span className="text-gray-500 text-xs">NF {nota.numero} · {nota.data_emissao || "—"}{bloqueada ? " · 🚫 bloqueado" : ""}</span>
+                        </div>
+                        <span className="text-sm font-bold flex-shrink-0" style={{ color: GREEN }}>
+                          R$ {Number(nota.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </span>
+                      </label>
+                    );
+                  })}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{selecionadas.size} selecionada(s)</p>
+                <p className="text-xs text-gray-500 mt-1">{notasSelecionadas.length} selecionada(s) · {notasBloqueadas.size} bloqueada(s)</p>
               </div>
 
               {/* Opções */}
               <div className="bg-gray-800 rounded-xl p-4 space-y-3">
                 <p className="text-sm font-medium text-white mb-1">Opções de Lançamento</p>
-
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input type="checkbox" checked={cadastrarFornecedores} onChange={e => setCadastrarFornecedores(e.target.checked)} className="accent-green-500 w-4 h-4" />
                   <div className="flex items-center gap-2">
@@ -303,7 +398,6 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
                     <span className="text-sm text-gray-300">Cadastrar fornecedores novos automaticamente</span>
                   </div>
                 </label>
-
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input type="checkbox" checked={cadastrarProdutos} onChange={e => setCadastrarProdutos(e.target.checked)} className="accent-green-500 w-4 h-4" />
                   <div className="flex items-center gap-2">
@@ -311,16 +405,6 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
                     <span className="text-sm text-gray-300">Dar entrada dos produtos no estoque</span>
                   </div>
                 </label>
-              </div>
-
-              {/* Financeiro global */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Forma de Pagamento</label>
-                  <select value={formaPagamento} onChange={e => setFormaPagamento(e.target.value)} className="input-dark">
-                    {FORMAS_PAGAMENTO.map(fp => <option key={fp}>{fp}</option>)}
-                  </select>
-                </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Status do Pagamento</label>
                   <select value={statusPagamento} onChange={e => setStatusPagamento(e.target.value)} className="input-dark">
@@ -333,22 +417,22 @@ export default function ModalLancamentoMassa({ notas, onClose, onConcluido }) {
 
               {/* Resumo */}
               <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-3 space-y-1.5 text-xs text-gray-400">
-                <div className="flex items-center gap-2"><FileText className="w-3.5 h-3.5 text-blue-400" /> {selecionadas.size} nota(s) serão marcadas como <span className="text-white font-medium">Lançada</span></div>
+                <div className="flex items-center gap-2"><FileText className="w-3.5 h-3.5 text-blue-400" /> {notasSelecionadas.length} nota(s) serão marcadas como <span className="text-white font-medium">Lançada</span></div>
+                <div className="flex items-center gap-2"><DollarSign className="w-3.5 h-3.5 text-yellow-400" /> Forma de pagamento <span className="text-white font-medium">detectada individualmente no XML</span> de cada nota</div>
                 {cadastrarFornecedores && <div className="flex items-center gap-2"><Users className="w-3.5 h-3.5 text-blue-400" /> Fornecedores novos serão cadastrados automaticamente</div>}
                 {cadastrarProdutos && <div className="flex items-center gap-2"><Package className="w-3.5 h-3.5 text-orange-400" /> Produtos entrarão no estoque (novos serão criados)</div>}
-                <div className="flex items-center gap-2"><DollarSign className="w-3.5 h-3.5 text-green-400" /> Despesas lançadas no financeiro como <span className="text-red-400 font-medium">Pendente</span></div>
               </div>
 
               <button
                 onClick={processarMassa}
-                disabled={selecionadas.size === 0}
+                disabled={notasSelecionadas.length === 0}
                 className="w-full py-3 rounded-xl text-sm font-bold text-black transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 style={{ background: GREEN }}
-                onMouseEnter={e => { if (selecionadas.size > 0) e.currentTarget.style.background = GREEN_DARK; }}
+                onMouseEnter={e => { if (notasSelecionadas.length > 0) e.currentTarget.style.background = GREEN_DARK; }}
                 onMouseLeave={e => e.currentTarget.style.background = GREEN}
               >
                 <ChevronRight className="w-4 h-4" />
-                Lançar {selecionadas.size} Nota(s) em Massa
+                Lançar {notasSelecionadas.length} Nota(s) em Massa
               </button>
             </>
           )}

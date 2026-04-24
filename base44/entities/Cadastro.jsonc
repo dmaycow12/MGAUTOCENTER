@@ -76,6 +76,11 @@
     "observacoes": {
       "type": "string",
       "title": "Observa\u00e7\u00f5es"
+    },
+    "permite_lancamento_massa": {
+      "type": "boolean",
+      "title": "Permite Lan\u00e7amento em Massa",
+      "default": true
     }
   },
   "name": "Cadastro",
