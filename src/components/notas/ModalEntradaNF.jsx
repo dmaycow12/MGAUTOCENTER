@@ -470,7 +470,15 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
           {/* ABA ESTOQUE */}
           {aba === "estoque" && (
             <div className="space-y-4">
-              <p className="text-xs text-gray-400">Marque os itens que devem entrar no estoque. Edite o código ou vincule a um produto existente.</p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-400">Marque os itens que devem entrar no estoque. Edite o código ou vincule a um produto existente.</p>
+                <button
+                  onClick={() => setItens(prev => prev.map(it => ({ ...it, dar_entrada_estoque: false })))}
+                  className="flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-all"
+                >
+                  Não cadastrar nenhum produto
+                </button>
+              </div>
               {itens.length === 0 ? (
                 <p className="text-gray-500 text-sm text-center py-6">Nenhum item encontrado no XML</p>
               ) : (

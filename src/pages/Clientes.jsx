@@ -2,10 +2,13 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Edit, Trash2, User, Phone, Mail, ChevronDown, ChevronUp, Car, X, LayoutGrid, List, Loader2 } from "lucide-react";
 
+const CATEGORIAS = ["Cliente", "Fornecedor", "Funcionário", "Transportadora"];
+
 export default function Clientes() {
   const [clientes, setClientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [filtroCategoria, setFiltroCategoria] = useState("Todos");
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -96,7 +99,7 @@ export default function Clientes() {
   };
 
   function defaultForm() {
-    return { nome: "", nome_fantasia: "", tipo: "Pessoa Física", cpf_cnpj: "", rg_ie: "", telefone: "", email: "", cep: "", endereco: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", observacoes: "" };
+    return { nome: "", nome_fantasia: "", categoria: "Cliente", tipo: "Pessoa Física", cpf_cnpj: "", rg_ie: "", telefone: "", email: "", cep: "", endereco: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", observacoes: "" };
   }
 
   useEffect(() => {
@@ -159,12 +162,14 @@ export default function Clientes() {
   };
 
   const filtrados = clientes
-    .filter(c =>
-      c.nome?.toLowerCase().includes(search.toLowerCase()) ||
-      c.cpf_cnpj?.includes(search) ||
-      c.telefone?.includes(search) ||
-      c.email?.toLowerCase().includes(search.toLowerCase())
-    )
+    .filter(c => {
+      const matchSearch = c.nome?.toLowerCase().includes(search.toLowerCase()) ||
+        c.cpf_cnpj?.includes(search) ||
+        c.telefone?.includes(search) ||
+        c.email?.toLowerCase().includes(search.toLowerCase());
+      const matchCategoria = filtroCategoria === "Todos" || (c.categoria || "Cliente") === filtroCategoria;
+      return matchSearch && matchCategoria;
+    })
     .sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR", { sensitivity: "base" }));
 
 
@@ -202,12 +207,22 @@ export default function Clientes() {
         <button
           onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
-          style={{background: "#00ff00", color: "#fff"}}
+          style={{background: "#00ff00", color: "#000"}}
           onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
           onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
         >
           <Plus className="w-4 h-4" /> Novo Cadastro
         </button>
+        {/* Filtros de categoria */}
+        <div className="flex gap-1">
+          {["Todos", ...CATEGORIAS].map(cat => (
+            <button key={cat} onClick={() => setFiltroCategoria(cat)}
+              className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all"
+              style={{ background: filtroCategoria === cat ? "#062C9B" : "#1f2937", color: "#fff", border: "1px solid #374151" }}>
+              {cat}
+            </button>
+          ))}
+        </div>
         {/* Linha 2: busca + filtro */}
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -379,6 +394,11 @@ export default function Clientes() {
             </div>
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormGroup label="Categoria">
+                  <select value={form.categoria || "Cliente"} onChange={e => setForm({ ...form, categoria: e.target.value })} className="input-dark" autoComplete="off">
+                    {CATEGORIAS.map(c => <option key={c}>{c}</option>)}
+                  </select>
+                </FormGroup>
                 <FormGroup label="Tipo">
                   <select value={form.tipo} onChange={e => setForm({ ...form, tipo: e.target.value })} className="input-dark" autoComplete="off">
                     <option>Pessoa Física</option>
