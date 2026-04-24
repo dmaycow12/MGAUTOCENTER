@@ -1029,7 +1029,7 @@ export default function NotasFiscais() {
                   {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Cancelada' && (
                     <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>
                   )}
-                  {nota.xml_content && (
+                  {nota.xml_content && nota.xml_content.trim().startsWith("<") && (
                     <button title="Ver XML" onClick={() => setXmlModal(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-purple-400 rounded-lg transition-all"><Code className="w-3.5 h-3.5"/></button>
                   )}
                   <button title="Visualizar PDF" onClick={() => visualizarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-green-400 rounded-lg transition-all"><Eye className="w-3.5 h-3.5"/></button>
@@ -1089,30 +1089,11 @@ export default function NotasFiscais() {
                             {transmitindo === nota.id ? "..." : "Transmitir"}
                           </button>
                         )}
-                        {nota.xml_content ? (
+                        {nota.xml_content && nota.xml_content.trim().startsWith("<") && (
                           <button title="Ver XML" onClick={() => setXmlModal(nota)} className="p-1 text-gray-500 hover:text-purple-400 transition-all">
                             <Code className="w-4 h-4" />
                           </button>
-                        ) : nota.chave_acesso ? (
-                          <button title="Buscar XML na SEFAZ" onClick={async () => {
-                            feedback('sucesso', 'Buscando XML na SEFAZ...');
-                            try {
-                              const res = await base44.functions.invoke('buscarXmlNota', { chave_acesso: nota.chave_acesso, nota_id: nota.id });
-                              if (res.data?.sucesso && res.data?.xml) {
-                                setMsgFeedback(null);
-                                // Atualiza local para mostrar o XML
-                                setNotas(prev => prev.map(n => n.id === nota.id ? { ...n, xml_content: res.data.xml } : n));
-                                setXmlModal({ ...nota, xml_content: res.data.xml });
-                              } else {
-                                feedback('erro', res.data?.erro || 'XML não disponível ainda na SEFAZ.');
-                              }
-                            } catch (e) {
-                              feedback('erro', 'Erro: ' + e.message);
-                            }
-                          }} className="p-1 text-gray-500 hover:text-yellow-400 transition-all">
-                            <Code className="w-4 h-4" />
-                          </button>
-                        ) : null}
+                        )}
                         {(nota.status === "Importada") && (
                           <button title="Lançar Entrada" onClick={async () => {
                             const xmlStr = nota.xml_content?.trim() || "";
