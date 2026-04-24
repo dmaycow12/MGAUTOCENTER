@@ -1087,7 +1087,8 @@ export default function NotasFiscais() {
                         )}
                         {(nota.status === "Importada") && (
                           <button title="Lançar Entrada" onClick={async () => {
-                            const xmlDisponivel = nota.xml_content && nota.xml_content.includes('<det');
+                            const xmlStr = nota.xml_content?.trim() || "";
+                            const xmlDisponivel = xmlStr.startsWith("<") && (xmlStr.includes("det") || xmlStr.includes("NFe") || xmlStr.includes("nfeProc"));
                             if (xmlDisponivel) {
                               setNotaIdParaEntrada(nota.id);
                               setXmlParaEntrada(nota.xml_content);
