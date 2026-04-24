@@ -1034,7 +1034,7 @@ export default function NotasFiscais() {
                   {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Cancelada' && (
                     <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>
                   )}
-                  {(nota.xml_original || (nota.xml_content && nota.xml_content.trim().startsWith("<"))) && (
+                  {(nota.xml_original || nota.chave_acesso) && (
                     <button title="Ver XML" onClick={() => setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content })} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-purple-400 rounded-lg transition-all"><Code className="w-3.5 h-3.5"/></button>
                   )}
                   <button title="Visualizar PDF" onClick={() => visualizarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-green-400 rounded-lg transition-all"><Eye className="w-3.5 h-3.5"/></button>
@@ -1094,7 +1094,7 @@ export default function NotasFiscais() {
                             {transmitindo === nota.id ? "..." : "Transmitir"}
                           </button>
                         )}
-                        {(nota.xml_original || (nota.xml_content && nota.xml_content.trim().startsWith("<"))) && (
+                        {(nota.xml_original || nota.chave_acesso) && (
                           <button title="Ver XML" onClick={() => setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content })} className="p-1 text-gray-500 hover:text-purple-400 transition-all">
                             <Code className="w-4 h-4" />
                           </button>
