@@ -93,53 +93,6 @@ Deno.serve(async (req) => {
         numeroNF = String(parseInt(chave.substring(25, 34), 10));
       }
 
-      // Tentar buscar XML completo da nota (mesma lógica da função buscarXmlNota)
-      let xmlOriginal = null;
-      if (chave) {
-        try {
-          const xmlEndpoints = [
-            `${FOCUSNFE_BASE}/nfes_recebidas/${chave}.xml`,
-            `${FOCUSNFE_BASE}/nfes_recebidas/${chave}/xml`,
-            `${FOCUSNFE_BASE}/download_nfe/${chave}`,
-            `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
-          ];
-          for (const endpoint of xmlEndpoints) {
-            const xmlResp = await fetch(endpoint, { headers: { 'Authorization': AUTH_HEADER } });
-            if (!xmlResp.ok) continue;
-            const ct = xmlResp.headers.get('content-type') || '';
-            let candidate = '';
-            if (ct.includes('xml')) {
-              candidate = await xmlResp.text();
-            } else {
-              const xmlData = await xmlResp.json().catch(() => ({}));
-              candidate = xmlData.xml || xmlData.xml_nota || xmlData.xml_nfe || '';
-              if (!candidate && xmlData.caminho_xml_nota_fiscal) {
-                const r2 = await fetch(xmlData.caminho_xml_nota_fiscal, { headers: { 'Authorization': AUTH_HEADER } });
-                if (r2.ok) candidate = await r2.text();
-              }
-            }
-            if (candidate && candidate.length > 500 && (
-              candidate.includes('infNFe') || candidate.includes('nfeProc') || candidate.includes('<det') || candidate.includes(':det')
-            )) {
-              xmlOriginal = candidate.length <= 200000 ? candidate : null;
-              break;
-            }
-          }
-        } catch (_) {}
-      }
-
-      // Se tem XML, fazer upload e salvar URL
-      let xmlUrl = null;
-      if (xmlOriginal) {
-        try {
-          const blob = new Blob([xmlOriginal], { type: 'text/xml' });
-          const formData = new FormData();
-          formData.append('file', blob, `NF-${numeroNF || chave}.xml`);
-          const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: blob });
-          xmlUrl = uploadResp?.file_url || null;
-        } catch (_) {}
-      }
-
       await base44.asServiceRole.entities.NotaFiscal.create({
         tipo: 'NFe',
         numero: numeroNF,
@@ -152,8 +105,6 @@ Deno.serve(async (req) => {
         data_emissao,
         observacoes: `Nota recebida via SEFAZ | Manifesto: ${nf.manifestacao_destinatario || 'pendente'}`,
         mensagem_sefaz: nf.situacao || '',
-        ...(xmlUrl ? { xml_url: xmlUrl } : {}),
-        ...(xmlOriginal && xmlOriginal.length <= 50000 ? { xml_original: xmlOriginal } : {}),
       });
 
       importadas++;
