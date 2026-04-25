@@ -124,13 +124,13 @@ Deno.serve(async (req) => {
         } catch (_) {}
       }
 
-      // Upload XML como arquivo se disponível
-      let xmlUrl = null;
+      // Salvar XML sempre via upload de arquivo
+      let xmlParaSalvar = {};
       if (xmlOriginal) {
         try {
-          const xmlFile = new File([xmlOriginal], `NF-${numeroNF || chave}.xml`, { type: 'application/xml' });
+          const xmlFile = new File([xmlOriginal], `NF-${numeroNF || chave}.xml`, { type: 'text/xml' });
           const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
-          xmlUrl = uploadResp?.file_url || null;
+          if (uploadResp?.file_url) xmlParaSalvar = { xml_url: uploadResp.file_url };
         } catch (_) {}
       }
 
@@ -146,8 +146,7 @@ Deno.serve(async (req) => {
         data_emissao,
         observacoes: `Nota recebida via SEFAZ | Manifesto: ${nf.manifestacao_destinatario || 'pendente'}`,
         mensagem_sefaz: nf.situacao || '',
-        ...(xmlUrl ? { xml_url: xmlUrl } : {}),
-        ...(xmlOriginal && xmlOriginal.length <= 45000 ? { xml_original: xmlOriginal } : {}),
+        ...xmlParaSalvar,
       });
 
       importadas++;
