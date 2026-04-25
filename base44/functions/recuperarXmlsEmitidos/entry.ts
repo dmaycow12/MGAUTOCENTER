@@ -10,8 +10,11 @@ const normalizarUrl = (url) => {
   return `https://api.focusnfe.com.br${url}`;
 };
 
-const buscarXmlDaFocusNFe = async (ref, tipo) => {
+const buscarXmlDaFocusNFe = async (ref, tipo, chaveAcesso) => {
   const ep = tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfe';
+
+  // Se não tem ref (spedy_id), a nota não existe na FocusNFe com referência indexada — não é possível recuperar
+  if (!ref) return null;
 
   // Passo 1: consultar dados da nota (inclui caminho_xml_nota_fiscal)
   const consultaResp = await fetch(`${FOCUSNFE_BASE}/${ep}/${ref}?completo=1`, {
@@ -53,11 +56,11 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Buscar notas Emitidas com spedy_id mas sem xml_url e sem xml_original (lote de 15)
+    // Buscar notas Emitidas sem xml_url — aceita tanto spedy_id quanto chave_acesso como referência
     const emitidas = await base44.asServiceRole.entities.NotaFiscal.list('-created_date', 500);
     const todasSemXml = emitidas.filter(n =>
       n.status === 'Emitida' &&
-      n.spedy_id &&
+      (n.spedy_id || n.chave_acesso) &&
       !n.xml_url &&
       !(n.xml_original && n.xml_original.trim().startsWith('<'))
     );
@@ -69,10 +72,11 @@ Deno.serve(async (req) => {
 
     for (const nota of semXml) {
       try {
-        const xml = await buscarXmlDaFocusNFe(nota.spedy_id, nota.tipo || 'NFe');
+        const ref = nota.spedy_id || '';
+        const xml = await buscarXmlDaFocusNFe(ref, nota.tipo || 'NFe', nota.chave_acesso || '');
 
         if (!xml) {
-          logs.push(`FALHA: ${nota.tipo} nº ${nota.numero} (ref: ${nota.spedy_id}) - XML não encontrado na FocusNFe`);
+          logs.push(`FALHA: ${nota.tipo} nº ${nota.numero} (ref: ${ref || nota.chave_acesso}) - XML não encontrado na FocusNFe`);
           falhas++;
           continue;
         }
