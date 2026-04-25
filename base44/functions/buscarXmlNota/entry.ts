@@ -66,13 +66,17 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Tenta salvar XML na nota (pode falhar se o XML for muito grande — não é erro crítico)
+  // Salva XML na nota: se pequeno salva direto, se grande faz upload e salva URL
   if (nota_id) {
     try {
-      // Usar apenas os primeiros 50KB para não exceder o limite do campo
-      const xmlParaSalvar = xml.length > 50000 ? '' : xml;
-      if (xmlParaSalvar) {
-        await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { xml_content: xmlParaSalvar });
+      if (xml.length <= 50000) {
+        await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { xml_original: xml });
+      } else {
+        const blob = new Blob([xml], { type: 'text/xml' });
+        const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: blob });
+        if (uploadResp?.file_url) {
+          await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { xml_url: uploadResp.file_url });
+        }
       }
     } catch (_) {}
   }

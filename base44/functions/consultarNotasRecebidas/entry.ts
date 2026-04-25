@@ -128,6 +128,18 @@ Deno.serve(async (req) => {
         } catch (_) {}
       }
 
+      // Se tem XML, fazer upload e salvar URL
+      let xmlUrl = null;
+      if (xmlOriginal) {
+        try {
+          const blob = new Blob([xmlOriginal], { type: 'text/xml' });
+          const formData = new FormData();
+          formData.append('file', blob, `NF-${numeroNF || chave}.xml`);
+          const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: blob });
+          xmlUrl = uploadResp?.file_url || null;
+        } catch (_) {}
+      }
+
       await base44.asServiceRole.entities.NotaFiscal.create({
         tipo: 'NFe',
         numero: numeroNF,
@@ -140,7 +152,8 @@ Deno.serve(async (req) => {
         data_emissao,
         observacoes: `Nota recebida via SEFAZ | Manifesto: ${nf.manifestacao_destinatario || 'pendente'}`,
         mensagem_sefaz: nf.situacao || '',
-        ...(xmlOriginal ? { xml_original: xmlOriginal } : {}),
+        ...(xmlUrl ? { xml_url: xmlUrl } : {}),
+        ...(xmlOriginal && xmlOriginal.length <= 50000 ? { xml_original: xmlOriginal } : {}),
       });
 
       importadas++;

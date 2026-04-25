@@ -1038,7 +1038,7 @@ export default function NotasFiscais() {
                   {(nota.xml_original || nota.chave_acesso || nota.spedy_id) && (
                     <button title="Ver XML" onClick={() => setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content })}
                       className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
-                      style={{ color: (nota.xml_original || (nota.xml_content && nota.xml_content.trim().startsWith("<"))) ? "#00ff00" : "#ff2222" }}>
+                      style={{ color: (nota.xml_original || nota.xml_url || (nota.xml_content && nota.xml_content.trim().startsWith("<"))) ? "#00ff00" : "#ff2222" }}>
                       <Code className="w-3.5 h-3.5"/>
                     </button>
                   )}
@@ -1102,19 +1102,33 @@ export default function NotasFiscais() {
                         {(nota.xml_original || nota.chave_acesso || nota.spedy_id) && (
                           <button title="Ver XML" onClick={() => setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content })}
                             className="p-1 transition-all"
-                            style={{ color: (nota.xml_original || (nota.xml_content && nota.xml_content.trim().startsWith("<"))) ? "#00ff00" : "#ff2222" }}>
+                            style={{ color: (nota.xml_original || nota.xml_url || (nota.xml_content && nota.xml_content.trim().startsWith("<"))) ? "#00ff00" : "#ff2222" }}>
                             <Code className="w-4 h-4" />
                           </button>
                         )}
                         {(nota.status === "Importada") && (
                           <button title="Lançar Entrada" onClick={async () => {
-                            const xmlStr = nota.xml_content?.trim() || "";
-                            // XML válido: começa com < (não é JSON de itens)
-                            const xmlDisponivel = xmlStr.startsWith("<");
+                            // XML válido: xml_original tem prioridade, depois xml_content se for XML
+                            const xmlOriginal = nota.xml_original?.trim() || "";
+                            const xmlContent = nota.xml_content?.trim() || "";
+                            const xmlDisponivel = xmlOriginal.startsWith("<") ? xmlOriginal : (xmlContent.startsWith("<") ? xmlContent : "");
                             if (xmlDisponivel) {
                               setNotaIdParaEntrada(nota.id);
-                              setXmlParaEntrada(nota.xml_content);
+                              setXmlParaEntrada(xmlDisponivel);
                               setShowEntrada(true);
+                            } else if (nota.xml_url) {
+                              // XML salvo como arquivo — buscar e abrir
+                              feedback('sucesso', 'Carregando XML...');
+                              try {
+                                const r = await fetch(nota.xml_url);
+                                const xmlText = await r.text();
+                                setMsgFeedback(null);
+                                setNotaIdParaEntrada(nota.id);
+                                setXmlParaEntrada(xmlText);
+                                setShowEntrada(true);
+                              } catch (e) {
+                                feedback('erro', 'Erro ao carregar XML: ' + e.message);
+                              }
                             } else if (nota.chave_acesso) {
                               feedback('sucesso', 'Buscando XML na SEFAZ...');
                               try {
