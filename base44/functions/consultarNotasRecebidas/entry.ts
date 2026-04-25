@@ -98,28 +98,16 @@ Deno.serve(async (req) => {
       if (chave) {
         try {
           const xmlEndpoints = [
-            `${FOCUSNFE_BASE}/nfes_recebidas/${chave}.xml`,
-            `${FOCUSNFE_BASE}/nfes_recebidas/${chave}/xml`,
-            `${FOCUSNFE_BASE}/download_nfe/${chave}`,
+            `${FOCUSNFE_BASE}/nfes_recebidas/${chave}?completo=true`,
             `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
           ];
           for (const endpoint of xmlEndpoints) {
             const xmlResp = await fetch(endpoint, { headers: { 'Authorization': AUTH_HEADER } });
             if (!xmlResp.ok) continue;
-            const ct = xmlResp.headers.get('content-type') || '';
-            let candidate = '';
-            if (ct.includes('xml')) {
-              candidate = await xmlResp.text();
-            } else {
-              const xmlData = await xmlResp.json().catch(() => null);
-              candidate = xmlData?.xml || xmlData?.xml_nota || xmlData?.xml_nfe || xmlData?.xml_documento || '';
-              if (!candidate && xmlData?.caminho_xml_nota_fiscal) {
-                const r2 = await fetch(xmlData.caminho_xml_nota_fiscal, { headers: { 'Authorization': AUTH_HEADER } });
-                if (r2.ok) candidate = await r2.text();
-              }
-            }
-            if (candidate && candidate.length > 500 && (candidate.includes('<det') || candidate.includes(':det') || candidate.includes('infNFe'))) {
-              xmlOriginal = candidate.trim();
+            const xmlData = await xmlResp.json().catch(() => null);
+            const xmlStr = xmlData?.xml_documento || xmlData?.xml || xmlData?.nfe_xml || '';
+            if (xmlStr && xmlStr.trim().startsWith('<') && xmlStr.includes('<det')) {
+              xmlOriginal = xmlStr.trim();
               break;
             }
           }

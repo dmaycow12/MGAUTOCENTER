@@ -66,10 +66,14 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Salva o XML original na nota
+  // Tenta salvar XML na nota (pode falhar se o XML for muito grande — não é erro crítico)
   if (nota_id) {
     try {
-      await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { xml_original: xml });
+      // Usar apenas os primeiros 50KB para não exceder o limite do campo
+      const xmlParaSalvar = xml.length > 50000 ? '' : xml;
+      if (xmlParaSalvar) {
+        await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { xml_content: xmlParaSalvar });
+      }
     } catch (_) {}
   }
 

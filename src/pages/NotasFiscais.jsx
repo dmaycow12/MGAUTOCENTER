@@ -81,7 +81,6 @@ export default function NotasFiscais() {
   const [filtroTipo, setFiltroTipo] = useState(() => { try { const s = localStorage.getItem("nf_filtroTipo"); return s ? JSON.parse(s) : ["Saída"]; } catch { return ["Saída"]; } });
   const [filtroModeloNF, setFiltroModeloNF] = useState(() => { try { const s = localStorage.getItem("nf_filtroModelo"); const parsed = s ? JSON.parse(s) : null; return parsed && parsed.length > 0 ? parsed : ["NFe", "NFCe", "NFSe"]; } catch { return ["NFe", "NFCe", "NFSe"]; } });
   const [gerandoZip, setGerandoZip] = useState(false);
-  const [recuperandoXmls, setRecuperandoXmls] = useState(false);
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
   const [atualizandoStatus, setAtualizandoStatus] = useState(null);
@@ -971,27 +970,6 @@ export default function NotasFiscais() {
         <div className="flex gap-0.5">
           <button onClick={() => exportarXmlsZip()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Exportar XML
-          </button>
-          <button
-            onClick={async () => {
-              setRecuperandoXmls(true);
-              try {
-                const res = await base44.functions.invoke('recuperarXmlsAusentes', {});
-                feedback('sucesso', res.data?.mensagem || 'XMLs recuperados.');
-                load();
-              } catch (e) {
-                feedback('erro', 'Erro: ' + e.message);
-              }
-              setRecuperandoXmls(false);
-            }}
-            disabled={recuperandoXmls}
-            className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
-            style={{background:"#f97316", color:"#000"}}
-            onMouseEnter={e => { if (!recuperandoXmls) e.currentTarget.style.background="#ea6a05"; }}
-            onMouseLeave={e => e.currentTarget.style.background="#f97316"}
-          >
-            {recuperandoXmls ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Code className="w-4 h-4" />}
-            {recuperandoXmls ? 'Buscando...' : 'Recuperar XMLs'}
           </button>
           <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             <BarChart2 className="w-4 h-4" /> Sintegra
