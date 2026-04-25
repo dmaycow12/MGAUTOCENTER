@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
       const situacao = (nf.situacao || '').toLowerCase();
       const status = situacao.includes('cancel') ? 'Cancelada' : 'Importada';
 
-      // Manifestação para liberar XML (sem delay)
+      // Manifestação para liberar XML
       if (chave) {
         try {
           await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}/manifestacoes`, {
@@ -85,15 +85,33 @@ Deno.serve(async (req) => {
         } catch (_) {}
       }
 
-      // Extrair número e série do JSON da nota (sem baixar XML completo)
+      // Extrair número e série da chave de acesso
       let numeroNF = nf.numero || '';
       let serieNF = nf.serie || '1';
-
-      // Tentar extrair número/série da chave de acesso se não veio no JSON
-      // Chave NFe: posições 25-34 = NNNNNNNN (número), 22-24 = série
       if (!numeroNF && chave && chave.length === 44) {
         serieNF = String(parseInt(chave.substring(22, 25), 10));
         numeroNF = String(parseInt(chave.substring(25, 34), 10));
+      }
+
+      // Tentar buscar XML completo da nota
+      let xmlOriginal = null;
+      if (chave) {
+        try {
+          const xmlEndpoints = [
+            `${FOCUSNFE_BASE}/nfes_recebidas/${chave}?completo=true`,
+            `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
+          ];
+          for (const endpoint of xmlEndpoints) {
+            const xmlResp = await fetch(endpoint, { headers: { 'Authorization': AUTH_HEADER } });
+            if (!xmlResp.ok) continue;
+            const xmlData = await xmlResp.json().catch(() => null);
+            const xmlStr = xmlData?.xml_documento || xmlData?.xml || xmlData?.nfe_xml || '';
+            if (xmlStr && xmlStr.trim().startsWith('<') && xmlStr.includes('<det')) {
+              xmlOriginal = xmlStr.trim();
+              break;
+            }
+          }
+        } catch (_) {}
       }
 
       await base44.asServiceRole.entities.NotaFiscal.create({
@@ -108,6 +126,7 @@ Deno.serve(async (req) => {
         data_emissao,
         observacoes: `Nota recebida via SEFAZ | Manifesto: ${nf.manifestacao_destinatario || 'pendente'}`,
         mensagem_sefaz: nf.situacao || '',
+        ...(xmlOriginal ? { xml_original: xmlOriginal } : {}),
       });
 
       importadas++;

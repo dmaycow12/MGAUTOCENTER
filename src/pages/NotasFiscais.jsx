@@ -1038,7 +1038,7 @@ export default function NotasFiscais() {
                   {(nota.xml_original || nota.chave_acesso || nota.spedy_id) && (
                     <button title="Ver XML" onClick={() => setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content })}
                       className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
-                      style={{ color: (nota.xml_original || (nota.xml_content && nota.xml_content.trim().startsWith("<"))) ? "#a855f7" : "#ef4444" }}>
+                      style={{ color: (nota.xml_original || (nota.xml_content && nota.xml_content.trim().startsWith("<"))) ? "#00ff00" : "#ff2222" }}>
                       <Code className="w-3.5 h-3.5"/>
                     </button>
                   )}
@@ -1102,7 +1102,7 @@ export default function NotasFiscais() {
                         {(nota.xml_original || nota.chave_acesso || nota.spedy_id) && (
                           <button title="Ver XML" onClick={() => setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content })}
                             className="p-1 transition-all"
-                            style={{ color: (nota.xml_original || (nota.xml_content && nota.xml_content.trim().startsWith("<"))) ? "#a855f7" : "#ef4444" }}>
+                            style={{ color: (nota.xml_original || (nota.xml_content && nota.xml_content.trim().startsWith("<"))) ? "#00ff00" : "#ff2222" }}>
                             <Code className="w-4 h-4" />
                           </button>
                         )}
