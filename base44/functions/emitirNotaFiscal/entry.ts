@@ -20,6 +20,25 @@ const normalizarUrl = (url) => {
   return `https://api.focusnfe.com.br${url}`;
 };
 
+// Faz upload do XML para armazenamento permanente no Base44
+const salvarXmlPermanente = async (base44, xmlUrl, ref, numero) => {
+  if (!xmlUrl) return null;
+  try {
+    const isS3 = xmlUrl.includes('amazonaws.com') || xmlUrl.includes('s3.');
+    const resp = await fetch(xmlUrl, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER } });
+    if (!resp.ok) return null;
+    const text = await resp.text();
+    if (!text || !text.includes('<')) return null;
+    const xmlFile = new File([text], `NF-${numero || ref}.xml`, { type: 'text/xml' });
+    const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
+    console.log('[XML SALVO]', file_url);
+    return file_url;
+  } catch (e) {
+    console.error('[XML ERRO]', e.message);
+    return null;
+  }
+};
+
 // Faz upload do PDF para armazenamento permanente no Base44
 const salvarPdfPermanente = async (base44, pdfUrl, nota_id) => {
   if (!pdfUrl) return null;
@@ -421,12 +440,22 @@ Deno.serve(async (req) => {
     }
 
     // ============================================================
-    // SE EMITIDA: SALVA PDF PERMANENTEMENTE
+    // SE EMITIDA: SALVA PDF E XML PERMANENTEMENTE
     // ============================================================
     let pdfUrlFinal = pdfUrl;
-    if (statusNota === 'Emitida' && pdfUrl) {
-      const pdfSalvo = await salvarPdfPermanente(base44, pdfUrl, nota_id || 'nova');
-      if (pdfSalvo) pdfUrlFinal = pdfSalvo;
+    let xmlUrlFinal = '';
+    if (statusNota === 'Emitida') {
+      if (pdfUrl) {
+        const pdfSalvo = await salvarPdfPermanente(base44, pdfUrl, nota_id || 'nova');
+        if (pdfSalvo) pdfUrlFinal = pdfSalvo;
+      }
+      // Salvar XML
+      const caminhoXml = resultFinal.caminho_xml_nota_fiscal || resultFinal.caminho_xml || '';
+      if (caminhoXml) {
+        const xmlUrl = normalizarUrl(caminhoXml);
+        const xmlSalvo = await salvarXmlPermanente(base44, xmlUrl, ref, numeroFinal);
+        if (xmlSalvo) xmlUrlFinal = xmlSalvo;
+      }
     }
 
     // Baixar estoque se NFe/NFCe e emitida sem OS vinculada
@@ -473,6 +502,7 @@ Deno.serve(async (req) => {
       data_emissao: data_emissao || new Date().toISOString().split('T')[0],
       valor_total: Number(valor_total) || 0,
       pdf_url: pdfUrlFinal,
+      xml_url: xmlUrlFinal || undefined,
       chave_acesso: chaveAcesso,
       ordem_venda_id: body.ordem_venda_id || '',
       observacoes: observacoes || '',
