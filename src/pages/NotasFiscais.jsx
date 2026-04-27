@@ -1064,11 +1064,11 @@ export default function NotasFiscais() {
                     <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>
                   )}
                   {(nota.xml_original || nota.chave_acesso || nota.spedy_id) && (
-                    <button title="Ver XML" onClick={() => setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content })}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
-                      style={{ color: (nota.xml_original || nota.xml_url || (nota.xml_content && nota.xml_content.trim().startsWith("<"))) ? "#00ff00" : "#ff2222" }}>
-                      <Code className="w-3.5 h-3.5"/>
-                    </button>
+                   <button title="Ver XML" onClick={() => setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content })}
+                     className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
+                     style={{ color: (nota.xml_original?.trim().startsWith("<") || nota.xml_url?.startsWith("http") || (nota.xml_content?.trim().startsWith("<"))) ? "#00ff00" : "#ff2222" }}>
+                     <Code className="w-3.5 h-3.5"/>
+                   </button>
                   )}
                   <button title="Visualizar PDF" onClick={() => visualizarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-green-400 rounded-lg transition-all"><Eye className="w-3.5 h-3.5"/></button>
                   <button title="Baixar PDF" onClick={() => baixarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Download className="w-3.5 h-3.5"/></button>
@@ -1130,7 +1130,7 @@ export default function NotasFiscais() {
                         {(nota.xml_original || nota.chave_acesso || nota.spedy_id) && (
                           <button title="Ver XML" onClick={() => setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content })}
                             className="p-1 transition-all"
-                            style={{ color: (nota.xml_original || nota.xml_url || (nota.xml_content && nota.xml_content.trim().startsWith("<"))) ? "#00ff00" : "#ff2222" }}>
+                            style={{ color: (nota.xml_original?.trim().startsWith("<") || nota.xml_url?.startsWith("http") || (nota.xml_content?.trim().startsWith("<"))) ? "#00ff00" : "#ff2222" }}>
                             <Code className="w-4 h-4" />
                           </button>
                         )}
