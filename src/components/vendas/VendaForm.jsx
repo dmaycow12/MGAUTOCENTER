@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { X, Plus, Trash2, AlertTriangle, Camera, Image } from "lucide-react";
+import { X, Plus, Trash2, AlertTriangle, Camera, Image, GripVertical } from "lucide-react";
 import SearchableSelect from "@/components/notas/SearchableSelect";
 import { reduzirEstoque } from "./estoqueUtils";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 const defaultForm = () => ({
   numero: "",
@@ -358,6 +359,19 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     setForm(f => ({ ...f, pecas: novos, ...calc }));
   };
 
+  const onDragEnd = (result, tipo) => {
+    if (!result.destination) return;
+    const from = result.source.index;
+    const to = result.destination.index;
+    if (from === to) return;
+    setForm(f => {
+      const lista = [...(f[tipo] || [])];
+      const [item] = lista.splice(from, 1);
+      lista.splice(to, 0, item);
+      return { ...f, [tipo]: lista, ...recalcular(tipo === 'servicos' ? lista : f.servicos, tipo === 'pecas' ? lista : f.pecas, f.desconto) };
+    });
+  };
+
   const onDesconto = (val) => {
     const d = Number(val) || 0;
     const calc = recalcular(form.servicos, form.pecas, d);
@@ -580,7 +594,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   </div>
                   <Field label="Nome"><input value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} className="input-dark" autoComplete="new-password" placeholder="Ou digite manualmente" /></Field>
                   <Field label="Nome Social / Nome Fantasia"><input value={form.cliente_nome_fantasia || ""} onChange={e => setForm(f => ({ ...f, cliente_nome_fantasia: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
-                  <Field label="Telefone"><input value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
+                  <Field label="Telefone"><input value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} className="input-dark" autoComplete="new-password" tabIndex={10} /></Field>
                   <Field label="E-mail"><input value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
                   <Field label="CPF / CNPJ"><input value={form.cliente_cpf_cnpj} onChange={e => setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
                   <Field label="Endereço"><input value={form.cliente_endereco || ""} onChange={e => setForm(f => ({ ...f, cliente_endereco: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
@@ -600,9 +614,9 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                       </select>
                     </Field>
                   )}
-                  <Field label="Modelo"><input value={form.veiculo_modelo} onChange={e => setForm(f => ({ ...f, veiculo_modelo: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
-                  <Field label="Placa"><input value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} className="input-dark" autoComplete="new-password" placeholder="AAA0000" /></Field>
-                  <Field label="KM"><input value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
+                  <Field label="Modelo"><input value={form.veiculo_modelo} onChange={e => setForm(f => ({ ...f, veiculo_modelo: e.target.value }))} className="input-dark" autoComplete="new-password" tabIndex={11} /></Field>
+                  <Field label="Placa"><input value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} className="input-dark" autoComplete="new-password" placeholder="AAA0000" tabIndex={12} /></Field>
+                  <Field label="KM"><input value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" autoComplete="new-password" tabIndex={13} /></Field>
                 </div>
               </Section>
 
@@ -632,88 +646,120 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
               </Section>
 
               <Section title="Produtos">
-                {(form.pecas || []).map((p, i) => (
-                  <div key={i} className="bg-gray-800/50 rounded-xl p-3 mb-2">
-                    {p._new ? (
-                      <div className="flex gap-2 items-center">
-                        <div className="flex-1">
-                          <SearchableSelect
-                            placeholder="Selecionar produto do estoque..."
-                            options={estoque.map(e => ({ value: e.id, label: e.descricao, sublabel: [e.codigo ? `Cód: ${e.codigo}` : '', e.valor_venda ? `R$ ${Number(e.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : ''].filter(Boolean).join(' | ') }))}
-                            onSelect={opt => { const item = estoque.find(e => e.id === opt.value); if (item) selecionarProduto(i, item); }}
-                          />
-                        </div>
-                        <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2"><Trash2 className="w-4 h-4" /></button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap md:flex-nowrap gap-2 items-end">
-                        <div className="w-20 flex-shrink-0">
-                          <label className="text-xs text-gray-500 mb-1 block">Código</label>
-                          <div className="input-dark text-gray-400 text-sm truncate">{p.codigo || '—'}</div>
-                        </div>
-                        <div className="flex-1 min-w-[120px]">
-                          <label className="text-xs text-gray-500 mb-1 block">Produto</label>
-                          <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
-                        </div>
-                        <div className="w-16 flex-shrink-0">
-                          <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
-                          <input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
-                        </div>
-                        <div className="w-24 flex-shrink-0">
-                          <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                          <input value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" autoComplete="off" />
-                        </div>
-                        <div className="w-24 flex-shrink-0">
-                          <label className="text-xs text-gray-500 mb-1 block">Total</label>
-                          <div className="input-dark text-gray-300 text-sm">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
-                        </div>
-                        <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2 mb-0.5"><Trash2 className="w-4 h-4" /></button>
+                <DragDropContext onDragEnd={r => onDragEnd(r, 'pecas')}>
+                  <Droppable droppableId="pecas">
+                    {provided => (
+                      <div ref={provided.innerRef} {...provided.droppableProps}>
+                        {(form.pecas || []).map((p, i) => (
+                          <Draggable key={i} draggableId={`peca-${i}`} index={i} isDragDisabled={p._new}>
+                            {(drag, snap) => (
+                              <div ref={drag.innerRef} {...drag.draggableProps} className={`bg-gray-800/50 rounded-xl p-3 mb-2 ${snap.isDragging ? 'ring-2 ring-orange-500' : ''}`}>
+                                {p._new ? (
+                                  <div className="flex gap-2 items-center">
+                                    <div className="flex-1">
+                                      <SearchableSelect
+                                        placeholder="Selecionar produto do estoque..."
+                                        options={estoque.map(e => ({ value: e.id, label: e.descricao, sublabel: [e.codigo ? `Cód: ${e.codigo}` : '', e.valor_venda ? `R$ ${Number(e.valor_venda).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : ''].filter(Boolean).join(' | ') }))}
+                                        onSelect={opt => { const item = estoque.find(e => e.id === opt.value); if (item) selecionarProduto(i, item); }}
+                                      />
+                                    </div>
+                                    <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2"><Trash2 className="w-4 h-4" /></button>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-wrap md:flex-nowrap gap-2 items-end">
+                                    <div {...drag.dragHandleProps} className="flex items-center self-center pb-0.5 cursor-grab text-gray-600 hover:text-gray-400 flex-shrink-0">
+                                      <GripVertical className="w-4 h-4" />
+                                    </div>
+                                    <div className="w-20 flex-shrink-0">
+                                      <label className="text-xs text-gray-500 mb-1 block">Código</label>
+                                      <div className="input-dark text-gray-400 text-sm truncate">{p.codigo || '—'}</div>
+                                    </div>
+                                    <div className="flex-1 min-w-[120px]">
+                                      <label className="text-xs text-gray-500 mb-1 block">Produto</label>
+                                      <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
+                                    </div>
+                                    <div className="w-16 flex-shrink-0">
+                                      <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
+                                      <input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
+                                    </div>
+                                    <div className="w-24 flex-shrink-0">
+                                      <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
+                                      <input value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" autoComplete="off" />
+                                    </div>
+                                    <div className="w-24 flex-shrink-0">
+                                      <label className="text-xs text-gray-500 mb-1 block">Total</label>
+                                      <div className="input-dark text-gray-300 text-sm">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
+                                    </div>
+                                    <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2 mb-0.5"><Trash2 className="w-4 h-4" /></button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
                       </div>
                     )}
-                  </div>
-                ))}
+                  </Droppable>
+                </DragDropContext>
                 <button onClick={addPeca} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
                   <Plus className="w-4 h-4" /> Adicionar
                 </button>
               </Section>
 
               <Section title="Serviços">
-                {(form.servicos || []).map((s, i) => (
-                  <div key={i} className="bg-gray-800/50 rounded-xl p-3 mb-2">
-                    {s._new ? (
-                      <div className="flex gap-2 items-center">
-                        <div className="flex-1">
-                          <SearchableSelect
-                            placeholder="Selecionar serviço cadastrado..."
-                            options={servicosCad.map(sv => ({ value: sv.id, label: sv.descricao, sublabel: sv.valor ? `R$ ${Number(sv.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
-                             onSelect={opt => { const item = servicosCad.find(sv => sv.id === opt.value); if (item) selecionarServico(i, item); }}
-                          />
-                        </div>
-                        <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2"><Trash2 className="w-4 h-4" /></button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap md:flex-nowrap gap-2 items-end">
-                        <div className="flex-1 min-w-[120px]">
-                          <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
-                          <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
-                        </div>
-                        <div className="w-16 flex-shrink-0">
-                          <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
-                          <input value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
-                        </div>
-                        <div className="w-24 flex-shrink-0">
-                          <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                          <input value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" autoComplete="off" />
-                        </div>
-                        <div className="w-24 flex-shrink-0">
-                          <label className="text-xs text-gray-500 mb-1 block">Total</label>
-                          <div className="input-dark text-gray-300 text-sm">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
-                        </div>
-                        <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2 mb-0.5"><Trash2 className="w-4 h-4" /></button>
+                <DragDropContext onDragEnd={r => onDragEnd(r, 'servicos')}>
+                  <Droppable droppableId="servicos">
+                    {provided => (
+                      <div ref={provided.innerRef} {...provided.droppableProps}>
+                        {(form.servicos || []).map((s, i) => (
+                          <Draggable key={i} draggableId={`servico-${i}`} index={i} isDragDisabled={s._new}>
+                            {(drag, snap) => (
+                              <div ref={drag.innerRef} {...drag.draggableProps} className={`bg-gray-800/50 rounded-xl p-3 mb-2 ${snap.isDragging ? 'ring-2 ring-orange-500' : ''}`}>
+                                {s._new ? (
+                                  <div className="flex gap-2 items-center">
+                                    <div className="flex-1">
+                                      <SearchableSelect
+                                        placeholder="Selecionar serviço cadastrado..."
+                                        options={servicosCad.map(sv => ({ value: sv.id, label: sv.descricao, sublabel: sv.valor ? `R$ ${Number(sv.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '' }))}
+                                        onSelect={opt => { const item = servicosCad.find(sv => sv.id === opt.value); if (item) selecionarServico(i, item); }}
+                                      />
+                                    </div>
+                                    <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2"><Trash2 className="w-4 h-4" /></button>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-wrap md:flex-nowrap gap-2 items-end">
+                                    <div {...drag.dragHandleProps} className="flex items-center self-center pb-0.5 cursor-grab text-gray-600 hover:text-gray-400 flex-shrink-0">
+                                      <GripVertical className="w-4 h-4" />
+                                    </div>
+                                    <div className="flex-1 min-w-[120px]">
+                                      <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
+                                      <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
+                                    </div>
+                                    <div className="w-16 flex-shrink-0">
+                                      <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
+                                      <input value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
+                                    </div>
+                                    <div className="w-24 flex-shrink-0">
+                                      <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
+                                      <input value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" autoComplete="off" />
+                                    </div>
+                                    <div className="w-24 flex-shrink-0">
+                                      <label className="text-xs text-gray-500 mb-1 block">Total</label>
+                                      <div className="input-dark text-gray-300 text-sm">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
+                                    </div>
+                                    <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2 mb-0.5"><Trash2 className="w-4 h-4" /></button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
                       </div>
                     )}
-                  </div>
-                ))}
+                  </Droppable>
+                </DragDropContext>
                 <button onClick={addServico} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
                   <Plus className="w-4 h-4" /> Adicionar
                 </button>
