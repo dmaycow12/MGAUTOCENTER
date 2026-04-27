@@ -1,20 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { X, Download, Save, AlertCircle } from "lucide-react";
+import { X, Download, Save, AlertCircle, Loader2 } from "lucide-react";
 
 export default function ModalXML({ nota, onClose, onSalvo }) {
-  const temXmlCompleto = nota.xml_original?.trim().startsWith("<") ||
-    (nota.xml_content?.trim().startsWith("<"));
-
-  const xmlAtual = nota.xml_original || (nota.xml_content?.trim().startsWith("<") ? nota.xml_content : "");
-
+  const [xmlCarregado, setXmlCarregado] = useState("");
+  const [carregando, setCarregando] = useState(false);
   const [xmlManual, setXmlManual] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
 
+  // Verifica se já tem XML inline (sem precisar buscar da URL)
+  const xmlInline = nota.xml_original?.trim().startsWith("<")
+    ? nota.xml_original
+    : nota.xml_content?.trim().startsWith("<")
+    ? nota.xml_content
+    : "";
+
+  useEffect(() => {
+    if (xmlInline) {
+      setXmlCarregado(xmlInline);
+      return;
+    }
+    // Se tem xml_url, buscar o arquivo
+    if (nota.xml_url) {
+      setCarregando(true);
+      fetch(nota.xml_url)
+        .then(r => r.text())
+        .then(text => {
+          if (text && text.trim().startsWith("<")) {
+            setXmlCarregado(text);
+          } else {
+            setXmlCarregado("");
+          }
+        })
+        .catch(() => setXmlCarregado(""))
+        .finally(() => setCarregando(false));
+    }
+  }, [nota.id]);
+
+  const temXml = !!xmlCarregado;
+
   const baixarXml = () => {
-    const conteudo = xmlAtual;
-    const blob = new Blob([conteudo], { type: "text/xml;charset=utf-8" });
+    // Se tem xml_url e não tem inline, abrir direto
+    if (!xmlInline && nota.xml_url) {
+      const a = document.createElement("a");
+      a.href = nota.xml_url;
+      a.download = `NF-${nota.numero || nota.id}.xml`;
+      a.click();
+      return;
+    }
+    const blob = new Blob([xmlCarregado], { type: "text/xml;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -31,8 +66,22 @@ export default function ModalXML({ nota, onClose, onSalvo }) {
     setSalvando(true);
     setErro("");
     try {
-      await base44.entities.NotaFiscal.update(nota.id, { xml_original: xmlManual.trim() });
-      onSalvo(xmlManual.trim());
+      // Salvar como arquivo para não estourar limite do campo
+      const xmlFile = new File([xmlManual.trim()], `NF-${nota.numero || nota.id}.xml`, { type: "text/xml" });
+      const uploadResp = await base44.integrations.Core.UploadFile({ file: xmlFile });
+      if (uploadResp?.file_url) {
+        await base44.entities.NotaFiscal.update(nota.id, {
+          xml_url: uploadResp.file_url,
+          xml_original: null,
+        });
+        setXmlCarregado(xmlManual.trim());
+        onSalvo(xmlManual.trim());
+      } else {
+        // Fallback: salvar direto no campo
+        await base44.entities.NotaFiscal.update(nota.id, { xml_original: xmlManual.trim() });
+        setXmlCarregado(xmlManual.trim());
+        onSalvo(xmlManual.trim());
+      }
     } catch (e) {
       setErro("Erro ao salvar: " + e.message);
     }
@@ -49,7 +98,7 @@ export default function ModalXML({ nota, onClose, onSalvo }) {
             <p className="text-gray-500 text-xs mt-0.5">{nota.cliente_nome} · {nota.data_emissao}</p>
           </div>
           <div className="flex items-center gap-2">
-            {temXmlCompleto && (
+            {temXml && (
               <button onClick={baixarXml}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg font-medium text-white"
                 style={{ background: "#062C9B" }}>
@@ -62,9 +111,14 @@ export default function ModalXML({ nota, onClose, onSalvo }) {
 
         {/* Conteúdo */}
         <div className="flex-1 overflow-auto p-4 space-y-3">
-          {temXmlCompleto ? (
+          {carregando ? (
+            <div className="flex items-center justify-center gap-3 py-12 text-gray-400">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="text-sm">Carregando XML...</span>
+            </div>
+          ) : temXml ? (
             <pre className="text-xs text-green-400 font-mono whitespace-pre-wrap break-all bg-gray-950 rounded-lg p-4 border border-gray-800">
-              {xmlAtual}
+              {xmlCarregado}
             </pre>
           ) : (
             <>

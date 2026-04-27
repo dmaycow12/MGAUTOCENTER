@@ -838,18 +838,30 @@ export default function NotasFiscais() {
   };
 
   const exportarXmlsZip = async () => {
-    const comXml = filtradas.filter(n => {
-      const xml = n.xml_original || n.xml_content || "";
-      return xml.trim().startsWith("<");
-    });
+    const comXml = filtradas.filter(n =>
+      n.xml_original?.trim().startsWith("<") ||
+      n.xml_content?.trim().startsWith("<") ||
+      n.xml_url?.startsWith("http")
+    );
     if (comXml.length === 0) return alert("Nenhuma nota com XML disponível no filtro atual.");
     setGerandoZip(true);
+    feedback("sucesso", `Preparando ZIP com ${comXml.length} nota(s)...`);
     try {
       const zip = new JSZip();
       for (const nota of comXml) {
-        const xml = nota.xml_original || nota.xml_content;
         const nome = `${nota.tipo || "NF"}-${nota.numero || nota.id}.xml`;
-        zip.file(nome, xml);
+        // Prioridade: xml_original inline > xml_content inline > xml_url (arquivo)
+        if (nota.xml_original?.trim().startsWith("<")) {
+          zip.file(nome, nota.xml_original);
+        } else if (nota.xml_content?.trim().startsWith("<")) {
+          zip.file(nome, nota.xml_content);
+        } else if (nota.xml_url) {
+          try {
+            const r = await fetch(nota.xml_url);
+            const text = await r.text();
+            if (text && text.trim().startsWith("<")) zip.file(nome, text);
+          } catch (_) {}
+        }
       }
       const blob = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(blob);
@@ -858,6 +870,7 @@ export default function NotasFiscais() {
       a.download = `XMLs_NF_${periodoRange.inicio}_${periodoRange.fim}.zip`;
       a.click();
       URL.revokeObjectURL(url);
+      setMsgFeedback(null);
     } catch (e) {
       feedback("erro", "Erro ao gerar ZIP: " + e.message);
     }
