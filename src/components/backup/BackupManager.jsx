@@ -74,13 +74,34 @@ export default function BackupManager() {
           } catch (_) {}
         }
 
+        // 2) Tentar baixar o PDF físico
+        let pdfBlob = null;
+        if (nota.pdf_url?.startsWith("http")) {
+          try {
+            setProgresso(`Baixando PDF ${i + 1}/${notas.length}: ${nome}`);
+            const r = await fetch(nota.pdf_url);
+            if (r.ok) {
+              const ct = r.headers.get("content-type") || "";
+              if (ct.includes("pdf") || ct.includes("octet")) {
+                pdfBlob = await r.arrayBuffer();
+              }
+            }
+          } catch (_) {}
+        }
+
         // Salvar JSON da nota
         pastaNotas.file(`${nome}.json`, JSON.stringify(notaExport, null, 2));
 
         // Salvar XML como arquivo separado se tiver
         if (xmlContent) {
           pastaNotas.file(`${nome}.xml`, xmlContent);
-          notaExport._xml_arquivo = `${nome}.xml`; // referência no JSON
+          notaExport._xml_arquivo = `${nome}.xml`;
+        }
+
+        // Salvar PDF como arquivo físico
+        if (pdfBlob) {
+          pastaNotas.file(`${nome}.pdf`, pdfBlob);
+          notaExport._pdf_arquivo = `${nome}.pdf`;
         }
 
         indice.push({
@@ -93,6 +114,7 @@ export default function BackupManager() {
           data_emissao: nota.data_emissao,
           chave_acesso: nota.chave_acesso,
           tem_xml: !!xmlContent,
+          tem_pdf: !!pdfBlob,
           arquivo: `${nome}.json`,
         });
 
@@ -110,6 +132,7 @@ export default function BackupManager() {
         total_registros: totalRegistros,
         total_notas: notas.length,
         notas_com_xml: indice.filter(n => n.tem_xml).length,
+        notas_com_pdf: indice.filter(n => n.tem_pdf).length,
       }, null, 2));
 
       setProgresso("Compactando ZIP...");
@@ -123,9 +146,10 @@ export default function BackupManager() {
       URL.revokeObjectURL(url);
 
       const comXml = indice.filter(n => n.tem_xml).length;
+      const comPdf = indice.filter(n => n.tem_pdf).length;
       setMsgBaixar({
         tipo: "sucesso",
-        texto: `Backup gerado! ${totalRegistros} registros | ${notas.length} notas fiscais | ${comXml} XMLs salvos como arquivo físico.`,
+        texto: `Backup gerado! ${totalRegistros} registros | ${notas.length} notas | ${comXml} XMLs físicos | ${comPdf} PDFs físicos salvos.`,
       });
     } catch (e) {
       setMsgBaixar({ tipo: "erro", texto: e.message });
@@ -243,6 +267,7 @@ export default function BackupManager() {
           <ul className="text-gray-400 text-xs space-y-1 list-disc list-inside">
             <li>Cada nota fiscal salva em <code className="text-green-300">NF-xxx.json</code> individual</li>
             <li>XML de cada nota salvo em <code className="text-green-300">NF-xxx.xml</code> físico</li>
+            <li>DANFE/PDF de cada nota salvo em <code className="text-green-300">NF-xxx.pdf</code> físico</li>
             <li>Demais entidades em JSON por categoria</li>
           </ul>
           {baixando && progresso && (
