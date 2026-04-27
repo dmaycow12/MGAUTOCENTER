@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import {
   FileText, Plus, Upload, Search, Trash2, X,
-  CheckCircle, AlertCircle, Printer, Download, PlusCircle, MinusCircle, RefreshCw, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Archive, BarChart2, Pencil, ClipboardList, Ban, LogIn, Eye, Code
+  CheckCircle, AlertCircle, PlusCircle, MinusCircle, RefreshCw, ChevronLeft, ChevronRight, LayoutGrid, List, BarChart2, Pencil, ClipboardList, Ban, LogIn, Code, Download
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
@@ -82,6 +82,7 @@ export default function NotasFiscais() {
   const [filtroModeloNF, setFiltroModeloNF] = useState(() => { try { const s = localStorage.getItem("nf_filtroModelo"); const parsed = s ? JSON.parse(s) : null; return parsed && parsed.length > 0 ? parsed : ["NFe", "NFCe", "NFSe"]; } catch { return ["NFe", "NFCe", "NFSe"]; } });
   const [gerandoZip, setGerandoZip] = useState(false);
   const [recuperandoXmls, setRecuperandoXmls] = useState(false);
+  const [recuperandoPdfs, setRecuperandoPdfs] = useState(false);
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
   const [atualizandoStatus, setAtualizandoStatus] = useState(null);
@@ -736,84 +737,22 @@ export default function NotasFiscais() {
     load();
   };
 
-  const obterPdfBlob = async (nota) => {
-    // Se já tem PDF permanente salvo no Base44, abre direto — sem espera!
-    if (nota.pdf_url && (nota.pdf_url.includes('base44.com') || nota.pdf_url.startsWith('https://files.'))) {
-      return { url: nota.pdf_url, direto: true };
+  const abrirPdfNota = async (nota) => {
+    // Se já tem pdf_url salva, abre direto
+    if (nota.pdf_url) {
+      window.open(nota.pdf_url, '_blank');
+      return;
     }
-
-    // Solicita ao proxy que busque/salve o PDF
-    const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
-    const data = res.data;
-
-    if (data?.processando) throw new Error(data.mensagem || 'A SEFAZ ainda está processando a nota.');
-    if (!data?.sucesso) throw new Error(data?.erro || 'PDF não disponível para esta nota.');
-
-    // Atualiza state local com a URL permanente
-    if (data?.pdf_url_publica) {
-      setNotas(prev => prev.map(n => n.id === nota.id ? { ...n, pdf_url: data.pdf_url_publica, status: 'Emitida' } : n));
-      return { url: data.pdf_url_publica, direto: true };
-    }
-
-    throw new Error('PDF não pôde ser obtido.');
-  };
-
-  const visualizarNota = async (nota) => {
-    feedback('sucesso', 'Carregando PDF...');
+    // Busca/salva na FocusNFe via proxy
+    feedback('sucesso', 'Buscando PDF...');
     try {
-      const { url, direto } = await obterPdfBlob(nota);
+      const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
+      const data = res.data;
+      if (data?.processando) { feedback('erro', data.mensagem || 'SEFAZ ainda processando.'); return; }
+      if (!data?.sucesso) { feedback('erro', data?.erro || 'PDF não disponível.'); return; }
+      setNotas(prev => prev.map(n => n.id === nota.id ? { ...n, pdf_url: data.pdf_url_publica } : n));
       setMsgFeedback(null);
-      window.open(url, '_blank');
-      if (!direto) setTimeout(() => URL.revokeObjectURL(url), 120000);
-    } catch (e) {
-      feedback('erro', e.message);
-    }
-  };
-
-  const nomeArquivoNota = (nota) => {
-    const tipo = (nota.tipo || 'NF').toUpperCase();
-    const numero = nota.numero || nota.id;
-    return `${tipo}-${numero}.pdf`;
-  };
-
-  const imprimirNota = async (nota) => {
-    feedback('sucesso', 'Carregando PDF para impressão...');
-    try {
-      const { url, direto } = await obterPdfBlob(nota);
-      setMsgFeedback(null);
-      if (direto) {
-        const win = window.open(url, '_blank');
-        if (win) { win.onload = () => { win.focus(); win.print(); }; }
-        return;
-      }
-      const win = window.open(url, '_blank');
-      if (win) { win.onload = () => { win.focus(); win.print(); }; }
-      setTimeout(() => URL.revokeObjectURL(url), 120000);
-    } catch (e) {
-      feedback('erro', e.message);
-    }
-  };
-
-  const baixarNota = async (nota) => {
-    feedback('sucesso', 'Preparando download...');
-    try {
-      const { url, direto } = await obterPdfBlob(nota);
-      setMsgFeedback(null);
-      const nomeArquivo = nomeArquivoNota(nota);
-      if (direto) {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = nomeArquivo;
-        a.click();
-        return;
-      }
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = nomeArquivo;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      window.open(data.pdf_url_publica, '_blank');
     } catch (e) {
       feedback('erro', e.message);
     }
@@ -1012,6 +951,33 @@ export default function NotasFiscais() {
             {recuperandoXmls ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Code className="w-4 h-4" />}
             {recuperandoXmls ? 'Recuperando...' : 'Recuperar XMLs'}
           </button>
+          <button
+            onClick={async () => {
+              setRecuperandoPdfs(true);
+              try {
+                const res = await base44.functions.invoke('recuperarPdfsFaltantes', {});
+                const d = res.data;
+                if (d?.sucesso) {
+                  feedback('sucesso', `PDFs recuperados: ${d.recuperadas}${d.restantes > 0 ? ` | Restam ${d.restantes} — clique novamente` : ' | Todos concluídos!'}`);
+                  if (d.recuperadas > 0) load();
+                } else {
+                  feedback('erro', d?.erro || 'Erro ao recuperar PDFs.');
+                }
+              } catch (e) {
+                feedback('erro', 'Erro: ' + e.message);
+              }
+              setRecuperandoPdfs(false);
+            }}
+            disabled={recuperandoPdfs}
+            className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+            style={{background:"#ef4444", color:"#fff"}}
+            onMouseEnter={e => { if (!recuperandoPdfs) e.currentTarget.style.background="#dc2626"; }}
+            onMouseLeave={e => e.currentTarget.style.background="#ef4444"}
+            title="Recuperar PDFs de notas emitidas que ainda não têm PDF salvo"
+          >
+            {recuperandoPdfs ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+            {recuperandoPdfs ? 'Recuperando...' : 'Recuperar PDFs'}
+          </button>
           <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             <BarChart2 className="w-4 h-4" /> Sintegra
           </button>
@@ -1083,8 +1049,12 @@ export default function NotasFiscais() {
                      <Code className="w-3.5 h-3.5"/>
                    </button>
                   )}
-                  <button title="Visualizar PDF" onClick={() => visualizarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-green-400 rounded-lg transition-all"><Eye className="w-3.5 h-3.5"/></button>
-                  <button title="Baixar PDF" onClick={() => baixarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Download className="w-3.5 h-3.5"/></button>
+                  <button
+                    title={nota.pdf_url ? "Abrir PDF" : "PDF não disponível"}
+                    onClick={() => abrirPdfNota(nota)}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
+                    style={{ color: nota.pdf_url ? "#00ff00" : "#ef4444" }}
+                  ><FileText className="w-3.5 h-3.5"/></button>
                   {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
                     <button title="Cancelar" onClick={() => cancelarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg transition-all"><Ban className="w-3.5 h-3.5"/></button>
                   )}
@@ -1200,17 +1170,14 @@ export default function NotasFiscais() {
                         )}
 
                         {nota.status !== 'Importada' && nota.status !== 'Lançada' && (
-                          <>
-                            <button title="Visualizar PDF" onClick={() => visualizarNota(nota)} className="p-1 text-gray-500 hover:text-green-400 transition-all">
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button title="Baixar PDF" onClick={() => baixarNota(nota)} className="p-1 text-gray-500 hover:text-blue-400 transition-all">
-                              <Download className="w-4 h-4" />
-                            </button>
-                            <button title="Imprimir" onClick={() => imprimirNota(nota)} className="p-1 text-gray-500 hover:text-yellow-400 transition-all">
-                              <Printer className="w-4 h-4" />
-                            </button>
-                        </>
+                          <button
+                            title={nota.pdf_url ? "Abrir PDF" : "PDF não disponível"}
+                            onClick={() => abrirPdfNota(nota)}
+                            className="p-1 transition-all"
+                            style={{ color: nota.pdf_url ? "#00ff00" : "#ef4444" }}
+                          >
+                            <FileText className="w-4 h-4" />
+                          </button>
                         )}
                         {(nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional' || nota.status === 'Erro de Sincronia Governamental') && (
                           <button title="Atualizar Status" onClick={() => atualizarStatusNota(nota)} disabled={atualizandoStatus === nota.id} className="p-1 text-gray-500 hover:text-cyan-400 transition-all disabled:opacity-50">
