@@ -753,19 +753,22 @@ export default function NotasFiscais() {
         },
         body: JSON.stringify({ nota_id: nota.id }),
       });
-      const contentType = resp.headers.get('content-type') || '';
-      if (contentType.includes('application/pdf')) {
-        const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
+      // Lê o body uma única vez como blob
+      const blob = await resp.blob();
+      if (blob.type.includes('application/pdf') || blob.type.includes('octet-stream')) {
+        const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
         setMsgFeedback(null);
         window.open(url, '_blank');
         setTimeout(() => URL.revokeObjectURL(url), 60000);
         if (!nota.pdf_url) load();
         return;
       }
-      const data = await resp.json();
+      // Não é PDF — tenta ler como JSON para pegar a mensagem de erro
+      const text = await blob.text();
+      let data = {};
+      try { data = JSON.parse(text); } catch (_) {}
       if (data?.processando) { feedback('erro', data.mensagem || 'SEFAZ ainda processando.'); return; }
-      feedback('erro', data?.erro || 'PDF não disponível.');
+      feedback('erro', data?.erro || text || 'PDF não disponível.');
     } catch (e) {
       feedback('erro', e.message);
     }
