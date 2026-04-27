@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Settings, Save, CheckCircle, UserPlus, LogOut, User, Pencil, Trash2, AlertCircle } from "lucide-react";
-import BackupCreator from "../components/backup/BackupCreator";
-import BackupRestorer from "../components/backup/BackupRestorer";
-import BackupExcel from "../components/backup/BackupExcel";
+import BackupManager from "../components/backup/BackupManager";
 
 export default function Configuracoes() {
   const CHAVES = ["nome_oficina", "cnpj", "telefone", "email", "endereco", "cidade", "estado", "cep",
@@ -346,14 +344,7 @@ export default function Configuracoes() {
         </div>
       </Section>
 
-      <Section title="Backup de Dados" icon={null}>
-        <p className="text-gray-400 text-sm mb-4">Faça backup regularmente de todos os dados da aplicação. Suporte a JSON, Excel e restauração.</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <BackupCreator />
-          <BackupRestorer />
-          <BackupExcel />
-        </div>
-      </Section>
+      <BackupManager />
 
       <Section title="Sessão" icon={LogOut}>
         <button onClick={handleLogout} className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 px-5 py-2.5 rounded-xl text-sm font-medium">

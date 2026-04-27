@@ -1,4 +1,7 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+
+// Entidades atuais do app
+const ENTIDADES = ["Cadastro", "Estoque", "NotaFiscal", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
 
 Deno.serve(async (req) => {
   try {
@@ -9,10 +12,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Apenas admins podem fazer backup' }, { status: 403 });
     }
 
-    const entidades = ["Cliente", "Veiculo", "Estoque", "NotaFiscal", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
     const backup = {};
 
-    for (const entidade of entidades) {
+    for (const entidade of ENTIDADES) {
       try {
         const dados = await base44.asServiceRole.entities[entidade].list('-created_date', 10000);
         backup[entidade] = dados;
@@ -21,7 +23,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return Response.json(backup);
+    return Response.json({ sucesso: true, backup, entidades: ENTIDADES });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
