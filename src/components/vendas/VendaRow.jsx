@@ -74,6 +74,8 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
   const [manualNFModal, setManualNFModal] = useState(null);
   const normalizarNF = (v) => v ? v.replace(/\(#?(\d+)\)/, '$1') : v;
+  const contatoSpanRef = useRef(null);
+  const veiculoSpanRef = useRef(null);
   const placaSpanRef = useRef(null);
   const kmSpanRef = useRef(null);
 
@@ -291,8 +293,8 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
         <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">#{os.numero || "—"}</td>
         {colunas.data && <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>}
         {colunas.cliente && <td className="px-4 py-3"><p className="text-white text-sm font-medium">{os.cliente_nome || "—"}</p></td>}
-        {colunas.contato && <td className="px-4 py-3"><p className="text-gray-300 text-sm whitespace-nowrap">{os.cliente_telefone || "—"}</p></td>}
-        {colunas.veiculo && <td className="px-4 py-3"><InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onNext={() => placaSpanRef.current?.click()} /></td>}
+        {colunas.contato && <td className="px-4 py-3"><span ref={contatoSpanRef}><InlineEdit value={os.cliente_telefone} onSave={v => saveField("cliente_telefone", v)} placeholder="—" onNext={() => veiculoSpanRef.current?.click()} /></span></td>}
+        {colunas.veiculo && <td className="px-4 py-3"><span ref={veiculoSpanRef}><InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onNext={() => placaSpanRef.current?.click()} /></span></td>}
         {colunas.placa && <td className="px-4 py-3"><span ref={placaSpanRef}><InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono onNext={() => kmSpanRef.current?.click()} /></span></td>}
         {colunas.km && <td className="px-4 py-3"><span ref={kmSpanRef}><InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" /></span></td>}
         {colunas.status && <td className="px-4 py-3">
