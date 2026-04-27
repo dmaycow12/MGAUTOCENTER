@@ -29,24 +29,37 @@ Deno.serve(async (req) => {
     }
 
     // Ainda não tem PDF permanente — tenta buscar na Focus NFe
-    if (!nota.spedy_id) {
-      return Response.json({ sucesso: false, erro: 'Nota sem referência Focus NFe (spedy_id).' });
+    // Para notas de entrada (Importada/Lançada), buscar pelo chave_acesso na SEFAZ via Focus NFe
+    let result = null;
+
+    if (nota.spedy_id) {
+      // Notas emitidas: buscar pelo spedy_id (referência interna)
+      const ep = nota.tipo === 'NFSe' ? 'nfsen' : nota.tipo === 'NFCe' ? 'nfce' : 'nfe';
+      const consultaResp = await fetch(`${FOCUSNFE_BASE}/${ep}/${nota.spedy_id}?completo=1`, {
+        headers: { 'Authorization': AUTH_HEADER },
+      });
+      if (consultaResp.ok) {
+        result = await consultaResp.json();
+      }
+    } else if (nota.chave_acesso) {
+      // Notas de entrada: buscar pelo chave_acesso
+      const chave = nota.chave_acesso.replace(/\D/g, '');
+      const consultaResp = await fetch(`${FOCUSNFE_BASE}/nfe/${chave}?completo=1`, {
+        headers: { 'Authorization': AUTH_HEADER },
+      });
+      if (consultaResp.ok) {
+        result = await consultaResp.json();
+      }
     }
 
-    const ep = nota.tipo === 'NFSe' ? 'nfsen' : nota.tipo === 'NFCe' ? 'nfce' : 'nfe';
-    const consultaResp = await fetch(`${FOCUSNFE_BASE}/${ep}/${nota.spedy_id}?completo=1`, {
-      headers: { 'Authorization': AUTH_HEADER },
-    });
-
-    if (!consultaResp.ok) {
-      return Response.json({ sucesso: false, erro: `Erro ao consultar Focus NFe: ${consultaResp.status}` });
+    if (!result) {
+      return Response.json({ sucesso: false, erro: 'Nota sem referência Focus NFe (spedy_id) ou chave de acesso.' });
     }
 
-    const result = await consultaResp.json();
     const statusFocus = result.status || '';
-
-    if (statusFocus !== 'autorizado') {
-      return Response.json({ sucesso: false, processando: true, mensagem: `Status na SEFAZ: ${statusFocus}. Aguarde a autorização.` });
+    // Para notas de entrada, o status pode ser "autorizado" ou a consulta retorna direto os campos de PDF
+    if (statusFocus && statusFocus !== 'autorizado') {
+      return Response.json({ sucesso: false, processando: true, mensagem: `Status na SEFAZ: ${statusFocus}.` });
     }
 
     const rawPdf = result.url_danfse || result.caminho_pdf_nfsen || result.caminho_pdf_nfse || result.caminho_danfe || result.url_danfe || result.caminho_pdf || '';

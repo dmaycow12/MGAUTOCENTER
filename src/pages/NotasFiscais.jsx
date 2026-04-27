@@ -1173,16 +1173,14 @@ export default function NotasFiscais() {
                           </button>
                         )}
 
-                        {nota.status !== 'Importada' && nota.status !== 'Lançada' && (
-                          <button
-                            title={nota.pdf_url ? "Abrir PDF" : "PDF não disponível"}
+                        <button
+                            title={nota.pdf_url ? "Abrir PDF" : "Buscar PDF"}
                             onClick={() => abrirPdfNota(nota)}
                             className="p-1 transition-all"
                             style={{ color: nota.pdf_url ? "#00ff00" : "#ef4444" }}
                           >
                             <FileText className="w-4 h-4" />
                           </button>
-                        )}
                         {(nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional' || nota.status === 'Erro de Sincronia Governamental') && (
                           <button title="Atualizar Status" onClick={() => atualizarStatusNota(nota)} disabled={atualizandoStatus === nota.id} className="p-1 text-gray-500 hover:text-cyan-400 transition-all disabled:opacity-50">
                             {atualizandoStatus === nota.id ? <RefreshCw className="w-4 h-4 animate-spin text-cyan-400" /> : <RefreshCw className="w-4 h-4" />}
