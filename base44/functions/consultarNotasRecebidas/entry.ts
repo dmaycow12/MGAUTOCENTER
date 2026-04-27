@@ -134,6 +134,25 @@ Deno.serve(async (req) => {
         } catch (_) {}
       }
 
+      // Buscar DANFE (PDF) da nota de entrada
+      let pdfParaSalvar = {};
+      if (chave) {
+        try {
+          const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {
+            headers: { 'Authorization': AUTH_HEADER },
+          });
+          if (danfeResp.ok) {
+            const ct = danfeResp.headers.get('content-type') || '';
+            if (ct.includes('pdf') || ct.includes('octet')) {
+              const blob = await danfeResp.blob();
+              const pdfFile = new File([blob], `NF-${numeroNF || chave}.pdf`, { type: 'application/pdf' });
+              const uploadPdf = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+              if (uploadPdf?.file_url) pdfParaSalvar = { pdf_url: uploadPdf.file_url };
+            }
+          }
+        } catch (_) {}
+      }
+
       await base44.asServiceRole.entities.NotaFiscal.create({
         tipo: 'NFe',
         numero: numeroNF,
@@ -147,6 +166,7 @@ Deno.serve(async (req) => {
         observacoes: `Nota recebida via SEFAZ | Manifesto: ${nf.manifestacao_destinatario || 'pendente'}`,
         mensagem_sefaz: nf.situacao || '',
         ...xmlParaSalvar,
+        ...pdfParaSalvar,
       });
 
       importadas++;
