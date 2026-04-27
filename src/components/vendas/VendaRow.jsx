@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
@@ -19,12 +19,17 @@ export const COLUNAS_PADRAO = {
   status: true, valor: true, pagamento: true, nfe: true, nfse: true,
 };
 
-function InlineEdit({ value, onSave, placeholder = "", mono = false, onNext }) {
+const InlineEdit = forwardRef(function InlineEdit({ value, onSave, placeholder = "", mono = false, onNext }, ref) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(value || "");
   const inputRef = useRef(null);
   useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
   useEffect(() => { setVal(value || ""); }, [value]);
+
+  useImperativeHandle(ref, () => ({
+    startEdit: () => setEditing(true),
+  }));
+
   const commit = () => { onSave(val); setEditing(false); };
   if (editing) return (
     <input ref={inputRef} type="text" value={val}
@@ -45,7 +50,7 @@ function InlineEdit({ value, onSave, placeholder = "", mono = false, onNext }) {
       {val || placeholder || "—"}
     </span>
   );
-}
+});
 
 const STATUS_OPTIONS = ["Aberto", "Orçamento", "Concluído"];
 const STATUS_STYLE = {
@@ -74,10 +79,10 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
   const [manualNFModal, setManualNFModal] = useState(null);
   const normalizarNF = (v) => v ? v.replace(/\(#?(\d+)\)/, '$1') : v;
-  const contatoSpanRef = useRef(null);
-  const veiculoSpanRef = useRef(null);
-  const placaSpanRef = useRef(null);
-  const kmSpanRef = useRef(null);
+  const contatoRef = useRef(null);
+  const veiculoRef = useRef(null);
+  const placaRef = useRef(null);
+  const kmRef = useRef(null);
 
   const saveField = async (field, val) => {
     await base44.entities.Vendas.update(os.id, { [field]: val });
@@ -293,10 +298,10 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
         <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">#{os.numero || "—"}</td>
         {colunas.data && <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>}
         {colunas.cliente && <td className="px-4 py-3"><p className="text-white text-sm font-medium">{os.cliente_nome || "—"}</p></td>}
-        {colunas.contato && <td className="px-4 py-3"><span ref={contatoSpanRef}><InlineEdit value={os.cliente_telefone} onSave={v => saveField("cliente_telefone", v)} placeholder="—" onNext={() => veiculoSpanRef.current?.click()} /></span></td>}
-        {colunas.veiculo && <td className="px-4 py-3"><span ref={veiculoSpanRef}><InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onNext={() => placaSpanRef.current?.click()} /></span></td>}
-        {colunas.placa && <td className="px-4 py-3"><span ref={placaSpanRef}><InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono onNext={() => kmSpanRef.current?.click()} /></span></td>}
-        {colunas.km && <td className="px-4 py-3"><span ref={kmSpanRef}><InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" /></span></td>}
+        {colunas.contato && <td className="px-4 py-3"><InlineEdit ref={contatoRef} value={os.cliente_telefone} onSave={v => saveField("cliente_telefone", v)} placeholder="—" onNext={() => veiculoRef.current?.startEdit()} /></td>}
+        {colunas.veiculo && <td className="px-4 py-3"><InlineEdit ref={veiculoRef} value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onNext={() => placaRef.current?.startEdit()} /></td>}
+        {colunas.placa && <td className="px-4 py-3"><InlineEdit ref={placaRef} value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono onNext={() => kmRef.current?.startEdit()} /></td>}
+        {colunas.km && <td className="px-4 py-3"><InlineEdit ref={kmRef} value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" /></td>}
         {colunas.status && <td className="px-4 py-3">
           <div className="relative inline-block">
             <button ref={statusBtnRef}
