@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { appParams } from "@/lib/app-params";
 import {
   FileText, Plus, Upload, Search, Trash2, X,
   CheckCircle, AlertCircle, PlusCircle, MinusCircle, RefreshCw, ChevronLeft, ChevronRight, LayoutGrid, List, BarChart2, Pencil, ClipboardList, Ban, LogIn, Code, Download
@@ -738,21 +739,33 @@ export default function NotasFiscais() {
   };
 
   const abrirPdfNota = async (nota) => {
-    // Se já tem pdf_url salva, abre direto
-    if (nota.pdf_url) {
-      window.open(nota.pdf_url, '_blank');
-      return;
-    }
-    // Busca/salva na FocusNFe via proxy
-    feedback('sucesso', 'Buscando PDF...');
+    feedback('sucesso', 'Carregando PDF...');
     try {
-      const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
-      const data = res.data;
+      const { appId, token, functionsVersion, appBaseUrl } = appParams;
+      const baseUrl = appBaseUrl || 'https://base44.app';
+      const version = functionsVersion || '3';
+      const funcUrl = `${baseUrl}/api/apps/${appId}/functions/v${version}/proxyPdfNota`;
+      const resp = await fetch(funcUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ nota_id: nota.id }),
+      });
+      const contentType = resp.headers.get('content-type') || '';
+      if (contentType.includes('application/pdf')) {
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        setMsgFeedback(null);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        if (!nota.pdf_url) load();
+        return;
+      }
+      const data = await resp.json();
       if (data?.processando) { feedback('erro', data.mensagem || 'SEFAZ ainda processando.'); return; }
-      if (!data?.sucesso) { feedback('erro', data?.erro || 'PDF não disponível.'); return; }
-      setNotas(prev => prev.map(n => n.id === nota.id ? { ...n, pdf_url: data.pdf_url_publica } : n));
-      setMsgFeedback(null);
-      window.open(data.pdf_url_publica, '_blank');
+      feedback('erro', data?.erro || 'PDF não disponível.');
     } catch (e) {
       feedback('erro', e.message);
     }
