@@ -23,23 +23,9 @@ Deno.serve(async (req) => {
     const nota = lista[0];
     if (!nota) return Response.json({ sucesso: false, erro: 'Nota não encontrada' });
 
-    // Se já tem PDF salvo, baixa e faz stream para o browser
+    // Se já tem PDF salvo, retorna a URL diretamente
     if (nota.pdf_url) {
-      try {
-        const pdfResp = await fetch(nota.pdf_url);
-        if (pdfResp.ok) {
-          const blob = await pdfResp.blob();
-          const arrayBuffer = await blob.arrayBuffer();
-          return new Response(arrayBuffer, {
-            status: 200,
-            headers: {
-              'Content-Type': 'application/pdf',
-              'Content-Disposition': `inline; filename="nota_${nota_id}.pdf"`,
-              'Access-Control-Allow-Origin': '*',
-            }
-          });
-        }
-      } catch (_) {}
+      return Response.json({ sucesso: true, pdf_url: nota.pdf_url });
     }
 
     // Ainda não tem PDF permanente — tenta buscar na Focus NFe
@@ -84,16 +70,7 @@ Deno.serve(async (req) => {
     if (result.chave_nfe || result.chave_nfse) updateData.chave_acesso = result.chave_nfe || result.chave_nfse;
     await db.entities.NotaFiscal.update(nota_id, updateData);
 
-    // Retorna o PDF direto como stream
-    const arrayBuffer = await blob.arrayBuffer();
-    return new Response(arrayBuffer, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="nota_${nota_id}.pdf"`,
-        'Access-Control-Allow-Origin': '*',
-      }
-    });
+    return Response.json({ sucesso: true, pdf_url: file_url });
 
   } catch (error) {
     console.error('proxyPdfNota erro:', error.message);

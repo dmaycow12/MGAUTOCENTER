@@ -739,36 +739,24 @@ export default function NotasFiscais() {
   };
 
   const abrirPdfNota = async (nota) => {
-    feedback('sucesso', 'Carregando PDF...');
+    // Se já tem PDF salvo no banco, abre direto
+    if (nota.pdf_url) {
+      window.open(nota.pdf_url, '_blank');
+      return;
+    }
+    // Sem PDF salvo — tenta buscar via proxy
+    feedback('sucesso', 'Buscando PDF na Focus NFe...');
     try {
-      const { appId, token, functionsVersion, appBaseUrl } = appParams;
-      const baseUrl = appBaseUrl || 'https://base44.app';
-      const version = functionsVersion || '3';
-      const funcUrl = `${baseUrl}/api/apps/${appId}/functions/v${version}/proxyPdfNota`;
-      const resp = await fetch(funcUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ nota_id: nota.id }),
-      });
-      // Lê o body uma única vez como blob
-      const blob = await resp.blob();
-      if (blob.type.includes('application/pdf') || blob.type.includes('octet-stream')) {
-        const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+      const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
+      const data = res.data;
+      if (data?.pdf_url) {
+        window.open(data.pdf_url, '_blank');
         setMsgFeedback(null);
-        window.open(url, '_blank');
-        setTimeout(() => URL.revokeObjectURL(url), 60000);
-        if (!nota.pdf_url) load();
+        load();
         return;
       }
-      // Não é PDF — tenta ler como JSON para pegar a mensagem de erro
-      const text = await blob.text();
-      let data = {};
-      try { data = JSON.parse(text); } catch (_) {}
       if (data?.processando) { feedback('erro', data.mensagem || 'SEFAZ ainda processando.'); return; }
-      feedback('erro', data?.erro || text || 'PDF não disponível.');
+      feedback('erro', data?.erro || 'PDF não disponível.');
     } catch (e) {
       feedback('erro', e.message);
     }
