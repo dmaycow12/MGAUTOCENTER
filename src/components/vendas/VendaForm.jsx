@@ -84,6 +84,18 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
+  const contatoRef = useRef(null);
+  const veiculoRef = useRef(null);
+  const placaRef = useRef(null);
+  const kmRef = useRef(null);
+
+  const handleNavKey = (e, nextRef) => {
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      nextRef?.current?.focus();
+    }
+  };
+
   const [clienteSearch, setClienteSearch] = useState("");
   const [clienteSugestoes, setClienteSugestoes] = useState([]);
   const [showNovoCliente, setShowNovoCliente] = useState(false);
@@ -594,7 +606,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   </div>
                   <Field label="Nome"><input value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} className="input-dark" autoComplete="new-password" placeholder="Ou digite manualmente" /></Field>
                   <Field label="Nome Social / Nome Fantasia"><input value={form.cliente_nome_fantasia || ""} onChange={e => setForm(f => ({ ...f, cliente_nome_fantasia: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
-                  <Field label="Telefone"><input value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} className="input-dark" autoComplete="new-password" tabIndex={10} /></Field>
+                  <Field label="Telefone / Contato"><input ref={contatoRef} value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} onKeyDown={e => handleNavKey(e, veiculoRef)} className="input-dark" autoComplete="new-password" /></Field>
                   <Field label="E-mail"><input value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
                   <Field label="CPF / CNPJ"><input value={form.cliente_cpf_cnpj} onChange={e => setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
                   <Field label="Endereço"><input value={form.cliente_endereco || ""} onChange={e => setForm(f => ({ ...f, cliente_endereco: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
@@ -614,9 +626,9 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                       </select>
                     </Field>
                   )}
-                  <Field label="Modelo"><input value={form.veiculo_modelo} onChange={e => setForm(f => ({ ...f, veiculo_modelo: e.target.value }))} className="input-dark" autoComplete="new-password" tabIndex={11} /></Field>
-                  <Field label="Placa"><input value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} className="input-dark" autoComplete="new-password" placeholder="AAA0000" tabIndex={12} /></Field>
-                  <Field label="KM"><input value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" autoComplete="new-password" tabIndex={13} /></Field>
+                  <Field label="Modelo"><input ref={veiculoRef} value={form.veiculo_modelo} onChange={e => setForm(f => ({ ...f, veiculo_modelo: e.target.value }))} onKeyDown={e => handleNavKey(e, placaRef)} className="input-dark" autoComplete="new-password" /></Field>
+                  <Field label="Placa"><input ref={placaRef} value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} onKeyDown={e => handleNavKey(e, kmRef)} className="input-dark" autoComplete="new-password" placeholder="AAA0000" /></Field>
+                  <Field label="KM"><input ref={kmRef} value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
                 </div>
               </Section>
 
