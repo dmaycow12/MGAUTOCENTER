@@ -42,13 +42,16 @@ Deno.serve(async (req) => {
         result = await consultaResp.json();
       }
     } else if (nota.chave_acesso) {
-      // Notas de entrada: buscar pelo chave_acesso
+      // Notas de entrada: buscar pelo endpoint de notas recebidas
       const chave = nota.chave_acesso.replace(/\D/g, '');
-      const consultaResp = await fetch(`${FOCUSNFE_BASE}/nfe/${chave}?completo=1`, {
-        headers: { 'Authorization': AUTH_HEADER },
-      });
-      if (consultaResp.ok) {
-        result = await consultaResp.json();
+      // Tenta endpoint de notas recebidas primeiro (NFe de entrada)
+      const endpoints = [
+        `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
+        `${FOCUSNFE_BASE}/nfe/${chave}?completo=1`,
+      ];
+      for (const ep of endpoints) {
+        const r = await fetch(ep, { headers: { 'Authorization': AUTH_HEADER } });
+        if (r.ok) { result = await r.json().catch(() => null); if (result) break; }
       }
     }
 
@@ -56,14 +59,35 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: 'Nota sem referência Focus NFe (spedy_id) ou chave de acesso.' });
     }
 
-    const statusFocus = result.status || '';
-    // Para notas de entrada, o status pode ser "autorizado" ou a consulta retorna direto os campos de PDF
-    if (statusFocus && statusFocus !== 'autorizado') {
-      return Response.json({ sucesso: false, processando: true, mensagem: `Status na SEFAZ: ${statusFocus}.` });
+    // Campos de PDF: notas emitidas e notas recebidas têm campos diferentes
+    const rawPdf = result.url_danfse || result.caminho_pdf_nfsen || result.caminho_pdf_nfse
+      || result.caminho_danfe || result.url_danfe || result.caminho_pdf
+      || result.caminho_xml_nota_fiscal_pdf || result.url_pdf || '';
+    const pdfUrlFocus = normalizarUrl(rawPdf);
+
+    // Se não tem URL de PDF direto mas tem chave, tenta gerar DANFE via endpoint específico
+    if (!pdfUrlFocus && nota.chave_acesso) {
+      const chave = nota.chave_acesso.replace(/\D/g, '');
+      const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {
+        headers: { 'Authorization': AUTH_HEADER },
+      });
+      if (danfeResp.ok) {
+        const ct = danfeResp.headers.get('content-type') || '';
+        if (ct.includes('pdf') || ct.includes('octet')) {
+          const blob = await danfeResp.blob();
+          const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+          const { file_url } = await db.integrations.Core.UploadFile({ file });
+          await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+          return Response.json({ sucesso: true, pdf_url: file_url });
+        }
+      }
+      return Response.json({ sucesso: false, erro: 'DANFE não disponível para esta nota de entrada. O fornecedor pode não ter autorizado o acesso.' });
     }
 
-    const rawPdf = result.url_danfse || result.caminho_pdf_nfsen || result.caminho_pdf_nfse || result.caminho_danfe || result.url_danfe || result.caminho_pdf || '';
-    const pdfUrlFocus = normalizarUrl(rawPdf);
+    const statusFocus = result.status || '';
+    if (statusFocus && statusFocus !== 'autorizado' && !rawPdf) {
+      return Response.json({ sucesso: false, processando: true, mensagem: `Status na SEFAZ: ${statusFocus}.` });
+    }
 
     if (!pdfUrlFocus) {
       return Response.json({ sucesso: false, erro: 'PDF não disponível na Focus NFe.' });
