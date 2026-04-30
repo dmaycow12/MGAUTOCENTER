@@ -75,7 +75,8 @@ Deno.serve(async (req) => {
         const ct = danfeResp.headers.get('content-type') || '';
         if (ct.includes('pdf') || ct.includes('octet')) {
           const blob = await danfeResp.blob();
-          const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+          const nomeArquivo = `${(nota.tipo || 'nf').toLowerCase()}-${nota.numero || nota_id}.pdf`;
+          const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
           const { file_url } = await db.integrations.Core.UploadFile({ file });
           await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
           return Response.json({ sucesso: true, pdf_url: file_url });
@@ -100,7 +101,8 @@ Deno.serve(async (req) => {
     }
 
     const blob = await pdfResp.blob();
-    const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+    const nomeArquivo = `${(nota.tipo || 'nf').toLowerCase()}-${nota.numero || nota_id}.pdf`;
+    const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
     const { file_url } = await db.integrations.Core.UploadFile({ file });
 
     const updateData = { pdf_url: file_url };
