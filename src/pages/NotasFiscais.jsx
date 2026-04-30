@@ -738,10 +738,28 @@ export default function NotasFiscais() {
     load();
   };
 
+  const downloadPdf = async (url, nome) => {
+    const resp = await fetch(url);
+    const blob = await resp.blob();
+    const objUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objUrl;
+    a.download = nome;
+    a.click();
+    URL.revokeObjectURL(objUrl);
+  };
+
+  const nomeArquivoPdf = (nota) => {
+    const cliente = (nota.cliente_nome || 'cliente').replace(/[^a-zA-Z0-9À-ÿ\s]/g, '').trim().replace(/\s+/g, '-').substring(0, 30);
+    const tipo = (nota.tipo || 'nf').toLowerCase();
+    const num = nota.numero || nota.id;
+    return `${cliente}-${tipo}-${num}.pdf`;
+  };
+
   const abrirPdfNota = async (nota) => {
-    // Se já tem PDF salvo no banco, abre direto
+    // Se já tem PDF salvo no banco, baixa com nome correto
     if (nota.pdf_url) {
-      window.open(nota.pdf_url, '_blank');
+      downloadPdf(nota.pdf_url, nomeArquivoPdf(nota));
       return;
     }
     // Sem PDF salvo — tenta buscar via proxy
@@ -750,7 +768,7 @@ export default function NotasFiscais() {
       const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
       const data = res.data;
       if (data?.pdf_url) {
-        window.open(data.pdf_url, '_blank');
+        await downloadPdf(data.pdf_url, nomeArquivoPdf(nota));
         setMsgFeedback(null);
         load();
         return;
