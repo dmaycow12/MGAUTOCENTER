@@ -45,16 +45,37 @@ Deno.serve(async (req) => {
     const status = data.status || '';
 
     if (status === 'autorizado') {
+      let pdfUrlFinal = '';
       const rawPdf = data.caminho_pdf_nfsen || data.caminho_pdf_nfse || data.caminho_danfe || '';
-      const pdfUrl = normalizarUrl(rawPdf);
+      if (rawPdf) {
+        const pdfUrl = normalizarUrl(rawPdf);
+        try {
+          const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
+          const pdfResp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER } });
+          if (pdfResp.ok) {
+            const blob = await pdfResp.blob();
+            const buffer = await blob.arrayBuffer();
+            const header = new Uint8Array(buffer, 0, 4);
+            const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+            if (isPdfValid) {
+              const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+              const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+              pdfUrlFinal = file_url;
+            }
+          }
+        } catch (e) {
+          console.error('[PDF] Erro ao validar:', e.message);
+        }
+      }
+      
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
-        pdf_url: pdfUrl,
+        pdf_url: pdfUrlFinal,
         status: 'Emitida',
         chave_acesso: data.chave_nfe || nota.chave_acesso || '',
         ...(data.numero ? { numero: String(data.numero) } : {}),
         ...(data.serie ? { serie: String(data.serie) } : {}),
       });
-      return Response.json({ sucesso: true, pdf_url: pdfUrl });
+      return Response.json({ sucesso: true, pdf_url: pdfUrlFinal });
     }
 
     if (status === 'erro_autorizacao' || status === 'rejeitado') {
