@@ -42,8 +42,16 @@ Deno.serve(async (req) => {
           if (!consultaResp.ok) { logs.push(`FALHA: ${nota.tipo} nº ${nota.numero} - API ${consultaResp.status}`); falhas++; continue; }
           const result = await consultaResp.json();
           if (result.status !== 'autorizado') { logs.push(`SKIP: ${nota.tipo} nº ${nota.numero} - status ${result.status}`); falhas++; continue; }
-          const rawPdf = result.url_danfse || result.caminho_pdf_nfsen || result.caminho_pdf_nfse || result.caminho_danfe || result.url_danfe || result.caminho_pdf || '';
-          const pdfUrl = normalizarUrl(rawPdf);
+          
+          // NFCe: tenta endpoint direto .pdf; NFe/NFSe: usa campos de URL
+          let pdfUrl = '';
+          if (nota.tipo === 'NFCe') {
+            pdfUrl = `${FOCUSNFE_BASE}/nfce/${nota.spedy_id}.pdf`;
+          } else {
+            const rawPdf = result.url_danfse || result.caminho_pdf_nfsen || result.caminho_pdf_nfse || result.caminho_danfe || result.url_danfe || result.caminho_pdf || '';
+            pdfUrl = normalizarUrl(rawPdf);
+          }
+          
           if (!pdfUrl) { logs.push(`FALHA: ${nota.tipo} nº ${nota.numero} - sem URL PDF`); falhas++; continue; }
           const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
           const pdfResp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER } });
