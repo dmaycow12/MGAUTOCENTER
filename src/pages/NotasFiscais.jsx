@@ -916,6 +916,33 @@ export default function NotasFiscais() {
           onClick={async () => {
             setBuscandoSefaz(true);
             try {
+              const res = await base44.functions.invoke('sincronizarNotasAPartirDeMarcoDe2026', {});
+              const data = res.data;
+              if (data?.sucesso) {
+                feedback('sucesso', `Emitidas: ${data.emitidas.criadas} novas (${data.emitidas.xmlRecuperados} XMLs, ${data.emitidas.pdfRecuperados} PDFs) | Recebidas: ${data.recebidas.criadas} novas (${data.recebidas.xmlRecuperados} XMLs, ${data.recebidas.pdfRecuperados} PDFs)`);
+                load();
+              } else {
+                feedback('erro', data?.erro || 'Erro ao sincronizar notas.');
+              }
+            } catch (e) {
+              feedback('erro', 'Erro: ' + e.message);
+            }
+            setBuscandoSefaz(false);
+          }}
+          disabled={buscandoSefaz}
+          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+          style={{background: "#00cc44", color: "#000"}}
+          onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00aa33"; }}
+          onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}
+          title="Sincroniza notas emitidas + recebidas a partir de 01/03/2026 com XMLs e PDFs"
+        >
+          {buscandoSefaz ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+          {buscandoSefaz ? 'Sincronizando...' : 'Sincronizar Março+'}
+        </button>
+        <button
+          onClick={async () => {
+            setBuscandoSefaz(true);
+            try {
               const res = await base44.functions.invoke('consultarNotasRecebidas', {});
               const data = res.data;
               if (data?.sucesso) {
