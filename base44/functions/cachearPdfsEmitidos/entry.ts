@@ -53,6 +53,13 @@ Deno.serve(async (req) => {
         if (!pdfResp.ok) { erros++; continue; }
 
         const blob = await pdfResp.blob();
+        
+        // Valida se é PDF válido
+        const buffer = await blob.arrayBuffer();
+        const header = new Uint8Array(buffer, 0, 4);
+        const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46; // %PDF
+        if (!isPdfValid) { erros++; continue; }
+        
         const file = new File([blob], `nota_${nota.id}.pdf`, { type: 'application/pdf' });
         const { file_url } = await db.integrations.Core.UploadFile({ file });
 

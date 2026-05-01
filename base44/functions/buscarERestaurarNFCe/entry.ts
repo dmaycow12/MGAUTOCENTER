@@ -135,6 +135,33 @@ Deno.serve(async (req) => {
 
     console.log('[RESTORE] dados:', JSON.stringify(notaFocus));
 
+    // Download e valida PDF se disponível
+    let pdfUrlFinal = '';
+    const rawPdfUrl = notaFocus.caminho_danfe || notaFocus.pdf_url || notaFocus.danfe_url || '';
+    if (rawPdfUrl) {
+      try {
+        const pdfUrlNormalizado = rawPdfUrl.startsWith('http') ? rawPdfUrl : `https://api.focusnfe.com.br${rawPdfUrl}`;
+        const isS3 = pdfUrlNormalizado.includes('amazonaws.com') || pdfUrlNormalizado.includes('s3.');
+        const pdfResp = await fetch(pdfUrlNormalizado, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER } });
+        
+        if (pdfResp.ok) {
+          const blob = await pdfResp.blob();
+          const buffer = await blob.arrayBuffer();
+          const header = new Uint8Array(buffer, 0, 4);
+          const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46; // %PDF
+          
+          if (isPdfValid) {
+            const nomeArquivo = `${tipoNota.toLowerCase()}-${numero}.pdf`;
+            const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
+            const { file_url } = await base44.integrations.Core.UploadFile({ file });
+            pdfUrlFinal = file_url;
+          }
+        }
+      } catch (e) {
+        console.error('[PDF] Erro ao validar:', e.message);
+      }
+    }
+
     const nova = await base44.asServiceRole.entities.NotaFiscal.create({
       tipo: tipoNota,
       numero: String(notaFocus.numero || numero),
@@ -145,7 +172,7 @@ Deno.serve(async (req) => {
       valor_total: Number(notaFocus.valor_total || notaFocus.valor || 0),
       spedy_id: notaFocus.referencia || notaFocus.reference || notaFocus.id || '',
       chave_acesso: notaFocus.chave_nfe || notaFocus.chave_acesso || notaFocus.chave || chaveAcesso || '',
-      pdf_url: notaFocus.caminho_danfe || notaFocus.pdf_url || notaFocus.danfe_url || '',
+      pdf_url: pdfUrlFinal,
       xml_url: notaFocus.caminho_xml_nota_fiscal || notaFocus.xml_url || '',
       status_sefaz: notaFocus.status || 'autorizado',
       mensagem_sefaz: notaFocus.mensagem_sefaz || '',

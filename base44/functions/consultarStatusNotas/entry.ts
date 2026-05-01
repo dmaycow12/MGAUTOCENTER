@@ -13,9 +13,20 @@ const normalizarUrl = (url) => {
 const salvarPdfPermanente = async (base44, pdfUrl, nota_id) => {
   if (!pdfUrl) return null;
   try {
-    const resp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER } });
+    const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
+    const resp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER } });
     if (!resp.ok) return null;
     const blob = await resp.blob();
+    
+    // Valida se é PDF válido (%PDF header)
+    const buffer = await blob.arrayBuffer();
+    const header = new Uint8Array(buffer, 0, 4);
+    const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46; // %PDF
+    if (!isPdfValid) {
+      console.warn('[PDF INVALIDO]', nota_id, '- não começa com %PDF');
+      return null;
+    }
+    
     const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
     const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
     console.log('[PDF PERMANENTE]', nota_id, '->', file_url);
