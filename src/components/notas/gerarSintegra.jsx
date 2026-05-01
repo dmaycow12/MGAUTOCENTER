@@ -161,42 +161,46 @@ export function reg54(nota, item, numItem, empresa) {
 
 
 // Registro 61 - NF Venda a Consumidor (modelo 02, 65, etc)
-// Convênio ICMS 57/95 - Layout: 126 caracteres
-// Pos 01-02: "61" | Pos 03-16: brancos (14) | Pos 17-30: brancos (14)
-// Pos 31-38: data DDMMAAAA | Pos 39-40: modelo | Pos 41-43: série (3)
-// Pos 44-45: subsérie | Pos 46-51: nº_inicial | Pos 52-57: nº_final
-// Pos 58-70: valor_total (13) | Pos 71-83: valor_icms (13) | Pos 84-87: alíquota (4)
-// Pos 88: situação (N/S/A) | Pos 89-126: brancos (38)
-export function reg61(data, serie, numInicial, numFinal, valorTotal, modelo = "02") {
+// Convênio ICMS 57/95 - Layout exato: 126 caracteres
+// Pos 01-02: tipo | 03-16: brancos | 17-30: brancos | 31-38: data AAAAMMDD
+// Pos 39-40: modelo | 41-43: série | 44-45: subsérie | 46-51: nº_inicial | 52-57: nº_final
+// Pos 58-70: valor_total (13) | 71-83: base_icms (13) | 84-95: valor_icms (12)
+// Pos 96-108: isentas (13) | 109-121: outras (13) | 122-125: alíquota (4) | 126: situação
+export function reg61(data, serie, numInicial, numFinal, valorTotal, baseIcms = 0, valorIcms = 0, isentas = 0, outras = 0, aliquota = "0000", modelo = "65") {
   let dataFormatada = "00000000";
   if (data && data.length >= 10) {
     const [ano, mes, dia] = data.split('-');
-    dataFormatada = `${dia}${mes}${ano}`;
+    dataFormatada = `${ano}${mes}${dia}`; // AAAAMMDD
   }
   
-  const ser = r(serie || "1", 3);           // 3 chars série
-  const subserie = r("", 2);                // 2 chars subsérie (em branco)
+  const ser = r(serie || "1", 3);
+  const subserie = r("", 2);
   const numini = rZ(numInicial || 0, 6);
   const numfim = rZ(numFinal || 0, 6);
-  const valtot = rN(valorTotal || 0, 13);   // 13 chars valor total
-  const valicms = rN(0, 13);                // 13 chars valor ICMS (zero se não houver)
-  const aliq = r("0000", 4);                // 4 chars alíquota
-  const sit = "N";                          // situação: N (normal)
+  const valtot = rN(valorTotal || 0, 13);
+  const baseIcm = rN(baseIcms || 0, 13);
+  const valIcm = rN(valorIcms || 0, 12);
+  const isen = rN(isentas || 0, 13);
+  const outr = rN(outras || 0, 13);
+  const aliq = rZ(aliquota || "0000", 4);
+  const sit = "S"; // S = Regular, C = Cancelado
   
-  let linha = "61" +                       // pos 01-02
-              " ".repeat(14) +             // pos 03-16: brancos
-              " ".repeat(14) +             // pos 17-30: brancos
-              dataFormatada +              // pos 31-38: data DDMMAAAA
-              rZ(modelo, 2) +              // pos 39-40: modelo
-              ser +                        // pos 41-43: série (3)
-              subserie +                   // pos 44-45: subsérie
-              numini +                     // pos 46-51: número inicial
-              numfim +                     // pos 52-57: número final
-              valtot +                     // pos 58-70: valor total (13)
-              valicms +                    // pos 71-83: valor ICMS (13)
-              aliq +                       // pos 84-87: alíquota (4)
-              sit +                        // pos 88: situação (1)
-              " ".repeat(38);              // pos 89-126: brancos (38)
+  let linha = "61" +                      // pos 01-02
+              " ".repeat(14) +            // pos 03-16: brancos
+              " ".repeat(14) +            // pos 17-30: brancos
+              dataFormatada +             // pos 31-38: data AAAAMMDD
+              rZ(modelo, 2) +             // pos 39-40: modelo
+              ser +                       // pos 41-43: série (3)
+              subserie +                  // pos 44-45: subsérie (2)
+              numini +                    // pos 46-51: número inicial (6)
+              numfim +                    // pos 52-57: número final (6)
+              valtot +                    // pos 58-70: valor total (13)
+              baseIcm +                   // pos 71-83: base ICMS (13)
+              valIcm +                    // pos 84-95: valor ICMS (12)
+              isen +                      // pos 96-108: isentas (13)
+              outr +                      // pos 109-121: outras (13)
+              aliq +                      // pos 122-125: alíquota (4)
+              sit;                        // pos 126: situação (1)
   
   return linha.substring(0, 126);
 }
