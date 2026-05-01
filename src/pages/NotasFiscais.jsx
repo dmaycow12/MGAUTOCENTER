@@ -789,7 +789,12 @@ export default function NotasFiscais() {
         return;
       }
       if (data?.processando) { feedback('erro', data.mensagem || 'SEFAZ ainda processando.'); return; }
-      feedback('erro', data?.erro || 'PDF não disponível.');
+      // Exibir erro com detalhes
+      let erroMsg = data?.erro || 'PDF não disponível.';
+      if (data?.detalhes) {
+        erroMsg += `\n\nDetalhes: ${data.detalhes}`;
+      }
+      feedback('erro', erroMsg);
     } catch (e) {
       feedback('erro', e.message);
     }
@@ -903,7 +908,7 @@ export default function NotasFiscais() {
       {msgFeedback && (
         <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm ${msgFeedback.tipo === "sucesso" ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
           {msgFeedback.tipo === "sucesso" ? <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />}
-          <span>{msgFeedback.msg}</span>
+          <span className="whitespace-pre-wrap break-words max-h-48 overflow-y-auto flex-1">{msgFeedback.msg}</span>
         </div>
       )}
 
