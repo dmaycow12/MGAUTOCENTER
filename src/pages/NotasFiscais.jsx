@@ -84,6 +84,7 @@ export default function NotasFiscais() {
   const [gerandoZip, setGerandoZip] = useState(false);
   const [recuperandoXmls, setRecuperandoXmls] = useState(false);
   const [recuperandoPdfs, setRecuperandoPdfs] = useState(false);
+  const [validandoPdfs, setValidandoPdfs] = useState(false);
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
   const [atualizandoStatus, setAtualizandoStatus] = useState(null);
@@ -1006,9 +1007,36 @@ export default function NotasFiscais() {
             {recuperandoPdfs ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
             {recuperandoPdfs ? 'Recuperando...' : 'Recuperar PDFs'}
           </button>
-          <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-            <BarChart2 className="w-4 h-4" /> Sintegra
+          <button
+            onClick={async () => {
+              setValidandoPdfs(true);
+              try {
+                const res = await base44.functions.invoke('validarePDfsFaltantes', {});
+                const d = res.data;
+                if (d?.sucesso) {
+                  feedback('sucesso', `Validação: ${d.corrompidas} corrompidas encontradas, ${d.recuperadas} corrigidas.`);
+                  if (d.recuperadas > 0) load();
+                } else {
+                  feedback('erro', d?.erro || 'Erro na validação.');
+                }
+              } catch (e) {
+                feedback('erro', 'Erro: ' + e.message);
+              }
+              setValidandoPdfs(false);
+            }}
+            disabled={validandoPdfs}
+            className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+            style={{background:"#ff9800", color:"#000"}}
+            onMouseEnter={e => { if (!validandoPdfs) e.currentTarget.style.background = "#e68900"; }}
+            onMouseLeave={e => e.currentTarget.style.background = "#ff9800"}
+            title="Validar e corrigir PDFs corrompidos"
+          >
+            {validandoPdfs ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+            {validandoPdfs ? 'Validando...' : 'Validar PDFs'}
           </button>
+           <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+             <BarChart2 className="w-4 h-4" /> Sintegra
+           </button>
           <div className={`flex-1 flex items-center h-9 rounded-lg text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
             <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}><ChevronLeft className="w-3 h-3" /></button>
             <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
