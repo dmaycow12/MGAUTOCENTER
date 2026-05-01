@@ -144,16 +144,15 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
           )}
 
           {/* Info */}
-           <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-xs text-blue-300 space-y-1">
-             <p className="font-semibold">Registros incluídos:</p>
-             <p>• Reg. 10 — Identificação da empresa</p>
-             <p>• Reg. 11 — Endereço do estabelecimento</p>
-             <p>• Reg. 50 — Notas fiscais (NFe)</p>
-             <p>• Reg. 54 — Itens das notas NFe (quando disponíveis)</p>
-             <p>• Reg. 61 — Vendas a consumidor (NFCe)</p>
-             <p>• Reg. 75 — Cadastro de produtos</p>
-             <p>• Reg. 90 — Encerramento/totalizadores</p>
-           </div>
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-xs text-blue-300 space-y-1">
+            <p className="font-semibold">Registros incluídos:</p>
+            <p>• Reg. 10 — Identificação da empresa</p>
+            <p>• Reg. 11 — Endereço do estabelecimento</p>
+            <p>• Reg. 50 — Notas fiscais (NFe/NFCe)</p>
+            <p>• Reg. 54 — Itens das notas (quando disponíveis)</p>
+            <p>• Reg. 75 — Cadastro de produtos</p>
+            <p>• Reg. 90 — Encerramento/totalizadores</p>
+          </div>
 
           <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 text-xs text-yellow-300">
             <div className="flex gap-2">
