@@ -356,9 +356,9 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     });
   }
 
-  // Reg.61 — NFCe agrupadas por data/série (alíquota em formato inteiro: 0=0%, 1200=12%, 1800=18%)
+  // Reg.61 — NFCe agrupadas por data/série (alíquota em formato inteiro: 18=1800 para 18% de ICMS em MG)
   for (const g of nfcePorDataSerie.values()) {
-    addLinha("61", reg61(empresa.cnpj, empresa.ie, g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal, 0)); // 0 = 0000 (sem ICMS)
+    addLinha("61", reg61(empresa.cnpj, empresa.ie, g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal, 18)); // 18% ICMS MG
   }
 
   // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
