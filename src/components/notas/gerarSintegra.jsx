@@ -1,5 +1,5 @@
-// Gerador de SINTEGRA - MG (Convênio ICMS 57/95)
-// Registros: 10, 11, 50, 54, 61, 75, 90
+// Gerador de SINTEGRA - Layout padrão MG
+// Registros: 10, 11, 50, 54, 75, 90
 
 function r(str, n, dir = "L", pad = " ") {
   const s = String(str ?? "");
@@ -9,14 +9,14 @@ function r(str, n, dir = "L", pad = " ") {
 function rN(v, n) { return r(Math.round(Number(v || 0) * 100), n, "R", "0"); }
 function rZ(v, n) { return r(String(Number(v || 0)), n, "R", "0"); }
 function rData(d) {
-  if (!d) return "00000000";
+  if (!d) return "00000000"; // data inválida vira zeros
   const clean = String(d).substring(0, 10).replace(/-/g, "");
   return clean.length === 8 ? clean : "00000000";
 }
 function limpaCNPJ(c) { return (c || "").replace(/\D/g, "").padEnd(14, "0").substring(0, 14); }
 function limpaIE(ie) {
   const s = (ie || "").replace(/\D/g, "");
-  if (!s) return "ISENTO        ";
+  if (!s) return "ISENTO        "; // 14 chars: "ISENTO" + 8 espaços
   return s.padEnd(14, " ").substring(0, 14);
 }
 function parseXmlItens(xmlStr) {
@@ -61,13 +61,14 @@ export function reg10(empresa, periodo) {
     r(fax.substring(0, 10).padEnd(10, "0"), 10) +
     rData(periodo.inicio) +
     rData(periodo.fim) +
-    "3" +
-    "3" +
-    "1"
+    "3" + // Convênio 76/03 e 20/04
+    "3" + // Totalidade das operações
+    "1"   // Normal
   );
 }
 
 // Registro 11 - Dados do estabelecimento
+// Layout: 2+34+5+22+15+8+28+12 = 126 chars
 export function reg11(empresa) {
   const numeroDigitos = (empresa.numero || "1355").replace(/\D/g, "") || "1355";
   const numero = numeroDigitos.padStart(5, "0").slice(-5);
@@ -84,13 +85,17 @@ export function reg11(empresa) {
   );
 }
 
-// Registro 50 - Notas fiscais (cabeçalho NFe modelo 55)
+// Registro 50 - Notas fiscais (cabeçalho)
+// Layout: 2+14+14+8+2+2+3+6+4+1+13+13+13+13+13+4+1 = 126 chars
+// SINTEGRA MG aceita apenas modelo 55 (NFe). NFCe (65) deve ser excluída.
 export function reg50(nota, empresa) {
   const isEntrada = nota.status === "Importada";
   const codSit = nota.status === "Cancelada" ? "S" : "N";
   const cfop = isEntrada ? "1102" : "5405";
   const emitente = isEntrada ? "T" : "P";
   const cnpjDoc = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
+  // CPF (11 dígitos) deve ser preenchido com zeros à ESQUERDA até 14 posições
+  // CNPJ (14 dígitos) usa como está
   const cnpjUsar = cnpjDoc.length === 11
     ? cnpjDoc.padStart(14, "0")
     : cnpjDoc.length === 14
@@ -99,26 +104,27 @@ export function reg50(nota, empresa) {
 
   return (
     "50" +
-    cnpjUsar +
-    limpaIE(nota.cliente_ie || "") +
-    rData(nota.data_emissao) +
-    r(nota.cliente_estado || empresa.uf, 2) +
-    r("55", 2) +
-    rZ(nota.serie || "1", 3) +
-    rZ(nota.numero, 6) +
-    r(cfop, 4) +
-    emitente +
-    rN(nota.valor_total, 13) +
-    rN(0, 13) +
-    rN(0, 13) +
-    rN(nota.valor_total, 13) +
-    rN(0, 13) +
-    r("0000", 4) +
-    r(codSit, 1)
+    cnpjUsar +                                    // 14
+    limpaIE(nota.cliente_ie || "") +              // 14
+    rData(nota.data_emissao) +                    //  8
+    r(nota.cliente_estado || empresa.uf, 2) +     //  2
+    r("55", 2) +                                  //  2 — sempre 55 (NFe)
+    rZ(nota.serie || "1", 3) +                    //  3
+    rZ(nota.numero, 6) +                          //  6
+    r(cfop, 4) +                                  //  4
+    emitente +                                    //  1
+    rN(nota.valor_total, 13) +                    // 13
+    rN(0, 13) +                                   // 13 base ICMS
+    rN(0, 13) +                                   // 13 valor ICMS
+    rN(nota.valor_total, 13) +                    // 13 isentas
+    rN(0, 13) +                                   // 13 outras
+    r("0000", 4) +                                //  4 alíquota
+    r(codSit, 1)                                  //  1 situação
   );
 }
 
 // Registro 54 - Itens das notas
+// Layout: 2+14+2+3+6+4+3+3+14+11+12+12+12+12+12+4 = 126 chars
 export function reg54(nota, item, numItem, empresa) {
   const cfop = nota.status === "Importada" ? "1102" : "5405";
   const cst = "060";
@@ -129,105 +135,99 @@ export function reg54(nota, item, numItem, empresa) {
     : cnpjDoc54.length === 14
     ? cnpjDoc54
     : "00000000000000";
+  // Código LEFT-align (igual ao Reg.75) para que o validador faça o match
   const codigoProd = r(item.codigo || "000", 14);
 
   return (
     "54" +
-    cnpjCampo +
-    r("55", 2) +
-    rZ(nota.serie || "1", 3) +
-    rZ(nota.numero, 6) +
-    r(cfop, 4) +
-    r(cst, 3) +
-    rZ(numItem + 1, 3) +
-    codigoProd +
-    rN(item.quantidade || 1, 11) +
-    rN(item.valor_unitario || (item.valor_total / (item.quantidade || 1)), 12) +
-    rN(0, 12) +
-    rN(0, 12) +
-    rN(0, 12) +
-    rN(0, 12) +
-    r("0000", 4)
+    cnpjCampo +                   // 14
+    r("55", 2) +                  //  2 — sempre 55 (NFe)
+    rZ(nota.serie || "1", 3) +    //  3 — mesmo formato do Reg.50
+    rZ(nota.numero, 6) +          //  6
+    r(cfop, 4) +                  //  4
+    r(cst, 3) +                   //  3
+    rZ(numItem + 1, 3) +          //  3
+    codigoProd +                  // 14
+    rN(item.quantidade || 1, 11) + // 11
+    rN(item.valor_unitario || (item.valor_total / (item.quantidade || 1)), 12) + // 12
+    rN(0, 12) +                   // 12 desconto
+    rN(0, 12) +                   // 12 base ICMS
+    rN(0, 12) +                   // 12 valor ICMS
+    rN(0, 12) +                   // 12 IPI
+    r("0000", 4)                  //  4 alíquota ICMS
   );
 }
 
 // Registro 61 - Documentos fiscais venda consumidor final (NFCe modelo 65)
-// Tipo 1: Resumo mensal por data/série → 126 caracteres
+// Layout Convênio ICMS 57/95: exatamente 126 caracteres conforme arquivo aprovado
+// Estrutura: 61 + 28 brancos + AAAAMMDD + 65 + nº_inicial(6) + nº_final(6) + valor(14) + ZEROS até 126
 export function reg61(data, numInicial, numFinal, valorTotal) {
+  // Data AAAAMMDD
   let dataf = "00000000";
   if (data && data.length >= 10) {
     const [ano, mes, dia] = data.split('-');
     dataf = `${ano}${mes}${dia}`;
   }
+  
+  // Números com 6 dígitos
   const numini = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
   const numfim = String(Math.max(0, Number(numFinal || 0))).padStart(6, "0").slice(-6);
+  
+  // Valor com 14 dígitos RIGHT (2 decimais)
   const valtot = rN(valorTotal || 0, 14);
   
   return (
     "61" +
-    " ".repeat(28) +
-    dataf +
-    "65" +
-    numini +
-    numfim +
-    valtot +
-    "0".repeat(60)
+    " ".repeat(28) +   // pos 03-30: 28 brancos
+    dataf +            // pos 31-38: data AAAAMMDD
+    "65" +             // pos 39-40: modelo 65
+    numini +           // pos 41-46: nº inicial (6)
+    numfim +           // pos 47-52: nº final (6)
+    valtot +           // pos 53-66: valor total (14)
+    "0".repeat(60)     // pos 67-126: 60 zeros (resto)
   );
 }
 
-// Registro 61R - Resumo por item (produto/código)
-// Tipo: 61R + dados estruturados
-export function reg61R(data, codigoNumerador, quantidade, valor) {
-  let dataf = "0000000000";
-  if (data && data.length >= 10) {
-    dataf = data.substring(0, 10).replace(/-/g, "");
-  }
-  const cod = String(codigoNumerador || "0").padStart(20, " ").slice(-20);
-  const qtd = rZ(quantidade || 0, 16);
-  const val = rN(valor || 0, 13);
-  
-  return (
-    "61R" +
-    dataf +
-    cod +
-    qtd +
-    val +
-    "0".repeat(68)
-  ).substring(0, 126);
-}
-
 // Registro 75 - Cadastro de produtos
+// Layout Conv. ICMS 76/03 item 20: 2+8+8+14+8+53+6+5+4+5+13 = 126 chars
+// Campos: tipo+dtIni+dtFim+codProd+NCM+desc+unid+aliqIPI+aliqICMS+reducBC+baseST
 export function reg75(produto, periodoInicio, periodoFim) {
   const ncm = (produto.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
   return (
     "75" +
-    rData(periodoInicio) +
-    rData(periodoFim) +
-    r(produto.codigo || "000", 14) +
-    r(ncm, 8) +
-    r(produto.descricao, 53) +
-    r(produto.unidade || "UN", 6) +
-    rZ(0, 5) +
-    r("0000", 4) +
-    rZ(0, 5) +
-    rZ(0, 13)
+    rData(periodoInicio) +            //  8 data inicial
+    rData(periodoFim) +               //  8 data final
+    r(produto.codigo || "000", 14) +  // 14 código left-align (igual Reg.54)
+    r(ncm, 8) +                       //  8 NCM
+    r(produto.descricao, 53) +        // 53 descrição
+    r(produto.unidade || "UN", 6) +   //  6 unidade
+    rZ(0, 5) +                        //  5 alíquota IPI (com 2 decimais, ex: 00000)
+    r("0000", 4) +                    //  4 alíquota ICMS (com 2 decimais, ex: 0000)
+    rZ(0, 5) +                        //  5 % redução BC ICMS (com 2 decimais)
+    rZ(0, 13)                         // 13 base cálculo ICMS ST
   );
 }
 
 // Registro 90 - Encerramento
+// SINTEGRA MG: uma linha por tipo (50,54,75) + linha "99" com total GERAL de todos os registros
+// Tipos 10 e 11 NÃO devem aparecer no reg90
 export function reg90(empresa, totais, linhasAnteriores) {
   const BR = r("", 85);
   const CNPJ = limpaCNPJ(empresa.cnpj);
   const IE = (empresa.ie || "").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
 
-  const tiposReg90 = ["50", "54", "61", "61R", "75"].filter(t => totais[t] > 0);
+  const tiposReg90 = ["50", "54", "61", "75"].filter(t => totais[t] > 0);
+  // Linhas do Reg.90: uma por tipo + a linha "99"
   const totalLinhasReg90 = tiposReg90.length + 1;
+  // Total GERAL = todas as linhas anteriores (10,11,50,54,75) + todas as linhas do reg90
   const totalGeral = linhasAnteriores + totalLinhasReg90;
+  // Campo 07 do Reg.90 = Número de registros tipo 90 no arquivo (não é o literal "9"!)
   const numReg90 = String(totalLinhasReg90);
 
   const linhas = tiposReg90.map(tipo =>
     "90" + CNPJ + IE + tipo + rZ(totais[tipo], 8) + BR + numReg90
   );
+  // A linha "99" informa o total GERAL de todas as linhas do arquivo
   linhas.push("90" + CNPJ + IE + "99" + rZ(totalGeral, 8) + BR + numReg90);
   return linhas;
 }
@@ -249,6 +249,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     fone: cfg("telefone") || "",
     fax: cfg("fax") || "",
     responsavel: cfg("responsavel") || "",
+    ie_sub: cfg("ie_substituto") || "",
   };
 
   const linhas = [];
@@ -262,11 +263,11 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
   addLinha("11", reg11(empresa));
 
   const notasPeriodo = notas.filter(n => {
-    const d = (n.data_emissao || "").substring(0, 10);
+    const d = (n.data_emissao || "").substring(0, 10); // suporta datetime com hora
     return d >= periodoInicio && d <= periodoFim && n.status !== "Rascunho";
   });
 
-  // NFe (modelo 55) para Reg.50/54
+  // Separar NFe (modelo 55) para Reg.50/54 e NFCe (modelo 65) para Reg.61
   const vistas = new Set();
   const notasSintegra = notasPeriodo.filter(n => {
     if (n.tipo !== "NFe") return false;
@@ -276,68 +277,62 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     return true;
   });
 
-  // NFCe (modelo 65) agrupadas por data
-  const nfcePorData = new Map();
+  // NFCe agrupadas por data+série+subsérie para Reg.61
+  const nfcePorGrupo = new Map();
   notasPeriodo
     .filter(n => n.tipo === "NFCe" && n.status !== "Cancelada")
     .forEach(n => {
       const data = (n.data_emissao || "").substring(0, 10);
-      if (!nfcePorData.has(data)) {
-        nfcePorData.set(data, { numInicial: 9999999, numFinal: 0, valorTotal: 0, itensMap: new Map() });
+      const serie = n.serie || "1";
+      const subserie = "00"; // padrão
+      const chave = `${data}_${serie}_${subserie}`;
+      if (!nfcePorGrupo.has(chave)) {
+        nfcePorGrupo.set(chave, { data, serie, subserie, numInicial: 9999999, numFinal: 0, valorTotal: 0, icmsTotal: 0, valorIsento: 0, valorOutros: 0 });
       }
-      const g = nfcePorData.get(data);
+      const g = nfcePorGrupo.get(chave);
       const num = parseInt(n.numero || "0", 10);
       if (num < g.numInicial) g.numInicial = num;
       if (num > g.numFinal) g.numFinal = num;
       g.valorTotal += parseFloat(n.valor_total || 0);
-      
-      // Coletar itens por código
-      let itens = [];
-      if (n.xml_content) {
-        try {
-          const parsed = JSON.parse(n.xml_content);
-          itens = Array.isArray(parsed) ? parsed : parseXmlItens(n.xml_content);
-        } catch {
-          itens = parseXmlItens(n.xml_content);
-        }
-      }
-      if (itens.length === 0) {
-        itens = [{ codigo: "000", quantidade: 1, valor_total: n.valor_total || 0 }];
-      }
-      itens.forEach(item => {
-        const cod = String(item.codigo || "000");
-        const qtd = parseFloat(item.quantidade || 1);
-        const val = parseFloat(item.valor_total || 0);
-        if (g.itensMap.has(cod)) {
-          const existing = g.itensMap.get(cod);
-          existing.quantidade += qtd;
-          existing.valor_total += val;
-        } else {
-          g.itensMap.set(cod, { quantidade: qtd, valor_total: val });
-        }
-      });
+      // ICMS e isento: estimados, poderia vir do XML
+      g.icmsTotal += 0; // valor ICMS extraído do XML (implementar se houver)
+      g.valorIsento += 0;
+      g.valorOutros += 0;
     });
 
-  // Reg.50
+  // Reg.50 — todos primeiro
   for (const nota of notasSintegra) {
     addLinha("50", reg50(nota, empresa));
   }
 
-  // Reg.54
+  // Reg.54 — depois, coletar dados dos produtos para Reg.75
   const codigosNosItens = new Set();
-  const itensPorCodigo = new Map();
+  const itensPorCodigo = new Map(); // fallback para Reg.75 quando não há estoque
   for (const nota of notasSintegra) {
     let itens = [];
     if (nota.xml_content) {
       try {
         const parsed = JSON.parse(nota.xml_content);
-        itens = Array.isArray(parsed) ? parsed : parseXmlItens(nota.xml_content);
+        if (Array.isArray(parsed)) {
+          itens = parsed;
+        } else {
+          itens = parseXmlItens(nota.xml_content);
+        }
       } catch {
         itens = parseXmlItens(nota.xml_content);
       }
     }
+    // Se não há itens, criar item padrão com valor total da nota
     if (itens.length === 0) {
-      itens = [{ codigo: "000", descricao: "PRODUTO", ncm: "87089990", unidade: "UN", quantidade: 1, valor_unitario: nota.valor_total || 0, valor_total: nota.valor_total || 0 }];
+      itens = [{
+        codigo: "000",
+        descricao: "PRODUTO",
+        ncm: "87089990",
+        unidade: "UN",
+        quantidade: 1,
+        valor_unitario: nota.valor_total || 0,
+        valor_total: nota.valor_total || 0,
+      }];
     }
     itens.forEach((item, idx) => {
       addLinha("54", reg54(nota, item, idx, empresa));
@@ -348,18 +343,14 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     });
   }
 
-  // Reg.61 - Resumo mensal NFCe
-  for (const [data, g] of nfcePorData.entries()) {
-    addLinha("61", reg61(data, g.numInicial, g.numFinal, g.valorTotal));
-    
-    // Reg.61R - Resumo por item da NFCe
-    for (const [cod, item] of g.itensMap.entries()) {
-      addLinha("61R", reg61R(data, cod, item.quantidade, item.valor_total));
-    }
+  // Reg.61 — NFCe agrupadas por data/série (modelo 65)
+  for (const g of nfcePorGrupo.values()) {
+    addLinha("61", reg61(g.data, g.numInicial, g.numFinal, g.valorTotal));
   }
 
-  // Reg.75
+  // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
   const produtosUnicos = new Map();
+  // Prioridade 1: estoque cadastrado
   estoque.forEach(p => {
     const cod = (p.codigo || "").trim();
     const desc = (p.descricao || "").trim();
@@ -367,8 +358,9 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     if (!codigosNosItens.has(cod)) return;
     if (!produtosUnicos.has(cod)) produtosUnicos.set(cod, p);
   });
+  // Prioridade 2: item da própria NF (fallback para produtos não cadastrados)
   for (const [cod, item] of itensPorCodigo.entries()) {
-    if (produtosUnicos.has(cod)) continue;
+    if (produtosUnicos.has(cod)) continue; // já tem no estoque
     produtosUnicos.set(cod, {
       codigo: cod,
       descricao: item.descricao || "PRODUTO",
@@ -381,7 +373,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     addLinha("75", reg75(produto, periodoInicio, periodoFim));
   }
 
-  // Reg.90
+  // Reg.90 retorna array — unir tudo com CRLF num único join
   const linhasReg90 = reg90(empresa, totais, linhas.length);
   const todasLinhas = [...linhas, ...linhasReg90].join("\r\n");
 
