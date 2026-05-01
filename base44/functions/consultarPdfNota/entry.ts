@@ -57,6 +57,10 @@ Deno.serve(async (req) => {
             const buffer = await blob.arrayBuffer();
             const header = new Uint8Array(buffer, 0, 4);
             const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+            if (!isPdfValid && nota.tipo === 'NFCe') {
+              // NFCe sem PDF disponível — retornar vazio
+              return;
+            }
             if (isPdfValid) {
               const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
               const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
