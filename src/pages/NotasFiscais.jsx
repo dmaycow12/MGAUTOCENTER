@@ -774,11 +774,6 @@ export default function NotasFiscais() {
       downloadPdf(nota.pdf_url, nomeArquivoPdf(nota));
       return;
     }
-    // NFCe sem PDF — aviso específico
-    if (nota.tipo === 'NFCe') {
-      feedback('erro', 'NFCe não disponibiliza PDF na Focus NFe. Acesse o e-Commerce do fornecedor ou use o QR Code.');
-      return;
-    }
     // Sem PDF salvo — tenta buscar via proxy
     feedback('sucesso', 'Buscando PDF na Focus NFe...');
     try {

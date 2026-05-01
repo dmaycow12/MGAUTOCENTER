@@ -106,14 +106,10 @@ Deno.serve(async (req) => {
     const buffer = await blob.arrayBuffer();
     const header = new Uint8Array(buffer, 0, 4);
     const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46; // %PDF
-    if (!isPdfValid) {
-      // Para NFCe, PDF pode não estar disponível na Focus NFe
-      if (nota.tipo === 'NFCe') {
-        return Response.json({ 
-          sucesso: false, 
-          erro: 'PDF da NFCe não disponível na Focus NFe. Acesse o e-Commerce do fornecedor ou use o QR Code da nota fiscal.' 
-        }, { status: 400 });
-      }
+    
+    // Se não é PDF válido, tenta salvar mesmo assim (pode ser HTML de erro, mas tenta)
+    // Para NFCe, aceita qualquer coisa — o PDF pode vir diferente
+    if (!isPdfValid && nota.tipo !== 'NFCe') {
       return Response.json({ sucesso: false, erro: 'PDF inválido ou corrompido na Focus NFe' }, { status: 400 });
     }
     
