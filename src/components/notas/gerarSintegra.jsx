@@ -30,18 +30,39 @@ function calcularDigitosCNPJ(cnpj12) {
   return cnpj12 + d1 + d2;
 }
 
+function calcularDigitosCPF(cpf9) {
+  if (cpf9.length !== 9) return null;
+  let soma = 0;
+  for (let i = 0; i < 9; i++) soma += parseInt(cpf9[i]) * (10 - i);
+  let d1 = (soma % 11) < 2 ? 0 : 11 - (soma % 11);
+  
+  soma = 0;
+  for (let i = 0; i < 9; i++) soma += parseInt(cpf9[i]) * (11 - i);
+  soma += d1 * 2;
+  let d2 = (soma % 11) < 2 ? 0 : 11 - (soma % 11);
+  
+  return cpf9 + d1 + d2;
+}
+
 function limpaCNPJ(c) { 
   const clean = (c || "").replace(/\D/g, "");
-  if (!clean || clean.length < 11) return "00000000000000";
-  if (clean.length === 14) return clean; // já tem dígitos
+  if (!clean) return "00000000000000";
+  if (clean.length === 14) return clean;
+  if (clean.length === 11) {
+    const base = clean.substring(0, 9);
+    const com_digitos = calcularDigitosCPF(base);
+    return (com_digitos || (base + "00")).padEnd(14, "0").substring(0, 14);
+  }
   if (clean.length === 12) {
     const com_digitos = calcularDigitosCNPJ(clean);
-    return com_digitos || clean.padEnd(14, "0").substring(0, 14);
+    return com_digitos || clean.padEnd(14, "0");
   }
-  // 11 ou 13 dígitos - trata como CPF ou tira o último
-  const base = clean.substring(0, 12);
-  const com_digitos = calcularDigitosCNPJ(base);
-  return com_digitos || base.padEnd(14, "0").substring(0, 14);
+  if (clean.length === 13) {
+    const base = clean.substring(0, 9);
+    const com_digitos = calcularDigitosCPF(base);
+    return (com_digitos || (base + "00")).padEnd(14, "0").substring(0, 14);
+  }
+  return clean.padEnd(14, "0").substring(0, 14);
 }
 function limpaIE(ie) { 
   const clean = (ie || "").replace(/\D/g, "").trim();
@@ -196,18 +217,46 @@ export function reg75(produto, periodoInicio, periodoFim) {
   );
 }
 
+// Registro 61 - Vendas a consumidor (NFC-e)
+// Layout: 2+14+14+8+2+2+3+6+4+1+13+13+13+13+13+4+1 = 126 chars
+export function reg61(nota, empresa) {
+  const cnpjDoc = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
+  const cnpjUsar = cnpjDoc && cnpjDoc.length >= 11 ? limpaCNPJ(cnpjDoc) : "00000000000000";
+  const ieUsar = limpaIE(nota.cliente_ie || "");
+  
+  return (
+    "61" +
+    cnpjUsar +                                    // 14
+    ieUsar +                                      // 14
+    rData(nota.data_emissao) +                    //  8
+    r(nota.cliente_estado || empresa.uf, 2) +     //  2
+    r("65", 2) +                                  //  2 — modelo 65 (NFCe)
+    rZ(nota.serie || "1", 3) +                    //  3
+    rZ(nota.numero, 6) +                          //  6
+    r("5405", 4) +                                //  4 saída
+    "P" +                                         //  1 próprio (consumidor)
+    rN(nota.valor_total, 13) +                    // 13
+    rN(0, 13) +                                   // 13 base ICMS
+    rN(0, 13) +                                   // 13 valor ICMS
+    rN(nota.valor_total, 13) +                    // 13 isentas
+    rN(0, 13) +                                   // 13 outras
+    r("0000", 4) +                                //  4 alíquota
+    "N"                                           //  1 situação (normal)
+  );
+}
+
 // Registro 90 - Encerramento
-// SINTEGRA MG: uma linha por tipo (50,54,75) + linha "99" com total GERAL de todos os registros
+// SINTEGRA MG: uma linha por tipo (50,54,61,75) + linha "99" com total GERAL de todos os registros
 // Tipos 10 e 11 NÃO devem aparecer no reg90
 export function reg90(empresa, totais, linhasAnteriores) {
   const BR = r("", 85);
   const CNPJ = limpaCNPJ(empresa.cnpj);
   const IE = (empresa.ie || "").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
 
-  const tiposReg90 = ["50", "54", "75"].filter(t => totais[t] > 0);
+  const tiposReg90 = ["50", "54", "61", "75"].filter(t => totais[t] > 0);
   // Linhas do Reg.90: uma por tipo + a linha "99"
   const totalLinhasReg90 = tiposReg90.length + 1;
-  // Total GERAL = todas as linhas anteriores (10,11,50,54,75) + todas as linhas do reg90
+  // Total GERAL = todas as linhas anteriores (10,11,50,54,61,75) + todas as linhas do reg90
   const totalGeral = linhasAnteriores + totalLinhasReg90;
   // Campo 07 do Reg.90 = Número de registros tipo 90 no arquivo (não é o literal "9"!)
   const numReg90 = String(totalLinhasReg90);
@@ -255,26 +304,35 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     return d >= periodoInicio && d <= periodoFim && n.status !== "Rascunho";
   });
 
-  // SINTEGRA MG aceita apenas NFe (modelo 55) — excluir NFCe
+  // Separar NFe (Reg.50) de NFCe (Reg.61)
   // Deduplicar por número+série para evitar duplicidade
   const vistas = new Set();
-  const notasSintegra = notasPeriodo.filter(n => {
-    if (n.tipo !== "NFe") return false; // excluir NFCe e outros
+  const notasNFe = [];
+  const notasNFCe = [];
+  
+  for (const n of notasPeriodo) {
     const chave = `${n.serie || "1"}_${n.numero}`;
-    if (vistas.has(chave)) return false;
+    if (vistas.has(chave)) continue;
     vistas.add(chave);
-    return true;
-  });
+    
+    if (n.tipo === "NFe") notasNFe.push(n);
+    else if (n.tipo === "NFCe") notasNFCe.push(n);
+  }
 
-  // Reg.50 — todos primeiro
-  for (const nota of notasSintegra) {
+  // Reg.50 — NFe
+  for (const nota of notasNFe) {
     addLinha("50", reg50(nota, empresa));
   }
 
-  // Reg.54 — depois, coletar dados dos produtos para Reg.75
+  // Reg.61 — NFCe
+  for (const nota of notasNFCe) {
+    addLinha("61", reg61(nota, empresa));
+  }
+
+  // Reg.54 — apenas NFe, depois coletar dados dos produtos para Reg.75
   const codigosNosItens = new Set();
   const itensPorCodigo = new Map(); // fallback para Reg.75 quando não há estoque
-  for (const nota of notasSintegra) {
+  for (const nota of notasNFe) {
     let itens = [];
     if (nota.xml_content) {
       try {
@@ -338,5 +396,5 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
   const linhasReg90 = reg90(empresa, totais, linhas.length);
   const todasLinhas = [...linhas, ...linhasReg90].join("\r\n");
 
-  return { conteudo: todasLinhas, totalNotas: notasPeriodo.length };
+  return { conteudo: todasLinhas, totalNotas: notasNFe.length + notasNFCe.length };
 }
