@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { X, FileDown, RefreshCw, AlertCircle } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { X, FileDown, RefreshCw, AlertCircle, Eye } from "lucide-react";
 import { gerarArquivoSintegra } from "./gerarSintegra";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -13,6 +13,7 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
   const [dataFim, setDataFim] = useState("");
   const [gerando, setGerando] = useState(false);
   const [resultado, setResultado] = useState(null);
+  const [showConferencia, setShowConferencia] = useState(false);
 
   const pad = n => String(n).padStart(2, "0");
 
@@ -65,6 +66,39 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
       setGerando(false);
     }, 100);
   };
+
+  // Conferência: todas as notas emitidas no período vs o que vai no SINTEGRA
+  const conferencia = useMemo(() => {
+    const periodo = getPeriodo();
+    const inicio = periodo.inicio;
+    const fim = periodo.fim;
+
+    const todasNoPeriodo = notas.filter(n => {
+      const d = (n.data_emissao || "").substring(0, 10);
+      return d >= inicio && d <= fim && n.status !== "Rascunho" && n.status !== "Cancelada";
+    });
+
+    const nfeNoSintegra = todasNoPeriodo.filter(n => n.tipo === "NFe");
+    const foraDosintegra = todasNoPeriodo.filter(n => n.tipo !== "NFe");
+
+    const totalNFe = nfeNoSintegra.reduce((s, n) => s + Number(n.valor_total || 0), 0);
+    const totalNFCe = todasNoPeriodo.filter(n => n.tipo === "NFCe").reduce((s, n) => s + Number(n.valor_total || 0), 0);
+    const totalNFSe = todasNoPeriodo.filter(n => n.tipo === "NFSe").reduce((s, n) => s + Number(n.valor_total || 0), 0);
+    const totalGeral = todasNoPeriodo.reduce((s, n) => s + Number(n.valor_total || 0), 0);
+
+    return {
+      periodo: periodo.label,
+      totalNotas: todasNoPeriodo.length,
+      nfeCount: nfeNoSintegra.length,
+      totalNFe,
+      totalNFCe,
+      totalNFSe,
+      totalGeral,
+      foraDosintegra,
+    };
+  }, [mes, ano, modo, dataInicio, dataFim, notas]);
+
+  const fmt = v => `R$ ${Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 
   const anos = [];
   for (let y = hoje.getFullYear(); y >= hoje.getFullYear() - 5; y--) anos.push(y);
@@ -161,6 +195,61 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
               <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
               <span>Configure os dados da empresa em <strong>Configurações</strong> (CNPJ, IE, endereço) para geração correta.</span>
             </div>
+          </div>
+
+          {/* Painel de Conferência */}
+          <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+            <button
+              onClick={() => setShowConferencia(!showConferencia)}
+              className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-white hover:bg-gray-700 transition-all"
+            >
+              <span className="flex items-center gap-2"><Eye className="w-4 h-4 text-blue-400" /> Conferir faturamento do período</span>
+              <span className="text-gray-400 text-xs">{showConferencia ? "▲ fechar" : "▼ abrir"}</span>
+            </button>
+            {showConferencia && (
+              <div className="px-4 pb-4 space-y-3">
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-gray-900 rounded-lg p-3">
+                    <p className="text-gray-500 mb-1">Total emitido (período)</p>
+                    <p className="text-white font-bold text-sm">{fmt(conferencia.totalGeral)}</p>
+                    <p className="text-gray-600 mt-1">{conferencia.totalNotas} nota(s)</p>
+                  </div>
+                  <div className="bg-gray-900 rounded-lg p-3">
+                    <p className="text-gray-500 mb-1">Incluso no SINTEGRA</p>
+                    <p className="text-green-400 font-bold text-sm">{fmt(conferencia.totalNFe)}</p>
+                    <p className="text-gray-600 mt-1">{conferencia.nfeCount} NFe(s)</p>
+                  </div>
+                  {conferencia.totalNFCe > 0 && (
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <p className="text-orange-400 mb-1">NFCe — NÃO entra no SINTEGRA MG</p>
+                      <p className="text-orange-300 font-bold text-sm">{fmt(conferencia.totalNFCe)}</p>
+                    </div>
+                  )}
+                  {conferencia.totalNFSe > 0 && (
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <p className="text-blue-400 mb-1">NFSe — NÃO entra no SINTEGRA MG</p>
+                      <p className="text-blue-300 font-bold text-sm">{fmt(conferencia.totalNFSe)}</p>
+                    </div>
+                  )}
+                </div>
+                {conferencia.foraDosintegra.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-2 font-semibold">Notas fora do SINTEGRA ({conferencia.foraDosintegra.length}):</p>
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {conferencia.foraDosintegra.map(n => (
+                        <div key={n.id} className="flex justify-between text-xs bg-gray-900 rounded px-3 py-1.5">
+                          <span className="text-gray-400">{n.tipo} nº {n.numero || "—"} — {n.cliente_nome || "—"}</span>
+                          <span className="text-white font-medium">{fmt(n.valor_total || 0)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {conferencia.foraDosintegra.length === 0 && conferencia.totalNotas > 0 && (
+                  <p className="text-xs text-green-400">✓ Todo o faturamento do período está coberto pelo SINTEGRA.</p>
+                )}
+              </div>
+            )}
           </div>
 
           {resultado && (
