@@ -162,13 +162,14 @@ export function reg54(nota, item, numItem, empresa) {
 // Layout Convênio ICMS 57/95 item 17.1.3.1: 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126
 // Série = 3 espaços em branco (conforme item 17.1.3.1)
 // Alíquota = 4 dígitos inteiros (ex: 0000=sem ICMS, 1200=12%, 1800=18%)
-export function reg61(_cnpjEmpresa, _ieEmpresa, data, _serie, numInicial, numFinal, valorTotal, aliquotaICMS = 0) {
+export function reg61(cnpjEmpresa, ieEmpresa, data, _serie, numInicial, numFinal, valorTotal, aliquotaICMS = 0) {
   const valorCentavos = Math.round(Number(valorTotal || 0) * 100);
   const vTotalStr = String(valorCentavos).padStart(13, "0").slice(-13);
   const zeros13   = "0000000000000";
 
-  const CNPJ14   = " ".repeat(14);
-  const IE14     = " ".repeat(14);
+  // CNPJ e IE do emitente — campos 03-16 e 17-30
+  const CNPJ14 = limpaCNPJ(cnpjEmpresa).padEnd(14, "0").substring(0, 14);
+  const IE14   = limpaIE(ieEmpresa);
   const SERIE3   = " ".repeat(3);  // Em branco conforme item 17.1.3.1
   // Alíquota: 4 dígitos inteiros (ex: 0 → "0000", 12 → "1200", 18 → "1800")
   const ALIQUOTA4 = String(Math.round(Number(aliquotaICMS || 0) * 100)).padStart(4, "0").slice(-4);
