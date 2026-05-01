@@ -31,35 +31,37 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
     return { inicio: dataInicio, fim: dataFim, label: `${dataInicio} a ${dataFim}` };
   };
 
+  const gerarEBaixar = (periodo) => {
+    const { conteudo, totalNotas } = gerarArquivoSintegra({
+      notas, estoque, configs,
+      periodoInicio: periodo.inicio,
+      periodoFim: periodo.fim,
+    });
+    const blob = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anoLabel = periodo.inicio.substring(0, 4);
+    const mesLabel = periodo.inicio.substring(5, 7);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = modo === "mes"
+      ? `SINTEGRA_${anoLabel}${mesLabel}.txt`
+      : `SINTEGRA_${periodo.inicio}_${periodo.fim}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    return { conteudo, totalNotas };
+  };
+
   const gerar = () => {
     const periodo = getPeriodo();
     if (!periodo.inicio || !periodo.fim) return alert("Informe o período.");
     setGerando(true);
     setResultado(null);
-
     setTimeout(() => {
       try {
-        const { conteudo, totalNotas } = gerarArquivoSintegra({
-          notas,
-          estoque,
-          configs,
-          periodoInicio: periodo.inicio,
-          periodoFim: periodo.fim,
-        });
-
-        const blob = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const anoLabel = periodo.inicio.substring(0, 4);
-        const mesLabel = periodo.inicio.substring(5, 7);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = modo === "mes"
-          ? `SINTEGRA_${anoLabel}${mesLabel}.txt`
-          : `SINTEGRA_${periodo.inicio}_${periodo.fim}.txt`;
-        a.click();
-        URL.revokeObjectURL(url);
-
-        setResultado({ sucesso: true, totalNotas, periodo: periodo.label });
+        const { conteudo, totalNotas } = gerarEBaixar(periodo);
+        // Mostra as primeiras linhas Reg.54 para diagnóstico
+        const linhas54 = conteudo.split("\r\n").filter(l => l.startsWith("54")).slice(0, 5);
+        setResultado({ sucesso: true, totalNotas, periodo: periodo.label, debug54: linhas54 });
       } catch (e) {
         setResultado({ sucesso: false, erro: e.message });
       }
@@ -249,10 +251,22 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
           </div>
 
           {resultado && (
-            <div className={`rounded-lg p-3 text-sm ${resultado.sucesso ? "bg-green-500/10 border border-green-500/20 text-green-400" : "bg-red-500/10 border border-red-500/20 text-red-400"}`}>
-              {resultado.sucesso
-                ? `✓ Arquivo gerado com ${resultado.totalNotas} nota(s) do período ${resultado.periodo}.`
-                : `Erro: ${resultado.erro}`}
+            <div className={`rounded-lg p-3 text-xs ${resultado.sucesso ? "bg-green-500/10 border border-green-500/20 text-green-400" : "bg-red-500/10 border border-red-500/20 text-red-400"}`}>
+              {resultado.sucesso ? (
+                <>
+                  <p className="font-semibold mb-2">✓ Gerado: {resultado.totalNotas} nota(s) — {resultado.periodo}</p>
+                  {resultado.debug54 && resultado.debug54.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-yellow-400 font-bold mb-1">Diagnóstico — primeiras linhas Reg.54 (pos 25-30 = nº NF, pos 31-33 = item):</p>
+                      {resultado.debug54.map((l, i) => (
+                        <div key={i} className="font-mono text-green-300 text-xs break-all">
+                          NF={l.substring(24,30)} ITEM={l.substring(30,33)} COD={l.substring(33,47).trim()}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : `Erro: ${resultado.erro}`}
             </div>
           )}
         </div>
