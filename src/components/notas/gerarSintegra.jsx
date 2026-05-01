@@ -14,19 +14,19 @@ function rData(d) {
   return clean.length === 8 ? clean : "00000000";
 }
 function calcularDigitosCNPJ(cnpj12) {
-  const calc = (seq, mult_init) => {
-    let soma = 0;
-    let mult = mult_init;
-    for (let i = 0; i < seq.length; i++) {
-      soma += parseInt(seq[i]) * mult;
-      mult--;
-    }
-    const resto = soma % 11;
-    return resto < 2 ? 0 : 11 - resto;
-  };
   if (cnpj12.length !== 12) return null;
-  const d1 = calc(cnpj12, 5);
-  const d2 = calc(cnpj12 + d1, 6);
+  const seq1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  const seq2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  
+  let soma = 0;
+  for (let i = 0; i < 12; i++) soma += parseInt(cnpj12[i]) * seq1[i];
+  const d1 = (soma % 11) < 2 ? 0 : 11 - (soma % 11);
+  
+  soma = 0;
+  for (let i = 0; i < 12; i++) soma += parseInt(cnpj12[i]) * seq2[i];
+  soma += d1 * seq2[12];
+  const d2 = (soma % 11) < 2 ? 0 : 11 - (soma % 11);
+  
   return cnpj12 + d1 + d2;
 }
 
