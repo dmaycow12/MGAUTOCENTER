@@ -92,7 +92,23 @@ Deno.serve(async (req) => {
     }
 
     if (!pdfUrlFocus) {
-      return Response.json({ sucesso: false, erro: 'PDF não disponível na Focus NFe.' });
+      // Não tem URL de PDF direto — tenta gerar DANFE se tiver chave
+      if (nota.chave_acesso) {
+        console.log('[DEBUG] Sem URL de PDF na resposta. Tentando gerar DANFE via chave_acesso...');
+        const chave = nota.chave_acesso.replace(/\D/g, '');
+        const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {
+          headers: { 'Authorization': AUTH_HEADER },
+        });
+        if (danfeResp.ok && danfeResp.headers.get('content-type')?.includes('pdf')) {
+          const blob = await danfeResp.blob();
+          const nomeArquivo = `${(nota.tipo || 'nf').toLowerCase()}-${nota.numero || nota_id}.pdf`;
+          const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
+          const { file_url } = await db.integrations.Core.UploadFile({ file });
+          await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+          return Response.json({ sucesso: true, pdf_url: file_url });
+        }
+      }
+      return Response.json({ sucesso: false, erro: 'PDF não disponível na Focus NFe. Verifique se o fornecedor autorizou o acesso ao DANFE ou se a nota ainda está sendo processada.' });
     }
 
     const isS3 = pdfUrlFocus.includes('amazonaws.com') || pdfUrlFocus.includes('s3.');
@@ -118,7 +134,25 @@ Deno.serve(async (req) => {
           }
         }
       }
-      return Response.json({ sucesso: false, erro: `Erro ${pdfResp.status} ao buscar PDF em: ${pdfUrlFocus}` });
+      // Se URL está retornando erro mas temos chave de acesso, tenta gerar DANFE
+      if (nota.chave_acesso && pdfResp.status !== 200) {
+        console.log('[DEBUG] URL retornou erro, tentando gerar DANFE via chave_acesso...');
+        const chave = nota.chave_acesso.replace(/\D/g, '');
+        try {
+          const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {
+            headers: { 'Authorization': AUTH_HEADER },
+          });
+          if (danfeResp.ok && danfeResp.headers.get('content-type')?.includes('pdf')) {
+            const blob = await danfeResp.blob();
+            const nomeArquivo = `${(nota.tipo || 'nf').toLowerCase()}-${nota.numero || nota_id}.pdf`;
+            const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
+            const { file_url } = await db.integrations.Core.UploadFile({ file });
+            await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+            return Response.json({ sucesso: true, pdf_url: file_url });
+          }
+        } catch (_) {}
+      }
+      return Response.json({ sucesso: false, erro: `Erro ${pdfResp.status} ao buscar PDF. A URL pode estar inválida ou o fornecedor não autorizou acesso.`, url_tentada: pdfUrlFocus });
     }
 
     const blob = await pdfResp.blob();
