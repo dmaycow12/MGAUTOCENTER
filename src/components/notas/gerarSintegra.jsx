@@ -95,20 +95,19 @@ export function reg11(empresa) {
 
 // Registro 50 - Notas fiscais (cabeçalho)
 // Layout: 2+14+14+8+2+2+3+6+4+1+13+13+13+13+13+4+1 = 126 chars
-// SINTEGRA MG: NFe = modelo 55, NFCe = modelo 65
+// SINTEGRA MG: apenas NFe modelo 55 — NFCe e NFSe são excluídas
 export function reg50(nota, empresa) {
   const isEntrada = nota.status === "Importada";
   const codSit = nota.status === "Cancelada" ? "S" : "N";
   const cfop = isEntrada ? "1102" : "5405";
   const emitente = isEntrada ? "T" : "P";
-  const modelo = nota.tipo === "NFCe" ? "65" : "55";
   return (
     "50" +
     limpaDocumento(nota.cliente_cpf_cnpj) +       // 14
     limpaIE(nota.cliente_ie || "") +              // 14
     rData(nota.data_emissao) +                    //  8
     r(nota.cliente_estado || empresa.uf, 2) +     //  2
-    r(modelo, 2) +                                //  2 — 55 (NFe) ou 65 (NFCe)
+    r("55", 2) +                                  //  2 — sempre 55 (NFe)
     rZ(nota.serie || "1", 3) +                    //  3
     rZ(nota.numero, 6) +                          //  6
     r(cfop, 4) +                                  //  4
@@ -133,11 +132,10 @@ export function reg54(nota, item, numItem, empresa) {
   // Código LEFT-align (igual ao Reg.75) para que o validador faça o match
   const codigoProd = r(item.codigo || "000", 14);
 
-  const modelo = nota.tipo === "NFCe" ? "65" : "55";
   return (
     "54" +
     cnpjCampo +                   // 14
-    r(modelo, 2) +                //  2 — 55 (NFe) ou 65 (NFCe)
+    r("55", 2) +                  //  2 — sempre 55 (NFe)
     rZ(nota.serie || "1", 3) +    //  3 — mesmo formato do Reg.50
     rZ(nota.numero, 6) +          //  6
     r(cfop, 4) +                  //  4
@@ -233,12 +231,12 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     return d >= periodoInicio && d <= periodoFim && n.status !== "Rascunho";
   });
 
-  // SINTEGRA MG: NFe (modelo 55) e NFCe (modelo 65) — excluir apenas NFSe
+  // SINTEGRA MG: apenas NFe (modelo 55) — NFCe (65) e NFSe são excluídas
   // Deduplicar por número+série para evitar duplicidade
   const vistas = new Set();
   const notasSintegra = notasPeriodo.filter(n => {
-    if (n.tipo !== "NFe" && n.tipo !== "NFCe") return false; // excluir NFSe e outros
-    const chave = `${n.tipo}_${n.serie || "1"}_${n.numero}`;
+    if (n.tipo !== "NFe") return false;
+    const chave = `${n.serie || "1"}_${n.numero}`;
     if (vistas.has(chave)) return false;
     vistas.add(chave);
     return true;
