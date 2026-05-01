@@ -334,9 +334,11 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
   }
 
   // Reg.61 — CF-e modelo 02 (Cupom Fiscal Eletrônico pessoa física)
-  for (const g of cfePorGrupo.values()) {
-    addLinha("61", reg61(g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal));
-  }
+  // NOTA: Registro 61 comentado pois validador SEFAZ-MG não aceita NFC-e via Reg.61
+  // NFC-e devem ser registradas apenas via Reg.50/54 (modelo 55) se aplicável
+  // for (const g of cfePorGrupo.values()) {
+  //   addLinha("61", reg61(g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal));
+  // }
 
   // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
   const produtosUnicos = new Map();
