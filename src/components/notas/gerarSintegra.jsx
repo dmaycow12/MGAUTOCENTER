@@ -164,9 +164,9 @@ export function reg54(nota, item, numItem, empresa) {
 // Convênio ICMS 57/95 - Layout: 126 caracteres
 // Pos 01-02: "61" | Pos 03-04: modelo "02" | Pos 05-10: série (6)
 // Pos 11-16: nº_inicial (6) | Pos 17-22: nº_final (6) | Pos 23-36: valor_total (14)
-// Pos 37-126: zeros (90)
+// Pos 37-126: espaços em branco (90)
 export function reg61(data, serie, numInicial, numFinal, valorTotal) {
-  const ser = rZ(serie || "0", 6);      // 6 dígitos série (em vez de 2)
+  const ser = rZ(serie || "0", 6);      // 6 dígitos série
   const numini = rZ(numInicial || 0, 6);
   const numfim = rZ(numFinal || 0, 6);
   const valtot = rN(valorTotal || 0, 14);
@@ -177,7 +177,7 @@ export function reg61(data, serie, numInicial, numFinal, valorTotal) {
               numini +         // pos 11-16: número inicial (6)
               numfim +         // pos 17-22: número final (6)
               valtot +         // pos 23-36: valor total (14)
-              r("", 90);       // pos 37-126: preenchido com zeros
+              " ".repeat(90);  // pos 37-126: espaços em branco (90)
   
   return linha.substring(0, 126);
 }
