@@ -148,8 +148,9 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
              <p className="font-semibold">Registros incluídos:</p>
              <p>• Reg. 10 — Identificação da empresa</p>
              <p>• Reg. 11 — Endereço do estabelecimento</p>
-             <p>• Reg. 50 — Notas fiscais (NFe modelo 55 apenas)</p>
-             <p>• Reg. 54 — Itens das notas (quando disponíveis)</p>
+             <p>• Reg. 50 — Notas fiscais (NFe modelo 55)</p>
+             <p>• Reg. 54 — Itens das notas</p>
+             <p>• Reg. 61 — CF-e modelo 02 (Cupom Fiscal Eletrônico PF)</p>
              <p>• Reg. 75 — Cadastro de produtos</p>
              <p>• Reg. 90 — Encerramento/totalizadores</p>
            </div>

@@ -160,6 +160,34 @@ export function reg54(nota, item, numItem, empresa) {
 
 
 
+// Registro 61 - CF-e modelo 02 (Cupom Fiscal Eletrônico para consumidor PF)
+// Convênio ICMS 57/95 - Layout: 126 caracteres
+// Pos 01-02: "61" | Pos 03-30: 28 brancos | Pos 31-38: data AAAAMMDD
+// Pos 39-40: modelo "02" | Pos 41-42: série (2) | Pos 43-48: nº_inicial (6)
+// Pos 49-54: nº_final (6) | Pos 55-68: valor_total (14) | Pos 69-126: zeros/brancos (58)
+export function reg61(data, serie, numInicial, numFinal, valorTotal) {
+  let dataf = "00000000";
+  if (data && data.length >= 10) {
+    const [ano, mes, dia] = data.split('-');
+    dataf = `${ano}${mes}${dia}`;
+  }
+  
+  const ser = rZ(serie || "00", 2);
+  const numini = rZ(numInicial || 0, 6);
+  const numfim = rZ(numFinal || 0, 6);
+  const valtot = rN(valorTotal || 0, 14);
+  
+  // Construir respeitando espaços em branco
+  let linha = "61" + " ".repeat(28) + dataf + "02" + ser + numini + numfim + valtot;
+  
+  // Completar até 126 com zeros
+  while (linha.length < 126) {
+    linha += "0";
+  }
+  
+  return linha.substring(0, 126);
+}
+
 // Registro 75 - Cadastro de produtos
 // Layout Conv. ICMS 76/03 item 20: 2+8+8+14+8+53+6+5+4+5+13 = 126 chars
 // Campos: tipo+dtIni+dtFim+codProd+NCM+desc+unid+aliqIPI+aliqICMS+reducBC+baseST
@@ -189,6 +217,7 @@ export function reg90(empresa, totais, linhasAnteriores) {
   const IE = (empresa.ie || "").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
 
   const tiposReg90 = ["50", "54", "61", "75"].filter(t => totais[t] > 0);
+  // Se houver Reg.61, ordena: 50, 54, 61, 75 (sempre que existir)
   // Linhas do Reg.90: uma por tipo + a linha "99"
   const totalLinhasReg90 = tiposReg90.length + 1;
   // Total GERAL = todas as linhas anteriores (10,11,50,54,75) + todas as linhas do reg90
@@ -249,27 +278,22 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     return true;
   });
 
-  // NFCe agrupadas por data+série+subsérie para Reg.61
-  const nfcePorGrupo = new Map();
+  // CF-e modelo 02 agrupadas por data+série para Reg.61
+  const cfePorGrupo = new Map();
   notasPeriodo
-    .filter(n => n.tipo === "NFCe" && n.status !== "Cancelada")
+    .filter(n => n.tipo === "CFe" && n.status !== "Cancelada")
     .forEach(n => {
       const data = (n.data_emissao || "").substring(0, 10);
       const serie = n.serie || "1";
-      const subserie = "00"; // padrão
-      const chave = `${data}_${serie}_${subserie}`;
-      if (!nfcePorGrupo.has(chave)) {
-        nfcePorGrupo.set(chave, { data, serie, subserie, numInicial: 9999999, numFinal: 0, valorTotal: 0, icmsTotal: 0, valorIsento: 0, valorOutros: 0 });
+      const chave = `${data}_${serie}`;
+      if (!cfePorGrupo.has(chave)) {
+        cfePorGrupo.set(chave, { data, serie, numInicial: 9999999, numFinal: 0, valorTotal: 0 });
       }
-      const g = nfcePorGrupo.get(chave);
+      const g = cfePorGrupo.get(chave);
       const num = parseInt(n.numero || "0", 10);
       if (num < g.numInicial) g.numInicial = num;
       if (num > g.numFinal) g.numFinal = num;
       g.valorTotal += parseFloat(n.valor_total || 0);
-      // ICMS e isento: estimados, poderia vir do XML
-      g.icmsTotal += 0; // valor ICMS extraído do XML (implementar se houver)
-      g.valorIsento += 0;
-      g.valorOutros += 0;
     });
 
   // Reg.50 — todos primeiro
@@ -315,8 +339,10 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     });
   }
 
-  // Reg.61 — Removido: SINTEGRA-MG não aceita NFCe modelo 65
-  // Apenas modelo 55 (NFe) é suportado
+  // Reg.61 — CF-e modelo 02 (Cupom Fiscal Eletrônico pessoa física)
+  for (const g of cfePorGrupo.values()) {
+    addLinha("61", reg61(g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal));
+  }
 
   // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
   const produtosUnicos = new Map();
