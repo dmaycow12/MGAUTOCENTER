@@ -158,31 +158,24 @@ export function reg54(nota, item, numItem, empresa) {
   );
 }
 
-// Registro 61 - Documentos fiscais venda consumidor final (NFCe modelo 65, NF modelo 02)
-// Layout Convênio ICMS 57/95: 117 caracteres
-// Pos 01-02: "61" | 03-16: brancos (14) | 17-30: brancos (14) | 31-38: DDMMAAAA
-// 39-40: modelo (02/65) | 41-43: série (3 X) | 44-45: subsérie (2 X)
-// 46-51: nº inicial (6 N) | 52-57: nº final (6 N) | 58-71: valor total (14 N 2dec)
-// 72-85: ICMS (14 N 2dec) | 86-89: alíquota (4 N 2dec) | 90-103: isento (14 N 2dec)
-// 104-117: outros (14 N 2dec)
-export function reg61(data, modelo, serie, subserie, numInicial, numFinal, valorTotal, icmsTotal, aliquota, valorIsento, valorOutros) {
-  // Data DDMMAAAA
+// Registro 61 - Documentos fiscais venda consumidor final (NFCe modelo 65)
+// Layout Convênio ICMS 57/95: exatamente 126 caracteres
+// Pos 01-02: "61" | 03-30: 28 brancos | 31-38: AAAAMMDD | 39-41: série/modelo
+// 42-45: nº | 46-59: valor total (14 N 2dec) | 60-73: ICMS (14 N 2dec)
+// 74-77: alíquota (4 N 2dec) | 78-91: isento (14 N 2dec) | 92-105: outros (14 N 2dec)
+// 106-126: 21 brancos
+export function reg61(data, serie, numInicial, numFinal, valorTotal, icmsTotal, aliquota, valorIsento, valorOutros) {
+  // Data AAAAMMDD (ex: 20260131)
   let dataf = "00000000";
   if (data && data.length >= 10) {
     const [ano, mes, dia] = data.split('-');
-    dataf = `${dia}${mes}${ano}`;
+    dataf = `${ano}${mes}${dia}`;
   }
   
-  // Modelo 2 dígitos
-  const modelof = String(modelo || "65").padStart(2, "0").slice(-2);
-  
-  // Série 3 caracteres LEFT
-  const serief = r(serie || "", 3);
-  
-  // Subsérie 2 caracteres LEFT (geralmente vazio ou "00")
-  const subseriief = r(subserie || "", 2);
-  
-  // Números 6 dígitos RIGHT
+  // Série + número (ex: "650" para NFC-e série vazia + "00" + "20000" para número 20000)
+  // Formato: 3 dígitos série + 2 dígitos subsérie + 6 dígitos número (total 11 posições para 39-49)
+  const serief = String(serie || "001").padStart(3, "0").slice(-3);
+  const subseriief = "00"; // padrão
   const numini = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
   const numfim = String(Math.max(0, Number(numFinal || 0))).padStart(6, "0").slice(-6);
   
@@ -192,24 +185,23 @@ export function reg61(data, modelo, serie, subserie, numInicial, numFinal, valor
   const valisen = rN(valorIsento || 0, 14);
   const valout = rN(valorOutros || 0, 14);
   
-  // Alíquota 4 dígitos (2 decimais: 18% = "1800") RIGHT
+  // Alíquota 4 dígitos (2 decimais: 18% = "1800", 0% = "0000") RIGHT
   const aliq = String(Math.round((aliquota || 0) * 100)).padStart(4, "0").slice(-4);
   
   return (
     "61" +
-    " ".repeat(14) +  // pos 03-16: brancos CNPJ
-    " ".repeat(14) +  // pos 17-30: brancos IE
-    dataf +           // pos 31-38: data
-    modelof +         // pos 39-40: modelo
-    serief +          // pos 41-43: série
-    subseriief +      // pos 44-45: subsérie
-    numini +          // pos 46-51: nº inicial
-    numfim +          // pos 52-57: nº final
-    valtot +          // pos 58-71: valor total
-    valicm +          // pos 72-85: ICMS
-    aliq +            // pos 86-89: alíquota
-    valisen +         // pos 90-103: isento
-    valout            // pos 104-117: outros
+    " ".repeat(28) +  // pos 03-30: 28 brancos
+    dataf +           // pos 31-38: data AAAAMMDD
+    serief +          // pos 39-41: série (3 dígitos)
+    subseriief +      // pos 42-43: subsérie (2 dígitos)
+    numini +          // pos 44-49: nº inicial (6 dígitos)
+    numfim +          // pos 50-55: nº final (6 dígitos)
+    valtot +          // pos 56-69: valor total (14)
+    valicm +          // pos 70-83: ICMS (14)
+    aliq +            // pos 84-87: alíquota (4)
+    valisen +         // pos 88-101: isento (14)
+    valout +          // pos 102-115: outros (14)
+    " ".repeat(11)    // pos 116-126: 11 brancos (para completar 126)
   );
 }
 
@@ -368,9 +360,9 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     });
   }
 
-  // Reg.61 — NFCe agrupadas por data/série/subsérie
+  // Reg.61 — NFCe agrupadas por data/série
   for (const g of nfcePorGrupo.values()) {
-    addLinha("61", reg61(g.data, "65", g.serie, g.subserie, g.numInicial, g.numFinal, g.valorTotal, g.icmsTotal, 18, g.valorIsento, g.valorOutros));
+    addLinha("61", reg61(g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal, g.icmsTotal, 0, g.valorIsento, g.valorOutros));
   }
 
   // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
