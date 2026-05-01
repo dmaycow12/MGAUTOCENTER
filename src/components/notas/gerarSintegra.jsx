@@ -159,39 +159,30 @@ export function reg54(nota, item, numItem, empresa) {
 }
 
 // Registro 61 - Documentos fiscais venda consumidor final (NFCe modelo 65)
-// Layout Convênio ICMS 57/95: exatamente 126 caracteres
-// Pos 01-02: "61" | Pos 03-30: 28 brancos | Pos 31-38: data AAAAMMDD
-// Pos 39-40: modelo "65" | Pos 41-42: série (2) | Pos 43-48: nº_inicial (6)
-// Pos 49-54: nº_final (6) | Pos 55-68: valor_total (14) | Pos 69-126: zeros (58)
+// Convênio ICMS 57/95 - Layout: 126 caracteres
+// NOTA: Alguns validadores interpretam posições posicionais com ESPAÇOS,
+// então preservamos os espaços em branco (não zeros!)
 export function reg61(data, serie, numInicial, numFinal, valorTotal) {
-  // Data AAAAMMDD
   let dataf = "00000000";
   if (data && data.length >= 10) {
     const [ano, mes, dia] = data.split('-');
     dataf = `${ano}${mes}${dia}`;
   }
   
-  // Série com 2 dígitos
   const ser = rZ(serie || "00", 2);
-  
-  // Números com 6 dígitos cada
   const numini = rZ(numInicial || 0, 6);
   const numfim = rZ(numFinal || 0, 6);
-  
-  // Valor com 14 dígitos RIGHT (2 decimais)
   const valtot = rN(valorTotal || 0, 14);
   
-  return (
-    "61" +                // pos 01-02
-    " ".repeat(28) +      // pos 03-30: 28 brancos
-    dataf +               // pos 31-38: data AAAAMMDD
-    "65" +                // pos 39-40: modelo 65
-    ser +                 // pos 41-42: série (2)
-    numini +              // pos 43-48: nº inicial (6)
-    numfim +              // pos 49-54: nº final (6)
-    valtot +              // pos 55-68: valor total (14)
-    "0".repeat(58)        // pos 69-126: 58 zeros
-  );
+  // Construir com espaços no bloco inicial (não substitua por zeros!)
+  let linha = "61" + " ".repeat(28) + dataf + "65" + ser + numini + numfim + valtot;
+  
+  // Padronizar até 126 caracteres com zeros
+  while (linha.length < 126) {
+    linha += "0";
+  }
+  
+  return linha.substring(0, 126);
 }
 
 // Registro 75 - Cadastro de produtos
