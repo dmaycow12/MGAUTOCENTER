@@ -160,30 +160,24 @@ export function reg54(nota, item, numItem, empresa) {
 
 
 
-// Registro 61 - CF-e modelo 02 (Cupom Fiscal Eletrônico para consumidor PF)
+// Registro 61 - NF modelo 02 (Nota Fiscal Consumidor PF)
 // Convênio ICMS 57/95 - Layout: 126 caracteres
-// Pos 01-02: "61" | Pos 03-30: 28 brancos | Pos 31-38: data AAAAMMDD
-// Pos 39-40: modelo "02" | Pos 41-42: série (2) | Pos 43-48: nº_inicial (6)
-// Pos 49-54: nº_final (6) | Pos 55-68: valor_total (14) | Pos 69-126: zeros/brancos (58)
+// Pos 01-02: "61" | Pos 03-04: modelo "02" | Pos 05-10: série (6)
+// Pos 11-16: nº_inicial (6) | Pos 17-22: nº_final (6) | Pos 23-36: valor_total (14)
+// Pos 37-126: zeros (90)
 export function reg61(data, serie, numInicial, numFinal, valorTotal) {
-  let dataf = "00000000";
-  if (data && data.length >= 10) {
-    const [ano, mes, dia] = data.split('-');
-    dataf = `${ano}${mes}${dia}`;
-  }
-  
-  const ser = rZ(serie || "00", 2);
+  const ser = rZ(serie || "0", 6);      // 6 dígitos série (em vez de 2)
   const numini = rZ(numInicial || 0, 6);
   const numfim = rZ(numFinal || 0, 6);
   const valtot = rN(valorTotal || 0, 14);
   
-  // Construir respeitando espaços em branco
-  let linha = "61" + " ".repeat(28) + dataf + "02" + ser + numini + numfim + valtot;
-  
-  // Completar até 126 com zeros
-  while (linha.length < 126) {
-    linha += "0";
-  }
+  let linha = "61" +           // pos 01-02
+              "02" +           // pos 03-04: modelo
+              ser +            // pos 05-10: série (6)
+              numini +         // pos 11-16: número inicial (6)
+              numfim +         // pos 17-22: número final (6)
+              valtot +         // pos 23-36: valor total (14)
+              r("", 90);       // pos 37-126: preenchido com zeros
   
   return linha.substring(0, 126);
 }
