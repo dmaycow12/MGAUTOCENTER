@@ -50,7 +50,13 @@ Deno.serve(async (req) => {
           if (!pdfResp.ok) { logs.push(`FALHA: ${nota.tipo} nº ${nota.numero} - download ${pdfResp.status}`); falhas++; continue; }
           pdfBlob = await pdfResp.blob();
 
-        } else if (nota.chave_acesso) {
+          // Valida se é PDF válido
+          const buffer = await pdfBlob.arrayBuffer();
+          const header = new Uint8Array(buffer, 0, 4);
+          const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+          if (!isPdfValid) { logs.push(`FALHA: ${nota.tipo} nº ${nota.numero} - PDF inválido`); falhas++; continue; }
+
+          } else if (nota.chave_acesso) {
           // Nota de entrada — DANFE via endpoint nfes_recebidas
           const chave = nota.chave_acesso.replace(/\D/g, '');
           const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {
@@ -60,6 +66,12 @@ Deno.serve(async (req) => {
           const ct = danfeResp.headers.get('content-type') || '';
           if (!ct.includes('pdf') && !ct.includes('octet')) { logs.push(`FALHA entrada: nº ${nota.numero} - não é PDF`); falhas++; continue; }
           pdfBlob = await danfeResp.blob();
+
+          // Valida se é PDF válido
+          const bufferEntrada = await pdfBlob.arrayBuffer();
+          const headerEntrada = new Uint8Array(bufferEntrada, 0, 4);
+          const isPdfValidEntrada = headerEntrada[0] === 0x25 && headerEntrada[1] === 0x50 && headerEntrada[2] === 0x44 && headerEntrada[3] === 0x46;
+          if (!isPdfValidEntrada) { logs.push(`FALHA entrada: nº ${nota.numero} - PDF inválido`); falhas++; continue; }
         }
 
         if (!pdfBlob) { falhas++; continue; }
