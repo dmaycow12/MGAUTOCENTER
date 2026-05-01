@@ -281,7 +281,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
   // CF-e modelo 02 agrupadas por data+série para Reg.61
   const cfePorGrupo = new Map();
   notasPeriodo
-    .filter(n => n.tipo === "CFe" && n.status !== "Cancelada")
+    .filter(n => n.tipo === "NFCe" && n.status !== "Cancelada")
     .forEach(n => {
       const data = (n.data_emissao || "").substring(0, 10);
       const serie = n.serie || "1";
