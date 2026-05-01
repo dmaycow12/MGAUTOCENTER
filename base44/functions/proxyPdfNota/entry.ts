@@ -62,8 +62,9 @@ Deno.serve(async (req) => {
     // Campos de PDF: notas emitidas e notas recebidas têm campos diferentes
     const rawPdf = result.url_danfse || result.caminho_pdf_nfsen || result.caminho_pdf_nfse
       || result.caminho_danfe || result.url_danfe || result.caminho_pdf
-      || result.caminho_xml_nota_fiscal_pdf || result.url_pdf || '';
+      || result.caminho_xml_nota_fiscal_pdf || result.url_pdf || result.arquivo_pdf || '';
     const pdfUrlFocus = normalizarUrl(rawPdf);
+    console.log('[DEBUG] rawPdf:', rawPdf, 'pdfUrlFocus:', pdfUrlFocus);
 
     // Se não tem URL de PDF direto mas tem chave, tenta gerar DANFE via endpoint específico
     if (!pdfUrlFocus && nota.chave_acesso) {
@@ -95,9 +96,29 @@ Deno.serve(async (req) => {
     }
 
     const isS3 = pdfUrlFocus.includes('amazonaws.com') || pdfUrlFocus.includes('s3.');
+    console.log('[DEBUG] Tentando buscar PDF em:', pdfUrlFocus, '| isS3:', isS3);
     const pdfResp = await fetch(pdfUrlFocus, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER } });
+    
     if (!pdfResp.ok) {
-      return Response.json({ sucesso: false, erro: `Erro ao baixar PDF da Focus NFe: ${pdfResp.status}` });
+      // Tenta novamente sem auth header se for erro de permissão
+      if (pdfResp.status === 403 && !isS3) {
+        console.log('[DEBUG] 403 Forbidden com auth, tentando sem auth...');
+        const pdfResp2 = await fetch(pdfUrlFocus, {});
+        if (pdfResp2.ok) {
+          const blob = await pdfResp2.blob();
+          const buffer = await blob.arrayBuffer();
+          const header = new Uint8Array(buffer, 0, 4);
+          const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+          if (isPdfValid) {
+            const nomeArquivo = `${(nota.tipo || 'nf').toLowerCase()}-${nota.numero || nota_id}.pdf`;
+            const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
+            const { file_url } = await db.integrations.Core.UploadFile({ file });
+            await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+            return Response.json({ sucesso: true, pdf_url: file_url });
+          }
+        }
+      }
+      return Response.json({ sucesso: false, erro: `Erro ${pdfResp.status} ao buscar PDF em: ${pdfUrlFocus}` });
     }
 
     const blob = await pdfResp.blob();
