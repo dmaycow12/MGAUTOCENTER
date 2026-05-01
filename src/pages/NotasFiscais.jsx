@@ -311,8 +311,8 @@ export default function NotasFiscais() {
     const matchTipo = filtroTipo.length === 0 || (filtroTipo.includes("Saída") && !isEntrada) || (filtroTipo.includes("Entrada") && isEntrada);
     const matchModelo = filtroModeloNF.length === 0 || filtroModeloNF.includes(n.tipo);
     if (!matchTipo || !matchModelo) return false;
-    const data = n.data_emissao || "";
-    if (data < periodoRange.inicio || data > periodoRange.fim) return false;
+    // Se tem data_emissao, valida contra o período; se não tem, ignora o filtro de período
+    if (n.data_emissao && (n.data_emissao < periodoRange.inicio || n.data_emissao > periodoRange.fim)) return false;
     if (search) {
       const s = search.toLowerCase();
       return (n.cliente_nome || "").toLowerCase().includes(s) || (n.numero || "").includes(s) || (n.chave_acesso || "").includes(s);
