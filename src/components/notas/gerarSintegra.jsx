@@ -101,7 +101,7 @@ export function reg10(empresa, periodo) {
     rX(fax, 10) +
     rData(periodo.inicio) +
     rData(periodo.fim) +
-    "2" +   // estrutura versão atual do Conv. 57/95
+    "3" +   // estrutura versão atual do Conv. 57/95 (código 3 para fatos a partir de 01/01/2004)
     "3" +   // totalidade das operações
     "1"     // normal
   );
