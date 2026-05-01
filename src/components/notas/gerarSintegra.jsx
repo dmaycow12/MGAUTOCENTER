@@ -161,25 +161,34 @@ export function reg54(nota, item, numItem, empresa) {
 // Registro 61 - Documentos fiscais não emitidos por ECF (NFCe modelo 65)
 // Layout Convênio ICMS 57/95: 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126
 // CNPJ, IE e Série ficam em BRANCO conforme item 17.1.3.1 do manual
-export function reg61(_cnpjEmpresa, _ieEmpresa, data, _serie, numInicial, numFinal, valorTotal) {
-  const linha = (
-    "61" +
-    r("", 14) +                    // 14 CNPJ — brancos
-    r("", 14) +                    // 14 IE   — brancos
-    rData(data) +                  //  8 data emissão
-    r("65", 2) +                   //  2 modelo NFCe
-    r("", 3) +                     //  3 série — brancos (item 17.1.3.1)
-    rZ(numInicial, 6) +            //  6 número inicial
-    rZ(numFinal, 6) +              //  6 número final
-    rN(valorTotal, 13) +           // 13 valor total
-    rN(0, 13) +                    // 13 base ICMS
-    rN(0, 13) +                    // 13 valor ICMS
-    rN(valorTotal, 13) +           // 13 isentas (Simples Nacional)
-    rN(0, 13) +                    // 13 outras
-    r("0000", 4)                   //  4 alíquota — 0000 numérico (brancos rejeitados pelo validador)
+export function reg61(_cnpjEmpresa, _ieEmpresa, data, serie, numInicial, numFinal, valorTotal) {
+  // Layout SINTEGRA Reg.61 = 126 chars:
+  // 2+14+14+8+2+3+6+6+13+13+13+13+13+4+1 = 126
+  // Posições fixas — qualquer desvio causa "Formato inválido"
+  const valorCentavos = Math.round(Number(valorTotal || 0) * 100);
+  const vTotalStr  = String(valorCentavos).padStart(13, "0").slice(-13); // 13
+  const vIsStr     = vTotalStr;                                           // 13 isentas = total (Simples)
+  const zeros13    = "0000000000000";                                     // 13
+  const serieStr   = String(Number(serie || 1)).padStart(3, "0").slice(-3); // 3 — numérico
+
+  return (
+    "61" +                                                   //  2
+    "              " +                                       // 14 CNPJ em branco
+    "              " +                                       // 14 IE   em branco
+    rData(data) +                                            //  8
+    "65" +                                                   //  2 modelo NFCe
+    serieStr +                                               //  3 série numérica
+    String(Number(numInicial || 0)).padStart(6, "0").slice(-6) + //  6 num inicial
+    String(Number(numFinal   || 0)).padStart(6, "0").slice(-6) + //  6 num final
+    vTotalStr +                                              // 13 valor total
+    zeros13 +                                               // 13 base ICMS
+    zeros13 +                                               // 13 valor ICMS
+    vIsStr +                                                // 13 isentas/não tributadas
+    zeros13 +                                               // 13 outras
+    "0000" +                                                //  4 alíquota
+    " "                                                     //  1 branco
+  // 2+14+14+8+2+3+6+6+13+13+13+13+13+4+1 = 126
   );
-  // 2+14+14+8+2+3+6+6+13+13+13+13+13+4 = 124 + 2 brancos = 126
-  return linha + r("", 2);
 }
 
 // Registro 75 - Cadastro de produtos
