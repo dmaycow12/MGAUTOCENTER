@@ -9,15 +9,21 @@ function r(str, n, dir = "L", pad = " ") {
 function rN(v, n) { return r(Math.round(Number(v || 0) * 100), n, "R", "0"); }
 function rZ(v, n) { return r(String(Number(v || 0)), n, "R", "0"); }
 function rData(d) {
-  if (!d) return "00000000"; // data inválida vira zeros
+  if (!d) return "00000000";
   const clean = String(d).substring(0, 10).replace(/-/g, "");
-  return clean.length === 8 ? clean : "00000000";
+  if (clean.length !== 8) return "00000000";
+  // Valida se data é formato correto AAAAMMDD
+  const ano = clean.substring(0, 4);
+  const mes = clean.substring(4, 6);
+  const dia = clean.substring(6, 8);
+  if (parseInt(mes) < 1 || parseInt(mes) > 12 || parseInt(dia) < 1 || parseInt(dia) > 31) return "00000000";
+  return clean;
 }
 function limpaCNPJ(c) { return (c || "").replace(/\D/g, "").padEnd(14, "0").substring(0, 14); }
 function limpaIE(ie) {
   const s = (ie || "").replace(/\D/g, "");
-  if (!s) return "ISENTO        "; // 14 chars: "ISENTO" + 8 espaços
-  return s.padEnd(14, " ").substring(0, 14);
+  if (!s || s === "0000000000000") return "ISENTO        "; // 14 chars exatos
+  return s.length <= 14 ? s.padEnd(14, " ") : s.substring(0, 14);
 }
 function parseXmlItens(xmlStr) {
   if (!xmlStr || typeof xmlStr !== 'string') return [];
@@ -90,17 +96,12 @@ export function reg11(empresa) {
 // SINTEGRA MG aceita apenas modelo 55 (NFe). NFCe (65) deve ser excluída.
 export function reg50(nota, empresa) {
   const isEntrada = nota.status === "Importada";
-  const codSit = nota.status === "Cancelada" ? "S" : "N";
+  const codSit = nota.status === "Cancelada" ? "C" : "N"; // C=Cancelado, não S
   const cfop = isEntrada ? "1102" : "5405";
   const emitente = isEntrada ? "T" : "P";
-  const cnpjDoc = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
-  // CPF (11 dígitos) deve ser preenchido com zeros à ESQUERDA até 14 posições
-  // CNPJ (14 dígitos) usa como está
-  const cnpjUsar = cnpjDoc.length === 11
-    ? cnpjDoc.padStart(14, "0")
-    : cnpjDoc.length === 14
-    ? cnpjDoc
-    : "00000000000000";
+  const cnpjDoc = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "").padEnd(14, "0").substring(0, 14);
+  // Valida CPF (11) ou CNPJ (14) — caso contrário todos zeros
+  const cnpjUsar = (cnpjDoc.length === 11 || cnpjDoc.length === 14) ? cnpjDoc : "00000000000000";
 
   return (
     "50" +
@@ -173,7 +174,8 @@ export function reg61(data, serie, numInicial, numFinal, valorTotal, baseIcms = 
     dataFormatada = `${ano}${mes}${dia}`; // AAAAMMDD
   }
   
-  const ser = r(serie || "1", 3);
+  const serNum = String(serie || "1").replace(/\D/g, "") || "1";
+  const ser = r(serNum, 3); // Série como string alfanumérica, left-aligned
   const subserie = r("", 2);
   const numini = rZ(numInicial || 0, 6);
   const numfim = rZ(numFinal || 0, 6);
@@ -295,7 +297,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     return true;
   });
 
-  // CF-e modelo 02 agrupadas por data+série para Reg.61
+  // CF-e modelo 65 agrupadas por data+série para Reg.61
   const cfePorGrupo = new Map();
   notasPeriodo
     .filter(n => n.tipo === "NFCe" && n.status !== "Cancelada")
@@ -304,12 +306,14 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
       const serie = n.serie || "1";
       const chave = `${data}_${serie}`;
       if (!cfePorGrupo.has(chave)) {
-        cfePorGrupo.set(chave, { data, serie, numInicial: 9999999, numFinal: 0, valorTotal: 0 });
+        cfePorGrupo.set(chave, { data, serie, numInicial: null, numFinal: null, valorTotal: 0 });
       }
       const g = cfePorGrupo.get(chave);
       const num = parseInt(n.numero || "0", 10);
-      if (num < g.numInicial) g.numInicial = num;
-      if (num > g.numFinal) g.numFinal = num;
+      if (num > 0) {
+        if (g.numInicial === null || num < g.numInicial) g.numInicial = num;
+        if (g.numFinal === null || num > g.numFinal) g.numFinal = num;
+      }
       g.valorTotal += parseFloat(n.valor_total || 0);
     });
 
@@ -356,9 +360,12 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     });
   }
 
-  // Reg.61 — NF Venda a Consumidor (modelo 02, 65)
+  // Reg.61 — NF Venda a Consumidor (modelo 65)
   for (const g of cfePorGrupo.values()) {
-    addLinha("61", reg61(g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal, "65"));
+    // Só gera Reg.61 se há números válidos
+    if (g.numInicial !== null && g.numFinal !== null && g.numInicial > 0 && g.numFinal > 0) {
+      addLinha("61", reg61(g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal, 0, 0, 0, 0, "0000", "65"));
+    }
   }
 
   // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
