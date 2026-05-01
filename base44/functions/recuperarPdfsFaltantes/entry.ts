@@ -84,9 +84,7 @@ Deno.serve(async (req) => {
 
         if (!pdfBlob) { falhas++; continue; }
 
-        const nomeArquivo = `${(nota.tipo || 'nf').toLowerCase()}-${nota.numero || nota.id}.pdf`;
-        const file = new File([pdfBlob], nomeArquivo, { type: 'application/pdf' });
-        const { file_url } = await db.integrations.Core.UploadFile({ file });
+        const { file_url } = await db.integrations.Core.UploadFile({ file: pdfBlob });
         await db.entities.NotaFiscal.update(nota.id, { pdf_url: file_url });
         logs.push(`OK: ${nota.tipo} nº ${nota.numero} (${nota.status})`);
         recuperadas++;
