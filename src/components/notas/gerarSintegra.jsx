@@ -132,20 +132,16 @@ export function reg54(nota, item, numItem, empresa) {
   const cfop = nota.status === "Importada" ? "1102" : "5405";
   const cst = "060";
   const ncm = (item.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
-  const cnpjDoc54 = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
-  const cnpjCampo = cnpjDoc54.length === 11
-    ? cnpjDoc54.padStart(14, "0")
-    : cnpjDoc54.length === 14
-    ? cnpjDoc54
-    : "00000000000000";
+  // CNPJ pode ter 11 (CPF) ou 14 (CNPJ) dígitos — LEFT-ALIGN E PREENCHER COM ZEROS
+  const cnpjDoc = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "").padEnd(14, "0").substring(0, 14);
   // Código LEFT-align (igual ao Reg.75) para que o validador faça o match
   const codigoProd = r(item.codigo || "000", 14);
 
   return (
     "54" +
-    cnpjCampo +                   // 14
+    cnpjDoc +                     // 14
     r("55", 2) +                  //  2 — sempre 55 (NFe)
-    rZ(nota.serie || "1", 3) +    //  3 — mesmo formato do Reg.50
+    r(nota.serie || "1", 3) +     //  3 — série pode ser alfanumérica
     rZ(nota.numero, 6) +          //  6
     r(cfop, 4) +                  //  4
     r(cst, 3) +                   //  3
@@ -176,8 +172,8 @@ export function reg61(data, serie, numInicial, numFinal, valorTotal, baseIcms = 
     dataFormatada = `${ano}${mes}${dia}`; // AAAAMMDD
   }
   
-  const serNum = String(serie || "1").replace(/\D/g, "") || "1";
-  const ser = rZ(serNum, 3); // Série NUMÉRICA com zeros à esquerda
+  // Série pode ser alfanumérica (1-3 caracteres)
+  const ser = r(String(serie || "1"), 3);
   const subserie = r("", 2);
   const numini = rZ(numInicial || 0, 6);
   const numfim = rZ(numFinal || 0, 6);
