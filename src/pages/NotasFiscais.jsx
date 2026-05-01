@@ -739,14 +739,26 @@ export default function NotasFiscais() {
   };
 
   const downloadPdf = async (url, nome) => {
-    const resp = await fetch(url);
-    const blob = await resp.blob();
-    const objUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = objUrl;
-    a.download = nome;
-    a.click();
-    URL.revokeObjectURL(objUrl);
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const blob = await resp.blob();
+      
+      // Valida PDF header
+      const buffer = await blob.arrayBuffer();
+      const header = new Uint8Array(buffer, 0, 4);
+      const isPdf = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+      if (!isPdf) throw new Error('Arquivo inválido (não é PDF)');
+      
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objUrl;
+      a.download = nome;
+      a.click();
+      URL.revokeObjectURL(objUrl);
+    } catch (e) {
+      feedback('erro', `Erro ao baixar: ${e.message}`);
+    }
   };
 
   const nomeArquivoPdf = (nota) => {
