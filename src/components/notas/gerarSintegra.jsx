@@ -160,33 +160,32 @@ export function reg54(nota, item, numItem, empresa) {
 
 // Registro 61 - Documentos fiscais não emitidos por ECF (NFCe modelo 65)
 // Layout Convênio ICMS 57/95: 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126
-// CNPJ, IE e Série ficam em BRANCO conforme item 17.1.3.1 do manual
-export function reg61(_cnpjEmpresa, _ieEmpresa, data, _serie, numInicial, numFinal, valorTotal) {
-  // Layout SINTEGRA Reg.61 = 126 chars (item 17.1.3.1 do Conv. 57/95):
-  // 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126
-  // Série DEVE ser BRANCO (3 espaços) conforme item 17.1.3.1
-  // CNPJ e IE também em BRANCO
+// Copiado do sistema de referência (arquivo jan/2026):
+//   "61" + 14 brancos + 14 brancos + data(8) + "65" + serie_num(3) + numIni(6) + numFim(6)
+//   + vTotal(13) + zeros(13) + zeros(13) + vTotal(13) + zeros(13) + "0000"(4) + "  "(2)
+// CNPJ e IE = brancos. Série = número formatado com zeros à esquerda (ex: "001").
+export function reg61(_cnpjEmpresa, _ieEmpresa, data, serie, numInicial, numFinal, valorTotal) {
   const valorCentavos = Math.round(Number(valorTotal || 0) * 100);
-  const vTotalStr = String(valorCentavos).padStart(13, "0").slice(-13); // 13
-  const zeros13   = "0000000000000";                                     // 13
+  const vTotalStr = String(valorCentavos).padStart(13, "0").slice(-13);
+  const zeros13   = "0000000000000";
 
-  // Campos construídos com repeat() para garantir tamanho exato sem risco de editor
-  const CNPJ14  = " ".repeat(14);   // pos 3-16
-  const IE14    = " ".repeat(14);   // pos 17-30
-  const SERIE3  = " ".repeat(3);    // pos 41-43  (brancos conforme item 17.1.3.1)
-  const BRANCOS2 = " ".repeat(2);   // pos 125-126
+  const CNPJ14   = " ".repeat(14);
+  const IE14     = " ".repeat(14);
+  // Série: número com zeros à esquerda (igual ao arquivo de referência: "001", "002" etc.)
+  const SERIE3   = String(Number(serie) || 1).padStart(3, "0").slice(-3);
+  const BRANCOS2 = " ".repeat(2);
 
   const numIni6 = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
   const numFim6 = String(Math.max(0, Number(numFinal   || 0))).padStart(6, "0").slice(-6);
 
-  // Monta a linha campo a campo — TOTAL DEVE SER EXATAMENTE 126
-  const linha =
+  // 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126 ✓
+  return (
     "61"      +  // 2   pos 1-2
-    CNPJ14    +  // 14  pos 3-16
-    IE14      +  // 14  pos 17-30
+    CNPJ14    +  // 14  pos 3-16   (brancos)
+    IE14      +  // 14  pos 17-30  (brancos)
     rData(data) +// 8   pos 31-38
     "65"      +  // 2   pos 39-40
-    SERIE3    +  // 3   pos 41-43
+    SERIE3    +  // 3   pos 41-43  (número: "001")
     numIni6   +  // 6   pos 44-49
     numFim6   +  // 6   pos 50-55
     vTotalStr +  // 13  pos 56-68
@@ -195,9 +194,8 @@ export function reg61(_cnpjEmpresa, _ieEmpresa, data, _serie, numInicial, numFin
     vTotalStr +  // 13  pos 95-107
     zeros13   +  // 13  pos 108-120
     "0000"    +  // 4   pos 121-124
-    BRANCOS2;    // 2   pos 125-126
-  // 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126 ✓
-  return linha;
+    BRANCOS2     // 2   pos 125-126
+  );
 }
 
 // Registro 75 - Cadastro de produtos
