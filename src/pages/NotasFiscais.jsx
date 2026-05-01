@@ -104,9 +104,18 @@ export default function NotasFiscais() {
   const periodoDropRef = useRef(null);
 
   const pad = n => String(n).padStart(2, "0");
+  
+  // Calcula o último dia do mês corretamente
+  const ultimoDiaDoMes = (ano, mes) => {
+    return new Date(ano, mes, 0).getDate();
+  };
+  
   const periodoRange = usandoOutroPeriodo && customRange
     ? customRange
-    : { inicio: `${filtroAno}-${pad(filtroMes)}-01`, fim: `${filtroAno}-${pad(filtroMes)}-31` };
+    : { 
+        inicio: `${filtroAno}-${pad(filtroMes)}-01`, 
+        fim: `${filtroAno}-${pad(filtroMes)}-${pad(ultimoDiaDoMes(filtroAno, filtroMes))}` 
+      };
 
   const navegarMes = (direcao) => {
     setUsandoOutroPeriodo(false);
