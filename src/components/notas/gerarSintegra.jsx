@@ -159,50 +159,37 @@ export function reg54(nota, item, numItem, empresa) {
 }
 
 // Registro 61 - Cupons emitidos por ECF (NFCe modelo 65)
-// Layout Convênio ICMS 57/95 item 17.1.3.1: 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126
-// Série = 3 espaços em branco (conforme item 17.1.3.1)
-// Alíquota = 4 dígitos inteiros (ex: 0000=sem ICMS, 1200=12%, 1800=18%)
-export function reg61(_cnpjEmpresa, _ieEmpresa, data, serie, numInicial, numFinal, valorTotal, aliquotaICMS = 0) {
+// Layout Convênio ICMS 57/95: 2+14+14+8+1+2+6+6+13+13+13+13+13+4+2 = 126
+export function reg61(_cnpjEmpresa, _ieEmpresa, data, serie, numInicial, numFinal, valorTotal, aliquotaICMS = 18) {
   const valorCentavos = Math.round(Number(valorTotal || 0) * 100);
   const vTotalStr = String(valorCentavos).padStart(13, "0").slice(-13);
   const zeros13   = "0000000000000";
-
-  const CNPJ14   = " ".repeat(14);  // Brancos — registro 61 não usa CNPJ
-  const IE14     = " ".repeat(14);  // Brancos — registro 61 não usa IE
-  const SERIE1   = r(serie || "D", 1);  // Série: D, E, etc.
-  const SUBSERIE2 = " ".repeat(2);  // Subsérie: brancos
-  // Alíquota: 4 dígitos inteiros (ex: 0 → "0000", 12 → "1200", 18 → "1800")
-  const ALIQUOTA4 = String(Math.round(Number(aliquotaICMS || 0) * 100)).padStart(4, "0").slice(-4);
-  const RESTANTE39 = " ".repeat(39);  // Restante (posições 88-126)
-
+  
+  // Alíquota: converter percentual para 4 dígitos (ex: 18 → "1800")
+  const aliqStr = String(Math.round(aliquotaICMS * 100)).padStart(4, "0").slice(-4);
+  
   const numIni6 = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
   const numFim6 = String(Math.max(0, Number(numFinal   || 0))).padStart(6, "0").slice(-6);
-
-  // Layout: 2+14+14+8+1+2+6+6+16+14+4+39 = 126 ✓
-  // Convênio ICMS 57/95 item 17.1.3.1:
-  // - Posições 03-30: brancos (não usa CNPJ/IE)
-  // - Posição 39: série (D, E, etc.)
-  // - Posições 84-87: alíquota ICMS (4 dígitos)
+  const serieStr = r(serie || "D", 1);
   
   const linha = (
     "61"        +  // 2   pos 01-02
-    CNPJ14      +  // 14  pos 03-16   (brancos)
-    IE14        +  // 14  pos 17-30   (brancos)
+    " ".repeat(14) +  // 14  pos 03-16 (brancos CNPJ)
+    " ".repeat(14) +  // 14  pos 17-30 (brancos IE)
     rData(data) +  // 8   pos 31-38
-    SERIE1      +  // 1   pos 39      (série: D, E, etc.)
-    SUBSERIE2   +  // 2   pos 40-41   (subsérie: brancos)
-    numIni6     +  // 6   pos 42-47   (nº CF inicial)
-    numFim6     +  // 6   pos 48-53   (nº CF final)
-    vTotalStr   +  // 13  pos 54-66   (valor total)
-    zeros13     +  // 13  pos 67-79   (base ICMS)
-    zeros13     +  // 13  pos 80-92   (valor ICMS)
-    vTotalStr   +  // 13  pos 93-105  (isentas)
+    serieStr    +  // 1   pos 39 (série)
+    " ".repeat(2)  +  // 2   pos 40-41 (brancos subsérie)
+    numIni6     +  // 6   pos 42-47 (nº CF inicial)
+    numFim6     +  // 6   pos 48-53 (nº CF final)
+    vTotalStr   +  // 13  pos 54-66 (valor total)
+    zeros13     +  // 13  pos 67-79 (base ICMS)
+    zeros13     +  // 13  pos 80-92 (valor ICMS)
+    vTotalStr   +  // 13  pos 93-105 (isentas)
     zeros13     +  // 13  pos 106-118 (outras)
-    ALIQUOTA4   +  // 4   pos 119-122 (alíquota ICMS)
-    RESTANTE39     // 39  pos 123-161 (restante — espaços)
+    aliqStr     +  // 4   pos 119-122 (alíquota ICMS)
+    " ".repeat(4)    // 4   pos 123-126 (brancos finais)
   );
-  // Garantir exatamente 126 chars
-  return linha.padEnd(126, " ").substring(0, 126);
+  return linha.substring(0, 126);
 }
 
 // Registro 75 - Cadastro de produtos
