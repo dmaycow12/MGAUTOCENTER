@@ -158,43 +158,43 @@ export function reg54(nota, item, numItem, empresa) {
   );
 }
 
-// Registro 61 - Documentos fiscais não emitidos por ECF (NFCe modelo 65)
-// Layout Convênio ICMS 57/95: 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126
-// Copiado do sistema de referência (arquivo jan/2026):
-//   "61" + 14 brancos + 14 brancos + data(8) + "65" + serie_num(3) + numIni(6) + numFim(6)
-//   + vTotal(13) + zeros(13) + zeros(13) + vTotal(13) + zeros(13) + "0000"(4) + "  "(2)
-// CNPJ e IE = brancos. Série = número formatado com zeros à esquerda (ex: "001").
-export function reg61(_cnpjEmpresa, _ieEmpresa, data, serie, numInicial, numFinal, valorTotal) {
+// Registro 61 - Cupons emitidos por ECF (NFCe modelo 65)
+// Layout Convênio ICMS 57/95 item 17.1.3.1: 2+14+14+8+2+1+2+6+6+13+13+13+13+13+4+2 = 126
+// Série = 1 letra ECF (A-Z) + 2 dígitos subsérie (00-99)
+// Alíquota = 4 dígitos (ex: 0000=sem ICMS, 1200=12%, 1800=18%)
+export function reg61(_cnpjEmpresa, _ieEmpresa, data, _serie, numInicial, numFinal, valorTotal, aliquotaICMS = 0) {
   const valorCentavos = Math.round(Number(valorTotal || 0) * 100);
   const vTotalStr = String(valorCentavos).padStart(13, "0").slice(-13);
   const zeros13   = "0000000000000";
 
   const CNPJ14   = " ".repeat(14);
   const IE14     = " ".repeat(14);
-  // Série: número com zeros à esquerda (igual ao arquivo de referência: "001", "002" etc.)
-  const SERIE3   = String(Number(serie) || 1).padStart(3, "0").slice(-3);
-  const BRANCOS2 = " ".repeat(2);
+  const SERIELETRA = "D";  // Letra da série ECF (A-Z, padrão: D)
+  const SUBSERIE  = "00";  // Subsérie (00-99)
+  const ALIQUOTA4 = String(Math.round(Number(aliquotaICMS || 0) * 100)).padStart(4, "0").slice(-4);
+  const BRANCOS2  = " ".repeat(2);
 
   const numIni6 = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
   const numFim6 = String(Math.max(0, Number(numFinal   || 0))).padStart(6, "0").slice(-6);
 
-  // 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126 ✓
+  // 2+14+14+8+2+1+2+6+6+13+13+13+13+13+4+2 = 126 ✓
   return (
-    "61"      +  // 2   pos 1-2
-    CNPJ14    +  // 14  pos 3-16   (brancos)
-    IE14      +  // 14  pos 17-30  (brancos)
-    rData(data) +// 8   pos 31-38
-    "65"      +  // 2   pos 39-40
-    SERIE3    +  // 3   pos 41-43  (número: "001")
-    numIni6   +  // 6   pos 44-49
-    numFim6   +  // 6   pos 50-55
-    vTotalStr +  // 13  pos 56-68
-    zeros13   +  // 13  pos 69-81
-    zeros13   +  // 13  pos 82-94
-    vTotalStr +  // 13  pos 95-107
-    zeros13   +  // 13  pos 108-120
-    "0000"    +  // 4   pos 121-124
-    BRANCOS2     // 2   pos 125-126
+    "61"        +  // 2   pos 1-2
+    CNPJ14      +  // 14  pos 3-16   (brancos)
+    IE14        +  // 14  pos 17-30  (brancos)
+    rData(data) +  // 8   pos 31-38
+    "65"        +  // 2   pos 39-40  (modelo ECF/PDV)
+    SERIELETRA  +  // 1   pos 41     (série: letra)
+    SUBSERIE    +  // 2   pos 42-43  (subsérie: número)
+    numIni6     +  // 6   pos 44-49
+    numFim6     +  // 6   pos 50-55
+    vTotalStr   +  // 13  pos 56-68
+    zeros13     +  // 13  pos 69-81
+    zeros13     +  // 13  pos 82-94
+    vTotalStr   +  // 13  pos 95-107
+    zeros13     +  // 13  pos 108-120
+    ALIQUOTA4   +  // 4   pos 121-124 (alíquota ICMS)
+    BRANCOS2       // 2   pos 125-126
   );
 }
 
@@ -351,7 +351,8 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
 
   // Reg.61 — NFCe agrupadas por data/série
   for (const g of nfcePorDataSerie.values()) {
-    addLinha("61", reg61(empresa.cnpj, empresa.ie, g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal));
+    // Alíquota padrão: 0% (sem ICMS) para simplificar; ajuste conforme necessário
+    addLinha("61", reg61(empresa.cnpj, empresa.ie, g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal, 0));
   }
 
   // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
