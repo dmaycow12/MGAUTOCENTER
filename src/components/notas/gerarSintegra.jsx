@@ -112,7 +112,7 @@ export function reg10(empresa, periodo) {
 // Layout: "11" + End(34) + Num(5) + Comp(22) + Bairro(15) + CEP(8) + Contato(28) + Fone(12) = 126
 // ============================================================
 export function reg11(empresa) {
-  const num = (empresa.numero || "0").replace(/\D/g, "").padStart(5, "0").slice(-5);
+  const num = (empresa.numero || "1").replace(/\D/g, "").padStart(5, "0").slice(-5) || "00001";
   const cep = (empresa.cep || "00000000").replace(/\D/g, "").padStart(8, "0").slice(-8);
   const fone = (empresa.fone || "0").replace(/\D/g, "").padStart(12, "0").slice(-12);
   return (
@@ -284,7 +284,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     cep: cfg("cep") || "",
     fone: cfg("telefone") || "",
     fax: cfg("fax") || "",
-    responsavel: cfg("responsavel") || "",
+    responsavel: cfg("responsavel") || cfg("razao_social") || "MG AUTOCENTER LTDA",
   };
 
   const linhas = [];
