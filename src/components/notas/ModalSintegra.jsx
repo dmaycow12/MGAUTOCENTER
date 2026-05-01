@@ -78,10 +78,10 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
       return d >= inicio && d <= fim && n.status !== "Rascunho" && n.status !== "Cancelada";
     });
 
-    const nfeNoSintegra = todasNoPeriodo.filter(n => n.tipo === "NFe");
-    const foraDosintegra = todasNoPeriodo.filter(n => n.tipo !== "NFe");
+    const noSintegra = todasNoPeriodo.filter(n => n.tipo === "NFe" || n.tipo === "NFCe");
+    const foraDosintegra = todasNoPeriodo.filter(n => n.tipo === "NFSe");
 
-    const totalNFe = nfeNoSintegra.reduce((s, n) => s + Number(n.valor_total || 0), 0);
+    const totalNFe = todasNoPeriodo.filter(n => n.tipo === "NFe").reduce((s, n) => s + Number(n.valor_total || 0), 0);
     const totalNFCe = todasNoPeriodo.filter(n => n.tipo === "NFCe").reduce((s, n) => s + Number(n.valor_total || 0), 0);
     const totalNFSe = todasNoPeriodo.filter(n => n.tipo === "NFSe").reduce((s, n) => s + Number(n.valor_total || 0), 0);
     const totalGeral = todasNoPeriodo.reduce((s, n) => s + Number(n.valor_total || 0), 0);
@@ -89,7 +89,8 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
     return {
       periodo: periodo.label,
       totalNotas: todasNoPeriodo.length,
-      nfeCount: nfeNoSintegra.length,
+      noSintegraCount: noSintegra.length,
+      totalNoSintegra: totalNFe + totalNFCe,
       totalNFe,
       totalNFCe,
       totalNFSe,
@@ -184,7 +185,7 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
             <p className="font-semibold">Registros incluídos:</p>
             <p>• Reg. 10 — Identificação da empresa</p>
             <p>• Reg. 11 — Endereço do estabelecimento</p>
-            <p>• Reg. 50 — Notas fiscais (NFe/NFCe)</p>
+            <p>• Reg. 50 — Notas fiscais (NFe mod.55 e NFCe mod.65)</p>
             <p>• Reg. 54 — Itens das notas (quando disponíveis)</p>
             <p>• Reg. 75 — Cadastro de produtos</p>
             <p>• Reg. 90 — Encerramento/totalizadores</p>
@@ -215,20 +216,14 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
                     <p className="text-gray-600 mt-1">{conferencia.totalNotas} nota(s)</p>
                   </div>
                   <div className="bg-gray-900 rounded-lg p-3">
-                    <p className="text-gray-500 mb-1">Incluso no SINTEGRA (só NFe)</p>
-                    <p className="text-green-400 font-bold text-sm">{fmt(conferencia.totalNFe)}</p>
-                    <p className="text-gray-600 mt-1">{conferencia.nfeCount} NFe(s)</p>
+                   <p className="text-gray-500 mb-1">No SINTEGRA (NFe + NFCe)</p>
+                   <p className="text-green-400 font-bold text-sm">{fmt(conferencia.totalNoSintegra)}</p>
+                   <p className="text-gray-600 mt-1">{conferencia.noSintegraCount} nota(s)</p>
                   </div>
-                  {conferencia.totalNFCe > 0 && (
-                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
-                      <p className="text-orange-400 mb-1">NFCe — NÃO entra no SINTEGRA MG</p>
-                      <p className="text-orange-300 font-bold text-sm">{fmt(conferencia.totalNFCe)}</p>
-                    </div>
-                  )}
                   {conferencia.totalNFSe > 0 && (
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                      <p className="text-blue-400 mb-1">NFSe — NÃO entra no SINTEGRA MG</p>
-                      <p className="text-blue-300 font-bold text-sm">{fmt(conferencia.totalNFSe)}</p>
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <p className="text-orange-400 mb-1">NFSe — NÃO entra no SINTEGRA</p>
+                      <p className="text-orange-300 font-bold text-sm">{fmt(conferencia.totalNFSe)}</p>
                     </div>
                   )}
                 </div>
