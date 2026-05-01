@@ -216,8 +216,7 @@ export function reg90(empresa, totais, linhasAnteriores) {
   const CNPJ = limpaCNPJ(empresa.cnpj);
   const IE = (empresa.ie || "").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
 
-  const tiposReg90 = ["50", "54", "61", "75"].filter(t => totais[t] > 0);
-  // Se houver Reg.61, ordena: 50, 54, 61, 75 (sempre que existir)
+  const tiposReg90 = ["50", "54", "75"].filter(t => totais[t] > 0);
   // Linhas do Reg.90: uma por tipo + a linha "99"
   const totalLinhasReg90 = tiposReg90.length + 1;
   // Total GERAL = todas as linhas anteriores (10,11,50,54,75) + todas as linhas do reg90
@@ -278,23 +277,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     return true;
   });
 
-  // CF-e modelo 02 agrupadas por data+série para Reg.61
-  const cfePorGrupo = new Map();
-  notasPeriodo
-    .filter(n => n.tipo === "NFCe" && n.status !== "Cancelada")
-    .forEach(n => {
-      const data = (n.data_emissao || "").substring(0, 10);
-      const serie = n.serie || "1";
-      const chave = `${data}_${serie}`;
-      if (!cfePorGrupo.has(chave)) {
-        cfePorGrupo.set(chave, { data, serie, numInicial: 9999999, numFinal: 0, valorTotal: 0 });
-      }
-      const g = cfePorGrupo.get(chave);
-      const num = parseInt(n.numero || "0", 10);
-      if (num < g.numInicial) g.numInicial = num;
-      if (num > g.numFinal) g.numFinal = num;
-      g.valorTotal += parseFloat(n.valor_total || 0);
-    });
+
 
   // Reg.50 — todos primeiro
   for (const nota of notasSintegra) {
@@ -339,10 +322,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     });
   }
 
-  // Reg.61 — CF-e modelo 02 (Cupom Fiscal Eletrônico pessoa física)
-  for (const g of cfePorGrupo.values()) {
-    addLinha("61", reg61(g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal));
-  }
+  // Reg.61 — Não suportado em SINTEGRA-MG
 
   // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
   const produtosUnicos = new Map();
