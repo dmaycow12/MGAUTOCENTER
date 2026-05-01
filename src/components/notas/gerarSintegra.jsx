@@ -171,6 +171,32 @@ export function reg54(nota, item, numItem, empresa) {
   );
 }
 
+// Registro 61 - Ajustes (complementos do Reg.54 para ICMS)
+// Layout: 2+14+14+8+2+2+3+6+4+3+13+13+13+13+13 = 126 chars
+export function reg61(nota, item, numItem, empresa) {
+  const cfop = nota.status === "Importada" ? "1102" : "5405";
+  const cnpjCampo = limpaCNPJ(nota.cliente_cpf_cnpj || "");
+  const ajusteIcms = 0; // sem ajuste
+  
+  return (
+    "61" +
+    cnpjCampo +                   // 14
+    limpaIE(nota.cliente_ie || "") +  // 14
+    rData(nota.data_emissao) +    //  8
+    r(nota.cliente_estado || empresa.uf, 2) +  //  2
+    r("55", 2) +                  //  2
+    rZ(nota.serie || "1", 3) +    //  3
+    rZ(nota.numero, 6) +          //  6
+    r(cfop, 4) +                  //  4
+    rZ(numItem + 1, 3) +          //  3
+    rN(ajusteIcms, 13) +          // 13 ajuste débito ICMS
+    rN(0, 13) +                   // 13 ajuste crédito ICMS
+    rN(0, 13) +                   // 13 ajuste débito ICMS ST
+    rN(0, 13) +                   // 13 ajuste crédito ICMS ST
+    rN(0, 13)                     // 13 outros ajustes
+  );
+}
+
 // Registro 75 - Cadastro de produtos
 // Layout Conv. ICMS 76/03 item 20: 2+8+8+14+8+53+6+5+4+5+13 = 126 chars
 // Campos: tipo+dtIni+dtFim+codProd+NCM+desc+unid+aliqIPI+aliqICMS+reducBC+baseST
@@ -199,7 +225,7 @@ export function reg90(empresa, totais, linhasAnteriores) {
   const CNPJ = limpaCNPJ(empresa.cnpj);
   const IE = (empresa.ie || "").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
 
-  const tiposReg90 = ["50", "54", "75"].filter(t => totais[t] > 0);
+  const tiposReg90 = ["50", "54", "61", "75"].filter(t => totais[t] > 0);
   // Linhas do Reg.90: uma por tipo + a linha "99"
   const totalLinhasReg90 = tiposReg90.length + 1;
   // Total GERAL = todas as linhas anteriores (10,11,50,54,75) + todas as linhas do reg90
@@ -266,7 +292,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     addLinha("50", reg50(nota, empresa));
   }
 
-  // Reg.54 — depois, coletar dados dos produtos para Reg.75
+  // Reg.54 e Reg.61 — itens e ajustes
   const codigosNosItens = new Set();
   const itensPorCodigo = new Map(); // fallback para Reg.75 quando não há estoque
   for (const nota of notasSintegra) {
@@ -297,6 +323,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     }
     itens.forEach((item, idx) => {
       addLinha("54", reg54(nota, item, idx, empresa));
+      addLinha("61", reg61(nota, item, idx, empresa));
       if (item.codigo) {
         codigosNosItens.add(item.codigo);
         if (!itensPorCodigo.has(item.codigo)) itensPorCodigo.set(item.codigo, item);
