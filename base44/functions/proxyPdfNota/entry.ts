@@ -42,7 +42,10 @@ Deno.serve(async (req) => {
         console.log('[DEBUG] Tentando endpoint NFCe:', pdfUrl);
         const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER } });
         
-        if (!pdfResp.ok) continue;
+        if (!pdfResp.ok) {
+          console.log('[DEBUG] Endpoint retornou', pdfResp.status);
+          continue;
+        }
         
         const contentType = pdfResp.headers.get('content-type') || '';
         console.log('[DEBUG] Content-Type:', contentType);
@@ -50,7 +53,7 @@ Deno.serve(async (req) => {
         // Se endpoint retorna JSON, significa que tem mais dados
         if (contentType.includes('application/json')) {
           const jsonData = await pdfResp.json();
-          console.log('[DEBUG] Resposta JSON da NFCe:', JSON.stringify(jsonData).substring(0, 200));
+          console.log('[DEBUG] Resposta JSON da NFCe:', JSON.stringify(jsonData).substring(0, 500));
           
           // Tenta extrair URL de PDF dos dados
           const pdfUrls = [
@@ -60,20 +63,32 @@ Deno.serve(async (req) => {
             jsonData.danfce_url,
           ].filter(Boolean);
           
+          if (pdfUrls.length === 0) {
+            console.log('[DEBUG] Nenhuma URL de PDF encontrada na resposta JSON');
+            return Response.json({ sucesso: false, erro: 'NFCe não tem URL de PDF disponível ainda', json_response: jsonData });
+          }
+          
           for (const url of pdfUrls) {
             if (!url) continue;
             const fullUrl = url.startsWith('http') ? url : normalizarUrl(url);
             console.log('[DEBUG] Tentando URL extraída:', fullUrl);
             const pdfResp2 = await fetch(fullUrl, {});
-            if (pdfResp2.ok && pdfResp2.headers.get('content-type')?.includes('pdf')) {
+            if (pdfResp2.ok) {
               const blob = await pdfResp2.blob();
               const buffer = await blob.arrayBuffer();
-              if (buffer.byteLength > 100) { // PDF válido tem pelo menos 100 bytes
+              const header = new Uint8Array(buffer, 0, 4);
+              const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+              
+              console.log('[DEBUG] Arquivo baixado, tamanho:', buffer.byteLength, 'válido:', isPdfValid);
+              
+              if (isPdfValid && buffer.byteLength > 1000) { // PDF válido tem pelo menos 1KB
                 const nomeArquivo = `nfce-${nota.numero || nota_id}.pdf`;
                 const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
                 const { file_url } = await db.integrations.Core.UploadFile({ file });
                 await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
                 return Response.json({ sucesso: true, pdf_url: file_url });
+              } else if (!isPdfValid) {
+                console.log('[DEBUG] Arquivo não é PDF válido, header:', Array.from(header).map(b => b.toString(16)));
               }
             }
           }
@@ -81,17 +96,23 @@ Deno.serve(async (req) => {
         }
         
         // Se é PDF direto
-        if (contentType.includes('pdf')) {
+        if (contentType.includes('pdf') || contentType.includes('octet')) {
           const blob = await pdfResp.blob();
           const buffer = await blob.arrayBuffer();
-          console.log('[DEBUG] PDF recebido, tamanho:', buffer.byteLength, 'bytes');
+          const header = new Uint8Array(buffer, 0, 4);
+          const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
           
-          if (buffer.byteLength > 100) {
+          console.log('[DEBUG] PDF direto recebido, tamanho:', buffer.byteLength, 'válido:', isPdfValid);
+          
+          if (isPdfValid && buffer.byteLength > 1000) { // PDF válido tem pelo menos 1KB
             const nomeArquivo = `nfce-${nota.numero || nota_id}.pdf`;
             const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
             const { file_url } = await db.integrations.Core.UploadFile({ file });
             await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
             return Response.json({ sucesso: true, pdf_url: file_url });
+          } else {
+            console.log('[DEBUG] PDF inválido ou muito pequeno, header:', Array.from(header).map(b => b.toString(16)));
+            return Response.json({ sucesso: false, erro: `Arquivo inválido recebido (${buffer.byteLength} bytes)` });
           }
         }
       }
