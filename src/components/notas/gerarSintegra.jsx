@@ -159,40 +159,48 @@ export function reg54(nota, item, numItem, empresa) {
 }
 
 // Registro 61 - Cupons emitidos por ECF (NFCe modelo 65)
-// Layout oficial Convênio ICMS 57/95 item 17.1.3.1:
-// pos 01-02: "61" | pos 03-30: brancos | pos 31-38: data | pos 39-41: série (LEFT) 
-// pos 42-47: nº inicial | pos 48-53: nº final | pos 54-66: valor total | pos 67-79: base ICMS
-// pos 80-92: valor ICMS | pos 93-105: isentas | pos 106-118: outras | pos 119-122: alíquota
+// Convênio ICMS 57/95 item 17.1.3.1 - Layout EXATO: 126 caracteres
+// 01-02: "61" | 03-14: CNPJ (brancos) | 15-28: IE (brancos) | 29-36: data
+// 37-39: modelo (sempre "065") | 40-42: série (LEFT-ALIGNED) | 43-48: nº inicial
+// 49-54: nº final | 55-67: valor total | 68-80: base ICMS | 81-93: valor ICMS
+// 94-106: isentas | 107-119: outras | 120-123: alíquota (4 dígitos) | 124-126: brancos
 export function reg61(_cnpjEmpresa, _ieEmpresa, data, serie, numInicial, numFinal, valorTotal, aliquotaICMS = 18) {
-  const valorCentavos = Math.round(Number(valorTotal || 0) * 100);
-  const vTotalStr = String(valorCentavos).padStart(13, "0").slice(-13);
-  const zeros13   = "0000000000000";
+  // Formatar componentes
+  const dataf = rData(data);
+  const modelo = "065";  // NFCe é modelo 65
+  const serief = r(serie || "D", 3);  // série LEFT-aligned em 3 posições
+  const numini = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
+  const numfim = String(Math.max(0, Number(numFinal || 0))).padStart(6, "0").slice(-6);
   
-  // Série: LEFT-ALIGNED em 3 posições (ex: "D  " ou "1  ")
-  const serieStr = r(serie || "D", 3);
+  // Valores em centavos (13 dígitos RIGHT-aligned)
+  const valtot = String(Math.round(Number(valorTotal || 0) * 100)).padStart(13, "0").slice(-13);
+  const valbas = "0000000000000";
+  const valicm = "0000000000000";
+  const valisen = valtot;
+  const valout = "0000000000000";
   
-  // Alíquota: 4 dígitos inteiros (ex: 18 → "1800")
-  const aliqStr = String(Math.round(aliquotaICMS * 100)).padStart(4, "0").slice(-4);
+  // Alíquota: 4 dígitos inteiros (18 → "1800")
+  const aliq = String(Math.round(aliquotaICMS * 100)).padStart(4, "0").slice(-4);
   
-  // Números com 6 dígitos RIGHT-ALIGNED
-  const numIni6 = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
-  const numFim6 = String(Math.max(0, Number(numFinal   || 0))).padStart(6, "0").slice(-6);
-  
+  // Montar linha exata: 2+12+14+8+3+3+6+6+13+13+13+13+13+4+3 = 126
   const linha = (
-    "61"        +  // 2   pos 01-02 (tipo)
-    " ".repeat(28) +  // 28  pos 03-30 (brancos)
-    rData(data) +  // 8   pos 31-38 (data)
-    serieStr    +  // 3   pos 39-41 (série LEFT)
-    numIni6     +  // 6   pos 42-47 (nº inicial)
-    numFim6     +  // 6   pos 48-53 (nº final)
-    vTotalStr   +  // 13  pos 54-66 (valor total)
-    zeros13     +  // 13  pos 67-79 (base ICMS)
-    zeros13     +  // 13  pos 80-92 (valor ICMS)
-    vTotalStr   +  // 13  pos 93-105 (isentas)
-    zeros13     +  // 13  pos 106-118 (outras)
-    aliqStr     +  // 4   pos 119-122 (alíquota)
-    " ".repeat(4)    // 4   pos 123-126 (brancos)
+    "61"        +     // 2   pos 01-02
+    " ".repeat(12) +  // 12  pos 03-14 (CNPJ brancos)
+    " ".repeat(14) +  // 14  pos 15-28 (IE brancos)
+    dataf       +     // 8   pos 29-36 (data)
+    modelo      +     // 3   pos 37-39 (modelo 065)
+    serief      +     // 3   pos 40-42 (série)
+    numini      +     // 6   pos 43-48 (nº inicial)
+    numfim      +     // 6   pos 49-54 (nº final)
+    valtot      +     // 13  pos 55-67 (valor total)
+    valbas      +     // 13  pos 68-80 (base ICMS)
+    valicm      +     // 13  pos 81-93 (valor ICMS)
+    valisen     +     // 13  pos 94-106 (isentas)
+    valout      +     // 13  pos 107-119 (outras)
+    aliq        +     // 4   pos 120-123 (alíquota)
+    " ".repeat(3)     // 3   pos 124-126 (brancos)
   );
+  
   return linha.substring(0, 126);
 }
 
