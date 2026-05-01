@@ -943,7 +943,7 @@ export default function NotasFiscais() {
           <Plus className="w-4 h-4" /> Emitir Nota
         </button>
         {filtradas.filter(n => n.status === "Importada").length > 0 && (
-          <button onClick={() => setShowLancamentoMassa(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background: "#3b82f6", color: "#fff"}} onMouseEnter={e => e.currentTarget.style.background = "#2563eb"} onMouseLeave={e => e.currentTarget.style.background = "#3b82f6"}>
+          <button onClick={() => setShowLancamentoMassa(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background: "#062C9B", color: "#fff"}} onMouseEnter={e => e.currentTarget.style.background = "#041a4d"} onMouseLeave={e => e.currentTarget.style.background = "#062C9B"}>
             <ClipboardList className="w-4 h-4" /> Lançar em Massa
           </button>
         )}
@@ -958,7 +958,7 @@ export default function NotasFiscais() {
           <button onClick={() => { const novo = filtroModeloNF.includes("NFCe") ? filtroModeloNF.filter(x => x !== "NFCe") : [...filtroModeloNF, "NFCe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFCe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFCe</button>
           <button onClick={() => { const novo = filtroModeloNF.includes("NFSe") ? filtroModeloNF.filter(x => x !== "NFSe") : [...filtroModeloNF, "NFSe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
         </div>
-        <div className="flex gap-0.5">
+        <div className="flex flex-col lg:flex-row gap-0.5">
           <button onClick={() => exportarXmlsZip()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Exportar XML
           </button>
@@ -1019,7 +1019,7 @@ export default function NotasFiscais() {
           <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             <BarChart2 className="w-4 h-4" /> Sintegra
           </button>
-          <div className={`flex-1 flex items-center h-9 rounded-lg text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
+          <div className={`w-full lg:flex-1 flex items-center h-9 rounded-lg text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
             <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}><ChevronLeft className="w-3 h-3" /></button>
             <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
             <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}><ChevronRight className="w-3 h-3" /></button>
