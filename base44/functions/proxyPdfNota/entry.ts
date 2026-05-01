@@ -107,10 +107,8 @@ Deno.serve(async (req) => {
     const header = new Uint8Array(buffer, 0, 4);
     const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46; // %PDF
     
-    // Se não é PDF válido, tenta salvar mesmo assim (pode ser HTML de erro, mas tenta)
-    // Para NFCe, aceita qualquer coisa — o PDF pode vir diferente
-    if (!isPdfValid && nota.tipo !== 'NFCe') {
-      return Response.json({ sucesso: false, erro: 'PDF inválido ou corrompido na Focus NFe' }, { status: 400 });
+    if (!isPdfValid) {
+      return Response.json({ sucesso: false, erro: 'Arquivo não é PDF válido. Focus NFe retornou HTML de erro ou arquivo corrompido.' }, { status: 400 });
     }
     
     const nomeArquivo = `${(nota.tipo || 'nf').toLowerCase()}-${nota.numero || nota_id}.pdf`;
