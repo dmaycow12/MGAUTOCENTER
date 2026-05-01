@@ -101,14 +101,16 @@ Deno.serve(async (req) => {
     }
 
     const blob = await pdfResp.blob();
-    
-    // Valida se é PDF válido (%PDF header)
     const buffer = await blob.arrayBuffer();
     const header = new Uint8Array(buffer, 0, 4);
     const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46; // %PDF
     
     if (!isPdfValid) {
-      return Response.json({ sucesso: false, erro: 'Arquivo não é PDF válido. Focus NFe retornou HTML de erro ou arquivo corrompido.' }, { status: 400 });
+      // Se não é PDF, tenta extrair mensagem de erro do conteúdo
+      const textDecoder = new TextDecoder();
+      const texto = textDecoder.decode(buffer.slice(0, 500));
+      const erroMsg = texto.includes('error') || texto.includes('<!') ? 'Focus NFe retornou erro ou HTML. Verifique acesso ao fornecedor.' : 'Arquivo não é PDF válido.';
+      return Response.json({ sucesso: false, erro: erroMsg });
     }
     
     const nomeArquivo = `${(nota.tipo || 'nf').toLowerCase()}-${nota.numero || nota_id}.pdf`;
