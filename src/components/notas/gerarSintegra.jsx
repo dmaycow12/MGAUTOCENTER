@@ -14,7 +14,11 @@ function rData(d) {
   return clean.length === 8 ? clean : "00000000";
 }
 function limpaCNPJ(c) { return (c || "").replace(/\D/g, "").padEnd(14, "0").substring(0, 14); }
-function limpaIE(ie) { return (ie || "ISENTO").padEnd(14, " ").substring(0, 14); }
+function limpaIE(ie) {
+  const s = (ie || "").replace(/\D/g, "");
+  if (!s) return "ISENTO        "; // 14 chars: "ISENTO" + 8 espaços
+  return s.padEnd(14, " ").substring(0, 14);
+}
 function parseXmlItens(xmlStr) {
   if (!xmlStr || typeof xmlStr !== 'string') return [];
   const itens = [];
@@ -90,7 +94,13 @@ export function reg50(nota, empresa) {
   const cfop = isEntrada ? "1102" : "5405";
   const emitente = isEntrada ? "T" : "P";
   const cnpjDoc = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
-  const cnpjUsar = cnpjDoc.length >= 11 ? cnpjDoc.padEnd(14, "0").substring(0, 14) : "00000000000000";
+  // CPF (11 dígitos) deve ser preenchido com zeros à ESQUERDA até 14 posições
+  // CNPJ (14 dígitos) usa como está
+  const cnpjUsar = cnpjDoc.length === 11
+    ? cnpjDoc.padStart(14, "0")
+    : cnpjDoc.length === 14
+    ? cnpjDoc
+    : "00000000000000";
 
   return (
     "50" +
@@ -120,7 +130,11 @@ export function reg54(nota, item, numItem, empresa) {
   const cst = "060";
   const ncm = (item.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
   const cnpjDoc54 = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
-  const cnpjCampo = cnpjDoc54.length >= 11 ? cnpjDoc54.padEnd(14, "0").substring(0, 14) : "00000000000000";
+  const cnpjCampo = cnpjDoc54.length === 11
+    ? cnpjDoc54.padStart(14, "0")
+    : cnpjDoc54.length === 14
+    ? cnpjDoc54
+    : "00000000000000";
   // Código LEFT-align (igual ao Reg.75) para que o validador faça o match
   const codigoProd = r(item.codigo || "000", 14);
 
@@ -144,24 +158,27 @@ export function reg54(nota, item, numItem, empresa) {
   );
 }
 
-// Registro 61 - Resumo mensal de NFCe (modelo 65) por data
-// Layout: 2+14+14+2+3+6+6+8+14+13+13+1 = 110 chars + 16 brancos = 126
-export function reg61(cnpj, ie, data, serie, numInicial, numFinal, qtd, valorTotal) {
-  const cnpjFormatado = limpaCNPJ(cnpj);
-  const ieFormatado = (ie || "ISENTO").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
+// Registro 61 - Documentos fiscais não emitidos por ECF (NFCe modelo 65)
+// Layout: tipo(2)+CNPJ(14)+IE(14)+data(8)+modelo(2)+serie(3)+numIni(6)+numFin(6)+vlrTotal(13)+baseICMS(13)+vlrICMS(13)+isenta(13)+outras(13)+aliq(4)+brancos(2) = 126
+export function reg61(cnpjEmpresa, ieEmpresa, data, serie, numInicial, numFinal, valorTotal) {
+  const cnpj = limpaCNPJ(cnpjEmpresa);
+  const ie = (ieEmpresa || "").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
   return (
     "61" +
-    r("", 14) +                   // 14 CNPJ terceiro (brancos)
-    r("", 14) +                   // 14 IE terceiro (brancos)
+    cnpj +                         // 14 CNPJ do emitente
+    ie +                           // 14 IE do emitente
     rData(data) +                  //  8 data emissão
-    r("65", 2) +                   //  2 modelo (NFCe = 65)
+    r("65", 2) +                   //  2 modelo NFCe
     rZ(serie || "1", 3) +          //  3 série
     rZ(numInicial, 6) +            //  6 número inicial
     rZ(numFinal, 6) +              //  6 número final
-    rN(valorTotal, 13) +           // 13 valor total
-    rN(0, 13) +                    // 13 base ICMS
+    rN(valorTotal, 13) +           // 13 valor total (com 2 dec)
+    rN(0, 13) +                    // 13 base de cálculo ICMS
     rN(0, 13) +                    // 13 valor ICMS
-    r("", 16)                      // 16 brancos (reservado)
+    rN(valorTotal, 13) +           // 13 isenta/não tributada (NFCe simples nacional = isento)
+    rN(0, 13) +                    // 13 outras
+    r("0000", 4) +                 //  4 alíquota (0000)
+    r("", 2)                       //  2 brancos para fechar 126
   );
 }
 
@@ -318,7 +335,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
 
   // Reg.61 — NFCe agrupadas por data/série
   for (const g of nfcePorDataSerie.values()) {
-    addLinha("61", reg61(empresa.cnpj, empresa.ie, g.data, g.serie, g.numInicial, g.numFinal, g.qtd, g.valorTotal));
+    addLinha("61", reg61(empresa.cnpj, empresa.ie, g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal));
   }
 
   // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
