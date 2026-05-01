@@ -96,7 +96,7 @@ export function reg10(empresa, periodo) {
     faxCampo +
     rData(periodo.inicio) +
     rData(periodo.fim) +
-    "1" + // Código de identificação da estrutura (1=Padrão, 2=Otimizado, 3=Misto)
+    "3" + // Código de identificação da estrutura (3=Misto obrigatório após 2004)
     "1" + // Código de identificação da natureza das operações (1=Totalidade, 2=Parcial, 3=Simples)
     "1"   // Código de finalidade (1=Normal, 2=Retificação, 3=Substituta)
   );
