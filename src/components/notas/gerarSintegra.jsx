@@ -161,34 +161,33 @@ export function reg54(nota, item, numItem, empresa) {
 // Registro 61 - Documentos fiscais não emitidos por ECF (NFCe modelo 65)
 // Layout Convênio ICMS 57/95: 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126
 // CNPJ, IE e Série ficam em BRANCO conforme item 17.1.3.1 do manual
-export function reg61(_cnpjEmpresa, _ieEmpresa, data, serie, numInicial, numFinal, valorTotal) {
-  // Layout SINTEGRA Reg.61 = 126 chars:
-  // 2+14+14+8+2+3+6+6+13+13+13+13+13+4+1 = 126
-  // Posições fixas — qualquer desvio causa "Formato inválido"
+export function reg61(_cnpjEmpresa, _ieEmpresa, data, _serie, numInicial, numFinal, valorTotal) {
+  // Layout SINTEGRA Reg.61 = 126 chars (item 17.1.3.1 do Conv. 57/95):
+  // 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126
+  // Série DEVE ser BRANCO (3 espaços) conforme item 17.1.3.1
+  // CNPJ e IE também em BRANCO
   const valorCentavos = Math.round(Number(valorTotal || 0) * 100);
-  const vTotalStr  = String(valorCentavos).padStart(13, "0").slice(-13); // 13
-  const vIsStr     = vTotalStr;                                           // 13 isentas = total (Simples)
-  const zeros13    = "0000000000000";                                     // 13
-  const serieStr   = String(Number(serie || 1)).padStart(3, "0").slice(-3); // 3 — numérico
+  const vTotalStr = String(valorCentavos).padStart(13, "0").slice(-13); // 13
+  const zeros13   = "0000000000000";                                     // 13
 
-  return (
-    "61" +                                                   //  2
-    "              " +                                       // 14 CNPJ em branco
-    "              " +                                       // 14 IE   em branco
-    rData(data) +                                            //  8
-    "65" +                                                   //  2 modelo NFCe
-    serieStr +                                               //  3 série numérica
-    String(Number(numInicial || 0)).padStart(6, "0").slice(-6) + //  6 num inicial
-    String(Number(numFinal   || 0)).padStart(6, "0").slice(-6) + //  6 num final
-    vTotalStr +                                              // 13 valor total
-    zeros13 +                                               // 13 base ICMS
-    zeros13 +                                               // 13 valor ICMS
-    vIsStr +                                                // 13 isentas/não tributadas
-    zeros13 +                                               // 13 outras
-    "0000" +                                                //  4 alíquota
-    " "                                                     //  1 branco
-  // 2+14+14+8+2+3+6+6+13+13+13+13+13+4+1 = 126
-  );
+  const linha =
+    "61" +                                                        //  2
+    "              " +                                            // 14 CNPJ — branco (14 espaços)
+    "              " +                                            // 14 IE   — branco (14 espaços)
+    rData(data) +                                                 //  8 data AAAAMMDD
+    "65" +                                                        //  2 modelo NFCe
+    "   " +                                                       //  3 série — BRANCO (item 17.1.3.1)
+    String(Number(numInicial || 0)).padStart(6, "0").slice(-6) +  //  6 número inicial
+    String(Number(numFinal   || 0)).padStart(6, "0").slice(-6) +  //  6 número final
+    vTotalStr +                                                   // 13 valor total
+    zeros13 +                                                     // 13 base ICMS (Simples = 0)
+    zeros13 +                                                     // 13 valor ICMS (Simples = 0)
+    vTotalStr +                                                   // 13 isentas (Simples = valor total)
+    zeros13 +                                                     // 13 outras
+    "0000" +                                                      //  4 alíquota (numérico)
+    "  ";                                                         //  2 brancos finais
+  // Verificação: 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126
+  return linha;
 }
 
 // Registro 75 - Cadastro de produtos
