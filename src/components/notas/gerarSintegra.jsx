@@ -160,11 +160,10 @@ export function reg54(nota, item, numItem, empresa) {
 
 // Registro 61 - Documentos fiscais venda consumidor final (NFCe modelo 65)
 // Layout Convênio ICMS 57/95: exatamente 126 caracteres
-// Pos 01-02: "61" | 03-30: 28 brancos | 31-38: AAAAMMDD | 39-41: série/modelo
-// 42-45: nº | 46-59: valor total (14 N 2dec) | 60-73: ICMS (14 N 2dec)
-// 74-77: alíquota (4 N 2dec) | 78-91: isento (14 N 2dec) | 92-105: outros (14 N 2dec)
-// 106-126: 21 brancos
-export function reg61(data, serie, numInicial, numFinal, valorTotal, icmsTotal, aliquota, valorIsento, valorOutros) {
+// Pos 01-02: "61" | 03-30: 28 brancos | 31-38: AAAAMMDD | 39-41: série (650)
+// 42-43: subsérie (02) | 44-49: nº inicial | 50-55: nº final | 56-69: valor total
+// 70-83: ICMS | 84-87: alíquota | 88-101: isento | 102-115: outros | 116-126: 11 brancos
+export function reg61(data, numInicial, numFinal, valorTotal, icmsTotal) {
   // Data AAAAMMDD (ex: 20260131)
   let dataf = "00000000";
   if (data && data.length >= 10) {
@@ -172,36 +171,35 @@ export function reg61(data, serie, numInicial, numFinal, valorTotal, icmsTotal, 
     dataf = `${ano}${mes}${dia}`;
   }
   
-  // Série + número (ex: "650" para NFC-e série vazia + "00" + "20000" para número 20000)
-  // Formato: 3 dígitos série + 2 dígitos subsérie + 6 dígitos número (total 11 posições para 39-49)
-  const serief = String(serie || "001").padStart(3, "0").slice(-3);
-  const subseriief = "00"; // padrão
+  // Série fixa 650 (NFC-e modelo 65)
+  const serie = "650";
+  const subserie = "02"; // padrão para modelo 65
   const numini = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
   const numfim = String(Math.max(0, Number(numFinal || 0))).padStart(6, "0").slice(-6);
   
-  // Valores 14 dígitos (2 decimais = centavos) RIGHT
+  // Valores 14 dígitos RIGHT (2 decimais)
   const valtot = rN(valorTotal || 0, 14);
   const valicm = rN(icmsTotal || 0, 14);
-  const valisen = rN(valorIsento || 0, 14);
-  const valout = rN(valorOutros || 0, 14);
+  const valisen = rN(0, 14);
+  const valout = rN(0, 14);
   
-  // Alíquota 4 dígitos (2 decimais: 18% = "1800", 0% = "0000") RIGHT
-  const aliq = String(Math.round((aliquota || 0) * 100)).padStart(4, "0").slice(-4);
+  // Alíquota sempre 0000 (zero)
+  const aliq = "0000";
   
   return (
     "61" +
     " ".repeat(28) +  // pos 03-30: 28 brancos
     dataf +           // pos 31-38: data AAAAMMDD
-    serief +          // pos 39-41: série (3 dígitos)
-    subseriief +      // pos 42-43: subsérie (2 dígitos)
-    numini +          // pos 44-49: nº inicial (6 dígitos)
-    numfim +          // pos 50-55: nº final (6 dígitos)
-    valtot +          // pos 56-69: valor total (14)
-    valicm +          // pos 70-83: ICMS (14)
-    aliq +            // pos 84-87: alíquota (4)
-    valisen +         // pos 88-101: isento (14)
-    valout +          // pos 102-115: outros (14)
-    " ".repeat(11)    // pos 116-126: 11 brancos (para completar 126)
+    serie +           // pos 39-41: série 650
+    subserie +        // pos 42-43: subsérie 02
+    numini +          // pos 44-49: nº inicial
+    numfim +          // pos 50-55: nº final
+    valtot +          // pos 56-69: valor total
+    valicm +          // pos 70-83: ICMS (sempre 0)
+    aliq +            // pos 84-87: alíquota (0000)
+    valisen +         // pos 88-101: isento (sempre 0)
+    valout +          // pos 102-115: outros (sempre 0)
+    " ".repeat(11)    // pos 116-126: 11 brancos
   );
 }
 
@@ -360,9 +358,9 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     });
   }
 
-  // Reg.61 — NFCe agrupadas por data/série
+  // Reg.61 — NFCe agrupadas por data/série (modelo 65)
   for (const g of nfcePorGrupo.values()) {
-    addLinha("61", reg61(g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal, g.icmsTotal, 0, g.valorIsento, g.valorOutros));
+    addLinha("61", reg61(g.data, g.numInicial, g.numFinal, g.valorTotal, g.icmsTotal));
   }
 
   // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
