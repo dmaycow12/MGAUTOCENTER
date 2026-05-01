@@ -18,10 +18,9 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
 
   const getPeriodo = () => {
     if (modo === "mes") {
-      const ultimoDia = new Date(ano, mes, 0).getDate();
       return {
         inicio: `${ano}-${pad(mes)}-01`,
-        fim: `${ano}-${pad(mes)}-${pad(ultimoDia)}`,
+        fim: `${ano}-${pad(mes)}-31`,
         label: `${MESES[mes - 1]}/${ano}`,
       };
     }
