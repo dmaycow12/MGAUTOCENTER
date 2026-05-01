@@ -160,13 +160,21 @@ export function reg54(nota, item, numItem, empresa) {
 
 // Registro 61 - Cupons emitidos por ECF (NFCe modelo 65)
 // Convênio ICMS 57/95 item 17.1.3.1 - Layout EXATO: 126 caracteres
-// 01-02: "61" | 03-14: CNPJ (brancos) | 15-28: IE (brancos) | 29-36: data
-// 37-39: modelo (sempre "065") | 40-42: série (LEFT-ALIGNED) | 43-48: nº inicial
-// 49-54: nº final | 55-67: valor total | 68-80: base ICMS | 81-93: valor ICMS
-// 94-106: isentas | 107-119: outras | 120-123: alíquota (4 dígitos) | 124-126: brancos
+// 01-02: "61" | 03-14: CNPJ brancos | 15-28: IE brancos | 29-36: DDMMAAAA
+// 37-39: modelo 065 | 40-42: série LEFT | 43-48: nº inicial | 49-54: nº final
+// 55-67: valor total | 68-80: base ICMS | 81-93: valor ICMS | 94-106: isentas
+// 107-119: outras | 120-123: alíquota 4 dígitos | 124-126: brancos
 export function reg61(_cnpjEmpresa, _ieEmpresa, data, serie, numInicial, numFinal, valorTotal, aliquotaICMS = 18) {
-  // Formatar componentes
-  const dataf = rData(data);
+  // Data em formato DDMMAAAA
+  let dataf;
+  if (data && data.length >= 10) {
+    // Entrada vem como YYYY-MM-DD, converte para DDMMAAAA
+    const [ano, mes, dia] = data.split('-');
+    dataf = `${dia}${mes}${ano}`;
+  } else {
+    dataf = "00000000";
+  }
+  
   const modelo = "065";  // NFCe é modelo 65
   const serief = r(serie || "D", 3);  // série LEFT-aligned em 3 posições
   const numini = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
@@ -182,14 +190,14 @@ export function reg61(_cnpjEmpresa, _ieEmpresa, data, serie, numInicial, numFina
   // Alíquota: 4 dígitos inteiros (18 → "1800")
   const aliq = String(Math.round(aliquotaICMS * 100)).padStart(4, "0").slice(-4);
   
-  // Montar linha exata: 2+12+14+8+3+3+6+6+13+13+13+13+13+4+3 = 126
+  // Montar linha exata com posições corretas
   const linha = (
     "61"        +     // 2   pos 01-02
     " ".repeat(12) +  // 12  pos 03-14 (CNPJ brancos)
     " ".repeat(14) +  // 14  pos 15-28 (IE brancos)
-    dataf       +     // 8   pos 29-36 (data)
+    dataf       +     // 8   pos 29-36 (data DDMMAAAA)
     modelo      +     // 3   pos 37-39 (modelo 065)
-    serief      +     // 3   pos 40-42 (série)
+    serief      +     // 3   pos 40-42 (série LEFT)
     numini      +     // 6   pos 43-48 (nº inicial)
     numfim      +     // 6   pos 49-54 (nº final)
     valtot      +     // 13  pos 55-67 (valor total)
