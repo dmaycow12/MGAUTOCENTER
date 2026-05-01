@@ -127,11 +127,21 @@ Deno.serve(async (req) => {
     const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46; // %PDF
     
     if (!isPdfValid) {
-      // Se não é PDF, tenta extrair mensagem de erro do conteúdo
+      // Se não é PDF, extrai mensagem de erro completa
       const textDecoder = new TextDecoder();
-      const texto = textDecoder.decode(buffer.slice(0, 500));
-      const erroMsg = texto.includes('error') || texto.includes('<!') ? 'Focus NFe retornou erro ou HTML. Verifique acesso ao fornecedor.' : 'Arquivo não é PDF válido.';
-      return Response.json({ sucesso: false, erro: erroMsg });
+      const texto = textDecoder.decode(buffer);
+      console.log('[DEBUG] Resposta não-PDF:', texto.substring(0, 1000));
+      
+      // Tenta extrair mensagem do JSON se houver
+      let erroMsg = 'Focus NFe retornou erro ou HTML.';
+      try {
+        const jsonErr = JSON.parse(texto);
+        if (jsonErr.status_code || jsonErr.message || jsonErr.error) {
+          erroMsg = `${jsonErr.status_code || ''} ${jsonErr.message || jsonErr.error}`.trim();
+        }
+      } catch {}
+      
+      return Response.json({ sucesso: false, erro: erroMsg, detalhes: texto.substring(0, 500) });
     }
     
     const nomeArquivo = `${(nota.tipo || 'nf').toLowerCase()}-${nota.numero || nota_id}.pdf`;
