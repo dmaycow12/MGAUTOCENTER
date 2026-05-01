@@ -170,14 +170,15 @@ export function reg61(_cnpjEmpresa, _ieEmpresa, data, _serie, numInicial, numFin
   const CNPJ14   = " ".repeat(14);
   const IE14     = " ".repeat(14);
   const SERIE3   = " ".repeat(3);  // Em branco conforme item 17.1.3.1
+  // Alíquota: 4 dígitos inteiros (ex: 0 → "0000", 12 → "1200", 18 → "1800")
   const ALIQUOTA4 = String(Math.round(Number(aliquotaICMS || 0) * 100)).padStart(4, "0").slice(-4);
   const BRANCOS2  = " ".repeat(2);
 
   const numIni6 = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
   const numFim6 = String(Math.max(0, Number(numFinal   || 0))).padStart(6, "0").slice(-6);
 
-  // 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126 ✓
-  return (
+  // Validar comprimento: 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126 ✓
+  const linha = (
     "61"        +  // 2   pos 1-2
     CNPJ14      +  // 14  pos 3-16   (brancos)
     IE14        +  // 14  pos 17-30  (brancos)
@@ -194,6 +195,8 @@ export function reg61(_cnpjEmpresa, _ieEmpresa, data, _serie, numInicial, numFin
     ALIQUOTA4   +  // 4   pos 121-124 (alíquota ICMS com 4 dígitos)
     BRANCOS2       // 2   pos 125-126
   );
+  // Garantir exatamente 126 chars (cortar ou completar se necessário)
+  return linha.padEnd(126, " ").substring(0, 126);
 }
 
 // Registro 75 - Cadastro de produtos
