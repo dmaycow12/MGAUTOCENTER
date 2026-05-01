@@ -101,6 +101,15 @@ Deno.serve(async (req) => {
     }
 
     const blob = await pdfResp.blob();
+    
+    // Valida se é PDF válido (%PDF header)
+    const buffer = await blob.arrayBuffer();
+    const header = new Uint8Array(buffer, 0, 4);
+    const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46; // %PDF
+    if (!isPdfValid) {
+      return Response.json({ sucesso: false, erro: 'PDF inválido ou corrompido na Focus NFe' }, { status: 400 });
+    }
+    
     const nomeArquivo = `${(nota.tipo || 'nf').toLowerCase()}-${nota.numero || nota_id}.pdf`;
     const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
     const { file_url } = await db.integrations.Core.UploadFile({ file });
