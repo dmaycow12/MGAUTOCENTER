@@ -31,23 +31,72 @@ Deno.serve(async (req) => {
     // Para NFCe emitida: buscar direto pelo reference_id (spedy_id)
     if (nota.tipo === 'NFCe' && nota.spedy_id) {
       console.log('[DEBUG] NFCe emitida, buscando PDF via reference_id:', nota.spedy_id);
-      // Endpoint de PDF para NFCe emitida
-      const pdfUrl = `${FOCUSNFE_BASE}/nfce/${nota.spedy_id}.pdf`;
-      const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER } });
-      if (pdfResp.ok) {
-        const blob = await pdfResp.blob();
-        const buffer = await blob.arrayBuffer();
-        const header = new Uint8Array(buffer, 0, 4);
-        const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
-        if (isPdfValid) {
-          const nomeArquivo = `nfce-${nota.numero || nota_id}.pdf`;
-          const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
-          const { file_url } = await db.integrations.Core.UploadFile({ file });
-          await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
-          return Response.json({ sucesso: true, pdf_url: file_url });
+      
+      // Tenta múltiplos endpoints para NFCe
+      const endpoints = [
+        `${FOCUSNFE_BASE}/nfce/${nota.spedy_id}.pdf`,
+        `${FOCUSNFE_BASE}/nfce/${nota.spedy_id}`,
+      ];
+      
+      for (const pdfUrl of endpoints) {
+        console.log('[DEBUG] Tentando endpoint NFCe:', pdfUrl);
+        const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER } });
+        
+        if (!pdfResp.ok) continue;
+        
+        const contentType = pdfResp.headers.get('content-type') || '';
+        console.log('[DEBUG] Content-Type:', contentType);
+        
+        // Se endpoint retorna JSON, significa que tem mais dados
+        if (contentType.includes('application/json')) {
+          const jsonData = await pdfResp.json();
+          console.log('[DEBUG] Resposta JSON da NFCe:', JSON.stringify(jsonData).substring(0, 200));
+          
+          // Tenta extrair URL de PDF dos dados
+          const pdfUrls = [
+            jsonData.url_danfce,
+            jsonData.caminho_pdf,
+            jsonData.url_pdf,
+            jsonData.danfce_url,
+          ].filter(Boolean);
+          
+          for (const url of pdfUrls) {
+            if (!url) continue;
+            const fullUrl = url.startsWith('http') ? url : normalizarUrl(url);
+            console.log('[DEBUG] Tentando URL extraída:', fullUrl);
+            const pdfResp2 = await fetch(fullUrl, {});
+            if (pdfResp2.ok && pdfResp2.headers.get('content-type')?.includes('pdf')) {
+              const blob = await pdfResp2.blob();
+              const buffer = await blob.arrayBuffer();
+              if (buffer.byteLength > 100) { // PDF válido tem pelo menos 100 bytes
+                const nomeArquivo = `nfce-${nota.numero || nota_id}.pdf`;
+                const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
+                const { file_url } = await db.integrations.Core.UploadFile({ file });
+                await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+                return Response.json({ sucesso: true, pdf_url: file_url });
+              }
+            }
+          }
+          continue;
+        }
+        
+        // Se é PDF direto
+        if (contentType.includes('pdf')) {
+          const blob = await pdfResp.blob();
+          const buffer = await blob.arrayBuffer();
+          console.log('[DEBUG] PDF recebido, tamanho:', buffer.byteLength, 'bytes');
+          
+          if (buffer.byteLength > 100) {
+            const nomeArquivo = `nfce-${nota.numero || nota_id}.pdf`;
+            const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
+            const { file_url } = await db.integrations.Core.UploadFile({ file });
+            await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+            return Response.json({ sucesso: true, pdf_url: file_url });
+          }
         }
       }
-      return Response.json({ sucesso: false, erro: 'Não foi possível recuperar o PDF da NFCe', pdfUrl });
+      
+      return Response.json({ sucesso: false, erro: 'Não foi possível recuperar o PDF da NFCe. Verifique se a NFCe foi autorizada corretamente.' });
     }
 
     // Ainda não tem PDF permanente — tenta buscar na Focus NFe
