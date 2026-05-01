@@ -912,18 +912,7 @@ export default function NotasFiscais() {
         <button onClick={() => setShowImport(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
           <Upload className="w-4 h-4" /> Importar XML
         </button>
-        <button
-          onClick={() => {
-            feedback('info', '⚠️ ATENÇÃO: A API da Focus NFe NÃO fornece endpoint para notas EMITIDAS. Para recuperar as notas que você emitiu e seus XMLs/PDFs, acesse manualmente: https://www.focusnfe.com.br (painel > minhas notas emitidas > exportar). As notas RECEBIDAS de terceiros podem ser sincronizadas automaticamente.');
-          }}
-          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all"
-          style={{background: "#ff9800", color: "#000"}}
-          onMouseEnter={e => e.currentTarget.style.background = "#f57c00"}
-          onMouseLeave={e => e.currentTarget.style.background = "#ff9800"}
-          title="Clique para ver informações sobre recuperação de notas emitidas"
-        >
-          <AlertCircle className="w-4 h-4" /> Recuperar Notas Emitidas
-        </button>
+
         <button
           onClick={async () => {
             setBuscandoSefaz(true);
