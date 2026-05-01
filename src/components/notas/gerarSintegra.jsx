@@ -6,6 +6,53 @@ function r(str, n, dir = "L", pad = " ") {
   if (dir === "L") return s.padEnd(n, pad).substring(0, n);
   return s.padStart(n, pad).slice(-n);
 }
+
+// Valida CPF ou CNPJ com dígito verificador
+function isValidCPFCNPJ(doc) {
+  if (!doc || doc.length < 11) return false;
+  const clean = String(doc).replace(/\D/g, "");
+  if (clean.length === 11) return isValidCPF(clean);
+  if (clean.length === 14) return isValidCNPJ(clean);
+  return false;
+}
+
+function isValidCPF(cpf) {
+  if (!cpf || cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+  let sum = 0, remainder;
+  for (let i = 1; i <= 9; i++) sum += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+  remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cpf.substring(9, 10))) return false;
+  sum = 0;
+  for (let i = 1; i <= 10; i++) sum += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+  remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  return remainder === parseInt(cpf.substring(10, 11));
+}
+
+function isValidCNPJ(cnpj) {
+  if (!cnpj || cnpj.length !== 14 || /^(\d)\1{13}$/.test(cnpj)) return false;
+  let size = cnpj.length - 2;
+  let numbers = cnpj.substring(0, size);
+  let digits = cnpj.substring(size);
+  let sum = 0, pos = size - 7;
+  for (let i = size; i >= 1; i--) {
+    sum += numbers.charAt(size - i) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  let result = sum % 11 < 2 ? 0 : 11 - sum % 11;
+  if (result !== parseInt(digits.charAt(0))) return false;
+  size = size + 1;
+  numbers = cnpj.substring(0, size);
+  sum = 0;
+  pos = size - 7;
+  for (let i = size; i >= 1; i--) {
+    sum += numbers.charAt(size - i) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  result = sum % 11 < 2 ? 0 : 11 - sum % 11;
+  return result === parseInt(digits.charAt(1));
+}
 function rN(v, n) { return r(Math.round(Number(v || 0) * 100), n, "R", "0"); }
 function rZ(v, n) { return r(String(Number(v || 0)), n, "R", "0"); }
 function rData(d) {
@@ -96,12 +143,13 @@ export function reg11(empresa) {
 // SINTEGRA MG aceita apenas modelo 55 (NFe). NFCe (65) deve ser excluída.
 export function reg50(nota, empresa) {
   const isEntrada = nota.status === "Importada";
-  const codSit = nota.status === "Cancelada" ? "C" : "N"; // C=Cancelado, não S
+  const codSit = nota.status === "Cancelada" ? "C" : "N";
   const cfop = isEntrada ? "1102" : "5405";
   const emitente = isEntrada ? "T" : "P";
-  const cnpjDoc = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "").padEnd(14, "0").substring(0, 14);
-  // Valida CPF (11) ou CNPJ (14) — caso contrário todos zeros
-  const cnpjUsar = (cnpjDoc.length === 11 || cnpjDoc.length === 14) ? cnpjDoc : "00000000000000";
+  const cnpjDoc = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
+  // CPF ou CNPJ sem dígito verificador ou inválido — usar ISENTO
+  let cnpjUsar = cnpjDoc.padEnd(14, "0").substring(0, 14);
+  if (!isValidCPFCNPJ(cnpjDoc)) cnpjUsar = "00000000000000";
 
   return (
     "50" +
@@ -175,7 +223,7 @@ export function reg61(data, serie, numInicial, numFinal, valorTotal, baseIcms = 
   }
   
   const serNum = String(serie || "1").replace(/\D/g, "") || "1";
-  const ser = r(serNum, 3); // Série como string alfanumérica, left-aligned
+  const ser = rZ(serNum, 3); // Série NUMÉRICA com zeros à esquerda
   const subserie = r("", 2);
   const numini = rZ(numInicial || 0, 6);
   const numfim = rZ(numFinal || 0, 6);
