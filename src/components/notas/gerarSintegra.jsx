@@ -33,13 +33,10 @@ function calcularDigitosCNPJ(cnpj12) {
 function limpaCNPJ(c) { 
   const clean = (c || "").replace(/\D/g, "");
   if (!clean || clean.length < 11) return "00000000000000";
-  if (clean.length === 14) return clean; // já tem dígitos
-  if (clean.length === 12) {
-    const com_digitos = calcularDigitosCNPJ(clean);
-    return com_digitos || clean.padEnd(14, "0").substring(0, 14);
-  }
-  // 11 ou 13 dígitos - trata como CPF ou tira o último
-  const base = clean.substring(0, 12);
+  if (clean.length === 14) return clean; // já tem 14 dígitos
+  if (clean.length === 13) return clean.padEnd(14, "0"); // 13 dígitos + 1 zero
+  // 11 ou 12 dígitos - calcula dígitos verificadores
+  const base = clean.substring(0, Math.min(12, clean.length)).padEnd(12, "0").substring(0, 12);
   const com_digitos = calcularDigitosCNPJ(base);
   return com_digitos || base.padEnd(14, "0").substring(0, 14);
 }
@@ -121,8 +118,7 @@ export function reg50(nota, empresa) {
   const codSit = nota.status === "Cancelada" ? "S" : "N";
   const cfop = isEntrada ? "1102" : "5405";
   const emitente = isEntrada ? "T" : "P";
-  const cnpjDoc = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
-  const cnpjUsar = cnpjDoc.length >= 11 ? cnpjDoc.padEnd(14, "0").substring(0, 14) : "00000000000000";
+  const cnpjUsar = limpaCNPJ(nota.cliente_cpf_cnpj || "");
 
   return (
     "50" +
@@ -151,8 +147,7 @@ export function reg54(nota, item, numItem, empresa) {
   const cfop = nota.status === "Importada" ? "1102" : "5405";
   const cst = "060";
   const ncm = (item.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
-  const cnpjDoc54 = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
-  const cnpjCampo = cnpjDoc54.length >= 11 ? cnpjDoc54.padEnd(14, "0").substring(0, 14) : "00000000000000";
+  const cnpjCampo = limpaCNPJ(nota.cliente_cpf_cnpj || "");
   // Código LEFT-align (igual ao Reg.75) para que o validador faça o match
   const codigoProd = r(item.codigo || "000", 14);
 
