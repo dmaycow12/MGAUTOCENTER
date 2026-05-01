@@ -7,52 +7,7 @@ function r(str, n, dir = "L", pad = " ") {
   return s.padStart(n, pad).slice(-n);
 }
 
-// Valida CPF ou CNPJ com dígito verificador
-function isValidCPFCNPJ(doc) {
-  if (!doc || doc.length < 11) return false;
-  const clean = String(doc).replace(/\D/g, "");
-  if (clean.length === 11) return isValidCPF(clean);
-  if (clean.length === 14) return isValidCNPJ(clean);
-  return false;
-}
 
-function isValidCPF(cpf) {
-  if (!cpf || cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
-  let sum = 0, remainder;
-  for (let i = 1; i <= 9; i++) sum += parseInt(cpf.substring(i - 1, i)) * (11 - i);
-  remainder = (sum * 10) % 11;
-  if (remainder === 10 || remainder === 11) remainder = 0;
-  if (remainder !== parseInt(cpf.substring(9, 10))) return false;
-  sum = 0;
-  for (let i = 1; i <= 10; i++) sum += parseInt(cpf.substring(i - 1, i)) * (12 - i);
-  remainder = (sum * 10) % 11;
-  if (remainder === 10 || remainder === 11) remainder = 0;
-  return remainder === parseInt(cpf.substring(10, 11));
-}
-
-function isValidCNPJ(cnpj) {
-  if (!cnpj || cnpj.length !== 14 || /^(\d)\1{13}$/.test(cnpj)) return false;
-  let size = cnpj.length - 2;
-  let numbers = cnpj.substring(0, size);
-  let digits = cnpj.substring(size);
-  let sum = 0, pos = size - 7;
-  for (let i = size; i >= 1; i--) {
-    sum += numbers.charAt(size - i) * pos--;
-    if (pos < 2) pos = 9;
-  }
-  let result = sum % 11 < 2 ? 0 : 11 - sum % 11;
-  if (result !== parseInt(digits.charAt(0))) return false;
-  size = size + 1;
-  numbers = cnpj.substring(0, size);
-  sum = 0;
-  pos = size - 7;
-  for (let i = size; i >= 1; i--) {
-    sum += numbers.charAt(size - i) * pos--;
-    if (pos < 2) pos = 9;
-  }
-  result = sum % 11 < 2 ? 0 : 11 - sum % 11;
-  return result === parseInt(digits.charAt(1));
-}
 function rN(v, n) { return r(Math.round(Number(v || 0) * 100), n, "R", "0"); }
 function rZ(v, n) { return r(String(Number(v || 0)), n, "R", "0"); }
 function rData(d) {
@@ -146,10 +101,9 @@ export function reg50(nota, empresa) {
   const codSit = nota.status === "Cancelada" ? "C" : "N";
   const cfop = isEntrada ? "1102" : "5405";
   const emitente = isEntrada ? "T" : "P";
-  const cnpjDoc = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
-  // CPF ou CNPJ sem dígito verificador ou inválido — usar ISENTO
-  let cnpjUsar = cnpjDoc.padEnd(14, "0").substring(0, 14);
-  if (!isValidCPFCNPJ(cnpjDoc)) cnpjUsar = "00000000000000";
+  // CPF/CNPJ: sempre preencher com zeros se faltam dígitos (sistema pode não ter dados completos)
+  const cnpjDoc = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "").padEnd(14, "0").substring(0, 14);
+  const cnpjUsar = cnpjDoc;
 
   return (
     "50" +
@@ -235,24 +189,28 @@ export function reg61(data, serie, numInicial, numFinal, valorTotal, baseIcms = 
   const aliq = rZ(aliquota || "0000", 4);
   const sit = "S"; // S = Regular, C = Cancelado
   
-  let linha = "61" +                      // pos 01-02
-              " ".repeat(14) +            // pos 03-16: brancos
-              " ".repeat(14) +            // pos 17-30: brancos
-              dataFormatada +             // pos 31-38: data AAAAMMDD
-              rZ(modelo, 2) +             // pos 39-40: modelo
-              ser +                       // pos 41-43: série (3)
+  let linha = "61" +                      // pos 01-02: "61"
+              " ".repeat(14) +            // pos 03-16: brancos (14)
+              " ".repeat(14) +            // pos 17-30: brancos (14)
+              dataFormatada +             // pos 31-38: AAAAMMDD (8)
+              rZ(modelo, 2) +             // pos 39-40: modelo (2)
+              ser +                       // pos 41-43: série numérica (3)
               subserie +                  // pos 44-45: subsérie (2)
-              numini +                    // pos 46-51: número inicial (6)
-              numfim +                    // pos 52-57: número final (6)
+              numini +                    // pos 46-51: nº inicial (6)
+              numfim +                    // pos 52-57: nº final (6)
               valtot +                    // pos 58-70: valor total (13)
               baseIcm +                   // pos 71-83: base ICMS (13)
-              valIcm +                    // pos 84-95: valor ICMS (12)
+              valIcm +                    // pos 84-95: ICMS (12)
               isen +                      // pos 96-108: isentas (13)
               outr +                      // pos 109-121: outras (13)
               aliq +                      // pos 122-125: alíquota (4)
               sit;                        // pos 126: situação (1)
   
-  return linha.substring(0, 126);
+  // Garantir exato 126 chars
+  if (linha.length !== 126) {
+    linha = linha.padEnd(126, " ").substring(0, 126);
+  }
+  return linha;
 }
 
 // Registro 75 - Cadastro de produtos
@@ -365,14 +323,11 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
       g.valorTotal += parseFloat(n.valor_total || 0);
     });
 
-  // Reg.50 — todos primeiro
-  for (const nota of notasSintegra) {
-    addLinha("50", reg50(nota, empresa));
-  }
-
-  // Reg.54 — depois, coletar dados dos produtos para Reg.75
+  // Coletar dados de produtos para Reg.75
   const codigosNosItens = new Set();
-  const itensPorCodigo = new Map(); // fallback para Reg.75 quando não há estoque
+  const itensPorCodigo = new Map();
+
+  // Reg.50 e Reg.54 — só gerar se nota tem itens válidos
   for (const nota of notasSintegra) {
     let itens = [];
     if (nota.xml_content) {
@@ -387,25 +342,18 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
         itens = parseXmlItens(nota.xml_content);
       }
     }
-    // Se não há itens, criar item padrão com valor total da nota
-    if (itens.length === 0) {
-      itens = [{
-        codigo: "000",
-        descricao: "PRODUTO",
-        ncm: "87089990",
-        unidade: "UN",
-        quantidade: 1,
-        valor_unitario: nota.valor_total || 0,
-        valor_total: nota.valor_total || 0,
-      }];
+    
+    // Só gera Reg.50/54 se há itens
+    if (itens.length > 0) {
+      addLinha("50", reg50(nota, empresa));
+      itens.forEach((item, idx) => {
+        addLinha("54", reg54(nota, item, idx, empresa));
+        if (item.codigo) {
+          codigosNosItens.add(item.codigo);
+          if (!itensPorCodigo.has(item.codigo)) itensPorCodigo.set(item.codigo, item);
+        }
+      });
     }
-    itens.forEach((item, idx) => {
-      addLinha("54", reg54(nota, item, idx, empresa));
-      if (item.codigo) {
-        codigosNosItens.add(item.codigo);
-        if (!itensPorCodigo.has(item.codigo)) itensPorCodigo.set(item.codigo, item);
-      }
-    });
   }
 
   // Reg.61 — NF Venda a Consumidor (modelo 65)
