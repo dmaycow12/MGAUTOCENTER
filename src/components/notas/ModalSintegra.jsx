@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, FileDown, RefreshCw, AlertCircle } from "lucide-react";
-import { gerarArquivoSintegra } from "./gerarSintegra";
+import { gerarArquivoSintegra } from "./gerarSintegraV2";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
