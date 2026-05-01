@@ -13,8 +13,11 @@ function rData(d) {
   const clean = String(d).substring(0, 10).replace(/-/g, "");
   return clean.length === 8 ? clean : "00000000";
 }
-function limpaCNPJ(c) { return (c || "").replace(/\D/g, "").padEnd(14, "0").substring(0, 14); }
-function limpaIE(ie) { return (ie || "ISENTO").padEnd(14, " ").substring(0, 14); }
+function limpaCNPJ(c) { return (c || "").replace(/\D/g, "").padStart(14, "0").slice(-14); }
+function limpaIE(ie) { 
+  const clean = (ie || "ISENTO").replace(/\D/g, "").padStart(14, " ");
+  return clean.substring(0, 14);
+}
 function parseXmlItens(xmlStr) {
   if (!xmlStr || typeof xmlStr !== 'string') return [];
   const itens = [];
