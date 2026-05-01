@@ -78,20 +78,18 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
       return d >= inicio && d <= fim && n.status !== "Rascunho" && n.status !== "Cancelada";
     });
 
-    const nfeNoSintegra = todasNoPeriodo.filter(n => n.tipo === "NFe");
-    const foraDosintegra = todasNoPeriodo.filter(n => n.tipo !== "NFe");
+    const noSintegra = todasNoPeriodo.filter(n => n.tipo === "NFe" || n.tipo === "NFCe");
+    const foraDosintegra = todasNoPeriodo.filter(n => n.tipo !== "NFe" && n.tipo !== "NFCe");
 
-    const totalNFe = nfeNoSintegra.reduce((s, n) => s + Number(n.valor_total || 0), 0);
-    const totalNFCe = todasNoPeriodo.filter(n => n.tipo === "NFCe").reduce((s, n) => s + Number(n.valor_total || 0), 0);
+    const totalNoSintegra = noSintegra.reduce((s, n) => s + Number(n.valor_total || 0), 0);
     const totalNFSe = todasNoPeriodo.filter(n => n.tipo === "NFSe").reduce((s, n) => s + Number(n.valor_total || 0), 0);
     const totalGeral = todasNoPeriodo.reduce((s, n) => s + Number(n.valor_total || 0), 0);
 
     return {
       periodo: periodo.label,
       totalNotas: todasNoPeriodo.length,
-      nfeCount: nfeNoSintegra.length,
-      totalNFe,
-      totalNFCe,
+      noSintegraCount: noSintegra.length,
+      totalNoSintegra,
       totalNFSe,
       totalGeral,
       foraDosintegra,
@@ -215,16 +213,10 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
                     <p className="text-gray-600 mt-1">{conferencia.totalNotas} nota(s)</p>
                   </div>
                   <div className="bg-gray-900 rounded-lg p-3">
-                    <p className="text-gray-500 mb-1">Incluso no SINTEGRA</p>
-                    <p className="text-green-400 font-bold text-sm">{fmt(conferencia.totalNFe)}</p>
-                    <p className="text-gray-600 mt-1">{conferencia.nfeCount} NFe(s)</p>
+                    <p className="text-gray-500 mb-1">Incluso no SINTEGRA (NFe + NFCe)</p>
+                    <p className="text-green-400 font-bold text-sm">{fmt(conferencia.totalNoSintegra)}</p>
+                    <p className="text-gray-600 mt-1">{conferencia.noSintegraCount} nota(s)</p>
                   </div>
-                  {conferencia.totalNFCe > 0 && (
-                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
-                      <p className="text-orange-400 mb-1">NFCe — NÃO entra no SINTEGRA MG</p>
-                      <p className="text-orange-300 font-bold text-sm">{fmt(conferencia.totalNFCe)}</p>
-                    </div>
-                  )}
                   {conferencia.totalNFSe > 0 && (
                     <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
                       <p className="text-blue-400 mb-1">NFSe — NÃO entra no SINTEGRA MG</p>
