@@ -160,24 +160,43 @@ export function reg54(nota, item, numItem, empresa) {
 
 
 
-// Registro 61 - NF modelo 02 (Nota Fiscal Consumidor PF)
+// Registro 61 - NF Venda a Consumidor (modelo 02, 65, etc)
 // Convênio ICMS 57/95 - Layout: 126 caracteres
-// Pos 01-02: "61" | Pos 03-04: modelo "02" | Pos 05-10: série (6)
-// Pos 11-16: nº_inicial (6) | Pos 17-22: nº_final (6) | Pos 23-36: valor_total (14)
-// Pos 37-126: espaços em branco (90)
-export function reg61(data, serie, numInicial, numFinal, valorTotal) {
-  const ser = rZ(serie || "0", 6);      // 6 dígitos série
+// Pos 01-02: "61" | Pos 03-16: brancos (14) | Pos 17-30: brancos (14)
+// Pos 31-38: data DDMMAAAA | Pos 39-40: modelo | Pos 41-43: série (3)
+// Pos 44-45: subsérie | Pos 46-51: nº_inicial | Pos 52-57: nº_final
+// Pos 58-70: valor_total (13) | Pos 71-83: valor_icms (13) | Pos 84-87: alíquota (4)
+// Pos 88: situação (N/S/A) | Pos 89-126: brancos (38)
+export function reg61(data, serie, numInicial, numFinal, valorTotal, modelo = "02") {
+  let dataFormatada = "00000000";
+  if (data && data.length >= 10) {
+    const [ano, mes, dia] = data.split('-');
+    dataFormatada = `${dia}${mes}${ano}`;
+  }
+  
+  const ser = r(serie || "1", 3);           // 3 chars série
+  const subserie = r("", 2);                // 2 chars subsérie (em branco)
   const numini = rZ(numInicial || 0, 6);
   const numfim = rZ(numFinal || 0, 6);
-  const valtot = rN(valorTotal || 0, 14);
+  const valtot = rN(valorTotal || 0, 13);   // 13 chars valor total
+  const valicms = rN(0, 13);                // 13 chars valor ICMS (zero se não houver)
+  const aliq = r("0000", 4);                // 4 chars alíquota
+  const sit = "N";                          // situação: N (normal)
   
-  let linha = "61" +           // pos 01-02
-              "02" +           // pos 03-04: modelo
-              ser +            // pos 05-10: série (6)
-              numini +         // pos 11-16: número inicial (6)
-              numfim +         // pos 17-22: número final (6)
-              valtot +         // pos 23-36: valor total (14)
-              " ".repeat(90);  // pos 37-126: espaços em branco (90)
+  let linha = "61" +                       // pos 01-02
+              " ".repeat(14) +             // pos 03-16: brancos
+              " ".repeat(14) +             // pos 17-30: brancos
+              dataFormatada +              // pos 31-38: data DDMMAAAA
+              rZ(modelo, 2) +              // pos 39-40: modelo
+              ser +                        // pos 41-43: série (3)
+              subserie +                   // pos 44-45: subsérie
+              numini +                     // pos 46-51: número inicial
+              numfim +                     // pos 52-57: número final
+              valtot +                     // pos 58-70: valor total (13)
+              valicms +                    // pos 71-83: valor ICMS (13)
+              aliq +                       // pos 84-87: alíquota (4)
+              sit +                        // pos 88: situação (1)
+              " ".repeat(38);              // pos 89-126: brancos (38)
   
   return linha.substring(0, 126);
 }
@@ -333,12 +352,10 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     });
   }
 
-  // Reg.61 — CF-e modelo 02 (Cupom Fiscal Eletrônico pessoa física)
-  // NOTA: Registro 61 comentado pois validador SEFAZ-MG não aceita NFC-e via Reg.61
-  // NFC-e devem ser registradas apenas via Reg.50/54 (modelo 55) se aplicável
-  // for (const g of cfePorGrupo.values()) {
-  //   addLinha("61", reg61(g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal));
-  // }
+  // Reg.61 — NF Venda a Consumidor (modelo 02, 65)
+  for (const g of cfePorGrupo.values()) {
+    addLinha("61", reg61(g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal, "65"));
+  }
 
   // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
   const produtosUnicos = new Map();
