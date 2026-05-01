@@ -159,35 +159,39 @@ export function reg54(nota, item, numItem, empresa) {
 }
 
 // Registro 61 - Cupons emitidos por ECF (NFCe modelo 65)
-// Layout Convênio ICMS 57/95: 2+14+14+8+1+2+6+6+13+13+13+13+13+4+2 = 126
+// Layout oficial Convênio ICMS 57/95 item 17.1.3.1:
+// pos 01-02: "61" | pos 03-30: brancos | pos 31-38: data | pos 39-41: série (LEFT) 
+// pos 42-47: nº inicial | pos 48-53: nº final | pos 54-66: valor total | pos 67-79: base ICMS
+// pos 80-92: valor ICMS | pos 93-105: isentas | pos 106-118: outras | pos 119-122: alíquota
 export function reg61(_cnpjEmpresa, _ieEmpresa, data, serie, numInicial, numFinal, valorTotal, aliquotaICMS = 18) {
   const valorCentavos = Math.round(Number(valorTotal || 0) * 100);
   const vTotalStr = String(valorCentavos).padStart(13, "0").slice(-13);
   const zeros13   = "0000000000000";
   
-  // Alíquota: converter percentual para 4 dígitos (ex: 18 → "1800")
+  // Série: LEFT-ALIGNED em 3 posições (ex: "D  " ou "1  ")
+  const serieStr = r(serie || "D", 3);
+  
+  // Alíquota: 4 dígitos inteiros (ex: 18 → "1800")
   const aliqStr = String(Math.round(aliquotaICMS * 100)).padStart(4, "0").slice(-4);
   
+  // Números com 6 dígitos RIGHT-ALIGNED
   const numIni6 = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
   const numFim6 = String(Math.max(0, Number(numFinal   || 0))).padStart(6, "0").slice(-6);
-  const serieStr = r(serie || "D", 1);
   
   const linha = (
-    "61"        +  // 2   pos 01-02
-    " ".repeat(14) +  // 14  pos 03-16 (brancos CNPJ)
-    " ".repeat(14) +  // 14  pos 17-30 (brancos IE)
-    rData(data) +  // 8   pos 31-38
-    serieStr    +  // 1   pos 39 (série)
-    " ".repeat(2)  +  // 2   pos 40-41 (brancos subsérie)
-    numIni6     +  // 6   pos 42-47 (nº CF inicial)
-    numFim6     +  // 6   pos 48-53 (nº CF final)
+    "61"        +  // 2   pos 01-02 (tipo)
+    " ".repeat(28) +  // 28  pos 03-30 (brancos)
+    rData(data) +  // 8   pos 31-38 (data)
+    serieStr    +  // 3   pos 39-41 (série LEFT)
+    numIni6     +  // 6   pos 42-47 (nº inicial)
+    numFim6     +  // 6   pos 48-53 (nº final)
     vTotalStr   +  // 13  pos 54-66 (valor total)
     zeros13     +  // 13  pos 67-79 (base ICMS)
     zeros13     +  // 13  pos 80-92 (valor ICMS)
     vTotalStr   +  // 13  pos 93-105 (isentas)
     zeros13     +  // 13  pos 106-118 (outras)
-    aliqStr     +  // 4   pos 119-122 (alíquota ICMS)
-    " ".repeat(4)    // 4   pos 123-126 (brancos finais)
+    aliqStr     +  // 4   pos 119-122 (alíquota)
+    " ".repeat(4)    // 4   pos 123-126 (brancos)
   );
   return linha.substring(0, 126);
 }
