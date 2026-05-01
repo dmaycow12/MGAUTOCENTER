@@ -14,7 +14,19 @@ function rData(d) {
   return clean.length === 8 ? clean : "00000000";
 }
 function limpaCNPJ(c) { return (c || "").replace(/\D/g, "").padEnd(14, "0").substring(0, 14); }
-function limpaIE(ie) { return (ie || "ISENTO").padEnd(14, " ").substring(0, 14); }
+// CPF (11 dígitos) deve ser preenchido com zeros À ESQUERDA até 14 dígitos — NÃO à direita
+function limpaDocumento(doc) {
+  const d = (doc || "").replace(/\D/g, "");
+  if (!d) return "00000000000000";
+  // Preenche à ESQUERDA com zeros para que o dígito verificador não mude
+  return d.padStart(14, "0").slice(-14);
+}
+// IE: somente dígitos — se tiver pontuação ou não for numérica, usa ISENTO
+function limpaIE(ie) {
+  const soDigitos = (ie || "").replace(/\D/g, "");
+  if (!soDigitos || soDigitos.length < 5) return "ISENTO        ".substring(0, 14);
+  return soDigitos.padEnd(14, " ").substring(0, 14);
+}
 function parseXmlItens(xmlStr) {
   if (!xmlStr || typeof xmlStr !== 'string') return [];
   const itens = [];
@@ -89,12 +101,9 @@ export function reg50(nota, empresa) {
   const codSit = nota.status === "Cancelada" ? "S" : "N";
   const cfop = isEntrada ? "1102" : "5405";
   const emitente = isEntrada ? "T" : "P";
-  const cnpjDoc = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
-  const cnpjUsar = cnpjDoc.length >= 11 ? cnpjDoc.padEnd(14, "0").substring(0, 14) : "00000000000000";
-
   return (
     "50" +
-    cnpjUsar +                                    // 14
+    limpaDocumento(nota.cliente_cpf_cnpj) +       // 14
     limpaIE(nota.cliente_ie || "") +              // 14
     rData(nota.data_emissao) +                    //  8
     r(nota.cliente_estado || empresa.uf, 2) +     //  2
@@ -119,8 +128,7 @@ export function reg54(nota, item, numItem, empresa) {
   const cfop = nota.status === "Importada" ? "1102" : "5405";
   const cst = "060";
   const ncm = (item.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
-  const cnpjDoc54 = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "");
-  const cnpjCampo = cnpjDoc54.length >= 11 ? cnpjDoc54.padEnd(14, "0").substring(0, 14) : "00000000000000";
+  const cnpjCampo = limpaDocumento(nota.cliente_cpf_cnpj);
   // Código LEFT-align (igual ao Reg.75) para que o validador faça o match
   const codigoProd = r(item.codigo || "000", 14);
 

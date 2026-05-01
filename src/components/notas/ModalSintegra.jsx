@@ -16,11 +16,14 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
 
   const pad = n => String(n).padStart(2, "0");
 
+  const ultimoDiaMes = (m, a) => new Date(a, m, 0).getDate(); // Date(ano, mes, 0) = último dia do mês anterior = último dia de 'mes-1'
+
   const getPeriodo = () => {
     if (modo === "mes") {
+      const ult = ultimoDiaMes(mes, ano);
       return {
         inicio: `${ano}-${pad(mes)}-01`,
-        fim: `${ano}-${pad(mes)}-31`,
+        fim: `${ano}-${pad(mes)}-${pad(ult)}`,
         label: `${MESES[mes - 1]}/${ano}`,
       };
     }
