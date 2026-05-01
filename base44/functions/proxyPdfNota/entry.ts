@@ -75,20 +75,13 @@ Deno.serve(async (req) => {
             const pdfResp2 = await fetch(fullUrl, {});
             if (pdfResp2.ok) {
               const blob = await pdfResp2.blob();
-              const buffer = await blob.arrayBuffer();
-              const header = new Uint8Array(buffer, 0, 4);
-              const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+              console.log('[DEBUG] Arquivo baixado, tamanho:', blob.size);
               
-              console.log('[DEBUG] Arquivo baixado, tamanho:', buffer.byteLength, 'válido:', isPdfValid);
-              
-              if (isPdfValid && buffer.byteLength > 1000) { // PDF válido tem pelo menos 1KB
+              if (blob.size > 1000) { // PDF válido tem pelo menos 1KB
                 const nomeArquivo = `nfce-${nota.numero || nota_id}.pdf`;
-                const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
-                const { file_url } = await db.integrations.Core.UploadFile({ file });
+                const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
                 await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
                 return Response.json({ sucesso: true, pdf_url: file_url });
-              } else if (!isPdfValid) {
-                console.log('[DEBUG] Arquivo não é PDF válido, header:', Array.from(header).map(b => b.toString(16)));
               }
             }
           }
@@ -98,21 +91,15 @@ Deno.serve(async (req) => {
         // Se é PDF direto
         if (contentType.includes('pdf') || contentType.includes('octet')) {
           const blob = await pdfResp.blob();
-          const buffer = await blob.arrayBuffer();
-          const header = new Uint8Array(buffer, 0, 4);
-          const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+          console.log('[DEBUG] PDF direto recebido, tamanho:', blob.size);
           
-          console.log('[DEBUG] PDF direto recebido, tamanho:', buffer.byteLength, 'válido:', isPdfValid);
-          
-          if (isPdfValid && buffer.byteLength > 1000) { // PDF válido tem pelo menos 1KB
+          if (blob.size > 1000) { // PDF válido tem pelo menos 1KB
             const nomeArquivo = `nfce-${nota.numero || nota_id}.pdf`;
-            const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
-            const { file_url } = await db.integrations.Core.UploadFile({ file });
+            const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
             await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
             return Response.json({ sucesso: true, pdf_url: file_url });
           } else {
-            console.log('[DEBUG] PDF inválido ou muito pequeno, header:', Array.from(header).map(b => b.toString(16)));
-            return Response.json({ sucesso: false, erro: `Arquivo inválido recebido (${buffer.byteLength} bytes)` });
+            return Response.json({ sucesso: false, erro: `Arquivo inválido recebido (${blob.size} bytes)` });
           }
         }
       }
