@@ -91,8 +91,9 @@ function parseXmlItens(xmlStr) {
 }
 
 // ---- COLETA ITENS DE UMA NOTA ------------------------------
-function coletarItens(nota, todasNotas) {
-  // 1. Tenta XML da nota principal
+// irmas = lista de notas-irmãs já calculada (com sufixo no número)
+function coletarItens(nota, irmas) {
+  // 1. Tenta XML/JSON da nota principal
   const xmlStr = nota.xml_original || nota.xml_content || "";
   if (xmlStr) {
     try {
@@ -115,28 +116,14 @@ function coletarItens(nota, todasNotas) {
     if (fromXml.length > 0) return fromXml;
   }
 
-  // 2. Coleta itens das notas irmãs (mesmo número-base, sufixos diferentes)
-  // Ex: nota "026967" agrupa "026967-001","026967-012","026967-022"...
-  // Cada nota-irmã com sufixo representa 1 item da NF-e original
-  const base = numBase(nota.numero);
-  const serie = String(nota.serie || "1").replace(/\D/g, "") || "1";
-  const irmas = todasNotas.filter(n => {
-    if (n.id === nota.id) return false;
-    if (numBase(n.numero) !== base) return false;
-    if ((String(n.serie || "1").replace(/\D/g, "") || "1") !== serie) return false;
-    // só as que têm sufixo (são itens)
-    return String(n.numero).includes("-");
-  });
-
-  if (irmas.length > 0) {
-    // Cada nota-irmã é tratada como 1 item
+  // 2. Usa as notas-irmãs como itens individuais
+  if (irmas && irmas.length > 0) {
     return irmas.map(irma => {
       const xmlI = irma.xml_original || irma.xml_content || "";
-      // Tenta pegar item do XML da irmã
       if (xmlI) {
         try {
           const p = JSON.parse(xmlI);
-          if (Array.isArray(p) && p.length > 0) {
+          if (Array.isArray(p) && p.length > 0 && p[0].descricao) {
             return {
               codigo:        String(p[0].codigo || p[0].estoque_id || "OUTROS").substring(0, 14),
               descricao:     String(p[0].descricao || "PRODUTO").substring(0, 53),
@@ -153,7 +140,6 @@ function coletarItens(nota, todasNotas) {
         const fromXml = parseXmlItens(xmlI);
         if (fromXml.length > 0) return fromXml[0];
       }
-      // Fallback: usa valor total da nota-irmã como item genérico
       return {
         codigo:        "OUTROS",
         descricao:     "MERCADORIA",
@@ -168,7 +154,7 @@ function coletarItens(nota, todasNotas) {
     });
   }
 
-  // 3. Fallback: item único com valor total
+  // 3. Fallback: item único
   return [{
     codigo:        "OUTROS",
     descricao:     "MERCADORIA DIVERSA",
@@ -293,30 +279,30 @@ function reg54(nota, item, idx) {
 
 // ============================================================
 // REG 61 — NFCe totais diários, 126 posições
-// Layout Conv.57/95 item 17:
-// 61(2)+CNPJ(14)+IE(14)+DATA(8)+MOD(2)+SÉR(3)+SUBSÉR(2)+NR_INI(6)+NR_FIM(6)
+// Layout Conv.57/95 (com Aj.SINIEF 11/15 para NFCe mod.65):
+// 61(2)+BRANCOS(14)+BRANCOS(14)+DATA(8)+MOD(2)+SÉR(3)+SUBSÉR(2)+NR_INI(6)+NR_FIM(6)
 // +VL_TOTAL(13)+BASE_ICMS(13)+ALIQ(4)+SIT(1)+BRANCOS(38)
 // = 2+14+14+8+2+3+2+6+6+13+13+4+1+38 = 126
 // ============================================================
-function reg61(g, emp) {
+function reg61(g) {
   const serie  = rX(String(g.serie || "1"), 3);
   const numIni = rZ(g.numInicial || 1, 6);
   const numFim = rZ(g.numFinal || g.numInicial || 1, 6);
   const linha  = (
     "61" +
-    limpaCNPJ(emp.cnpj) +    // 14
-    limpaIEEmit(emp.ie) +    // 14
-    rData(g.data) +          //  8
-    "2D" +                   //  2 modelo 2D = código NFCe no Reg.61
-    serie +                  //  3
-    "  " +                   //  2 subsérie
-    numIni +                 //  6
-    numFim +                 //  6
-    rN2(g.valorTotal, 13) +  // 13
-    rN2(0, 13) +             // 13
-    "0000" +                 //  4
-    "N" +                    //  1
-    rX("", 38)               // 38
+    rX("", 14) +             // 14 brancos (CNPJ emissor — não preencher para cupom/NFCe)
+    rX("", 14) +             // 14 brancos (IE emissor — não preencher)
+    rData(g.data) +          //  8 data
+    "65" +                   //  2 modelo NFCe = 65
+    serie +                  //  3 série
+    "  " +                   //  2 subsérie (brancos)
+    numIni +                 //  6 número inicial
+    numFim +                 //  6 número final
+    rN2(g.valorTotal, 13) +  // 13 valor total
+    rN2(0, 13) +             // 13 base ICMS
+    "0000" +                 //  4 alíquota
+    "N" +                    //  1 situação
+    rX("", 38)               // 38 brancos
   );                         // = 126
   if (linha.length !== 126) console.warn(`[61] ${linha.length} chars`);
   return linha;
@@ -400,22 +386,43 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
   });
 
   // ── NFe: deduplicar por (série, número-base) ─────────────
-  // Mantém a nota representante (sem sufixo preferida)
-  const nfeMap = new Map(); // "serie_numbase" → nota
+  // Agrupa todas as notas NFe por (série, número-base).
+  // Para cada grupo, a representante gera Reg.50 e Reg.54.
+  // Notas com sufixo (ex: "026967-012") são tratadas como itens da representante.
+  const nfeMap = new Map(); // "serie_numbase" → { rep: nota, irmas: nota[] }
   for (const n of notasPeriodo) {
     if (n.tipo !== "NFe") continue;
     const nb    = numBase(n.numero);
     const serie = String(n.serie || "1").replace(/\D/g, "") || "1";
     const chave = `${serie}_${nb}`;
-    const atual = nfeMap.get(chave);
-    // Prefere nota sem sufixo (número base puro)
-    if (!atual || (!String(n.numero).includes("-") && String(atual.numero).includes("-"))) {
-      nfeMap.set(chave, n);
+    if (!nfeMap.has(chave)) nfeMap.set(chave, { rep: null, irmas: [] });
+    const grp = nfeMap.get(chave);
+    const temSufixo = String(n.numero).includes("-");
+    if (!temSufixo) {
+      // Nota sem sufixo é sempre a representante preferida
+      if (!grp.rep || grp.rep && String(grp.rep.numero).includes("-")) grp.rep = n;
+    } else {
+      grp.irmas.push(n);
     }
   }
-  const nfes = [...nfeMap.values()].sort((a, b) =>
-    (a.data_emissao || "").localeCompare(b.data_emissao || "")
-  );
+  // Se não há nota sem sufixo, escolhe a primeira irmã como representante
+  // (e remove ela da lista de irmãs para não duplicar)
+  for (const grp of nfeMap.values()) {
+    if (!grp.rep && grp.irmas.length > 0) {
+      grp.rep = grp.irmas[0];
+      grp.irmas = grp.irmas.slice(1); // remove a representante da lista de irmãs
+    }
+  }
+  const nfes = [...nfeMap.values()]
+    .filter(g => g.rep)
+    .map(g => g.rep)
+    .sort((a, b) => (a.data_emissao || "").localeCompare(b.data_emissao || ""));
+
+  // Mapa de irmãs por chave (para passar para coletarItens)
+  const irmasMap = new Map();
+  for (const [chave, grp] of nfeMap.entries()) {
+    irmasMap.set(grp.rep?.id, grp.irmas);
+  }
 
   // ── Reg.50 (todos primeiro) ──────────────────────────────
   for (const nota of nfes) add("50", reg50(nota, emp));
@@ -424,14 +431,16 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
   const prodMap = new Map();
 
   for (const nota of nfes) {
-    const itens = coletarItens(nota, notasPeriodo);
+    const irmas = irmasMap.get(nota.id) || [];
+    const itens = coletarItens(nota, irmas);
     itens.forEach((item, idx) => {
       add("54", reg54(nota, item, idx));
-      const cod = rX(String(item.codigo || "OUTROS").substring(0, 14), 14).trimEnd();
-      if (cod && !prodMap.has(cod)) {
-        const estoq = (estoque || []).find(e => (e.codigo || "").trim() === cod);
-        prodMap.set(cod, {
-          codigo:    cod,
+      // Chave de produto: mesma truncagem do Reg.54, sem espaços de padding
+      const codRaw = String(item.codigo || "OUTROS").substring(0, 14).trim();
+      if (codRaw && !prodMap.has(codRaw)) {
+        const estoq = (estoque || []).find(e => (e.codigo || "").trim() === codRaw);
+        prodMap.set(codRaw, {
+          codigo:    codRaw,
           descricao: estoq?.descricao || item.descricao || "PRODUTO",
           ncm:       estoq?.ncm || item.ncm || "87089990",
           unidade:   estoq?.unidade || item.unidade || "UN",
@@ -457,7 +466,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     g.valorTotal += Number(nfce.valor_total || 0);
   }
   for (const g of [...grp61.values()].sort((a, b) => rData(a.data).localeCompare(rData(b.data)))) {
-    add("61", reg61(g, emp));
+    add("61", reg61(g));
   }
 
   // ── Reg.75 (DEPOIS do 61) ────────────────────────────────
