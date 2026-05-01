@@ -14,9 +14,9 @@ function rData(d) {
   return clean.length === 8 ? clean : "00000000";
 }
 function calcularDigitosCNPJ(cnpj12) {
-  const calc = (seq) => {
+  const calc = (seq, mult_init) => {
     let soma = 0;
-    let mult = seq.length + 1;
+    let mult = mult_init;
     for (let i = 0; i < seq.length; i++) {
       soma += parseInt(seq[i]) * mult;
       mult--;
@@ -25,8 +25,8 @@ function calcularDigitosCNPJ(cnpj12) {
     return resto < 2 ? 0 : 11 - resto;
   };
   if (cnpj12.length !== 12) return null;
-  const d1 = calc(cnpj12);
-  const d2 = calc(cnpj12 + d1);
+  const d1 = calc(cnpj12, 5);
+  const d2 = calc(cnpj12 + d1, 6);
   return cnpj12 + d1 + d2;
 }
 
