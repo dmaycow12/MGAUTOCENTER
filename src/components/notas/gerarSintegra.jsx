@@ -159,47 +159,39 @@ export function reg54(nota, item, numItem, empresa) {
 }
 
 // Registro 61 - Documentos fiscais venda consumidor final (NFCe modelo 65)
-// Layout Convênio ICMS 57/95: exatamente 126 caracteres
-// Pos 01-02: "61" | 03-30: 28 brancos | 31-38: AAAAMMDD | 39-41: série (650)
-// 42-43: subsérie (02) | 44-49: nº inicial | 50-55: nº final | 56-69: valor total
-// 70-83: ICMS | 84-87: alíquota | 88-101: isento | 102-115: outros | 116-126: 11 brancos
+// Layout Convênio ICMS 57/95: exatamente 126 caracteres (copiar estrutura aprovada)
+// Pos 01-02: "61" | 03-30: 28 brancos | 31-38: AAAAMMDD | 39-40: 65 | 41-42: 00
+// 43-48: nº inicial | 49-54: nº final | 55-68: valor total | 69-82: ICMS | 83-86: alíquota
+// 87-100: isento | 101-114: outros | 115-126: 12 brancos
 export function reg61(data, numInicial, numFinal, valorTotal, icmsTotal) {
-  // Data AAAAMMDD (ex: 20260131)
+  // Data AAAAMMDD
   let dataf = "00000000";
   if (data && data.length >= 10) {
     const [ano, mes, dia] = data.split('-');
     dataf = `${ano}${mes}${dia}`;
   }
   
-  // Série fixa 650 (NFC-e modelo 65)
-  const serie = "650";
-  const subserie = "02"; // padrão para modelo 65
   const numini = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
   const numfim = String(Math.max(0, Number(numFinal || 0))).padStart(6, "0").slice(-6);
-  
-  // Valores 14 dígitos RIGHT (2 decimais)
   const valtot = rN(valorTotal || 0, 14);
   const valicm = rN(icmsTotal || 0, 14);
   const valisen = rN(0, 14);
   const valout = rN(0, 14);
   
-  // Alíquota sempre 0000 (zero)
-  const aliq = "0000";
-  
   return (
     "61" +
     " ".repeat(28) +  // pos 03-30: 28 brancos
-    dataf +           // pos 31-38: data AAAAMMDD
-    serie +           // pos 39-41: série 650
-    subserie +        // pos 42-43: subsérie 02
-    numini +          // pos 44-49: nº inicial
-    numfim +          // pos 50-55: nº final
-    valtot +          // pos 56-69: valor total
-    valicm +          // pos 70-83: ICMS (sempre 0)
-    aliq +            // pos 84-87: alíquota (0000)
-    valisen +         // pos 88-101: isento (sempre 0)
-    valout +          // pos 102-115: outros (sempre 0)
-    " ".repeat(11)    // pos 116-126: 11 brancos
+    dataf +           // pos 31-38: AAAAMMDD
+    "65" +            // pos 39-40: modelo 65
+    "00" +            // pos 41-42: série 00
+    numini +          // pos 43-48: nº inicial (6 dígitos)
+    numfim +          // pos 49-54: nº final (6 dígitos)
+    valtot +          // pos 55-68: valor total (14)
+    valicm +          // pos 69-82: ICMS (14)
+    "0000" +          // pos 83-86: alíquota (4)
+    valisen +         // pos 87-100: isento (14)
+    valout +          // pos 101-114: outros (14)
+    " ".repeat(12)    // pos 115-126: 12 brancos
   );
 }
 
