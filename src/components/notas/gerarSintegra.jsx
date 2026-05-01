@@ -170,23 +170,33 @@ export function reg61(_cnpjEmpresa, _ieEmpresa, data, _serie, numInicial, numFin
   const vTotalStr = String(valorCentavos).padStart(13, "0").slice(-13); // 13
   const zeros13   = "0000000000000";                                     // 13
 
+  // Campos construídos com repeat() para garantir tamanho exato sem risco de editor
+  const CNPJ14  = " ".repeat(14);   // pos 3-16
+  const IE14    = " ".repeat(14);   // pos 17-30
+  const SERIE3  = " ".repeat(3);    // pos 41-43  (brancos conforme item 17.1.3.1)
+  const BRANCOS2 = " ".repeat(2);   // pos 125-126
+
+  const numIni6 = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
+  const numFim6 = String(Math.max(0, Number(numFinal   || 0))).padStart(6, "0").slice(-6);
+
+  // Monta a linha campo a campo — TOTAL DEVE SER EXATAMENTE 126
   const linha =
-    "61" +                                                        //  2
-    "              " +                                            // 14 CNPJ — branco (14 espaços)
-    "              " +                                            // 14 IE   — branco (14 espaços)
-    rData(data) +                                                 //  8 data AAAAMMDD
-    "65" +                                                        //  2 modelo NFCe
-    "   " +                                                       //  3 série — BRANCO (item 17.1.3.1)
-    String(Number(numInicial || 0)).padStart(6, "0").slice(-6) +  //  6 número inicial
-    String(Number(numFinal   || 0)).padStart(6, "0").slice(-6) +  //  6 número final
-    vTotalStr +                                                   // 13 valor total
-    zeros13 +                                                     // 13 base ICMS (Simples = 0)
-    zeros13 +                                                     // 13 valor ICMS (Simples = 0)
-    vTotalStr +                                                   // 13 isentas (Simples = valor total)
-    zeros13 +                                                     // 13 outras
-    "0000" +                                                      //  4 alíquota (numérico)
-    "  ";                                                         //  2 brancos finais
-  // Verificação: 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126
+    "61"      +  // 2   pos 1-2
+    CNPJ14    +  // 14  pos 3-16
+    IE14      +  // 14  pos 17-30
+    rData(data) +// 8   pos 31-38
+    "65"      +  // 2   pos 39-40
+    SERIE3    +  // 3   pos 41-43
+    numIni6   +  // 6   pos 44-49
+    numFim6   +  // 6   pos 50-55
+    vTotalStr +  // 13  pos 56-68
+    zeros13   +  // 13  pos 69-81
+    zeros13   +  // 13  pos 82-94
+    vTotalStr +  // 13  pos 95-107
+    zeros13   +  // 13  pos 108-120
+    "0000"    +  // 4   pos 121-124
+    BRANCOS2;    // 2   pos 125-126
+  // 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126 ✓
   return linha;
 }
 
