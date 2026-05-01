@@ -158,32 +158,7 @@ export function reg54(nota, item, numItem, empresa) {
   );
 }
 
-// Registro 61 - Documentos fiscais venda consumidor final (NFCe modelo 65)
-// Convênio ICMS 57/95 - Layout: 126 caracteres
-// NOTA: Alguns validadores interpretam posições posicionais com ESPAÇOS,
-// então preservamos os espaços em branco (não zeros!)
-export function reg61(data, serie, numInicial, numFinal, valorTotal) {
-  let dataf = "00000000";
-  if (data && data.length >= 10) {
-    const [ano, mes, dia] = data.split('-');
-    dataf = `${ano}${mes}${dia}`;
-  }
-  
-  const ser = rZ(serie || "00", 2);
-  const numini = rZ(numInicial || 0, 6);
-  const numfim = rZ(numFinal || 0, 6);
-  const valtot = rN(valorTotal || 0, 14);
-  
-  // Construir com espaços no bloco inicial (não substitua por zeros!)
-  let linha = "61" + " ".repeat(28) + dataf + "65" + ser + numini + numfim + valtot;
-  
-  // Padronizar até 126 caracteres com zeros
-  while (linha.length < 126) {
-    linha += "0";
-  }
-  
-  return linha.substring(0, 126);
-}
+
 
 // Registro 75 - Cadastro de produtos
 // Layout Conv. ICMS 76/03 item 20: 2+8+8+14+8+53+6+5+4+5+13 = 126 chars
@@ -340,10 +315,8 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     });
   }
 
-  // Reg.61 — NFCe agrupadas por data/série (modelo 65)
-  for (const g of nfcePorGrupo.values()) {
-    addLinha("61", reg61(g.data, g.serie, g.numInicial, g.numFinal, g.valorTotal));
-  }
+  // Reg.61 — Removido: SINTEGRA-MG não aceita NFCe modelo 65
+  // Apenas modelo 55 (NFe) é suportado
 
   // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
   const produtosUnicos = new Map();
