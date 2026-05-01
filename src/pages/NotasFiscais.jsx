@@ -753,6 +753,15 @@ export default function NotasFiscais() {
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const blob = await resp.blob();
       
+      // Validar que é um PDF válido
+      const buffer = await blob.slice(0, 4).arrayBuffer();
+      const header = new Uint8Array(buffer);
+      const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+      
+      if (!isPdfValid) {
+        throw new Error('Arquivo não é um PDF válido');
+      }
+      
       const objUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = objUrl;
@@ -772,11 +781,29 @@ export default function NotasFiscais() {
   };
 
   const abrirPdfNota = async (nota) => {
-    // Se já tem PDF salvo no banco, baixa com nome correto
+    // Se já tem PDF salvo no banco, valida e baixa
     if (nota.pdf_url) {
-      downloadPdf(nota.pdf_url, nomeArquivoPdf(nota));
+      try {
+        const resp = await fetch(nota.pdf_url);
+        const blob = await resp.blob();
+        const buffer = await blob.slice(0, 4).arrayBuffer();
+        const header = new Uint8Array(buffer);
+        const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+        
+        if (!isPdfValid) {
+          feedback('erro', 'PDF salvo está corrompido. Buscando novo...');
+          // Limpar PDF corrompido e tentar buscar novamente
+          await base44.entities.NotaFiscal.update(nota.id, { pdf_url: '' });
+          abrirPdfNota(nota);
+          return;
+        }
+        downloadPdf(nota.pdf_url, nomeArquivoPdf(nota));
+      } catch (e) {
+        feedback('erro', 'Erro ao validar PDF: ' + e.message);
+      }
       return;
     }
+    
     // Sem PDF salvo — tenta buscar via proxy
     feedback('sucesso', 'Buscando PDF na Focus NFe...');
     try {
