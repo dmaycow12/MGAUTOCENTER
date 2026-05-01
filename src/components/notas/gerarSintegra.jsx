@@ -159,11 +159,9 @@ export function reg54(nota, item, numItem, empresa) {
 }
 
 // Registro 61 - Documentos fiscais venda consumidor final (NFCe modelo 65)
-// Layout Convênio ICMS 57/95: exatamente 126 caracteres (copiar estrutura aprovada)
-// Pos 01-02: "61" | 03-30: 28 brancos | 31-38: AAAAMMDD | 39-40: 65 | 41-42: 00
-// 43-48: nº inicial | 49-54: nº final | 55-68: valor total | 69-82: ICMS | 83-86: alíquota
-// 87-100: isento | 101-114: outros | 115-126: 12 brancos
-export function reg61(data, numInicial, numFinal, valorTotal, icmsTotal) {
+// Layout Convênio ICMS 57/95: exatamente 126 caracteres conforme arquivo aprovado
+// Estrutura: 61 + 28 brancos + AAAAMMDD + 65 + nº_inicial(6) + nº_final(6) + valor(14) + ZEROS até 126
+export function reg61(data, numInicial, numFinal, valorTotal) {
   // Data AAAAMMDD
   let dataf = "00000000";
   if (data && data.length >= 10) {
@@ -171,27 +169,22 @@ export function reg61(data, numInicial, numFinal, valorTotal, icmsTotal) {
     dataf = `${ano}${mes}${dia}`;
   }
   
+  // Números com 6 dígitos
   const numini = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
   const numfim = String(Math.max(0, Number(numFinal || 0))).padStart(6, "0").slice(-6);
+  
+  // Valor com 14 dígitos RIGHT (2 decimais)
   const valtot = rN(valorTotal || 0, 14);
-  const valicm = rN(icmsTotal || 0, 14);
-  const valisen = rN(0, 14);
-  const valout = rN(0, 14);
   
   return (
     "61" +
-    " ".repeat(28) +  // pos 03-30: 28 brancos
-    dataf +           // pos 31-38: AAAAMMDD
-    "65" +            // pos 39-40: modelo 65
-    "00" +            // pos 41-42: série 00
-    numini +          // pos 43-48: nº inicial (6 dígitos)
-    numfim +          // pos 49-54: nº final (6 dígitos)
-    valtot +          // pos 55-68: valor total (14)
-    valicm +          // pos 69-82: ICMS (14)
-    "0000" +          // pos 83-86: alíquota (4)
-    valisen +         // pos 87-100: isento (14)
-    valout +          // pos 101-114: outros (14)
-    " ".repeat(12)    // pos 115-126: 12 brancos
+    " ".repeat(28) +   // pos 03-30: 28 brancos
+    dataf +            // pos 31-38: data AAAAMMDD
+    "65" +             // pos 39-40: modelo 65
+    numini +           // pos 41-46: nº inicial (6)
+    numfim +           // pos 47-52: nº final (6)
+    valtot +           // pos 53-66: valor total (14)
+    "0".repeat(60)     // pos 67-126: 60 zeros (resto)
   );
 }
 
@@ -352,7 +345,7 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
 
   // Reg.61 — NFCe agrupadas por data/série (modelo 65)
   for (const g of nfcePorGrupo.values()) {
-    addLinha("61", reg61(g.data, g.numInicial, g.numFinal, g.valorTotal, g.icmsTotal));
+    addLinha("61", reg61(g.data, g.numInicial, g.numFinal, g.valorTotal));
   }
 
   // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
