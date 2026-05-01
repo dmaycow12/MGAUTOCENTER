@@ -158,9 +158,60 @@ export function reg54(nota, item, numItem, empresa) {
   );
 }
 
-// Registro 61 - NÃO UTILIZADO no SINTEGRA MG
-// NFCe deve ser registrada como Registro 50 (modelo 65) ou ignorada
-// Este arquivo é descontinuado
+// Registro 61 - Documentos fiscais venda consumidor final (NFCe modelo 65, NF modelo 02)
+// Layout Convênio ICMS 57/95: 117 caracteres
+// Pos 01-02: "61" | 03-16: brancos (14) | 17-30: brancos (14) | 31-38: DDMMAAAA
+// 39-40: modelo (02/65) | 41-43: série (3 X) | 44-45: subsérie (2 X)
+// 46-51: nº inicial (6 N) | 52-57: nº final (6 N) | 58-71: valor total (14 N 2dec)
+// 72-85: ICMS (14 N 2dec) | 86-89: alíquota (4 N 2dec) | 90-103: isento (14 N 2dec)
+// 104-117: outros (14 N 2dec)
+export function reg61(data, modelo, serie, subserie, numInicial, numFinal, valorTotal, icmsTotal, aliquota, valorIsento, valorOutros) {
+  // Data DDMMAAAA
+  let dataf = "00000000";
+  if (data && data.length >= 10) {
+    const [ano, mes, dia] = data.split('-');
+    dataf = `${dia}${mes}${ano}`;
+  }
+  
+  // Modelo 2 dígitos
+  const modelof = String(modelo || "65").padStart(2, "0").slice(-2);
+  
+  // Série 3 caracteres LEFT
+  const serief = r(serie || "", 3);
+  
+  // Subsérie 2 caracteres LEFT (geralmente vazio ou "00")
+  const subseriief = r(subserie || "", 2);
+  
+  // Números 6 dígitos RIGHT
+  const numini = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
+  const numfim = String(Math.max(0, Number(numFinal || 0))).padStart(6, "0").slice(-6);
+  
+  // Valores 14 dígitos (2 decimais = centavos) RIGHT
+  const valtot = rN(valorTotal || 0, 14);
+  const valicm = rN(icmsTotal || 0, 14);
+  const valisen = rN(valorIsento || 0, 14);
+  const valout = rN(valorOutros || 0, 14);
+  
+  // Alíquota 4 dígitos (2 decimais: 18% = "1800") RIGHT
+  const aliq = String(Math.round((aliquota || 0) * 100)).padStart(4, "0").slice(-4);
+  
+  return (
+    "61" +
+    " ".repeat(14) +  // pos 03-16: brancos CNPJ
+    " ".repeat(14) +  // pos 17-30: brancos IE
+    dataf +           // pos 31-38: data
+    modelof +         // pos 39-40: modelo
+    serief +          // pos 41-43: série
+    subseriief +      // pos 44-45: subsérie
+    numini +          // pos 46-51: nº inicial
+    numfim +          // pos 52-57: nº final
+    valtot +          // pos 58-71: valor total
+    valicm +          // pos 72-85: ICMS
+    aliq +            // pos 86-89: alíquota
+    valisen +         // pos 90-103: isento
+    valout            // pos 104-117: outros
+  );
+}
 
 // Registro 75 - Cadastro de produtos
 // Layout Conv. ICMS 76/03 item 20: 2+8+8+14+8+53+6+5+4+5+13 = 126 chars
@@ -190,7 +241,7 @@ export function reg90(empresa, totais, linhasAnteriores) {
   const CNPJ = limpaCNPJ(empresa.cnpj);
   const IE = (empresa.ie || "").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
 
-  const tiposReg90 = ["50", "54", "75"].filter(t => totais[t] > 0);
+  const tiposReg90 = ["50", "54", "61", "75"].filter(t => totais[t] > 0);
   // Linhas do Reg.90: uma por tipo + a linha "99"
   const totalLinhasReg90 = tiposReg90.length + 1;
   // Total GERAL = todas as linhas anteriores (10,11,50,54,75) + todas as linhas do reg90
@@ -251,7 +302,28 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     return true;
   });
 
-  // NFCe não é incluída no SINTEGRA MG (Convênio ICMS 57/95)
+  // NFCe agrupadas por data+série+subsérie para Reg.61
+  const nfcePorGrupo = new Map();
+  notasPeriodo
+    .filter(n => n.tipo === "NFCe" && n.status !== "Cancelada")
+    .forEach(n => {
+      const data = (n.data_emissao || "").substring(0, 10);
+      const serie = n.serie || "1";
+      const subserie = "00"; // padrão
+      const chave = `${data}_${serie}_${subserie}`;
+      if (!nfcePorGrupo.has(chave)) {
+        nfcePorGrupo.set(chave, { data, serie, subserie, numInicial: 9999999, numFinal: 0, valorTotal: 0, icmsTotal: 0, valorIsento: 0, valorOutros: 0 });
+      }
+      const g = nfcePorGrupo.get(chave);
+      const num = parseInt(n.numero || "0", 10);
+      if (num < g.numInicial) g.numInicial = num;
+      if (num > g.numFinal) g.numFinal = num;
+      g.valorTotal += parseFloat(n.valor_total || 0);
+      // ICMS e isento: estimados, poderia vir do XML
+      g.icmsTotal += 0; // valor ICMS extraído do XML (implementar se houver)
+      g.valorIsento += 0;
+      g.valorOutros += 0;
+    });
 
   // Reg.50 — todos primeiro
   for (const nota of notasSintegra) {
@@ -296,8 +368,10 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     });
   }
 
-  // Reg.61 — DESCONTINUADO para SINTEGRA MG
-  // NFCe (modelo 65) não é aceita no SINTEGRA MG conforme Convênio ICMS 57/95
+  // Reg.61 — NFCe agrupadas por data/série/subsérie
+  for (const g of nfcePorGrupo.values()) {
+    addLinha("61", reg61(g.data, "65", g.serie, g.subserie, g.numInicial, g.numFinal, g.valorTotal, g.icmsTotal, 18, g.valorIsento, g.valorOutros));
+  }
 
   // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
   const produtosUnicos = new Map();
