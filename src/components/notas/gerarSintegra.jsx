@@ -176,7 +176,7 @@ export function reg61(_cnpjEmpresa, _ieEmpresa, data, _serie, numInicial, numFin
     rN(0, 13) +                    // 13 valor ICMS
     rN(valorTotal, 13) +           // 13 isentas (Simples Nacional)
     rN(0, 13) +                    // 13 outras
-    r("", 4)                       //  4 alíquota — brancos
+    r("0000", 4)                   //  4 alíquota — 0000 numérico (brancos rejeitados pelo validador)
   );
   // 2+14+14+8+2+3+6+6+13+13+13+13+13+4 = 124 + 2 brancos = 126
   return linha + r("", 2);
