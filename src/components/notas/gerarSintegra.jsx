@@ -159,27 +159,27 @@ export function reg54(nota, item, numItem, empresa) {
 }
 
 // Registro 61 - Documentos fiscais não emitidos por ECF (NFCe modelo 65)
-// Layout: tipo(2)+CNPJ(14)+IE(14)+data(8)+modelo(2)+serie(3)+numIni(6)+numFin(6)+vlrTotal(13)+baseICMS(13)+vlrICMS(13)+isenta(13)+outras(13)+aliq(4)+brancos(2) = 126
-export function reg61(cnpjEmpresa, ieEmpresa, data, serie, numInicial, numFinal, valorTotal) {
-  const cnpj = limpaCNPJ(cnpjEmpresa);
-  const ie = (ieEmpresa || "").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
-  return (
+// Layout Convênio ICMS 57/95: 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126
+// CNPJ, IE e Série ficam em BRANCO conforme item 17.1.3.1 do manual
+export function reg61(_cnpjEmpresa, _ieEmpresa, data, _serie, numInicial, numFinal, valorTotal) {
+  const linha = (
     "61" +
-    cnpj +                         // 14 CNPJ do emitente
-    ie +                           // 14 IE do emitente
+    r("", 14) +                    // 14 CNPJ — brancos
+    r("", 14) +                    // 14 IE   — brancos
     rData(data) +                  //  8 data emissão
     r("65", 2) +                   //  2 modelo NFCe
-    rZ(serie || "1", 3) +          //  3 série
+    r("", 3) +                     //  3 série — brancos (item 17.1.3.1)
     rZ(numInicial, 6) +            //  6 número inicial
     rZ(numFinal, 6) +              //  6 número final
-    rN(valorTotal, 13) +           // 13 valor total (com 2 dec)
-    rN(0, 13) +                    // 13 base de cálculo ICMS
+    rN(valorTotal, 13) +           // 13 valor total
+    rN(0, 13) +                    // 13 base ICMS
     rN(0, 13) +                    // 13 valor ICMS
-    rN(valorTotal, 13) +           // 13 isenta/não tributada (NFCe simples nacional = isento)
+    rN(valorTotal, 13) +           // 13 isentas (Simples Nacional)
     rN(0, 13) +                    // 13 outras
-    r("0000", 4) +                 //  4 alíquota (0000)
-    r("", 2)                       //  2 brancos para fechar 126
+    r("", 4)                       //  4 alíquota — brancos
   );
+  // 2+14+14+8+2+3+6+6+13+13+13+13+13+4 = 124 + 2 brancos = 126
+  return linha + r("", 2);
 }
 
 // Registro 75 - Cadastro de produtos
