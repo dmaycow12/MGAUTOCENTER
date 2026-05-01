@@ -13,9 +13,35 @@ function rData(d) {
   const clean = String(d).substring(0, 10).replace(/-/g, "");
   return clean.length === 8 ? clean : "00000000";
 }
+function calcularDigitosCNPJ(cnpj12) {
+  const calc = (seq) => {
+    let soma = 0;
+    let mult = seq.length + 1;
+    for (let i = 0; i < seq.length; i++) {
+      soma += parseInt(seq[i]) * mult;
+      mult--;
+    }
+    const resto = soma % 11;
+    return resto < 2 ? 0 : 11 - resto;
+  };
+  if (cnpj12.length !== 12) return null;
+  const d1 = calc(cnpj12);
+  const d2 = calc(cnpj12 + d1);
+  return cnpj12 + d1 + d2;
+}
+
 function limpaCNPJ(c) { 
   const clean = (c || "").replace(/\D/g, "");
-  return clean && clean.length >= 11 ? clean.padEnd(14, "0").substring(0, 14) : "00000000000000";
+  if (!clean || clean.length < 11) return "00000000000000";
+  if (clean.length === 14) return clean; // já tem dígitos
+  if (clean.length === 12) {
+    const com_digitos = calcularDigitosCNPJ(clean);
+    return com_digitos || clean.padEnd(14, "0").substring(0, 14);
+  }
+  // 11 ou 13 dígitos - trata como CPF ou tira o último
+  const base = clean.substring(0, 12);
+  const com_digitos = calcularDigitosCNPJ(base);
+  return com_digitos || base.padEnd(14, "0").substring(0, 14);
 }
 function limpaIE(ie) { 
   const clean = (ie || "").replace(/\D/g, "").trim();
