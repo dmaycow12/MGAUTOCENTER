@@ -28,6 +28,28 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: true, pdf_url: nota.pdf_url });
     }
 
+    // Para NFCe emitida: buscar direto pelo reference_id (spedy_id)
+    if (nota.tipo === 'NFCe' && nota.spedy_id) {
+      console.log('[DEBUG] NFCe emitida, buscando PDF via reference_id:', nota.spedy_id);
+      // Endpoint de PDF para NFCe emitida
+      const pdfUrl = `${FOCUSNFE_BASE}/nfce/${nota.spedy_id}.pdf`;
+      const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER } });
+      if (pdfResp.ok) {
+        const blob = await pdfResp.blob();
+        const buffer = await blob.arrayBuffer();
+        const header = new Uint8Array(buffer, 0, 4);
+        const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+        if (isPdfValid) {
+          const nomeArquivo = `nfce-${nota.numero || nota_id}.pdf`;
+          const file = new File([blob], nomeArquivo, { type: 'application/pdf' });
+          const { file_url } = await db.integrations.Core.UploadFile({ file });
+          await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+          return Response.json({ sucesso: true, pdf_url: file_url });
+        }
+      }
+      return Response.json({ sucesso: false, erro: 'Não foi possível recuperar o PDF da NFCe', pdfUrl });
+    }
+
     // Ainda não tem PDF permanente — tenta buscar na Focus NFe
     // Para notas de entrada (Importada/Lançada), buscar pelo chave_acesso na SEFAZ via Focus NFe
     let result = null;
