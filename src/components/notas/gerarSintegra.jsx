@@ -162,41 +162,46 @@ export function reg54(nota, item, numItem, empresa) {
 // Layout Convênio ICMS 57/95 item 17.1.3.1: 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126
 // Série = 3 espaços em branco (conforme item 17.1.3.1)
 // Alíquota = 4 dígitos inteiros (ex: 0000=sem ICMS, 1200=12%, 1800=18%)
-export function reg61(cnpjEmpresa, ieEmpresa, data, _serie, numInicial, numFinal, valorTotal, aliquotaICMS = 0) {
+export function reg61(_cnpjEmpresa, _ieEmpresa, data, serie, numInicial, numFinal, valorTotal, aliquotaICMS = 0) {
   const valorCentavos = Math.round(Number(valorTotal || 0) * 100);
   const vTotalStr = String(valorCentavos).padStart(13, "0").slice(-13);
   const zeros13   = "0000000000000";
 
-  // CNPJ e IE do emitente — campos 03-16 e 17-30
-  const CNPJ14 = limpaCNPJ(cnpjEmpresa).padEnd(14, "0").substring(0, 14);
-  const IE14   = limpaIE(ieEmpresa);
-  const SERIE3   = " ".repeat(3);  // Em branco conforme item 17.1.3.1
+  const CNPJ14   = " ".repeat(14);  // Brancos — registro 61 não usa CNPJ
+  const IE14     = " ".repeat(14);  // Brancos — registro 61 não usa IE
+  const SERIE1   = r(serie || "D", 1);  // Série: D, E, etc.
+  const SUBSERIE2 = " ".repeat(2);  // Subsérie: brancos
   // Alíquota: 4 dígitos inteiros (ex: 0 → "0000", 12 → "1200", 18 → "1800")
   const ALIQUOTA4 = String(Math.round(Number(aliquotaICMS || 0) * 100)).padStart(4, "0").slice(-4);
-  const BRANCOS2  = " ".repeat(2);
+  const RESTANTE39 = " ".repeat(39);  // Restante (posições 88-126)
 
   const numIni6 = String(Math.max(0, Number(numInicial || 0))).padStart(6, "0").slice(-6);
   const numFim6 = String(Math.max(0, Number(numFinal   || 0))).padStart(6, "0").slice(-6);
 
-  // Validar comprimento: 2+14+14+8+2+3+6+6+13+13+13+13+13+4+2 = 126 ✓
+  // Layout: 2+14+14+8+1+2+6+6+16+14+4+39 = 126 ✓
+  // Convênio ICMS 57/95 item 17.1.3.1:
+  // - Posições 03-30: brancos (não usa CNPJ/IE)
+  // - Posição 39: série (D, E, etc.)
+  // - Posições 84-87: alíquota ICMS (4 dígitos)
+  
   const linha = (
-    "61"        +  // 2   pos 1-2
-    CNPJ14      +  // 14  pos 3-16   (brancos)
-    IE14        +  // 14  pos 17-30  (brancos)
+    "61"        +  // 2   pos 01-02
+    CNPJ14      +  // 14  pos 03-16   (brancos)
+    IE14        +  // 14  pos 17-30   (brancos)
     rData(data) +  // 8   pos 31-38
-    "65"        +  // 2   pos 39-40  (modelo ECF/PDV)
-    SERIE3      +  // 3   pos 41-43  (série: espaços em branco)
-    numIni6     +  // 6   pos 44-49
-    numFim6     +  // 6   pos 50-55
-    vTotalStr   +  // 13  pos 56-68
-    zeros13     +  // 13  pos 69-81
-    zeros13     +  // 13  pos 82-94
-    vTotalStr   +  // 13  pos 95-107
-    zeros13     +  // 13  pos 108-120
-    ALIQUOTA4   +  // 4   pos 121-124 (alíquota ICMS com 4 dígitos)
-    BRANCOS2       // 2   pos 125-126
+    SERIE1      +  // 1   pos 39      (série: D, E, etc.)
+    SUBSERIE2   +  // 2   pos 40-41   (subsérie: brancos)
+    numIni6     +  // 6   pos 42-47   (nº CF inicial)
+    numFim6     +  // 6   pos 48-53   (nº CF final)
+    vTotalStr   +  // 13  pos 54-66   (valor total)
+    zeros13     +  // 13  pos 67-79   (base ICMS)
+    zeros13     +  // 13  pos 80-92   (valor ICMS)
+    vTotalStr   +  // 13  pos 93-105  (isentas)
+    zeros13     +  // 13  pos 106-118 (outras)
+    ALIQUOTA4   +  // 4   pos 119-122 (alíquota ICMS)
+    RESTANTE39     // 39  pos 123-161 (restante — espaços)
   );
-  // Garantir exatamente 126 chars (cortar ou completar se necessário)
+  // Garantir exatamente 126 chars
   return linha.padEnd(126, " ").substring(0, 126);
 }
 
