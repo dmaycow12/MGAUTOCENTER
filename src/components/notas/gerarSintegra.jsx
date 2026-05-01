@@ -144,6 +144,27 @@ export function reg54(nota, item, numItem, empresa) {
   );
 }
 
+// Registro 61 - Resumo mensal de NFCe (modelo 65) por data
+// Layout: 2+14+14+2+3+6+6+8+14+13+13+1 = 110 chars + 16 brancos = 126
+export function reg61(cnpj, ie, data, serie, numInicial, numFinal, qtd, valorTotal) {
+  const cnpjFormatado = limpaCNPJ(cnpj);
+  const ieFormatado = (ie || "ISENTO").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
+  return (
+    "61" +
+    r("", 14) +                   // 14 CNPJ terceiro (brancos)
+    r("", 14) +                   // 14 IE terceiro (brancos)
+    rData(data) +                  //  8 data emissão
+    r("65", 2) +                   //  2 modelo (NFCe = 65)
+    rZ(serie || "1", 3) +          //  3 série
+    rZ(numInicial, 6) +            //  6 número inicial
+    rZ(numFinal, 6) +              //  6 número final
+    rN(valorTotal, 13) +           // 13 valor total
+    rN(0, 13) +                    // 13 base ICMS
+    rN(0, 13) +                    // 13 valor ICMS
+    r("", 16)                      // 16 brancos (reservado)
+  );
+}
+
 // Registro 75 - Cadastro de produtos
 // Layout Conv. ICMS 76/03 item 20: 2+8+8+14+8+53+6+5+4+5+13 = 126 chars
 // Campos: tipo+dtIni+dtFim+codProd+NCM+desc+unid+aliqIPI+aliqICMS+reducBC+baseST
@@ -172,7 +193,7 @@ export function reg90(empresa, totais, linhasAnteriores) {
   const CNPJ = limpaCNPJ(empresa.cnpj);
   const IE = (empresa.ie || "").replace(/\D/g, "").padEnd(14, " ").substring(0, 14);
 
-  const tiposReg90 = ["50", "54", "75"].filter(t => totais[t] > 0);
+  const tiposReg90 = ["50", "54", "61", "75"].filter(t => totais[t] > 0);
   // Linhas do Reg.90: uma por tipo + a linha "99"
   const totalLinhasReg90 = tiposReg90.length + 1;
   // Total GERAL = todas as linhas anteriores (10,11,50,54,75) + todas as linhas do reg90
@@ -223,16 +244,34 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     return d >= periodoInicio && d <= periodoFim && n.status !== "Rascunho";
   });
 
-  // SINTEGRA MG aceita apenas NFe (modelo 55) — excluir NFCe
-  // Deduplicar por número+série para evitar duplicidade
+  // Separar NFe (modelo 55) para Reg.50/54 e NFCe (modelo 65) para Reg.61
   const vistas = new Set();
   const notasSintegra = notasPeriodo.filter(n => {
-    if (n.tipo !== "NFe") return false; // excluir NFCe e outros
+    if (n.tipo !== "NFe") return false;
     const chave = `${n.serie || "1"}_${n.numero}`;
     if (vistas.has(chave)) return false;
     vistas.add(chave);
     return true;
   });
+
+  // NFCe agrupadas por data+série para Reg.61
+  const nfcePorDataSerie = new Map();
+  notasPeriodo
+    .filter(n => n.tipo === "NFCe" && n.status !== "Cancelada")
+    .forEach(n => {
+      const data = (n.data_emissao || "").substring(0, 10);
+      const serie = n.serie || "1";
+      const chave = `${data}_${serie}`;
+      if (!nfcePorDataSerie.has(chave)) {
+        nfcePorDataSerie.set(chave, { data, serie, numInicial: 9999999, numFinal: 0, qtd: 0, valorTotal: 0 });
+      }
+      const g = nfcePorDataSerie.get(chave);
+      const num = parseInt(n.numero || "0", 10);
+      if (num < g.numInicial) g.numInicial = num;
+      if (num > g.numFinal) g.numFinal = num;
+      g.qtd++;
+      g.valorTotal += parseFloat(n.valor_total || 0);
+    });
 
   // Reg.50 — todos primeiro
   for (const nota of notasSintegra) {
@@ -275,6 +314,11 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
         if (!itensPorCodigo.has(item.codigo)) itensPorCodigo.set(item.codigo, item);
       }
     });
+  }
+
+  // Reg.61 — NFCe agrupadas por data/série
+  for (const g of nfcePorDataSerie.values()) {
+    addLinha("61", reg61(empresa.cnpj, empresa.ie, g.data, g.serie, g.numInicial, g.numFinal, g.qtd, g.valorTotal));
   }
 
   // Reg.75 — primeiro busca no estoque, depois usa item da NF como fallback
