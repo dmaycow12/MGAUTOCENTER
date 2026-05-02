@@ -890,41 +890,72 @@ export default function NotasFiscais() {
     }
   };
 
+  const gerarExcelNotas = (notasList) => {
+    const cabecalho = ["Tipo","Número","Série","Status","Cliente","CPF/CNPJ","Data Emissão","Valor Total","Chave Acesso","Observações"];
+    const linhas = notasList.map(n => [
+      n.tipo || "",
+      n.numero || "",
+      n.serie || "",
+      n.status || "",
+      n.cliente_nome || "",
+      n.cliente_cpf_cnpj || "",
+      n.data_emissao || "",
+      Number(n.valor_total || 0).toFixed(2).replace(".", ","),
+      n.chave_acesso || "",
+      n.observacoes || "",
+    ]);
+    const toCSV = (rows) => rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(";")).join("\n");
+    const csvContent = toCSV([cabecalho, ...linhas]);
+    return "\uFEFF" + csvContent; // BOM para Excel reconhecer UTF-8
+  };
+
   const exportarZip = async () => {
-    const notasComArquivos = filtradas.filter(n =>
-      n.xml_original?.trim().startsWith("<") ||
-      n.xml_content?.trim().startsWith("<") ||
-      n.xml_url?.startsWith("http") ||
-      n.pdf_url?.startsWith("http")
-    );
-    if (notasComArquivos.length === 0) return alert("Nenhuma nota com XML ou PDF disponível no filtro atual.");
+    const todasNotas = filtradas;
+    if (todasNotas.length === 0) return alert("Nenhuma nota no filtro atual.");
     setGerandoZip(true);
-    feedback("sucesso", `Preparando ZIP com ${notasComArquivos.length} nota(s)...`);
+    feedback("sucesso", `Preparando ZIP com ${todasNotas.length} nota(s)...`);
     try {
       const zip = new JSZip();
-      for (const nota of notasComArquivos) {
-        const base = `${nota.tipo || "NF"}-${nota.numero || nota.id}`;
-        if (nota.xml_original?.trim().startsWith("<")) {
-          zip.file(`${base}.xml`, nota.xml_original);
-        } else if (nota.xml_content?.trim().startsWith("<")) {
-          zip.file(`${base}.xml`, nota.xml_content);
-        } else if (nota.xml_url) {
-          try {
-            const r = await fetch(nota.xml_url);
-            const text = await r.text();
-            if (text && text.trim().startsWith("<")) zip.file(`${base}.xml`, text);
-          } catch (_) {}
+
+      // Helper para obter XML de uma nota
+      const getXml = async (nota) => {
+        if (nota.xml_original?.trim().startsWith("<")) return nota.xml_original;
+        if (nota.xml_content?.trim().startsWith("<")) return nota.xml_content;
+        if (nota.xml_url) {
+          try { const r = await fetch(nota.xml_url); const t = await r.text(); if (t?.trim().startsWith("<")) return t; } catch (_) {}
         }
-        if (nota.pdf_url) {
-          try {
-            const r = await fetch(nota.pdf_url);
-            if (r.ok) {
-              const blob = await r.blob();
-              zip.file(`${base}.pdf`, blob);
-            }
-          } catch (_) {}
+        return null;
+      };
+
+      const isEntrada = (n) => n.status === "Importada" || n.status === "Lançada";
+
+      // Estrutura de pastas
+      const pastas = {
+        "Notas de Entrada/NFe":   todasNotas.filter(n => isEntrada(n) && n.tipo === "NFe"),
+        "Notas de Entrada/NFSe":  todasNotas.filter(n => isEntrada(n) && n.tipo === "NFSe"),
+        "Notas de Saida/NFe":     todasNotas.filter(n => !isEntrada(n) && n.tipo === "NFe"),
+        "Notas de Saida/NFSe":    todasNotas.filter(n => !isEntrada(n) && n.tipo === "NFSe"),
+        "Notas de Saida/NFCe":    todasNotas.filter(n => !isEntrada(n) && n.tipo === "NFCe"),
+      };
+
+      for (const [pasta, notasPasta] of Object.entries(pastas)) {
+        for (const nota of notasPasta) {
+          const base = `${nota.tipo}-${nota.numero || nota.id}`;
+          const xml = await getXml(nota);
+          if (xml) zip.file(`${pasta}/${base}.xml`, xml);
+          if (nota.pdf_url) {
+            try {
+              const r = await fetch(nota.pdf_url);
+              if (r.ok) { const b = await r.blob(); zip.file(`${pasta}/${base}.pdf`, b); }
+            } catch (_) {}
+          }
         }
       }
+
+      // Relatório Excel (CSV) com todas as notas
+      const csvContent = gerarExcelNotas(todasNotas);
+      zip.file(`Relatorio_Notas_${periodoRange.inicio}_${periodoRange.fim}.csv`, csvContent);
+
       const blob = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, FileDown, RefreshCw, AlertCircle } from "lucide-react";
 import { gerarArquivoSintegra } from "./gerarSintegra";
+import JSZip from "jszip";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
@@ -28,40 +29,87 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
     return { inicio: dataInicio, fim: dataFim, label: `${dataInicio} a ${dataFim}` };
   };
 
-  const gerar = () => {
+  const getXml = async (nota) => {
+    if (nota.xml_original?.trim().startsWith("<")) return nota.xml_original;
+    if (nota.xml_content?.trim().startsWith("<")) return nota.xml_content;
+    if (nota.xml_url) {
+      try { const r = await fetch(nota.xml_url); const t = await r.text(); if (t?.trim().startsWith("<")) return t; } catch (_) {}
+    }
+    return null;
+  };
+
+  const gerar = async () => {
     const periodo = getPeriodo();
     if (!periodo.inicio || !periodo.fim) return alert("Informe o período.");
     setGerando(true);
     setResultado(null);
 
-    setTimeout(() => {
-      try {
-        const { conteudo, totalNotas } = gerarArquivoSintegra({
-          notas,
-          estoque,
-          configs,
-          periodoInicio: periodo.inicio,
-          periodoFim: periodo.fim,
-        });
+    try {
+      const { conteudo, totalNotas } = gerarArquivoSintegra({
+        notas,
+        estoque,
+        configs,
+        periodoInicio: periodo.inicio,
+        periodoFim: periodo.fim,
+      });
 
-        const blob = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const anoLabel = periodo.inicio.substring(0, 4);
-        const mesLabel = periodo.inicio.substring(5, 7);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = modo === "mes"
-          ? `SINTEGRA_${anoLabel}${mesLabel}.txt`
-          : `SINTEGRA_${periodo.inicio}_${periodo.fim}.txt`;
-        a.click();
-        URL.revokeObjectURL(url);
+      const anoLabel = periodo.inicio.substring(0, 4);
+      const mesLabel = periodo.inicio.substring(5, 7);
+      const nomeBase = modo === "mes" ? `${anoLabel}${mesLabel}` : `${periodo.inicio}_${periodo.fim}`;
 
-        setResultado({ sucesso: true, totalNotas, periodo: periodo.label });
-      } catch (e) {
-        setResultado({ sucesso: false, erro: e.message });
+      // Notas do período
+      const notasPeriodo = notas.filter(n => {
+        const d = n.data_emissao || "";
+        return d >= periodo.inicio && d <= periodo.fim;
+      });
+
+      const isEntrada = (n) => n.status === "Importada" || n.status === "Lançada";
+
+      const zip = new JSZip();
+
+      // Arquivo SINTEGRA
+      zip.file(`SINTEGRA_${nomeBase}.txt`, new Blob([conteudo], { type: "text/plain;charset=utf-8" }));
+
+      // XMLs organizados em pastas
+      const pastas = {
+        "Notas de Entrada/NFe":   notasPeriodo.filter(n => isEntrada(n) && n.tipo === "NFe"),
+        "Notas de Entrada/NFSe":  notasPeriodo.filter(n => isEntrada(n) && n.tipo === "NFSe"),
+        "Notas de Saida/NFe":     notasPeriodo.filter(n => !isEntrada(n) && n.tipo === "NFe"),
+        "Notas de Saida/NFSe":    notasPeriodo.filter(n => !isEntrada(n) && n.tipo === "NFSe"),
+        "Notas de Saida/NFCe":    notasPeriodo.filter(n => !isEntrada(n) && n.tipo === "NFCe"),
+      };
+
+      for (const [pasta, notasPasta] of Object.entries(pastas)) {
+        for (const nota of notasPasta) {
+          const base = `${nota.tipo}-${nota.numero || nota.id}`;
+          const xml = await getXml(nota);
+          if (xml) zip.file(`XMLs/${pasta}/${base}.xml`, xml);
+        }
       }
-      setGerando(false);
-    }, 100);
+
+      // Relatório CSV (abre no Excel)
+      const cabecalho = ["Tipo","Número","Status","Cliente","CPF/CNPJ","Data Emissão","Valor Total","Chave Acesso"];
+      const linhas = notasPeriodo.map(n => [
+        n.tipo||"", n.numero||"", n.status||"", n.cliente_nome||"",
+        n.cliente_cpf_cnpj||"", n.data_emissao||"",
+        Number(n.valor_total||0).toFixed(2).replace(".",","), n.chave_acesso||""
+      ]);
+      const csvContent = "\uFEFF" + [cabecalho, ...linhas].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(";")).join("\n");
+      zip.file(`Relatorio_Notas_${nomeBase}.csv`, csvContent);
+
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `SINTEGRA_${nomeBase}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      setResultado({ sucesso: true, totalNotas, periodo: periodo.label });
+    } catch (e) {
+      setResultado({ sucesso: false, erro: e.message });
+    }
+    setGerando(false);
   };
 
   const anos = [];
@@ -183,7 +231,7 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
             onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
           >
             {gerando ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-            {gerando ? "Gerando..." : "Baixar SINTEGRA"}
+            {gerando ? "Gerando..." : "Baixar SINTEGRA + XMLs"}
           </button>
         </div>
       </div>
