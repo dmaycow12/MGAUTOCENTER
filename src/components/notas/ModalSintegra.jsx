@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { X, FileDown, RefreshCw, AlertCircle } from "lucide-react";
 import { gerarArquivoSintegra } from "./gerarSintegra";
 import JSZip from "jszip";
+import * as XLSX from "xlsx";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
 export default function ModalSintegra({ notas, estoque, configs, onClose }) {
   const hoje = new Date();
-  const [modo, setModo] = useState("mes"); // "mes" ou "periodo"
+  const [modo, setModo] = useState("mes");
   const [mes, setMes] = useState(hoje.getMonth() + 1);
   const [ano, setAno] = useState(hoje.getFullYear());
   const [dataInicio, setDataInicio] = useState("");
@@ -38,6 +39,41 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
     return null;
   };
 
+  const gerarXlsx = (notasPeriodo) => {
+    const isEntrada = (n) => n.status === "Importada" || n.status === "Lançada";
+
+    const abas = [
+      { nome: "NFe Entrada",  filtro: n => isEntrada(n) && n.tipo === "NFe"  },
+      { nome: "NFSe Entrada", filtro: n => isEntrada(n) && n.tipo === "NFSe" },
+      { nome: "NFe Saida",    filtro: n => !isEntrada(n) && n.tipo === "NFe"  },
+      { nome: "NFSe Saida",   filtro: n => !isEntrada(n) && n.tipo === "NFSe" },
+      { nome: "NFCe Saida",   filtro: n => !isEntrada(n) && n.tipo === "NFCe" },
+    ];
+
+    const wb = XLSX.utils.book_new();
+
+    for (const aba of abas) {
+      const notasAba = notasPeriodo.filter(aba.filtro);
+      const rows = [["Número", "Data", "Valor"]];
+      let totalValor = 0;
+      for (const n of notasAba) {
+        const valor = Number(n.valor_total || 0);
+        totalValor += valor;
+        rows.push([n.numero || "", n.data_emissao || "", valor]);
+      }
+      rows.push(["", "TOTAL", totalValor]);
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+
+      // Largura das colunas
+      ws["!cols"] = [{ wch: 14 }, { wch: 14 }, { wch: 16 }];
+
+      XLSX.utils.book_append_sheet(wb, ws, aba.nome);
+    }
+
+    return XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  };
+
   const gerar = async () => {
     const periodo = getPeriodo();
     if (!periodo.inicio || !periodo.fim) return alert("Informe o período.");
@@ -57,7 +93,6 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
       const mesLabel = periodo.inicio.substring(5, 7);
       const nomeBase = modo === "mes" ? `${anoLabel}${mesLabel}` : `${periodo.inicio}_${periodo.fim}`;
 
-      // Notas do período
       const notasPeriodo = notas.filter(n => {
         const d = n.data_emissao || "";
         return d >= periodo.inicio && d <= periodo.fim;
@@ -70,13 +105,13 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
       // Arquivo SINTEGRA
       zip.file(`SINTEGRA_${nomeBase}.txt`, new Blob([conteudo], { type: "text/plain;charset=utf-8" }));
 
-      // XMLs organizados em pastas
+      // XMLs e PDFs organizados em pastas
       const pastas = {
-        "Notas de Entrada/NFe":   notasPeriodo.filter(n => isEntrada(n) && n.tipo === "NFe"),
-        "Notas de Entrada/NFSe":  notasPeriodo.filter(n => isEntrada(n) && n.tipo === "NFSe"),
-        "Notas de Saida/NFe":     notasPeriodo.filter(n => !isEntrada(n) && n.tipo === "NFe"),
-        "Notas de Saida/NFSe":    notasPeriodo.filter(n => !isEntrada(n) && n.tipo === "NFSe"),
-        "Notas de Saida/NFCe":    notasPeriodo.filter(n => !isEntrada(n) && n.tipo === "NFCe"),
+        "Notas de Entrada/NFe":  notasPeriodo.filter(n => isEntrada(n) && n.tipo === "NFe"),
+        "Notas de Entrada/NFSe": notasPeriodo.filter(n => isEntrada(n) && n.tipo === "NFSe"),
+        "Notas de Saida/NFe":    notasPeriodo.filter(n => !isEntrada(n) && n.tipo === "NFe"),
+        "Notas de Saida/NFSe":   notasPeriodo.filter(n => !isEntrada(n) && n.tipo === "NFSe"),
+        "Notas de Saida/NFCe":   notasPeriodo.filter(n => !isEntrada(n) && n.tipo === "NFCe"),
       };
 
       for (const [pasta, notasPasta] of Object.entries(pastas)) {
@@ -84,18 +119,18 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
           const base = `${nota.tipo}-${nota.numero || nota.id}`;
           const xml = await getXml(nota);
           if (xml) zip.file(`XMLs/${pasta}/${base}.xml`, xml);
+          if (nota.pdf_url) {
+            try {
+              const r = await fetch(nota.pdf_url);
+              if (r.ok) { const b = await r.blob(); zip.file(`XMLs/${pasta}/${base}.pdf`, b); }
+            } catch (_) {}
+          }
         }
       }
 
-      // Relatório CSV (abre no Excel)
-      const cabecalho = ["Tipo","Número","Status","Cliente","CPF/CNPJ","Data Emissão","Valor Total","Chave Acesso"];
-      const linhas = notasPeriodo.map(n => [
-        n.tipo||"", n.numero||"", n.status||"", n.cliente_nome||"",
-        n.cliente_cpf_cnpj||"", n.data_emissao||"",
-        Number(n.valor_total||0).toFixed(2).replace(".",","), n.chave_acesso||""
-      ]);
-      const csvContent = "\uFEFF" + [cabecalho, ...linhas].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(";")).join("\n");
-      zip.file(`Relatorio_Notas_${nomeBase}.csv`, csvContent);
+      // Relatório XLSX com 5 abas
+      const xlsxData = gerarXlsx(notasPeriodo);
+      zip.file(`Relatorio_Notas_${nomeBase}.xlsx`, xlsxData);
 
       const zipBlob = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(zipBlob);
@@ -193,13 +228,10 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
 
           {/* Info */}
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-xs text-blue-300 space-y-1">
-            <p className="font-semibold">Registros incluídos:</p>
-            <p>• Reg. 10 — Identificação da empresa</p>
-            <p>• Reg. 11 — Endereço do estabelecimento</p>
-            <p>• Reg. 50 — Notas fiscais (NFe/NFCe)</p>
-            <p>• Reg. 54 — Itens das notas (quando disponíveis)</p>
-            <p>• Reg. 75 — Cadastro de produtos</p>
-            <p>• Reg. 90 — Encerramento/totalizadores</p>
+            <p className="font-semibold">Conteúdo do ZIP:</p>
+            <p>• SINTEGRA .txt — registros 10, 11, 50, 54, 75, 90</p>
+            <p>• XMLs e PDFs organizados por tipo/categoria</p>
+            <p>• Relatório .xlsx com 5 abas (NFe/NFSe Entrada e Saída, NFCe)</p>
           </div>
 
           <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 text-xs text-yellow-300">
@@ -231,7 +263,7 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
             onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
           >
             {gerando ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-            {gerando ? "Gerando..." : "Baixar SINTEGRA + XMLs"}
+            {gerando ? "Gerando..." : "Baixar"}
           </button>
         </div>
       </div>
