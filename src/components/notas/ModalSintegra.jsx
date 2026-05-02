@@ -18,6 +18,12 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
 
   const pad = n => String(n).padStart(2, "0");
 
+  const formatarNome = (dataStr) => {
+    const [ano, mes] = dataStr.split("-");
+    const meses = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+    return `${meses[Number(mes) - 1]}-${ano}`;
+  };
+
   const getPeriodo = () => {
     if (modo === "mes") {
       const ultimoDia = new Date(ano, mes, 0).getDate();
@@ -89,9 +95,7 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
         periodoFim: periodo.fim,
       });
 
-      const anoLabel = periodo.inicio.substring(0, 4);
-      const mesLabel = periodo.inicio.substring(5, 7);
-      const nomeBase = modo === "mes" ? `${anoLabel}${mesLabel}` : `${periodo.inicio}_${periodo.fim}`;
+      const nomeBase = formatarNome(periodo.inicio);
 
       const notasPeriodo = notas.filter(n => {
         const d = n.data_emissao || "";
@@ -103,7 +107,7 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
       const zip = new JSZip();
 
       // Arquivo SINTEGRA
-      zip.file(`SINTEGRA_${nomeBase}.txt`, new Blob([conteudo], { type: "text/plain;charset=utf-8" }));
+      zip.file(`SINTEGRA-${nomeBase}.txt`, new Blob([conteudo], { type: "text/plain;charset=utf-8" }));
 
       // XMLs e PDFs organizados em pastas
       const pastas = {
@@ -120,11 +124,11 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
           const base = `${nota.tipo}-${nota.numero || nota.id}`;
           promises.push((async () => {
             const xml = await getXml(nota);
-            if (xml) zip.file(`XMLs/${pasta}/${base}.xml`, xml);
+            if (xml) zip.file(`notas/${pasta}/${base}.xml`, xml);
             if (nota.pdf_url) {
               try {
                 const r = await fetch(nota.pdf_url);
-                if (r.ok) { const b = await r.blob(); zip.file(`XMLs/${pasta}/${base}.pdf`, b); }
+                if (r.ok) { const b = await r.blob(); zip.file(`notas/${pasta}/${base}.pdf`, b); }
               } catch (_) {}
             }
           })());
@@ -134,13 +138,13 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
 
       // Relatório XLSX com 5 abas
       const xlsxData = gerarXlsx(notasPeriodo);
-      zip.file(`Relatorio_Notas_${nomeBase}.xlsx`, xlsxData);
+      zip.file(`Relatorio-${nomeBase}.xlsx`, xlsxData);
 
       const zipBlob = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(zipBlob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `SINTEGRA_${nomeBase}.zip`;
+      a.download = `SINTEGRA-${nomeBase}.zip`;
       a.click();
       URL.revokeObjectURL(url);
 
@@ -230,20 +234,7 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
             </div>
           )}
 
-          {/* Info */}
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-xs text-blue-300 space-y-1">
-            <p className="font-semibold">Conteúdo do ZIP:</p>
-            <p>• SINTEGRA .txt — registros 10, 11, 50, 54, 75, 90</p>
-            <p>• XMLs e PDFs organizados por tipo/categoria</p>
-            <p>• Relatório .xlsx com 5 abas (NFe/NFSe Entrada e Saída, NFCe)</p>
-          </div>
 
-          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 text-xs text-yellow-300">
-            <div className="flex gap-2">
-              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-              <span>Configure os dados da empresa em <strong>Configurações</strong> (CNPJ, IE, endereço) para geração correta.</span>
-            </div>
-          </div>
 
           {resultado && (
             <div className={`rounded-lg p-3 text-sm ${resultado.sucesso ? "bg-green-500/10 border border-green-500/20 text-green-400" : "bg-red-500/10 border border-red-500/20 text-red-400"}`}>
