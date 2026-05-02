@@ -995,11 +995,11 @@ export default function NotasFiscais() {
 
       {/* Linha 1: Emitir Nota + Filtro de Tempo */}
       <div className="flex gap-0.5">
-        <button onClick={() => { setForm(f => ({ ...f, numero: proximoNumero(notas, f.tipo), serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background: "#00cc44", color: "#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00aa33"} onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}>
+        <button onClick={() => { setForm(f => ({ ...f, numero: proximoNumero(notas, f.tipo), serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
           <Plus className="w-4 h-4" /> Emitir Nota
         </button>
         {filtradas.filter(n => n.status === "Importada").length > 0 && (
-          <button onClick={() => setShowLancamentoMassa(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background: "#3b82f6", color: "#fff"}} onMouseEnter={e => e.currentTarget.style.background = "#2563eb"} onMouseLeave={e => e.currentTarget.style.background = "#3b82f6"}>
+          <button onClick={() => setShowLancamentoMassa(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
             <ClipboardList className="w-4 h-4" /> Lançar em Massa
           </button>
         )}
@@ -1040,12 +1040,12 @@ export default function NotasFiscais() {
           }}
           disabled={buscandoSefaz}
           className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
-          style={{background: "#00cc44", color: "#000"}}
-          onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00aa33"; }}
-          onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}
+          style={{background:"#00ff00", color:"#000"}}
+          onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00dd00"; }}
+          onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
         >
           {buscandoSefaz ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-          {buscandoSefaz ? 'Buscando...' : 'Buscar da SEFAZ'}
+          {buscandoSefaz ? 'Importando...' : 'Importar'}
         </button>
         <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
           <BarChart2 className="w-4 h-4" /> Sintegra
