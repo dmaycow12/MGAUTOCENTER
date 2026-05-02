@@ -781,26 +781,14 @@ export default function NotasFiscais() {
   };
 
   const abrirPdfNota = async (nota) => {
-    // Se já tem PDF salvo no banco, valida e baixa
+    // Se já tem PDF salvo no banco
     if (nota.pdf_url) {
-      try {
-        const resp = await fetch(nota.pdf_url);
-        const blob = await resp.blob();
-        const buffer = await blob.slice(0, 4).arrayBuffer();
-        const header = new Uint8Array(buffer);
-        const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
-        
-        if (!isPdfValid) {
-          feedback('erro', 'PDF salvo está corrompido. Buscando novo...');
-          // Limpar PDF corrompido e tentar buscar novamente
-          await base44.entities.NotaFiscal.update(nota.id, { pdf_url: '' });
-          abrirPdfNota(nota);
-          return;
-        }
-        downloadPdf(nota.pdf_url, nomeArquivoPdf(nota));
-      } catch (e) {
-        feedback('erro', 'Erro ao validar PDF: ' + e.message);
+      // NFCe salva como HTML — abre em nova aba
+      if (nota.pdf_url.endsWith('.html') || nota.pdf_url.includes('/notas_fiscais_consumidor/')) {
+        window.open(nota.pdf_url, '_blank');
+        return;
       }
+      downloadPdf(nota.pdf_url, nomeArquivoPdf(nota));
       return;
     }
     
@@ -810,17 +798,21 @@ export default function NotasFiscais() {
       const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
       const data = res.data;
       if (data?.pdf_url) {
+        // NFCe retorna HTML — abre em nova aba para impressão
+        if (data.is_html) {
+          setMsgFeedback(null);
+          window.open(data.pdf_url, '_blank');
+          load();
+          return;
+        }
         await downloadPdf(data.pdf_url, nomeArquivoPdf(nota));
         setMsgFeedback(null);
         load();
         return;
       }
       if (data?.processando) { feedback('erro', data.mensagem || 'SEFAZ ainda processando.'); return; }
-      // Exibir erro com detalhes
       let erroMsg = data?.erro || 'PDF não disponível.';
-      if (data?.detalhes) {
-        erroMsg += `\n\nDetalhes: ${data.detalhes}`;
-      }
+      if (data?.detalhes) erroMsg += `\n\nDetalhes: ${data.detalhes}`;
       feedback('erro', erroMsg);
     } catch (e) {
       feedback('erro', e.message);
