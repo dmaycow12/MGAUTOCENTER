@@ -996,11 +996,11 @@ export default function NotasFiscais() {
       {/* Linha 1: Emitir Nota + Filtro de Tempo */}
       <div className="flex gap-0.5">
         <button onClick={() => { setForm(f => ({ ...f, numero: proximoNumero(notas, f.tipo), serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
-          <Plus className="w-4 h-4" /> Emitir Nota
+          <Plus className="w-4 h-4" /> Emitir
         </button>
         {filtradas.filter(n => n.status === "Importada").length > 0 && (
           <button onClick={() => setShowLancamentoMassa(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
-            <ClipboardList className="w-4 h-4" /> Lançar em Massa
+            <ClipboardList className="w-4 h-4" /> Lançar
           </button>
         )}
         <div className={`flex-1 flex items-center h-9 rounded-lg text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
@@ -1051,7 +1051,7 @@ export default function NotasFiscais() {
           <BarChart2 className="w-4 h-4" /> Sintegra
         </button>
         <button onClick={() => exportarZip()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-          {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} {gerandoZip ? 'Exportando...' : 'Exportar'}
+          {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />} {gerandoZip ? 'Exportando...' : 'Exportar'}
         </button>
       </div>
 
