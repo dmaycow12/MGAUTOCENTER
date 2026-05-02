@@ -780,31 +780,44 @@ export default function NotasFiscais() {
     return `${cliente}-${tipo}-${num}.pdf`;
   };
 
+  const abrirDanfeNfce = async (nota) => {
+    feedback('sucesso', 'Carregando DANFE NFCe...');
+    try {
+      const res = await base44.functions.invoke('danfeNfce', { nota_id: nota.id });
+      const data = res.data;
+      if (data?.erro) { feedback('erro', data.erro); return; }
+      if (data?.html) {
+        const blob = new Blob([data.html], { type: 'text/html; charset=utf-8' });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+        setMsgFeedback(null);
+        load();
+      }
+    } catch (e) {
+      feedback('erro', e.message);
+    }
+  };
+
   const abrirPdfNota = async (nota) => {
+    // NFCe — usa danfeNfce para abrir HTML com botão de salvar PDF
+    if (nota.tipo === 'NFCe') {
+      await abrirDanfeNfce(nota);
+      return;
+    }
+
     // Se já tem PDF salvo no banco
     if (nota.pdf_url) {
-      // NFCe salva como HTML — abre em nova aba
-      if (nota.pdf_url.endsWith('.html') || nota.pdf_url.includes('/notas_fiscais_consumidor/')) {
-        window.open(nota.pdf_url, '_blank');
-        return;
-      }
       downloadPdf(nota.pdf_url, nomeArquivoPdf(nota));
       return;
     }
-    
+
     // Sem PDF salvo — tenta buscar via proxy
     feedback('sucesso', 'Buscando PDF na Focus NFe...');
     try {
       const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
       const data = res.data;
       if (data?.pdf_url) {
-        // NFCe retorna HTML — abre em nova aba para impressão
-        if (data.is_html) {
-          setMsgFeedback(null);
-          window.open(data.pdf_url, '_blank');
-          load();
-          return;
-        }
         await downloadPdf(data.pdf_url, nomeArquivoPdf(nota));
         setMsgFeedback(null);
         load();
