@@ -84,6 +84,7 @@ export default function NotasFiscais() {
   const [gerandoZip, setGerandoZip] = useState(false);
   const [recuperandoXmls, setRecuperandoXmls] = useState(false);
   const [recuperandoPdfs, setRecuperandoPdfs] = useState(false);
+  const [convertendoNfce, setConvertendoNfce] = useState(false);
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
   const [atualizandoStatus, setAtualizandoStatus] = useState(null);
@@ -786,6 +787,14 @@ export default function NotasFiscais() {
       const res = await base44.functions.invoke('danfeNfce', { nota_id: nota.id });
       const data = res.data;
       if (data?.erro) { feedback('erro', data.erro); return; }
+      // PDF gerado e salvo — abre direto
+      if (data?.pdf_url) {
+        window.open(data.pdf_url, '_blank');
+        setMsgFeedback(null);
+        load();
+        return;
+      }
+      // Fallback: HTML (converte no navegador via print)
       if (data?.html) {
         const blob = new Blob([data.html], { type: 'text/html; charset=utf-8' });
         const blobUrl = URL.createObjectURL(blob);
@@ -834,7 +843,19 @@ export default function NotasFiscais() {
 
   const baixarPdfNota = async (nota) => {
     if (nota.tipo === 'NFCe') {
-      await abrirDanfeNfce(nota);
+      // Para NFCe: garante que o PDF foi gerado e baixa direto
+      let pdfUrl = nota.pdf_url && !nota.pdf_url.endsWith('.html') ? nota.pdf_url : null;
+      if (!pdfUrl) {
+        feedback('sucesso', 'Gerando PDF da NFCe...');
+        try {
+          const res = await base44.functions.invoke('danfeNfce', { nota_id: nota.id });
+          const data = res.data;
+          if (data?.pdf_url) { pdfUrl = data.pdf_url; load(); }
+          else { feedback('erro', data?.erro || 'PDF não disponível.'); return; }
+        } catch (e) { feedback('erro', e.message); return; }
+      }
+      await downloadPdf(pdfUrl, nomeArquivoPdf(nota));
+      setMsgFeedback(null);
       return;
     }
     let pdfUrl = nota.pdf_url;
@@ -1074,6 +1095,33 @@ export default function NotasFiscais() {
           >
             {recuperandoPdfs ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
             {recuperandoPdfs ? 'Recuperando...' : 'Recuperar PDFs'}
+          </button>
+          <button
+            onClick={async () => {
+              setConvertendoNfce(true);
+              try {
+                const res = await base44.functions.invoke('cachearPdfsNfce', {});
+                const d = res.data;
+                if (d?.sucesso) {
+                  feedback('sucesso', `NFCe convertidas: ${d.convertidas}${d.restantes > 0 ? ` | Restam ${d.restantes} — clique novamente` : ' | Todas concluídas!'}`);
+                  if (d.convertidas > 0) load();
+                } else {
+                  feedback('erro', d?.erro || 'Erro ao converter PDFs NFCe.');
+                }
+              } catch (e) {
+                feedback('erro', 'Erro: ' + e.message);
+              }
+              setConvertendoNfce(false);
+            }}
+            disabled={convertendoNfce}
+            className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+            style={{background:"#a855f7", color:"#fff"}}
+            onMouseEnter={e => { if (!convertendoNfce) e.currentTarget.style.background="#9333ea"; }}
+            onMouseLeave={e => e.currentTarget.style.background="#a855f7"}
+            title="Converter DANFE HTML das NFCe para PDF e salvar no banco"
+          >
+            {convertendoNfce ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+            {convertendoNfce ? 'Convertendo...' : 'PDF NFCe'}
           </button>
           <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             <BarChart2 className="w-4 h-4" /> Sintegra
