@@ -28,83 +28,65 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: true, pdf_url: nota.pdf_url });
     }
 
-    // Para NFCe emitida: buscar direto pelo reference_id (spedy_id)
+    // Para NFCe emitida: a Focus NFe retorna HTML (DANFE simplificado), não PDF
+    // Usamos o serviço gratuito screenshotmachine ou urlpdf para converter para PDF
     if (nota.tipo === 'NFCe' && nota.spedy_id) {
-      console.log('[DEBUG] NFCe emitida, buscando PDF via reference_id:', nota.spedy_id);
-      
-      // Tenta múltiplos endpoints para NFCe
-      const endpoints = [
-        `${FOCUSNFE_BASE}/nfce/${nota.spedy_id}.pdf`,
-        `${FOCUSNFE_BASE}/nfce/${nota.spedy_id}`,
-      ];
-      
-      for (const pdfUrl of endpoints) {
-        console.log('[DEBUG] Tentando endpoint NFCe:', pdfUrl);
-        const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER } });
-        
-        if (!pdfResp.ok) {
-          console.log('[DEBUG] Endpoint retornou', pdfResp.status);
-          continue;
-        }
-        
-        const contentType = pdfResp.headers.get('content-type') || '';
-        console.log('[DEBUG] Content-Type:', contentType);
-        
-        // Se endpoint retorna JSON, significa que tem mais dados
-        if (contentType.includes('application/json')) {
-          const jsonData = await pdfResp.json();
-          console.log('[DEBUG] Resposta JSON da NFCe:', JSON.stringify(jsonData).substring(0, 500));
-          
-          // Tenta extrair URL de PDF dos dados
-          const pdfUrls = [
-            jsonData.url_danfce,
-            jsonData.caminho_pdf,
-            jsonData.url_pdf,
-            jsonData.danfce_url,
-          ].filter(Boolean);
-          
-          if (pdfUrls.length === 0) {
-            console.log('[DEBUG] Nenhuma URL de PDF encontrada na resposta JSON');
-            return Response.json({ sucesso: false, erro: 'NFCe não tem URL de PDF disponível ainda', json_response: jsonData });
-          }
-          
-          for (const url of pdfUrls) {
-            if (!url) continue;
-            const fullUrl = url.startsWith('http') ? url : normalizarUrl(url);
-            console.log('[DEBUG] Tentando URL extraída:', fullUrl);
-            const pdfResp2 = await fetch(fullUrl, {});
-            if (pdfResp2.ok) {
-              const blob = await pdfResp2.blob();
-              console.log('[DEBUG] Arquivo baixado, tamanho:', blob.size);
-              
-              if (blob.size > 1000) { // PDF válido tem pelo menos 1KB
-                const nomeArquivo = `nfce-${nota.numero || nota_id}.pdf`;
-                const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
-                await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
-                return Response.json({ sucesso: true, pdf_url: file_url });
-              }
-            }
-          }
-          continue;
-        }
-        
-        // Se é PDF direto
-        if (contentType.includes('pdf') || contentType.includes('octet')) {
-          const blob = await pdfResp.blob();
-          console.log('[DEBUG] PDF direto recebido, tamanho:', blob.size);
-          
-          if (blob.size > 1000) { // PDF válido tem pelo menos 1KB
-            const nomeArquivo = `nfce-${nota.numero || nota_id}.pdf`;
-            const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
-            await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+      console.log('[DEBUG] NFCe emitida, buscando dados via spedy_id:', nota.spedy_id);
+
+      const consultaResp = await fetch(`${FOCUSNFE_BASE}/nfce/${nota.spedy_id}?completo=1`, {
+        headers: { 'Authorization': AUTH_HEADER },
+      });
+      if (!consultaResp.ok) {
+        return Response.json({ sucesso: false, erro: `Erro ao consultar NFCe: ${consultaResp.status}` });
+      }
+      const dadosNFCe = await consultaResp.json();
+      const chave = (dadosNFCe.chave_nfe || nota.chave_acesso || '').replace(/\D/g, '');
+      const caminhoHtml = dadosNFCe.caminho_danfe || '';
+      const htmlUrl = caminhoHtml ? normalizarUrl(caminhoHtml) : '';
+
+      if (!htmlUrl) {
+        return Response.json({ sucesso: false, erro: 'DANFE da NFCe não disponível ainda.' });
+      }
+
+      // Baixa o conteúdo HTML da Focus NFe
+      const htmlResp = await fetch(htmlUrl, { headers: { 'Authorization': AUTH_HEADER } });
+      if (!htmlResp.ok) {
+        return Response.json({ sucesso: false, erro: `Erro ao buscar DANFE HTML: ${htmlResp.status}` });
+      }
+      const htmlContent = await htmlResp.text();
+      console.log('[DEBUG] HTML obtido, tamanho:', htmlContent.length);
+
+      // Converte HTML → PDF usando screenshotapi.net (gratuito com limite)
+      // Alternativa: urlbox, browserless, etc.
+      // Usamos o serviço do screenshotapi que aceita HTML content para PDF
+      const pdfConvertResp = await fetch('https://screenshotapi.net/api/v1/screenshot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: 'DEMO',
+          html: htmlContent,
+          output: 'pdf',
+          width: 400,
+          full_page: true,
+        }),
+      });
+      console.log('[DEBUG] screenshotapi status:', pdfConvertResp.status);
+
+      if (pdfConvertResp.ok) {
+        const ct = pdfConvertResp.headers.get('content-type') || '';
+        if (ct.includes('pdf') || ct.includes('octet')) {
+          const pdfBlob = await pdfConvertResp.blob();
+          if (pdfBlob.size > 500) {
+            const { file_url } = await db.integrations.Core.UploadFile({ file: pdfBlob });
+            await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url, chave_acesso: chave });
             return Response.json({ sucesso: true, pdf_url: file_url });
-          } else {
-            return Response.json({ sucesso: false, erro: `Arquivo inválido recebido (${blob.size} bytes)` });
           }
         }
       }
-      
-      return Response.json({ sucesso: false, erro: 'Não foi possível recuperar o PDF da NFCe. Verifique se a NFCe foi autorizada corretamente.' });
+
+      // Fallback: salva URL do HTML — frontend abre em nova aba (usuário imprime como PDF)
+      await db.entities.NotaFiscal.update(nota_id, { pdf_url: htmlUrl, chave_acesso: chave });
+      return Response.json({ sucesso: true, pdf_url: htmlUrl, is_html: true });
     }
 
     // Ainda não tem PDF permanente — tenta buscar na Focus NFe
