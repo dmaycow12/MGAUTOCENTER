@@ -114,19 +114,23 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
         "Notas de Saida/NFCe":   notasPeriodo.filter(n => !isEntrada(n) && n.tipo === "NFCe"),
       };
 
+      const promises = [];
       for (const [pasta, notasPasta] of Object.entries(pastas)) {
         for (const nota of notasPasta) {
           const base = `${nota.tipo}-${nota.numero || nota.id}`;
-          const xml = await getXml(nota);
-          if (xml) zip.file(`XMLs/${pasta}/${base}.xml`, xml);
-          if (nota.pdf_url) {
-            try {
-              const r = await fetch(nota.pdf_url);
-              if (r.ok) { const b = await r.blob(); zip.file(`XMLs/${pasta}/${base}.pdf`, b); }
-            } catch (_) {}
-          }
+          promises.push((async () => {
+            const xml = await getXml(nota);
+            if (xml) zip.file(`XMLs/${pasta}/${base}.xml`, xml);
+            if (nota.pdf_url) {
+              try {
+                const r = await fetch(nota.pdf_url);
+                if (r.ok) { const b = await r.blob(); zip.file(`XMLs/${pasta}/${base}.pdf`, b); }
+              } catch (_) {}
+            }
+          })());
         }
       }
+      await Promise.all(promises);
 
       // Relatório XLSX com 5 abas
       const xlsxData = gerarXlsx(notasPeriodo);
