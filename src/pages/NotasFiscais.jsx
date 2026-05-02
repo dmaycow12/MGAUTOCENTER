@@ -82,6 +82,9 @@ export default function NotasFiscais() {
   const [filtroTipo, setFiltroTipo] = useState(() => { try { const s = localStorage.getItem("nf_filtroTipo"); return s ? JSON.parse(s) : ["Saída"]; } catch { return ["Saída"]; } });
   const [filtroModeloNF, setFiltroModeloNF] = useState(() => { try { const s = localStorage.getItem("nf_filtroModelo"); const parsed = s ? JSON.parse(s) : null; return parsed && parsed.length > 0 ? parsed : ["NFe", "NFCe", "NFSe"]; } catch { return ["NFe", "NFCe", "NFSe"]; } });
   const [gerandoZip, setGerandoZip] = useState(false);
+  const [recuperandoXmls, setRecuperandoXmls] = useState(false);
+  const [recuperandoPdfs, setRecuperandoPdfs] = useState(false);
+  const [convertendoNfce, setConvertendoNfce] = useState(false);
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
   const [atualizandoStatus, setAtualizandoStatus] = useState(null);
@@ -890,40 +893,29 @@ export default function NotasFiscais() {
     }
   };
 
-  const exportarZip = async () => {
-    const notasComArquivos = filtradas.filter(n =>
+  const exportarXmlsZip = async () => {
+    const comXml = filtradas.filter(n =>
       n.xml_original?.trim().startsWith("<") ||
       n.xml_content?.trim().startsWith("<") ||
-      n.xml_url?.startsWith("http") ||
-      n.pdf_url?.startsWith("http")
+      n.xml_url?.startsWith("http")
     );
-    if (notasComArquivos.length === 0) return alert("Nenhuma nota com XML ou PDF disponível no filtro atual.");
+    if (comXml.length === 0) return alert("Nenhuma nota com XML disponível no filtro atual.");
     setGerandoZip(true);
-    feedback("sucesso", `Preparando ZIP com ${notasComArquivos.length} nota(s)...`);
+    feedback("sucesso", `Preparando ZIP com ${comXml.length} nota(s)...`);
     try {
       const zip = new JSZip();
-      for (const nota of notasComArquivos) {
-        const base = `${nota.tipo || "NF"}-${nota.numero || nota.id}`;
-        // XML
+      for (const nota of comXml) {
+        const nome = `${nota.tipo || "NF"}-${nota.numero || nota.id}.xml`;
+        // Prioridade: xml_original inline > xml_content inline > xml_url (arquivo)
         if (nota.xml_original?.trim().startsWith("<")) {
-          zip.file(`${base}.xml`, nota.xml_original);
+          zip.file(nome, nota.xml_original);
         } else if (nota.xml_content?.trim().startsWith("<")) {
-          zip.file(`${base}.xml`, nota.xml_content);
+          zip.file(nome, nota.xml_content);
         } else if (nota.xml_url) {
           try {
             const r = await fetch(nota.xml_url);
             const text = await r.text();
-            if (text && text.trim().startsWith("<")) zip.file(`${base}.xml`, text);
-          } catch (_) {}
-        }
-        // PDF
-        if (nota.pdf_url) {
-          try {
-            const r = await fetch(nota.pdf_url);
-            if (r.ok) {
-              const blob = await r.blob();
-              zip.file(`${base}.pdf`, blob);
-            }
+            if (text && text.trim().startsWith("<")) zip.file(nome, text);
           } catch (_) {}
         }
       }
@@ -931,7 +923,7 @@ export default function NotasFiscais() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `NF_${periodoRange.inicio}_${periodoRange.fim}.zip`;
+      a.download = `XMLs_NF_${periodoRange.inicio}_${periodoRange.fim}.zip`;
       a.click();
       URL.revokeObjectURL(url);
       setMsgFeedback(null);
@@ -1047,8 +1039,89 @@ export default function NotasFiscais() {
           <button onClick={() => { const novo = filtroModeloNF.includes("NFSe") ? filtroModeloNF.filter(x => x !== "NFSe") : [...filtroModeloNF, "NFSe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
         </div>
         <div className="flex gap-0.5">
-          <button onClick={() => exportarZip()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-            {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} {gerandoZip ? 'Exportando...' : 'Exportar XML + PDF'}
+          <button onClick={() => exportarXmlsZip()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+            {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Exportar XML
+          </button>
+          <button
+            onClick={async () => {
+              setRecuperandoXmls(true);
+              try {
+                const res = await base44.functions.invoke('recuperarXmlsEmitidos', {});
+                const d = res.data;
+                if (d?.sucesso) {
+                  feedback('sucesso', `XMLs recuperados: ${d.recuperadas}${d.restantes > 0 ? ` | Restam ${d.restantes} — clique novamente` : ' | Todos concluídos!'}`);
+                  if (d.recuperadas > 0) load();
+                } else {
+                  feedback('erro', d?.erro || 'Erro ao recuperar XMLs.');
+                }
+              } catch (e) {
+                feedback('erro', 'Erro: ' + e.message);
+              }
+              setRecuperandoXmls(false);
+            }}
+            disabled={recuperandoXmls}
+            className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+            style={{background:"#f59e0b", color:"#000"}}
+            onMouseEnter={e => { if (!recuperandoXmls) e.currentTarget.style.background="#d97706"; }}
+            onMouseLeave={e => e.currentTarget.style.background="#f59e0b"}
+            title="Recuperar XMLs de notas emitidas que ainda não têm XML salvo"
+          >
+            {recuperandoXmls ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Code className="w-4 h-4" />}
+            {recuperandoXmls ? 'Recuperando...' : 'Recuperar XMLs'}
+          </button>
+          <button
+            onClick={async () => {
+              setRecuperandoPdfs(true);
+              try {
+                const res = await base44.functions.invoke('recuperarPdfsFaltantes', {});
+                const d = res.data;
+                if (d?.sucesso) {
+                  feedback('sucesso', `PDFs recuperados: ${d.recuperadas}${d.restantes > 0 ? ` | Restam ${d.restantes} — clique novamente` : ' | Todos concluídos!'}`);
+                  if (d.recuperadas > 0) load();
+                } else {
+                  feedback('erro', d?.erro || 'Erro ao recuperar PDFs.');
+                }
+              } catch (e) {
+                feedback('erro', 'Erro: ' + e.message);
+              }
+              setRecuperandoPdfs(false);
+            }}
+            disabled={recuperandoPdfs}
+            className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+            style={{background:"#ef4444", color:"#fff"}}
+            onMouseEnter={e => { if (!recuperandoPdfs) e.currentTarget.style.background="#dc2626"; }}
+            onMouseLeave={e => e.currentTarget.style.background="#ef4444"}
+            title="Recuperar PDFs de notas emitidas que ainda não têm PDF salvo"
+          >
+            {recuperandoPdfs ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+            {recuperandoPdfs ? 'Recuperando...' : 'Recuperar PDFs'}
+          </button>
+          <button
+            onClick={async () => {
+              setConvertendoNfce(true);
+              try {
+                const res = await base44.functions.invoke('cachearPdfsNfce', {});
+                const d = res.data;
+                if (d?.sucesso) {
+                  feedback('sucesso', `NFCe convertidas: ${d.convertidas}${d.restantes > 0 ? ` | Restam ${d.restantes} — clique novamente` : ' | Todas concluídas!'}`);
+                  if (d.convertidas > 0) load();
+                } else {
+                  feedback('erro', d?.erro || 'Erro ao converter PDFs NFCe.');
+                }
+              } catch (e) {
+                feedback('erro', 'Erro: ' + e.message);
+              }
+              setConvertendoNfce(false);
+            }}
+            disabled={convertendoNfce}
+            className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+            style={{background:"#a855f7", color:"#fff"}}
+            onMouseEnter={e => { if (!convertendoNfce) e.currentTarget.style.background="#9333ea"; }}
+            onMouseLeave={e => e.currentTarget.style.background="#a855f7"}
+            title="Converter DANFE HTML das NFCe para PDF e salvar no banco"
+          >
+            {convertendoNfce ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+            {convertendoNfce ? 'Convertendo...' : 'PDF NFCe'}
           </button>
           <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             <BarChart2 className="w-4 h-4" /> Sintegra
