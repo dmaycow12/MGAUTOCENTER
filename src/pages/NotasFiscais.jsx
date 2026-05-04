@@ -166,95 +166,97 @@ export default function NotasFiscais() {
   const [xmlModal, setXmlModal] = useState(null); // nota para visualizar XML
 
   useEffect(() => {
-    load().then(async ({ estoque: estoqueData }) => {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("emitir") === "1") {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("emitir") === "1") {
+      (async () => {
         const tipo = params.get("tipo") || "NFSe";
         const os_id = params.get("os_id") || "";
-        const cliente_id = params.get("cliente_id") || "";
-        const cliente_nome = params.get("cliente_nome") || "";
+        const cliente_id_param = params.get("cliente_id") || "";
+        const cliente_nome_param = params.get("cliente_nome") || "";
         window.history.replaceState({}, "", window.location.pathname);
 
+        // Carrega dados em paralelo
+        const [{ clientes: clientesList, estoque: estoqueData }, osData] = await Promise.all([
+          load(),
+          os_id ? base44.entities.Vendas.filter({ id: os_id }, "-created_date", 1) : Promise.resolve([]),
+        ]);
+
+        const os = osData[0];
         let items = [defaultItem()];
         let valor_total = 0;
-        let clienteExtra = {};
-        if (os_id) {
-          try {
-            const osData = await base44.entities.Vendas.filter({ id: os_id }, "-created_date", 1);
-            const os = osData[0];
-            if (os) {
-              // Busca dados completos do cliente no cadastro
-              let clienteCadastro = null;
-              if (os.cliente_id) {
-                try {
-                  const cRes = await base44.entities.Cadastro.filter({ id: os.cliente_id }, "-created_date", 1);
-                  clienteCadastro = cRes[0] || null;
-                } catch {}
-              }
-              const enderecoCompleto = os.cliente_endereco || (clienteCadastro ? [clienteCadastro.endereco, clienteCadastro.numero].filter(Boolean).join(', ') : '');
-              clienteExtra = {
-                cliente_cpf_cnpj: os.cliente_cpf_cnpj || clienteCadastro?.cpf_cnpj || "",
-                cliente_ie: clienteCadastro?.rg_ie || "",
-                cliente_email: os.cliente_email || clienteCadastro?.email || "",
-                cliente_telefone: os.cliente_telefone || clienteCadastro?.telefone || "",
-                cliente_endereco: enderecoCompleto,
-                cliente_numero: clienteCadastro?.numero || "",
-                cliente_bairro: os.cliente_bairro || clienteCadastro?.bairro || "",
-                cliente_cep: clienteCadastro?.cep || "",
-                cliente_cidade: os.cliente_cidade || clienteCadastro?.cidade || "",
-                cliente_estado: os.cliente_estado || clienteCadastro?.estado || "",
-                forma_pagamento: os.parcelas_detalhes?.[0]?.forma_pagamento || os.forma_pagamento || "A Combinar",
-              };
-              if (tipo === "NFSe") {
-                const servs = os.servicos || [];
-                if (servs.length > 0) {
-                  items = servs.map(s => ({
-                    descricao: s.descricao || "",
-                    quantidade: Number(s.quantidade ?? 1),
-                    valor_unitario: Number(s.valor || 0),
-                    valor_total: Number(s.valor || 0) * Number(s.quantidade ?? 1),
-                  }));
-                }
-                valor_total = items.reduce((sum, it) => sum + it.valor_total, 0);
-              } else {
-                const pecas = os.pecas || [];
-                if (pecas.length > 0) {
-                  items = pecas.map(p => {
-                    const estoqueItem = estoqueData.find(e => e.id === p.estoque_id);
-                    return {
-                      descricao: p.descricao || "",
-                      codigo: p.codigo || estoqueItem?.codigo || "",
-                      estoque_id: p.estoque_id || "",
-                      quantidade: Number(p.quantidade || 1),
-                      valor_unitario: Number(p.valor_unitario || 0),
-                      valor_total: Number(p.valor_total || 0),
-                      ncm: estoqueItem?.ncm || "87089990",
-                      cfop: estoqueItem?.cfop || "5405",
-                      cest: estoqueItem?.cest || "",
-                      unidade: estoqueItem?.unidade || "UN",
-                    };
-                  });
-                }
-                valor_total = items.reduce((sum, it) => sum + it.valor_total, 0);
-              }
+
+        if (os) {
+          if (tipo === "NFSe") {
+            const servs = os.servicos || [];
+            if (servs.length > 0) {
+              items = servs.map(s => ({
+                descricao: s.descricao || "",
+                quantidade: Number(s.quantidade ?? 1),
+                valor_unitario: Number(s.valor || 0),
+                valor_total: Number(s.valor || 0) * Number(s.quantidade ?? 1),
+              }));
             }
-          } catch {}
+          } else {
+            const pecas = os.pecas || [];
+            if (pecas.length > 0) {
+              items = pecas.map(p => {
+                const estoqueItem = estoqueData.find(e => e.id === p.estoque_id);
+                return {
+                  descricao: p.descricao || "",
+                  codigo: p.codigo || estoqueItem?.codigo || "",
+                  estoque_id: p.estoque_id || "",
+                  quantidade: Number(p.quantidade || 1),
+                  valor_unitario: Number(p.valor_unitario || 0),
+                  valor_total: Number(p.valor_total || 0),
+                  ncm: estoqueItem?.ncm || "87089990",
+                  cfop: estoqueItem?.cfop || "5405",
+                  cest: estoqueItem?.cest || "",
+                  unidade: estoqueItem?.unidade || "UN",
+                };
+              });
+            }
+          }
+          valor_total = items.reduce((sum, it) => sum + it.valor_total, 0);
         }
 
-        setForm({
-          ...defaultForm(),
-          tipo,
-          ordem_venda_id: os_id,
-          cliente_id,
-          cliente_nome,
-          ...clienteExtra,
-          valor_total,
-          items,
-        });
+        // Busca cliente pelo ID — prioriza os.cliente_id, depois URL param
+        const clienteIdFinal = os?.cliente_id || cliente_id_param;
+        const c = clientesList?.find(cl => cl.id === clienteIdFinal);
+
+        const dadosCliente = c ? {
+          cliente_id: c.id,
+          cliente_nome: c.nome || cliente_nome_param,
+          cliente_cpf_cnpj: c.cpf_cnpj || os?.cliente_cpf_cnpj || "",
+          cliente_ie: c.rg_ie || "",
+          cliente_email: c.email || os?.cliente_email || "",
+          cliente_telefone: c.telefone || os?.cliente_telefone || "",
+          cliente_endereco: [c.endereco, c.numero].filter(Boolean).join(', ') || os?.cliente_endereco || "",
+          cliente_numero: c.numero || "",
+          cliente_bairro: c.bairro || os?.cliente_bairro || "",
+          cliente_cep: c.cep || "",
+          cliente_cidade: c.cidade || os?.cliente_cidade || "",
+          cliente_estado: c.estado || os?.cliente_estado || "",
+          forma_pagamento: os?.parcelas_detalhes?.[0]?.forma_pagamento || os?.forma_pagamento || "A Combinar",
+        } : {
+          cliente_id: cliente_id_param,
+          cliente_nome: cliente_nome_param,
+          cliente_cpf_cnpj: os?.cliente_cpf_cnpj || "",
+          cliente_email: os?.cliente_email || "",
+          cliente_telefone: os?.cliente_telefone || "",
+          cliente_endereco: os?.cliente_endereco || "",
+          cliente_bairro: os?.cliente_bairro || "",
+          cliente_cidade: os?.cliente_cidade || "",
+          cliente_estado: os?.cliente_estado || "",
+          forma_pagamento: os?.parcelas_detalhes?.[0]?.forma_pagamento || os?.forma_pagamento || "A Combinar",
+        };
+
+        setForm({ ...defaultForm(), tipo, ordem_venda_id: os_id, ...dadosCliente, valor_total, items });
         setAbaForm("cliente");
         setShowForm(true);
-      }
-    });
+      })();
+    } else {
+      load();
+    }
   }, []);
 
   const proximoNumero = (notasList, tipo) => {
