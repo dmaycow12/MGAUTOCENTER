@@ -1432,6 +1432,7 @@ export default function NotasFiscais() {
                        placeholder="Digite o nome ou CPF/CNPJ..."
                        options={clientesFiltrados.map(c => ({ value: c.id, label: c.nome, sublabel: c.cpf_cnpj || '' }))}
                        onSelect={opt => selecionarCliente(opt.value)}
+                       initialValue={form.cliente_nome || ''}
                      />
                    </F>
 

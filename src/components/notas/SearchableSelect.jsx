@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
-export default function SearchableSelect({ options = [], onSelect, placeholder = 'Digite para buscar...' }) {
-  const [query, setQuery] = useState('');
+export default function SearchableSelect({ options = [], onSelect, placeholder = 'Digite para buscar...', initialValue = '' }) {
+  const [query, setQuery] = useState(initialValue);
   const [open, setOpen] = useState(false);
   const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0 });
   const inputRef = useRef(null);
@@ -14,6 +14,10 @@ export default function SearchableSelect({ options = [], onSelect, placeholder =
       setDropPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
     }
   };
+
+  useEffect(() => {
+    if (initialValue) setQuery(initialValue);
+  }, [initialValue]);
 
   useEffect(() => {
     if (open) updatePos();
