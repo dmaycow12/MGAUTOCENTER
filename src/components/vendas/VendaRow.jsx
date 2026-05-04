@@ -220,7 +220,7 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
     if ((tipo === 'NFe' || tipo === 'NFCe') && jaTemNfNfce) return;
     if (tipo === 'NFSe' && jaTemNfse) return;
 
-    const params = new URLSearchParams({ emitir: "1", tipo, os_id: os.id, os_numero: os.numero || "", cliente_id: os.cliente_id || "", cliente_nome: encodeURIComponent(os.cliente_nome || ""), valor: String(os.valor_total || 0) });
+    const params = new URLSearchParams({ emitir: "1", tipo, os_id: os.id, os_numero: os.numero || "", cliente_id: os.cliente_id || "", cliente_nome: os.cliente_nome || "", valor: String(os.valor_total || 0) });
     window.open(createPageUrl("NotasFiscais") + "?" + params.toString(), "_blank");
   };
 

@@ -172,7 +172,7 @@ export default function NotasFiscais() {
         const tipo = params.get("tipo") || "NFSe";
         const os_id = params.get("os_id") || "";
         const cliente_id = params.get("cliente_id") || "";
-        const cliente_nome = decodeURIComponent(params.get("cliente_nome") || "");
+        const cliente_nome = params.get("cliente_nome") || "";
         window.history.replaceState({}, "", window.location.pathname);
 
         let items = [defaultItem()];
