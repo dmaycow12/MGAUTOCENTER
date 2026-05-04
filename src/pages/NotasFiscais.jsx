@@ -221,7 +221,9 @@ export default function NotasFiscais() {
 
         // Busca cliente pelo ID — prioriza os.cliente_id, depois URL param
         const clienteIdFinal = os?.cliente_id || cliente_id_param;
-        const c = clientesList?.find(cl => cl.id === clienteIdFinal);
+        const clienteNomeBusca = os?.cliente_nome || cliente_nome_param || "";
+        const c = clientesList?.find(cl => cl.id === clienteIdFinal)
+          || (clienteNomeBusca ? clientesList?.find(cl => cl.nome?.toLowerCase() === clienteNomeBusca.toLowerCase()) : null);
 
         const dadosCliente = c ? {
           cliente_id: c.id,
