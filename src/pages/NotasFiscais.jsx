@@ -170,7 +170,7 @@ export default function NotasFiscais() {
     if (params.get("emitir") === "1") {
       (async () => {
         const tipo = params.get("tipo") || "NFSe";
-        const os_id = params.get("os_id") || "";
+        const os_id = params.get("os_id") || ""; // os_id = ordem de venda id (parâmetro URL mantido por compatibilidade)
         const cliente_id_param = params.get("cliente_id") || "";
         const cliente_nome_param = params.get("cliente_nome") || "";
         window.history.replaceState({}, "", window.location.pathname);
