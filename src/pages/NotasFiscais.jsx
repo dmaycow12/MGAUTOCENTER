@@ -290,7 +290,7 @@ export default function NotasFiscais() {
   const load = async () => {
     const [n, c, configs, os, est, srv] = await Promise.all([
       base44.entities.NotaFiscal.list("-created_date", 500),
-      base44.entities.Cadastro.list("-created_date", 200),
+      base44.entities.Cadastro.list("-created_date", 500),
       base44.entities.Configuracao.list("-created_date", 100),
       base44.entities.Vendas.list("-created_date", 500),
       base44.entities.Estoque.list("-created_date", 500),
