@@ -170,24 +170,24 @@ export default function NotasFiscais() {
     if (params.get("emitir") === "1") {
       (async () => {
         const tipo = params.get("tipo") || "NFSe";
-        const os_id = params.get("os_id") || ""; // os_id = ordem de venda id (parâmetro URL mantido por compatibilidade)
+        const venda_id = params.get("os_id") || "";
         const cliente_id_param = params.get("cliente_id") || "";
         const cliente_nome_param = params.get("cliente_nome") || "";
         window.history.replaceState({}, "", window.location.pathname);
 
         // Carrega dados em paralelo
-        const [{ clientes: clientesList, estoque: estoqueData }, osData] = await Promise.all([
+        const [{ clientes: clientesList, estoque: estoqueData }, vendaData] = await Promise.all([
           load(),
-          os_id ? base44.entities.Vendas.filter({ id: os_id }, "-created_date", 1) : Promise.resolve([]),
+          venda_id ? base44.entities.Vendas.filter({ id: venda_id }, "-created_date", 1) : Promise.resolve([]),
         ]);
 
-        const os = osData[0];
+        const venda = vendaData[0];
         let items = [defaultItem()];
         let valor_total = 0;
 
-        if (os) {
+        if (venda) {
           if (tipo === "NFSe") {
-            const servs = os.servicos || [];
+            const servs = venda.servicos || [];
             if (servs.length > 0) {
               items = servs.map(s => ({
                 descricao: s.descricao || "",
@@ -197,7 +197,7 @@ export default function NotasFiscais() {
               }));
             }
           } else {
-            const pecas = os.pecas || [];
+            const pecas = venda.pecas || [];
             if (pecas.length > 0) {
               items = pecas.map(p => {
                 const estoqueItem = estoqueData.find(e => e.id === p.estoque_id);
@@ -219,40 +219,40 @@ export default function NotasFiscais() {
           valor_total = items.reduce((sum, it) => sum + it.valor_total, 0);
         }
 
-        // Busca cliente pelo ID — prioriza os.cliente_id, depois URL param
-        const clienteIdFinal = os?.cliente_id || cliente_id_param;
-        const clienteNomeBusca = os?.cliente_nome || cliente_nome_param || "";
+        // Busca cliente pelo ID — prioriza venda.cliente_id, depois URL param
+        const clienteIdFinal = venda?.cliente_id || cliente_id_param;
+        const clienteNomeBusca = venda?.cliente_nome || cliente_nome_param || "";
         const c = clientesList?.find(cl => cl.id === clienteIdFinal)
           || (clienteNomeBusca ? clientesList?.find(cl => cl.nome?.toLowerCase() === clienteNomeBusca.toLowerCase()) : null);
 
         const dadosCliente = c ? {
           cliente_id: c.id,
           cliente_nome: c.nome || cliente_nome_param,
-          cliente_cpf_cnpj: c.cpf_cnpj || os?.cliente_cpf_cnpj || "",
+          cliente_cpf_cnpj: c.cpf_cnpj || venda?.cliente_cpf_cnpj || "",
           cliente_ie: c.rg_ie || "",
-          cliente_email: c.email || os?.cliente_email || "",
-          cliente_telefone: c.telefone || os?.cliente_telefone || "",
-          cliente_endereco: [c.endereco, c.numero].filter(Boolean).join(', ') || os?.cliente_endereco || "",
+          cliente_email: c.email || venda?.cliente_email || "",
+          cliente_telefone: c.telefone || venda?.cliente_telefone || "",
+          cliente_endereco: [c.endereco, c.numero].filter(Boolean).join(', ') || venda?.cliente_endereco || "",
           cliente_numero: c.numero || "",
-          cliente_bairro: c.bairro || os?.cliente_bairro || "",
+          cliente_bairro: c.bairro || venda?.cliente_bairro || "",
           cliente_cep: c.cep || "",
-          cliente_cidade: c.cidade || os?.cliente_cidade || "",
-          cliente_estado: c.estado || os?.cliente_estado || "",
-          forma_pagamento: os?.parcelas_detalhes?.[0]?.forma_pagamento || os?.forma_pagamento || "A Combinar",
+          cliente_cidade: c.cidade || venda?.cliente_cidade || "",
+          cliente_estado: c.estado || venda?.cliente_estado || "",
+          forma_pagamento: venda?.parcelas_detalhes?.[0]?.forma_pagamento || venda?.forma_pagamento || "A Combinar",
         } : {
           cliente_id: cliente_id_param,
           cliente_nome: cliente_nome_param,
-          cliente_cpf_cnpj: os?.cliente_cpf_cnpj || "",
-          cliente_email: os?.cliente_email || "",
-          cliente_telefone: os?.cliente_telefone || "",
-          cliente_endereco: os?.cliente_endereco || "",
-          cliente_bairro: os?.cliente_bairro || "",
-          cliente_cidade: os?.cliente_cidade || "",
-          cliente_estado: os?.cliente_estado || "",
-          forma_pagamento: os?.parcelas_detalhes?.[0]?.forma_pagamento || os?.forma_pagamento || "A Combinar",
+          cliente_cpf_cnpj: venda?.cliente_cpf_cnpj || "",
+          cliente_email: venda?.cliente_email || "",
+          cliente_telefone: venda?.cliente_telefone || "",
+          cliente_endereco: venda?.cliente_endereco || "",
+          cliente_bairro: venda?.cliente_bairro || "",
+          cliente_cidade: venda?.cliente_cidade || "",
+          cliente_estado: venda?.cliente_estado || "",
+          forma_pagamento: venda?.parcelas_detalhes?.[0]?.forma_pagamento || venda?.forma_pagamento || "A Combinar",
         };
 
-        setForm({ ...defaultForm(), tipo, ordem_venda_id: os_id, ...dadosCliente, valor_total, items });
+        setForm({ ...defaultForm(), tipo, ordem_venda_id: venda_id, ...dadosCliente, valor_total, items });
         setAbaForm("cliente");
         setShowForm(true);
       })();
@@ -288,7 +288,7 @@ export default function NotasFiscais() {
   };
 
   const load = async () => {
-    const [n, c, configs, os, est, srv] = await Promise.all([
+    const [n, c, configs, vendas, est, srv] = await Promise.all([
       base44.entities.NotaFiscal.list("-created_date", 500),
       base44.entities.Cadastro.list("-created_date", 500),
       base44.entities.Configuracao.list("-created_date", 100),
@@ -298,7 +298,7 @@ export default function NotasFiscais() {
     ]);
     setNotas(n);
     setClientes(c);
-    setVendas(os);
+    setVendas(vendas);
     setEstoque(est);
     setServicos(srv);
     setConfigsNF(configs);
