@@ -214,8 +214,14 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
   };
 
   const emitirNF = (tipo) => {
+    // Bloquear se já existe NFe/NFCe (para tipos NFe e NFCe) ou NFSe (para tipo NFSe)
+    const jaTemNfNfce = notasOs.some(n => n.tipo === 'NFe' || n.tipo === 'NFCe');
+    const jaTemNfse = notasOs.some(n => n.tipo === 'NFSe');
+    if ((tipo === 'NFe' || tipo === 'NFCe') && jaTemNfNfce) return;
+    if (tipo === 'NFSe' && jaTemNfse) return;
+
     const params = new URLSearchParams({ emitir: "1", tipo, os_id: os.id, os_numero: os.numero || "", cliente_id: os.cliente_id || "", cliente_nome: encodeURIComponent(os.cliente_nome || ""), valor: String(os.valor_total || 0) });
-    navigate(createPageUrl("NotasFiscais") + "?" + params.toString());
+    window.open(createPageUrl("NotasFiscais") + "?" + params.toString(), "_blank");
   };
 
 
@@ -336,15 +342,15 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
         {colunas?.nfe && <td className="px-4 py-3">{(() => {
           const nfe = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
           const manual = os.nfe_manual;
-          if (nfe) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => emitirNF(nfe.tipo || 'NFe')}>{nfe.tipo}{nfe.numero}</span>;
-          if (manual) { const n = normalizarNF(manual); return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => emitirNF('NFe')}>{n}</span>; }
+          if (nfe) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">{nfe.tipo}{nfe.numero}</span>;
+          if (manual) { const n = normalizarNF(manual); return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">{n}</span>; }
           return <button onClick={() => emitirNF('NFe')} className="text-gray-700 hover:text-green-400 text-xs transition-all">+ NF</button>;
         })()}</td>}
         {colunas.nfse && <td className="px-4 py-3">{(() => {
           const nfse = notasOs.find(n => n.tipo === 'NFSe');
           const manual = os.nfse_manual;
-          if (nfse) return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => emitirNF('NFSe')}>NFSe{nfse.numero}</span>;
-          if (manual) { const n = normalizarNF(manual); return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => emitirNF('NFSe')}>{n}</span>; }
+          if (nfse) return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">NFSe{nfse.numero}</span>;
+          if (manual) { const n = normalizarNF(manual); return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">{n}</span>; }
           return <button onClick={() => emitirNF('NFSe')} className="text-gray-700 hover:text-blue-400 text-xs transition-all">+ NFSe</button>;
         })()}</td>}
         <td className="px-4 py-3">
