@@ -237,12 +237,6 @@ export default function Configuracoes() {
           <F label="Série NFC-e">
             <input value={config.nfce_serie} onChange={e => setConfig({ ...config, nfce_serie: e.target.value })} className="input-dark" />
           </F>
-          <F label="Token (CSC Token)">
-            <input value={config.nfce_token} onChange={e => setConfig({ ...config, nfce_token: e.target.value })} className="input-dark" placeholder="Ex: 000001" />
-          </F>
-          <F label="CSC (Código de Segurança)">
-            <input value={config.nfce_csc} onChange={e => setConfig({ ...config, nfce_csc: e.target.value })} className="input-dark" />
-          </F>
           <F label="Ambiente">
             <select value={config.nfce_ambiente} onChange={e => setConfig({ ...config, nfce_ambiente: e.target.value })} className="input-dark">
               <option value="producao">Produção</option>
@@ -260,34 +254,17 @@ export default function Configuracoes() {
 
       <Section title="NFS-e — Nota Fiscal de Serviço" icon={null}>
        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-         <F label="Último DPS NFS-e">
-           <input type="text" inputMode="numeric" autoComplete="off" value={config.nfse_ultimo_dps} onChange={e => setConfig({ ...config, nfse_ultimo_dps: e.target.value })} className="input-dark" />
-         </F>
          <F label="Série do DPS">
            <input value={config.nfse_serie_dps} onChange={e => setConfig({ ...config, nfse_serie_dps: e.target.value })} className="input-dark" />
          </F>
-          <F label="Natureza de operação">
-            <input value={config.nfse_natureza_operacao} onChange={e => setConfig({ ...config, nfse_natureza_operacao: e.target.value })} className="input-dark" />
+          <F label="Última NFS-e">
+            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfse_ultimo_dps} onChange={e => setConfig({ ...config, nfse_ultimo_dps: e.target.value })} className="input-dark" />
           </F>
           <F label="Ambiente">
             <select value={config.nfse_ambiente} onChange={e => setConfig({ ...config, nfse_ambiente: e.target.value })} className="input-dark">
               <option value="producao">Produção</option>
               <option value="homologacao">Homologação</option>
             </select>
-          </F>
-          <F label="Layout da NFS-e">
-            <select value={config.nfse_layout} onChange={e => setConfig({ ...config, nfse_layout: e.target.value })} className="input-dark">
-              <option value="Nacional">Nacional</option>
-            </select>
-          </F>
-          <F label="Apuração dos tributos">
-            <input value={config.nfse_apuracao} onChange={e => setConfig({ ...config, nfse_apuracao: e.target.value })} className="input-dark" />
-          </F>
-          <F label="Tipo imunidade">
-            <input value={config.nfse_imunidade} onChange={e => setConfig({ ...config, nfse_imunidade: e.target.value })} className="input-dark" />
-          </F>
-          <F label="Tipo operação">
-            <input value={config.nfse_tipo_operacao} onChange={e => setConfig({ ...config, nfse_tipo_operacao: e.target.value })} className="input-dark" />
           </F>
         </div>
       </Section>
