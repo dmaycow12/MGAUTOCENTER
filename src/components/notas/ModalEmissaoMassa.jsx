@@ -40,6 +40,16 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
     if (selecionadas.length === 0) return;
     setEmitindo(true);
     const res = [];
+
+    // Busca as notas mais recentes antes de começar para ter numeração atualizada
+    let notasAtualizadas = [];
+    try {
+      const resp = await base44.entities.NotaFiscal.list("-created_date", 500);
+      notasAtualizadas = resp || [];
+    } catch (_) {
+      notasAtualizadas = notas || [];
+    }
+
     for (const vendaId of selecionadas) {
       const venda = vendas.find(v => v.id === vendaId);
       if (!venda) continue;
@@ -70,10 +80,23 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
           items: itensFinal,
           data_emissao: new Date().toISOString().split('T')[0],
           serie: '1',
+          forcar_recalculo_numero: true,
         };
 
         const resp = await base44.functions.invoke('emitirNotaFiscal', payload);
-        res.push({ venda, sucesso: resp.data?.sucesso, mensagem: resp.data?.mensagem || resp.data?.erro || '' });
+        const sucesso = resp.data?.sucesso;
+
+        // Após cada emissão bem-sucedida, recarrega as notas para garantir numeração atualizada
+        if (sucesso) {
+          try {
+            const atualizadas = await base44.entities.NotaFiscal.list("-created_date", 500);
+            notasAtualizadas = atualizadas || notasAtualizadas;
+          } catch (_) {}
+          // Aguarda um breve intervalo para evitar colisão de numeração no backend
+          await new Promise(r => setTimeout(r, 800));
+        }
+
+        res.push({ venda, sucesso, mensagem: resp.data?.mensagem || resp.data?.erro || '' });
       } catch (e) {
         res.push({ venda, sucesso: false, mensagem: e.message });
       }
