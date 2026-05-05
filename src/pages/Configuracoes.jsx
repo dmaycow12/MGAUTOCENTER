@@ -36,9 +36,8 @@ export default function Configuracoes() {
   useEffect(() => { loadAll(); }, []);
 
   const loadAll = async () => {
-    const [todos, todasNotas] = await Promise.all([
+    const [todos] = await Promise.all([
       base44.entities.Configuracao.list("-created_date", 200),
-      base44.entities.NotaFiscal.list("-created_date", 2000),
     ]);
 
     const c = {
@@ -63,18 +62,7 @@ export default function Configuracoes() {
       }
     });
 
-    // Calcula o maior número real usado em cada tipo (ignora canceladas/rascunhos/erros)
-    const notasValidas = todasNotas.filter(n => n.numero && !["Cancelada","Rascunho","Erro"].includes(n.status));
-    const maiorNumero = (tipo) => {
-      const nums = notasValidas.filter(n => n.tipo === tipo).map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
-      return nums.length > 0 ? Math.max(...nums) : 0;
-    };
-
-    // Para cada campo de "último número", exibe o maior entre o que está salvo no banco e o real das notas
-    c.nfe_ultimo_numero = String(Math.max(parseInt(c.nfe_ultimo_numero || "0", 10), maiorNumero("NFe")));
-    c.nfce_ultimo_numero = String(Math.max(parseInt(c.nfce_ultimo_numero || "0", 10), maiorNumero("NFCe")));
-    c.nfse_ultimo_dps = String(Math.max(parseInt(c.nfse_ultimo_dps || "0", 10), maiorNumero("NFSe")));
-    c.nfse_ultimo_numero = String(Math.max(parseInt(c.nfse_ultimo_numero || "0", 10), maiorNumero("NFSe")));
+    // Usa exatamente o valor salvo na configuração, sem recalcular com base nas notas
 
     setConfig(c);
     setConfigIds(ids);
