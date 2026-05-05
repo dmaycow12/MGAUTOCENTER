@@ -194,35 +194,29 @@ Deno.serve(async (req) => {
         proximoNfseNumero = proximoRps;
       } else {
         // Busca configs de DPS e número NFS-e em paralelo
-        const [configsDps, configsNfseNum, todasNfse] = await Promise.all([
+        const [configsDps, configsNfseNum] = await Promise.all([
           base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_dps' }),
           base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_numero' }),
-          base44.asServiceRole.entities.NotaFiscal.list('-created_date', 1000),
         ]);
 
-        const nfseEmitidas = todasNfse.filter(n => n.tipo === 'NFSe' && n.numero && n.status !== 'Cancelada' && n.status !== 'Rascunho' && n.status !== 'Erro');
-
-        // --- DPS ---
+        // Usa estritamente o valor salvo na configuração, sem comparar com o banco
         const ultimoDpsConfig = parseInt(configsDps[0]?.valor || '0', 10);
-        const ultimoDpsBanco = nfseEmitidas.map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n)).reduce((max, n) => Math.max(max, n), 0);
-        proximoRps = Math.max(ultimoDpsConfig, ultimoDpsBanco) + 1;
+        proximoRps = ultimoDpsConfig + 1;
         if (configsDps.length > 0) {
           await base44.asServiceRole.entities.Configuracao.update(configsDps[0].id, { valor: String(proximoRps) });
         } else {
           await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_dps', valor: String(proximoRps), descricao: 'Ultimo numero DPS autorizado' });
         }
 
-        // --- Número NFS-e ---
         const ultimoNfseNumConfig = parseInt(configsNfseNum[0]?.valor || '0', 10);
-        // O número da NFS-e também deve ser sequencial sem pular
-        proximoNfseNumero = Math.max(ultimoNfseNumConfig, ultimoDpsBanco) + 1;
+        proximoNfseNumero = ultimoNfseNumConfig + 1;
         if (configsNfseNum.length > 0) {
           await base44.asServiceRole.entities.Configuracao.update(configsNfseNum[0].id, { valor: String(proximoNfseNumero) });
         } else {
           await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_numero', valor: String(proximoNfseNumero), descricao: 'Ultimo numero NFS-e autorizado' });
         }
 
-        console.log(`[NFSe] Próximo DPS: ${proximoRps} | Próximo NFS-e: ${proximoNfseNumero}`);
+        console.log(`[NFSe] Próximo DPS: ${proximoRps} (era: ${ultimoDpsConfig}) | Próximo NFS-e: ${proximoNfseNumero} (era: ${ultimoNfseNumConfig})`);
       }
 
       const valorServico = Number(valor_total) || 1.0;
@@ -286,23 +280,15 @@ Deno.serve(async (req) => {
       if (notaExistente?.numero) {
         proximoNfce = parseInt(notaExistente.numero, 10);
       } else {
-        const [configsNfce, todasNfce] = await Promise.all([
-          base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfce_ultimo_numero' }),
-          base44.asServiceRole.entities.NotaFiscal.list('-created_date', 1000),
-        ]);
+        const configsNfce = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfce_ultimo_numero' });
         const ultimoNfceConfig = parseInt(configsNfce[0]?.valor || '0', 10);
-        const ultimoNfceNota = todasNfce
-          .filter(n => n.tipo === 'NFCe' && n.numero && n.status !== 'Cancelada' && n.status !== 'Rascunho' && n.status !== 'Erro')
-          .map(n => parseInt(n.numero, 10))
-          .filter(n => !isNaN(n))
-          .reduce((max, n) => Math.max(max, n), 0);
-        proximoNfce = Math.max(ultimoNfceConfig, ultimoNfceNota) + 1;
+        proximoNfce = ultimoNfceConfig + 1;
         if (configsNfce.length > 0) {
           await base44.asServiceRole.entities.Configuracao.update(configsNfce[0].id, { valor: String(proximoNfce) });
         } else {
           await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfce_ultimo_numero', valor: String(proximoNfce), descricao: 'Ultimo numero NFCe autorizado' });
         }
-        console.log(`[NFCe] Próximo número: ${proximoNfce} (config: ${ultimoNfceConfig}, maior no banco: ${ultimoNfceNota})`);
+        console.log(`[NFCe] Próximo número: ${proximoNfce} (era: ${ultimoNfceConfig})`);
       }
 
       const prodItems = (items && items.length > 0) ? items : [
@@ -349,23 +335,15 @@ Deno.serve(async (req) => {
       if (notaExistente?.numero) {
         proximoNfe = parseInt(notaExistente.numero, 10);
       } else {
-        const [configsNfe, todasNfe] = await Promise.all([
-          base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfe_ultimo_numero' }),
-          base44.asServiceRole.entities.NotaFiscal.list('-created_date', 1000),
-        ]);
+        const configsNfe = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfe_ultimo_numero' });
         const ultimoNfeConfig = parseInt(configsNfe[0]?.valor || '0', 10);
-        const ultimoNfeNota = todasNfe
-          .filter(n => n.tipo === 'NFe' && n.numero && n.status !== 'Cancelada' && n.status !== 'Rascunho' && n.status !== 'Erro')
-          .map(n => parseInt(n.numero, 10))
-          .filter(n => !isNaN(n))
-          .reduce((max, n) => Math.max(max, n), 0);
-        proximoNfe = Math.max(ultimoNfeConfig, ultimoNfeNota) + 1;
+        proximoNfe = ultimoNfeConfig + 1;
         if (configsNfe.length > 0) {
           await base44.asServiceRole.entities.Configuracao.update(configsNfe[0].id, { valor: String(proximoNfe) });
         } else {
           await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfe_ultimo_numero', valor: String(proximoNfe), descricao: 'Ultimo numero NFe autorizado' });
         }
-        console.log(`[NFe] Próximo número: ${proximoNfe} (config: ${ultimoNfeConfig}, maior no banco: ${ultimoNfeNota})`);
+        console.log(`[NFe] Próximo número: ${proximoNfe} (era: ${ultimoNfeConfig})`);
       }
 
       const prodItems = (items && items.length > 0) ? items : [
