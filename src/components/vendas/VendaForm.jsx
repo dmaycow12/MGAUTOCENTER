@@ -302,7 +302,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const updateServico = (i, field, val) => {
-    const novos = form.servicos.map((s, idx) => idx === i ? { ...s, _new: false, [field]: field === "valor" ? Number(val) : val } : s);
+    const novos = form.servicos.map((s, idx) => idx === i ? { ...s, _new: false, [field]: field === "valor" ? parseNum(val) : val } : s);
     if ((field === "codigo" || field === "descricao") && val.length > 0) {
       setServicoSugestoes({ idx: i, lista: servicosCad.filter(s =>
         s.codigo?.toLowerCase().includes(val.toLowerCase()) || s.descricao?.toLowerCase().includes(val.toLowerCase())
@@ -334,10 +334,12 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     setForm(f => ({ ...f, pecas: novos, ...calc }));
   };
 
+  const parseNum = (val) => Number(String(val).replace(',', '.')) || 0;
+
   const updatePeca = (i, field, val) => {
     const novos = form.pecas.map((p, idx) => {
       if (idx !== i) return p;
-      const updated = { ...p, _new: false, [field]: ["quantidade", "valor_unitario"].includes(field) ? Number(val) : val };
+      const updated = { ...p, _new: false, [field]: ["quantidade", "valor_unitario"].includes(field) ? parseNum(val) : val };
       updated.valor_total = Number(updated.quantidade || 0) * Number(updated.valor_unitario || 0);
       return updated;
     });

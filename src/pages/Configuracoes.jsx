@@ -15,7 +15,7 @@ export default function Configuracoes() {
   const [config, setConfig] = useState({
     nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
     logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
-    inscricao_municipal: "", inscricao_estadual: "", opcao_simples_nacional: "3", regime_tributario: "1", regime_especial: "0",
+    inscricao_municipal: "", inscricao_estadual: "", opcao_simples_nacional: "", regime_tributario: "", regime_especial: "",
     focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
     nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00", nfe_ambiente: "producao",
     nfce_serie: "1", nfce_ultimo_numero: "0", nfce_versao: "4.00", nfce_token: "", nfce_csc: "", nfce_ambiente: "producao",
@@ -40,7 +40,7 @@ export default function Configuracoes() {
     const c = {
      nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
      logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
-     inscricao_municipal: "", inscricao_estadual: "", opcao_simples_nacional: "3", regime_tributario: "1", regime_especial: "0",
+     inscricao_municipal: "", inscricao_estadual: "", opcao_simples_nacional: "", regime_tributario: "", regime_especial: "",
      focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
      nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00", nfe_ambiente: "producao",
      nfce_serie: "1", nfce_ultimo_numero: "0", nfce_versao: "4.00", nfce_token: "", nfce_csc: "", nfce_ambiente: "producao",
@@ -180,19 +180,19 @@ export default function Configuracoes() {
             <input autoComplete="new-password" value={config.estado} onChange={e => setConfig({ ...config, estado: e.target.value })} className="input-dark" maxLength={2} />
           </F>
           <F label="Inscrição Municipal">
-            <input autoComplete="new-password" value={config.inscricao_municipal} onChange={e => setConfig({ ...config, inscricao_municipal: e.target.value })} className="input-dark" placeholder="Ex: 2024000738" />
+            <input autoComplete="new-password" value={config.inscricao_municipal} onChange={e => setConfig({ ...config, inscricao_municipal: e.target.value })} className="input-dark" />
           </F>
           <F label="Inscrição Estadual">
-            <input autoComplete="new-password" value={config.inscricao_estadual} onChange={e => setConfig({ ...config, inscricao_estadual: e.target.value })} className="input-dark" placeholder="Ex: 0016952490059" />
+            <input autoComplete="new-password" value={config.inscricao_estadual} onChange={e => setConfig({ ...config, inscricao_estadual: e.target.value })} className="input-dark" />
           </F>
           <F label="Opção Simples Nacional (cód.)">
-            <input autoComplete="new-password" value={config.opcao_simples_nacional} onChange={e => setConfig({ ...config, opcao_simples_nacional: e.target.value })} className="input-dark" placeholder="3" />
+            <input autoComplete="new-password" value={config.opcao_simples_nacional} onChange={e => setConfig({ ...config, opcao_simples_nacional: e.target.value })} className="input-dark" />
           </F>
           <F label="Regime Tributário Simples Nacional">
-            <input autoComplete="new-password" value={config.regime_tributario} onChange={e => setConfig({ ...config, regime_tributario: e.target.value })} className="input-dark" placeholder="1" />
+            <input autoComplete="new-password" value={config.regime_tributario} onChange={e => setConfig({ ...config, regime_tributario: e.target.value })} className="input-dark" />
           </F>
           <F label="Regime Especial Tributação">
-            <input autoComplete="new-password" value={config.regime_especial} onChange={e => setConfig({ ...config, regime_especial: e.target.value })} className="input-dark" placeholder="0" />
+            <input autoComplete="new-password" value={config.regime_especial} onChange={e => setConfig({ ...config, regime_especial: e.target.value })} className="input-dark" />
           </F>
         </div>
       </Section>
@@ -402,7 +402,7 @@ function TokenField({ label, value, onChange }) {
     <div>
       <label className="block text-xs text-gray-400 mb-1">{label}</label>
       <div className="relative">
-        <input type={visible ? "text" : "password"} value={value} onChange={e => onChange(e.target.value)} className="input-dark pr-10" placeholder="Cole seu token aqui" />
+        <input type={visible ? "text" : "password"} value={value} onChange={e => onChange(e.target.value)} className="input-dark pr-10" placeholder="" />
         <button type="button" onClick={() => setVisible(!visible)} className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-300">
           {visible ? '🙈' : '👁️'}
         </button>
