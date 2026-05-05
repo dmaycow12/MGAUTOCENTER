@@ -177,19 +177,22 @@ Deno.serve(async (req) => {
       if (notaExistente?.numero) {
         proximoRps = parseInt(notaExistente.numero, 10);
       } else {
-        // Busca o maior número já usado nas notas do banco E na config — usa o maior entre os dois
+        // Busca config nfse_ultimo_dps (editável na tela de Configurações) E maior número no banco
         const [configsNfse, todasNfse] = await Promise.all([
           base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_dps' }),
           base44.asServiceRole.entities.NotaFiscal.list('-created_date', 1000),
         ]);
+        // A config salva pelo usuário em Configurações é a fonte de verdade principal
         const ultimoDpsConfig = parseInt(configsNfse[0]?.valor || '0', 10);
+        // Também verifica o maior número já emitido no banco para evitar colisão
         const ultimoDpsNota = todasNfse
-          .filter(n => n.tipo === 'NFSe' && n.numero && n.status !== 'Cancelada')
+          .filter(n => n.tipo === 'NFSe' && n.numero && n.status !== 'Cancelada' && n.status !== 'Rascunho' && n.status !== 'Erro')
           .map(n => parseInt(n.numero, 10))
           .filter(n => !isNaN(n))
           .reduce((max, n) => Math.max(max, n), 0);
+        // Usa o maior entre config e banco, +1
         proximoRps = Math.max(ultimoDpsConfig, ultimoDpsNota) + 1;
-        // Atualiza config atomicamente com o novo número reservado
+        // Salva o número reservado de volta na config para a próxima emissão
         if (configsNfse.length > 0) {
           await base44.asServiceRole.entities.Configuracao.update(configsNfse[0].id, { valor: String(proximoRps) });
         } else {
@@ -265,7 +268,7 @@ Deno.serve(async (req) => {
         ]);
         const ultimoNfceConfig = parseInt(configsNfce[0]?.valor || '0', 10);
         const ultimoNfceNota = todasNfce
-          .filter(n => n.tipo === 'NFCe' && n.numero && n.status !== 'Cancelada')
+          .filter(n => n.tipo === 'NFCe' && n.numero && n.status !== 'Cancelada' && n.status !== 'Rascunho' && n.status !== 'Erro')
           .map(n => parseInt(n.numero, 10))
           .filter(n => !isNaN(n))
           .reduce((max, n) => Math.max(max, n), 0);
@@ -327,7 +330,7 @@ Deno.serve(async (req) => {
         ]);
         const ultimoNfeConfig = parseInt(configsNfe[0]?.valor || '0', 10);
         const ultimoNfeNota = todasNfe
-          .filter(n => n.tipo === 'NFe' && n.numero && n.status !== 'Cancelada')
+          .filter(n => n.tipo === 'NFe' && n.numero && n.status !== 'Cancelada' && n.status !== 'Rascunho' && n.status !== 'Erro')
           .map(n => parseInt(n.numero, 10))
           .filter(n => !isNaN(n))
           .reduce((max, n) => Math.max(max, n), 0);
