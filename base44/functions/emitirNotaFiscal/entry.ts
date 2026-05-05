@@ -189,21 +189,31 @@ Deno.serve(async (req) => {
     if (tipo === 'NFSe') {
       endpoint = `/nfsen?ref=${ref}`;
 
-      if (notaExistente?.numero) {
+      // Só reutiliza o número do rascunho se ele já foi enviado para a SEFAZ (tem spedy_id)
+      if (notaExistente?.numero && notaExistente?.spedy_id) {
         proximoRps = parseInt(notaExistente.numero, 10);
         proximoNfseNumero = proximoRps;
       } else {
-        // Busca configs de DPS e número NFS-e em paralelo
-        const [configsDps, configsNfseNum] = await Promise.all([
+        // Busca DIRETA por chave para garantir valor atual (sem cache de todasConfigs)
+        const [configsDpsArr, configsNfseNumArr] = await Promise.all([
           base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_dps' }),
           base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_numero' }),
         ]);
 
-        // Usa estritamente o valor salvo na configuração, sem comparar com o banco
+        // Pega o registro com o valor mais recente (ordenado por updated_date desc se houver duplicatas)
+        const configsDps = configsDpsArr.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0));
+        const configsNfseNum = configsNfseNumArr.sort((a, b) => new Date(b.updated_date || 0) - new Date(a.updated_date || 0));
+
         const ultimoDpsConfig = parseInt(configsDps[0]?.valor || '0', 10);
         proximoRps = ultimoDpsConfig + 1;
+        console.log(`[NFSe-DEBUG] nfse_ultimo_dps encontrado: ${configsDpsArr.length} registros, valor mais recente: ${ultimoDpsConfig}, próximo: ${proximoRps}`);
+        
         if (configsDps.length > 0) {
           await base44.asServiceRole.entities.Configuracao.update(configsDps[0].id, { valor: String(proximoRps) });
+          // Remove duplicatas se existirem
+          for (let i = 1; i < configsDps.length; i++) {
+            await base44.asServiceRole.entities.Configuracao.delete(configsDps[i].id);
+          }
         } else {
           await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_dps', valor: String(proximoRps), descricao: 'Ultimo numero DPS autorizado' });
         }
@@ -212,6 +222,9 @@ Deno.serve(async (req) => {
         proximoNfseNumero = ultimoNfseNumConfig + 1;
         if (configsNfseNum.length > 0) {
           await base44.asServiceRole.entities.Configuracao.update(configsNfseNum[0].id, { valor: String(proximoNfseNumero) });
+          for (let i = 1; i < configsNfseNum.length; i++) {
+            await base44.asServiceRole.entities.Configuracao.delete(configsNfseNum[i].id);
+          }
         } else {
           await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_numero', valor: String(proximoNfseNumero), descricao: 'Ultimo numero NFS-e autorizado' });
         }
