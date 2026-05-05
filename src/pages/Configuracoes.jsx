@@ -10,7 +10,7 @@ export default function Configuracoes() {
     "focusnfe_api_key_homologacao", "focusnfe_api_key_producao",
     "nfe_serie", "nfe_ultimo_numero", "nfe_versao", "nfe_ambiente",
     "nfce_serie", "nfce_ultimo_numero", "nfce_versao", "nfce_token", "nfce_csc", "nfce_ambiente",
-    "nfse_serie_dps", "nfse_ultimo_dps", "nfse_versao", "nfse_natureza_operacao", "nfse_layout", "nfse_apuracao", "nfse_imunidade", "nfse_tipo_operacao", "nfse_ambiente"];
+    "nfse_serie_dps", "nfse_ultimo_dps", "nfse_ultimo_numero", "nfse_versao", "nfse_natureza_operacao", "nfse_layout", "nfse_apuracao", "nfse_imunidade", "nfse_tipo_operacao", "nfse_ambiente"];
 
   const [config, setConfig] = useState({
     nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
@@ -19,7 +19,7 @@ export default function Configuracoes() {
     focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
     nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00", nfe_ambiente: "producao",
     nfce_serie: "1", nfce_ultimo_numero: "0", nfce_versao: "4.00", nfce_token: "", nfce_csc: "", nfce_ambiente: "producao",
-    nfse_serie_dps: "900", nfse_ultimo_dps: "0", nfse_versao: "1.00", nfse_natureza_operacao: "", nfse_layout: "Nacional", nfse_apuracao: "", nfse_imunidade: "", nfse_tipo_operacao: "", nfse_ambiente: "producao",
+    nfse_serie_dps: "900", nfse_ultimo_dps: "0", nfse_ultimo_numero: "0", nfse_versao: "1.00", nfse_natureza_operacao: "", nfse_layout: "Nacional", nfse_apuracao: "", nfse_imunidade: "", nfse_tipo_operacao: "", nfse_ambiente: "producao",
   });
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
@@ -44,7 +44,7 @@ export default function Configuracoes() {
      focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
      nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00", nfe_ambiente: "producao",
      nfce_serie: "1", nfce_ultimo_numero: "0", nfce_versao: "4.00", nfce_token: "", nfce_csc: "", nfce_ambiente: "producao",
-     nfse_serie_dps: "900", nfse_ultimo_dps: "0", nfse_versao: "1.00", nfse_natureza_operacao: "", nfse_layout: "Nacional", nfse_apuracao: "", nfse_imunidade: "", nfse_tipo_operacao: "", nfse_ambiente: "producao",
+     nfse_serie_dps: "900", nfse_ultimo_dps: "0", nfse_ultimo_numero: "0", nfse_versao: "1.00", nfse_natureza_operacao: "", nfse_layout: "Nacional", nfse_apuracao: "", nfse_imunidade: "", nfse_tipo_operacao: "", nfse_ambiente: "producao",
     };
     const ids = {};
     const extras = [];
@@ -259,6 +259,9 @@ export default function Configuracoes() {
          </F>
           <F label="Última DPS">
             <input type="text" inputMode="numeric" autoComplete="off" value={config.nfse_ultimo_dps} onChange={e => setConfig({ ...config, nfse_ultimo_dps: e.target.value })} className="input-dark" />
+          </F>
+          <F label="Última NFS-e (número da nota)">
+            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfse_ultimo_numero} onChange={e => setConfig({ ...config, nfse_ultimo_numero: e.target.value })} className="input-dark" />
           </F>
           <F label="Ambiente">
             <select value={config.nfse_ambiente} onChange={e => setConfig({ ...config, nfse_ambiente: e.target.value })} className="input-dark">

@@ -188,31 +188,42 @@ Deno.serve(async (req) => {
     if (tipo === 'NFSe') {
       endpoint = `/nfsen?ref=${ref}`;
 
+      let proximoNfseNumero = null; // número da NFS-e (campo "numero" da nota)
+
       if (notaExistente?.numero) {
         proximoRps = parseInt(notaExistente.numero, 10);
+        proximoNfseNumero = proximoRps;
       } else {
-        // Busca config nfse_ultimo_dps (editável na tela de Configurações) E maior número no banco
-        const [configsNfse, todasNfse] = await Promise.all([
+        // Busca configs de DPS e número NFS-e em paralelo
+        const [configsDps, configsNfseNum, todasNfse] = await Promise.all([
           base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_dps' }),
+          base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_numero' }),
           base44.asServiceRole.entities.NotaFiscal.list('-created_date', 1000),
         ]);
-        // A config salva pelo usuário em Configurações é a fonte de verdade principal
-        const ultimoDpsConfig = parseInt(configsNfse[0]?.valor || '0', 10);
-        // Também verifica o maior número já emitido no banco para evitar colisão
-        const ultimoDpsNota = todasNfse
-          .filter(n => n.tipo === 'NFSe' && n.numero && n.status !== 'Cancelada' && n.status !== 'Rascunho' && n.status !== 'Erro')
-          .map(n => parseInt(n.numero, 10))
-          .filter(n => !isNaN(n))
-          .reduce((max, n) => Math.max(max, n), 0);
-        // Usa o maior entre config e banco, +1
-        proximoRps = Math.max(ultimoDpsConfig, ultimoDpsNota) + 1;
-        // Salva o número reservado de volta na config para a próxima emissão
-        if (configsNfse.length > 0) {
-          await base44.asServiceRole.entities.Configuracao.update(configsNfse[0].id, { valor: String(proximoRps) });
+
+        const nfseEmitidas = todasNfse.filter(n => n.tipo === 'NFSe' && n.numero && n.status !== 'Cancelada' && n.status !== 'Rascunho' && n.status !== 'Erro');
+
+        // --- DPS ---
+        const ultimoDpsConfig = parseInt(configsDps[0]?.valor || '0', 10);
+        const ultimoDpsBanco = nfseEmitidas.map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n)).reduce((max, n) => Math.max(max, n), 0);
+        proximoRps = Math.max(ultimoDpsConfig, ultimoDpsBanco) + 1;
+        if (configsDps.length > 0) {
+          await base44.asServiceRole.entities.Configuracao.update(configsDps[0].id, { valor: String(proximoRps) });
         } else {
-          await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_dps', valor: String(proximoRps), descricao: 'Ultimo numero DPS/NFSe Nacional autorizado' });
+          await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_dps', valor: String(proximoRps), descricao: 'Ultimo numero DPS autorizado' });
         }
-        console.log(`[NFSe] Próximo RPS: ${proximoRps} (config: ${ultimoDpsConfig}, maior no banco: ${ultimoDpsNota})`);
+
+        // --- Número NFS-e ---
+        const ultimoNfseNumConfig = parseInt(configsNfseNum[0]?.valor || '0', 10);
+        // O número da NFS-e também deve ser sequencial sem pular
+        proximoNfseNumero = Math.max(ultimoNfseNumConfig, ultimoDpsBanco) + 1;
+        if (configsNfseNum.length > 0) {
+          await base44.asServiceRole.entities.Configuracao.update(configsNfseNum[0].id, { valor: String(proximoNfseNumero) });
+        } else {
+          await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_numero', valor: String(proximoNfseNumero), descricao: 'Ultimo numero NFS-e autorizado' });
+        }
+
+        console.log(`[NFSe] Próximo DPS: ${proximoRps} | Próximo NFS-e: ${proximoNfseNumero}`);
       }
 
       const valorServico = Number(valor_total) || 1.0;
@@ -415,7 +426,7 @@ Deno.serve(async (req) => {
     // ============================================================
     // SALVA spedy_id NO RASCUNHO ANTES DE ENVIAR (anti-duplicata)
     // ============================================================
-    let numeroFinal = tipo === 'NFSe' ? String(proximoRps) : tipo === 'NFCe' ? String(proximoNfce) : String(proximoNfe);
+    let numeroFinal = tipo === 'NFSe' ? String(proximoNfseNumero ?? proximoRps) : tipo === 'NFCe' ? String(proximoNfce) : String(proximoNfe);
 
     if (nota_id) {
       // Atualiza o rascunho com o ref ANTES de enviar — se a página cair, saberemos que já foi enviado
@@ -557,16 +568,19 @@ Deno.serve(async (req) => {
       mensagem_sefaz: mensagemSefaz,
     };
 
-    // Reverter número reservado se erro em nova emissão
+    // Reverter números reservados se erro em nova emissão
     const erroE0014 = mensagemSefaz?.includes('E0014') || mensagemSefaz?.includes('já existe');
     if (statusNota === 'Erro' && !nota_id && tipo === 'NFSe' && !erroE0014) {
       try {
-        const configsNfse = await base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_dps' });
-        if (configsNfse.length > 0) {
-          const ultimoDps = parseInt(configsNfse[0].valor || '0', 10);
-          if (ultimoDps === proximoRps) {
-            await base44.asServiceRole.entities.Configuracao.update(configsNfse[0].id, { valor: String(ultimoDps - 1) });
-          }
+        const [configsDpsRev, configsNfseNumRev] = await Promise.all([
+          base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_dps' }),
+          base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_numero' }),
+        ]);
+        if (configsDpsRev.length > 0 && parseInt(configsDpsRev[0].valor) === proximoRps) {
+          await base44.asServiceRole.entities.Configuracao.update(configsDpsRev[0].id, { valor: String(proximoRps - 1) });
+        }
+        if (configsNfseNumRev.length > 0 && parseInt(configsNfseNumRev[0].valor) === proximoNfseNumero) {
+          await base44.asServiceRole.entities.Configuracao.update(configsNfseNumRev[0].id, { valor: String(proximoNfseNumero - 1) });
         }
       } catch (revertError) {
         console.error('[DPS REVERT ERROR]', revertError);
