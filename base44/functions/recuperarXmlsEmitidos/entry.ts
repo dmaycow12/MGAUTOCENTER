@@ -58,12 +58,15 @@ Deno.serve(async (req) => {
 
     // Buscar notas Emitidas sem xml_url — aceita tanto spedy_id quanto chave_acesso como referência
     const emitidas = await base44.asServiceRole.entities.NotaFiscal.list('-created_date', 500);
-    const todasSemXml = emitidas.filter(n =>
-      n.status === 'Emitida' &&
-      (n.spedy_id || n.chave_acesso) &&
-      !n.xml_url &&
-      !(n.xml_original && n.xml_original.trim().startsWith('<'))
-    );
+    const todasSemXml = emitidas.filter(n => {
+      if (n.status !== 'Emitida') return false;
+      if (!(n.spedy_id || n.chave_acesso)) return false;
+      // Já tem XML permanente salvo no Base44
+      if (n.xml_original && n.xml_original.trim().startsWith('<')) return false;
+      if (n.xml_url && n.xml_url.startsWith('http') && !n.xml_url.includes('focusnfe') && !n.xml_url.includes('amazonaws')) return false;
+      // xml_url é caminho relativo FocusNFe (precisa fazer download e salvar permanentemente)
+      return true;
+    });
     const semXml = todasSemXml.slice(0, 15);
 
     const logs = [];
