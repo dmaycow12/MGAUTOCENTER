@@ -10,9 +10,10 @@ const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
 const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
 const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
 
-const CNPJ_EMITENTE = '54043647000120';
+// Valores padrão — serão sobrescritos pelas configs do banco
+const CNPJ_EMITENTE_PADRAO = '54043647000120';
 const COD_MUNICIPIO_PATOS = '3148004';
-const INSCRICAO_MUNICIPAL = '2024000738';
+const INSCRICAO_MUNICIPAL_PADRAO = '2024000738';
 
 const normalizarUrl = (url) => {
   if (!url) return '';
@@ -105,6 +106,19 @@ Deno.serve(async (req) => {
     let cpfCnpjLimpo = (cliente_cpf_cnpj || '').replace(/\D/g, '');
     let cepLimpo = (cliente_cep || '').replace(/\D/g, '');
     if (cepLimpo.length !== 8) cepLimpo = '38700327';
+
+    // ============================================================
+    // CARREGA CONFIGS DO EMITENTE DO BANCO
+    // ============================================================
+    const todasConfigs = await base44.asServiceRole.entities.Configuracao.list('-created_date', 200);
+    const getConf = (chave, padrao = '') => todasConfigs.find(c => c.chave === chave)?.valor || padrao;
+
+    const CNPJ_EMITENTE = getConf('cnpj', CNPJ_EMITENTE_PADRAO).replace(/\D/g, '');
+    const INSCRICAO_MUNICIPAL = getConf('inscricao_municipal', INSCRICAO_MUNICIPAL_PADRAO);
+    const INSCRICAO_ESTADUAL = getConf('inscricao_estadual', '');
+    const OPCAO_SIMPLES = parseInt(getConf('opcao_simples_nacional', '3'), 10);
+    const REGIME_TRIBUTARIO = parseInt(getConf('regime_tributario', '1'), 10);
+    const REGIME_ESPECIAL = parseInt(getConf('regime_especial', '0'), 10);
 
     // ============================================================
     // PROTEÇÃO ANTI-DUPLICATA: Verifica nota existente
@@ -232,9 +246,9 @@ Deno.serve(async (req) => {
         codigo_municipio_emissora: COD_MUNICIPIO_PATOS,
         cnpj_prestador: CNPJ_EMITENTE,
         inscricao_municipal_prestador: INSCRICAO_MUNICIPAL,
-        codigo_opcao_simples_nacional: 3,
-        regime_tributario_simples_nacional: 1,
-        regime_especial_tributacao: 0,
+        codigo_opcao_simples_nacional: OPCAO_SIMPLES,
+        regime_tributario_simples_nacional: REGIME_TRIBUTARIO,
+        regime_especial_tributacao: REGIME_ESPECIAL,
         ...(cpfCnpjLimpo.length === 14 ? { cnpj_tomador: cpfCnpjLimpo } : (cpfCnpjLimpo.length === 11 ? { cpf_tomador: cpfCnpjLimpo } : {})),
         razao_social_tomador: (cliente_nome || 'Consumidor Final').substring(0, 100),
         ...(cliente_email ? { email_tomador: cliente_email } : {}),
@@ -286,6 +300,7 @@ Deno.serve(async (req) => {
       ];
       payload = {
         cnpj_emitente: CNPJ_EMITENTE,
+        ...(INSCRICAO_ESTADUAL ? { inscricao_estadual_emitente: INSCRICAO_ESTADUAL } : {}),
         data_emissao: dataEmissaoISO,
         natureza_operacao: 'VENDA AO CONSUMIDOR',
         modalidade_frete: '9',
@@ -348,6 +363,7 @@ Deno.serve(async (req) => {
       ];
       payload = {
         cnpj_emitente: CNPJ_EMITENTE,
+        ...(INSCRICAO_ESTADUAL ? { inscricao_estadual_emitente: INSCRICAO_ESTADUAL } : {}),
         data_emissao: dataEmissaoISO,
         data_saida_entrada: dataEmissaoISO,
         natureza_operacao: body.natureza_operacao || 'Venda de mercadoria',

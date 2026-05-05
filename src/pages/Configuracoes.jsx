@@ -6,6 +6,7 @@ import BackupManager from "../components/backup/BackupManager";
 export default function Configuracoes() {
   const CHAVES = ["nome_oficina", "cnpj", "telefone", "email", "endereco", "cidade", "estado", "cep",
     "logo_url", "observacoes_padrao", "proximo_numero_os",
+    "inscricao_municipal", "inscricao_estadual", "opcao_simples_nacional", "regime_tributario", "regime_especial",
     "focusnfe_api_key_homologacao", "focusnfe_api_key_producao",
     "nfe_serie", "nfe_ultimo_numero", "nfe_versao", "nfe_ambiente",
     "nfce_serie", "nfce_ultimo_numero", "nfce_versao", "nfce_token", "nfce_csc", "nfce_ambiente",
@@ -14,6 +15,7 @@ export default function Configuracoes() {
   const [config, setConfig] = useState({
     nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
     logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
+    inscricao_municipal: "", inscricao_estadual: "", opcao_simples_nacional: "3", regime_tributario: "1", regime_especial: "0",
     focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
     nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00", nfe_ambiente: "producao",
     nfce_serie: "1", nfce_ultimo_numero: "0", nfce_versao: "4.00", nfce_token: "", nfce_csc: "", nfce_ambiente: "producao",
@@ -38,6 +40,7 @@ export default function Configuracoes() {
     const c = {
      nome_oficina: "", cnpj: "", telefone: "", email: "", endereco: "", cidade: "", estado: "", cep: "",
      logo_url: "", observacoes_padrao: "", proximo_numero_os: "1",
+     inscricao_municipal: "", inscricao_estadual: "", opcao_simples_nacional: "3", regime_tributario: "1", regime_especial: "0",
      focusnfe_api_key_homologacao: "", focusnfe_api_key_producao: "",
      nfe_serie: "1", nfe_ultimo_numero: "0", nfe_versao: "4.00", nfe_ambiente: "producao",
      nfce_serie: "1", nfce_ultimo_numero: "0", nfce_versao: "4.00", nfce_token: "", nfce_csc: "", nfce_ambiente: "producao",
@@ -175,6 +178,21 @@ export default function Configuracoes() {
           </F>
           <F label="Estado">
             <input autoComplete="new-password" value={config.estado} onChange={e => setConfig({ ...config, estado: e.target.value })} className="input-dark" maxLength={2} />
+          </F>
+          <F label="Inscrição Municipal">
+            <input autoComplete="new-password" value={config.inscricao_municipal} onChange={e => setConfig({ ...config, inscricao_municipal: e.target.value })} className="input-dark" placeholder="Ex: 2024000738" />
+          </F>
+          <F label="Inscrição Estadual">
+            <input autoComplete="new-password" value={config.inscricao_estadual} onChange={e => setConfig({ ...config, inscricao_estadual: e.target.value })} className="input-dark" placeholder="Ex: 0016952490059" />
+          </F>
+          <F label="Opção Simples Nacional (cód.)">
+            <input autoComplete="new-password" value={config.opcao_simples_nacional} onChange={e => setConfig({ ...config, opcao_simples_nacional: e.target.value })} className="input-dark" placeholder="3" />
+          </F>
+          <F label="Regime Tributário Simples Nacional">
+            <input autoComplete="new-password" value={config.regime_tributario} onChange={e => setConfig({ ...config, regime_tributario: e.target.value })} className="input-dark" placeholder="1" />
+          </F>
+          <F label="Regime Especial Tributação">
+            <input autoComplete="new-password" value={config.regime_especial} onChange={e => setConfig({ ...config, regime_especial: e.target.value })} className="input-dark" placeholder="0" />
           </F>
         </div>
       </Section>
