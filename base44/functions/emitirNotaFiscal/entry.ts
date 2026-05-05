@@ -182,13 +182,12 @@ Deno.serve(async (req) => {
     let endpoint = '';
     let payload = null;
     let proximoRps = null;
+    let proximoNfseNumero = null;
     let proximoNfce = null;
     let proximoNfe = null;
 
     if (tipo === 'NFSe') {
       endpoint = `/nfsen?ref=${ref}`;
-
-      let proximoNfseNumero = null; // número da NFS-e (campo "numero" da nota)
 
       if (notaExistente?.numero) {
         proximoRps = parseInt(notaExistente.numero, 10);
