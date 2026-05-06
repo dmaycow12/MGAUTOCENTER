@@ -252,7 +252,7 @@ export default function BackupManager() {
     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6">
       <div>
         <h2 className="text-white font-bold text-lg">Backup de Dados</h2>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-500 text-sm mt-1 hidden">
           Exporta <strong className="text-white">cada nota fiscal em arquivo separado</strong> com seu XML físico real — sem depender de links do banco.
         </p>
       </div>
