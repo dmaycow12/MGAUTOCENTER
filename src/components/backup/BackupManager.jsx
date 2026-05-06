@@ -279,9 +279,9 @@ export default function BackupManager() {
             onClick={baixarBackup}
             disabled={baixando}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold disabled:opacity-50 transition-all"
-            style={{ background: "#00cc44", color: "#000" }}
-            onMouseEnter={(e) => {if (!baixando) e.currentTarget.style.background = "#00aa33";}}
-            onMouseLeave={(e) => e.currentTarget.style.background = "#00cc44"}>
+            style={{ background: "#00ff00", color: "#000" }}
+            onMouseEnter={(e) => {if (!baixando) e.currentTarget.style.background = "#00dd00";}}
+            onMouseLeave={(e) => e.currentTarget.style.background = "#00ff00"}>
             
             {baixando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             {baixando ? "Gerando backup..." : "Baixar Backup ZIP"}

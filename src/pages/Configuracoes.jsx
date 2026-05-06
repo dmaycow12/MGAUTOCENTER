@@ -215,7 +215,7 @@ export default function Configuracoes() {
         </div>
       </Section>
 
-      <button onClick={salvar} disabled={salvando} className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all disabled:opacity-50 mx-auto" style={{background:"#00ff00", color:"#000", textShadow:"0 0 3px #fff, 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000", display:"flex"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
+      <button onClick={salvar} disabled={salvando} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 mx-auto" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
         <Save className="w-5 h-5" />
         {salvando ? "Salvando..." : "Salvar Configurações"}
       </button>
