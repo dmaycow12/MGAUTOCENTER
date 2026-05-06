@@ -252,9 +252,9 @@ export default function BackupManager() {
     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6">
       <div>
         <h2 className="text-white font-bold text-lg">Backup de Dados</h2>
-        <p className="text-gray-500 text-sm mt-1 hidden">
-          Exporta <strong className="text-white">cada nota fiscal em arquivo separado</strong> com seu XML físico real — sem depender de links do banco.
-        </p>
+        
+
+        
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -265,10 +265,10 @@ export default function BackupManager() {
             <h3 className="text-white font-semibold">Baixar Backup Completo</h3>
           </div>
           <ul className="text-gray-400 text-xs space-y-1 list-disc list-inside">
-            <li className="hidden">Cada nota fiscal salva em <code className="text-green-300">NF-xxx.json</code> individual</li>
-            <li className="hidden">XML de cada nota salvo em <code className="text-green-300">NF-xxx.xml</code> físico</li>
-            <li className="hidden">DANFE/PDF de cada nota salvo em <code className="text-green-300">NF-xxx.pdf</code> físico</li>
-            <li className="hidden">Demais entidades em JSON por categoria</li>
+            
+            
+            
+            
           </ul>
           {baixando && progresso &&
           <p className="text-yellow-400 text-xs flex items-center gap-2">
@@ -300,9 +300,9 @@ export default function BackupManager() {
             <Upload className="w-5 h-5 text-blue-400" />
             <h3 className="text-white font-semibold">Restaurar Backup</h3>
           </div>
-          <p className="text-gray-400 text-xs hidden">
-            Selecione um <code className="text-blue-400">.zip</code> gerado por este sistema. Os XMLs físicos serão restaurados junto com os dados de cada nota. Registros serão <span className="text-yellow-400 font-medium">adicionados</span> ao banco atual.
-          </p>
+          
+
+          
           {restaurando && progresso &&
           <p className="text-yellow-400 text-xs flex items-center gap-2">
               <Loader2 className="w-3 h-3 animate-spin" /> {progresso}
