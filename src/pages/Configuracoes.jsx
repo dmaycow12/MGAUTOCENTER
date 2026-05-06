@@ -192,7 +192,7 @@ export default function Configuracoes() {
       <Section title="NFS-e — Nota Fiscal de Serviço" icon={null}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <F label="Série do DPS">
-            <input value={config.nfse_serie_dps} onChange={(e) => setConfig({ ...config, nfse_serie_dps: e.target.value })} className="input-dark hidden" />
+            
           </F>
           <F label="Última DPS">
             <input type="text" inputMode="numeric" autoComplete="off" value={config.nfse_ultimo_dps} onChange={(e) => setConfig({ ...config, nfse_ultimo_dps: e.target.value })} className="input-dark" />
