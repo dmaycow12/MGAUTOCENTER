@@ -218,18 +218,18 @@ Deno.serve(async (req) => {
           await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_dps', valor: String(proximoRps), descricao: 'Ultimo numero DPS autorizado' });
         }
 
-        const ultimoNfseNumConfig = parseInt(configsNfseNum[0]?.valor || '0', 10);
-        proximoNfseNumero = ultimoNfseNumConfig + 1;
+        // Número da nota sempre igual ao DPS — nunca diverge
+        proximoNfseNumero = proximoRps;
         if (configsNfseNum.length > 0) {
           await base44.asServiceRole.entities.Configuracao.update(configsNfseNum[0].id, { valor: String(proximoNfseNumero) });
           for (let i = 1; i < configsNfseNum.length; i++) {
             await base44.asServiceRole.entities.Configuracao.delete(configsNfseNum[i].id);
           }
         } else {
-          await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_numero', valor: String(proximoNfseNumero), descricao: 'Ultimo numero NFS-e autorizado' });
+          await base44.asServiceRole.entities.Configuracao.create({ chave: 'nfse_ultimo_numero', valor: String(proximoNfseNumero), descricao: 'Ultimo numero NFS-e autorizado (igual ao DPS)' });
         }
 
-        console.log(`[NFSe] Próximo DPS: ${proximoRps} (era: ${ultimoDpsConfig}) | Próximo NFS-e: ${proximoNfseNumero} (era: ${ultimoNfseNumConfig})`);
+        console.log(`[NFSe] Próximo DPS = Próximo NFS-e: ${proximoRps} (era: ${ultimoDpsConfig})`);
       }
 
       const valorServico = Number(valor_total) || 1.0;
@@ -566,11 +566,12 @@ Deno.serve(async (req) => {
           base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_dps' }),
           base44.asServiceRole.entities.Configuracao.filter({ chave: 'nfse_ultimo_numero' }),
         ]);
+        // Reverte DPS e número da nota juntos (são sempre iguais)
         if (configsDpsRev.length > 0 && parseInt(configsDpsRev[0].valor) === proximoRps) {
           await base44.asServiceRole.entities.Configuracao.update(configsDpsRev[0].id, { valor: String(proximoRps - 1) });
         }
         if (configsNfseNumRev.length > 0 && parseInt(configsNfseNumRev[0].valor) === proximoNfseNumero) {
-          await base44.asServiceRole.entities.Configuracao.update(configsNfseNumRev[0].id, { valor: String(proximoNfseNumero - 1) });
+          await base44.asServiceRole.entities.Configuracao.update(configsNfseNumRev[0].id, { valor: String(proximoRps - 1) });
         }
       } catch (revertError) {
         console.error('[DPS REVERT ERROR]', revertError);

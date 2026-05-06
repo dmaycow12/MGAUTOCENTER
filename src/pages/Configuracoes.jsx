@@ -194,11 +194,11 @@ export default function Configuracoes() {
           <F label="Série do DPS">
             <input value={config.nfse_serie_dps} onChange={e => setConfig({ ...config, nfse_serie_dps: e.target.value })} className="input-dark" />
           </F>
-          <F label="Última DPS">
-            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfse_ultimo_dps} onChange={e => setConfig({ ...config, nfse_ultimo_dps: e.target.value })} className="input-dark" />
-          </F>
-          <F label="Última NFS-e (número da nota)">
-            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfse_ultimo_numero} onChange={e => setConfig({ ...config, nfse_ultimo_numero: e.target.value })} className="input-dark" />
+          <F label="Última DPS / Número da Nota">
+            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfse_ultimo_dps} onChange={e => {
+              const v = e.target.value;
+              setConfig({ ...config, nfse_ultimo_dps: v, nfse_ultimo_numero: v });
+            }} className="input-dark" />
           </F>
           <F label="Ambiente">
             <select value={config.nfse_ambiente} onChange={e => setConfig({ ...config, nfse_ambiente: e.target.value })} className="input-dark">
