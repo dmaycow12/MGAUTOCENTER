@@ -810,15 +810,22 @@ export default function NotasFiscais() {
   };
 
   const abrirPdfNota = async (nota) => {
-    // NFCe — usa danfeNfce para abrir HTML com botão de salvar PDF
-    if (nota.tipo === 'NFCe') {
-      await abrirDanfeNfce(nota);
+    // Se já tem PDF salvo no banco (válido, não HTML nem placeholder) — abre em nova aba instantaneamente
+    const pdfSalvoValido = nota.pdf_url &&
+      !nota.pdf_url.endsWith('.html') &&
+      !nota.pdf_url.includes('/notas_fiscais_consumidor/') &&
+      !nota.pdf_url.includes('nota_nova.pdf') &&
+      !nota.pdf_url.includes('focusnfe') &&
+      !nota.pdf_url.includes('amazonaws');
+
+    if (pdfSalvoValido) {
+      window.open(nota.pdf_url, '_blank');
       return;
     }
 
-    // Se já tem PDF salvo no banco — abre em nova aba
-    if (nota.pdf_url) {
-      window.open(nota.pdf_url, '_blank');
+    // NFCe sem PDF salvo — usa danfeNfce para buscar/gerar
+    if (nota.tipo === 'NFCe') {
+      await abrirDanfeNfce(nota);
       return;
     }
 
