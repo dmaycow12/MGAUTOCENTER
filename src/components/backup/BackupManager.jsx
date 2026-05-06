@@ -115,7 +115,7 @@ export default function BackupManager() {
           chave_acesso: nota.chave_acesso,
           tem_xml: !!xmlContent,
           tem_pdf: !!pdfBlob,
-          arquivo: `${nome}.json`,
+          arquivo: `${nome}.json`
         });
 
         totalRegistros++;
@@ -131,8 +131,8 @@ export default function BackupManager() {
         entidades: Object.keys(backup),
         total_registros: totalRegistros,
         total_notas: notas.length,
-        notas_com_xml: indice.filter(n => n.tem_xml).length,
-        notas_com_pdf: indice.filter(n => n.tem_pdf).length,
+        notas_com_xml: indice.filter((n) => n.tem_xml).length,
+        notas_com_pdf: indice.filter((n) => n.tem_pdf).length
       }, null, 2));
 
       setProgresso("Compactando ZIP...");
@@ -145,11 +145,11 @@ export default function BackupManager() {
       a.click();
       URL.revokeObjectURL(url);
 
-      const comXml = indice.filter(n => n.tem_xml).length;
-      const comPdf = indice.filter(n => n.tem_pdf).length;
+      const comXml = indice.filter((n) => n.tem_xml).length;
+      const comPdf = indice.filter((n) => n.tem_pdf).length;
       setMsgBaixar({
         tipo: "sucesso",
-        texto: `Backup gerado! ${totalRegistros} registros | ${notas.length} notas | ${comXml} XMLs físicos | ${comPdf} PDFs físicos salvos.`,
+        texto: `Backup gerado! ${totalRegistros} registros | ${notas.length} notas | ${comXml} XMLs físicos | ${comPdf} PDFs físicos salvos.`
       });
     } catch (e) {
       setMsgBaixar({ tipo: "erro", texto: e.message });
@@ -209,8 +209,8 @@ export default function BackupManager() {
       const notaEntries = [];
       zip.forEach((caminho, entry) => {
         if (caminho.startsWith("NotaFiscal/") && !entry.dir && caminho.endsWith(".json") && !caminho.includes("_indice")) {
-          notaEntries.push(entry.async("string").then(s => {
-            try { notasBackup.push(JSON.parse(s)); } catch (_) {}
+          notaEntries.push(entry.async("string").then((s) => {
+            try {notasBackup.push(JSON.parse(s));} catch (_) {}
           }));
         }
       });
@@ -237,9 +237,9 @@ export default function BackupManager() {
       const data = res.data;
       if (!data.sucesso) throw new Error(data.error || "Erro ao restaurar.");
 
-      const resumo = Object.entries(data.resultados || {})
-        .map(([ent, r]) => `${ent}: ${r.importados}`)
-        .join(" | ");
+      const resumo = Object.entries(data.resultados || {}).
+      map(([ent, r]) => `${ent}: ${r.importados}`).
+      join(" | ");
       setMsgRestaurar({ tipo: "sucesso", texto: `${data.msg} — ${resumo}` });
     } catch (e) {
       setMsgRestaurar({ tipo: "erro", texto: e.message });
@@ -265,33 +265,33 @@ export default function BackupManager() {
             <h3 className="text-white font-semibold">Baixar Backup Completo</h3>
           </div>
           <ul className="text-gray-400 text-xs space-y-1 list-disc list-inside">
-            <li>Cada nota fiscal salva em <code className="text-green-300">NF-xxx.json</code> individual</li>
-            <li>XML de cada nota salvo em <code className="text-green-300">NF-xxx.xml</code> físico</li>
-            <li>DANFE/PDF de cada nota salvo em <code className="text-green-300">NF-xxx.pdf</code> físico</li>
-            <li>Demais entidades em JSON por categoria</li>
+            <li className="hidden">Cada nota fiscal salva em <code className="text-green-300">NF-xxx.json</code> individual</li>
+            <li className="hidden">XML de cada nota salvo em <code className="text-green-300">NF-xxx.xml</code> físico</li>
+            <li className="hidden">DANFE/PDF de cada nota salvo em <code className="text-green-300">NF-xxx.pdf</code> físico</li>
+            <li className="hidden">Demais entidades em JSON por categoria</li>
           </ul>
-          {baixando && progresso && (
-            <p className="text-yellow-400 text-xs flex items-center gap-2">
+          {baixando && progresso &&
+          <p className="text-yellow-400 text-xs flex items-center gap-2">
               <Loader2 className="w-3 h-3 animate-spin" /> {progresso}
             </p>
-          )}
+          }
           <button
             onClick={baixarBackup}
             disabled={baixando}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold disabled:opacity-50 transition-all"
             style={{ background: "#00cc44", color: "#000" }}
-            onMouseEnter={e => { if (!baixando) e.currentTarget.style.background = "#00aa33"; }}
-            onMouseLeave={e => e.currentTarget.style.background = "#00cc44"}
-          >
+            onMouseEnter={(e) => {if (!baixando) e.currentTarget.style.background = "#00aa33";}}
+            onMouseLeave={(e) => e.currentTarget.style.background = "#00cc44"}>
+            
             {baixando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             {baixando ? "Gerando backup..." : "Baixar Backup ZIP"}
           </button>
-          {msgBaixar && (
-            <div className={`flex items-start gap-2 p-3 rounded-lg text-xs ${msgBaixar.tipo === "sucesso" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+          {msgBaixar &&
+          <div className={`flex items-start gap-2 p-3 rounded-lg text-xs ${msgBaixar.tipo === "sucesso" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
               {msgBaixar.tipo === "sucesso" ? <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
               <span>{msgBaixar.texto}</span>
             </div>
-          )}
+          }
         </div>
 
         {/* RESTAURAR */}
@@ -300,33 +300,33 @@ export default function BackupManager() {
             <Upload className="w-5 h-5 text-blue-400" />
             <h3 className="text-white font-semibold">Restaurar Backup</h3>
           </div>
-          <p className="text-gray-400 text-xs">
+          <p className="text-gray-400 text-xs hidden">
             Selecione um <code className="text-blue-400">.zip</code> gerado por este sistema. Os XMLs físicos serão restaurados junto com os dados de cada nota. Registros serão <span className="text-yellow-400 font-medium">adicionados</span> ao banco atual.
           </p>
-          {restaurando && progresso && (
-            <p className="text-yellow-400 text-xs flex items-center gap-2">
+          {restaurando && progresso &&
+          <p className="text-yellow-400 text-xs flex items-center gap-2">
               <Loader2 className="w-3 h-3 animate-spin" /> {progresso}
             </p>
-          )}
+          }
           <button
             onClick={selecionarArquivo}
             disabled={restaurando}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold disabled:opacity-50 transition-all"
             style={{ background: "#062C9B", color: "#fff" }}
-            onMouseEnter={e => { if (!restaurando) e.currentTarget.style.background = "#041a5e"; }}
-            onMouseLeave={e => e.currentTarget.style.background = "#062C9B"}
-          >
+            onMouseEnter={(e) => {if (!restaurando) e.currentTarget.style.background = "#041a5e";}}
+            onMouseLeave={(e) => e.currentTarget.style.background = "#062C9B"}>
+            
             {restaurando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             {restaurando ? "Restaurando..." : "Selecionar Arquivo ZIP"}
           </button>
-          {msgRestaurar && (
-            <div className={`flex items-start gap-2 p-3 rounded-lg text-xs ${msgRestaurar.tipo === "sucesso" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+          {msgRestaurar &&
+          <div className={`flex items-start gap-2 p-3 rounded-lg text-xs ${msgRestaurar.tipo === "sucesso" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
               {msgRestaurar.tipo === "sucesso" ? <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
               <span>{msgRestaurar.texto}</span>
             </div>
-          )}
+          }
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
