@@ -167,7 +167,7 @@ export default function Configuracoes() {
       </Section>
 
       <Section title="NFC-e — Nota Fiscal do Consumidor" icon={null}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <F label="Última NFC-e">
             <input type="text" inputMode="numeric" autoComplete="off" value={config.nfce_ultimo_numero} onChange={e => setConfig({ ...config, nfce_ultimo_numero: e.target.value })} className="input-dark" />
           </F>
@@ -190,10 +190,10 @@ export default function Configuracoes() {
       </Section>
 
       <Section title="NFS-e — Nota Fiscal de Serviço" icon={null}>
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-         <F label="Série do DPS">
-           <input value={config.nfse_serie_dps} onChange={e => setConfig({ ...config, nfse_serie_dps: e.target.value })} className="input-dark" />
-         </F>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <F label="Série do DPS">
+            <input value={config.nfse_serie_dps} onChange={e => setConfig({ ...config, nfse_serie_dps: e.target.value })} className="input-dark" />
+          </F>
           <F label="Última DPS">
             <input type="text" inputMode="numeric" autoComplete="off" value={config.nfse_ultimo_dps} onChange={e => setConfig({ ...config, nfse_ultimo_dps: e.target.value })} className="input-dark" />
           </F>
