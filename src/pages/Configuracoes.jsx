@@ -122,14 +122,51 @@ export default function Configuracoes() {
           <F label="Inscrição Estadual">
             <input autoComplete="new-password" value={config.inscricao_estadual} onChange={e => setConfig({ ...config, inscricao_estadual: e.target.value })} className="input-dark" />
           </F>
-          <F label="Opção Simples Nacional (cód.)">
-            <input autoComplete="new-password" value={config.opcao_simples_nacional} onChange={e => setConfig({ ...config, opcao_simples_nacional: e.target.value })} className="input-dark" />
+          <F label="Opção Simples Nacional" className="col-span-1 md:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
+              {[
+                { v: "1", label: "1 — Não optante" },
+                { v: "2", label: "2 — Optante (SIMEI/MEI)" },
+                { v: "3", label: "3 — Optante (Simples Nacional)" },
+              ].map(({ v, label }) => (
+                <label key={v} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${config.opcao_simples_nacional === v ? "border-green-500 bg-green-500/10" : "border-gray-700 bg-gray-800 hover:border-gray-500"}`}>
+                  <input type="radio" name="opcao_simples" value={v} checked={config.opcao_simples_nacional === v} onChange={() => setConfig({ ...config, opcao_simples_nacional: v })} className="accent-green-500" />
+                  <span className="text-white text-sm">{label}</span>
+                </label>
+              ))}
+            </div>
           </F>
-          <F label="Regime Tributário Simples Nacional">
-            <input autoComplete="new-password" value={config.regime_tributario} onChange={e => setConfig({ ...config, regime_tributario: e.target.value })} className="input-dark" />
+          <F label="Regime Tributário" className="col-span-1 md:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
+              {[
+                { v: "1", label: "1 — Simples Nacional" },
+                { v: "2", label: "2 — Simples Nacional — excesso sublimite" },
+                { v: "3", label: "3 — Regime Normal (Lucro Presumido/Real)" },
+              ].map(({ v, label }) => (
+                <label key={v} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${config.regime_tributario === v ? "border-green-500 bg-green-500/10" : "border-gray-700 bg-gray-800 hover:border-gray-500"}`}>
+                  <input type="radio" name="regime_tributario" value={v} checked={config.regime_tributario === v} onChange={() => setConfig({ ...config, regime_tributario: v })} className="accent-green-500" />
+                  <span className="text-white text-sm">{label}</span>
+                </label>
+              ))}
+            </div>
           </F>
-          <F label="Regime Especial Tributação">
-            <input autoComplete="new-password" value={config.regime_especial} onChange={e => setConfig({ ...config, regime_especial: e.target.value })} className="input-dark" />
+          <F label="Regime Especial de Tributação (NFS-e)" className="col-span-1 md:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
+              {[
+                { v: "0", label: "0 — Nenhum / Não aplicável" },
+                { v: "1", label: "1 — Microempresa Municipal" },
+                { v: "2", label: "2 — Estimativa" },
+                { v: "3", label: "3 — Sociedade de Profissionais" },
+                { v: "4", label: "4 — Cooperativa" },
+                { v: "5", label: "5 — Microempresário Individual (MEI)" },
+                { v: "6", label: "6 — Microempresário e Empresa de Pequeno Porte (ME/EPP)" },
+              ].map(({ v, label }) => (
+                <label key={v} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${config.regime_especial === v ? "border-green-500 bg-green-500/10" : "border-gray-700 bg-gray-800 hover:border-gray-500"}`}>
+                  <input type="radio" name="regime_especial" value={v} checked={config.regime_especial === v} onChange={() => setConfig({ ...config, regime_especial: v })} className="accent-green-500" />
+                  <span className="text-white text-sm">{label}</span>
+                </label>
+              ))}
+            </div>
           </F>
         </div>
       </Section>
