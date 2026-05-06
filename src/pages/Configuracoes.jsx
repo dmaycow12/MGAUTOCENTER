@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Settings, Save, CheckCircle } from "lucide-react";
+import { Settings, Save, CheckCircle, ChevronDown } from "lucide-react";
 import BackupManager from "../components/backup/BackupManager";
 
 export default function Configuracoes() {
@@ -25,6 +25,7 @@ export default function Configuracoes() {
   const [salvo, setSalvo] = useState(false);
   const [loading, setLoading] = useState(true);
   const [configIds, setConfigIds] = useState({});
+  const [openSelect, setOpenSelect] = useState({});
 
 
 
@@ -122,52 +123,49 @@ export default function Configuracoes() {
           <F label="Inscrição Estadual">
             <input autoComplete="new-password" value={config.inscricao_estadual} onChange={e => setConfig({ ...config, inscricao_estadual: e.target.value })} className="input-dark" />
           </F>
-          <F label="Opção Simples Nacional" className="col-span-1 md:col-span-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
-              {[
-                { v: "1", label: "1 — Não optante" },
-                { v: "2", label: "2 — Optante (SIMEI/MEI)" },
-                { v: "3", label: "3 — Optante (Simples Nacional)" },
-              ].map(({ v, label }) => (
-                <label key={v} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${config.opcao_simples_nacional === v ? "border-green-500 bg-green-500/10" : "border-gray-700 bg-gray-800 hover:border-gray-500"}`}>
-                  <input type="radio" name="opcao_simples" value={v} checked={config.opcao_simples_nacional === v} onChange={() => setConfig({ ...config, opcao_simples_nacional: v })} className="accent-green-500" />
-                  <span className="text-white text-sm">{label}</span>
-                </label>
-              ))}
-            </div>
-          </F>
-          <F label="Regime Tributário" className="col-span-1 md:col-span-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
-              {[
-                { v: "1", label: "1 — Simples Nacional" },
-                { v: "2", label: "2 — Simples Nacional — excesso sublimite" },
-                { v: "3", label: "3 — Regime Normal (Lucro Presumido/Real)" },
-              ].map(({ v, label }) => (
-                <label key={v} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${config.regime_tributario === v ? "border-green-500 bg-green-500/10" : "border-gray-700 bg-gray-800 hover:border-gray-500"}`}>
-                  <input type="radio" name="regime_tributario" value={v} checked={config.regime_tributario === v} onChange={() => setConfig({ ...config, regime_tributario: v })} className="accent-green-500" />
-                  <span className="text-white text-sm">{label}</span>
-                </label>
-              ))}
-            </div>
-          </F>
-          <F label="Regime Especial de Tributação (NFS-e)" className="col-span-1 md:col-span-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
-              {[
-                { v: "0", label: "0 — Nenhum / Não aplicável" },
-                { v: "1", label: "1 — Microempresa Municipal" },
-                { v: "2", label: "2 — Estimativa" },
-                { v: "3", label: "3 — Sociedade de Profissionais" },
-                { v: "4", label: "4 — Cooperativa" },
-                { v: "5", label: "5 — Microempresário Individual (MEI)" },
-                { v: "6", label: "6 — Microempresário e Empresa de Pequeno Porte (ME/EPP)" },
-              ].map(({ v, label }) => (
-                <label key={v} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${config.regime_especial === v ? "border-green-500 bg-green-500/10" : "border-gray-700 bg-gray-800 hover:border-gray-500"}`}>
-                  <input type="radio" name="regime_especial" value={v} checked={config.regime_especial === v} onChange={() => setConfig({ ...config, regime_especial: v })} className="accent-green-500" />
-                  <span className="text-white text-sm">{label}</span>
-                </label>
-              ))}
-            </div>
-          </F>
+          <RadioAccordion
+            id="opcao_simples"
+            label="Opção Simples Nacional"
+            value={config.opcao_simples_nacional}
+            open={!!openSelect.opcao_simples}
+            onToggle={() => setOpenSelect(s => ({ ...s, opcao_simples: !s.opcao_simples }))}
+            options={[
+              { v: "1", label: "1 — Não optante" },
+              { v: "2", label: "2 — Optante (SIMEI/MEI)" },
+              { v: "3", label: "3 — Optante (Simples Nacional)" },
+            ]}
+            onChange={v => setConfig({ ...config, opcao_simples_nacional: v })}
+          />
+          <RadioAccordion
+            id="regime_tributario"
+            label="Regime Tributário"
+            value={config.regime_tributario}
+            open={!!openSelect.regime_tributario}
+            onToggle={() => setOpenSelect(s => ({ ...s, regime_tributario: !s.regime_tributario }))}
+            options={[
+              { v: "1", label: "1 — Simples Nacional" },
+              { v: "2", label: "2 — Simples Nacional — excesso sublimite" },
+              { v: "3", label: "3 — Regime Normal (Lucro Presumido/Real)" },
+            ]}
+            onChange={v => setConfig({ ...config, regime_tributario: v })}
+          />
+          <RadioAccordion
+            id="regime_especial"
+            label="Regime Especial de Tributação (NFS-e)"
+            value={config.regime_especial}
+            open={!!openSelect.regime_especial}
+            onToggle={() => setOpenSelect(s => ({ ...s, regime_especial: !s.regime_especial }))}
+            options={[
+              { v: "0", label: "0 — Nenhum / Não aplicável" },
+              { v: "1", label: "1 — Microempresa Municipal" },
+              { v: "2", label: "2 — Estimativa" },
+              { v: "3", label: "3 — Sociedade de Profissionais" },
+              { v: "4", label: "4 — Cooperativa" },
+              { v: "5", label: "5 — Microempresário Individual (MEI)" },
+              { v: "6", label: "6 — ME/EPP" },
+            ]}
+            onChange={v => setConfig({ ...config, regime_especial: v })}
+          />
         </div>
       </Section>
 
@@ -285,6 +283,37 @@ function F({ label, children, className = "" }) {
   );
 }
 
+
+function RadioAccordion({ id, label, value, open, onToggle, options, onChange }) {
+  const selected = options.find(o => o.v === value);
+  return (
+    <div className="col-span-1 md:col-span-2">
+      <label className="block text-xs text-gray-400 mb-1">{label}</label>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-gray-700 bg-gray-800 hover:border-gray-500 transition-all"
+      >
+        <span className="text-white text-sm">{selected ? selected.label : "— Selecione —"}</span>
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="mt-1 border border-gray-700 rounded-lg overflow-hidden">
+          {options.map(({ v, label: optLabel }) => (
+            <label
+              key={v}
+              onClick={() => { onChange(v); onToggle(); }}
+              className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-all ${value === v ? "bg-green-500/15 text-green-400" : "bg-gray-800 text-white hover:bg-gray-700"}`}
+            >
+              <input type="radio" name={id} value={v} checked={value === v} onChange={() => {}} className="accent-green-500" />
+              <span className="text-sm">{optLabel}</span>
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function TokenField({ label, value, onChange }) {
   const [visible, setVisible] = React.useState(false);
