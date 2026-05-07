@@ -1,0 +1,114 @@
+{
+  "type": "object",
+  "properties": {
+    "codigo": {
+      "type": "string",
+      "title": "C\u00f3digo Principal"
+    },
+    "codigos": {
+      "type": "array",
+      "title": "C\u00f3digos Adicionais",
+      "items": {
+        "type": "string"
+      }
+    },
+    "descricao": {
+      "type": "string",
+      "title": "Descri\u00e7\u00e3o"
+    },
+    "categoria": {
+      "type": "string",
+      "title": "Categoria"
+    },
+    "marca": {
+      "type": "string",
+      "title": "Marca"
+    },
+    "unidade": {
+      "type": "string",
+      "title": "Unidade",
+      "enum": [
+        "UN",
+        "PC",
+        "KG",
+        "L",
+        "M",
+        "CX",
+        "PAR"
+      ]
+    },
+    "quantidade": {
+      "type": "number",
+      "title": "Quantidade",
+      "default": 0
+    },
+    "estoque_minimo": {
+      "type": "number",
+      "title": "Estoque M\u00ednimo",
+      "default": 0
+    },
+    "valor_custo": {
+      "type": "number",
+      "title": "Valor de Custo",
+      "default": 0
+    },
+    "valor_venda": {
+      "type": "number",
+      "title": "Valor de Venda",
+      "default": 0
+    },
+    "ncm": {
+      "type": "string",
+      "title": "NCM",
+      "default": "87089990"
+    },
+    "cfop": {
+      "type": "string",
+      "title": "CFOP",
+      "default": "5405"
+    },
+    "cest": {
+      "type": "string",
+      "title": "CEST"
+    },
+    "observacoes": {
+      "type": "string",
+      "title": "Observa\u00e7\u00f5es"
+    },
+    "historico": {
+      "type": "array",
+      "title": "Hist\u00f3rico de Movimenta\u00e7\u00f5es",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string"
+          },
+          "quantidade": {
+            "type": "number"
+          },
+          "valor_unitario": {
+            "type": "number"
+          },
+          "fornecedor": {
+            "type": "string"
+          },
+          "ordem_venda_numero": {
+            "type": "string"
+          },
+          "ordem_venda_id": {
+            "type": "string"
+          },
+          "observacao": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "name": "Estoque",
+  "required": []
+}

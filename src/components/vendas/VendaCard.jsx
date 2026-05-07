@@ -129,7 +129,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
     await base44.entities.Vendas.update(os.id, { status: novoStatus });
     if (!eraConcluido && ficaConcluido) {
       await gerarLancamentosFinanceiros(os);
-      await reduzirEstoque(os.pecas);
+      await reduzirEstoque(os.pecas, os);
     }
     onRefresh?.();
   };

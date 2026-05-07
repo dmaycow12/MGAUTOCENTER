@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, CheckSquare, ChevronUp, ChevronDown, Download, Filter, Tag, ClipboardCheck } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, ChevronUp, ChevronDown, Download, ClipboardCheck } from "lucide-react";
 import ProgressoReajuste from "../components/estoque/ProgressoReajuste";
+import ModalEstoqueForm from "../components/estoque/ModalEstoqueForm";
 
 const arredondarVendaParaCinco = (valor) => {
   return Math.ceil(valor / 5) * 5;
 };
 
 const defaultForm = () => ({
-  codigo: "", descricao: "", marca: "",
+  codigo: "", codigos: [], descricao: "", marca: "",
   quantidade: 0, estoque_minimo: 0, valor_custo: 0, valor_venda: 0,
-  localizacao: "", fornecedor: "", ncm: "87089990", cfop: "5405", cest: "", observacoes: ""
+  ncm: "87089990", cfop: "5405", cest: "", observacoes: "", historico: []
 });
 
 export default function Estoque() {
@@ -194,6 +195,7 @@ export default function Estoque() {
     const matchSearch = !search ||
       i.descricao?.toLowerCase().includes(search.toLowerCase()) ||
       i.codigo?.toLowerCase().includes(search.toLowerCase()) ||
+      (i.codigos || []).some(c => c?.toLowerCase().includes(search.toLowerCase())) ||
       i.categoria?.toLowerCase().includes(search.toLowerCase()) ||
       i.marca?.toLowerCase().includes(search.toLowerCase());
     const matchFiltro = filtro === "Todos" || (filtro === "Estoque Baixo" && i.quantidade <= i.estoque_minimo);
@@ -800,62 +802,13 @@ export default function Estoque() {
 
       {/* Modal Form */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-5 border-b border-gray-800">
-              <h2 className="text-white font-semibold">{editando ? "Editar Item" : "Novo Item de Estoque"}</h2>
-              <button onClick={() => { setShowForm(false); setEditando(null); }}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <F label="Código"><input value={form.codigo} onChange={e => setForm({ ...form, codigo: e.target.value })} className="input-dark" /></F>
-                <F label="Quantidade"><input type="text" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: Number(e.target.value.replace(/[^0-9.]/g, "") || 0) })} className="input-dark" /></F>
-                <F label="Descrição *" className="col-span-2">
-                  <input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} className="input-dark" />
-                </F>
-                <F label="Marca"><input value={form.marca} onChange={e => setForm({ ...form, marca: e.target.value })} className="input-dark" /></F>
-                <F label="Estoque Mínimo">
-                  <input type="text" value={form.estoque_minimo} onChange={e => setForm({ ...form, estoque_minimo: Number(e.target.value.replace(/[^0-9.]/g, "") || 0) })} className="input-dark" />
-                </F>
-                <F label="Valor de Custo (R$)">
-                  <input type="text" step="0.01" value={form.valor_custo} onChange={e => setForm({ ...form, valor_custo: Number(e.target.value.replace(/[^0-9.]/g, "") || 0) })} className="input-dark" />
-                </F>
-                <F label="Valor de Venda (R$)">
-                   <input type="text" step="0.01" value={form.valor_venda} onChange={e => {
-                     const val = Number(e.target.value.replace(/[^0-9.]/g, "") || 0);
-                     setForm({ ...form, valor_venda: arredondarVendaParaCinco(val) });
-                   }} className="input-dark" />
-                 </F>
-                <F label="Localização"><input value={form.localizacao} onChange={e => setForm({ ...form, localizacao: e.target.value })} className="input-dark" /></F>
-                <F label="Fornecedor"><input value={form.fornecedor} onChange={e => setForm({ ...form, fornecedor: e.target.value })} className="input-dark" /></F>
-              </div>
-
-              {/* Dados Fiscais */}
-              <div className="border-t border-gray-800 pt-4">
-                <p className="text-xs text-gray-500 font-medium mb-3 uppercase tracking-wide">Dados Fiscais</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <F label="NCM">
-                    <input value={form.ncm} onChange={e => setForm({ ...form, ncm: e.target.value })} className="input-dark" placeholder="87089990" maxLength={8} />
-                  </F>
-                  <F label="CFOP">
-                    <input value={form.cfop} onChange={e => setForm({ ...form, cfop: e.target.value })} className="input-dark" placeholder="5405" maxLength={4} />
-                  </F>
-                  <F label="CEST" className="col-span-2">
-                    <input value={form.cest} onChange={e => setForm({ ...form, cest: e.target.value })} className="input-dark" placeholder="Ex: 0100100" />
-                  </F>
-                </div>
-              </div>
-
-              <F label="Observações"><textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} className="input-dark" rows={2} /></F>
-            </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
-              <button onClick={() => { setShowForm(false); setEditando(null); }} className="px-4 py-2 text-sm text-white rounded-lg transition-all" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>Cancelar</button>
-              <button onClick={salvar} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all" style={{background: "#062C9B"}} onMouseEnter={e => e.currentTarget.style.background = "#041a4d"} onMouseLeave={e => e.currentTarget.style.background = "#062C9B"}>
-                {editando ? "Salvar" : "Adicionar"}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ModalEstoqueForm
+          editando={editando}
+          form={form}
+          setForm={setForm}
+          onSalvar={salvar}
+          onClose={() => { setShowForm(false); setEditando(null); }}
+        />
       )}
 
       <ProgressoReajuste

@@ -320,24 +320,36 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
         }
         // Prioridade 3: descrição removida — só vincula por código ou vínculo manual
 
+        const movEntrada = {
+          tipo: "entrada",
+          data: new Date().toISOString(),
+          quantidade: item.quantidade,
+          valor_unitario: item.valor_unitario,
+          fornecedor: dados.emitente || nomeFornecedor || "",
+          observacao: `NF ${dados.numero || ""}`,
+        };
         if (existente) {
           idsUsados.add(existente.id);
           const novaQtd = (existente.quantidade || 0) + item.quantidade;
+          const historicoAtual = Array.isArray(existente.historico) ? existente.historico : [];
           await base44.entities.Estoque.update(existente.id, {
             quantidade: novaQtd, valor_custo: item.valor_unitario,
             ncm: item.ncm || existente.ncm, cfop: item.cfop || existente.cfop,
+            historico: [...historicoAtual, movEntrada],
           });
           estoqueAtual = estoqueAtual.map(e => e.id === existente.id ? { ...e, quantidade: novaQtd } : e);
         } else {
           const criado = await base44.entities.Estoque.create({
             descricao: item.descricao,
             codigo: item.codigo || "",
+            codigos: [],
             quantidade: item.quantidade,
             valor_custo: item.valor_unitario, valor_venda: item.valor_unitario,
-            unidade: item.unidade || "UN", fornecedor: dados.emitente,
+            unidade: item.unidade || "UN",
             ncm: item.ncm || "", cfop: item.cfop || "",
             marca: item.marca || "",
             categoria: item.categoria || "",
+            historico: [movEntrada],
           });
           if (criado?.id) {
             idsUsados.add(criado.id);

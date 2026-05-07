@@ -26,7 +26,7 @@ function encontrarItemEstoque(estoqueList, peca) {
   return null;
 }
 
-export async function reduzirEstoque(pecas) {
+export async function reduzirEstoque(pecas, venda = null) {
   if (!pecas || pecas.length === 0) return;
   const estoqueList = await base44.entities.Estoque.list("-created_date", 1000);
   for (const peca of pecas) {
@@ -35,7 +35,17 @@ export async function reduzirEstoque(pecas) {
     const item = encontrarItemEstoque(estoqueList, peca);
     if (item) {
       const novaQtd = Math.max(0, Number(item.quantidade || 0) - qtd);
-      await base44.entities.Estoque.update(item.id, { quantidade: novaQtd });
+      const movSaida = {
+        tipo: "saida",
+        data: new Date().toISOString(),
+        quantidade: qtd,
+        valor_unitario: Number(peca.valor_unitario || 0),
+        ordem_venda_numero: venda?.numero || "",
+        ordem_venda_id: venda?.id || "",
+        observacao: "",
+      };
+      const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
+      await base44.entities.Estoque.update(item.id, { quantidade: novaQtd, historico: [...historicoAtual, movSaida] });
     }
   }
 }
