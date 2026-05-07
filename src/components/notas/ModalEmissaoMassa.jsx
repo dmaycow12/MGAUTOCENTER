@@ -29,7 +29,9 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
     if (tipoNF === 'NFCe') {
       if (temNFCe || temNFe) return false;
       // PJ (CNPJ com 14 dígitos) não pode emitir NFCe
-      const cpfCnpj = (venda.cliente_cpf_cnpj || '').replace(/\D/g, '');
+      const clienteCadastro = clientes.find(c => c.id === venda.cliente_id);
+      const cpfCnpjRaw = venda.cliente_cpf_cnpj || clienteCadastro?.cpf_cnpj || '';
+      const cpfCnpj = cpfCnpjRaw.replace(/\D/g, '');
       if (cpfCnpj.length === 14) return false;
       return (venda.pecas || []).length > 0;
     }
