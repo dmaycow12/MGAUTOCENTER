@@ -26,7 +26,15 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
       if (temNFe || temNFCe) return false;
       return (venda.pecas || []).length > 0;
     }
-
+    if (tipoNF === 'NFCe') {
+      if (temNFCe || temNFe) return false;
+      // Bloqueia CNPJ (PJ) — apenas CPF ou sem documento podem emitir NFCe
+      const clienteCadastro = clientes.find(c => c.id === venda.cliente_id);
+      const cpfCnpjRaw = venda.cliente_cpf_cnpj || clienteCadastro?.cpf_cnpj || '';
+      const cpfCnpj = cpfCnpjRaw.replace(/\D/g, '');
+      if (cpfCnpj.length === 14) return false;
+      return (venda.pecas || []).length > 0;
+    }
     return true;
   });
 
@@ -118,7 +126,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
           <>
             <div className="p-5 flex-shrink-0 flex items-center gap-4 border-b border-gray-800">
               <span className="text-xs text-gray-400">Tipo de NF:</span>
-              {['NFSe', 'NFe'].map(t => (
+              {['NFSe', 'NFe', 'NFCe'].map(t => (
                 <button key={t} onClick={() => setTipoNF(t)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${tipoNF === t ? 'bg-[#062C9B] text-white' : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'}`}>
                   {t}
