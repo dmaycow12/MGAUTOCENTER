@@ -28,11 +28,14 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
     }
     if (tipoNF === 'NFCe') {
       if (temNFCe || temNFe) return false;
-      // PJ (CNPJ com 14 dígitos) não pode emitir NFCe
+      // PJ não pode emitir NFCe — verifica CNPJ ou nome com indicativo PJ
       const clienteCadastro = clientes.find(c => c.id === venda.cliente_id);
       const cpfCnpjRaw = venda.cliente_cpf_cnpj || clienteCadastro?.cpf_cnpj || '';
       const cpfCnpj = cpfCnpjRaw.replace(/\D/g, '');
       if (cpfCnpj.length === 14) return false;
+      const nomeCliente = (venda.cliente_nome || '').toUpperCase();
+      const isPJ = /\b(LTDA|EIRELI|S\.?A\.?|ME\b|EPP\b|CNPJ|COMERCIO|COMERCIAL|INDUSTRIA|DISTRIBUIDORA|TRANSPORTADORA|CONSTRUTORA|SERVICOS|CENTER|AUTO CENTER|HOLDING)\b/.test(nomeCliente);
+      if (isPJ) return false;
       return (venda.pecas || []).length > 0;
     }
     return true;
