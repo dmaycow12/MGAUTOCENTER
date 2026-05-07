@@ -28,11 +28,13 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
     }
     if (tipoNF === 'NFCe') {
       if (temNFCe || temNFe) return false;
-      // Bloqueia CNPJ (PJ) — apenas CPF ou sem documento podem emitir NFCe
+      // Bloqueia PJ — verifica CNPJ na venda, no cadastro, e o tipo do cadastro
       const clienteCadastro = clientes.find(c => c.id === venda.cliente_id);
-      const cpfCnpjRaw = venda.cliente_cpf_cnpj || clienteCadastro?.cpf_cnpj || '';
-      const cpfCnpj = cpfCnpjRaw.replace(/\D/g, '');
-      if (cpfCnpj.length === 14) return false;
+      const cpfCnpjVenda = (venda.cliente_cpf_cnpj || '').replace(/\D/g, '');
+      const cpfCnpjCadastro = (clienteCadastro?.cpf_cnpj || '').replace(/\D/g, '');
+      if (cpfCnpjVenda.length === 14) return false;
+      if (cpfCnpjCadastro.length === 14) return false;
+      if (clienteCadastro?.tipo === 'Pessoa Jurídica') return false;
       return (venda.pecas || []).length > 0;
     }
     return true;
