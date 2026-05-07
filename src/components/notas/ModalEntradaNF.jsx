@@ -70,7 +70,7 @@ function parsearXML(xmlOriginal) {
     const limparCodigo = (str) => str ? str.replace(/[.\-/]/g, "") : "";
     const codigoLimpo = limparCodigo(cProd) || ((cEAN && cEAN !== "SEM GTIN") ? limparCodigo(cEAN) : "");
     const eanLimpo = (cEAN && cEAN !== "SEM GTIN") ? limparCodigo(cEAN) : "";
-    return { descricao: xProd, quantidade: qCom, valor_unitario: vUnCom, valor_total: vProd, codigo: codigoLimpo, ean: eanLimpo, ncm: NCM, cfop: CFOP, unidade: uCom, dar_entrada_estoque: true, estoqueVinculado: null };
+    return { descricao: xProd, quantidade: qCom, valor_unitario: vUnCom, valor_total: vProd, codigo: codigoLimpo, ean: eanLimpo, ncm: NCM, cfop: CFOP, unidade: uCom, dar_entrada_estoque: false, estoqueVinculado: null };
   });
 
   const vBC = parseFloat(get("vBC") || "0"); const vICMS = parseFloat(get("vICMS") || "0");
@@ -480,10 +480,10 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
               <div className="flex items-center justify-between">
                 <p className="text-xs text-gray-400">Marque os itens que devem entrar no estoque. Edite o código ou vincule a um produto existente.</p>
                 <button
-                  onClick={() => setItens(prev => prev.map(it => ({ ...it, dar_entrada_estoque: false })))}
-                  className="flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-all"
+                  onClick={() => setItens(prev => prev.map(it => ({ ...it, dar_entrada_estoque: true })))}
+                  className="flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg border border-green-500/40 text-green-400 hover:bg-green-500/10 transition-all"
                 >
-                  Não cadastrar nenhum produto
+                  Cadastrar todos os produtos
                 </button>
               </div>
               {itens.length === 0 ? (
