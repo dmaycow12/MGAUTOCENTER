@@ -28,13 +28,21 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
     }
     if (tipoNF === 'NFCe') {
       if (temNFCe || temNFe) return false;
-      // Bloqueia PJ — verifica CNPJ na venda, no cadastro, e o tipo do cadastro
       const clienteCadastro = clientes.find(c => c.id === venda.cliente_id);
+      // 1) CNPJ salvo na venda
       const cpfCnpjVenda = (venda.cliente_cpf_cnpj || '').replace(/\D/g, '');
-      const cpfCnpjCadastro = (clienteCadastro?.cpf_cnpj || '').replace(/\D/g, '');
       if (cpfCnpjVenda.length === 14) return false;
-      if (cpfCnpjCadastro.length === 14) return false;
-      if (clienteCadastro?.tipo === 'Pessoa Jurídica') return false;
+      // 2) CNPJ ou tipo PJ no cadastro
+      if (clienteCadastro) {
+        const cpfCnpjCadastro = (clienteCadastro.cpf_cnpj || '').replace(/\D/g, '');
+        if (cpfCnpjCadastro.length === 14) return false;
+        if (clienteCadastro.tipo === 'Pessoa Jurídica') return false;
+      }
+      // 3) Fallback: nome da venda contém indicativo PJ (quando não há cadastro ou cpf/cnpj)
+      if (!cpfCnpjVenda && !clienteCadastro) {
+        const nome = (venda.cliente_nome || '').toUpperCase();
+        if (/\b(LTDA|EIRELI|S\.?A\.|EPP|ME\b|COMERCIO|COMERCIAL|INDUSTRIA|DISTRIBUIDORA|TRANSPORTADORA|CONSTRUTORA|CENTER|HOLDING)\b/.test(nome)) return false;
+      }
       return (venda.pecas || []).length > 0;
     }
     return true;
