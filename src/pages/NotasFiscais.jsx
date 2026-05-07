@@ -3,11 +3,10 @@ import { base44 } from "@/api/base44Client";
 import { appParams } from "@/lib/app-params";
 import {
   FileText, Plus, Upload, Search, Trash2, X,
-  CheckCircle, AlertCircle, PlusCircle, MinusCircle, RefreshCw, ChevronLeft, ChevronRight, LayoutGrid, List, BarChart2, Pencil, ClipboardList, Ban, LogIn, Code, Download
+  CheckCircle, AlertCircle, PlusCircle, MinusCircle, RefreshCw, ChevronLeft, ChevronRight, LayoutGrid, List, BarChart2, Pencil, Ban, LogIn, Code, Download
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
-import ModalLancamentoMassa from "@/components/notas/ModalLancamentoMassa";
 import ModalXML from "@/components/notas/ModalXML";
 import SearchableSelect from "@/components/notas/SearchableSelect";
 
@@ -88,8 +87,6 @@ export default function NotasFiscais() {
   const [gerandoSintegra, setGerandoSintegra] = useState(false);
 
   const [notaIdParaEntrada, setNotaIdParaEntrada] = useState(null);
-  const [showLancamentoMassa, setShowLancamentoMassa] = useState(false);
-
   const hoje = new Date();
   const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
   const [filtroMes, setFiltroMes] = useState(() => { try { const s = localStorage.getItem("nf_filtroMes"); return s ? Number(s) : hoje.getMonth() + 1; } catch { return hoje.getMonth() + 1; } });
@@ -1040,11 +1037,7 @@ export default function NotasFiscais() {
         <button onClick={() => { setForm(f => ({ ...f, numero: proximoNumero(notas, f.tipo), serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
           <Plus className="w-4 h-4" /> Emitir
         </button>
-        {filtradas.filter(n => n.status === "Importada").length > 0 && (
-          <button onClick={() => setShowLancamentoMassa(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
-            <ClipboardList className="w-4 h-4" /> Lançar
-          </button>
-        )}
+
         <div className={`flex-1 flex items-center h-9 rounded-lg text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
           <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}><ChevronLeft className="w-3 h-3" /></button>
           <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
@@ -1751,20 +1744,6 @@ export default function NotasFiscais() {
             </div>
           </div>
         </div>
-      )}
-
-      {showLancamentoMassa && (
-        <ModalLancamentoMassa
-          notas={filtradas.filter(n => n.status === "Importada")}
-          onClose={() => setShowLancamentoMassa(false)}
-          onConcluido={() => {
-            // Garantir que filtro de Entrada e NFe estejam ativos para ver as notas lançadas
-            setFiltroTipo(prev => prev.includes("Entrada") ? prev : [...prev, "Entrada"]);
-            setFiltroModeloNF(prev => prev.includes("NFe") ? prev : [...prev, "NFe"]);
-            feedback("sucesso", "Lançamento em massa concluído!");
-            load();
-          }}
-        />
       )}
 
       {showEntrada && xmlParaEntrada && (
