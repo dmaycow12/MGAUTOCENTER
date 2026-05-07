@@ -119,10 +119,12 @@ function CampoDescricaoBusca({ estoqueExistente, item, onChange }) {
   }, []);
 
   const filtrados = item.descricao?.length >= 2
-    ? estoqueExistente.filter(e =>
-        e.descricao?.toLowerCase().includes(item.descricao.toLowerCase()) ||
-        e.codigo?.toLowerCase().includes(item.descricao.toLowerCase())
-      ).slice(0, 8)
+    ? estoqueExistente.filter(e => {
+        const q = item.descricao.toLowerCase();
+        return e.descricao?.toLowerCase().includes(q)
+          || e.codigo?.toLowerCase().includes(q)
+          || (e.codigos || []).some(c => c?.toLowerCase().includes(q));
+      }).slice(0, 8)
     : [];
 
   const selecionar = (prod) => {
@@ -221,13 +223,18 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
     ]).then(([est, nfs, clientes]) => {
       setEstoqueExistente(est);
 
-      // Tentar auto-vincular por código ou descrição se não houver mapeamento salvo
+      // Tentar auto-vincular por código principal OU por código alternativo (codigos[])
       setItens(prev => prev.map(item => {
-        if (item.estoqueVinculado) return item; // já tem mapeamento
-        let encontrado = null;
-        if (item.codigo) encontrado = est.find(e => e.codigo === item.codigo);
-        // Só vincula automaticamente se o código bater exatamente — sem fallback por descrição
-        return encontrado ? { ...item, estoqueVinculado: { id: encontrado.id, descricao: encontrado.descricao }, marca: item.marca || encontrado.marca || "", categoria: item.categoria || encontrado.categoria || "" } : item;
+        if (item.estoqueVinculado) return item; // já tem mapeamento salvo
+        if (!item.codigo) return item;
+        const codNorm = item.codigo.toUpperCase().trim();
+        // 1. Código principal
+        let encontrado = est.find(e => e.codigo?.toUpperCase().trim() === codNorm);
+        // 2. Códigos alternativos
+        if (!encontrado) encontrado = est.find(e => (e.codigos || []).some(c => c?.toUpperCase().trim() === codNorm));
+        return encontrado
+          ? { ...item, estoqueVinculado: { id: encontrado.id, descricao: encontrado.descricao }, marca: item.marca || encontrado.marca || "", categoria: item.categoria || encontrado.categoria || "" }
+          : item;
       }));
 
       const chave = parsed.chave;
@@ -332,12 +339,24 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
           idsUsados.add(existente.id);
           const novaQtd = (existente.quantidade || 0) + item.quantidade;
           const historicoAtual = Array.isArray(existente.historico) ? existente.historico : [];
+
+          // Salvar código do fornecedor como código alternativo (se ainda não estiver cadastrado)
+          const codigosAtuais = Array.isArray(existente.codigos) ? existente.codigos : [];
+          const codigoNF = item.codigo?.toUpperCase().trim();
+          const codigoJaSalvo = !codigoNF
+            || existente.codigo?.toUpperCase().trim() === codigoNF
+            || codigosAtuais.some(c => c?.toUpperCase().trim() === codigoNF);
+          const novosCodigos = codigoJaSalvo ? codigosAtuais : [...codigosAtuais, codigoNF];
+
           await base44.entities.Estoque.update(existente.id, {
-            quantidade: novaQtd, valor_custo: item.valor_unitario,
-            ncm: item.ncm || existente.ncm, cfop: item.cfop || existente.cfop,
+            quantidade: novaQtd,
+            valor_custo: item.valor_unitario,
+            ncm: item.ncm || existente.ncm,
+            cfop: item.cfop || existente.cfop,
+            codigos: novosCodigos,
             historico: [...historicoAtual, movEntrada],
           });
-          estoqueAtual = estoqueAtual.map(e => e.id === existente.id ? { ...e, quantidade: novaQtd } : e);
+          estoqueAtual = estoqueAtual.map(e => e.id === existente.id ? { ...e, quantidade: novaQtd, codigos: novosCodigos } : e);
         } else {
           const criado = await base44.entities.Estoque.create({
             descricao: item.descricao,
