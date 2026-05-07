@@ -1,13 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes = [], onClose, onConcluido }) {
+export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes: clientesProp = [], onClose, onConcluido }) {
   const [selecionadas, setSelecionadas] = useState([]);
   const [tipoNF, setTipoNF] = useState('NFSe');
   const [emitindo, setEmitindo] = useState(false);
   const [resultados, setResultados] = useState([]);
   const [concluido, setConcluido] = useState(false);
+  const [clientes, setClientes] = useState(clientesProp);
+
+  // Carrega TODOS os cadastros diretamente — garante dados completos e frescos
+  useEffect(() => {
+    base44.entities.Cadastro.list('-created_date', 5000).then(res => {
+      if (res && res.length > 0) setClientes(res);
+    }).catch(() => {});
+  }, []);
+
+  const isPJ = (venda) => {
+    // Verifica pelo CNPJ na própria venda
+    const cpfCnpjVenda = (venda.cliente_cpf_cnpj || '').replace(/\D/g, '');
+    if (cpfCnpjVenda.length === 14) return true;
+
+    // Busca cadastro por ID ou por nome (caso cliente_id não esteja preenchido)
+    const cadastro = clientes.find(c => c.id === venda.cliente_id)
+      || clientes.find(c => c.nome?.toLowerCase().trim() === venda.cliente_nome?.toLowerCase().trim());
+
+    if (cadastro) {
+      if (cadastro.tipo === 'Pessoa Jurídica') return true;
+      const cpfCnpjCadastro = (cadastro.cpf_cnpj || '').replace(/\D/g, '');
+      if (cpfCnpjCadastro.length === 14) return true;
+    }
+
+    return false;
+  };
 
   const vendasElegiveis = vendas.filter(venda => {
     if (venda.status !== 'Concluído') return false;
@@ -28,21 +54,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
     }
     if (tipoNF === 'NFCe') {
       if (temNFCe || temNFe) return false;
-      const clienteCadastro = clientes.find(c => c.id === venda.cliente_id);
-      // 1) CNPJ salvo na venda
-      const cpfCnpjVenda = (venda.cliente_cpf_cnpj || '').replace(/\D/g, '');
-      if (cpfCnpjVenda.length === 14) return false;
-      // 2) CNPJ ou tipo PJ no cadastro
-      if (clienteCadastro) {
-        const cpfCnpjCadastro = (clienteCadastro.cpf_cnpj || '').replace(/\D/g, '');
-        if (cpfCnpjCadastro.length === 14) return false;
-        if (clienteCadastro.tipo === 'Pessoa Jurídica') return false;
-      }
-      // 3) Fallback: nome da venda contém indicativo PJ (quando não há cadastro ou cpf/cnpj)
-      if (!cpfCnpjVenda && !clienteCadastro) {
-        const nome = (venda.cliente_nome || '').toUpperCase();
-        if (/\b(LTDA|EIRELI|S\.?A\.|EPP|ME\b|COMERCIO|COMERCIAL|INDUSTRIA|DISTRIBUIDORA|TRANSPORTADORA|CONSTRUTORA|CENTER|HOLDING)\b/.test(nome)) return false;
-      }
+      if (isPJ(venda)) return false;
       return (venda.pecas || []).length > 0;
     }
     return true;
