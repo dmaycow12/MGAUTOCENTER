@@ -148,7 +148,7 @@ function CampoDescricaoBusca({ estoqueExistente, item, onChange }) {
           onFocus={() => setOpen(true)}
           className="w-full bg-gray-700 border text-white rounded-lg pl-8 pr-8 py-2 text-sm focus:outline-none"
           style={{ borderColor: item.estoqueVinculado ? GREEN : "#4b5563" }}
-          placeholder="Descrição / buscar produto cadastrado..."
+          placeholder=""
         />
         {item.estoqueVinculado && (
           <button onClick={limpar} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
@@ -159,9 +159,7 @@ function CampoDescricaoBusca({ estoqueExistente, item, onChange }) {
       {item.estoqueVinculado && (
         <p className="text-xs mt-1" style={{ color: GREEN }}>✓ Vinculado: {item.estoqueVinculado.descricao}</p>
       )}
-      {!item.estoqueVinculado && !item.descricao && (
-        <p className="text-xs mt-1 text-gray-500">Nenhum vínculo — será criado como novo produto no estoque</p>
-      )}
+      
       {open && filtrados.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg z-20 shadow-xl max-h-44 overflow-y-auto">
           {filtrados.map(prod => (
@@ -516,7 +514,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                   onClick={() => setItens(prev => prev.map(it => ({ ...it, dar_entrada_estoque: true })))}
                   className="flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg border border-green-500/40 text-green-400 hover:bg-green-500/10 transition-all"
                 >
-                  Cadastrar todos os produtos
+                  Lançar Produtos no Estoque
                 </button>
               </div>
               {itens.length === 0 ? (
@@ -573,7 +571,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                                     value={item.codigo || ""}
                                     onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, codigo: e.target.value } : it))}
                                     className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
-                                    placeholder="Código"
+                                    placeholder=""
                                   />
                                 </div>
                                 <div>
@@ -582,7 +580,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                                     value={item.marca || ""}
                                     onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, marca: e.target.value } : it))}
                                     className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
-                                    placeholder="Ex: Bosch"
+                                    placeholder=""
                                   />
                                 </div>
                               </div>
