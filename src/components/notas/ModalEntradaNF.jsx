@@ -570,7 +570,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                                   <input
                                     value={item.codigo || ""}
                                     readOnly
-                                    className="w-full bg-gray-800 border border-gray-700 text-gray-400 rounded-lg px-2 py-1.5 text-xs cursor-not-allowed font-mono"
+                                    className="w-full bg-gray-800 border border-gray-700 text-gray-400 rounded-lg px-2 py-1.5 text-xs cursor-default font-mono"
                                     placeholder=""
                                   />
                                 </div>
