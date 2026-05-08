@@ -110,6 +110,8 @@ function parsearXML(xmlOriginal) {
 // Campo unificado: descrição + busca de produto existente
 function CampoDescricaoBusca({ estoqueExistente, item, onChange }) {
   const [open, setOpen] = useState(false);
+  // busca separada do valor exibido — quando vinculado, exibe descrição do banco; busca usa texto digitado
+  const [buscaTexto, setBuscaTexto] = useState("");
   const ref = useRef(null);
 
   useEffect(() => {
@@ -118,9 +120,13 @@ function CampoDescricaoBusca({ estoqueExistente, item, onChange }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const filtrados = item.descricao?.length >= 2
+  // Quando está vinculado, exibe a descrição do banco; senão exibe o campo editável
+  const descricaoExibida = item.estoqueVinculado ? item.estoqueVinculado.descricao : item.descricao;
+
+  const termoBusca = item.estoqueVinculado ? "" : (item.descricao || "");
+  const filtrados = termoBusca.length >= 2
     ? estoqueExistente.filter(e => {
-        const q = item.descricao.toLowerCase();
+        const q = termoBusca.toLowerCase();
         return e.descricao?.toLowerCase().includes(q)
           || e.codigo?.toLowerCase().includes(q)
           || (e.codigos || []).some(c => c?.toLowerCase().includes(q));
@@ -133,32 +139,41 @@ function CampoDescricaoBusca({ estoqueExistente, item, onChange }) {
   };
 
   const limpar = () => {
-    onChange({ estoqueVinculado: null });
+    onChange({ estoqueVinculado: null, descricao: item.estoqueVinculado?.descricao || item.descricao, codigoInterno: "" });
     setOpen(true);
   };
 
   return (
     <div ref={ref} className="relative">
       <div className="relative">
-        <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+        {!item.estoqueVinculado && <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />}
+        {item.estoqueVinculado && (
+          <CheckCircle className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: GREEN }} />
+        )}
         <input
-          value={item.descricao}
-          onChange={e => { onChange({ descricao: e.target.value, estoqueVinculado: null }); setOpen(true); }}
-          onFocus={() => setOpen(true)}
+          value={descricaoExibida}
+          onChange={e => {
+            if (item.estoqueVinculado) return; // não edita quando vinculado
+            onChange({ descricao: e.target.value, estoqueVinculado: null });
+            setOpen(true);
+          }}
+          onFocus={() => { if (!item.estoqueVinculado) setOpen(true); }}
+          readOnly={!!item.estoqueVinculado}
           className="w-full bg-gray-700 border text-white rounded-lg pl-8 pr-8 py-2 text-sm focus:outline-none"
-          style={{ borderColor: item.estoqueVinculado ? GREEN : "#4b5563" }}
-          placeholder=""
+          style={{
+            borderColor: item.estoqueVinculado ? GREEN : "#4b5563",
+            cursor: item.estoqueVinculado ? "default" : "text",
+            color: item.estoqueVinculado ? "#fff" : "#fff",
+          }}
+          placeholder="Digite para buscar..."
         />
         {item.estoqueVinculado && (
-          <button onClick={limpar} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+          <button onClick={limpar} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white" title="Desvincular">
             <X className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
-      {item.estoqueVinculado && (
-        <p className="text-xs mt-1" style={{ color: GREEN }}>✓ Vinculado: {item.estoqueVinculado.descricao}</p>
-      )}
-      
+
       {open && filtrados.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg z-20 shadow-xl max-h-44 overflow-y-auto">
           {filtrados.map(prod => (
@@ -198,7 +213,8 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
     // Aplicar memória de mapeamento
     const itensComMapa = parsed.itens.map(item => {
       if (item.codigo && mapa[item.codigo]) {
-        return { ...item, estoqueVinculado: mapa[item.codigo] };
+        const vinculo = mapa[item.codigo];
+        return { ...item, estoqueVinculado: vinculo, descricao: vinculo.descricao, codigoInterno: vinculo.codigo || "" };
       }
       return item;
     });
@@ -232,7 +248,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
         if (!encontrado) encontrado = est.find(e => (e.codigos || []).some(c => c?.toUpperCase().trim() === codNorm));
         // Mantém o codigo original da NF (do fornecedor), só adiciona o vínculo
         return encontrado
-          ? { ...item, estoqueVinculado: { id: encontrado.id, descricao: encontrado.descricao }, codigoInterno: encontrado.codigo || "", marca: item.marca || encontrado.marca || "", categoria: item.categoria || encontrado.categoria || "" }
+          ? { ...item, estoqueVinculado: { id: encontrado.id, descricao: encontrado.descricao }, descricao: encontrado.descricao, codigoInterno: encontrado.codigo || "", marca: item.marca || encontrado.marca || "", categoria: item.categoria || encontrado.categoria || "" }
           : item;
       }));
 
@@ -527,11 +543,17 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                           onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, dar_entrada_estoque: e.target.checked } : it))}
                           className="mt-1 accent-green-500 w-4 h-4 flex-shrink-0 cursor-pointer" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm font-medium truncate">
-                            {item.estoqueVinculado
-                              ? `${item.estoqueVinculado.descricao}${item.codigo ? ` (${item.codigo})` : ""}`
-                              : item.descricao}
-                          </p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-white text-sm font-medium truncate">
+                              {item.estoqueVinculado ? item.estoqueVinculado.descricao : item.descricao}
+                              {item.codigo && <span className="text-gray-500 text-xs ml-1">({item.codigo})</span>}
+                            </p>
+                            {item.estoqueVinculado && (
+                              <span className="flex-shrink-0 text-xs font-bold px-1.5 py-0.5 rounded" style={{ background: "#00ff0022", color: GREEN, border: "1px solid #00ff0044" }}>
+                                ✓ JÁ CADASTRADO
+                              </span>
+                            )}
+                          </div>
                           <div className="flex flex-wrap gap-3 mt-1 text-xs text-gray-400">
                             <span>Qtd: <span className="text-white">{item.quantidade}</span></span>
                             <span>Unit: <span className="text-white">R$ {Number(item.valor_unitario).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></span>
