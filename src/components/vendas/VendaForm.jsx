@@ -237,6 +237,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       cliente_nome: c?.nome || "",
       cliente_nome_fantasia: c?.nome_fantasia || "",
       cliente_telefone: c?.telefone || "",
+      cliente_email: c?.email || "",
+      cliente_cpf_cnpj: c?.cpf_cnpj || "",
       cliente_endereco: end,
       cliente_bairro: c?.bairro || "",
       cliente_cidade: c?.cidade || "",
