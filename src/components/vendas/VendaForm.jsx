@@ -622,37 +622,28 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
               </Section>
 
               <div>
-                <div className="flex items-center justify-between border-b border-gray-700 pb-2 mb-3">
+                <div className="border-b border-gray-700 pb-2 mb-3">
                   <h3 className="text-sm font-medium text-white">Veículo</h3>
-                  <button type="button" onClick={() => setShowDadosVeiculo(v => !v)}
-                    className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-white"
-                    style={{background: showDadosVeiculo ? "#374151" : "#062C9B"}}>
-                    <Plus className="w-3.5 h-3.5" /> Veículo
-                  </button>
                 </div>
-                {showDadosVeiculo && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {form.cliente_id && veiculosCliente.length > 0 && (
-                      <Field label="Selecionar Veículo" className="col-span-2 md:col-span-4">
-                        <select value={form.veiculo_id} onChange={e => onVeiculoChange(e.target.value)} className="input-dark">
-                          <option value="">— Selecione —</option>
-                          {veiculosCliente.map(v => <option key={v.id} value={v.id}>{v.placa} — {v.marca} {v.modelo} {v.ano}</option>)}
-                        </select>
-                      </Field>
-                    )}
-                    <Field label="Modelo"><input ref={veiculoRef} value={form.veiculo_modelo} onChange={e => setForm(f => ({ ...f, veiculo_modelo: e.target.value }))} onKeyDown={e => handleNavKey(e, placaRef)} className="input-dark" autoComplete="new-password" /></Field>
-                    <Field label="Placa"><input ref={placaRef} value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} onKeyDown={e => handleNavKey(e, kmRef)} className="input-dark" autoComplete="new-password" placeholder="AAA0000" /></Field>
-                    <Field label="KM"><input ref={kmRef} value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
-                  </div>
-                )}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {form.cliente_id && veiculosCliente.length > 0 && (
+                    <Field label="Selecionar Veículo" className="col-span-2 md:col-span-4">
+                      <select value={form.veiculo_id} onChange={e => onVeiculoChange(e.target.value)} className="input-dark">
+                        <option value="">— Selecione —</option>
+                        {veiculosCliente.map(v => <option key={v.id} value={v.id}>{v.placa} — {v.marca} {v.modelo} {v.ano}</option>)}
+                      </select>
+                    </Field>
+                  )}
+                  <Field label="Modelo"><input ref={veiculoRef} value={form.veiculo_modelo} onChange={e => setForm(f => ({ ...f, veiculo_modelo: e.target.value }))} onKeyDown={e => handleNavKey(e, placaRef)} className="input-dark" autoComplete="new-password" /></Field>
+                  <Field label="Placa"><input ref={placaRef} value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} onKeyDown={e => handleNavKey(e, kmRef)} className="input-dark" autoComplete="new-password" placeholder="AAA0000" /></Field>
+                  <Field label="KM"><input ref={kmRef} value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
+                </div>
               </div>
 
-              {showDadosVeiculo && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Defeito Relatado"><textarea value={form.defeito_relatado} onChange={e => setForm(f => ({ ...f, defeito_relatado: e.target.value }))} className="input-dark" rows={2} autoComplete="off" /></Field>
-                  <Field label="Diagnóstico"><textarea value={form.diagnostico} onChange={e => setForm(f => ({ ...f, diagnostico: e.target.value }))} className="input-dark" rows={2} autoComplete="off" /></Field>
-                </div>
-              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Field label="Defeito Relatado"><textarea value={form.defeito_relatado} onChange={e => setForm(f => ({ ...f, defeito_relatado: e.target.value }))} className="input-dark" rows={2} autoComplete="off" /></Field>
+                <Field label="Diagnóstico"><textarea value={form.diagnostico} onChange={e => setForm(f => ({ ...f, diagnostico: e.target.value }))} className="input-dark" rows={2} autoComplete="off" /></Field>
+              </div>
 
               <Section title="Fotos do Veículo / Serviço">
                 <div className="flex flex-wrap gap-2 mb-3">
