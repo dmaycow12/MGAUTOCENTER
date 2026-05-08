@@ -128,7 +128,8 @@ function CampoDescricaoBusca({ estoqueExistente, item, onChange }) {
     : [];
 
   const selecionar = (prod) => {
-    onChange({ estoqueVinculado: { id: prod.id, descricao: prod.descricao }, descricao: prod.descricao, codigo: prod.codigo || item.codigo, marca: prod.marca || item.marca || "", categoria: prod.categoria || item.categoria || "" });
+    // Preserva o código original da NF (código do fornecedor) — não substitui pelo código interno
+    onChange({ estoqueVinculado: { id: prod.id, descricao: prod.descricao }, descricao: prod.descricao, marca: prod.marca || item.marca || "", categoria: prod.categoria || item.categoria || "" });
     setOpen(false);
   };
 
@@ -232,6 +233,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
         let encontrado = est.find(e => e.codigo?.toUpperCase().trim() === codNorm);
         // 2. Códigos alternativos
         if (!encontrado) encontrado = est.find(e => (e.codigos || []).some(c => c?.toUpperCase().trim() === codNorm));
+        // Mantém o codigo original da NF (do fornecedor), só adiciona o vínculo
         return encontrado
           ? { ...item, estoqueVinculado: { id: encontrado.id, descricao: encontrado.descricao }, marca: item.marca || encontrado.marca || "", categoria: item.categoria || encontrado.categoria || "" }
           : item;
