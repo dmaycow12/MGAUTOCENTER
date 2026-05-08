@@ -352,18 +352,23 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
         }
         // Prioridade 3: descrição removida — só vincula por código ou vínculo manual
 
+        const obsNF = `NF ${dados.numero || ""}`;
         const movEntrada = {
           tipo: "entrada",
           data: new Date().toISOString(),
           quantidade: item.quantidade,
           valor_unitario: item.valor_unitario,
           fornecedor: dados.emitente || nomeFornecedor || "",
-          observacao: `NF ${dados.numero || ""}`,
+          observacao: obsNF,
         };
         if (existente) {
           idsUsados.add(existente.id);
+          const historicoAtualCheck = Array.isArray(existente.historico) ? existente.historico : [];
+          // Evita lançamento duplo: se já existe entrada desta NF com mesma quantidade, pula
+          const jaLancado = historicoAtualCheck.some(h => h.tipo === "entrada" && h.observacao === obsNF && h.quantidade === item.quantidade);
+          if (jaLancado) continue;
           const novaQtd = (existente.quantidade || 0) + item.quantidade;
-          const historicoAtual = Array.isArray(existente.historico) ? existente.historico : [];
+          const historicoAtual = historicoAtualCheck;
 
           // Salvar código do fornecedor como código alternativo (se ainda não estiver cadastrado)
           const codigosAtuais = Array.isArray(existente.codigos) ? existente.codigos : [];
