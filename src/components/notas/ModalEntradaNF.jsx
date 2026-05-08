@@ -296,13 +296,24 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
       }
 
       const itensParaSalvar = itens.map(i => ({ descricao: i.descricao, quantidade: i.quantidade, codigo: i.codigo }));
-      // Preservar o XML original — xml_content fica com JSON de itens, xml_original guarda o XML bruto
-      const xmlOriginal = xmlTexto && xmlTexto.trim().startsWith("<") ? xmlTexto : null;
+
+      // Upload do XML como arquivo se for grande demais para salvar direto
+      let xmlUrl = null;
+      const isXmlValido = xmlTexto && xmlTexto.trim().startsWith("<");
+      if (isXmlValido) {
+        try {
+          const xmlBlob = new Blob([xmlTexto], { type: "application/xml" });
+          const xmlFile = new File([xmlBlob], `nf_${dados.numero || "entrada"}.xml`, { type: "application/xml" });
+          const { file_url } = await base44.integrations.Core.UploadFile({ file: xmlFile });
+          xmlUrl = file_url;
+        } catch {}
+      }
+
       if (notaId) {
         await base44.entities.NotaFiscal.update(notaId, {
           status: "Lançada",
           xml_content: JSON.stringify(itensParaSalvar),
-          ...(xmlOriginal ? { xml_original: xmlOriginal } : {}),
+          ...(xmlUrl ? { xml_url: xmlUrl } : {}),
           numero: dados.numero || "",
           serie: dados.serie || "",
           forma_pagamento: financeiro.forma_pagamento || "",
@@ -312,7 +323,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
           tipo: "NFe", numero: dados.numero, serie: dados.serie, status: "Lançada",
           cliente_nome: dados.emitente, valor_total: dados.valor, chave_acesso: dados.chave,
           xml_content: JSON.stringify(itensParaSalvar),
-          ...(xmlOriginal ? { xml_original: xmlOriginal } : {}),
+          ...(xmlUrl ? { xml_url: xmlUrl } : {}),
           data_emissao: dados.dataEmissao,
           observacoes: `CNPJ Fornecedor: ${dados.cnpjEmit}`,
         });
