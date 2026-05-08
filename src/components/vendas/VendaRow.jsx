@@ -20,7 +20,14 @@ export const COLUNAS_PADRAO = {
   status: true, valor: true, pagamento: true, nfe: true, nfse: true,
 };
 
-const InlineEdit = forwardRef(function InlineEdit({ value, onSave, placeholder = "", mono = false, onNext }, ref) {
+const formatTelefone = (val) => {
+  const digits = val.replace(/\D/g, '').slice(0, 11);
+  if (digits.length === 11) return `${digits.slice(0, 2)} ${digits.slice(2, 7)} ${digits.slice(7)}`;
+  if (digits.length === 10) return `${digits.slice(0, 2)} ${digits.slice(2, 6)} ${digits.slice(6)}`;
+  return digits;
+};
+
+const InlineEdit = forwardRef(function InlineEdit({ value, onSave, placeholder = "", mono = false, onNext, isPhone = false }, ref) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(value || "");
   const inputRef = useRef(null);
@@ -31,10 +38,31 @@ const InlineEdit = forwardRef(function InlineEdit({ value, onSave, placeholder =
     startEdit: () => setEditing(true),
   }));
 
-  const commit = () => { onSave(val); setEditing(false); };
+  const commit = () => {
+    if (isPhone) {
+      const digits = val.replace(/\D/g, '');
+      if (digits.length < 10 || digits.length > 11) {
+        alert("O telefone deve ter entre 10 e 11 dígitos.");
+        return;
+      }
+      onSave(formatTelefone(val));
+    } else {
+      onSave(val);
+    }
+    setEditing(false);
+  };
+
   if (editing) return (
     <input ref={inputRef} type="text" value={val}
-      onChange={e => setVal(e.target.value)}
+      onChange={e => {
+        const input = e.target.value;
+        if (isPhone) {
+          const digits = input.replace(/\D/g, '').slice(0, 11);
+          setVal(formatTelefone(digits));
+        } else {
+          setVal(input);
+        }
+      }}
       onBlur={commit}
       onKeyDown={e => {
         if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); commit(); onNext?.(); }
@@ -42,6 +70,7 @@ const InlineEdit = forwardRef(function InlineEdit({ value, onSave, placeholder =
       }}
       className="bg-gray-800 border border-orange-500 text-white rounded px-1.5 py-0.5 text-sm focus:outline-none w-24"
       style={{MozAppearance:"textfield"}}
+      inputMode={isPhone ? "numeric" : "text"}
     />
   );
   return (
@@ -323,7 +352,7 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
         <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">#{os.numero || "—"}</td>
         {colunas.data && <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>}
         {colunas.cliente && <td className="px-4 py-3"><p className="text-white text-sm font-medium">{nomeExibido}</p></td>}
-        {colunas.contato && <td className="px-4 py-3"><InlineEdit ref={contatoRef} value={os.cliente_telefone} onSave={v => saveField("cliente_telefone", v)} placeholder="—" onNext={() => veiculoRef.current?.startEdit()} /></td>}
+        {colunas.contato && <td className="px-4 py-3"><InlineEdit ref={contatoRef} value={os.cliente_telefone} onSave={v => saveField("cliente_telefone", v)} placeholder="—" onNext={() => veiculoRef.current?.startEdit()} isPhone={true} /></td>}
         {colunas.veiculo && <td className="px-4 py-3"><InlineEdit ref={veiculoRef} value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onNext={() => placaRef.current?.startEdit()} /></td>}
         {colunas.placa && <td className="px-4 py-3"><InlineEdit ref={placaRef} value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono onNext={() => kmRef.current?.startEdit()} /></td>}
         {colunas.km && <td className="px-4 py-3"><InlineEdit ref={kmRef} value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v || null)} placeholder="—" /></td>}
