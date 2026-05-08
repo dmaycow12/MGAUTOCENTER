@@ -424,10 +424,30 @@ export default function Clientes() {
                    <input value={form.nome_fantasia} onChange={e => setForm({ ...form, nome_fantasia: e.target.value })} className="input-dark" autoComplete="off" name="nome_fantasia_cliente" />
                  </FormGroup>
                 <FormGroup label="Inscrição Estadual">
-                  <input value={form.rg_ie} onChange={e => setForm({ ...form, rg_ie: e.target.value.replace(/[.-]/g, '') })} className="input-dark" autoComplete="off" name="ie_cliente" />
+                  <input
+                    value={form.rg_ie}
+                    onChange={e => setForm({ ...form, rg_ie: e.target.value.replace(/\D/g, '') })}
+                    className="input-dark"
+                    autoComplete="off"
+                    name="ie_cliente"
+                    inputMode="numeric"
+                  />
                 </FormGroup>
                 <FormGroup label="Telefone Contato">
-                  <input value={form.telefone} onChange={e => setForm({ ...form, telefone: e.target.value })} className="input-dark" autoComplete="off" name="tel_cliente" />
+                  <input
+                    value={form.telefone}
+                    onChange={e => {
+                      // Mantém apenas números e formata: 2 dígitos + espaço + resto
+                      const nums = e.target.value.replace(/\D/g, '');
+                      const formatted = nums.length > 2 ? nums.slice(0, 2) + ' ' + nums.slice(2) : nums;
+                      setForm({ ...form, telefone: formatted });
+                    }}
+                    className="input-dark"
+                    autoComplete="off"
+                    name="tel_cliente"
+                    inputMode="numeric"
+                    maxLength={15}
+                  />
                 </FormGroup>
                 <FormGroup label="E-mail">
                   <input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="input-dark" autoComplete="off" name="email_cliente" />
