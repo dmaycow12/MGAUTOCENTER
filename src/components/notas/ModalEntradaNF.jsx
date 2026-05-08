@@ -297,17 +297,16 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
 
       const itensParaSalvar = itens.map(i => ({ descricao: i.descricao, quantidade: i.quantidade, codigo: i.codigo }));
 
-      // Upload do XML como arquivo se for grande demais para salvar direto
+      // Tenta salvar o XML — ignora silenciosamente se falhar, não bloqueia o restante
       let xmlUrl = null;
-      const isXmlValido = xmlTexto && xmlTexto.trim().startsWith("<");
-      if (isXmlValido) {
-        try {
+      try {
+        if (xmlTexto && xmlTexto.trim().startsWith("<")) {
           const xmlBlob = new Blob([xmlTexto], { type: "application/xml" });
           const xmlFile = new File([xmlBlob], `nf_${dados.numero || "entrada"}.xml`, { type: "application/xml" });
-          const { file_url } = await base44.integrations.Core.UploadFile({ file: xmlFile });
-          xmlUrl = file_url;
-        } catch {}
-      }
+          const res = await base44.integrations.Core.UploadFile({ file: xmlFile });
+          xmlUrl = res?.file_url || null;
+        }
+      } catch (_) { /* ignora erro de upload de XML */ }
 
       if (notaId) {
         await base44.entities.NotaFiscal.update(notaId, {
