@@ -73,7 +73,11 @@ function fmtValor(v) {
 
 export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDelete, onRefresh, colunas = COLUNAS_PADRAO }) {
   const clienteCadastro = clientes.find(c => c.id === os.cliente_id);
-  const nomeExibido = clienteCadastro?.nome_fantasia || os.cliente_nome_fantasia || os.cliente_nome || "—";
+  const isConsumidor = os.cliente_nome?.toUpperCase() === "CONSUMIDOR";
+  // Para CONSUMIDOR, usa o nome fantasia salvo NA VENDA (editável por venda). Para outros, usa o do cadastro como fallback.
+  const nomeExibido = isConsumidor
+    ? (os.cliente_nome_fantasia || os.cliente_nome || "—")
+    : (clienteCadastro?.nome_fantasia || os.cliente_nome_fantasia || os.cliente_nome || "—");
   const notasOs = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Rascunho');
   const navigate = useNavigate();
   const [statusOpen, setStatusOpen] = useState(false);

@@ -191,7 +191,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   }, []);
 
   useEffect(() => {
-    if (!os && clientes.length > 0) {
+    // Só auto-seleciona CONSUMIDOR em NOVA venda (sem os)
+    if (!os && clientes.length > 0 && !form.cliente_id) {
       const consumidor = clientes.find(c => c.nome?.toUpperCase() === "CONSUMIDOR");
       if (consumidor) onClienteChange(consumidor.id);
     }
@@ -234,11 +235,13 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const onClienteChange = (clienteId) => {
     const c = clientes.find(c => c.id === clienteId);
     const end = [c?.endereco, c?.numero].filter(Boolean).join(", ");
+    const isConsumidorSelecionado = c?.nome?.toUpperCase() === "CONSUMIDOR";
     setForm(f => ({
       ...f,
       cliente_id: clienteId,
       cliente_nome: c?.nome || "",
-      cliente_nome_fantasia: c?.nome_fantasia || "",
+      // Para CONSUMIDOR, preserva nome_fantasia já salvo na venda (ou vazio para novo). Para outros, pega do cadastro.
+      cliente_nome_fantasia: isConsumidorSelecionado ? (f.cliente_nome_fantasia || "") : (c?.nome_fantasia || ""),
       cliente_telefone: c?.telefone || "",
       cliente_email: c?.email || "",
       cliente_cpf_cnpj: c?.cpf_cnpj || "",
