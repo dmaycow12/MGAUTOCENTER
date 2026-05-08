@@ -543,12 +543,24 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
 
                           {item.dar_entrada_estoque && (
                             <div className="mt-2 space-y-2">
-                              {/* Campo principal: descrição + busca integrada */}
-                              <CampoDescricaoBusca
-                                estoqueExistente={estoqueExistente}
-                                item={item}
-                                onChange={changes => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, ...changes } : it))}
-                              />
+                              {/* Descrição + Código Original lado a lado */}
+                              <div className="flex gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <CampoDescricaoBusca
+                                    estoqueExistente={estoqueExistente}
+                                    item={item}
+                                    onChange={changes => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, ...changes } : it))}
+                                  />
+                                </div>
+                                {item.codigo && (
+                                  <div className="flex-shrink-0 w-36">
+                                    <p className="text-xs text-gray-500 mb-1">Cód. Original (NF)</p>
+                                    <div className="bg-gray-700 border border-gray-600 text-orange-400 font-mono rounded-lg px-2 py-2 text-xs font-bold truncate" title={item.codigo}>
+                                      {item.codigo}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                               {/* Código, Marca e Categoria — sempre visíveis */}
                               <div className="grid grid-cols-2 gap-2">
                                 <div>
