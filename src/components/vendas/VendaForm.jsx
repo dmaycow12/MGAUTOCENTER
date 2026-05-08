@@ -615,7 +615,15 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     <input value={form.cliente_nome_fantasia || ""} onChange={e => setForm(f => ({ ...f, cliente_nome_fantasia: e.target.value }))} className="input-dark" autoComplete="new-password" />
                   </Field>
                   <Field label="Contato">
-                    <input ref={contatoRef} value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} onKeyDown={e => handleNavKey(e, veiculoRef)} className="input-dark" autoComplete="new-password" />
+                    <input ref={contatoRef} value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))}
+                      onBlur={e => {
+                        const digits = e.target.value.replace(/\D/g, '');
+                        let formatted = e.target.value;
+                        if (digits.length === 10) formatted = `${digits.slice(0,2)} ${digits.slice(2,6)} ${digits.slice(6)}`;
+                        else if (digits.length === 11) formatted = `${digits.slice(0,2)} ${digits.slice(2,7)} ${digits.slice(7)}`;
+                        setForm(f => ({ ...f, cliente_telefone: formatted }));
+                      }}
+                      onKeyDown={e => handleNavKey(e, veiculoRef)} className="input-dark" autoComplete="new-password" />
                   </Field>
 
                 </div>
