@@ -240,15 +240,15 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       ...f,
       cliente_id: clienteId,
       cliente_nome: c?.nome || "",
-      // Para CONSUMIDOR, preserva nome_fantasia já salvo na venda (ou vazio para novo). Para outros, pega do cadastro.
+      // Para CONSUMIDOR, preserva nome_fantasia e telefone já salvos na venda. Para outros, pega do cadastro.
       cliente_nome_fantasia: isConsumidorSelecionado ? (f.cliente_nome_fantasia || "") : (c?.nome_fantasia || ""),
-      cliente_telefone: c?.telefone || "",
-      cliente_email: c?.email || "",
-      cliente_cpf_cnpj: c?.cpf_cnpj || "",
-      cliente_endereco: end,
-      cliente_bairro: c?.bairro || "",
-      cliente_cidade: c?.cidade || "",
-      cliente_estado: c?.estado || "",
+      cliente_telefone: isConsumidorSelecionado ? (f.cliente_telefone || "") : (c?.telefone || ""),
+      cliente_email: isConsumidorSelecionado ? (f.cliente_email || "") : (c?.email || ""),
+      cliente_cpf_cnpj: isConsumidorSelecionado ? (f.cliente_cpf_cnpj || "") : (c?.cpf_cnpj || ""),
+      cliente_endereco: isConsumidorSelecionado ? (f.cliente_endereco || "") : end,
+      cliente_bairro: isConsumidorSelecionado ? (f.cliente_bairro || "") : (c?.bairro || ""),
+      cliente_cidade: isConsumidorSelecionado ? (f.cliente_cidade || "") : (c?.cidade || ""),
+      cliente_estado: isConsumidorSelecionado ? (f.cliente_estado || "") : (c?.estado || ""),
     }));
     setClienteSearch("");
     setClienteSugestoes([]);
