@@ -41,11 +41,11 @@ const InlineEdit = forwardRef(function InlineEdit({ value, onSave, placeholder =
   const commit = () => {
     if (isPhone) {
       const digits = val.replace(/\D/g, '');
-      if (digits.length < 10 || digits.length > 11) {
+      if (digits.length > 0 && (digits.length < 10 || digits.length > 11)) {
         alert("O telefone deve ter entre 10 e 11 dígitos.");
         return;
       }
-      onSave(formatTelefone(val));
+      onSave(digits.length > 0 ? formatTelefone(val) : "");
     } else {
       onSave(val);
     }
