@@ -70,7 +70,7 @@
       "title": "Ano"
     },
     "quilometragem": {
-      "type": "number",
+      "type": "string",
       "title": "Quilometragem"
     },
     "data_entrada": {

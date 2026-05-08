@@ -310,7 +310,7 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
         {colunas.contato && <td className="px-4 py-3"><InlineEdit ref={contatoRef} value={os.cliente_telefone} onSave={v => saveField("cliente_telefone", v)} placeholder="—" onNext={() => veiculoRef.current?.startEdit()} /></td>}
         {colunas.veiculo && <td className="px-4 py-3"><InlineEdit ref={veiculoRef} value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onNext={() => placaRef.current?.startEdit()} /></td>}
         {colunas.placa && <td className="px-4 py-3"><InlineEdit ref={placaRef} value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono onNext={() => kmRef.current?.startEdit()} /></td>}
-        {colunas.km && <td className="px-4 py-3"><InlineEdit ref={kmRef} value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => { const n = Number(v); saveField("quilometragem", v && !isNaN(n) && v.trim() !== "" ? n : (v || null)); }} placeholder="—" /></td>}
+        {colunas.km && <td className="px-4 py-3"><InlineEdit ref={kmRef} value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v || null)} placeholder="—" /></td>}
         {colunas.status && <td className="px-4 py-3">
           <div className="relative inline-block">
             <button ref={statusBtnRef}
