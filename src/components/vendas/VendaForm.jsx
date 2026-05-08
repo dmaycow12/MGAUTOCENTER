@@ -582,7 +582,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
           </div>
 
           {!isConcluida && (
-            <>
+            <React.Fragment>
               <Section title="Cliente">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="col-span-1 md:col-span-2">
@@ -630,9 +630,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     <Plus className="w-3.5 h-3.5" /> Veículo
                   </button>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="col-span-2 md:col-span-4">
-                  {showDadosVeiculo && (<>
+                {showDadosVeiculo && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {form.cliente_id && veiculosCliente.length > 0 && (
                       <Field label="Selecionar Veículo" className="col-span-2 md:col-span-4">
                         <select value={form.veiculo_id} onChange={e => onVeiculoChange(e.target.value)} className="input-dark">
@@ -644,8 +643,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     <Field label="Modelo"><input ref={veiculoRef} value={form.veiculo_modelo} onChange={e => setForm(f => ({ ...f, veiculo_modelo: e.target.value }))} onKeyDown={e => handleNavKey(e, placaRef)} className="input-dark" autoComplete="new-password" /></Field>
                     <Field label="Placa"><input ref={placaRef} value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} onKeyDown={e => handleNavKey(e, kmRef)} className="input-dark" autoComplete="new-password" placeholder="AAA0000" /></Field>
                     <Field label="KM"><input ref={kmRef} value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
-                  </>)}
-                </div>
+                  </div>
+                )}
               </div>
 
               {showDadosVeiculo && (
@@ -858,7 +857,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
               <Field label="Observações">
                 <textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} className="input-dark" rows={4} autoComplete="off" />
               </Field>
-            </>
+            </React.Fragment>
           )}
         </div>
 
