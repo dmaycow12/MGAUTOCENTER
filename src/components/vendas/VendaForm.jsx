@@ -621,15 +621,17 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 </div>
               </Section>
 
-              <Section title="Veículo">
+              <div>
+                <div className="flex items-center justify-between border-b border-gray-700 pb-2 mb-3">
+                  <h3 className="text-sm font-medium text-white">Veículo</h3>
+                  <button type="button" onClick={() => setShowDadosVeiculo(v => !v)}
+                    className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-white"
+                    style={{background: showDadosVeiculo ? "#374151" : "#062C9B"}}>
+                    <Plus className="w-3.5 h-3.5" /> Veículo
+                  </button>
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="col-span-2 md:col-span-4 flex justify-end">
-                    <button type="button" onClick={() => setShowDadosVeiculo(v => !v)}
-                      className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-white"
-                      style={{background: showDadosVeiculo ? "#374151" : "#062C9B"}}>
-                      <Plus className="w-3.5 h-3.5" /> Veículo
-                    </button>
-                  </div>
+                  <div className="col-span-2 md:col-span-4">
                   {showDadosVeiculo && (<>
                     {form.cliente_id && veiculosCliente.length > 0 && (
                       <Field label="Selecionar Veículo" className="col-span-2 md:col-span-4">
@@ -644,7 +646,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     <Field label="KM"><input ref={kmRef} value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
                   </>)}
                 </div>
-              </Section>
+              </div>
 
               {showDadosVeiculo && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
