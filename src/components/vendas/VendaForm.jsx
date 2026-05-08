@@ -619,7 +619,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   {form.cliente_nome?.toUpperCase() === "CONSUMIDOR" && !showDadosCliente && (
                     <>
                       <Field label="Nome Social / Nome Fantasia">
-                        <input value={form.cliente_nome_fantasia || ""} onChange={e => setForm(f => ({ ...f, cliente_nome_fantasia: e.target.value }))} className="input-dark" autoComplete="new-password" placeholder="Ex: ITAMAR" />
+                        <input value={form.cliente_nome_fantasia || ""} onChange={e => setForm(f => ({ ...f, cliente_nome_fantasia: e.target.value }))} className="input-dark" autoComplete="new-password" placeholder="" />
                       </Field>
                       <Field label="Telefone / Contato">
                         <input ref={contatoRef} value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} onKeyDown={e => handleNavKey(e, veiculoRef)} className="input-dark" autoComplete="new-password" />
