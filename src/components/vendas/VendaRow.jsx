@@ -141,7 +141,11 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
     const eraConcluido = os.status === "Concluído";
     const ficaConcluido = novoStatus === "Concluído";
     if (eraConcluido && !ficaConcluido) { setStatusPendente(novoStatus); setShowAviso(true); return; }
-    await base44.entities.Vendas.update(os.id, { status: novoStatus });
+    const updateData = { status: novoStatus };
+    if (os.quilometragem !== undefined && os.quilometragem !== null) {
+      updateData.quilometragem = String(os.quilometragem);
+    }
+    await base44.entities.Vendas.update(os.id, updateData);
     if (!eraConcluido && ficaConcluido) {
       await gerarLancamentosFinanceiros(os);
       await reduzirEstoque(os.pecas, os);
