@@ -331,6 +331,12 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
       let estoqueAtual = await base44.entities.Estoque.list("-created_date", 500);
       const idsUsados = new Set();
       const mapaAtualizado = lerMapa();
+      const nfNumero = dados.numero || "";
+      // Conta quantas entradas desta NF já existem no histórico de cada produto
+      const contagemEntradas = (historico, qtd) => {
+        if (!Array.isArray(historico)) return 0;
+        return historico.filter(h => h.tipo === "entrada" && h.observacao === `NF ${nfNumero}` && h.quantidade === qtd).length;
+      };
 
       for (const item of itens) {
         if (!item.dar_entrada_estoque || !item.descricao) continue;
@@ -352,7 +358,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
         }
         // Prioridade 3: descrição removida — só vincula por código ou vínculo manual
 
-        const obsNF = `NF ${dados.numero || ""}`;
+        const obsNF = `NF ${nfNumero}`;
         const movEntrada = {
           tipo: "entrada",
           data: new Date().toISOString(),
@@ -363,12 +369,10 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
         };
         if (existente) {
           idsUsados.add(existente.id);
-          const historicoAtualCheck = Array.isArray(existente.historico) ? existente.historico : [];
-          // Evita lançamento duplo: se já existe entrada desta NF com mesma quantidade, pula
-          const jaLancado = historicoAtualCheck.some(h => h.tipo === "entrada" && h.observacao === obsNF && h.quantidade === item.quantidade);
-          if (jaLancado) continue;
+          const historicoAtual = Array.isArray(existente.historico) ? existente.historico : [];
+          // Conta quantas vezes esta NF já foi lançada — permite apenas 1
+          if (contagemEntradas(historicoAtual, item.quantidade) >= 1) continue;
           const novaQtd = (existente.quantidade || 0) + item.quantidade;
-          const historicoAtual = historicoAtualCheck;
 
           // Salvar código do fornecedor como código alternativo (se ainda não estiver cadastrado)
           const codigosAtuais = Array.isArray(existente.codigos) ? existente.codigos : [];
@@ -388,6 +392,13 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
           });
           estoqueAtual = estoqueAtual.map(e => e.id === existente.id ? { ...e, quantidade: novaQtd, codigos: novosCodigos } : e);
         } else {
+          // Verifica se já foi criado antes com esta NF (produto novo duplicado)
+          const jaExisteNovo = estoqueAtual.find(e =>
+            contagemEntradas(e.historico, item.quantidade) >= 1 &&
+            e.historico?.some(h => h.observacao === obsNF)
+            && (e.codigo === (item.codigoInterno || item.codigo || "") || e.descricao === item.descricao)
+          );
+          if (jaExisteNovo) continue;
           const criado = await base44.entities.Estoque.create({
             descricao: item.descricao,
             codigo: item.codigoInterno || item.codigo || "",
