@@ -137,48 +137,61 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
 
           {/* ABA HISTÓRICO */}
           {aba === "historico" && (
-            <div className="space-y-2">
+            <div>
               {historico.length === 0 ? (
                 <div className="text-center py-12">
                   <History className="w-10 h-10 text-gray-600 mx-auto mb-2" />
                   <p className="text-gray-500 text-sm">Nenhuma movimentação registrada</p>
                 </div>
               ) : (
-                historico.map((mov, i) => {
-                  const isEntrada = mov.tipo === "entrada";
-                  return (
-                    <div key={i} className={`border rounded-xl p-3 ${isEntrada ? "bg-green-500/5 border-green-500/20" : "bg-red-500/5 border-red-500/20"}`}>
-                      <div className="flex items-start gap-3">
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${isEntrada ? "bg-green-500/20" : "bg-red-500/20"}`}>
-                          {isEntrada
-                            ? <ArrowDown className="w-4 h-4 text-green-400" />
-                            : <ArrowUp className="w-4 h-4 text-red-400" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <span className={`text-xs font-bold uppercase ${isEntrada ? "text-green-400" : "text-red-400"}`}>
-                              {isEntrada ? "Entrada" : "Saída"}
-                            </span>
-                            <span className="text-xs text-gray-500">{mov.data ? new Date(mov.data).toLocaleDateString("pt-BR") : "—"}</span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs">
-                            <span className="text-gray-400">Quantidade: <span className="text-white font-medium">{mov.quantidade}</span></span>
-                            <span className="text-gray-400">Valor Unit.: <span className="text-white font-medium">R$ {Number(mov.valor_unitario || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></span>
-                            {isEntrada && mov.fornecedor && (
-                              <span className="text-gray-400 col-span-2">Fornecedor: <span className="text-white font-medium">{mov.fornecedor}</span></span>
-                            )}
-                            {!isEntrada && mov.ordem_venda_numero && (
-                              <span className="text-gray-400 col-span-2">Ordem de Venda: <span className="text-white font-medium">#{mov.ordem_venda_numero}</span></span>
-                            )}
-                            {mov.observacao && (
-                              <span className="text-gray-500 col-span-2 italic">{mov.observacao}</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
+                <div className="overflow-x-auto rounded-xl border border-gray-800">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-gray-800 bg-gray-800/60">
+                        <th className="px-3 py-2 text-left text-gray-400 font-medium">Tipo</th>
+                        <th className="px-3 py-2 text-left text-gray-400 font-medium">Data</th>
+                        <th className="px-3 py-2 text-right text-gray-400 font-medium">Qtd</th>
+                        <th className="px-3 py-2 text-right text-gray-400 font-medium">Valor Unit.</th>
+                        <th className="px-3 py-2 text-left text-gray-400 font-medium">Fornecedor / O.V.</th>
+                        <th className="px-3 py-2 text-left text-gray-400 font-medium">Observação</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historico.map((mov, i) => {
+                        const isEntrada = mov.tipo === "entrada";
+                        return (
+                          <tr key={i} className={`border-b border-gray-800/60 last:border-0 ${isEntrada ? "bg-green-500/5" : "bg-red-500/5"}`}>
+                            <td className="px-3 py-2">
+                              <div className="flex items-center gap-1.5">
+                                {isEntrada
+                                  ? <ArrowDown className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
+                                  : <ArrowUp className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />}
+                                <span className={`font-bold uppercase ${isEntrada ? "text-green-400" : "text-red-400"}`}>
+                                  {isEntrada ? "Entrada" : "Saída"}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 text-gray-400 whitespace-nowrap">
+                              {mov.data ? new Date(mov.data).toLocaleDateString("pt-BR") : "—"}
+                            </td>
+                            <td className="px-3 py-2 text-right text-white font-medium">{mov.quantidade ?? "—"}</td>
+                            <td className="px-3 py-2 text-right text-white font-medium whitespace-nowrap">
+                              R$ {Number(mov.valor_unitario || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </td>
+                            <td className="px-3 py-2 text-gray-300 max-w-[160px] truncate">
+                              {isEntrada
+                                ? (mov.fornecedor || "—")
+                                : (mov.ordem_venda_numero ? `#${mov.ordem_venda_numero}` : "—")}
+                            </td>
+                            <td className="px-3 py-2 text-gray-500 italic max-w-[120px] truncate">
+                              {mov.observacao || "—"}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           )}
