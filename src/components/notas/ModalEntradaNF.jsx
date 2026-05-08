@@ -543,8 +543,8 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
 
                           {item.dar_entrada_estoque && (
                             <div className="mt-2 space-y-2">
-                              {/* Descrição + Código Original lado a lado */}
-                              <div className="flex gap-2">
+                              {/* Descrição + Código do produto cadastrado lado a lado */}
+                              <div className="flex gap-2 items-end">
                                 <div className="flex-1 min-w-0">
                                   <CampoDescricaoBusca
                                     estoqueExistente={estoqueExistente}
@@ -552,14 +552,17 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                                     onChange={changes => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, ...changes } : it))}
                                   />
                                 </div>
-                                {item.codigo && (
-                                  <div className="flex-shrink-0 w-36">
-                                    <p className="text-xs text-gray-500 mb-1">Cód. Original (NF)</p>
-                                    <div className="bg-gray-700 border border-gray-600 text-orange-400 font-mono rounded-lg px-2 py-2 text-xs font-bold truncate" title={item.codigo}>
-                                      {item.codigo}
+                                {item.estoqueVinculado && (() => {
+                                  const prod = estoqueExistente.find(e => e.id === item.estoqueVinculado.id);
+                                  return prod?.codigo ? (
+                                    <div className="flex-shrink-0 w-32">
+                                      <p className="text-xs text-gray-500 mb-1">Cód. Cadastro</p>
+                                      <div className="bg-gray-700 border border-gray-600 text-orange-400 font-mono rounded-lg px-2 py-2 text-xs font-bold truncate" title={prod.codigo}>
+                                        {prod.codigo}
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
+                                  ) : null;
+                                })()}
                               </div>
                               {/* Código, Marca e Categoria — sempre visíveis */}
                               <div className="grid grid-cols-2 gap-2">
