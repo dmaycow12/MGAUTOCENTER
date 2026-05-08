@@ -9,6 +9,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
   const [resultados, setResultados] = useState([]);
   const [concluido, setConcluido] = useState(false);
   const [clientes, setClientes] = useState(clientesProp);
+  const [notasFinais, setNotasFinais] = useState(null);
 
   // Carrega TODOS os cadastros diretamente — garante dados completos e frescos
   useEffect(() => {
@@ -131,6 +132,13 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
     setResultados(res);
     setEmitindo(false);
     setConcluido(true);
+
+    // Recarrega notas atualizadas para repassar ao fechar
+    try {
+      const notasFrescas = await base44.entities.NotaFiscal.list("-created_date", 1000);
+      notasAtualizadas = notasFrescas || notasAtualizadas;
+    } catch (_) {}
+    setNotasFinais(notasAtualizadas);
   };
 
   return (
@@ -214,7 +222,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
               ))}
             </div>
             <div className="p-5 border-t border-gray-800 flex justify-end">
-              <button onClick={() => { onConcluido(); onClose(); }}
+              <button onClick={() => { onConcluido(notasFinais); }}
                 className="px-6 py-2 text-sm text-black rounded-lg font-medium"
                 style={{background:'#00ff00'}}>
                 Fechar

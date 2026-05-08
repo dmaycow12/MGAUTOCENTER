@@ -423,7 +423,7 @@ export default function Vendas() {
           notas={notas}
           clientes={clientes}
           onClose={() => setShowEmissaoMassa(false)}
-          onConcluido={() => { setShowEmissaoMassa(false); load(); }}
+          onConcluido={(notasFrescas) => { setShowEmissaoMassa(false); if (notasFrescas) setNotas(notasFrescas); else load(); }}
         />
       )}
     </div>
