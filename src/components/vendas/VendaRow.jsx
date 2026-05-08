@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
@@ -311,14 +312,26 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
         {colunas.status && <td className="px-4 py-3">
           <div className="relative inline-block">
             <button ref={statusBtnRef}
-              onClick={() => setStatusOpen(v => !v)}
+              onClick={() => {
+                setStatusOpen(v => !v);
+              }}
               className="flex items-center justify-center gap-1 text-xs h-6 px-3 rounded-md font-semibold hover:opacity-90 transition-all whitespace-nowrap w-40"
               style={style.style}>
               {os.status || "—"}
               <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </button>
-            {statusOpen && (
-              <div ref={statusRef} className="absolute left-0 top-full mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-[9999] space-y-1 p-1" style={{width: '140px'}}>
+            {statusOpen && statusBtnRef.current && createPortal(
+              <div
+                ref={statusRef}
+                style={{
+                  position: "fixed",
+                  top: statusBtnRef.current.getBoundingClientRect().bottom + 4,
+                  left: statusBtnRef.current.getBoundingClientRect().left,
+                  width: 140,
+                  zIndex: 99999,
+                }}
+                className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl space-y-1 p-1"
+              >
                 {STATUS_OPTIONS.map(s => (
                   <button key={s} onClick={() => alterarStatus(s)}
                     className="w-full flex items-center justify-center h-6 text-xs font-semibold rounded-md transition-all hover:opacity-90 whitespace-nowrap"
@@ -326,7 +339,8 @@ export default function VendaRow({ os, notas = [], onEdit, onDelete, onRefresh, 
                     {s}
                   </button>
                 ))}
-              </div>
+              </div>,
+              document.body
             )}
           </div>
         </td>}
