@@ -437,9 +437,17 @@ export default function Clientes() {
                   <input
                     value={form.telefone}
                     onChange={e => {
-                      // Mantém apenas números e formata: 2 dígitos + espaço + resto
-                      const nums = e.target.value.replace(/\D/g, '');
-                      const formatted = nums.length > 2 ? nums.slice(0, 2) + ' ' + nums.slice(2) : nums;
+                      const nums = e.target.value.replace(/\D/g, '').slice(0, 11);
+                      let formatted = nums;
+                      if (nums.length === 11) {
+                        // Celular: DD XXXXX XXXX
+                        formatted = nums.slice(0, 2) + ' ' + nums.slice(2, 7) + ' ' + nums.slice(7);
+                      } else if (nums.length === 10) {
+                        // Fixo: DD XXXX XXXX
+                        formatted = nums.slice(0, 2) + ' ' + nums.slice(2, 6) + ' ' + nums.slice(6);
+                      } else if (nums.length > 2) {
+                        formatted = nums.slice(0, 2) + ' ' + nums.slice(2);
+                      }
                       setForm({ ...form, telefone: formatted });
                     }}
                     className="input-dark"
