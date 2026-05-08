@@ -569,8 +569,8 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                                   <p className="text-xs text-gray-500 mb-1">Cód. Fornecedor</p>
                                   <input
                                     value={item.codigo || ""}
-                                    onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, codigo: e.target.value } : it))}
-                                    className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
+                                    readOnly
+                                    className="w-full bg-gray-800 border border-gray-700 text-gray-400 rounded-lg px-2 py-1.5 text-xs cursor-not-allowed font-mono"
                                     placeholder=""
                                   />
                                 </div>
