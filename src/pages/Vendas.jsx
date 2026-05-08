@@ -395,6 +395,7 @@ export default function Vendas() {
                     key={os.id}
                     os={os}
                     notas={notas}
+                    clientes={clientes}
                     colunas={colunasVisiveis}
                     onEdit={() => { setEditando(os); setShowForm(true); }}
                     onDelete={() => excluir(os.id)}
