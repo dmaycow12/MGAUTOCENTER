@@ -560,7 +560,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                             <span>Total: <span className="font-medium" style={{ color: GREEN }}>R$ {Number(item.valor_total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></span>
                           </div>
 
-                          {item.dar_entrada_estoque && (
+                          {item.dar_entrada_estoque && !item.estoqueVinculado && (
                             <div className="mt-2 space-y-2">
                               {/* Descrição + Código do produto cadastrado lado a lado */}
                               <div className="flex gap-2 items-start">
