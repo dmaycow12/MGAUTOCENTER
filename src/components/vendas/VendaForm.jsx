@@ -142,6 +142,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const [servicoSugestoes, setServicoSugestoes] = useState({ idx: null, lista: [] });
   const [showAvisoReabrir, setShowAvisoReabrir] = useState(false);
   const [statusPendente, setStatusPendente] = useState(null);
+  const [showDadosCliente, setShowDadosCliente] = useState(!!os?.cliente_nome);
+  const [showDadosVeiculo, setShowDadosVeiculo] = useState(!!(os?.veiculo_modelo || os?.veiculo_placa));
 
   useEffect(() => {
     Promise.all([
@@ -246,6 +248,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     }));
     setClienteSearch("");
     setClienteSugestoes([]);
+    setShowDadosCliente(true);
   };
 
   const handleClienteSearch = (val) => {
@@ -601,6 +604,11 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                           </div>
                         )}
                       </div>
+                      <button type="button" onClick={() => setShowDadosCliente(v => !v)}
+                        className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-white flex-shrink-0"
+                        style={{background: showDadosCliente ? "#374151" : "#062C9B"}}>
+                        <Plus className="w-3.5 h-3.5" /> Cliente
+                      </button>
                       <button type="button" onClick={() => setShowNovoCliente(true)}
                         className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-white flex-shrink-0"
                         style={{background:"#062C9B"}}>
@@ -608,31 +616,42 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                       </button>
                     </div>
                   </div>
-                  <Field label="Nome"><input value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} className="input-dark" autoComplete="new-password" placeholder="Ou digite manualmente" /></Field>
-                  <Field label="Nome Social / Nome Fantasia"><input value={form.cliente_nome_fantasia || ""} onChange={e => setForm(f => ({ ...f, cliente_nome_fantasia: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
-                  <Field label="Telefone / Contato"><input ref={contatoRef} value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} onKeyDown={e => handleNavKey(e, veiculoRef)} className="input-dark" autoComplete="new-password" /></Field>
-                  <Field label="E-mail"><input value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
-                  <Field label="CPF / CNPJ"><input value={form.cliente_cpf_cnpj} onChange={e => setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
-                  <Field label="Endereço"><input value={form.cliente_endereco || ""} onChange={e => setForm(f => ({ ...f, cliente_endereco: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
-                  <Field label="Bairro"><input value={form.cliente_bairro || ""} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
-                  <Field label="Cidade"><input value={form.cliente_cidade || ""} onChange={e => setForm(f => ({ ...f, cliente_cidade: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
-                  <Field label="Estado"><input value={form.cliente_estado || ""} onChange={e => setForm(f => ({ ...f, cliente_estado: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
+                  {showDadosCliente && (<>
+                    <Field label="Nome"><input value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} className="input-dark" autoComplete="new-password" placeholder="Ou digite manualmente" /></Field>
+                    <Field label="Nome Social / Nome Fantasia"><input value={form.cliente_nome_fantasia || ""} onChange={e => setForm(f => ({ ...f, cliente_nome_fantasia: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
+                    <Field label="Telefone / Contato"><input ref={contatoRef} value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} onKeyDown={e => handleNavKey(e, veiculoRef)} className="input-dark" autoComplete="new-password" /></Field>
+                    <Field label="E-mail"><input value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
+                    <Field label="CPF / CNPJ"><input value={form.cliente_cpf_cnpj} onChange={e => setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
+                    <Field label="Endereço"><input value={form.cliente_endereco || ""} onChange={e => setForm(f => ({ ...f, cliente_endereco: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
+                    <Field label="Bairro"><input value={form.cliente_bairro || ""} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
+                    <Field label="Cidade"><input value={form.cliente_cidade || ""} onChange={e => setForm(f => ({ ...f, cliente_cidade: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
+                    <Field label="Estado"><input value={form.cliente_estado || ""} onChange={e => setForm(f => ({ ...f, cliente_estado: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
+                  </>)}
                 </div>
               </Section>
 
               <Section title="Veículo">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {form.cliente_id && veiculosCliente.length > 0 && (
-                    <Field label="Selecionar Veículo" className="col-span-2 md:col-span-4">
-                      <select value={form.veiculo_id} onChange={e => onVeiculoChange(e.target.value)} className="input-dark">
-                        <option value="">— Selecione —</option>
-                        {veiculosCliente.map(v => <option key={v.id} value={v.id}>{v.placa} — {v.marca} {v.modelo} {v.ano}</option>)}
-                      </select>
-                    </Field>
-                  )}
-                  <Field label="Modelo"><input ref={veiculoRef} value={form.veiculo_modelo} onChange={e => setForm(f => ({ ...f, veiculo_modelo: e.target.value }))} onKeyDown={e => handleNavKey(e, placaRef)} className="input-dark" autoComplete="new-password" /></Field>
-                  <Field label="Placa"><input ref={placaRef} value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} onKeyDown={e => handleNavKey(e, kmRef)} className="input-dark" autoComplete="new-password" placeholder="AAA0000" /></Field>
-                  <Field label="KM"><input ref={kmRef} value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
+                  <div className="col-span-2 md:col-span-4">
+                    <button type="button" onClick={() => setShowDadosVeiculo(v => !v)}
+                      className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-white"
+                      style={{background: showDadosVeiculo ? "#374151" : "#062C9B"}}>
+                      <Plus className="w-3.5 h-3.5" /> Veículo
+                    </button>
+                  </div>
+                  {showDadosVeiculo && (<>
+                    {form.cliente_id && veiculosCliente.length > 0 && (
+                      <Field label="Selecionar Veículo" className="col-span-2 md:col-span-4">
+                        <select value={form.veiculo_id} onChange={e => onVeiculoChange(e.target.value)} className="input-dark">
+                          <option value="">— Selecione —</option>
+                          {veiculosCliente.map(v => <option key={v.id} value={v.id}>{v.placa} — {v.marca} {v.modelo} {v.ano}</option>)}
+                        </select>
+                      </Field>
+                    )}
+                    <Field label="Modelo"><input ref={veiculoRef} value={form.veiculo_modelo} onChange={e => setForm(f => ({ ...f, veiculo_modelo: e.target.value }))} onKeyDown={e => handleNavKey(e, placaRef)} className="input-dark" autoComplete="new-password" /></Field>
+                    <Field label="Placa"><input ref={placaRef} value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} onKeyDown={e => handleNavKey(e, kmRef)} className="input-dark" autoComplete="new-password" placeholder="AAA0000" /></Field>
+                    <Field label="KM"><input ref={kmRef} value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
+                  </>)}
                 </div>
               </Section>
 
