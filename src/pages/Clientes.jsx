@@ -40,10 +40,15 @@ export default function Clientes() {
 
   const commitEdit = async (clienteId, field) => {
     if (!editCell) return;
+    if (field === 'telefone' && !validarTelefone(editValue)) {
+      setErroTelefone("O telefone deve ter exatamente 10 ou 11 dígitos (DDD + número).\nEx: 34 3822 2085 ou 34 98885 1245");
+      return;
+    }
     const cliente = clientes.find(c => c.id === clienteId);
-    if (cliente && String(cliente[field] || "") !== String(editValue)) {
-      await base44.entities.Cadastro.update(clienteId, { [field]: editValue });
-      setClientes(prev => prev.map(c => c.id === clienteId ? { ...c, [field]: editValue } : c));
+    const finalValue = field === 'telefone' && editValue ? formatTelefone(editValue) : editValue;
+    if (cliente && String(cliente[field] || "") !== String(finalValue)) {
+      await base44.entities.Cadastro.update(clienteId, { [field]: finalValue });
+      setClientes(prev => prev.map(c => c.id === clienteId ? { ...c, [field]: finalValue } : c));
     }
     setEditCell(null);
   };
@@ -113,6 +118,20 @@ export default function Clientes() {
   };
 
   const [avisoConsumidor, setAvisoConsumidor] = useState(false);
+  const [erroTelefone, setErroTelefone] = useState(null);
+
+  const validarTelefone = (val) => {
+    if (!val) return true;
+    const digits = val.replace(/\D/g, '');
+    return digits.length === 10 || digits.length === 11;
+  };
+
+  const formatTelefone = (val) => {
+    const digits = val.replace(/\D/g, '');
+    if (digits.length === 10) return `${digits.slice(0,2)} ${digits.slice(2,6)} ${digits.slice(6)}`;
+    if (digits.length === 11) return `${digits.slice(0,2)} ${digits.slice(2,7)} ${digits.slice(7)}`;
+    return digits;
+  };
   const isConsumidor = (c) => c?.nome?.toUpperCase() === "CONSUMIDOR";
 
   const normalizarTipo = (tipo) => {
@@ -124,6 +143,10 @@ export default function Clientes() {
 
   const salvar = async () => {
     if (!form.nome) return alert("Informe o nome do cliente.");
+    if (!validarTelefone(form.telefone)) {
+      setErroTelefone("O telefone deve ter exatamente 10 ou 11 dígitos (DDD + número).\nEx: 34 3822 2085 ou 34 98885 1245");
+      return;
+    }
     const formNormalizado = { ...form, tipo: normalizarTipo(form.tipo) };
     if (editando && isConsumidor(editando)) return alert("O cliente CONSUMIDOR não pode ser alterado.");
     // Validar CPF/CNPJ duplicado
@@ -499,6 +522,26 @@ export default function Clientes() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal erro telefone */}
+      {erroTelefone && (
+        <div className="fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-orange-500/40 rounded-2xl w-full max-w-sm p-6 space-y-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto">
+              <Phone className="w-6 h-6 text-orange-400" />
+            </div>
+            <h3 className="text-white font-bold text-lg">Telefone Inválido</h3>
+            <p className="text-gray-300 text-sm whitespace-pre-line">{erroTelefone}</p>
+            <button onClick={() => setErroTelefone(null)}
+              className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+              style={{background:"#f97316"}}
+              onMouseEnter={e=>e.currentTarget.style.background="#ea6b0a"}
+              onMouseLeave={e=>e.currentTarget.style.background="#f97316"}>
+              Corrigir
+            </button>
           </div>
         </div>
       )}

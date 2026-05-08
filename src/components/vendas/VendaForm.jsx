@@ -80,6 +80,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   useEffect(() => { parcelasRef.current = parcelas; }, [parcelas]);
 
   const [saving, setSaving] = useState(false);
+  const [erroTelefone, setErroTelefone] = useState(null);
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -453,8 +454,18 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     }
   };
 
+  const validarTelefone = (val) => {
+    if (!val) return true;
+    const digits = val.replace(/\D/g, '');
+    return digits.length === 10 || digits.length === 11;
+  };
+
   const salvar = async () => {
     if (!form.cliente_nome && !form.cliente_id) return alert("Selecione ou informe o cliente.");
+    if (!validarTelefone(form.cliente_telefone)) {
+      setErroTelefone("O telefone de contato deve ter exatamente 10 ou 11 dígitos (DDD + número).\nEx: 34 3822 2085 ou 34 98885 1245");
+      return;
+    }
     const pecasPendentes = (form.pecas || []).filter(p => p._new);
     const servicosPendentes = (form.servicos || []).filter(s => s._new);
     if (pecasPendentes.length > 0) return alert("Selecione o produto antes de salvar. Há produto(s) adicionados sem seleção.");
@@ -946,6 +957,23 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
               {salvandoCliente ? 'Salvando...' : 'Cadastrar'}
             </button>
           </div>
+        </div>
+      </div>
+    )}
+
+    {erroTelefone && (
+      <div className="fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4">
+        <div className="bg-gray-900 border border-orange-500/40 rounded-2xl w-full max-w-sm p-6 space-y-4 text-center">
+          <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto">
+            <span className="text-2xl">📞</span>
+          </div>
+          <h3 className="text-white font-bold text-lg">Telefone Inválido</h3>
+          <p className="text-gray-300 text-sm whitespace-pre-line">{erroTelefone}</p>
+          <button onClick={() => setErroTelefone(null)}
+            className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+            style={{background:"#f97316"}}>
+            Corrigir
+          </button>
         </div>
       </div>
     )}
