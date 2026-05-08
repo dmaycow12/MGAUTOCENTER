@@ -187,6 +187,7 @@ export default function Clientes() {
   const filtrados = clientes
     .filter(c => {
       const matchSearch = c.nome?.toLowerCase().includes(search.toLowerCase()) ||
+        c.nome_fantasia?.toLowerCase().includes(search.toLowerCase()) ||
         c.cpf_cnpj?.includes(search) ||
         c.telefone?.includes(search) ||
         c.email?.toLowerCase().includes(search.toLowerCase());
