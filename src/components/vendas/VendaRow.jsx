@@ -150,12 +150,16 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
   };
 
   const confirmarMudancaStatus = async () => {
-    await excluirLancamentosOS(os.id);
-    await restaurarEstoque(os.pecas);
-    await base44.entities.Vendas.update(os.id, { status: statusPendente });
-    setShowAviso(false);
-    setStatusPendente(null);
-    onRefresh?.();
+    try {
+      await excluirLancamentosOS(os.id);
+      await restaurarEstoque(os.pecas);
+      await base44.entities.Vendas.update(os.id, { status: statusPendente });
+      setShowAviso(false);
+      setStatusPendente(null);
+      onRefresh?.();
+    } catch (err) {
+      alert("Erro ao alterar status: " + (err?.message || "Erro desconhecido"));
+    }
   };
 
   const confirmarExcluir = async () => {
