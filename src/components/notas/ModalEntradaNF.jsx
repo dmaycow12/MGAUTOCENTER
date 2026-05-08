@@ -543,14 +543,14 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                           onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, dar_entrada_estoque: e.target.checked } : it))}
                           className="mt-1 accent-green-500 w-4 h-4 flex-shrink-0 cursor-pointer" />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center justify-between gap-2">
                             <p className="text-white text-sm font-medium truncate">
                               {item.estoqueVinculado ? item.estoqueVinculado.descricao : item.descricao}
                               {item.codigo && <span className="text-gray-500 text-xs ml-1">({item.codigo})</span>}
                             </p>
                             {item.estoqueVinculado && (
                               <span className="flex-shrink-0 text-xs font-bold px-1.5 py-0.5 rounded" style={{ background: "#00ff0022", color: GREEN, border: "1px solid #00ff0044" }}>
-                                ✓ JÁ CADASTRADO
+                                ✓ CADASTRADO
                               </span>
                             )}
                           </div>
