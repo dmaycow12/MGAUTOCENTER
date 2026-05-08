@@ -549,26 +549,23 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                                 item={item}
                                 onChange={changes => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, ...changes } : it))}
                               />
-                              {/* Código, Marca e Categoria — sempre visíveis */}
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <p className="text-xs text-gray-500 mb-1">Código</p>
-                                  <input
-                                    value={item.codigo || ""}
-                                    onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, codigo: e.target.value } : it))}
-                                    className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
-                                    placeholder="Código"
-                                  />
+                              {/* Código original da NF (fornecedor) — somente leitura */}
+                              {item.codigo && (
+                                <div className="flex items-center gap-2 bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-1.5">
+                                  <span className="text-xs text-gray-400 flex-shrink-0">Cód. Fornecedor:</span>
+                                  <span className="text-xs font-mono font-bold text-orange-400">{item.codigo}</span>
+                                  <span className="text-xs text-gray-500 ml-auto">(será salvo como código alternativo)</span>
                                 </div>
-                                <div>
-                                  <p className="text-xs text-gray-500 mb-1">Marca</p>
-                                  <input
-                                    value={item.marca || ""}
-                                    onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, marca: e.target.value } : it))}
-                                    className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
-                                    placeholder="Ex: Bosch"
-                                  />
-                                </div>
+                              )}
+                              {/* Marca */}
+                              <div>
+                                <p className="text-xs text-gray-500 mb-1">Marca</p>
+                                <input
+                                  value={item.marca || ""}
+                                  onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, marca: e.target.value } : it))}
+                                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
+                                  placeholder="Ex: Bosch"
+                                />
                               </div>
                             </div>
                           )}
