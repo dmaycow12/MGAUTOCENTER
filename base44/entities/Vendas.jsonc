@@ -25,6 +25,10 @@
       "type": "string",
       "title": "Cliente"
     },
+    "cliente_nome_fantasia": {
+      "type": "string",
+      "title": "Nome Social / Nome Fantasia do Cliente"
+    },
     "cliente_telefone": {
       "type": "string",
       "title": "Telefone do Cliente"
