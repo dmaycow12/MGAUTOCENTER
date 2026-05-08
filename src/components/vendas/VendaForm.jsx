@@ -702,7 +702,13 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                     </div>
                                     <div className="w-24 flex-shrink-0">
                                       <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                                      <input value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" autoComplete="off" />
+                                      <input
+                                        type="text"
+                                        inputMode="decimal"
+                                        defaultValue={p.valor_unitario}
+                                        key={`vu-${i}-${p.estoque_id || i}`}
+                                        onBlur={e => updatePeca(i, "valor_unitario", e.target.value)}
+                                        className="input-dark" autoComplete="off" />
                                     </div>
                                     <div className="w-24 flex-shrink-0">
                                       <label className="text-xs text-gray-500 mb-1 block">Total</label>
@@ -760,7 +766,13 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                     </div>
                                     <div className="w-24 flex-shrink-0">
                                       <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                                      <input value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" autoComplete="off" />
+                                      <input
+                                        type="text"
+                                        inputMode="decimal"
+                                        defaultValue={s.valor}
+                                        key={`sv-${i}-${s.codigo || i}`}
+                                        onBlur={e => updateServico(i, "valor", e.target.value)}
+                                        className="input-dark" autoComplete="off" />
                                     </div>
                                     <div className="w-24 flex-shrink-0">
                                       <label className="text-xs text-gray-500 mb-1 block">Total</label>

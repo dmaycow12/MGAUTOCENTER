@@ -546,6 +546,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                               {/* Descrição + Código do produto cadastrado lado a lado */}
                               <div className="flex gap-2 items-end">
                                 <div className="flex-1 min-w-0">
+                                  <p className="text-xs text-gray-500 mb-1">Descrição / Produto</p>
                                   <CampoDescricaoBusca
                                     estoqueExistente={estoqueExistente}
                                     item={item}
@@ -554,14 +555,14 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                                 </div>
                                 {item.estoqueVinculado && (() => {
                                   const prod = estoqueExistente.find(e => e.id === item.estoqueVinculado.id);
-                                  return prod?.codigo ? (
+                                  return (
                                     <div className="flex-shrink-0 w-32">
                                       <p className="text-xs text-gray-500 mb-1">Cód. Cadastro</p>
-                                      <div className="bg-gray-700 border border-gray-600 text-orange-400 font-mono rounded-lg px-2 py-2 text-xs font-bold truncate" title={prod.codigo}>
-                                        {prod.codigo}
+                                      <div className={`border rounded-lg px-2 py-2 text-xs font-bold truncate font-mono ${prod?.codigo ? "bg-gray-700 border-gray-600 text-orange-400" : "bg-gray-800 border-gray-700 text-gray-600"}`} title={prod?.codigo || ""}>
+                                        {prod?.codigo || "—"}
                                       </div>
                                     </div>
-                                  ) : null;
+                                  );
                                 })()}
                               </div>
                               {/* Código, Marca e Categoria — sempre visíveis */}
