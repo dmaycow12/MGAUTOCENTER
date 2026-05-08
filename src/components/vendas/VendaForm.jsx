@@ -485,7 +485,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       const formToSave = {
         ...formFinal,
         quilometragem: formFinal.quilometragem === "" || formFinal.quilometragem === null || formFinal.quilometragem === undefined
-          ? null : Number(formFinal.quilometragem),
+          ? "" : String(formFinal.quilometragem),
       };
 
       if (os) {
