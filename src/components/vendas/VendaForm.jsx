@@ -142,8 +142,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const [servicoSugestoes, setServicoSugestoes] = useState({ idx: null, lista: [] });
   const [showAvisoReabrir, setShowAvisoReabrir] = useState(false);
   const [statusPendente, setStatusPendente] = useState(null);
-  const [showDadosCliente, setShowDadosCliente] = useState(!!os?.cliente_nome);
-  const [showDadosVeiculo, setShowDadosVeiculo] = useState(!!(os?.veiculo_modelo || os?.veiculo_placa));
+  const [showDadosCliente, setShowDadosCliente] = useState(false);
+  const [showDadosVeiculo, setShowDadosVeiculo] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -655,10 +655,12 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 </div>
               </Section>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field label="Defeito Relatado"><textarea value={form.defeito_relatado} onChange={e => setForm(f => ({ ...f, defeito_relatado: e.target.value }))} className="input-dark" rows={2} autoComplete="off" /></Field>
-                <Field label="Diagnóstico"><textarea value={form.diagnostico} onChange={e => setForm(f => ({ ...f, diagnostico: e.target.value }))} className="input-dark" rows={2} autoComplete="off" /></Field>
-              </div>
+              {showDadosVeiculo && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field label="Defeito Relatado"><textarea value={form.defeito_relatado} onChange={e => setForm(f => ({ ...f, defeito_relatado: e.target.value }))} className="input-dark" rows={2} autoComplete="off" /></Field>
+                  <Field label="Diagnóstico"><textarea value={form.diagnostico} onChange={e => setForm(f => ({ ...f, diagnostico: e.target.value }))} className="input-dark" rows={2} autoComplete="off" /></Field>
+                </div>
+              )}
 
               <Section title="Fotos do Veículo / Serviço">
                 <div className="flex flex-wrap gap-2 mb-3">
