@@ -137,7 +137,7 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
 
           {/* ABA HISTÓRICO */}
           {aba === "historico" && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {historico.length === 0 ? (
                 <div className="text-center py-12">
                   <History className="w-10 h-10 text-gray-600 mx-auto mb-2" />
@@ -147,35 +147,52 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                 historico.map((mov, i) => {
                   const isEntrada = mov.tipo === "entrada";
                   return (
-                    <div key={i} className={`border rounded-xl p-3 ${isEntrada ? "bg-green-500/5 border-green-500/20" : "bg-red-500/5 border-red-500/20"}`}>
-                      <div className="flex items-start gap-3">
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${isEntrada ? "bg-green-500/20" : "bg-red-500/20"}`}>
-                          {isEntrada
-                            ? <ArrowDown className="w-4 h-4 text-green-400" />
-                            : <ArrowUp className="w-4 h-4 text-red-400" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <span className={`text-xs font-bold uppercase ${isEntrada ? "text-green-400" : "text-red-400"}`}>
-                              {isEntrada ? "Entrada" : "Saída"}
-                            </span>
-                            <span className="text-xs text-gray-500">{mov.data ? new Date(mov.data).toLocaleDateString("pt-BR") : "—"}</span>
+                    <div key={i} className={`border rounded-xl overflow-hidden ${isEntrada ? "border-green-500/25" : "border-red-500/25"}`}>
+                      {/* Cabeçalho */}
+                      <div className={`flex items-center justify-between px-3 py-2 ${isEntrada ? "bg-green-500/10" : "bg-red-500/10"}`}>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${isEntrada ? "bg-green-500/20" : "bg-red-500/20"}`}>
+                            {isEntrada
+                              ? <ArrowDown className="w-3.5 h-3.5 text-green-400" />
+                              : <ArrowUp className="w-3.5 h-3.5 text-red-400" />}
                           </div>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs">
-                            <span className="text-gray-400">Quantidade: <span className="text-white font-medium">{mov.quantidade}</span></span>
-                            <span className="text-gray-400">Valor Unit.: <span className="text-white font-medium">R$ {Number(mov.valor_unitario || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></span>
-                            {isEntrada && mov.fornecedor && (
-                              <span className="text-gray-400 col-span-2">Fornecedor: <span className="text-white font-medium">{mov.fornecedor}</span></span>
-                            )}
-                            {!isEntrada && mov.ordem_venda_numero && (
-                              <span className="text-gray-400 col-span-2">Ordem de Venda: <span className="text-white font-medium">#{mov.ordem_venda_numero}</span></span>
-                            )}
-                            {mov.observacao && (
-                              <span className="text-gray-500 col-span-2 italic">{mov.observacao}</span>
-                            )}
-                          </div>
+                          <span className={`text-xs font-bold uppercase tracking-wide ${isEntrada ? "text-green-400" : "text-red-400"}`}>
+                            {isEntrada ? "Entrada" : "Saída"}
+                          </span>
                         </div>
+                        <span className="text-xs text-gray-500">{mov.data ? new Date(mov.data).toLocaleDateString("pt-BR") : "—"}</span>
                       </div>
+                      {/* Tabela de dados */}
+                      <table className="w-full text-xs">
+                        <tbody>
+                          <tr className="border-b border-gray-800">
+                            <td className="px-3 py-2 text-gray-500 w-1/3">Quantidade</td>
+                            <td className="px-3 py-2 text-white font-medium">{mov.quantidade ?? "—"}</td>
+                          </tr>
+                          <tr className="border-b border-gray-800">
+                            <td className="px-3 py-2 text-gray-500">Valor Unitário</td>
+                            <td className="px-3 py-2 text-white font-medium">R$ {Number(mov.valor_unitario || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+                          </tr>
+                          {isEntrada && (
+                            <tr className="border-b border-gray-800">
+                              <td className="px-3 py-2 text-gray-500">Fornecedor</td>
+                              <td className="px-3 py-2 text-white font-medium">{mov.fornecedor || "—"}</td>
+                            </tr>
+                          )}
+                          {!isEntrada && (
+                            <tr className="border-b border-gray-800">
+                              <td className="px-3 py-2 text-gray-500">Ordem de Venda</td>
+                              <td className="px-3 py-2 text-white font-medium">{mov.ordem_venda_numero ? `#${mov.ordem_venda_numero}` : "—"}</td>
+                            </tr>
+                          )}
+                          {mov.observacao && (
+                            <tr>
+                              <td className="px-3 py-2 text-gray-500">Observação</td>
+                              <td className="px-3 py-2 text-gray-400 italic">{mov.observacao}</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   );
                 })
