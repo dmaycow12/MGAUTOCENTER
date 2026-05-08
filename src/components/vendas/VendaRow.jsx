@@ -157,7 +157,11 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
     try {
       await excluirLancamentosOS(os.id);
       await restaurarEstoque(os.pecas);
-      await base44.entities.Vendas.update(os.id, { status: statusPendente });
+      const updateData = { status: statusPendente };
+      if (os.quilometragem !== undefined && os.quilometragem !== null) {
+        updateData.quilometragem = String(os.quilometragem);
+      }
+      await base44.entities.Vendas.update(os.id, updateData);
       setShowAviso(false);
       setStatusPendente(null);
       onRefresh?.();
