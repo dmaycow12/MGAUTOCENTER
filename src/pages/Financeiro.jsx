@@ -515,7 +515,7 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
       {/* Descrição + categoria — ocupa espaço restante */}
       <div className="flex-1 min-w-0">
         <p className="text-white font-semibold text-sm truncate">{item.descricao}</p>
-        <p className="text-gray-500 text-xs truncate">{item.categoria || "—"} • {item.data_vencimento || "—"}</p>
+        <p className="text-gray-500 text-xs truncate">{item.categoria || "—"} • {item.data_vencimento ? item.data_vencimento.split("-").reverse().join("-") : "—"}</p>
       </div>
 
       {/* Status — botões sempre visíveis */}
