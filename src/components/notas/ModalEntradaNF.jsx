@@ -79,12 +79,28 @@ function parsearXML(xmlOriginal) {
   const vFrete = parseFloat(get("vFrete") || "0"); const vProd_total = parseFloat(get("vProd") || "0");
   const natOp = get("natOp"); const infCpl = get("infCpl");
 
+  // Tenta <detPag> primeiro (NF-e 4.0), depois <pag> direto (formato alternativo)
   const pagamentos = [];
   for (const dp of getAll("detPag")) {
     const tPag = dp.match(/<tPag>([^<]*)<\/tPag>/)?.[1] || "";
     const vPag = parseFloat(dp.match(/<vPag>([^<]*)<\/vPag>/)?.[1] || "0");
-    pagamentos.push({ tPag, vPag });
+    if (tPag) pagamentos.push({ tPag, vPag });
   }
+  // Fallback: <pag> contém <tPag> diretamente (sem <detPag>)
+  if (pagamentos.length === 0) {
+    for (const pg of getAll("pag")) {
+      const tPag = pg.match(/<tPag>([^<]*)<\/tPag>/)?.[1] || "";
+      const vPag = parseFloat(pg.match(/<vPag>([^<]*)<\/vPag>/)?.[1] || "0");
+      if (tPag) pagamentos.push({ tPag, vPag });
+    }
+  }
+  // Fallback final: tPag solto no XML
+  if (pagamentos.length === 0) {
+    const tPagSolto = xml.match(/<tPag>([^<]*)<\/tPag>/)?.[1] || "";
+    const vPagSolto = parseFloat(xml.match(/<vPag>([^<]*)<\/vPag>/)?.[1] || "0");
+    if (tPagSolto) pagamentos.push({ tPag: tPagSolto, vPag: vPagSolto });
+  }
+
   const dupNodes = getAll("dup");
   const boletos = dupNodes.map(dup => ({
     nDup: dup.match(/<nDup>([^<]*)<\/nDup>/)?.[1] || "",
@@ -96,7 +112,8 @@ function parsearXML(xmlOriginal) {
     "01": "Dinheiro", "02": "Cheque", "03": "Cartão de Crédito", "04": "Cartão de Débito",
     "05": "Crediário", "10": "Vale Alimentação", "15": "Boleto", "17": "PIX", "90": "Sem Pagamento", "99": "Outros",
   };
-  let forma_pagamento_detectada = boletos.length > 0 ? "Boleto" : "PIX";
+  // Prioridade: boletos detectados > tPag do XML > fallback Dinheiro
+  let forma_pagamento_detectada = boletos.length > 0 ? "Boleto" : "Dinheiro";
   if (pagamentos.length > 0) forma_pagamento_detectada = mapaForma[pagamentos[0].tPag] || forma_pagamento_detectada;
 
   return {
