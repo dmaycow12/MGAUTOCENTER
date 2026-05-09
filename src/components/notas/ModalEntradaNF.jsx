@@ -399,10 +399,17 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
             && (e.codigo === (item.codigoInterno || item.codigo || "") || e.descricao === item.descricao)
           );
           if (jaExisteNovo) continue;
+          // Se tem código interno diferente do código do fornecedor, salvar o cód. fornecedor em codigos[]
+          const codigoPrincipal = item.codigoInterno || item.codigo || "";
+          const codigoFornecedor = item.codigo?.toUpperCase().trim();
+          const codigosAlternativos = (codigoFornecedor && codigoFornecedor !== codigoPrincipal?.toUpperCase().trim())
+            ? [codigoFornecedor]
+            : [];
+
           const criado = await base44.entities.Estoque.create({
             descricao: item.descricao,
-            codigo: item.codigoInterno || item.codigo || "",
-            codigos: [],
+            codigo: codigoPrincipal,
+            codigos: codigosAlternativos,
             quantidade: item.quantidade,
             valor_custo: item.valor_unitario, valor_venda: item.valor_unitario,
             unidade: item.unidade || "UN",
