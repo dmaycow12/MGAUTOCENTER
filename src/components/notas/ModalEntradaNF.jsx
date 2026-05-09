@@ -70,7 +70,7 @@ function parsearXML(xmlOriginal) {
     const limparCodigo = (str) => str ? str.replace(/[.\-/]/g, "") : "";
     const codigoLimpo = limparCodigo(cProd) || ((cEAN && cEAN !== "SEM GTIN") ? limparCodigo(cEAN) : "");
     const eanLimpo = (cEAN && cEAN !== "SEM GTIN") ? limparCodigo(cEAN) : "";
-    return { descricao: xProd, quantidade: qCom, valor_unitario: vUnCom, valor_total: vProd, codigo: codigoLimpo, ean: eanLimpo, ncm: NCM, cfop: CFOP, unidade: uCom, dar_entrada_estoque: false, estoqueVinculado: null };
+    return { descricao: xProd, descricaoOriginal: xProd, quantidade: qCom, valor_unitario: vUnCom, valor_total: vProd, codigo: codigoLimpo, ean: eanLimpo, ncm: NCM, cfop: CFOP, unidade: uCom, dar_entrada_estoque: false, estoqueVinculado: null };
   });
 
   const vBC = parseFloat(get("vBC") || "0"); const vICMS = parseFloat(get("vICMS") || "0");
@@ -248,7 +248,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
         if (!encontrado) encontrado = est.find(e => (e.codigos || []).some(c => c?.toUpperCase().trim() === codNorm));
         // Mantém o codigo original da NF (do fornecedor), só adiciona o vínculo
         return encontrado
-          ? { ...item, estoqueVinculado: { id: encontrado.id, descricao: encontrado.descricao }, descricao: encontrado.descricao, codigoInterno: encontrado.codigo || "", marca: item.marca || encontrado.marca || "", categoria: item.categoria || encontrado.categoria || "" }
+          ? { ...item, estoqueVinculado: { id: encontrado.id, descricao: encontrado.descricao }, descricao: encontrado.descricao, codigoInterno: encontrado.codigo || "", marca: item.marca || encontrado.marca || "", categoria: item.categoria || encontrado.categoria || "", descricaoOriginal: item.descricaoOriginal || item.descricao }
           : item;
       }));
 
@@ -576,10 +576,22 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                           className="mt-1 accent-green-500 w-4 h-4 flex-shrink-0 cursor-pointer" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="text-white text-sm font-medium truncate">
-                              {item.estoqueVinculado ? item.estoqueVinculado.descricao : item.descricao}
-                              {item.codigo && <span className="text-gray-500 text-xs ml-1">({item.codigo})</span>}
-                            </p>
+                            <div className="min-w-0 flex-1">
+                              {/* Descrição original da NF */}
+                              <p className="text-gray-400 text-xs">
+                                NF: <span className="text-gray-300">{item.descricaoOriginal || item.descricao}</span>
+                                {item.codigo && <span className="text-gray-500 ml-1">({item.codigo})</span>}
+                              </p>
+                              {/* Descrição e código do cadastro (quando vinculado) */}
+                              {item.estoqueVinculado ? (
+                                <p className="text-white text-sm font-medium truncate mt-0.5">
+                                  {item.estoqueVinculado.descricao}
+                                  {item.codigoInterno && <span className="text-gray-400 text-xs ml-1.5 font-mono">[{item.codigoInterno}]</span>}
+                                </p>
+                              ) : (
+                                <p className="text-white text-sm font-medium truncate mt-0.5">{item.descricao}</p>
+                              )}
+                            </div>
                             {item.estoqueVinculado && (
                               <span className="flex-shrink-0 text-xs font-bold px-1.5 py-0.5 rounded" style={{ background: "#00ff0022", color: GREEN, border: "1px solid #00ff0044" }}>
                                 ✓ CADASTRADO
