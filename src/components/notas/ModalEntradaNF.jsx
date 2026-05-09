@@ -368,7 +368,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
 
         const movEntrada = {
           tipo: "entrada",
-          data: new Date().toISOString(),
+          data: dados.dataEmissao ? dados.dataEmissao + "T00:00:00.000Z" : new Date().toISOString(),
           quantidade: item.quantidade,
           valor_unitario: item.valor_unitario,
           fornecedor: dados.emitente || nomeFornecedor || "",
