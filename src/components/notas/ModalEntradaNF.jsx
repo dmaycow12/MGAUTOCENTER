@@ -340,10 +340,15 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
       const mapaAtualizado = lerMapa();
       const nfNumero = dados.numero || "";
       const obsNF = `NF ${nfNumero}`;
+      // Usa chave de acesso para identificar a NF com precisão e evitar falsos positivos
+      const chaveNF = dados.chave || "";
 
-      // Verifica se esta NF já foi lançada neste produto (pelo histórico pré-existente)
+      // Verifica se esta NF já foi lançada neste produto — usa chave de acesso se disponível
       const nfJaLancadaNo = (historico) => {
         if (!Array.isArray(historico)) return false;
+        if (chaveNF) {
+          return historico.some(h => h.tipo === "entrada" && h.chave_nf === chaveNF);
+        }
         return historico.some(h => h.tipo === "entrada" && h.observacao === obsNF);
       };
 
@@ -373,6 +378,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
           valor_unitario: item.valor_unitario,
           fornecedor: dados.emitente || nomeFornecedor || "",
           observacao: obsNF,
+          ...(chaveNF ? { chave_nf: chaveNF } : {}),
         };
         if (existente) {
           idsUsados.add(existente.id);
