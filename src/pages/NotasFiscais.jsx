@@ -488,11 +488,6 @@ export default function NotasFiscais() {
       setAvisoExclusao(nota);
       return;
     }
-    // Se status Importada, também bloqueia exclusão direta (usuário deve usar Cancelar Lançamento)
-    if (nota?.status === 'Importada') {
-      setAvisoExclusao(nota);
-      return;
-    }
     if (!confirm("Excluir esta nota fiscal?")) return;
     if (nota?.numero) {
       const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
