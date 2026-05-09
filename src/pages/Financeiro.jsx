@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Edit, Trash2 } from "lucide-react";
@@ -491,31 +492,45 @@ function KpiCard({ icon: Icon, label, value, color }) {
 }
 
 function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }) {
-  const [statusOpen, setStatusOpen] = useState(false);
   const [pagamentoOpen, setPagamentoOpen] = useState(false);
-  const statusRef = useRef(null);
   const pagamentoRef = useRef(null);
   const pagamentoBtnRef = useRef(null);
-  const [dropUp, setDropUp] = useState(false);
+  const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0, openUp: false });
 
   useEffect(() => {
     const handler = (e) => {
-      if (statusRef.current && !statusRef.current.contains(e.target)) setStatusOpen(false);
-      if (pagamentoRef.current && !pagamentoRef.current.contains(e.target)) setPagamentoOpen(false);
+      if (pagamentoRef.current && !pagamentoRef.current.contains(e.target) &&
+          pagamentoBtnRef.current && !pagamentoBtnRef.current.contains(e.target)) {
+        setPagamentoOpen(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const abrirDropdown = () => {
+    if (item.status === "Pago") return;
+    const rect = pagamentoBtnRef.current.getBoundingClientRect();
+    const itemHeight = PAGAMENTO_OPTIONS.length * 36;
+    const openUp = window.innerHeight - rect.bottom < itemHeight + 8;
+    setDropPos({
+      top: openUp ? rect.top - itemHeight - 4 : rect.bottom + 4,
+      left: rect.right - 144,
+      width: 144,
+      openUp,
+    });
+    setPagamentoOpen(v => !v);
+  };
 
   const fmt = v => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 
   return (
     <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all"
       style={item.status === "Atrasado" ? { background: "rgba(220,38,38,0.12)", borderLeft: "3px solid #dc2626" } : {}}>
-      {/* Tipo badge — largura fixa */}
+      {/* Tipo badge */}
       <span className={`text-xs px-2 py-1 rounded-full font-medium flex-shrink-0 w-16 text-center ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo}</span>
 
-      {/* Descrição + categoria — ocupa espaço restante */}
+      {/* Descrição + categoria */}
       <div className="flex-1 min-w-0">
         <p className="text-white font-semibold text-sm truncate">{item.descricao}</p>
         <p className="text-gray-500 text-xs truncate">{item.categoria || "—"} • {item.data_vencimento ? item.data_vencimento.split("-").reverse().join("-") : "—"}</p>
@@ -549,21 +564,14 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
         })}
       </div>
 
-      {/* Pagamento — dropdown clicável */}
-      <div className="relative flex-shrink-0" ref={pagamentoRef}>
+      {/* Pagamento — dropdown via portal */}
+      <div className="relative flex-shrink-0">
         <button
           ref={pagamentoBtnRef}
-          onClick={() => {
-            if (item.status === "Pago") return;
-            if (pagamentoBtnRef.current) {
-              const rect = pagamentoBtnRef.current.getBoundingClientRect();
-              setDropUp(window.innerHeight - rect.bottom < 160);
-            }
-            setPagamentoOpen(v => !v);
-          }}
-          className="w-28 text-xs px-2 py-1.5 rounded-lg font-medium text-center truncate transition-all"
+          onClick={abrirDropdown}
+          className="w-36 text-xs px-2 py-1.5 rounded-lg font-medium text-center truncate transition-all"
           style={{
-            background: item.status === "Pago" ? "#374151" : "#374151",
+            background: "#374151",
             color: item.status === "Pago" ? "#9ca3af" : "#fff",
             cursor: item.status === "Pago" ? "not-allowed" : "pointer",
             opacity: item.status === "Pago" ? 0.6 : 1,
@@ -572,12 +580,14 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
         >
           {item.forma_pagamento || "—"}
         </button>
-        {pagamentoOpen && (
-          <div className={`absolute right-0 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[140px] ${dropUp ? "bottom-full mb-1" : "top-full mt-1"}`}>
+        {pagamentoOpen && createPortal(
+          <div
+            ref={pagamentoRef}
+            style={{ position: "fixed", top: dropPos.top, left: dropPos.left, width: dropPos.width, zIndex: 9999 }}
+            className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden"
+          >
             {PAGAMENTO_OPTIONS.map(op => (
               <button key={op} onClick={() => {
-                // Não permite alterar pra "A Combinar" se status for Pago (já bloqueado pelo cursor)
-                // Também não abre dropdown se pago (já bloqueado), mas como segurança extra:
                 if (item.status === "Pago") return;
                 onAlterarPagamento(item, op);
                 setPagamentoOpen(false);
@@ -588,11 +598,12 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
                 {op}
               </button>
             ))}
-          </div>
+          </div>,
+          document.body
         )}
       </div>
 
-      {/* Valor — largura fixa, alinhado à direita */}
+      {/* Valor */}
       <span className={`font-bold text-sm flex-shrink-0 w-28 text-right ${item.tipo==="Receita"?"text-green-400":"text-red-400"}`}>R$ {fmt(item.valor)}</span>
 
       {/* Ações */}
