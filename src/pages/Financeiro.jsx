@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Edit, Trash2 } from "lucide-react";
 
-const STATUS_OPTIONS = ["Pendente", "Pago", "Atrasado"];
+const STATUS_OPTIONS = ["Pendente", "Pago"];
 const PAGAMENTO_OPTIONS = ["A Combinar", "Boleto", "Cartão", "Dinheiro", "PIX"];
 const STATUS_BG_LIST = { "Pendente": "#062C9B", "Pago": "#16a34a", "Atrasado": "#dc2626" };
 import FinanceiroCard from "@/components/financeiro/FinanceiroCard";
@@ -507,7 +507,8 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
   const fmt = v => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 
   return (
-    <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
+    <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all"
+      style={item.status === "Atrasado" ? { boxShadow: "inset 0 0 0 1px rgba(220,38,38,0.4), inset 0 0 20px rgba(220,38,38,0.08)" } : {}}>
       {/* Tipo badge — largura fixa */}
       <span className={`text-xs px-2 py-1 rounded-full font-medium flex-shrink-0 w-16 text-center ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo}</span>
 
