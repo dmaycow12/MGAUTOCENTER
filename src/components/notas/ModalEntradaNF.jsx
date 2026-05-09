@@ -332,10 +332,12 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
       const idsUsados = new Set();
       const mapaAtualizado = lerMapa();
       const nfNumero = dados.numero || "";
-      // Conta quantas entradas desta NF já existem no histórico de cada produto
-      const contagemEntradas = (historico, qtd) => {
-        if (!Array.isArray(historico)) return 0;
-        return historico.filter(h => h.tipo === "entrada" && h.observacao === `NF ${nfNumero}` && h.quantidade === qtd).length;
+      const obsNF = `NF ${nfNumero}`;
+
+      // Verifica se esta NF já foi lançada neste produto (pelo histórico pré-existente)
+      const nfJaLancadaNo = (historico) => {
+        if (!Array.isArray(historico)) return false;
+        return historico.some(h => h.tipo === "entrada" && h.observacao === obsNF);
       };
 
       for (const item of itens) {
@@ -352,13 +354,11 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
         if (item.estoqueVinculado?.id) {
           existente = estoqueAtual.find(e => e.id === item.estoqueVinculado.id && !idsUsados.has(e.id));
         }
-        // Prioridade 2: código
+        // Prioridade 2: código principal
         if (!existente && item.codigo) {
           existente = estoqueAtual.find(e => e.codigo === item.codigo && !idsUsados.has(e.id));
         }
-        // Prioridade 3: descrição removida — só vincula por código ou vínculo manual
 
-        const obsNF = `NF ${nfNumero}`;
         const movEntrada = {
           tipo: "entrada",
           data: new Date().toISOString(),
@@ -370,8 +370,8 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
         if (existente) {
           idsUsados.add(existente.id);
           const historicoAtual = Array.isArray(existente.historico) ? existente.historico : [];
-          // Conta quantas vezes esta NF já foi lançada — permite apenas 1
-          if (contagemEntradas(historicoAtual, item.quantidade) >= 1) continue;
+          // Evita lançar a mesma NF duas vezes no mesmo produto
+          if (nfJaLancadaNo(historicoAtual)) continue;
           const novaQtd = (existente.quantidade || 0) + item.quantidade;
 
           // Salvar código do fornecedor como código alternativo (se ainda não estiver cadastrado)
@@ -390,17 +390,14 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
             codigos: novosCodigos,
             historico: [...historicoAtual, movEntrada],
           });
-          estoqueAtual = estoqueAtual.map(e => e.id === existente.id ? { ...e, quantidade: novaQtd, codigos: novosCodigos } : e);
+          estoqueAtual = estoqueAtual.map(e => e.id === existente.id ? { ...e, quantidade: novaQtd, codigos: novosCodigos, historico: [...historicoAtual, movEntrada] } : e);
         } else {
-          // Verifica se já foi criado antes com esta NF (produto novo duplicado)
-          const jaExisteNovo = estoqueAtual.find(e =>
-            contagemEntradas(e.historico, item.quantidade) >= 1 &&
-            e.historico?.some(h => h.observacao === obsNF)
-            && (e.codigo === (item.codigoInterno || item.codigo || "") || e.descricao === item.descricao)
-          );
-          if (jaExisteNovo) continue;
-          // Código principal = código interno digitado pelo usuário (se houver), senão usa código do fornecedor
+          // Produto novo — verifica pelo código se já foi criado nesta sessão (evita duplicata real)
           const codigoPrincipal = item.codigoInterno || item.codigo || "";
+          const jaExisteNovo = codigoPrincipal
+            ? estoqueAtual.find(e => e.codigo === codigoPrincipal && !idsUsados.has(e.id) && nfJaLancadaNo(e.historico))
+            : null;
+          if (jaExisteNovo) continue;
           const codigoFornecedor = item.codigo?.toUpperCase().trim();
           // SEMPRE salva o código do fornecedor em codigos[] para garantir vínculo automático em futuros lançamentos
           const codigosAlternativos = codigoFornecedor ? [codigoFornecedor] : [];
