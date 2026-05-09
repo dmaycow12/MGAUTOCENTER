@@ -569,88 +569,99 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
               ) : (
                 <div className="space-y-2">
                   {itens.map((item, i) => (
-                    <div key={i} className={`bg-gray-800 border rounded-xl p-3 transition-all ${item.dar_entrada_estoque ? "border-green-500/30" : "border-gray-700 opacity-60"}`}>
-                      <div className="flex items-start gap-3">
-                        <input type="checkbox" checked={item.dar_entrada_estoque}
-                          onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, dar_entrada_estoque: e.target.checked } : it))}
-                          className="mt-1 accent-green-500 w-4 h-4 flex-shrink-0 cursor-pointer" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="min-w-0 flex-1">
-                              {/* Descrição original da NF */}
-                              <p className="text-gray-400 text-xs">
-                                NF: <span className="text-gray-300">{item.descricaoOriginal || item.descricao}</span>
-                                {item.codigo && <span className="text-gray-500 ml-1">({item.codigo})</span>}
-                              </p>
-                              {/* Descrição e código do cadastro (quando vinculado) */}
-                              {item.estoqueVinculado ? (
-                                <p className="text-white text-sm font-medium truncate mt-0.5">
-                                  {item.estoqueVinculado.descricao}
-                                  {item.codigoInterno && <span className="text-gray-400 text-xs ml-1.5 font-mono">[{item.codigoInterno}]</span>}
-                                </p>
-                              ) : (
-                                <p className="text-white text-sm font-medium truncate mt-0.5">{item.descricao}</p>
-                              )}
-                            </div>
-                            {item.estoqueVinculado && (
-                              <span className="flex-shrink-0 text-xs font-bold px-1.5 py-0.5 rounded" style={{ background: "#00ff0022", color: GREEN, border: "1px solid #00ff0044" }}>
-                                ✓ CADASTRADO
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap gap-3 mt-1 text-xs text-gray-400">
-                            <span>Qtd: <span className="text-white">{item.quantidade}</span></span>
-                            <span>Unit: <span className="text-white">R$ {Number(item.valor_unitario).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></span>
-                            <span>Total: <span className="font-medium" style={{ color: GREEN }}>R$ {Number(item.valor_total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></span>
-                          </div>
+                    <div key={i} className={`bg-gray-800 border rounded-xl overflow-hidden transition-all ${item.dar_entrada_estoque ? "border-green-500/30" : "border-gray-700 opacity-60"}`}>
+                      {/* Linha topo: checkbox + badge */}
+                      <div className="flex items-center justify-between px-3 pt-3 pb-2">
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" checked={item.dar_entrada_estoque}
+                            onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, dar_entrada_estoque: e.target.checked } : it))}
+                            className="accent-green-500 w-4 h-4 flex-shrink-0 cursor-pointer" />
+                          <span className="text-gray-500 text-xs font-medium">ITEM {i + 1}</span>
+                        </div>
+                        {item.estoqueVinculado && (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: "#00ff0022", color: GREEN, border: "1px solid #00ff0044" }}>
+                            ✓ CADASTRADO
+                          </span>
+                        )}
+                      </div>
 
-                          {item.dar_entrada_estoque && !item.estoqueVinculado && (
-                            <div className="mt-2 space-y-2">
-                              {/* Descrição + Código do produto cadastrado lado a lado */}
-                              <div className="flex gap-2 items-start">
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs text-gray-500 mb-1">Descrição / Produto</p>
-                                  <CampoDescricaoBusca
-                                    estoqueExistente={estoqueExistente}
-                                    item={item}
-                                    onChange={changes => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, ...changes } : it))}
-                                  />
-                                </div>
-                              </div>
-                              {/* Código, Cód. Fornecedor e Marca */}
-                              <div className="grid grid-cols-3 gap-2">
-                                <div>
-                                  <p className="text-xs text-gray-500 mb-1">Código (Interno)</p>
-                                  <input
-                                    value={item.codigoInterno || ""}
-                                    onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, codigoInterno: e.target.value.toUpperCase() } : it))}
-                                    className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500 font-mono"
-                                    placeholder=""
-                                  />
-                                </div>
-                                <div>
-                                  <p className="text-xs text-gray-500 mb-1">Cód. Fornecedor</p>
-                                  <input
-                                    value={item.codigo || ""}
-                                    readOnly
-                                    className="w-full bg-gray-800 border border-gray-700 text-gray-400 rounded-lg px-2 py-1.5 text-xs cursor-default font-mono"
-                                    placeholder=""
-                                  />
-                                </div>
-                                <div>
-                                  <p className="text-xs text-gray-500 mb-1">Marca</p>
-                                  <input
-                                    value={item.marca || ""}
-                                    onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, marca: e.target.value } : it))}
-                                    className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
-                                    placeholder=""
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          )}
+                      {/* Bloco NF original */}
+                      <div className="px-3 pb-2 border-b border-gray-700/50">
+                        <p className="text-gray-500 text-[10px] uppercase tracking-wide mb-0.5">Descrição na NF</p>
+                        <p className="text-gray-300 text-xs">
+                          {item.descricaoOriginal || item.descricao}
+                          {item.codigo && <span className="text-gray-500 ml-1.5 font-mono">({item.codigo})</span>}
+                        </p>
+                      </div>
+
+                      {/* Bloco cadastro (quando vinculado) */}
+                      {item.estoqueVinculado && (
+                        <div className="px-3 py-2 border-b border-gray-700/50" style={{ background: "#00ff0008" }}>
+                          <p className="text-gray-500 text-[10px] uppercase tracking-wide mb-0.5">Cadastro Vinculado</p>
+                          <p className="text-white text-sm font-semibold">
+                            {item.estoqueVinculado.descricao}
+                            {item.codigoInterno && (
+                              <span className="text-gray-400 text-xs ml-2 font-mono font-normal">[{item.codigoInterno}]</span>
+                            )}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Bloco valores */}
+                      <div className="px-3 py-2 grid grid-cols-3 gap-2 text-xs">
+                        <div>
+                          <p className="text-gray-500 text-[10px] uppercase tracking-wide">Qtd</p>
+                          <p className="text-white font-semibold">{item.quantidade}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 text-[10px] uppercase tracking-wide">Unit.</p>
+                          <p className="text-white font-semibold">R$ {Number(item.valor_unitario).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 text-[10px] uppercase tracking-wide">Total</p>
+                          <p className="font-bold" style={{ color: GREEN }}>R$ {Number(item.valor_total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
                         </div>
                       </div>
+
+                      {/* Campos edição (quando não vinculado e marcado) */}
+                      {item.dar_entrada_estoque && !item.estoqueVinculado && (
+                        <div className="px-3 pb-3 space-y-2 border-t border-gray-700/50 pt-2">
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">Descrição / Produto</p>
+                            <CampoDescricaoBusca
+                              estoqueExistente={estoqueExistente}
+                              item={item}
+                              onChange={changes => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, ...changes } : it))}
+                            />
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Cód. Interno</p>
+                              <input
+                                value={item.codigoInterno || ""}
+                                onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, codigoInterno: e.target.value.toUpperCase() } : it))}
+                                className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500 font-mono"
+                              />
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Cód. Fornecedor</p>
+                              <input
+                                value={item.codigo || ""}
+                                readOnly
+                                className="w-full bg-gray-800 border border-gray-700 text-gray-400 rounded-lg px-2 py-1.5 text-xs cursor-default font-mono"
+                              />
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Marca</p>
+                              <input
+                                value={item.marca || ""}
+                                onChange={e => setItens(prev => prev.map((it, idx) => idx === i ? { ...it, marca: e.target.value } : it))}
+                                className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-green-500"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
