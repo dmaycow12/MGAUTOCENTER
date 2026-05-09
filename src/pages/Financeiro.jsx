@@ -532,33 +532,8 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
         ))}
       </div>
 
-      {/* Pagamento dropdown — largura fixa */}
-      <div className="relative flex-shrink-0 w-28" ref={pagamentoRef}>
-        {item.status === "Pago" ? (
-          <span className="block text-xs px-2 py-1.5 rounded-lg bg-gray-700 text-gray-400 font-medium text-center truncate">{item.forma_pagamento || "A Combinar"}</span>
-        ) : (
-          <>
-            <button onClick={() => setPagamentoOpen(v => !v)}
-              className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg bg-gray-700 text-blue-300 hover:text-blue-200 font-medium text-xs transition-all">
-              <span className="truncate">{item.forma_pagamento || "A Combinar"}</span> <ChevronDown className="w-3 h-3 flex-shrink-0" />
-            </button>
-            {pagamentoOpen && (
-              <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-44 py-1 z-50">
-                {PAGAMENTO_OPTIONS.map(p => (
-                  <button key={p} onClick={() => {
-                    onAlterarPagamento(item, p);
-                    if (["Dinheiro", "PIX"].includes(p)) onAlterarStatus(item, "Pago");
-                    setPagamentoOpen(false);
-                  }}
-                    className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-700 transition-all ${item.forma_pagamento === p ? "text-orange-400" : "text-gray-300"}`}>
-                    {p}
-                  </button>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      {/* Pagamento — só exibe, sem dropdown */}
+      <span className="flex-shrink-0 w-28 text-xs px-2 py-1.5 rounded-lg bg-gray-700 text-gray-300 font-medium text-center truncate">{item.forma_pagamento || "—"}</span>
 
       {/* Valor — largura fixa, alinhado à direita */}
       <span className={`font-bold text-sm flex-shrink-0 w-28 text-right ${item.tipo==="Receita"?"text-green-400":"text-red-400"}`}>R$ {fmt(item.valor)}</span>
