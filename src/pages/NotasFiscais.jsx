@@ -445,32 +445,37 @@ export default function NotasFiscais() {
   const cancelarLancamento = async (nota) => {
     if (!confirm(`Cancelar o lançamento da NF ${nota.numero || ""}? Isso voltará o status para "Importada" para que possa ser relançada.`)) return;
     try {
-      // Reverter estoque: subtrair o que foi dado entrada
-      if (nota.xml_content) {
-        try {
-          const itens = JSON.parse(nota.xml_content);
-          if (Array.isArray(itens)) {
-            const estoqueAtual = await base44.entities.Estoque.list("-created_date", 1000);
-            for (const item of itens) {
-              if (!item.codigo || !item.quantidade) continue;
-              const prod = estoqueAtual.find(e => e.codigo === item.codigo);
-              if (prod) {
-                const novaQtd = Math.max(0, (prod.quantidade || 0) - item.quantidade);
-                await base44.entities.Estoque.update(prod.id, { quantidade: novaQtd });
-              }
-            }
-          }
-        } catch (_) {}
+      const obsNF = `NF ${nota.numero}`;
+
+      // Reverter estoque: busca TODOS os itens que têm histórico de entrada desta NF
+      const estoqueAtual = await base44.entities.Estoque.list("-created_date", 1000);
+      let revertidos = 0;
+      for (const prod of estoqueAtual) {
+        const historico = Array.isArray(prod.historico) ? prod.historico : [];
+        const entradasNF = historico.filter(h => h.tipo === "entrada" && h.observacao === obsNF);
+        if (entradasNF.length === 0) continue;
+
+        // Soma total do que entrou por esta NF
+        const qtdEntrou = entradasNF.reduce((acc, h) => acc + Number(h.quantidade || 0), 0);
+        const novaQtd = Math.max(0, (prod.quantidade || 0) - qtdEntrou);
+        // Remove as entradas desta NF do histórico
+        const historicoLimpo = historico.filter(h => !(h.tipo === "entrada" && h.observacao === obsNF));
+
+        await base44.entities.Estoque.update(prod.id, {
+          quantidade: novaQtd,
+          historico: historicoLimpo,
+        });
+        revertidos++;
       }
-      // Remover lançamento financeiro vinculado
-      try {
-        const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
-        const vinculados = financeiros.filter(f => f.descricao?.includes(`NF ${nota.numero}`));
-        for (const f of vinculados) await base44.entities.Financeiro.delete(f.id);
-      } catch (_) {}
+
+      // Remover lançamentos financeiros vinculados
+      const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
+      const vinculados = financeiros.filter(f => f.descricao?.includes(obsNF));
+      for (const f of vinculados) await base44.entities.Financeiro.delete(f.id);
+
       // Voltar status para Importada
       await base44.entities.NotaFiscal.update(nota.id, { status: "Importada" });
-      feedback("sucesso", "Lançamento cancelado. Nota voltou para Importada.");
+      feedback("sucesso", `Lançamento cancelado. ${revertidos} produto(s) revertido(s) no estoque. Nota voltou para Importada.`);
       load();
     } catch (e) {
       feedback("erro", "Erro ao cancelar lançamento: " + e.message);
