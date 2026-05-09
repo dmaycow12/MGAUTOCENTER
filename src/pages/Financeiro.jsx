@@ -112,7 +112,7 @@ export default function Financeiro() {
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const data = await base44.entities.Financeiro.list("-data_vencimento", 500);
+    const data = await base44.entities.Financeiro.list("-data_vencimento", 2000);
     // Auto-marcar como Atrasado se vencido e não pago
     const hoje = new Date().toISOString().split("T")[0];
     const aAtualizar = data.filter(i => i.status === "Pendente" && i.data_vencimento && i.data_vencimento < hoje);
