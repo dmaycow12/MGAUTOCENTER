@@ -517,24 +517,19 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
         <p className="text-gray-500 text-xs truncate">{item.categoria || "—"} • {item.data_vencimento || "—"}</p>
       </div>
 
-      {/* Status dropdown — largura fixa */}
-      <div className="relative flex-shrink-0 w-28" ref={statusRef}>
-        <button onClick={() => setStatusOpen(v => !v)}
-          className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg font-bold text-white text-xs hover:opacity-90 transition-all"
-          style={{ background: STATUS_BG_LIST[item.status] || "#6b7280" }}>
-          {item.status} <ChevronDown className={`w-3 h-3 transition-transform ${statusOpen ? "rotate-180" : ""}`} />
-        </button>
-        {statusOpen && (
-          <div className="absolute left-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full py-1 z-50">
-            {STATUS_OPTIONS.filter(s => s !== item.status).map(s => (
-              <button key={s} onClick={() => { onAlterarStatus(item, s); setStatusOpen(false); }}
-                className="w-full text-left px-3 py-2 text-xs font-bold text-white hover:opacity-80 transition-all"
-                style={{ background: STATUS_BG_LIST[s], margin: "2px 4px", width: "calc(100% - 8px)", borderRadius: "6px" }}>
-                {s}
-              </button>
-            ))}
-          </div>
-        )}
+      {/* Status — botões sempre visíveis */}
+      <div className="flex gap-1 flex-shrink-0">
+        {STATUS_OPTIONS.map(s => (
+          <button key={s} onClick={() => onAlterarStatus(item, s)}
+            className="px-2 py-1 rounded-lg text-xs font-bold transition-all"
+            style={{
+              background: item.status === s ? STATUS_BG_LIST[s] : "#374151",
+              color: "#fff",
+              opacity: item.status === s ? 1 : 0.45,
+            }}>
+            {s}
+          </button>
+        ))}
       </div>
 
       {/* Pagamento dropdown — largura fixa */}
