@@ -495,6 +495,8 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
   const [pagamentoOpen, setPagamentoOpen] = useState(false);
   const statusRef = useRef(null);
   const pagamentoRef = useRef(null);
+  const pagamentoBtnRef = useRef(null);
+  const [dropUp, setDropUp] = useState(false);
 
   useEffect(() => {
     const handler = (e) => {
@@ -550,8 +552,13 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
       {/* Pagamento — dropdown clicável */}
       <div className="relative flex-shrink-0" ref={pagamentoRef}>
         <button
+          ref={pagamentoBtnRef}
           onClick={() => {
-            if (item.status === "Pago") return; // não permite alterar se já pago
+            if (item.status === "Pago") return;
+            if (pagamentoBtnRef.current) {
+              const rect = pagamentoBtnRef.current.getBoundingClientRect();
+              setDropUp(window.innerHeight - rect.bottom < 160);
+            }
             setPagamentoOpen(v => !v);
           }}
           className="w-28 text-xs px-2 py-1.5 rounded-lg font-medium text-center truncate transition-all"
@@ -566,7 +573,7 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
           {item.forma_pagamento || "—"}
         </button>
         {pagamentoOpen && (
-          <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[140px]">
+          <div className={`absolute right-0 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[140px] ${dropUp ? "bottom-full mb-1" : "top-full mt-1"}`}>
             {PAGAMENTO_OPTIONS.map(op => (
               <button key={op} onClick={() => {
                 // Não permite alterar pra "A Combinar" se status for Pago (já bloqueado pelo cursor)
