@@ -585,10 +585,14 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                       {/* Bloco NF original */}
                       <div className="px-3 pb-2 border-b border-gray-700/50">
                         <p className="text-gray-500 text-[10px] uppercase tracking-wide mb-0.5">Descrição na NF</p>
-                        <p className="text-gray-300 text-xs">
-                          {item.descricaoOriginal || item.descricao}
-                          {item.codigo && <span className="text-gray-500 ml-1.5 font-mono">({item.codigo})</span>}
-                        </p>
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-gray-300 text-xs">{item.descricaoOriginal || item.descricao}</p>
+                          {item.codigo && (
+                            <span className="text-xs font-bold font-mono px-2 py-0.5 rounded flex-shrink-0" style={{ background: "#f9731622", color: "#f97316", border: "1px solid #f9731644" }}>
+                              {item.codigo}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Bloco cadastro (quando vinculado) */}
