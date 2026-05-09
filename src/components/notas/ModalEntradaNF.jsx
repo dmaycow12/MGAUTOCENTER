@@ -134,7 +134,7 @@ function CampoDescricaoBusca({ estoqueExistente, item, onChange }) {
     : [];
 
   const selecionar = (prod) => {
-    onChange({ estoqueVinculado: { id: prod.id, descricao: prod.descricao }, descricao: prod.descricao, codigoInterno: prod.codigo || "", marca: prod.marca || item.marca || "", categoria: prod.categoria || item.categoria || "" });
+    onChange({ estoqueVinculado: { id: prod.id, descricao: prod.descricao, codigo: prod.codigo || "" }, descricao: prod.descricao, codigoInterno: prod.codigo || "", marca: prod.marca || item.marca || "", categoria: prod.categoria || item.categoria || "" });
     setOpen(false);
   };
 
@@ -214,7 +214,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
     const itensComMapa = parsed.itens.map(item => {
       if (item.codigo && mapa[item.codigo]) {
         const vinculo = mapa[item.codigo];
-        return { ...item, estoqueVinculado: vinculo, descricao: vinculo.descricao, codigoInterno: vinculo.codigo || "" };
+        return { ...item, estoqueVinculado: { id: vinculo.id, descricao: vinculo.descricao, codigo: vinculo.codigo || "" }, descricao: vinculo.descricao, codigoInterno: vinculo.codigo || "" };
       }
       return item;
     });
@@ -248,7 +248,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
         if (!encontrado) encontrado = est.find(e => (e.codigos || []).some(c => c?.toUpperCase().trim() === codNorm));
         // Mantém o codigo original da NF (do fornecedor), só adiciona o vínculo
         return encontrado
-          ? { ...item, estoqueVinculado: { id: encontrado.id, descricao: encontrado.descricao }, descricao: encontrado.descricao, codigoInterno: encontrado.codigo || "", marca: item.marca || encontrado.marca || "", categoria: item.categoria || encontrado.categoria || "", descricaoOriginal: item.descricaoOriginal || item.descricao }
+          ? { ...item, estoqueVinculado: { id: encontrado.id, descricao: encontrado.descricao, codigo: encontrado.codigo || "" }, descricao: encontrado.descricao, codigoInterno: encontrado.codigo || "", marca: item.marca || encontrado.marca || "", categoria: item.categoria || encontrado.categoria || "", descricaoOriginal: item.descricaoOriginal || item.descricao }
           : item;
       }));
 
