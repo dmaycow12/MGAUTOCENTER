@@ -508,7 +508,7 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
 
   return (
     <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all"
-      style={item.status === "Atrasado" ? { boxShadow: "inset 0 0 0 1px rgba(220,38,38,0.4), inset 0 0 20px rgba(220,38,38,0.08)" } : {}}>
+      style={item.status === "Atrasado" ? { background: "rgba(220,38,38,0.12)", borderLeft: "3px solid #dc2626" } : {}}>
       {/* Tipo badge — largura fixa */}
       <span className={`text-xs px-2 py-1 rounded-full font-medium flex-shrink-0 w-16 text-center ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo}</span>
 
