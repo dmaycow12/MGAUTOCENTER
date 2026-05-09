@@ -399,12 +399,11 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
             && (e.codigo === (item.codigoInterno || item.codigo || "") || e.descricao === item.descricao)
           );
           if (jaExisteNovo) continue;
-          // Se tem código interno diferente do código do fornecedor, salvar o cód. fornecedor em codigos[]
+          // Código principal = código interno digitado pelo usuário (se houver), senão usa código do fornecedor
           const codigoPrincipal = item.codigoInterno || item.codigo || "";
           const codigoFornecedor = item.codigo?.toUpperCase().trim();
-          const codigosAlternativos = (codigoFornecedor && codigoFornecedor !== codigoPrincipal?.toUpperCase().trim())
-            ? [codigoFornecedor]
-            : [];
+          // SEMPRE salva o código do fornecedor em codigos[] para garantir vínculo automático em futuros lançamentos
+          const codigosAlternativos = codigoFornecedor ? [codigoFornecedor] : [];
 
           const criado = await base44.entities.Estoque.create({
             descricao: item.descricao,
