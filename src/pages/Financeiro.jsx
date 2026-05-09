@@ -520,21 +520,69 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
 
       {/* Status — botões sempre visíveis */}
       <div className="flex gap-1 flex-shrink-0">
-        {STATUS_OPTIONS.map(s => (
-          <button key={s} onClick={() => onAlterarStatus(item, s)}
-            className="px-2 py-1 rounded-lg text-xs font-bold transition-all"
-            style={{
-              background: item.status === s ? STATUS_BG_LIST[s] : "#374151",
-              color: "#fff",
-              opacity: item.status === s ? 1 : 0.45,
-            }}>
-            {s}
-          </button>
-        ))}
+        {STATUS_OPTIONS.map(s => {
+          const bloqueado = s === "Pago" && (!item.forma_pagamento || item.forma_pagamento === "A Combinar");
+          return (
+            <button key={s}
+              onClick={() => {
+                if (bloqueado) {
+                  alert("Defina a forma de pagamento antes de marcar como Pago.");
+                  return;
+                }
+                onAlterarStatus(item, s);
+              }}
+              className="px-2 py-1 rounded-lg text-xs font-bold transition-all"
+              style={{
+                background: item.status === s ? STATUS_BG_LIST[s] : "#374151",
+                color: "#fff",
+                opacity: item.status === s ? 1 : bloqueado ? 0.25 : 0.45,
+                cursor: bloqueado ? "not-allowed" : "pointer",
+              }}
+              title={bloqueado ? "Selecione a forma de pagamento primeiro" : undefined}
+            >
+              {s}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Pagamento — só exibe, sem dropdown */}
-      <span className="flex-shrink-0 w-28 text-xs px-2 py-1.5 rounded-lg bg-gray-700 text-gray-300 font-medium text-center truncate">{item.forma_pagamento || "—"}</span>
+      {/* Pagamento — dropdown clicável */}
+      <div className="relative flex-shrink-0" ref={pagamentoRef}>
+        <button
+          onClick={() => {
+            if (item.status === "Pago") return; // não permite alterar se já pago
+            setPagamentoOpen(v => !v);
+          }}
+          className="w-28 text-xs px-2 py-1.5 rounded-lg font-medium text-center truncate transition-all"
+          style={{
+            background: item.status === "Pago" ? "#374151" : "#374151",
+            color: item.status === "Pago" ? "#9ca3af" : "#fff",
+            cursor: item.status === "Pago" ? "not-allowed" : "pointer",
+            opacity: item.status === "Pago" ? 0.6 : 1,
+          }}
+          title={item.status === "Pago" ? "Não é possível alterar a forma de pagamento de um lançamento já pago" : "Clique para alterar"}
+        >
+          {item.forma_pagamento || "—"}
+        </button>
+        {pagamentoOpen && (
+          <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden min-w-[140px]">
+            {PAGAMENTO_OPTIONS.map(op => (
+              <button key={op} onClick={() => {
+                // Não permite alterar pra "A Combinar" se status for Pago (já bloqueado pelo cursor)
+                // Também não abre dropdown se pago (já bloqueado), mas como segurança extra:
+                if (item.status === "Pago") return;
+                onAlterarPagamento(item, op);
+                setPagamentoOpen(false);
+              }}
+                className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700 hover:text-white transition-all"
+                style={{ background: item.forma_pagamento === op ? "#062C9B" : "transparent", color: item.forma_pagamento === op ? "#fff" : undefined }}
+              >
+                {op}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Valor — largura fixa, alinhado à direita */}
       <span className={`font-bold text-sm flex-shrink-0 w-28 text-right ${item.tipo==="Receita"?"text-green-400":"text-red-400"}`}>R$ {fmt(item.valor)}</span>
