@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Edit, Trash2 } from "lucide-react";
 
 const STATUS_OPTIONS = ["Pendente", "Pago"];
@@ -526,7 +527,7 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
             <button key={s}
               onClick={() => {
                 if (bloqueado) {
-                  alert("Defina a forma de pagamento antes de marcar como Pago.");
+                  toast.error("Defina a forma de pagamento antes de marcar como Pago.");
                   return;
                 }
                 onAlterarStatus(item, s);
