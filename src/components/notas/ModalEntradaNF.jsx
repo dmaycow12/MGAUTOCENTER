@@ -239,7 +239,14 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
 
       // Tentar auto-vincular por código principal OU por código alternativo (codigos[])
       setItens(prev => prev.map(item => {
-        if (item.estoqueVinculado) return item; // já tem mapeamento salvo
+        // Se já tem vínculo do mapa, enriquecer com o código real do estoque
+        if (item.estoqueVinculado) {
+          const prodReal = est.find(e => e.id === item.estoqueVinculado.id);
+          if (prodReal) {
+            return { ...item, estoqueVinculado: { id: prodReal.id, descricao: prodReal.descricao, codigo: prodReal.codigo || "" }, codigoInterno: prodReal.codigo || "" };
+          }
+          return item;
+        }
         if (!item.codigo) return item;
         const codNorm = item.codigo.toUpperCase().trim();
         // 1. Código principal
