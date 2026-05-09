@@ -488,6 +488,11 @@ export default function NotasFiscais() {
       setAvisoExclusao(nota);
       return;
     }
+    // Se status Importada, também bloqueia exclusão direta (usuário deve usar Cancelar Lançamento)
+    if (nota?.status === 'Importada') {
+      setAvisoExclusao(nota);
+      return;
+    }
     if (!confirm("Excluir esta nota fiscal?")) return;
     if (nota?.numero) {
       const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
@@ -1700,6 +1705,9 @@ export default function NotasFiscais() {
               Notas com status <span className="font-bold text-white">"{avisoExclusao.status}"</span> não podem ser excluídas.
               {avisoExclusao.status === 'Lançada' && (
                 <p className="mt-2 text-gray-400">Para corrigir, use o botão <span className="text-orange-400 font-medium">Cancelar Lançamento</span> (ícone <Ban className="w-3 h-3 inline" />) para voltar ao status "Importada" e relançar.</p>
+              )}
+              {avisoExclusao.status === 'Importada' && (
+                <p className="mt-2 text-gray-400">Para excluir, primeiro use <span className="text-orange-400 font-medium">Cancelar Lançamento</span> (ícone <Ban className="w-3 h-3 inline" />) para reverter o estoque. Depois a nota poderá ser excluída.</p>
               )}
               {avisoExclusao.status === 'Emitida' && (
                 <p className="mt-2 text-gray-400">Para cancelar uma nota emitida, use o botão <span className="text-orange-400 font-medium">Cancelar Nota</span> na SEFAZ.</p>
