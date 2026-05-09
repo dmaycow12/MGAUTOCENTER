@@ -593,15 +593,17 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
 
                       {/* Bloco cadastro (quando vinculado) */}
                       {item.estoqueVinculado && (
-                        <div className="px-3 py-2 border-b border-gray-700/50" style={{ background: "#00ff0008" }}>
-                          <p className="text-gray-500 text-[10px] uppercase tracking-wide mb-0.5">Cadastro Vinculado</p>
-                          <p className="text-white text-sm font-semibold">
-                            {item.estoqueVinculado.descricao}
-                            {item.codigoInterno && (
-                              <span className="text-gray-400 text-xs ml-2 font-mono font-normal">[{item.codigoInterno}]</span>
-                            )}
-                          </p>
-                        </div>
+                       <div className="px-3 py-2 border-b border-gray-700/50" style={{ background: "#00ff0008" }}>
+                         <p className="text-gray-500 text-[10px] uppercase tracking-wide mb-0.5">Cadastro Vinculado</p>
+                         <div className="flex items-center justify-between gap-2">
+                           <p className="text-white text-sm font-semibold">{item.estoqueVinculado.descricao}</p>
+                           {(item.codigoInterno || item.estoqueVinculado.codigo) && (
+                             <span className="text-xs font-bold font-mono px-2 py-0.5 rounded flex-shrink-0" style={{ background: "#00ff0022", color: "#00ff00", border: "1px solid #00ff0044" }}>
+                               {item.codigoInterno || item.estoqueVinculado.codigo}
+                             </span>
+                           )}
+                         </div>
+                       </div>
                       )}
 
                       {/* Bloco valores */}
