@@ -113,8 +113,15 @@ function parsearXML(xmlOriginal) {
     "05": "Crediário", "10": "Vale Alimentação", "15": "Boleto", "17": "PIX", "90": "Sem Pagamento", "99": "Outros",
   };
   // Prioridade: boletos detectados > tPag do XML > fallback Dinheiro
-  let forma_pagamento_detectada = boletos.length > 0 ? "Boleto" : "Dinheiro";
-  if (pagamentos.length > 0) forma_pagamento_detectada = mapaForma[pagamentos[0].tPag] || forma_pagamento_detectada;
+  // Se há <dup> no XML, é sempre Boleto independente do tPag
+  let forma_pagamento_detectada;
+  if (boletos.length > 0) {
+    forma_pagamento_detectada = "Boleto";
+  } else if (pagamentos.length > 0) {
+    forma_pagamento_detectada = mapaForma[pagamentos[0].tPag] || "Dinheiro";
+  } else {
+    forma_pagamento_detectada = "Dinheiro";
+  }
 
   return {
     chave, numero, serie, valor, dataEmissao, emitente, cnpjEmit, dest_nome,
