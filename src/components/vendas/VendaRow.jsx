@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
-import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { ChevronDown, Pencil, Printer, Trash2, AlertTriangle } from "lucide-react";
+import { Pencil, Printer, Trash2, AlertTriangle } from "lucide-react";
 import { gerarHTMLImpressao } from "./vendaImpressao";
 import { reduzirEstoque, restaurarEstoque, excluirLancamentosOS } from "./estoqueUtils";
 
@@ -82,7 +81,7 @@ const InlineEdit = forwardRef(function InlineEdit({ value, onSave, placeholder =
   );
 });
 
-const STATUS_OPTIONS = ["Aberto", "Orçamento", "Concluído"];
+const STATUS_OPTIONS = ["Aberto", "Concluído"];
 const STATUS_STYLE = {
   "Aberto":    { style: { background: "#cc0000", color: "#fff" } },
   "Orçamento": { style: { background: "#062C9B", color: "#fff" } },
@@ -109,7 +108,6 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
     : (clienteCadastro?.nome_fantasia || os.cliente_nome_fantasia || os.cliente_nome || "—");
   const notasOs = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Rascunho');
   const navigate = useNavigate();
-  const [statusOpen, setStatusOpen] = useState(false);
   const [showAviso, setShowAviso] = useState(false);
   const [statusPendente, setStatusPendente] = useState(null);
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
@@ -125,35 +123,6 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
     onRefresh?.();
   };
 
-  const statusRef = useRef(null);
-  const statusBtnRef = useRef(null);
-  const [statusPos, setStatusPos] = useState({ top: 0, left: 0 });
-
-  const calcStatusPos = () => {
-    if (!statusBtnRef.current) return;
-    const rect = statusBtnRef.current.getBoundingClientRect();
-    const itemHeight = STATUS_OPTIONS.length * 36;
-    const openUp = window.innerHeight - rect.bottom < itemHeight + 8;
-    setStatusPos({
-      top: openUp ? rect.top - itemHeight - 4 : rect.bottom + 4,
-      left: rect.left,
-    });
-  };
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (statusRef.current && !statusRef.current.contains(e.target) && statusBtnRef.current && !statusBtnRef.current.contains(e.target)) setStatusOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  useEffect(() => {
-    if (!statusOpen) return;
-    const onScroll = () => calcStatusPos();
-    window.addEventListener("scroll", onScroll, true);
-    return () => window.removeEventListener("scroll", onScroll, true);
-  }, [statusOpen]);
 
   const gerarLancamentosFinanceiros = async (osData) => {
     const gerarParcelasBase = (total, qtd, dataBase) => {
@@ -185,7 +154,6 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
   };
 
   const alterarStatus = async (novoStatus) => {
-    setStatusOpen(false);
     const eraConcluido = os.status === "Concluído";
     const ficaConcluido = novoStatus === "Concluído";
     if (eraConcluido && !ficaConcluido) { setStatusPendente(novoStatus); setShowAviso(true); return; }
@@ -376,39 +344,19 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
         {colunas.placa && <td className="px-4 py-3"><InlineEdit ref={placaRef} value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono onNext={() => kmRef.current?.startEdit()} /></td>}
         {colunas.km && <td className="px-4 py-3"><InlineEdit ref={kmRef} value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v || null)} placeholder="—" /></td>}
         {colunas.status && <td className="px-4 py-3">
-          <div className="relative inline-block">
-            <button ref={statusBtnRef}
-              onClick={() => {
-                calcStatusPos();
-                setStatusOpen(v => !v);
-              }}
-              className="flex items-center justify-center gap-1 text-xs h-9 px-3 rounded-md font-semibold hover:opacity-90 transition-all whitespace-nowrap w-40"
-              style={style.style}>
-              {os.status || "—"}
-              <ChevronDown className="w-3 h-3 flex-shrink-0" />
-            </button>
-            {statusOpen && createPortal(
-               <div
-                 ref={statusRef}
-                 style={{
-                   position: "fixed",
-                   top: statusPos.top,
-                   left: statusPos.left,
-                   width: 160,
-                   zIndex: 999999,
-                 }}
-                 className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden"
-               >
-                 {STATUS_OPTIONS.map(s => (
-                   <button key={s} onClick={() => alterarStatus(s)}
-                     className="w-full flex items-center justify-center text-xs font-semibold transition-all hover:opacity-90 whitespace-nowrap"
-                     style={{ background: STATUS_STYLE[s].style.background, color: "#fff", height: "36px" }}>
-                     {s}
-                   </button>
-                 ))}
-               </div>,
-               document.body
-             )}
+          <div className="flex gap-1">
+            {STATUS_OPTIONS.map(s => (
+              <button key={s} onClick={() => alterarStatus(s)}
+                className="flex items-center justify-center text-xs h-8 px-3 rounded-md font-semibold transition-all whitespace-nowrap"
+                style={{
+                  background: os.status === s ? STATUS_STYLE[s].style.background : "#1f2937",
+                  color: "#fff",
+                  opacity: os.status === s ? 1 : 0.5,
+                  minWidth: "72px",
+                }}>
+                {s}
+              </button>
+            ))}
           </div>
         </td>}
         {colunas.valor && <td className="px-4 py-3 text-right font-bold whitespace-nowrap" style={{color:'#00ff00'}}>{fmtValor(os.valor_total)}</td>}
