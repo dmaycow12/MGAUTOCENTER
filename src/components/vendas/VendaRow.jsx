@@ -368,15 +368,15 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
               <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </button>
             {statusOpen && statusBtnRef.current && createPortal(
-              <div
-                ref={statusRef}
-                style={{
-                  position: "fixed",
-                  top: statusBtnRef.current.getBoundingClientRect().bottom + 4,
-                  left: statusBtnRef.current.getBoundingClientRect().left,
-                  width: 140,
-                  zIndex: 99999,
-                }}
+               <div
+                 ref={statusRef}
+                 style={{
+                   position: "fixed",
+                   top: statusBtnRef.current.getBoundingClientRect().bottom + 4,
+                   left: statusBtnRef.current.getBoundingClientRect().left,
+                   width: 140,
+                   zIndex: 999999,
+                 }}
                 className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl space-y-1 p-1"
               >
                 {STATUS_OPTIONS.map(s => (
