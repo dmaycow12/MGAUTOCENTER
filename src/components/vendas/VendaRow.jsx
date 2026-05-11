@@ -99,7 +99,7 @@ function fmtValor(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDelete, onRefresh, colunas = COLUNAS_PADRAO }) {
+export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDelete, onRefresh, colunas = COLUNAS_PADRAO, ocultarVeiculo = false }) {
   const clienteCadastro = clientes.find(c => c.id === os.cliente_id);
   const isConsumidor = os.cliente_nome?.toUpperCase() === "CONSUMIDOR";
   // Para CONSUMIDOR, usa o nome fantasia salvo NA VENDA (editável por venda). Para outros, usa o do cadastro como fallback.
@@ -340,9 +340,9 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
         {colunas.data && <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>}
         {colunas.cliente && <td className="px-4 py-3"><p className="text-white text-sm font-medium">{nomeExibido}</p></td>}
         {colunas.contato && <td className="px-4 py-3"><InlineEdit ref={contatoRef} value={os.cliente_telefone} onSave={v => saveField("cliente_telefone", v)} placeholder="—" onNext={() => veiculoRef.current?.startEdit()} isPhone={true} /></td>}
-        {colunas.veiculo && <td className="px-4 py-3"><InlineEdit ref={veiculoRef} value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onNext={() => placaRef.current?.startEdit()} /></td>}
-        {colunas.placa && <td className="px-4 py-3"><InlineEdit ref={placaRef} value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono onNext={() => kmRef.current?.startEdit()} /></td>}
-        {colunas.km && <td className="px-4 py-3"><InlineEdit ref={kmRef} value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v || null)} placeholder="—" /></td>}
+        {colunas.veiculo && !ocultarVeiculo && <td className="px-4 py-3"><InlineEdit ref={veiculoRef} value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onNext={() => placaRef.current?.startEdit()} /></td>}
+        {colunas.placa && !ocultarVeiculo && <td className="px-4 py-3"><InlineEdit ref={placaRef} value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono onNext={() => kmRef.current?.startEdit()} /></td>}
+        {colunas.km && !ocultarVeiculo && <td className="px-4 py-3"><InlineEdit ref={kmRef} value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v || null)} placeholder="—" /></td>}
         {colunas.status && <td className="px-4 py-3">
           <div className="flex gap-1">
             {STATUS_OPTIONS.map(s => (
