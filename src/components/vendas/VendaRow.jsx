@@ -132,7 +132,12 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
   const calcStatusPos = () => {
     if (!statusBtnRef.current) return;
     const rect = statusBtnRef.current.getBoundingClientRect();
-    setStatusPos({ top: rect.bottom + 4, left: rect.left });
+    const itemHeight = STATUS_OPTIONS.length * 32 + 8;
+    const openUp = window.innerHeight - rect.bottom < itemHeight + 8;
+    setStatusPos({
+      top: openUp ? rect.top - itemHeight - 4 : rect.bottom + 4,
+      left: rect.left,
+    });
   };
 
   useEffect(() => {
