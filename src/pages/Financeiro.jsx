@@ -581,9 +581,9 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
           {item.forma_pagamento || "—"}
         </button>
         {pagamentoOpen && createPortal(
-          <div
-            ref={pagamentoRef}
-            style={{ position: "fixed", top: dropPos.top, left: dropPos.left, width: dropPos.width, zIndex: 9999 }}
+           <div
+             ref={pagamentoRef}
+             style={{ position: "fixed", top: dropPos.top, left: dropPos.left, width: dropPos.width, zIndex: 999999 }}
             className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden"
           >
             {PAGAMENTO_OPTIONS.map(op => (
