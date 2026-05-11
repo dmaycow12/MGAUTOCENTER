@@ -198,7 +198,7 @@ export default function Vendas() {
       const matchStatus = filtroStatus.length === 0 || filtroStatus.includes(o.status);
       const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
       const temVeiculo = !!(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo);
-      const matchTipo = filtroTipo.length === 0 || filtroTipo.includes(temVeiculo ? "patio" : "balcao");
+      const matchTipo = filtroTipo.length > 0 && filtroTipo.includes(temVeiculo ? "patio" : "balcao");
       return matchSearch && matchStatus && matchPeriodo && matchTipo;
     })
     .sort((a, b) => (Number(a.numero || 0) || Number.MAX_VALUE) - (Number(b.numero || 0) || Number.MAX_VALUE));
