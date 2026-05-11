@@ -16,6 +16,7 @@ export default function Vendas() {
     const saved = localStorage.getItem("os_filtroStatus");
     return saved ? JSON.parse(saved) : [];
   });
+  const [filtroTipo, setFiltroTipo] = useState(() => localStorage.getItem("os_filtroTipo") || "todos");
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
   const [showEmissaoMassa, setShowEmissaoMassa] = useState(false);
@@ -61,6 +62,7 @@ export default function Vendas() {
   // Persistir filtros no localStorage
   useEffect(() => { localStorage.setItem("os_search", search); }, [search]);
   useEffect(() => { localStorage.setItem("os_filtroStatus", JSON.stringify(filtroStatus)); }, [filtroStatus]);
+  useEffect(() => { localStorage.setItem("os_filtroTipo", filtroTipo); }, [filtroTipo]);
   useEffect(() => { localStorage.setItem("os_filtroMes", filtroMes); }, [filtroMes]);
   useEffect(() => { localStorage.setItem("os_filtroAno", filtroAno); }, [filtroAno]);
   useEffect(() => { localStorage.setItem("os_usandoOutroPeriodo", usandoOutroPeriodo); }, [usandoOutroPeriodo]);
@@ -192,7 +194,9 @@ export default function Vendas() {
         o.veiculo_modelo?.toLowerCase().includes(s);
       const matchStatus = filtroStatus.length === 0 || filtroStatus.includes(o.status);
       const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
-      return matchSearch && matchStatus && matchPeriodo;
+      const temVeiculo = !!(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo);
+      const matchTipo = filtroTipo === "todos" || (filtroTipo === "patio" ? temVeiculo : !temVeiculo);
+      return matchSearch && matchStatus && matchPeriodo && matchTipo;
     })
     .sort((a, b) => (Number(a.numero || 0) || Number.MAX_VALUE) - (Number(b.numero || 0) || Number.MAX_VALUE));
 
@@ -230,6 +234,20 @@ export default function Vendas() {
             <button key={s} onClick={() => toggleStatus(s)}
               className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroStatus.includes(s) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {s}
+            </button>
+          ))}
+        </div>
+
+        {/* Linha 3: filtro Pátio / Balcão */}
+        <div className="flex gap-2">
+          {[
+            { key: "todos", label: "Todos" },
+            { key: "patio", label: "Pátio (com veículo)" },
+            { key: "balcao", label: "Balcão (sem veículo)" },
+          ].map(({ key, label }) => (
+            <button key={key} onClick={() => setFiltroTipo(key)}
+              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroTipo === key ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              {label}
             </button>
           ))}
         </div>
