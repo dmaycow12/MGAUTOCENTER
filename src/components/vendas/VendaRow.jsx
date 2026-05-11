@@ -127,6 +127,13 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
 
   const statusRef = useRef(null);
   const statusBtnRef = useRef(null);
+  const [statusPos, setStatusPos] = useState({ top: 0, left: 0 });
+
+  const calcStatusPos = () => {
+    if (!statusBtnRef.current) return;
+    const rect = statusBtnRef.current.getBoundingClientRect();
+    setStatusPos({ top: rect.bottom + 4, left: rect.left });
+  };
 
   useEffect(() => {
     const handler = (e) => {
@@ -135,6 +142,13 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  useEffect(() => {
+    if (!statusOpen) return;
+    const onScroll = () => calcStatusPos();
+    window.addEventListener("scroll", onScroll, true);
+    return () => window.removeEventListener("scroll", onScroll, true);
+  }, [statusOpen]);
 
   const gerarLancamentosFinanceiros = async (osData) => {
     const gerarParcelasBase = (total, qtd, dataBase) => {
@@ -360,6 +374,7 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
           <div className="relative inline-block">
             <button ref={statusBtnRef}
               onClick={() => {
+                calcStatusPos();
                 setStatusOpen(v => !v);
               }}
               className="flex items-center justify-center gap-1 text-xs h-6 px-3 rounded-md font-semibold hover:opacity-90 transition-all whitespace-nowrap w-40"
@@ -367,13 +382,13 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
               {os.status || "—"}
               <ChevronDown className="w-3 h-3 flex-shrink-0" />
             </button>
-            {statusOpen && statusBtnRef.current && createPortal(
+            {statusOpen && createPortal(
                <div
                  ref={statusRef}
                  style={{
                    position: "fixed",
-                   top: statusBtnRef.current.getBoundingClientRect().bottom + 4,
-                   left: statusBtnRef.current.getBoundingClientRect().left,
+                   top: statusPos.top,
+                   left: statusPos.left,
                    width: 140,
                    zIndex: 999999,
                  }}

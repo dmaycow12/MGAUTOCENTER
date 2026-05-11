@@ -495,7 +495,19 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
   const [pagamentoOpen, setPagamentoOpen] = useState(false);
   const pagamentoRef = useRef(null);
   const pagamentoBtnRef = useRef(null);
-  const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0, openUp: false });
+  const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0 });
+
+  const calcPos = () => {
+    if (!pagamentoBtnRef.current) return;
+    const rect = pagamentoBtnRef.current.getBoundingClientRect();
+    const itemHeight = PAGAMENTO_OPTIONS.length * 36;
+    const openUp = window.innerHeight - rect.bottom < itemHeight + 8;
+    setDropPos({
+      top: openUp ? rect.top - itemHeight - 4 : rect.bottom + 4,
+      left: rect.right - 144,
+      width: 144,
+    });
+  };
 
   useEffect(() => {
     const handler = (e) => {
@@ -508,17 +520,16 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  useEffect(() => {
+    if (!pagamentoOpen) return;
+    const onScroll = () => calcPos();
+    window.addEventListener("scroll", onScroll, true);
+    return () => window.removeEventListener("scroll", onScroll, true);
+  }, [pagamentoOpen]);
+
   const abrirDropdown = () => {
     if (item.status === "Pago") return;
-    const rect = pagamentoBtnRef.current.getBoundingClientRect();
-    const itemHeight = PAGAMENTO_OPTIONS.length * 36;
-    const openUp = window.innerHeight - rect.bottom < itemHeight + 8;
-    setDropPos({
-      top: openUp ? rect.top - itemHeight - 4 : rect.bottom + 4,
-      left: rect.right - 144,
-      width: 144,
-      openUp,
-    });
+    calcPos();
     setPagamentoOpen(v => !v);
   };
 
