@@ -205,6 +205,23 @@ export default function Vendas() {
 
   const ordensParaMassa = filtradas;
 
+  const fmtValorSimples = v => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  // Totais por tipo (aplica todos os filtros exceto o de tipo)
+  const ordensComFiltrosBase = ordens.filter(o => {
+    const s = search.toLowerCase();
+    const matchSearch = !search ||
+      o.numero?.toLowerCase().includes(s) ||
+      o.cliente_nome?.toLowerCase().includes(s) ||
+      o.veiculo_placa?.toLowerCase().includes(s) ||
+      o.veiculo_modelo?.toLowerCase().includes(s);
+    const matchStatus = filtroStatus.length === 0 || filtroStatus.includes(o.status);
+    const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
+    return matchSearch && matchStatus && matchPeriodo;
+  });
+  const totalPatio = ordensComFiltrosBase.filter(o => !!(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo)).reduce((acc, o) => acc + (o.valor_total || 0), 0);
+  const totalBalcao = ordensComFiltrosBase.filter(o => !(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo)).reduce((acc, o) => acc + (o.valor_total || 0), 0);
+
   return (
     <div className="space-y-4">
       {/* Controles — mesmo padrão do Financeiro */}
@@ -244,12 +261,13 @@ export default function Vendas() {
         {/* Linha 3: filtro Pátio / Balcão */}
         <div className="flex gap-2">
           {[
-            { key: "patio", label: "Pátio" },
-            { key: "balcao", label: "Balcão" },
-          ].map(({ key, label }) => (
+            { key: "patio", label: "Pátio", total: totalPatio },
+            { key: "balcao", label: "Balcão", total: totalBalcao },
+          ].map(({ key, label, total }) => (
             <button key={key} onClick={() => setFiltroTipo(prev => prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key])}
-              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroTipo.includes(key) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
-              {label}
+              className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 ${filtroTipo.includes(key) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              <span>{label}</span>
+              <span className={`text-xs font-semibold ${filtroTipo.includes(key) ? "text-green-300" : "text-gray-500"}`}>{fmtValorSimples(total)}</span>
             </button>
           ))}
         </div>
