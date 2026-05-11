@@ -132,7 +132,7 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
   const calcStatusPos = () => {
     if (!statusBtnRef.current) return;
     const rect = statusBtnRef.current.getBoundingClientRect();
-    const itemHeight = STATUS_OPTIONS.length * 32 + 8;
+    const itemHeight = STATUS_OPTIONS.length * 36;
     const openUp = window.innerHeight - rect.bottom < itemHeight + 8;
     setStatusPos({
       top: openUp ? rect.top - itemHeight - 4 : rect.bottom + 4,
@@ -382,7 +382,7 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
                 calcStatusPos();
                 setStatusOpen(v => !v);
               }}
-              className="flex items-center justify-center gap-1 text-xs h-6 px-3 rounded-md font-semibold hover:opacity-90 transition-all whitespace-nowrap w-40"
+              className="flex items-center justify-center gap-1 text-xs h-9 px-3 rounded-md font-semibold hover:opacity-90 transition-all whitespace-nowrap w-40"
               style={style.style}>
               {os.status || "—"}
               <ChevronDown className="w-3 h-3 flex-shrink-0" />
@@ -394,21 +394,21 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
                    position: "fixed",
                    top: statusPos.top,
                    left: statusPos.left,
-                   width: 140,
+                   width: 160,
                    zIndex: 999999,
                  }}
-                className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl space-y-1 p-1"
-              >
-                {STATUS_OPTIONS.map(s => (
-                  <button key={s} onClick={() => alterarStatus(s)}
-                    className="w-full flex items-center justify-center h-6 text-xs font-semibold rounded-md transition-all hover:opacity-90 whitespace-nowrap"
-                    style={{ background: STATUS_STYLE[s].style.background, color: "#fff" }}>
-                    {s}
-                  </button>
-                ))}
-              </div>,
-              document.body
-            )}
+                 className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden"
+               >
+                 {STATUS_OPTIONS.map(s => (
+                   <button key={s} onClick={() => alterarStatus(s)}
+                     className="w-full flex items-center justify-center text-xs font-semibold transition-all hover:opacity-90 whitespace-nowrap"
+                     style={{ background: STATUS_STYLE[s].style.background, color: "#fff", height: "36px" }}>
+                     {s}
+                   </button>
+                 ))}
+               </div>,
+               document.body
+             )}
           </div>
         </td>}
         {colunas.valor && <td className="px-4 py-3 text-right font-bold whitespace-nowrap" style={{color:'#00ff00'}}>{fmtValor(os.valor_total)}</td>}
