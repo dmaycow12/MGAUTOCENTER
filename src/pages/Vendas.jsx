@@ -17,8 +17,8 @@ export default function Vendas() {
     return saved ? JSON.parse(saved) : [];
   });
   const [filtroTipo, setFiltroTipo] = useState(() => {
-    const saved = localStorage.getItem("os_filtroTipo2");
-    return saved ? JSON.parse(saved) : [];
+   const saved = localStorage.getItem("os_filtroTipo2");
+   return saved ? JSON.parse(saved) : null;
   });
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
@@ -199,7 +199,7 @@ export default function Vendas() {
       const matchStatus = filtroStatus.length > 0 && filtroStatus.includes(o.status);
       const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
       const temVeiculo = !!(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo);
-      const matchTipo = filtroTipo.length > 0 && filtroTipo.includes(temVeiculo ? "patio" : "balcao");
+      const matchTipo = !filtroTipo || (filtroTipo === "patio" ? temVeiculo : !temVeiculo);
       return matchSearch && matchStatus && matchPeriodo && matchTipo;
     })
     .sort((a, b) => (Number(a.numero || 0) || Number.MAX_VALUE) - (Number(b.numero || 0) || Number.MAX_VALUE));
@@ -265,10 +265,10 @@ export default function Vendas() {
             { key: "patio", label: "Pátio", total: totalPatio },
             { key: "balcao", label: "Balcão", total: totalBalcao },
           ].map(({ key, label, total }) => (
-            <button key={key} onClick={() => setFiltroTipo(prev => prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key])}
-              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all relative ${filtroTipo.includes(key) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+            <button key={key} onClick={() => setFiltroTipo(filtroTipo === key ? null : key)}
+              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all relative ${filtroTipo === key ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               <span>{label}</span>
-              {filtroTipo.includes(key) && (
+              {filtroTipo === key && (
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-white">
                   {Number(total).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </span>
@@ -421,9 +421,9 @@ export default function Vendas() {
                  {colunasVisiveis.data && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">Data</th>}
                  {colunasVisiveis.cliente && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider flex-1">Cliente</th>}
                  {colunasVisiveis.contato && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Contato</th>}
-                 {colunasVisiveis.veiculo && !(!filtroTipo.includes("patio") && filtroTipo.includes("balcao")) && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Veículo</th>}
-                 {colunasVisiveis.placa && !(!filtroTipo.includes("patio") && filtroTipo.includes("balcao")) && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">Placa</th>}
-                 {colunasVisiveis.km && !(!filtroTipo.includes("patio") && filtroTipo.includes("balcao")) && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">KM</th>}
+                 {colunasVisiveis.veiculo && filtroTipo !== "balcao" && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Veículo</th>}
+                 {colunasVisiveis.placa && filtroTipo !== "balcao" && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">Placa</th>}
+                 {colunasVisiveis.km && filtroTipo !== "balcao" && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">KM</th>}
                  {colunasVisiveis.status && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Status</th>}
                  {colunasVisiveis.valor && <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Valor</th>}
                  {colunasVisiveis.pagamento && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-24">Pgto</th>}
@@ -440,7 +440,7 @@ export default function Vendas() {
                     notas={notas}
                     clientes={clientes}
                     colunas={colunasVisiveis}
-                    ocultarVeiculo={!filtroTipo.includes("patio") && filtroTipo.includes("balcao")}
+                    ocultarVeiculo={filtroTipo === "balcao"}
                     onEdit={() => { setEditando(os); setShowForm(true); }}
                     onDelete={() => excluir(os.id)}
                     onRefresh={load}
