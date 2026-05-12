@@ -18,7 +18,13 @@ export default function Vendas() {
   });
   const [filtroTipo, setFiltroTipo] = useState(() => {
    const saved = localStorage.getItem("os_filtroTipo2");
-   return saved ? JSON.parse(saved) : "patio";
+   if (saved) {
+     const parsed = JSON.parse(saved);
+     // migrar formato antigo (string) para array
+     if (typeof parsed === "string") return [parsed];
+     return parsed;
+   }
+   return ["patio"];
   });
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
@@ -199,7 +205,7 @@ export default function Vendas() {
       const matchStatus = filtroStatus.length > 0 && filtroStatus.includes(o.status);
       const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
       const temVeiculo = !!(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo);
-      const matchTipo = filtroTipo === "patio" ? temVeiculo : !temVeiculo;
+      const matchTipo = filtroTipo.length === 0 || (filtroTipo.includes("patio") && temVeiculo) || (filtroTipo.includes("balcao") && !temVeiculo);
       return matchSearch && matchStatus && matchPeriodo && matchTipo;
     })
     .sort((a, b) => (Number(a.numero || 0) || Number.MAX_VALUE) - (Number(b.numero || 0) || Number.MAX_VALUE));
@@ -260,14 +266,14 @@ export default function Vendas() {
           ))}
         </div>
 
-        {/* Linha 3: filtro Pátio / Balcão */}
+        {/* Linha 3: filtro Pátio / Balcão — multi-select */}
         <div className="flex gap-2">
           {[
             { key: "patio", label: "Pátio" },
             { key: "balcao", label: "Balcão" },
           ].map(({ key, label }) => (
-            <button key={key} onClick={() => setFiltroTipo(key)}
-              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroTipo === key ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+            <button key={key} onClick={() => setFiltroTipo(prev => prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key])}
+              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroTipo.includes(key) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {label}
             </button>
           ))}
@@ -275,13 +281,11 @@ export default function Vendas() {
 
         {/* Cards de totais */}
         <div className="flex gap-2">
-          <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 flex items-center justify-between">
-            <span className="text-xs text-gray-400 font-medium">Pátio</span>
-            <span className="text-sm font-bold text-white">{fmtTotal(totalPatio)}</span>
+          <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 flex items-center justify-center">
+            <span className="text-sm font-bold text-green-400">{fmtTotal(totalPatio)}</span>
           </div>
-          <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 flex items-center justify-between">
-            <span className="text-xs text-gray-400 font-medium">Balcão</span>
-            <span className="text-sm font-bold text-white">{fmtTotal(totalBalcao)}</span>
+          <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 flex items-center justify-center">
+            <span className="text-sm font-bold text-green-400">{fmtTotal(totalBalcao)}</span>
           </div>
         </div>
 
@@ -291,7 +295,7 @@ export default function Vendas() {
             <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
               <ChevronLeft className="w-3 h-3" />
             </button>
-            <button onClick={() => { setUsandoOutroPeriodo(false); setCustomRange(null); }} className="flex-1 text-center truncate h-full hover:bg-white/10 transition-all cursor-pointer">{MESES[filtroMes - 1]} - {filtroAno}</button>
+            <button onClick={() => { setUsandoOutroPeriodo(false); setCustomRange(null); }} className="flex-1 text-center h-full hover:bg-white/10 transition-all cursor-pointer px-1" style={{fontSize:"clamp(9px,2.2vw,13px)"}}>{MESES[filtroMes - 1]} - {filtroAno}</button>
             <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
               <ChevronRight className="w-3 h-3" />
             </button>
@@ -429,9 +433,9 @@ export default function Vendas() {
                  {colunasVisiveis.data && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">Data</th>}
                  {colunasVisiveis.cliente && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider flex-1">Cliente</th>}
                  {colunasVisiveis.contato && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Contato</th>}
-                 {colunasVisiveis.veiculo && filtroTipo !== "balcao" && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Veículo</th>}
-                 {colunasVisiveis.placa && filtroTipo !== "balcao" && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">Placa</th>}
-                 {colunasVisiveis.km && filtroTipo !== "balcao" && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">KM</th>}
+                 {colunasVisiveis.veiculo && filtroTipo.includes("patio") && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Veículo</th>}
+                 {colunasVisiveis.placa && filtroTipo.includes("patio") && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">Placa</th>}
+                 {colunasVisiveis.km && filtroTipo.includes("patio") && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">KM</th>}
                  {colunasVisiveis.status && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Status</th>}
                  {colunasVisiveis.valor && <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Valor</th>}
                  {colunasVisiveis.pagamento && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-24">Pgto</th>}
@@ -448,7 +452,7 @@ export default function Vendas() {
                     notas={notas}
                     clientes={clientes}
                     colunas={colunasVisiveis}
-                    ocultarVeiculo={filtroTipo === "balcao"}
+                    ocultarVeiculo={filtroTipo.includes("balcao") && !filtroTipo.includes("patio")}
                     onEdit={() => { setEditando(os); setShowForm(true); }}
                     onDelete={() => excluir(os.id)}
                     onRefresh={load}
