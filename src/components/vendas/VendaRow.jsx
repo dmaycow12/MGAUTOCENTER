@@ -102,9 +102,9 @@ function fmtValor(v) {
 export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDelete, onRefresh, colunas = COLUNAS_PADRAO, ocultarVeiculo = false }) {
   const clienteCadastro = clientes.find(c => c.id === os.cliente_id);
   const isConsumidor = os.cliente_nome?.toUpperCase() === "CONSUMIDOR";
-  // Para CONSUMIDOR, usa o nome fantasia salvo NA VENDA (editável por venda). Para outros, usa o do cadastro como fallback.
-  const nomeExibido = isConsumidor
-    ? (os.cliente_nome_fantasia || os.cliente_nome || "—")
+  // Mostra apenas nome social: para CONSUMIDOR usa o da venda (ou "CONSUMIDOR" como padrão); para outros usa nome_fantasia do cadastro ou da venda
+  const nomeSocialExibido = isConsumidor
+    ? (os.cliente_nome_fantasia || "CONSUMIDOR")
     : (clienteCadastro?.nome_fantasia || os.cliente_nome_fantasia || os.cliente_nome || "—");
   const notasOs = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Rascunho');
   const navigate = useNavigate();
@@ -340,9 +340,10 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
         <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">#{os.numero || "—"}</td>
         {colunas.data && <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>}
         {colunas.cliente && <td className="px-4 py-3">
-          <p className="text-white text-sm font-medium">{os.cliente_nome || "—"}</p>
-          {isConsumidor && (
-            <InlineEdit ref={nomeSocialRef} value={os.cliente_nome_fantasia} onSave={v => saveField("cliente_nome_fantasia", v)} placeholder="Nome social..." />
+          {isConsumidor ? (
+            <InlineEdit ref={nomeSocialRef} value={os.cliente_nome_fantasia || "CONSUMIDOR"} onSave={v => saveField("cliente_nome_fantasia", v)} placeholder="CONSUMIDOR" />
+          ) : (
+            <p className="text-white text-sm font-medium">{nomeSocialExibido}</p>
           )}
         </td>}
         {colunas.contato && <td className="px-4 py-3"><InlineEdit ref={contatoRef} value={os.cliente_telefone} onSave={v => saveField("cliente_telefone", v)} placeholder="—" onNext={() => veiculoRef.current?.startEdit()} isPhone={true} /></td>}

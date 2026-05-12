@@ -392,8 +392,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
               <>
                 <div className="px-3 py-2.5 border-b border-r border-gray-800">
                   <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
-                  <p className="text-white text-sm font-medium truncate">{os.cliente_nome || "—"}</p>
-                  <InlineEdit value={os.cliente_nome_fantasia} onSave={v => saveField("cliente_nome_fantasia", v)} placeholder="Nome social..." />
+                  <InlineEdit value={os.cliente_nome_fantasia || "CONSUMIDOR"} onSave={v => saveField("cliente_nome_fantasia", v)} placeholder="CONSUMIDOR" />
                 </div>
                 <div className="px-3 py-2.5 border-b border-gray-800">
                   <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Contato</p>
@@ -404,7 +403,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
               <>
                 <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
                   <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
-                  <p className="text-white text-sm font-medium truncate">{os.cliente_nome || "—"}</p>
+                  <p className="text-white text-sm font-medium truncate">{os.cliente_nome_fantasia || os.cliente_nome || "—"}</p>
                 </div>
                 <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
                   <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Contato</p>
