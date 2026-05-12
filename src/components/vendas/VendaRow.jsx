@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
@@ -100,7 +100,7 @@ function fmtValor(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDelete, onRefresh, colunas = COLUNAS_PADRAO, ocultarVeiculo = false }) {
+function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefresh, colunas = COLUNAS_PADRAO, ocultarVeiculo = false, rowIndex, getRowRef, registerRef }, ref) {
   const clienteCadastro = clientes.find(c => c.id === os.cliente_id);
   const isConsumidor = os.cliente_nome?.toUpperCase() === "CONSUMIDOR";
   // Mostra apenas nome social: para CONSUMIDOR usa o da venda (ou "CONSUMIDOR" como padrão); para outros usa nome_fantasia do cadastro ou da venda
@@ -119,6 +119,27 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
   const veiculoRef = useRef(null);
   const placaRef = useRef(null);
   const kmRef = useRef(null);
+
+  const startFirstEdit = () => {
+    if (isConsumidor && colunas.cliente) { nomeSocialRef.current?.startEdit(); return; }
+    if (colunas.contato) { contatoRef.current?.startEdit(); return; }
+    if (colunas.veiculo && !ocultarVeiculo) { veiculoRef.current?.startEdit(); return; }
+    if (colunas.placa && !ocultarVeiculo) { placaRef.current?.startEdit(); return; }
+    if (colunas.km && !ocultarVeiculo) { kmRef.current?.startEdit(); return; }
+  };
+
+  useImperativeHandle(ref, () => ({ startFirstEdit }));
+
+  // Registra ref nesta linha para uso externo
+  useEffect(() => {
+    registerRef?.(rowIndex, { startFirstEdit });
+    return () => registerRef?.(rowIndex, null);
+  }, [rowIndex, registerRef, isConsumidor, colunas, ocultarVeiculo]);
+
+  const goNextRow = () => {
+    const next = getRowRef?.(rowIndex + 1);
+    next?.startFirstEdit();
+  };
 
   const saveField = async (field, val) => {
     await base44.entities.Vendas.update(os.id, { [field]: val });
@@ -359,6 +380,7 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
           onNext={() => kmRef.current?.startEdit()}
           onPrev={() => veiculoRef.current?.startEdit()} /></td>}
         {colunas.km && !ocultarVeiculo && <td className="px-4 py-3"><InlineEdit ref={kmRef} value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v || null)} placeholder="—"
+          onNext={goNextRow}
           onPrev={() => placaRef.current?.startEdit()} /></td>}
         {colunas.status && <td className="px-4 py-3">
           <div className="flex gap-1">
@@ -419,3 +441,6 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
     </>
   );
 }
+
+const VendaRow = forwardRef(VendaRowInner);
+export default VendaRow;

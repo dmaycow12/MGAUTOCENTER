@@ -34,6 +34,7 @@ export default function Vendas() {
   });
   const [showColunasFilter, setShowColunasFilter] = useState(false);
   const filtroRef = useRef(null);
+  const rowRefs = useRef({});
 
   const hoje = new Date();
   const [filtroMes, setFiltroMes] = useState(() => {
@@ -432,7 +433,7 @@ export default function Vendas() {
                </tr>
               </thead>
               <tbody>
-                {filtradas.map(os => (
+                {filtradas.map((os, idx) => (
                   <VendaRow
                     key={os.id}
                     os={os}
@@ -443,6 +444,10 @@ export default function Vendas() {
                     onEdit={() => { setEditando(os); setShowForm(true); }}
                     onDelete={() => excluir(os.id)}
                     onRefresh={load}
+                    rowIndex={idx}
+                    totalRows={filtradas.length}
+                    getRowRef={(i) => rowRefs.current[i]}
+                    registerRef={(i, ref) => { rowRefs.current[i] = ref; }}
                   />
                 ))}
               </tbody>
