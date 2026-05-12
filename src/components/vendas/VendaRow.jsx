@@ -113,6 +113,7 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
   const [manualNFModal, setManualNFModal] = useState(null);
   const normalizarNF = (v) => v ? v.replace(/\(#?(\d+)\)/, '$1') : v;
+  const nomeSocialRef = useRef(null);
   const contatoRef = useRef(null);
   const veiculoRef = useRef(null);
   const placaRef = useRef(null);
@@ -338,7 +339,12 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
       <tr className="border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
         <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">#{os.numero || "—"}</td>
         {colunas.data && <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>}
-        {colunas.cliente && <td className="px-4 py-3"><p className="text-white text-sm font-medium">{nomeExibido}</p></td>}
+        {colunas.cliente && <td className="px-4 py-3">
+          <p className="text-white text-sm font-medium">{os.cliente_nome || "—"}</p>
+          {isConsumidor && (
+            <InlineEdit ref={nomeSocialRef} value={os.cliente_nome_fantasia} onSave={v => saveField("cliente_nome_fantasia", v)} placeholder="Nome social..." />
+          )}
+        </td>}
         {colunas.contato && <td className="px-4 py-3"><InlineEdit ref={contatoRef} value={os.cliente_telefone} onSave={v => saveField("cliente_telefone", v)} placeholder="—" onNext={() => veiculoRef.current?.startEdit()} isPhone={true} /></td>}
         {colunas.veiculo && !ocultarVeiculo && <td className="px-4 py-3"><InlineEdit ref={veiculoRef} value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onNext={() => placaRef.current?.startEdit()} /></td>}
         {colunas.placa && !ocultarVeiculo && <td className="px-4 py-3"><InlineEdit ref={placaRef} value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono onNext={() => kmRef.current?.startEdit()} /></td>}

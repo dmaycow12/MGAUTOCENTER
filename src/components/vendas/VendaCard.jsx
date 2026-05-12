@@ -33,22 +33,45 @@ function fmtValor(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function InlineEdit({ value, onSave, placeholder = "", onNext }) {
+const formatTelefone = (val) => {
+  const digits = val.replace(/\D/g, '').slice(0, 11);
+  if (digits.length === 11) return `${digits.slice(0, 2)} ${digits.slice(2, 7)} ${digits.slice(7)}`;
+  if (digits.length === 10) return `${digits.slice(0, 2)} ${digits.slice(2, 6)} ${digits.slice(6)}`;
+  return digits;
+};
+
+function InlineEdit({ value, onSave, placeholder = "", onNext, isPhone = false }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(value || "");
   const inputRef = useRef(null);
   useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
   useEffect(() => { setVal(value || ""); }, [value]);
-  const commit = () => { onSave(val); setEditing(false); };
+  const commit = () => {
+    if (isPhone) {
+      const digits = val.replace(/\D/g, '');
+      onSave(digits.length > 0 ? formatTelefone(val) : "");
+    } else {
+      onSave(val);
+    }
+    setEditing(false);
+  };
   if (editing) return (
     <input ref={inputRef} type="text" value={val}
-      onChange={e => setVal(e.target.value)}
+      onChange={e => {
+        if (isPhone) {
+          const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+          setVal(formatTelefone(digits));
+        } else {
+          setVal(e.target.value);
+        }
+      }}
       onBlur={commit}
       onKeyDown={e => {
         if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); commit(); onNext?.(); }
         if (e.key === "Escape") { setVal(value || ""); setEditing(false); }
       }}
       className="bg-gray-800 border border-orange-500 text-white rounded px-1.5 py-0.5 text-sm focus:outline-none w-full"
+      inputMode={isPhone ? "numeric" : "text"}
     />
   );
   return (
@@ -363,14 +386,33 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
         </div>
 
         <div className="grid grid-cols-2 border-t border-gray-800">
-          <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
-            <p className="text-white text-sm font-medium truncate">{os.cliente_nome || "—"}</p>
-          </div>
-          <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Contato</p>
-            <p className="text-gray-300 text-sm font-medium truncate">{os.cliente_telefone || "—"}</p>
-          </div>
+          {(() => {
+            const isConsumidor = os.cliente_nome?.toUpperCase() === "CONSUMIDOR";
+            return isConsumidor ? (
+              <>
+                <div className="px-3 py-2.5 border-b border-r border-gray-800">
+                  <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
+                  <p className="text-white text-sm font-medium truncate">{os.cliente_nome || "—"}</p>
+                  <InlineEdit value={os.cliente_nome_fantasia} onSave={v => saveField("cliente_nome_fantasia", v)} placeholder="Nome social..." />
+                </div>
+                <div className="px-3 py-2.5 border-b border-gray-800">
+                  <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Contato</p>
+                  <InlineEdit value={os.cliente_telefone} onSave={v => saveField("cliente_telefone", v)} placeholder="—" isPhone={true} />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
+                  <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
+                  <p className="text-white text-sm font-medium truncate">{os.cliente_nome || "—"}</p>
+                </div>
+                <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
+                  <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Contato</p>
+                  <p className="text-gray-300 text-sm font-medium truncate">{os.cliente_telefone || "—"}</p>
+                </div>
+              </>
+            );
+          })()}
           <div className="px-3 py-2.5 border-b border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Veículo</p>
             <InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onNext={() => placaEditRef.current?.click()} />
