@@ -68,7 +68,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const [form, setForm] = useState(() => {
     const base = os ? { ...defaultForm(), ...os, fotos: os.fotos || [] } : defaultForm();
     if (!os && !base.data_entrada) {
-      base.data_entrada = new Date().toISOString().split("T")[0];
+      const hoje = new Date();
+      base.data_entrada = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
     }
     return base;
   });
