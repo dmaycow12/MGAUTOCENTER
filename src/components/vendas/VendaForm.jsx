@@ -445,7 +445,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const updateParcela = (i, field, val) => {
     if (field === "forma_pagamento") {
-      const novoVenc = calcularVencimentoParcela(val, form.data_entrada);
+      const novoVenc = calcularVencimentoParcela(val, new Date().toISOString().split("T")[0]);
       setParcelas(prev => prev.map((p, idx) => idx === i ? { ...p, forma_pagamento: val, vencimento: novoVenc } : p));
       return;
     }
