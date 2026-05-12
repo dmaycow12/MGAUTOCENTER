@@ -64,7 +64,7 @@ const InlineEdit = forwardRef(function InlineEdit({ value, onSave, placeholder =
       }}
       onBlur={commit}
       onKeyDown={e => {
-        if (e.key === "Tab" && e.altKey) { e.preventDefault(); commit(); onPrev?.(); return; }
+        if (e.key === "Tab" && e.shiftKey) { e.preventDefault(); commit(); onPrev?.(); return; }
         if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); commit(); onNext?.(); return; }
         if (e.key === "Escape") { setVal(value || ""); setEditing(false); }
       }}
