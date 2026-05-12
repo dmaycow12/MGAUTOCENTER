@@ -265,9 +265,13 @@ export default function Vendas() {
             { key: "balcao", label: "Balcão", total: totalBalcao },
           ].map(({ key, label, total }) => (
             <button key={key} onClick={() => setFiltroTipo(prev => prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key])}
-              className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 ${filtroTipo.includes(key) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all relative ${filtroTipo.includes(key) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               <span>{label}</span>
-              <span className={`text-xs font-semibold ${filtroTipo.includes(key) ? "text-green-300" : "text-gray-500"}`}>{fmtValorSimples(total)}</span>
+              {filtroTipo.includes(key) && (
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-white">
+                  {Number(total).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </span>
+              )}
             </button>
           ))}
         </div>
