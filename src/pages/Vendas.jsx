@@ -295,7 +295,7 @@ export default function Vendas() {
             <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
               <ChevronLeft className="w-3 h-3" />
             </button>
-            <button onClick={() => { setUsandoOutroPeriodo(false); setCustomRange(null); }} className="flex-1 text-center py-3 hover:bg-white/10 transition-all cursor-pointer px-1 leading-tight" style={{fontSize:"clamp(9px,2.5vw,13px)"}}>{MESES[filtroMes - 1]}<br className="sm:hidden" /><span className="hidden sm:inline"> - </span>{filtroAno}</button>
+            <button onClick={() => { setUsandoOutroPeriodo(false); setCustomRange(null); }} className="flex-1 text-center py-3 hover:bg-white/10 transition-all cursor-pointer px-1 leading-tight" style={{fontSize:"clamp(11px,1.5vw,15px)"}}>{MESES[filtroMes - 1]} - {filtroAno}</button>
             <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
               <ChevronRight className="w-3 h-3" />
             </button>
@@ -305,12 +305,20 @@ export default function Vendas() {
             <button
               onClick={() => setPeriodoDropOpen(v => !v)}
               className={`w-full h-full min-h-[48px] flex items-center justify-center gap-1 px-2 rounded-xl font-semibold transition-all ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
-              style={{fontSize:"clamp(9px,2.5vw,13px)"}}
+              style={{fontSize:"clamp(11px,1.5vw,13px)"}}
             >
-              <span className="text-center leading-tight">
-                {usandoOutroPeriodo && customRange
-                  ? <>{customRange.inicio.split("-").reverse().join("/")}<span className="mx-1">—</span>{customRange.fim.split("-").reverse().join("/")}</>
-                  : <>{String(1).padStart(2,"0")}/{String(filtroMes).padStart(2,"0")}/{filtroAno}<span className="mx-1">—</span>{String(new Date(filtroAno,filtroMes,0).getDate()).padStart(2,"0")}/{String(filtroMes).padStart(2,"0")}/{filtroAno}</>}
+              <span className="text-center leading-tight flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                <span>
+                  {usandoOutroPeriodo && customRange
+                    ? customRange.inicio.split("-").reverse().join("/")
+                    : `${String(1).padStart(2,"0")}/${String(filtroMes).padStart(2,"0")}/${filtroAno}`}
+                </span>
+                <span className="hidden sm:inline">—</span>
+                <span>
+                  {usandoOutroPeriodo && customRange
+                    ? customRange.fim.split("-").reverse().join("/")
+                    : `${String(new Date(filtroAno,filtroMes,0).getDate()).padStart(2,"0")}/${String(filtroMes).padStart(2,"0")}/${filtroAno}`}
+                </span>
               </span>
               <ChevronDown className={`w-3 h-3 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
             </button>
