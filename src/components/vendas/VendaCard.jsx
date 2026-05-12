@@ -14,6 +14,48 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
   );
 }
 
+const FORMAS_PAGAMENTO = ["A Combinar", "Boleto", "Cartão", "Cheque", "Dinheiro", "PIX"];
+
+function getFeriadosBrasil(ano) {
+  const a = ano % 19, b = Math.floor(ano / 100), c = ano % 100;
+  const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const mes = Math.floor((h + l - 7 * m + 114) / 31);
+  const dia = ((h + l - 7 * m + 114) % 31) + 1;
+  const pascoa = new Date(ano, mes - 1, dia);
+  const fmt = d => `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const addDias = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+  return new Set([
+    "01-01","04-21","05-01","09-07","10-12","11-02","11-15","11-20","12-25",
+    fmt(addDias(pascoa, -48)), fmt(addDias(pascoa, -47)),
+    fmt(addDias(pascoa, -2)), fmt(pascoa), fmt(addDias(pascoa, 60)),
+  ]);
+}
+
+function proximoDiaUtil(dataBase) {
+  const d = dataBase ? new Date(dataBase + "T12:00:00") : new Date();
+  d.setDate(d.getDate() + 1);
+  const feriados = getFeriadosBrasil(d.getFullYear());
+  const fmtKey = dt => `${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  for (let i = 0; i < 10; i++) {
+    const dow = d.getDay();
+    if (dow !== 0 && dow !== 6 && !feriados.has(fmtKey(d))) break;
+    d.setDate(d.getDate() + 1);
+  }
+  return d.toISOString().split("T")[0];
+}
+
+function calcularVencimento(formaPagamento, dataEntrada) {
+  if (!formaPagamento || formaPagamento === "A Combinar") {
+    const base = dataEntrada ? new Date(dataEntrada + "T12:00:00") : new Date();
+    base.setDate(base.getDate() + 30);
+    return base.toISOString().split("T")[0];
+  }
+  return proximoDiaUtil(dataEntrada || new Date().toISOString().split("T")[0]);
+}
+
 const STATUS_OPTIONS = ["Aberto", "Orçamento", "Concluído"];
 
 const STATUS_STYLE = {
@@ -430,14 +472,35 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
           </div>
           <div className="px-3 py-2.5 border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Pagamento</p>
-            <p className="text-white text-sm font-medium">{(() => {
+            {(() => {
               const pd = os.parcelas_detalhes;
-              if (!pd || pd.length === 0) return os.forma_pagamento || "—";
-              const formas = [...new Set(pd.map(p => p.forma_pagamento).filter(Boolean))];
-              if (formas.length === 0) return os.forma_pagamento || "—";
-              if (formas.length === 1) return formas[0];
-              return "Misto";
-            })()}</p>
+              const formaAtual = (() => {
+                if (!pd || pd.length === 0) return os.forma_pagamento || "A Combinar";
+                const formas = [...new Set(pd.map(p => p.forma_pagamento).filter(Boolean))];
+                if (formas.length === 0) return os.forma_pagamento || "A Combinar";
+                if (formas.length === 1) return formas[0];
+                return "Misto";
+              })();
+              if (formaAtual === "Misto") return <p className="text-white text-sm font-medium">Misto</p>;
+              const handleChange = async (novaForma) => {
+                const novoVenc = calcularVencimento(novaForma, os.data_entrada);
+                const updates = { forma_pagamento: novaForma };
+                if (pd && pd.length > 0) updates.parcelas_detalhes = pd.map(p => ({ ...p, forma_pagamento: novaForma, vencimento: novoVenc }));
+                await base44.entities.Vendas.update(os.id, updates);
+                try {
+                  const fins = await base44.entities.Financeiro.filter({ ordem_servico_id: os.id });
+                  for (const f of fins) await base44.entities.Financeiro.update(f.id, { forma_pagamento: novaForma, data_vencimento: novoVenc });
+                } catch (_) {}
+                onRefresh?.();
+              };
+              return (
+                <select value={formaAtual} onChange={e => handleChange(e.target.value)}
+                  className="bg-transparent text-white text-sm font-medium border-0 outline-none cursor-pointer hover:opacity-80 transition-opacity w-full"
+                  style={{ background: "transparent" }}>
+                  {FORMAS_PAGAMENTO.map(f => <option key={f} value={f} style={{ background: "#1f2937", color: "#fff" }}>{f}</option>)}
+                </select>
+              );
+            })()}
           </div>
           <div className="px-3 py-2.5">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>

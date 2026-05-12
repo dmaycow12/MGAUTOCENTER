@@ -82,6 +82,56 @@ const InlineEdit = forwardRef(function InlineEdit({ value, onSave, placeholder =
   );
 });
 
+const FORMAS_PAGAMENTO = ["A Combinar", "Boleto", "Cartão", "Cheque", "Dinheiro", "PIX"];
+
+// Feriados nacionais brasileiros fixos (MM-DD) + cálculo de variáveis
+function getFeriadosBrasil(ano) {
+  // Cálculo da Páscoa (algoritmo de Meeus/Jones/Butcher)
+  const a = ano % 19, b = Math.floor(ano / 100), c = ano % 100;
+  const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const mes = Math.floor((h + l - 7 * m + 114) / 31);
+  const dia = ((h + l - 7 * m + 114) % 31) + 1;
+  const pascoa = new Date(ano, mes - 1, dia);
+  const fmt = d => `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const addDias = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+  return new Set([
+    "01-01","04-21","05-01","09-07","10-12","11-02","11-15","11-20","12-25",
+    fmt(addDias(pascoa, -48)), // Segunda de Carnaval
+    fmt(addDias(pascoa, -47)), // Terça de Carnaval
+    fmt(addDias(pascoa, -2)),  // Sexta-feira Santa
+    fmt(pascoa),               // Páscoa
+    fmt(addDias(pascoa, 60)),  // Corpus Christi
+  ]);
+}
+
+function proximoDiaUtil(dataBase) {
+  const d = dataBase ? new Date(dataBase + "T12:00:00") : new Date();
+  d.setDate(d.getDate() + 1);
+  const feriados = getFeriadosBrasil(d.getFullYear());
+  const fmtKey = dt => `${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  for (let i = 0; i < 10; i++) {
+    const dow = d.getDay();
+    const key = fmtKey(d);
+    if (dow !== 0 && dow !== 6 && !feriados.has(key)) break;
+    d.setDate(d.getDate() + 1);
+  }
+  return d.toISOString().split("T")[0];
+}
+
+function calcularVencimento(formaPagamento, dataEntrada) {
+  if (!formaPagamento || formaPagamento === "A Combinar") {
+    // 30 dias após a abertura
+    const base = dataEntrada ? new Date(dataEntrada + "T12:00:00") : new Date();
+    base.setDate(base.getDate() + 30);
+    return base.toISOString().split("T")[0];
+  }
+  // Para demais formas: próximo dia útil
+  return proximoDiaUtil(dataEntrada || new Date().toISOString().split("T")[0]);
+}
+
 const STATUS_OPTIONS = ["Aberto", "Concluído"];
 const STATUS_STYLE = {
   "Aberto":    { style: { background: "#cc0000", color: "#fff" } },
@@ -98,6 +148,54 @@ function fmtData(d) {
 
 function fmtValor(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function PagamentoSelect({ os, onRefresh }) {
+  const pd = os.parcelas_detalhes;
+  const formaAtual = (() => {
+    if (!pd || pd.length === 0) return os.forma_pagamento || "A Combinar";
+    const formas = [...new Set(pd.map(p => p.forma_pagamento).filter(Boolean))];
+    if (formas.length === 0) return os.forma_pagamento || "A Combinar";
+    if (formas.length === 1) return formas[0];
+    return "Misto";
+  })();
+
+  if (formaAtual === "Misto") return <span className="text-gray-300 text-sm">Misto</span>;
+
+  const handleChange = async (novaForma) => {
+    const novoVenc = calcularVencimento(novaForma, os.data_entrada);
+    // Atualiza a OS
+    const updates = { forma_pagamento: novaForma };
+    if (pd && pd.length > 0) {
+      updates.parcelas_detalhes = pd.map(p => ({ ...p, forma_pagamento: novaForma, vencimento: novoVenc }));
+    }
+    await base44.entities.Vendas.update(os.id, updates);
+    // Atualiza lançamentos financeiros vinculados
+    try {
+      const fins = await base44.entities.Financeiro.filter({ ordem_servico_id: os.id });
+      for (const f of fins) {
+        await base44.entities.Financeiro.update(f.id, {
+          forma_pagamento: novaForma,
+          data_vencimento: novoVenc,
+        });
+      }
+    } catch (_) {}
+    onRefresh?.();
+  };
+
+  return (
+    <select
+      value={formaAtual}
+      onChange={e => handleChange(e.target.value)}
+      className="bg-transparent text-gray-300 text-sm border-0 outline-none cursor-pointer hover:text-white transition-colors"
+      style={{ background: "transparent" }}
+      onClick={e => e.stopPropagation()}
+    >
+      {FORMAS_PAGAMENTO.map(f => (
+        <option key={f} value={f} style={{ background: "#1f2937", color: "#fff" }}>{f}</option>
+      ))}
+    </select>
+  );
 }
 
 function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefresh, colunas = COLUNAS_PADRAO, ocultarVeiculo = false, rowIndex, getRowRef, registerRef }, ref) {
@@ -399,14 +497,9 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
           </div>
         </td>}
         {colunas.valor && <td className="px-4 py-3 text-right font-bold whitespace-nowrap" style={{color:'#00ff00'}}>{fmtValor(os.valor_total)}</td>}
-        {colunas.pagamento && <td className="px-4 py-3 text-gray-300 text-sm whitespace-nowrap">{(() => {
-          const pd = os.parcelas_detalhes;
-          if (!pd || pd.length === 0) return os.forma_pagamento || "—";
-          const formas = [...new Set(pd.map(p => p.forma_pagamento).filter(Boolean))];
-          if (formas.length === 0) return os.forma_pagamento || "—";
-          if (formas.length === 1) return formas[0];
-          return "Misto";
-        })()}</td>}
+        {colunas.pagamento && <td className="px-4 py-3 whitespace-nowrap">
+          <PagamentoSelect os={os} onRefresh={onRefresh} />
+        </td>}
         {colunas?.nfe && <td className="px-4 py-3">{(() => {
           const nfe = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
           const manual = os.nfe_manual;
