@@ -40,6 +40,46 @@ const defaultForm = () => ({
   observacoes: "",
 });
 
+function getFeriadosBrasil(ano) {
+  const a = ano % 19, b = Math.floor(ano / 100), c = ano % 100;
+  const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const mes = Math.floor((h + l - 7 * m + 114) / 31);
+  const dia = ((h + l - 7 * m + 114) % 31) + 1;
+  const pascoa = new Date(ano, mes - 1, dia);
+  const fmt = dt => `${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  const addDias = (dt, n) => { const r = new Date(dt); r.setDate(r.getDate() + n); return r; };
+  return new Set([
+    "01-01","04-21","05-01","09-07","10-12","11-02","11-15","11-20","12-25",
+    fmt(addDias(pascoa, -48)), fmt(addDias(pascoa, -47)),
+    fmt(addDias(pascoa, -2)), fmt(pascoa), fmt(addDias(pascoa, 60)),
+  ]);
+}
+
+function proximoDiaUtil(dataBase) {
+  const dt = dataBase ? new Date(dataBase + "T12:00:00") : new Date();
+  dt.setDate(dt.getDate() + 1);
+  const feriados = getFeriadosBrasil(dt.getFullYear());
+  const fmtKey = d => `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  for (let i = 0; i < 10; i++) {
+    const dow = dt.getDay();
+    if (dow !== 0 && dow !== 6 && !feriados.has(fmtKey(dt))) break;
+    dt.setDate(dt.getDate() + 1);
+  }
+  return dt.toISOString().split("T")[0];
+}
+
+function calcularVencimentoParcela(formaPagamento, dataEntrada) {
+  if (!formaPagamento || formaPagamento === "A Combinar") {
+    const base = dataEntrada ? new Date(dataEntrada + "T12:00:00") : new Date();
+    base.setDate(base.getDate() + 30);
+    return base.toISOString().split("T")[0];
+  }
+  return proximoDiaUtil(dataEntrada || new Date().toISOString().split("T")[0]);
+}
+
 function gerarParcelas(total, qtd, dataBase) {
   const n = Math.max(1, Number(qtd) || 1);
   const valorParcela = parseFloat((total / n).toFixed(2));
@@ -404,6 +444,11 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const updateParcela = (i, field, val) => {
+    if (field === "forma_pagamento") {
+      const novoVenc = calcularVencimentoParcela(val, form.data_entrada);
+      setParcelas(prev => prev.map((p, idx) => idx === i ? { ...p, forma_pagamento: val, vencimento: novoVenc } : p));
+      return;
+    }
     if (field !== "valor") {
       setParcelas(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: val } : p));
       return;
