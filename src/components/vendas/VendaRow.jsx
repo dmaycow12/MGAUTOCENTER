@@ -187,8 +187,8 @@ function PagamentoSelect({ os, onRefresh }) {
     <select
       value={formaAtual}
       onChange={e => handleChange(e.target.value)}
-      className="bg-transparent text-gray-300 text-sm border-0 outline-none cursor-pointer hover:text-white transition-colors"
-      style={{ background: "transparent" }}
+      className="text-gray-300 text-sm border-0 outline-none cursor-pointer hover:text-white transition-colors"
+      style={{ background: "transparent", appearance: "none", WebkitAppearance: "none", MozAppearance: "none" }}
       onClick={e => e.stopPropagation()}
     >
       {FORMAS_PAGAMENTO.map(f => (

@@ -495,8 +495,8 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
               };
               return (
                 <select value={formaAtual} onChange={e => handleChange(e.target.value)}
-                  className="bg-transparent text-white text-sm font-medium border-0 outline-none cursor-pointer hover:opacity-80 transition-opacity w-full"
-                  style={{ background: "transparent" }}>
+                  className="text-white text-sm font-medium border-0 outline-none cursor-pointer hover:opacity-80 transition-opacity w-full"
+                  style={{ background: "transparent", appearance: "none", WebkitAppearance: "none", MozAppearance: "none" }}>
                   {FORMAS_PAGAMENTO.map(f => <option key={f} value={f} style={{ background: "#1f2937", color: "#fff" }}>{f}</option>)}
                 </select>
               );
