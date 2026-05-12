@@ -183,8 +183,9 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   useEffect(() => {
     if (!os) {
       base44.entities.Vendas.list("-created_date", 500).then(all => {
-        const nums = all.map(o => parseInt(o.numero, 10)).filter(n => !isNaN(n));
-        const proximo = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+        const usados = new Set(all.map(o => parseInt(o.numero, 10)).filter(n => !isNaN(n) && n > 0));
+        let proximo = 1;
+        while (usados.has(proximo)) proximo++;
         setForm(f => ({ ...f, numero: String(proximo) }));
       });
     }
@@ -485,9 +486,9 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
       if (!os) {
         const todas = await base44.entities.Vendas.list("-created_date", 500);
-        const numerosUsados = new Set(todas.map(o => String(o.numero).trim()));
-        let numeroTentativa = parseInt(formFinal.numero, 10) || 1;
-        while (numerosUsados.has(String(numeroTentativa))) numeroTentativa++;
+        const usadosSalvar = new Set(todas.map(o => parseInt(o.numero, 10)).filter(n => !isNaN(n) && n > 0));
+        let numeroTentativa = 1;
+        while (usadosSalvar.has(numeroTentativa)) numeroTentativa++;
         formFinal = { ...formFinal, numero: String(numeroTentativa) };
         setForm(f => ({ ...f, numero: String(numeroTentativa) }));
       }
