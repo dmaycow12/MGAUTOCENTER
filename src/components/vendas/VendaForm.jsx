@@ -695,7 +695,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     {provided => (
                       <div ref={provided.innerRef} {...provided.droppableProps}>
                         {(form.pecas || []).map((p, i) => (
-                          <Draggable key={i} draggableId={`peca-${i}`} index={i} isDragDisabled={p._new}>
+                          <Draggable key={p.estoque_id ? `peca-${p.estoque_id}-${i}` : `peca-new-${i}`} draggableId={p.estoque_id ? `peca-${p.estoque_id}-${i}` : `peca-new-${i}`} index={i} isDragDisabled={p._new}>
                             {(drag, snap) => (
                               <div ref={drag.innerRef} {...drag.draggableProps} className={`bg-gray-800/50 rounded-xl p-3 mb-2 ${snap.isDragging ? 'ring-2 ring-orange-500' : ''}`}>
                                 {p._new ? (
@@ -735,9 +735,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                       <input
                                         type="text"
                                         inputMode="decimal"
-                                        defaultValue={p.valor_unitario}
-                                        key={`vu-${i}-${p.estoque_id || i}`}
-                                        onBlur={e => updatePeca(i, "valor_unitario", e.target.value)}
+                                        value={p.valor_unitario}
+                                        onChange={e => updatePeca(i, "valor_unitario", e.target.value)}
                                         className="input-dark" autoComplete="off" />
                                     </div>
                                     <div className="w-24 flex-shrink-0">
@@ -767,7 +766,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     {provided => (
                       <div ref={provided.innerRef} {...provided.droppableProps}>
                         {(form.servicos || []).map((s, i) => (
-                          <Draggable key={i} draggableId={`servico-${i}`} index={i} isDragDisabled={s._new}>
+                          <Draggable key={s.codigo ? `servico-${s.codigo}-${i}` : `servico-new-${i}`} draggableId={s.codigo ? `servico-${s.codigo}-${i}` : `servico-new-${i}`} index={i} isDragDisabled={s._new}>
                             {(drag, snap) => (
                               <div ref={drag.innerRef} {...drag.draggableProps} className={`bg-gray-800/50 rounded-xl p-3 mb-2 ${snap.isDragging ? 'ring-2 ring-orange-500' : ''}`}>
                                 {s._new ? (
@@ -799,9 +798,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                       <input
                                         type="text"
                                         inputMode="decimal"
-                                        defaultValue={s.valor}
-                                        key={`sv-${i}-${s.codigo || i}`}
-                                        onBlur={e => updateServico(i, "valor", e.target.value)}
+                                        value={s.valor}
+                                        onChange={e => updateServico(i, "valor", e.target.value)}
                                         className="input-dark" autoComplete="off" />
                                     </div>
                                     <div className="w-24 flex-shrink-0">
