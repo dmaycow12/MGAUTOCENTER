@@ -45,7 +45,9 @@ export default function Clientes() {
       return;
     }
     const cliente = clientes.find(c => c.id === clienteId);
-    const finalValue = field === 'telefone' && editValue ? formatTelefone(editValue) : editValue;
+    let finalValue = editValue;
+    if (field === 'telefone' && editValue) finalValue = formatTelefone(editValue);
+    if (field === 'cpf_cnpj' && editValue) finalValue = formatCpfCnpj(editValue);
     if (cliente && String(cliente[field] || "") !== String(finalValue)) {
       await base44.entities.Cadastro.update(clienteId, { [field]: finalValue });
       setClientes(prev => prev.map(c => c.id === clienteId ? { ...c, [field]: finalValue } : c));
@@ -130,6 +132,18 @@ export default function Clientes() {
     return digits.length === 10 || digits.length === 11;
   };
 
+  const formatCpfCnpj = (val) => {
+    if (!val) return val;
+    const digits = val.replace(/\D/g, '');
+    if (digits.length === 11) {
+      return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+    if (digits.length === 14) {
+      return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    }
+    return val;
+  };
+
   const formatTelefone = (val) => {
     const digits = val.replace(/\D/g, '');
     if (digits.length === 10) return `${digits.slice(0,2)} ${digits.slice(2,6)} ${digits.slice(6)}`;
@@ -151,7 +165,7 @@ export default function Clientes() {
       setErroTelefone("O telefone deve ter exatamente 10 ou 11 dígitos (DDD + número).\nEx: 34 3822 2085 ou 34 98885 1245");
       return;
     }
-    const formNormalizado = { ...form, tipo: normalizarTipo(form.tipo) };
+    const formNormalizado = { ...form, tipo: normalizarTipo(form.tipo), cpf_cnpj: formatCpfCnpj(form.cpf_cnpj) };
     if (editando && isConsumidor(editando)) return alert("O cliente CONSUMIDOR não pode ser alterado.");
     // Validar CPF/CNPJ duplicado
     if (form.cpf_cnpj) {
