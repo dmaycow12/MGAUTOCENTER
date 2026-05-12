@@ -483,7 +483,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
               })();
               if (formaAtual === "Misto") return <p className="text-white text-sm font-medium">Misto</p>;
               const handleChange = async (novaForma) => {
-                const novoVenc = calcularVencimento(novaForma, os.data_entrada);
+                const novoVenc = calcularVencimento(novaForma, new Date().toISOString().split("T")[0]);
                 const updates = { forma_pagamento: novaForma };
                 if (pd && pd.length > 0) updates.parcelas_detalhes = pd.map(p => ({ ...p, forma_pagamento: novaForma, vencimento: novoVenc }));
                 await base44.entities.Vendas.update(os.id, updates);

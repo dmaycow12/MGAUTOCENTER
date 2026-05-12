@@ -163,7 +163,7 @@ function PagamentoSelect({ os, onRefresh }) {
   if (formaAtual === "Misto") return <span className="text-gray-300 text-sm">Misto</span>;
 
   const handleChange = async (novaForma) => {
-    const novoVenc = calcularVencimento(novaForma, os.data_entrada);
+    const novoVenc = calcularVencimento(novaForma, new Date().toISOString().split("T")[0]);
     // Atualiza a OS
     const updates = { forma_pagamento: novaForma };
     if (pd && pd.length > 0) {
