@@ -158,9 +158,9 @@ export function gerarHTMLImpressao(os) {
     "</td>" +
     "</tr></table>" +
     "<div class='section'><div class='section-title'>Dados do Cliente</div><div class='info-grid'>" +
-    "<div class='info-row'><div class='info-cell' style='flex:3'><div class='label'>Cliente</div><div class='value'>" + (os.cliente_nome||"—") + "</div></div><div class='info-cell' style='flex:2'><div class='label'>CPF/CNPJ</div><div class='value'>" + (os.cliente_cpf_cnpj||"") + "</div></div></div>" +
-    enderecoRow +
-    "<div class='info-row'><div class='info-cell' style='flex:2'><div class='label'>Telefone</div><div class='value'>" + (os.cliente_telefone||"—") + "</div></div><div class='info-cell' style='flex:3'><div class='label'>E-mail</div><div class='value'>" + (os.cliente_email||"") + "</div></div></div>" +
+    "<div class='info-row'><div class='info-cell' style='flex:3'><div class='label'>Nome / Razão Social</div><div class='value'>" + (os.cliente_nome||"—") + "</div><div style='font-size:8pt;color:#666;margin-top:2px;'>Nome Social: " + (os.cliente_nome_fantasia||"—") + "</div></div><div class='info-cell' style='flex:2'><div class='label'>CPF/CNPJ</div><div class='value'>" + (os.cliente_cpf_cnpj||"") + "</div></div></div>" +
+    "<div class='info-row'><div class='info-cell' style='flex:1'><div class='label'>Contato</div><div class='value'>" + (os.cliente_telefone||"—") + "</div></div></div>" +
+    "<div class='info-row'><div class='info-cell'><div class='label'>Endereço</div><div class='value' style='text-transform:uppercase'>" + [os.cliente_endereco, os.cliente_bairro, os.cliente_cidade, os.cliente_estado].filter(Boolean).join(", ") + "</div></div></div>" +
     "</div></div>" +
     (os.veiculo_modelo || os.veiculo_placa ? 
       "<div class='section'><div class='section-title'>Veiculo</div><div class='info-grid'><div class='info-row'>" +
