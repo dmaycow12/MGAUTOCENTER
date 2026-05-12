@@ -26,7 +26,7 @@ const formatTelefone = (val) => {
   return digits;
 };
 
-const InlineEdit = forwardRef(function InlineEdit({ value, onSave, placeholder = "", mono = false, onNext, isPhone = false }, ref) {
+const InlineEdit = forwardRef(function InlineEdit({ value, onSave, placeholder = "", mono = false, onNext, onPrev, isPhone = false }, ref) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(value || "");
   const inputRef = useRef(null);
@@ -64,7 +64,8 @@ const InlineEdit = forwardRef(function InlineEdit({ value, onSave, placeholder =
       }}
       onBlur={commit}
       onKeyDown={e => {
-        if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); commit(); onNext?.(); }
+        if (e.key === "Tab" && e.altKey) { e.preventDefault(); commit(); onPrev?.(); return; }
+        if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); commit(); onNext?.(); return; }
         if (e.key === "Escape") { setVal(value || ""); setEditing(false); }
       }}
       className="bg-gray-800 border border-orange-500 text-white rounded px-1.5 py-0.5 text-sm focus:outline-none w-24"
@@ -341,15 +342,24 @@ export default function VendaRow({ os, notas = [], clientes = [], onEdit, onDele
         {colunas.data && <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>}
         {colunas.cliente && <td className="px-4 py-3">
           {isConsumidor ? (
-            <InlineEdit ref={nomeSocialRef} value={os.cliente_nome_fantasia || "CONSUMIDOR"} onSave={v => saveField("cliente_nome_fantasia", v)} placeholder="CONSUMIDOR" />
+            <InlineEdit ref={nomeSocialRef} value={os.cliente_nome_fantasia || "CONSUMIDOR"} onSave={v => saveField("cliente_nome_fantasia", v)} placeholder="CONSUMIDOR"
+              onNext={() => colunas.contato ? contatoRef.current?.startEdit() : veiculoRef.current?.startEdit()} />
           ) : (
             <p className="text-white text-sm font-medium">{nomeSocialExibido}</p>
           )}
         </td>}
-        {colunas.contato && <td className="px-4 py-3"><InlineEdit ref={contatoRef} value={os.cliente_telefone} onSave={v => saveField("cliente_telefone", v)} placeholder="—" onNext={() => veiculoRef.current?.startEdit()} isPhone={true} /></td>}
-        {colunas.veiculo && !ocultarVeiculo && <td className="px-4 py-3"><InlineEdit ref={veiculoRef} value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onNext={() => placaRef.current?.startEdit()} /></td>}
-        {colunas.placa && !ocultarVeiculo && <td className="px-4 py-3"><InlineEdit ref={placaRef} value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono onNext={() => kmRef.current?.startEdit()} /></td>}
-        {colunas.km && !ocultarVeiculo && <td className="px-4 py-3"><InlineEdit ref={kmRef} value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v || null)} placeholder="—" /></td>}
+        {colunas.contato && <td className="px-4 py-3"><InlineEdit ref={contatoRef} value={os.cliente_telefone} onSave={v => saveField("cliente_telefone", v)} placeholder="—"
+          onNext={() => veiculoRef.current?.startEdit()}
+          onPrev={() => isConsumidor ? nomeSocialRef.current?.startEdit() : null}
+          isPhone={true} /></td>}
+        {colunas.veiculo && !ocultarVeiculo && <td className="px-4 py-3"><InlineEdit ref={veiculoRef} value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—"
+          onNext={() => placaRef.current?.startEdit()}
+          onPrev={() => colunas.contato ? contatoRef.current?.startEdit() : isConsumidor ? nomeSocialRef.current?.startEdit() : null} /></td>}
+        {colunas.placa && !ocultarVeiculo && <td className="px-4 py-3"><InlineEdit ref={placaRef} value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" mono
+          onNext={() => kmRef.current?.startEdit()}
+          onPrev={() => veiculoRef.current?.startEdit()} /></td>}
+        {colunas.km && !ocultarVeiculo && <td className="px-4 py-3"><InlineEdit ref={kmRef} value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v || null)} placeholder="—"
+          onPrev={() => placaRef.current?.startEdit()} /></td>}
         {colunas.status && <td className="px-4 py-3">
           <div className="flex gap-1">
             {STATUS_OPTIONS.map(s => (
