@@ -208,7 +208,7 @@ export default function Vendas() {
 
   const fmtValorSimples = v => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-  // Totais por tipo (aplica todos os filtros exceto o de tipo)
+  // Totais por tipo — baseados nas ordens já filtradas (exceto o filtro de tipo)
   const ordensComFiltrosBase = ordens.filter(o => {
     const s = search.toLowerCase();
     const matchSearch = !search ||
@@ -222,6 +222,7 @@ export default function Vendas() {
   });
   const totalPatio = ordensComFiltrosBase.filter(o => !!(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo)).reduce((acc, o) => acc + (o.valor_total || 0), 0);
   const totalBalcao = ordensComFiltrosBase.filter(o => !(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo)).reduce((acc, o) => acc + (o.valor_total || 0), 0);
+  const fmtTotal = v => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 
   return (
     <div className="space-y-4">
@@ -262,19 +263,26 @@ export default function Vendas() {
         {/* Linha 3: filtro Pátio / Balcão */}
         <div className="flex gap-2">
           {[
-            { key: "patio", label: "Pátio", total: totalPatio },
-            { key: "balcao", label: "Balcão", total: totalBalcao },
-          ].map(({ key, label, total }) => (
+            { key: "patio", label: "Pátio" },
+            { key: "balcao", label: "Balcão" },
+          ].map(({ key, label }) => (
             <button key={key} onClick={() => setFiltroTipo(key)}
-              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all relative ${filtroTipo === key ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
-              <span>{label}</span>
-              {filtroTipo === key && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-white">
-                  {Number(total).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                </span>
-              )}
+              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroTipo === key ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              {label}
             </button>
           ))}
+        </div>
+
+        {/* Cards de totais */}
+        <div className="flex gap-2">
+          <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 flex items-center justify-between">
+            <span className="text-xs text-gray-400 font-medium">Pátio</span>
+            <span className="text-sm font-bold text-white">{fmtTotal(totalPatio)}</span>
+          </div>
+          <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 flex items-center justify-between">
+            <span className="text-xs text-gray-400 font-medium">Balcão</span>
+            <span className="text-sm font-bold text-white">{fmtTotal(totalBalcao)}</span>
+          </div>
         </div>
 
         {/* Linha 3: filtro período */}
