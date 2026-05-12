@@ -281,12 +281,16 @@ export default function Vendas() {
 
         {/* Cards de totais */}
         <div className="flex gap-2">
-          <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 flex items-center justify-center">
-            <span className="text-sm font-bold text-green-400">{fmtTotal(totalPatio)}</span>
-          </div>
-          <div className="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 flex items-center justify-center">
-            <span className="text-sm font-bold text-green-400">{fmtTotal(totalBalcao)}</span>
-          </div>
+          {[
+            { label: "PÁTIO", value: totalPatio },
+            { label: "BALCÃO", value: totalBalcao },
+            { label: "TOTAL", value: totalPatio + totalBalcao },
+          ].map(({ label, value }) => (
+            <div key={label} className="flex-1 rounded-xl px-3 py-2.5 flex flex-col gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
+              <span className="text-xs font-semibold text-gray-400 tracking-wide">{label}</span>
+              <span className="text-sm font-bold text-green-400">{fmtTotal(value)}</span>
+            </div>
+          ))}
         </div>
 
         {/* Linha 3: filtro período */}
