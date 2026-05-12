@@ -81,6 +81,9 @@ export default function Clientes() {
       const d = resp.data.data;
       const est = d.estabelecimento;
       const ie = est?.inscricoes_estaduais?.find(i => i.ativo)?.inscricao_estadual || '';
+      const telefoneFormatado = est?.ddd1 && est?.telefone1 
+        ? `${est.ddd1}${est.telefone1}`.replace(/\D/g, '')
+        : form.telefone;
       setForm(f => ({
         ...f,
         tipo: 'Pessoa Jurídica',
@@ -88,7 +91,7 @@ export default function Clientes() {
         nome_fantasia: est?.nome_fantasia || f.nome_fantasia,
         rg_ie: ie,
         email: est?.email || f.email,
-        telefone: est?.ddd1 && est?.telefone1 ? `(${est.ddd1}) ${est.telefone1}` : f.telefone,
+        telefone: telefoneFormatado,
         cep: est?.cep || f.cep,
         endereco: est?.logradouro || f.endereco,
         numero: est?.numero || f.numero,
