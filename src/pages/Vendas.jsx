@@ -18,7 +18,7 @@ export default function Vendas() {
   });
   const [filtroTipo, setFiltroTipo] = useState(() => {
    const saved = localStorage.getItem("os_filtroTipo2");
-   return saved ? JSON.parse(saved) : null;
+   return saved ? JSON.parse(saved) : "patio";
   });
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
@@ -199,7 +199,7 @@ export default function Vendas() {
       const matchStatus = filtroStatus.length > 0 && filtroStatus.includes(o.status);
       const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
       const temVeiculo = !!(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo);
-      const matchTipo = !filtroTipo || (filtroTipo === "patio" ? temVeiculo : !temVeiculo);
+      const matchTipo = filtroTipo === "patio" ? temVeiculo : !temVeiculo;
       return matchSearch && matchStatus && matchPeriodo && matchTipo;
     })
     .sort((a, b) => (Number(a.numero || 0) || Number.MAX_VALUE) - (Number(b.numero || 0) || Number.MAX_VALUE));
@@ -265,7 +265,7 @@ export default function Vendas() {
             { key: "patio", label: "Pátio", total: totalPatio },
             { key: "balcao", label: "Balcão", total: totalBalcao },
           ].map(({ key, label, total }) => (
-            <button key={key} onClick={() => setFiltroTipo(filtroTipo === key ? null : key)}
+            <button key={key} onClick={() => setFiltroTipo(key)}
               className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all relative ${filtroTipo === key ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               <span>{label}</span>
               {filtroTipo === key && (
