@@ -637,7 +637,16 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                        <div className="px-3 py-2 border-b border-gray-700/50" style={{ background: "#00ff0008" }}>
                          <p className="text-gray-500 text-[10px] uppercase tracking-wide mb-0.5">Cadastro Vinculado</p>
                          <div className="flex items-center justify-between gap-2">
-                           <p className="text-white text-sm font-semibold">{item.estoqueVinculado.descricao}</p>
+                           <a
+                             href={`/Estoque?busca=${encodeURIComponent(item.estoqueVinculado.descricao)}`}
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             className="text-white text-sm font-semibold hover:underline"
+                             style={{ color: "#00ff00" }}
+                             title="Clique para ver no estoque"
+                           >
+                             {item.estoqueVinculado.descricao}
+                           </a>
                            {(() => {
                              const cod = item.codigoInterno || item.estoqueVinculado.codigo || item.codigo || "";
                              return cod ? (
@@ -647,6 +656,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                              ) : null;
                            })()}
                          </div>
+                         <p className="text-[10px] text-gray-500 mt-0.5">↗ Clique no nome para abrir no estoque</p>
                        </div>
                       )}
 
