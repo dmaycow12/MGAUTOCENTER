@@ -81,9 +81,10 @@ export default function Clientes() {
       const d = resp.data.data;
       const est = d.estabelecimento;
       const ie = est?.inscricoes_estaduais?.find(i => i.ativo)?.inscricao_estadual || '';
-      const telefoneFormatado = est?.ddd1 && est?.telefone1 
+      const rawTel = est?.ddd1 && est?.telefone1 
         ? `${est.ddd1}${est.telefone1}`.replace(/\D/g, '')
-        : form.telefone;
+        : form.telefone?.replace(/\D/g, '') || '';
+      const telefoneFormatado = rawTel ? formatTelefone(rawTel) : form.telefone;
       setForm(f => ({
         ...f,
         tipo: 'Pessoa Jurídica',
