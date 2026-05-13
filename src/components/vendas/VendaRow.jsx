@@ -212,6 +212,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
   const [manualNFModal, setManualNFModal] = useState(null);
   const normalizarNF = (v) => v ? v.replace(/\(#?(\d+)\)/, '$1') : v;
+  const numeroRef = useRef(null);
   const nomeSocialRef = useRef(null);
   const contatoRef = useRef(null);
   const veiculoRef = useRef(null);
@@ -219,11 +220,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
   const kmRef = useRef(null);
 
   const startFirstEdit = () => {
-    if (isConsumidor && colunas.cliente) { nomeSocialRef.current?.startEdit(); return; }
-    if (colunas.contato) { contatoRef.current?.startEdit(); return; }
-    if (colunas.veiculo && !ocultarVeiculo) { veiculoRef.current?.startEdit(); return; }
-    if (colunas.placa && !ocultarVeiculo) { placaRef.current?.startEdit(); return; }
-    if (colunas.km && !ocultarVeiculo) { kmRef.current?.startEdit(); return; }
+    numeroRef.current?.startEdit();
   };
 
   useImperativeHandle(ref, () => ({ startFirstEdit }));
@@ -457,7 +454,10 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
         </td></tr>
       )}
       <tr className="border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
-        <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">#{os.numero || "—"}</td>
+         <td className="px-4 py-3 text-white font-bold text-sm whitespace-nowrap">
+           #<InlineEdit ref={numeroRef} value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" mono
+             onNext={() => colunas.cliente && isConsumidor ? nomeSocialRef.current?.startEdit() : colunas.contato ? contatoRef.current?.startEdit() : colunas.veiculo && !ocultarVeiculo ? veiculoRef.current?.startEdit() : null} />
+         </td>
         {colunas.data && <td className="px-4 py-3 text-gray-400 text-sm whitespace-nowrap">{fmtData(os.data_entrada)}</td>}
         {colunas.cliente && <td className="px-4 py-3">
           {isConsumidor ? (
