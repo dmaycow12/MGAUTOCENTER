@@ -308,20 +308,20 @@ export default function Dashboard() {
           const totalPago = financeiro.filter(f => f.tipo === "Despesa" && f.status === "Pago").reduce((acc, f) => acc + Number(f.valor || 0), 0);
           const saldo = totalRecebido - totalPago;
           return (
-            <div className="rounded-xl p-6" style={{background: "linear-gradient(135deg, #0d1f35 0%, #162d4a 100%)", border: "1px solid #1e4d7b", boxShadow: "0 8px 16px rgba(0, 0, 0, 0.3)"}}>
-              <h2 className="text-white font-bold text-lg mb-4 text-center">Saldo do Caixa</h2>
+            <div className="rounded-2xl p-6" style={{background: "linear-gradient(135deg, #0a1929 0%, #132642 100%)", border: "1px solid rgba(30, 100, 150, 0.5)", boxShadow: "0 12px 24px rgba(0, 0, 0, 0.4)"}}>
+              <h2 className="text-white font-bold text-xl mb-5 text-center">Saldo do Caixa</h2>
               <div className="grid grid-cols-3 gap-4">
-                <div className="rounded-xl p-4 text-center" style={{background: "rgba(30, 58, 95, 0.6)", border: "1px solid rgba(30, 100, 150, 0.4)"}}>
-                  <p className="text-gray-400 text-xs font-semibold tracking-wide mb-2">Recebido</p>
-                  <p className="text-green-400 font-bold text-base">{fmt(totalRecebido)}</p>
+                <div className="rounded-2xl p-5 text-center" style={{background: "rgba(20, 40, 70, 0.7)", border: "1.5px solid rgba(50, 120, 180, 0.4)", boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.3)"}}>
+                  <p className="text-gray-400 text-sm font-semibold mb-3">Recebido</p>
+                  <p className="text-green-400 font-bold text-lg">{fmt(totalRecebido)}</p>
                 </div>
-                <div className="rounded-xl p-4 text-center" style={{background: "rgba(30, 58, 95, 0.6)", border: "1px solid rgba(30, 100, 150, 0.4)"}}>
-                  <p className="text-gray-400 text-xs font-semibold tracking-wide mb-2">Pago</p>
-                  <p className="text-red-400 font-bold text-base">{fmt(totalPago)}</p>
+                <div className="rounded-2xl p-5 text-center" style={{background: "rgba(20, 40, 70, 0.7)", border: "1.5px solid rgba(50, 120, 180, 0.4)", boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.3)"}}>
+                  <p className="text-gray-400 text-sm font-semibold mb-3">Pago</p>
+                  <p className="text-red-400 font-bold text-lg">{fmt(totalPago)}</p>
                 </div>
-                <div className="rounded-xl p-4 text-center" style={{background: saldo >= 0 ? "rgba(30, 58, 95, 0.6)" : "rgba(80, 20, 20, 0.6)", border: saldo >= 0 ? "1px solid rgba(30, 100, 150, 0.4)" : "1px solid rgba(150, 30, 30, 0.6)"}}>
-                  <p className="text-gray-400 text-xs font-semibold tracking-wide mb-2">—</p>
-                  <p className="font-bold text-base" style={{color: saldo >= 0 ? "#00C957" : "#FF4444"}}>{fmt(saldo)}</p>
+                <div className="rounded-2xl p-5 text-center" style={{background: saldo >= 0 ? "rgba(20, 40, 70, 0.7)" : "rgba(60, 20, 20, 0.8)", border: saldo >= 0 ? "1.5px solid rgba(50, 120, 180, 0.4)" : "1.5px solid rgba(150, 50, 50, 0.6)", boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.3)"}}>
+                  <p className="text-gray-400 text-sm font-semibold mb-3">Saldo</p>
+                  <p className="font-bold text-lg" style={{color: saldo >= 0 ? "#00C957" : "#FF6B6B"}}>{saldo >= 0 ? fmt(saldo) : `- ${fmt(Math.abs(saldo))}`}</p>
                 </div>
               </div>
             </div>
