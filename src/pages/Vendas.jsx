@@ -44,22 +44,23 @@ export default function Vendas() {
 
   const hoje = new Date();
   const [filtroMes, setFiltroMes] = useState(() => {
-    const saved = localStorage.getItem("os_filtroMes");
-    return saved ? parseInt(saved) : hoje.getMonth() + 1;
-  });
-  const [filtroAno, setFiltroAno] = useState(() => {
-    const saved = localStorage.getItem("os_filtroAno");
-    return saved ? parseInt(saved) : hoje.getFullYear();
-  });
-  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(() => localStorage.getItem("os_usandoOutroPeriodo") === "true");
-  const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
-  const [outroPeriodoInicio, setOutroPeriodoInicio] = useState(() => localStorage.getItem("os_outroPeriodoInicio") || "");
-  const [outroPeriodoFim, setOutroPeriodoFim] = useState(() => localStorage.getItem("os_outroPeriodoFim") || "");
-  const [customRange, setCustomRange] = useState(() => {
-    const saved = localStorage.getItem("os_customRange");
-    return saved ? JSON.parse(saved) : null;
-  });
-  const periodoDropRef = useRef(null);
+     const saved = localStorage.getItem("os_filtroMes");
+     return saved ? parseInt(saved) : hoje.getMonth() + 1;
+   });
+   const [filtroAno, setFiltroAno] = useState(() => {
+     const saved = localStorage.getItem("os_filtroAno");
+     return saved ? parseInt(saved) : hoje.getFullYear();
+   });
+   const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(() => localStorage.getItem("os_usandoOutroPeriodo") === "true");
+   const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
+   const [outroPeriodoInicio, setOutroPeriodoInicio] = useState(() => localStorage.getItem("os_outroPeriodoInicio") || "");
+   const [outroPeriodoFim, setOutroPeriodoFim] = useState(() => localStorage.getItem("os_outroPeriodoFim") || "");
+   const [customRange, setCustomRange] = useState(() => {
+     const saved = localStorage.getItem("os_customRange");
+     return saved ? JSON.parse(saved) : null;
+   });
+   const [orderData, setOrderData] = useState(() => localStorage.getItem("os_orderData") || "asc");
+   const periodoDropRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
@@ -77,9 +78,10 @@ export default function Vendas() {
   useEffect(() => { localStorage.setItem("os_filtroAno", filtroAno); }, [filtroAno]);
   useEffect(() => { localStorage.setItem("os_usandoOutroPeriodo", usandoOutroPeriodo); }, [usandoOutroPeriodo]);
   useEffect(() => { localStorage.setItem("os_outroPeriodoInicio", outroPeriodoInicio); }, [outroPeriodoInicio]);
-  useEffect(() => { localStorage.setItem("os_outroPeriodoFim", outroPeriodoFim); }, [outroPeriodoFim]);
-  useEffect(() => { localStorage.setItem("os_customRange", JSON.stringify(customRange)); }, [customRange]);
-  useEffect(() => { localStorage.setItem("os_colunasVisiveis", JSON.stringify(colunasVisiveis)); }, [colunasVisiveis]);
+   useEffect(() => { localStorage.setItem("os_outroPeriodoFim", outroPeriodoFim); }, [outroPeriodoFim]);
+   useEffect(() => { localStorage.setItem("os_customRange", JSON.stringify(customRange)); }, [customRange]);
+   useEffect(() => { localStorage.setItem("os_colunasVisiveis", JSON.stringify(colunasVisiveis)); }, [colunasVisiveis]);
+   useEffect(() => { localStorage.setItem("os_orderData", orderData); }, [orderData]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -195,20 +197,25 @@ export default function Vendas() {
     : { inicio: `${filtroAno}-${pad(filtroMes)}-01`, fim: `${filtroAno}-${pad(filtroMes)}-31` };
 
   const filtradas = ordens
-    .filter(o => {
-      const s = search.toLowerCase();
-      const matchSearch = !search ||
-        o.numero?.toLowerCase().includes(s) ||
-        o.cliente_nome?.toLowerCase().includes(s) ||
-        o.veiculo_placa?.toLowerCase().includes(s) ||
-        o.veiculo_modelo?.toLowerCase().includes(s);
-      const matchStatus = filtroStatus.length > 0 && filtroStatus.includes(o.status);
-      const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
-      const temVeiculo = !!(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo);
-      const matchTipo = filtroTipo.length === 0 || (filtroTipo.includes("patio") && temVeiculo) || (filtroTipo.includes("balcao") && !temVeiculo);
-      return matchSearch && matchStatus && matchPeriodo && matchTipo;
-    })
-    .sort((a, b) => (Number(a.numero || 0) || Number.MAX_VALUE) - (Number(b.numero || 0) || Number.MAX_VALUE));
+     .filter(o => {
+       const s = search.toLowerCase();
+       const matchSearch = !search ||
+         o.numero?.toLowerCase().includes(s) ||
+         o.cliente_nome?.toLowerCase().includes(s) ||
+         o.veiculo_placa?.toLowerCase().includes(s) ||
+         o.veiculo_modelo?.toLowerCase().includes(s);
+       const matchStatus = filtroStatus.length > 0 && filtroStatus.includes(o.status);
+       const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
+       const temVeiculo = !!(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo);
+       const matchTipo = filtroTipo.length === 0 || (filtroTipo.includes("patio") && temVeiculo) || (filtroTipo.includes("balcao") && !temVeiculo);
+       return matchSearch && matchStatus && matchPeriodo && matchTipo;
+     })
+     .sort((a, b) => {
+       const dataA = a.data_entrada || "";
+       const dataB = b.data_entrada || "";
+       if (orderData === "asc") return dataA.localeCompare(dataB);
+       return dataB.localeCompare(dataA);
+     });
 
   const ordensParaMassa = filtradas;
 
@@ -445,7 +452,7 @@ export default function Vendas() {
               <thead>
                <tr className="border-b border-gray-800">
                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-12">Nº</th>
-                 {colunasVisiveis.data && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">Data</th>}
+                 {colunasVisiveis.data && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20 cursor-pointer hover:text-white transition-colors" onClick={() => setOrderData(orderData === "asc" ? "desc" : "asc")}>Data {orderData === "asc" ? "↑" : "↓"}</th>}
                  {colunasVisiveis.cliente && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider flex-1">Cliente</th>}
                  {colunasVisiveis.contato && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Contato</th>}
                  {colunasVisiveis.veiculo && filtroTipo.includes("patio") && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Veículo</th>}
