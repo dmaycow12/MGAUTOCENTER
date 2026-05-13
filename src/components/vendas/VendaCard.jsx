@@ -331,8 +331,8 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
         </div>
       )}
       <div className="bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
-         <div className="flex items-center gap-2 px-3 py-2.5">
-           <div ref={numeroEditRef}><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
+        <div className="flex items-center gap-2 px-3 py-2.5">
+          <div ref={numeroEditRef} className="min-w-max"><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
           <div className="flex items-center gap-2 flex-wrap">
             {(() => {
               const nfeProduto = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
