@@ -83,45 +83,46 @@ const formatTelefone = (val) => {
 };
 
 function InlineEdit({ value, onSave, placeholder = "", onNext, isPhone = false }) {
-  const [editing, setEditing] = useState(false);
-  const [val, setVal] = useState(value || "");
-  const inputRef = useRef(null);
-  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
-  useEffect(() => { setVal(value || ""); }, [value]);
-  const commit = () => {
-    if (isPhone) {
-      const digits = val.replace(/\D/g, '');
-      onSave(digits.length > 0 ? formatTelefone(val) : "");
-    } else {
-      onSave(val);
-    }
-    setEditing(false);
-  };
-  if (editing) return (
-    <input ref={inputRef} type="text" value={val}
-      onChange={e => {
-        if (isPhone) {
-          const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
-          setVal(formatTelefone(digits));
-        } else {
-          setVal(e.target.value);
-        }
-      }}
-      onBlur={commit}
-      onKeyDown={e => {
-        if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); commit(); onNext?.(); }
-        if (e.key === "Escape") { setVal(value || ""); setEditing(false); }
-      }}
-      className="bg-gray-800 border border-orange-500 text-white rounded px-1.5 py-0.5 text-sm focus:outline-none w-full"
-      inputMode={isPhone ? "numeric" : "text"}
-    />
-  );
-  return (
-    <p className="text-white text-sm font-medium cursor-text hover:opacity-80 truncate"
-      onClick={() => setEditing(true)} title="Clique para editar">
-      {val || placeholder || "—"}
-    </p>
-  );
+   const [editing, setEditing] = useState(false);
+   const [val, setVal] = useState(value || "");
+   const inputRef = useRef(null);
+   useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+   useEffect(() => { setVal(value || ""); }, [value]);
+   const commit = () => {
+     if (isPhone) {
+       const digits = val.replace(/\D/g, '');
+       onSave(digits.length > 0 ? formatTelefone(val) : "");
+     } else {
+       onSave(val);
+     }
+     setEditing(false);
+   };
+   if (editing) return (
+     <input ref={inputRef} type="text" value={val}
+       onChange={e => {
+         if (isPhone) {
+           const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+           setVal(formatTelefone(digits));
+         } else {
+           setVal(e.target.value);
+         }
+       }}
+       onBlur={commit}
+       onKeyDown={e => {
+         if (e.key === "Enter") { e.preventDefault(); commit(); onNext?.(); }
+         if (e.key === "Tab") { commit(); onNext?.(); }
+         if (e.key === "Escape") { setVal(value || ""); setEditing(false); }
+       }}
+       className="bg-gray-800 border border-orange-500 text-white rounded px-1.5 py-0.5 text-sm focus:outline-none w-full"
+       inputMode={isPhone ? "numeric" : "text"}
+     />
+   );
+   return (
+     <p className="text-white text-sm font-medium cursor-text hover:opacity-80 truncate"
+       onClick={() => setEditing(true)} title="Clique para editar">
+       {val || placeholder || "—"}
+     </p>
+   );
 }
 
 export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh }) {
@@ -131,12 +132,13 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
   const placaEditRef = useRef(null);
   const kmEditRef = useRef(null);
   const [statusOpen, setStatusOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [showAvisoStatus, setShowAvisoStatus] = useState(false);
-  const [statusPendenteCard, setStatusPendenteCard] = useState(null);
-  const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
-  const [manualNFModal, setManualNFModal] = useState(null);
-  const normalizarNF = (v) => v ? v.replace(/\(#?(\d+)\)/, '$1') : v;
+   const [menuOpen, setMenuOpen] = useState(false);
+   const [showAvisoStatus, setShowAvisoStatus] = useState(false);
+   const [statusPendenteCard, setStatusPendenteCard] = useState(null);
+   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
+   const [manualNFModal, setManualNFModal] = useState(null);
+   const normalizarNF = (v) => v ? v.replace(/\(#?(\d+)\)/, '$1') : v;
+   const numeroEditRef = useRef(null);
 
   const saveField = async (field, val) => {
     await base44.entities.Vendas.update(os.id, { [field]: val });
@@ -329,8 +331,8 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
         </div>
       )}
       <div className="bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
-        <div className="flex items-center gap-2 px-3 py-2.5">
-          <span className="text-white font-bold text-sm tracking-wide flex-shrink-0">#{os.numero || "—"}</span>
+         <div className="flex items-center gap-2 px-3 py-2.5">
+           <div ref={numeroEditRef}><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
           <div className="flex items-center gap-2 flex-wrap">
             {(() => {
               const nfeProduto = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
