@@ -22,7 +22,7 @@ async function buscarTodasVendas(base44) {
   let todas = [];
   let skip = 0;
   while (true) {
-    const batch = await base44.entities.Vendas.filter({}, 'created_date', 100, skip);
+    const batch = await base44.entities.Vendas.filter({}, 'data_entrada', 100, skip);
     if (batch.length === 0) break;
     todas = todas.concat(batch);
     skip += 100;
