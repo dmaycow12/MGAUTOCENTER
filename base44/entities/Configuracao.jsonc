@@ -1,0 +1,41 @@
+{
+  "type": "object",
+  "properties": {
+    "chave": {
+      "type": "string",
+      "title": "Chave"
+    },
+    "valor": {
+      "type": "string",
+      "title": "Valor"
+    },
+    "descricao": {
+      "type": "string",
+      "title": "Descri\u00e7\u00e3o"
+    }
+  },
+  "name": "Configuracao",
+  "required": [],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
