@@ -97,6 +97,13 @@ export default function NotasFiscais() {
   const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
   const [customRange, setCustomRange] = useState(null);
   const periodoDropRef = useRef(null);
+  
+  const [orderBy, setOrderBy] = useState(() => { try { const s = localStorage.getItem("notas_orderby"); return s || "-created_date"; } catch { return "-created_date"; } });
+  const ordenarPor = (campo) => {
+    const novaOrdem = orderBy === `-${campo}` ? campo : `-${campo}`;
+    setOrderBy(novaOrdem);
+    localStorage.setItem("notas_orderby", novaOrdem);
+  };
 
   const pad = n => String(n).padStart(2, "0");
   
@@ -139,6 +146,10 @@ export default function NotasFiscais() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [orderBy]);
 
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("notas_viewmode") || "table");
   const [showForm, setShowForm] = useState(false);
@@ -286,7 +297,7 @@ export default function NotasFiscais() {
 
   const load = async () => {
     const [n, c, configs, vendas, est, srv] = await Promise.all([
-      base44.entities.NotaFiscal.list("-created_date", 500),
+      base44.entities.NotaFiscal.list(orderBy, 500),
       base44.entities.Cadastro.list("-created_date", 500),
       base44.entities.Configuracao.list("-created_date", 100),
       base44.entities.Vendas.list("-created_date", 500),
@@ -1191,9 +1202,9 @@ export default function NotasFiscais() {
               <thead>
                 <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
                   <th className="px-4 py-3">Tipo</th>
-                  <th className="px-4 py-3">Número</th>
+                  <th className="px-4 py-3 cursor-pointer hover:text-white transition-all select-none" onClick={() => ordenarPor("numero")}>Número {orderBy === "-numero" ? "↓" : orderBy === "numero" ? "↑" : ""}</th>
                   <th className="px-4 py-3">Cliente</th>
-                  <th className="px-4 py-3 hidden md:table-cell">Emissão</th>
+                  <th className="px-4 py-3 hidden md:table-cell cursor-pointer hover:text-white transition-all select-none" onClick={() => ordenarPor("data_emissao")}>Emissão {orderBy === "-data_emissao" ? "↓" : orderBy === "data_emissao" ? "↑" : ""}</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Valor</th>
                   <th className="px-4 py-3 text-center">Ações</th>
