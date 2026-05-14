@@ -263,13 +263,22 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
 
       // Tentar auto-vincular por código principal OU por código alternativo (codigos[])
       setItens(prev => prev.map(item => {
-        // Se já tem vínculo do mapa, enriquecer com o código real do estoque
+        // Se já tem vínculo do mapa, verificar se o produto ainda existe e tentar auto-vincular pelo código
         if (item.estoqueVinculado) {
           const prodReal = est.find(e => e.id === item.estoqueVinculado.id);
           if (prodReal) {
-            return { ...item, estoqueVinculado: { id: prodReal.id, descricao: prodReal.descricao, codigo: prodReal.codigo || "" }, codigoInterno: prodReal.codigo || "" };
+            // Verifica se o código da NF realmente pertence a esse produto (código principal ou alternativo)
+            const codNormItem = item.codigo?.toUpperCase().trim();
+            const codigoPrincipalBate = prodReal.codigo?.toUpperCase().trim() === codNormItem;
+            const codigoAlternativoBate = (prodReal.codigos || []).some(c => c?.toUpperCase().trim() === codNormItem);
+            if (codNormItem && !codigoPrincipalBate && !codigoAlternativoBate) {
+              // Mapa estava errado — ignora vínculo e tenta re-vincular corretamente abaixo
+            } else {
+              return { ...item, estoqueVinculado: { id: prodReal.id, descricao: prodReal.descricao, codigo: prodReal.codigo || "" }, codigoInterno: prodReal.codigo || "" };
+            }
           }
-          return item;
+          // Produto não encontrado ou vínculo inválido — limpa o vínculo para re-vincular corretamente
+          item = { ...item, estoqueVinculado: null, codigoInterno: "" };
         }
         if (!item.codigo) return item;
         const codNorm = item.codigo.toUpperCase().trim();
