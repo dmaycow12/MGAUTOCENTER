@@ -638,7 +638,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                          <p className="text-gray-500 text-[10px] uppercase tracking-wide mb-0.5">Cadastro Vinculado</p>
                          <div className="flex items-center justify-between gap-2">
                            <a
-                             href={`/Estoque?busca=${encodeURIComponent(item.estoqueVinculado.descricao)}`}
+                             href={`/Estoque?busca=${encodeURIComponent(item.codigoInterno || item.estoqueVinculado.codigo || item.estoqueVinculado.descricao)}`}
                              target="_blank"
                              rel="noopener noreferrer"
                              className="text-white text-sm font-semibold hover:underline"

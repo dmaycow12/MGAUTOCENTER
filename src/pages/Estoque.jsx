@@ -17,7 +17,10 @@ const defaultForm = () => ({
 export default function Estoque() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("busca") || "";
+  });
   const [showForm, setShowForm] = useState(false);
   const [editando, setEditando] = useState(null);
   const [form, setForm] = useState(defaultForm());
