@@ -1202,7 +1202,7 @@ export default function NotasFiscais() {
               <thead>
                 <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
                   <th className="px-4 py-3">Tipo</th>
-                  <th className="px-4 py-3 cursor-pointer hover:text-white transition-all select-none" onClick={() => ordenarPor("numero")}>Número {orderBy === "-numero" ? "↓" : orderBy === "numero" ? "↑" : ""}</th>
+                  <th className="px-4 py-3 cursor-pointer hover:text-white transition-all select-none" onClick={() => ordenarPor("numero")}>N° {orderBy === "-numero" ? "↓" : "↑"}</th>
                   <th className="px-4 py-3">Cliente</th>
                   <th className="px-4 py-3 hidden md:table-cell cursor-pointer hover:text-white transition-all select-none" onClick={() => ordenarPor("data_emissao")}>Emissão {orderBy === "-data_emissao" ? "↓" : orderBy === "data_emissao" ? "↑" : ""}</th>
                   <th className="px-4 py-3">Status</th>
