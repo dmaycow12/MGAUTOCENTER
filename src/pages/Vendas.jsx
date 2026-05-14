@@ -60,7 +60,8 @@ export default function Vendas() {
      return saved ? JSON.parse(saved) : null;
    });
    const [orderData, setOrderData] = useState(() => localStorage.getItem("os_orderData") || "asc");
-   const periodoDropRef = useRef(null);
+    const [orderNumero, setOrderNumero] = useState(() => localStorage.getItem("os_orderNumero") || "asc");
+    const periodoDropRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
@@ -81,7 +82,8 @@ export default function Vendas() {
    useEffect(() => { localStorage.setItem("os_outroPeriodoFim", outroPeriodoFim); }, [outroPeriodoFim]);
    useEffect(() => { localStorage.setItem("os_customRange", JSON.stringify(customRange)); }, [customRange]);
    useEffect(() => { localStorage.setItem("os_colunasVisiveis", JSON.stringify(colunasVisiveis)); }, [colunasVisiveis]);
-   useEffect(() => { localStorage.setItem("os_orderData", orderData); }, [orderData]);
+    useEffect(() => { localStorage.setItem("os_orderData", orderData); }, [orderData]);
+    useEffect(() => { localStorage.setItem("os_orderNumero", orderNumero); }, [orderNumero]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -211,10 +213,21 @@ export default function Vendas() {
        return matchSearch && matchStatus && matchPeriodo && matchTipo;
      })
      .sort((a, b) => {
+       // Prioriza ordenação por número se definida, senão por data
+       const numA = parseInt(a.numero || 0);
+       const numB = parseInt(b.numero || 0);
        const dataA = a.data_entrada || "";
        const dataB = b.data_entrada || "";
-       if (orderData === "asc") return dataA.localeCompare(dataB);
-       return dataB.localeCompare(dataA);
+
+       if (orderNumero !== "asc") {
+         if (numA !== numB) return orderNumero === "asc" ? numA - numB : numB - numA;
+       } else {
+         if (dataA !== dataB) {
+           if (orderData === "asc") return dataA.localeCompare(dataB);
+           return dataB.localeCompare(dataA);
+         }
+       }
+       return orderNumero === "asc" ? numA - numB : numB - numA;
      });
 
   const ordensParaMassa = filtradas;
@@ -451,8 +464,8 @@ export default function Vendas() {
             <table className="w-full min-w-[700px]">
               <thead>
                <tr className="border-b border-gray-800">
-                 <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-12">Nº</th>
-                 {colunasVisiveis.data && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20 cursor-pointer hover:text-white transition-colors" onClick={() => setOrderData(orderData === "asc" ? "desc" : "asc")}>Data {orderData === "asc" ? "↑" : "↓"}</th>}
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-12 cursor-pointer hover:text-white transition-colors" onClick={() => setOrderNumero(orderNumero === "asc" ? "desc" : "asc")}>Nº {orderNumero === "asc" ? "↑" : "↓"}</th>
+                  {colunasVisiveis.data && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20 cursor-pointer hover:text-white transition-colors" onClick={() => setOrderData(orderData === "asc" ? "desc" : "asc")}>Data {orderData === "asc" ? "↑" : "↓"}</th>}
                  {colunasVisiveis.cliente && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider flex-1">Cliente</th>}
                  {colunasVisiveis.contato && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Contato</th>}
                  {colunasVisiveis.veiculo && filtroTipo.includes("patio") && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Veículo</th>}
