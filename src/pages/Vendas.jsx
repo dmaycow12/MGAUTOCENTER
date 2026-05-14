@@ -464,10 +464,7 @@ export default function Vendas() {
             <table className="w-full min-w-[700px]">
               <thead>
                <tr className="border-b border-gray-800">
-                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-12 cursor-pointer hover:text-white transition-colors flex flex-col items-start" onClick={() => setOrderNumero(orderNumero === "asc" ? "desc" : "asc")}>
-                    <span>Nº</span>
-                    <span className="text-xs">{orderNumero === "asc" ? "↑" : "↓"}</span>
-                  </th>
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-12 cursor-pointer hover:text-white transition-colors whitespace-nowrap" onClick={() => setOrderNumero(orderNumero === "asc" ? "desc" : "asc")}>Nº {orderNumero === "asc" ? "↑" : "↓"}</th>
                   {colunasVisiveis.data && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20 cursor-pointer hover:text-white transition-colors" onClick={() => setOrderData(orderData === "asc" ? "desc" : "asc")}>Data {orderData === "asc" ? "↑" : "↓"}</th>}
                  {colunasVisiveis.cliente && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider flex-1">Cliente</th>}
                  {colunasVisiveis.contato && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Contato</th>}
