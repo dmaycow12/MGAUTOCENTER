@@ -5,6 +5,8 @@ import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
+import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { base44 } from '@/api/base44Client';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -15,6 +17,26 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AppRoutes = () => {
+  const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated } = useAuth();
+
+  if (isLoadingPublicSettings || isLoadingAuth) {
+    return (
+      <div style={{ background: '#000', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: '#fff', fontSize: '16px' }}>Carregando...</div>
+      </div>
+    );
+  }
+
+  if (authError?.type === 'auth_required' || (!isAuthenticated && authError)) {
+    base44.auth.redirectToLogin(window.location.href);
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    base44.auth.redirectToLogin(window.location.href);
+    return null;
+  }
+
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/Dashboard" replace />} />
@@ -38,7 +60,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClientInstance}>
       <Router>
-        <AppRoutes />
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
       </Router>
       <Toaster />
     </QueryClientProvider>
