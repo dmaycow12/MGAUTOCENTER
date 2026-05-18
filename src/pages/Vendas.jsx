@@ -193,6 +193,10 @@ export default function Vendas() {
     load();
   };
 
+  const atualizarOrdem = (id, dados) => {
+    setOrdens(prev => prev.map(o => o.id === id ? { ...o, ...dados } : o));
+  };
+
   const pad = n => String(n).padStart(2, "0");
   const periodoRange = usandoOutroPeriodo && customRange
     ? customRange
@@ -455,7 +459,7 @@ export default function Vendas() {
       ) : viewMode === "cards" ? (
        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
          {filtradas.map(os => (
-           <VendaCard key={os.id} os={os} clientes={clientes} notas={notas} onEdit={() => { setEditando(os); setShowForm(true); }} onDelete={() => excluir(os.id)} onRefresh={load} />
+           <VendaCard key={os.id} os={os} clientes={clientes} notas={notas} onEdit={() => { setEditando(os); setShowForm(true); }} onDelete={() => excluir(os.id)} onRefresh={load} onUpdate={(dados) => atualizarOrdem(os.id, dados)} />
           ))}
         </div>
       ) : (
@@ -491,6 +495,7 @@ export default function Vendas() {
                     onEdit={() => { setEditando(os); setShowForm(true); }}
                     onDelete={() => excluir(os.id)}
                     onRefresh={load}
+                    onUpdate={(dados) => atualizarOrdem(os.id, dados)}
                     rowIndex={idx}
                     totalRows={filtradas.length}
                     getRowRef={(i) => rowRefs.current[i]}

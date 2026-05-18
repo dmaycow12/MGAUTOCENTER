@@ -198,7 +198,7 @@ function PagamentoSelect({ os, onRefresh }) {
   );
 }
 
-function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefresh, colunas = COLUNAS_PADRAO, ocultarVeiculo = false, rowIndex, getRowRef, registerRef }, ref) {
+function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefresh, onUpdate, colunas = COLUNAS_PADRAO, ocultarVeiculo = false, rowIndex, getRowRef, registerRef }, ref) {
   const clienteCadastro = clientes.find(c => c.id === os.cliente_id);
   const isConsumidor = os.cliente_nome?.toUpperCase() === "CONSUMIDOR";
   // Mostra apenas nome social: para CONSUMIDOR usa o da venda (ou "CONSUMIDOR" como padrão); para outros usa nome_fantasia do cadastro ou da venda
@@ -275,6 +275,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
     const eraConcluido = os.status === "Concluído";
     const ficaConcluido = novoStatus === "Concluído";
     if (eraConcluido && !ficaConcluido) { setStatusPendente(novoStatus); setShowAviso(true); return; }
+    onUpdate?.({ status: novoStatus });
     const updateData = { status: novoStatus };
     if (os.quilometragem !== undefined && os.quilometragem !== null) {
       updateData.quilometragem = String(os.quilometragem);
@@ -291,6 +292,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
     try {
       await excluirLancamentosOS(os.id);
       await restaurarEstoque(os.pecas);
+      onUpdate?.({ status: statusPendente });
       const updateData = { status: statusPendente };
       if (os.quilometragem !== undefined && os.quilometragem !== null) {
         updateData.quilometragem = String(os.quilometragem);

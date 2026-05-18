@@ -125,7 +125,7 @@ function InlineEdit({ value, onSave, placeholder = "", onNext, isPhone = false }
    );
 }
 
-export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh }) {
+export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh, onUpdate }) {
   const notasOs = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Rascunho');
   const navigate = useNavigate();
   const veiculoEditRef = useRef(null);
@@ -193,6 +193,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
     const eraConcluido = os.status === "Concluído";
     const ficaConcluido = novoStatus === "Concluído";
     if (eraConcluido && !ficaConcluido) { setStatusPendenteCard(novoStatus); setShowAvisoStatus(true); return; }
+    onUpdate?.({ status: novoStatus });
     await base44.entities.Vendas.update(os.id, { status: novoStatus });
     if (!eraConcluido && ficaConcluido) {
       await gerarLancamentosFinanceiros(os);
@@ -208,6 +209,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh 
       const osData = osAtualizada || os;
       await excluirLancamentosOS(os.id);
       await restaurarEstoque(osData.pecas || []);
+      onUpdate?.({ status: statusPendenteCard });
       await base44.entities.Vendas.update(os.id, { status: statusPendenteCard });
       setShowAvisoStatus(false);
       setStatusPendenteCard(null);
