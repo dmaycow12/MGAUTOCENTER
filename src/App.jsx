@@ -27,12 +27,7 @@ const AppRoutes = () => {
     );
   }
 
-  if (authError?.type === 'auth_required' || (!isAuthenticated && authError)) {
-    base44.auth.redirectToLogin(window.location.href);
-    return null;
-  }
-
-  if (!isAuthenticated) {
+  if (authError?.type === 'auth_required') {
     base44.auth.redirectToLogin(window.location.href);
     return null;
   }
