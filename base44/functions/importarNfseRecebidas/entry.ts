@@ -28,12 +28,48 @@ async function buscarNFSesRecebidas() {
   return { notas: todas, erro: null };
 }
 
+// Gera um XML simples com os dados da NFSe Nacional
+function gerarXmlNfse(nf) {
+  const esc = (v) => String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<NFSeNacional>
+  <IdentificacaoNFSe>
+    <Numero>${esc(nf.numero_dfse || nf.numero)}</Numero>
+    <ChaveAcesso>${esc(nf.id_tag)}</ChaveAcesso>
+    <DataEmissao>${esc(nf.data_emissao)}</DataEmissao>
+    <DataCompetencia>${esc(nf.data_competencia)}</DataCompetencia>
+  </IdentificacaoNFSe>
+  <Prestador>
+    <CNPJ>${esc(nf.cnpj_prestador)}</CNPJ>
+    <RazaoSocial>${esc(nf.razao_social_prestador)}</RazaoSocial>
+    <NomeFantasia>${esc(nf.nome_fantasia_emitente)}</NomeFantasia>
+    <Municipio>${esc(nf.descricao_municipio_emissor)}</Municipio>
+    <UF>${esc(nf.uf_emitente)}</UF>
+    <Email>${esc(nf.email_prestador)}</Email>
+  </Prestador>
+  <Tomador>
+    <CNPJ>${esc(nf.cnpj_tomador)}</CNPJ>
+    <CPF>${esc(nf.cpf_tomador)}</CPF>
+    <RazaoSocial>${esc(nf.razao_social_tomador)}</RazaoSocial>
+    <Municipio>${esc(nf.codigo_municipio_tomador)}</Municipio>
+  </Tomador>
+  <Servico>
+    <Descricao>${esc(nf.descricao_servico)}</Descricao>
+    <DescricaoTributacaoNacional>${esc(nf.descricao_tributacao_nacional)}</DescricaoTributacaoNacional>
+    <InformacoesComplementares>${esc(nf.informacoes_complementares)}</InformacoesComplementares>
+    <ValorServico>${esc(nf.valor_servico)}</ValorServico>
+    <ValorLiquido>${esc(nf.valor_liquido)}</ValorLiquido>
+    <BaseCalculoISS>${esc(nf.iss_base_calculo)}</BaseCalculoISS>
+  </Servico>
+</NFSeNacional>`;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Busca notas já existentes para evitar duplicatas
     const notasExistentes = await base44.asServiceRole.entities.NotaFiscal.list('-created_date', 2000);
+    // Usar numero_dfse como identificador único (mais estável que id_tag)
     const chavesExistentes = new Set(notasExistentes.map(n => n.chave_acesso).filter(Boolean));
 
     const { notas: nfses, erro } = await buscarNFSesRecebidas();
@@ -46,42 +82,36 @@ Deno.serve(async (req) => {
     let atualizadas = 0;
 
     for (const nf of nfses) {
-      const chave = nf.chave || '';
-      const situacao = (nf.status || '').toLowerCase();
+      // Usar numero_dfse como chave de acesso (identificador único da NFSe Nacional)
+      const chave = nf.numero_dfse || nf.id_tag || '';
+      const situacao = (nf.status_mensagem || '').toLowerCase();
       const status = situacao.includes('cancel') ? 'Cancelada' : 'Importada';
-      const data_emissao = (nf.data_emissao || '').substring(0, 10);
-      const valorTotal = parseFloat(nf.valor_servicos || nf.servicos?.[0]?.valor_servicos || '0');
+      const data_emissao = (nf.data_emissao || nf.data_competencia || '').substring(0, 10);
+      const valorTotal = parseFloat(nf.valor_servico || nf.valor_liquido || '0');
 
       // Filtrar notas anteriores a 01/03/2026
       if (data_emissao && data_emissao < '2026-03-01') continue;
 
-      // Tentar baixar XML se url_xml disponível
-      let xmlParaSalvar = {};
-      if (nf.url_xml) {
-        try {
-          const xmlResp = await fetch(nf.url_xml, { headers: { 'Authorization': AUTH_HEADER } });
-          if (xmlResp.ok) {
-            const xmlText = await xmlResp.text();
-            if (xmlText && xmlText.length > 100) {
-              const xmlFile = new File([xmlText], `NFSe-${nf.numero || chave}.xml`, { type: 'text/xml' });
-              const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
-              if (uploadResp?.file_url) xmlParaSalvar = { xml_url: uploadResp.file_url };
-            }
-          }
-        } catch (_) {}
-      }
+      // Prestador = fornecedor (quem emitiu). Tomador = nossa empresa (quem recebeu o serviço)
+      const nomePrestador = nf.razao_social_prestador || nf.nome_fantasia_emitente || '';
+      const docPrestador = nf.cnpj_prestador || nf.cpf_prestador || '';
+      const descricaoServico = nf.descricao_servico || nf.descricao_tributacao_nacional || '';
+      const municipio = nf.descricao_municipio_prestacao || nf.descricao_municipio_emissor || '';
 
-      const nomePrestador = nf.prestador?.razao_social || nf.nome_prestador || 'Prestador';
-      const docPrestador = nf.prestador?.cnpj || nf.prestador?.cpf || nf.documento_prestador || '';
-      const discriminacao = nf.servicos?.[0]?.discriminacao || '';
+      // Gerar e salvar XML com os dados da nota
+      let xmlParaSalvar = {};
+      try {
+        const xmlText = gerarXmlNfse(nf);
+        const xmlFile = new File([xmlText], `NFSe-${chave}.xml`, { type: 'text/xml' });
+        const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
+        if (uploadResp?.file_url) xmlParaSalvar = { xml_url: uploadResp.file_url };
+      } catch (_) {}
 
       if (chave && chavesExistentes.has(chave)) {
-        // Nota já existe — atualizar XML/PDF se estiver faltando
+        // Nota já existe — atualizar XML se estiver faltando
         const notaExistente = notasExistentes.find(n => n.chave_acesso === chave);
         if (notaExistente && !notaExistente.xml_url && xmlParaSalvar.xml_url) {
-          const updates = { ...xmlParaSalvar };
-          if (!notaExistente.pdf_url && nf.url) updates.pdf_url = nf.url;
-          await base44.asServiceRole.entities.NotaFiscal.update(notaExistente.id, updates);
+          await base44.asServiceRole.entities.NotaFiscal.update(notaExistente.id, { xml_url: xmlParaSalvar.xml_url });
           atualizadas++;
         }
         continue;
@@ -89,8 +119,8 @@ Deno.serve(async (req) => {
 
       await base44.asServiceRole.entities.NotaFiscal.create({
         tipo: 'NFSe',
-        numero: nf.numero || nf.numero_rps || '',
-        serie: nf.serie_rps || nf.serie || '1',
+        numero: nf.numero_dfse || nf.numero || '',
+        serie: nf.serie_dps || '1',
         status,
         chave_acesso: chave,
         spedy_id: chave,
@@ -98,12 +128,11 @@ Deno.serve(async (req) => {
         cliente_cpf_cnpj: docPrestador,
         valor_total: valorTotal,
         data_emissao,
-        pdf_url: nf.url || '',
         observacoes: [
-          discriminacao ? `Serviço: ${discriminacao}` : null,
-          `Município: ${nf.nome_municipio || nf.prestador?.endereco?.nome_municipio || ''} ${nf.sigla_uf || nf.prestador?.endereco?.uf || ''}`,
+          descricaoServico ? `Serviço: ${descricaoServico}` : null,
+          municipio ? `Município: ${municipio}` : null,
         ].filter(Boolean).join(' | '),
-        mensagem_sefaz: nf.status || '',
+        mensagem_sefaz: nf.status_mensagem || '',
         ...xmlParaSalvar,
       });
 
@@ -115,8 +144,8 @@ Deno.serve(async (req) => {
       sucesso: true,
       mensagem: [
         importadas > 0 ? `${importadas} NFSe(s) importada(s).` : null,
-        atualizadas > 0 ? `${atualizadas} NFSe(s) atualizada(s) com XML faltante.` : null,
-        importadas === 0 && atualizadas === 0 ? `Nenhuma NFSe nova encontrada. ${nfses.length} nota(s) consultada(s).` : null,
+        atualizadas > 0 ? `${atualizadas} NFSe(s) atualizada(s) com XML.` : null,
+        importadas === 0 && atualizadas === 0 ? `Nenhuma NFSe nova. ${nfses.length} nota(s) consultada(s).` : null,
         erro ? `Aviso: ${erro}` : null,
       ].filter(Boolean).join(' '),
       importadas,
