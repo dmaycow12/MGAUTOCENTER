@@ -814,7 +814,6 @@ export default function NotasFiscais() {
   const abrirPdfNota = async (nota) => {
     // Se já tem PDF salvo no banco (válido, não HTML nem placeholder) — abre em nova aba instantaneamente
     const pdfSalvoValido = nota.pdf_url &&
-      !nota.pdf_url.endsWith('.html') &&
       !nota.pdf_url.includes('/notas_fiscais_consumidor/') &&
       !nota.pdf_url.includes('nota_nova.pdf') &&
       !nota.pdf_url.includes('focusnfe') &&
@@ -832,7 +831,7 @@ export default function NotasFiscais() {
     }
 
     // Sem PDF salvo — tenta buscar via proxy e abre em nova aba
-    feedback('sucesso', 'Buscando PDF na Focus NFe...');
+    feedback('sucesso', 'Buscando PDF...');
     try {
       const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
       const data = res.data;

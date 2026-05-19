@@ -93,34 +93,117 @@ Deno.serve(async (req) => {
     // Para notas de entrada (Importada/Lançada), buscar pelo chave_acesso na SEFAZ via Focus NFe
     let result = null;
 
-    // NFSe recebida: tentar buscar PDF diretamente pelo endpoint nfses_recebidas
-    if (nota.tipo === 'NFSe' && (nota.status === 'Importada' || nota.status === 'Lançada') && nota.chave_acesso) {
-      const chave = nota.chave_acesso.replace(/\D/g, '');
-      const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfses_recebidas/${chave}.pdf`, {
-        headers: { 'Authorization': AUTH_HEADER },
-      });
-      if (danfeResp.ok) {
-        const ct = danfeResp.headers.get('content-type') || '';
-        if (ct.includes('pdf') || ct.includes('octet')) {
-          const blob = await danfeResp.blob();
-          const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
-          await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
-          return Response.json({ sucesso: true, pdf_url: file_url });
-        }
+    // NFSe recebida (Nacional): gerar PDF com dados da nota (Focus NFe não fornece PDF para NFSe recebidas)
+    if (nota.tipo === 'NFSe' && (nota.status === 'Importada' || nota.status === 'Lançada')) {
+      // Ler XML salvo para extrair dados adicionais
+      let xmlDados = {};
+      const xmlUrl = nota.xml_url || '';
+      if (xmlUrl) {
+        try {
+          const xmlResp = await fetch(xmlUrl);
+          if (xmlResp.ok) {
+            const xmlText = await xmlResp.text();
+            const get = (tag) => { const m = xmlText.match(new RegExp(`<${tag}[^>]*>([^<]*)</${tag}>`)); return m ? m[1] : ''; };
+            xmlDados = {
+              razaoSocialPrestador: get('RazaoSocial') || get('razao_social_prestador'),
+              cnpjPrestador: get('CNPJ') || get('cnpj_prestador'),
+              municipio: get('Municipio') || get('municipio'),
+              uf: get('UF') || get('uf'),
+              descricao: get('Descricao') || get('DescricaoTributacaoNacional') || get('descricao_servico'),
+              valorServico: get('ValorServico') || get('valor_servico'),
+              valorLiquido: get('ValorLiquido') || get('valor_liquido'),
+              informacoes: get('InformacoesComplementares'),
+            };
+          }
+        } catch (_) {}
       }
-      // Fallback: retornar a url direta da Focus NFe se existir no campo spedy_id (que para NFSe é a chave)
-      const infoResp = await fetch(`${FOCUSNFE_BASE}/nfses_recebidas/${chave}`, {
-        headers: { 'Authorization': AUTH_HEADER },
-      });
-      if (infoResp.ok) {
-        const info = await infoResp.json().catch(() => ({}));
-        const pdfUrl = info.url || info.url_danfse || '';
-        if (pdfUrl) {
-          await db.entities.NotaFiscal.update(nota_id, { pdf_url: pdfUrl });
-          return Response.json({ sucesso: true, pdf_url: pdfUrl });
-        }
-      }
-      return Response.json({ sucesso: false, erro: 'PDF da NFSe não disponível na Focus NFe.' });
+
+      const prestador = nota.cliente_nome || xmlDados.razaoSocialPrestador || 'Prestador';
+      const cnpj = nota.cliente_cpf_cnpj || xmlDados.cnpjPrestador || '';
+      const descricao = xmlDados.descricao || (nota.observacoes || '').replace(/Serviço: /i, '').split(' | ')[0];
+      const municipio = xmlDados.municipio || xmlDados.uf || '';
+      const valorTotal = Number(nota.valor_total || 0).toFixed(2).replace('.', ',');
+      const numero = nota.numero || nota.chave_acesso || '';
+      const dataEmissao = nota.data_emissao || '';
+      const informacoes = xmlDados.informacoes || nota.observacoes || '';
+
+      // Gera HTML da nota para converter em PDF via jsPDF no browser (retornamos HTML para o frontend imprimir)
+      // Como backend não tem DOM, geramos um HTML bem formatado que o usuário pode imprimir como PDF
+      const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>NFSe ${numero}</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 12px; color: #000; margin: 20px; }
+  .header { text-align: center; border: 2px solid #000; padding: 10px; margin-bottom: 10px; }
+  .header h1 { font-size: 18px; margin: 0; }
+  .header h2 { font-size: 14px; margin: 4px 0 0 0; color: #444; }
+  .section { border: 1px solid #000; margin-bottom: 8px; }
+  .section-title { background: #ddd; font-weight: bold; padding: 4px 8px; font-size: 11px; text-transform: uppercase; }
+  .row { display: flex; border-top: 1px solid #ccc; }
+  .field { padding: 5px 8px; flex: 1; }
+  .field label { font-size: 9px; color: #555; display: block; text-transform: uppercase; }
+  .field span { font-size: 12px; font-weight: bold; }
+  .valor { font-size: 20px; font-weight: bold; color: #000; text-align: right; padding: 10px; }
+  @media print { body { margin: 0; } button { display: none; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>NOTA FISCAL DE SERVIÇOS ELETRÔNICA - NFSe</h1>
+  <h2>NOTA RECEBIDA</h2>
+</div>
+<div class="section">
+  <div class="section-title">Identificação da NFSe</div>
+  <div class="row">
+    <div class="field"><label>Número</label><span>${numero}</span></div>
+    <div class="field"><label>Data de Emissão</label><span>${dataEmissao}</span></div>
+    <div class="field"><label>Série</label><span>${nota.serie || '1'}</span></div>
+  </div>
+</div>
+<div class="section">
+  <div class="section-title">Prestador de Serviços</div>
+  <div class="row">
+    <div class="field" style="flex:3"><label>Razão Social</label><span>${prestador}</span></div>
+    <div class="field" style="flex:2"><label>CNPJ/CPF</label><span>${cnpj}</span></div>
+  </div>
+  <div class="row">
+    <div class="field"><label>Município</label><span>${municipio}</span></div>
+  </div>
+</div>
+<div class="section">
+  <div class="section-title">Discriminação do Serviço</div>
+  <div class="row">
+    <div class="field"><label>Descrição</label><span>${descricao}</span></div>
+  </div>
+  ${informacoes ? `<div class="row"><div class="field"><label>Informações Complementares</label><span>${informacoes}</span></div></div>` : ''}
+</div>
+<div class="section">
+  <div class="section-title">Valores</div>
+  <div class="row">
+    <div class="field"><label>Valor Total do Serviço</label></div>
+    <div class="valor">R$ ${valorTotal}</div>
+  </div>
+</div>
+<br>
+<div style="text-align:center; font-size:10px; color:#666;">
+  Documento gerado pelo sistema | NFSe Nacional recebida via SEFAZ
+</div>
+<br>
+<div style="text-align:center">
+  <button onclick="window.print()" style="padding:10px 30px;font-size:14px;cursor:pointer;background:#062C9B;color:#fff;border:none;border-radius:6px;">🖨️ Imprimir / Salvar como PDF</button>
+</div>
+<script>setTimeout(() => window.print(), 800);</script>
+</body>
+</html>`;
+
+      // Salva o HTML como arquivo e retorna URL
+      const htmlBlob = new Blob([html], { type: 'text/html; charset=utf-8' });
+      const htmlFile = new File([htmlBlob], `NFSe-${numero}.html`, { type: 'text/html' });
+      const { file_url } = await db.integrations.Core.UploadFile({ file: htmlFile });
+      await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+      return Response.json({ sucesso: true, pdf_url: file_url, is_html: true });
     }
 
     if (nota.spedy_id && !(nota.status === 'Importada' || nota.status === 'Lançada')) {
