@@ -9,7 +9,7 @@ async function buscarNFSesRecebidas() {
   let todas = [];
   let versaoCursor = 0;
   for (let i = 0; i < 40; i++) {
-    const url = `${FOCUSNFE_BASE}/nfses_recebidas?cnpj=${CNPJ_EMITENTE}&versao=${versaoCursor}&completa=1`;
+    const url = `${FOCUSNFE_BASE}/nfses_recebidas?cnpj=${CNPJ_EMITENTE}&versao=${versaoCursor}&completa=1&ambiente=nacional`;
     const resp = await fetch(url, { method: 'GET', headers: { 'Authorization': AUTH_HEADER } });
     if (!resp.ok) {
       const txt = await resp.text().catch(() => '');
