@@ -208,12 +208,88 @@ Deno.serve(async (req) => {
       if (chave) chavesExistentes.add(chave);
     }
 
+    // ===== ATUALIZAR XML/PDF FALTANTES EM NOTAS JÁ IMPORTADAS =====
+    let atualizadas = 0;
+    const notasFaltantes = notasExistentes.filter(n =>
+      n.tipo === 'NFe' &&
+      n.chave_acesso &&
+      (n.status === 'Importada' || n.status === 'Lançada') &&
+      (!n.xml_url && !n.xml_original?.trim().startsWith('<'))
+    );
+
+    for (const nota of notasFaltantes) {
+      const chave = nota.chave_acesso;
+      let xmlOriginal = null;
+      try {
+        const xmlEndpoints = [
+          `${FOCUSNFE_BASE}/nfes_recebidas/${chave}.xml`,
+          `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
+        ];
+        for (const endpoint of xmlEndpoints) {
+          const xmlResp = await fetch(endpoint, { headers: { 'Authorization': AUTH_HEADER } });
+          if (!xmlResp.ok) continue;
+          const ct = xmlResp.headers.get('content-type') || '';
+          let candidate = '';
+          if (ct.includes('xml')) {
+            candidate = await xmlResp.text();
+          } else {
+            const xmlData = await xmlResp.json().catch(() => ({}));
+            candidate = xmlData.xml || xmlData.xml_nota || xmlData.xml_nfe || '';
+            if (!candidate && xmlData.caminho_xml_nota_fiscal) {
+              const r2 = await fetch(xmlData.caminho_xml_nota_fiscal, { headers: { 'Authorization': AUTH_HEADER } });
+              if (r2.ok) candidate = await r2.text();
+            }
+          }
+          if (candidate && candidate.length > 500 && (candidate.includes('infNFe') || candidate.includes('nfeProc') || candidate.includes('<det'))) {
+            xmlOriginal = candidate;
+            break;
+          }
+        }
+      } catch (_) {}
+
+      let updates = {};
+
+      if (xmlOriginal) {
+        try {
+          const xmlFile = new File([xmlOriginal], `NF-${nota.numero || chave}.xml`, { type: 'text/xml' });
+          const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
+          if (uploadResp?.file_url) updates.xml_url = uploadResp.file_url;
+        } catch (_) {}
+      }
+
+      // Tenta buscar PDF se também estiver faltando
+      if (!nota.pdf_url) {
+        try {
+          const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {
+            headers: { 'Authorization': AUTH_HEADER },
+          });
+          if (danfeResp.ok) {
+            const ct = danfeResp.headers.get('content-type') || '';
+            if (ct.includes('pdf') || ct.includes('octet')) {
+              const blob = await danfeResp.blob();
+              const pdfFile = new File([blob], `NF-${nota.numero || chave}.pdf`, { type: 'application/pdf' });
+              const uploadPdf = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+              if (uploadPdf?.file_url) updates.pdf_url = uploadPdf.file_url;
+            }
+          }
+        } catch (_) {}
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await base44.asServiceRole.entities.NotaFiscal.update(nota.id, updates);
+        atualizadas++;
+      }
+    }
+
     return Response.json({
       sucesso: true,
-      mensagem: importadas > 0
-        ? `${importadas} nota(s) importada(s) da SEFAZ (NFe: ${nfes.length} consultadas, NFSe: ${nfses.length} consultadas).`
-        : `Nenhuma nota nova encontrada. NFe consultadas: ${nfes.length}, NFSe consultadas: ${nfses.length}.`,
+      mensagem: [
+        importadas > 0 ? `${importadas} nota(s) importada(s).` : null,
+        atualizadas > 0 ? `${atualizadas} nota(s) atualizada(s) com XML/PDF faltantes.` : null,
+        importadas === 0 && atualizadas === 0 ? `Nenhuma nota nova encontrada. NFe: ${nfes.length}, NFSe: ${nfses.length} consultadas.` : null,
+      ].filter(Boolean).join(' '),
       importadas,
+      atualizadas,
       nfes_consultadas: nfes.length,
       nfses_consultadas: nfses.length,
     });
