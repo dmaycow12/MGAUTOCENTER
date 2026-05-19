@@ -831,9 +831,9 @@ export default function NotasFiscais() {
       return;
     }
 
-    // NFSe Importada (recebida) — PDF não disponível via Focus NFe
-    if (nota.tipo === 'NFSe' && nota.status === 'Importada') {
-      feedback('erro', 'PDF não disponível para NFSe recebidas. Solicite o PDF diretamente ao prestador de serviço.');
+    // NFSe Importada/Lançada (recebida) — PDF não disponível via Focus NFe
+    if (nota.tipo === 'NFSe' && (nota.status === 'Importada' || nota.status === 'Lançada')) {
+      feedback('erro', 'PDF da NFSe não disponível. Solicite ao prestador de serviço.');
       return;
     }
 
@@ -858,9 +858,9 @@ export default function NotasFiscais() {
   };
 
   const baixarPdfNota = async (nota) => {
-    // NFSe Importada (recebida) — PDF não disponível
-    if (nota.tipo === 'NFSe' && nota.status === 'Importada') {
-      feedback('erro', 'PDF não disponível para NFSe recebidas. Solicite o PDF diretamente ao prestador de serviço.');
+    // NFSe Importada/Lançada (recebida) — PDF não disponível
+    if (nota.tipo === 'NFSe' && (nota.status === 'Importada' || nota.status === 'Lançada')) {
+      feedback('erro', 'PDF da NFSe não disponível. Solicite ao prestador de serviço.');
       return;
     }
     if (nota.tipo === 'NFCe') {

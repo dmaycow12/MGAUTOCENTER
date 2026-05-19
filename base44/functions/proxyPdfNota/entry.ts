@@ -28,6 +28,11 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: true, pdf_url: nota.pdf_url });
     }
 
+    // NFSe recebida (Importada/Lançada) — não tem PDF disponível via Focus NFe
+    if (nota.tipo === 'NFSe' && (nota.status === 'Importada' || nota.status === 'Lançada')) {
+      return Response.json({ sucesso: false, erro: 'PDF da NFSe não disponível. Solicite ao prestador de serviço.' });
+    }
+
     // Para NFCe emitida: a Focus NFe retorna HTML (DANFE simplificado), não PDF
     // Usamos o serviço gratuito screenshotmachine ou urlpdf para converter para PDF
     if (nota.tipo === 'NFCe' && nota.spedy_id) {
