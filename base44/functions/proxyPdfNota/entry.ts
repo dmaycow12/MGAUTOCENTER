@@ -96,10 +96,21 @@ Deno.serve(async (req) => {
     // NFSe recebida (Nacional): buscar DANFSe PDF na Focus NFe, fallback para HTML gerado
     if (nota.tipo === 'NFSe' && (nota.status === 'Importada' || nota.status === 'Lançada')) {
       // 1) Tentar buscar PDF real via endpoint Focus NFe nfsens_recebidas
-      if (nota.chave_acesso) {
-        const chave = nota.chave_acesso.replace(/\D/g, '');
-        console.log('[NFSe] Tentando DANFSe PDF em Focus NFe para chave:', chave);
-        const danfseResp = await fetch(`${FOCUSNFE_BASE}/nfsens_recebidas/${chave}.pdf`, {
+      // A chave real da NFSe Nacional (id_tag) começa com "NFS..." e está no XML salvo
+      let chaveNfse = nota.chave_acesso || '';
+      if (nota.xml_url && (!chaveNfse.startsWith('NFS') || chaveNfse.length < 30)) {
+        try {
+          const xr = await fetch(nota.xml_url);
+          if (xr.ok) {
+            const xt = await xr.text();
+            const mTag = xt.match(/<id_tag>([^<]+)<\/id_tag>/) || xt.match(/<ChaveAcesso>([^<]+)<\/ChaveAcesso>/);
+            if (mTag) chaveNfse = mTag[1].trim();
+          }
+        } catch (_) {}
+      }
+      if (chaveNfse) {
+        console.log('[NFSe] Tentando DANFSe PDF em Focus NFe para chave:', chaveNfse);
+        const danfseResp = await fetch(`${FOCUSNFE_BASE}/nfsens_recebidas/${chaveNfse}.pdf`, {
           headers: { 'Authorization': AUTH_HEADER },
           redirect: 'follow',
         });
