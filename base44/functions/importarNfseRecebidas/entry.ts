@@ -108,27 +108,7 @@ Deno.serve(async (req) => {
         if (uploadResp?.file_url) arquivosParaSalvar.xml_url = uploadResp.file_url;
       } catch (_) {}
 
-      // Buscar PDF via endpoint da Focus NFe — tenta id_tag primeiro, depois numero_dfse
-      let pdfEncontrado = false;
-      const idTag = nf.id_tag || '';
-      const numeroDfse = nf.numero_dfse || '';
-      
-      for (const [chavePdf, nomeCampo] of [[idTag, 'id_tag'], [numeroDfse, 'numero_dfse']]) {
-        if (!chavePdf || pdfEncontrado) continue;
-        try {
-          const pdfUrl = `${FOCUSNFE_BASE}/nfsens_recebidas/${chavePdf}.pdf`;
-          const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER, 'accept': 'application/pdf' } });
-          if (pdfResp.ok) {
-            const pdfBlob = await pdfResp.blob();
-            const pdfFile = new File([pdfBlob], `NFSe-${chave}.pdf`, { type: 'application/pdf' });
-            const pdfUpload = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
-            if (pdfUpload?.file_url) {
-              arquivosParaSalvar.pdf_url = pdfUpload.file_url;
-              pdfEncontrado = true;
-            }
-          }
-        } catch (_) {}
-      }
+      // PDF não disponível no endpoint da Focus NFe para NFSe Nacional — campo permanece vazio
 
       if (chave && chavesExistentes.has(chave)) {
         // Nota já existe — atualizar XML/PDF se estiver faltando
