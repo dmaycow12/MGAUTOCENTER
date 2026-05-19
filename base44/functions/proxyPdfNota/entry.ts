@@ -93,65 +93,79 @@ Deno.serve(async (req) => {
     // Para notas de entrada (Importada/Lançada), buscar pelo chave_acesso na SEFAZ via Focus NFe
     let result = null;
 
-    // NFSe recebida (Nacional): buscar DANFSe PDF na Focus NFe, fallback para HTML gerado
+    // NFSe recebida (Nacional): buscar PDF real via Focus NFe (endpoint correto para emitidas recebidas)
     if (nota.tipo === 'NFSe' && (nota.status === 'Importada' || nota.status === 'Lançada')) {
-      // 1) Tentar buscar PDF real via endpoint Focus NFe nfsens_recebidas
-      // A chave real da NFSe Nacional (id_tag) começa com "NFS..." e está no XML salvo
-      let chaveNfse = nota.chave_acesso || '';
-      if (nota.xml_url && (!chaveNfse.startsWith('NFS') || chaveNfse.length < 30)) {
-        try {
-          const xr = await fetch(nota.xml_url);
-          if (xr.ok) {
-            const xt = await xr.text();
-            const mTag = xt.match(/<id_tag>([^<]+)<\/id_tag>/) || xt.match(/<ChaveAcesso>([^<]+)<\/ChaveAcesso>/);
-            if (mTag) chaveNfse = mTag[1].trim();
-          }
-        } catch (_) {}
-      }
-      if (chaveNfse) {
-        console.log('[NFSe] Tentando DANFSe PDF em Focus NFe para chave:', chaveNfse);
-        const danfseResp = await fetch(`${FOCUSNFE_BASE}/nfsens_recebidas/${chaveNfse}.pdf`, {
-          headers: { 'Authorization': AUTH_HEADER },
-          redirect: 'follow',
-        });
-        console.log('[NFSe] Resposta Focus NFe:', danfseResp.status, danfseResp.headers.get('content-type'));
-        if (danfseResp.ok) {
-          const ct = danfseResp.headers.get('content-type') || '';
-          if (ct.includes('pdf') || ct.includes('octet')) {
-            const blob = await danfseResp.blob();
-            const buf = await blob.arrayBuffer();
-            const h = new Uint8Array(buf, 0, 4);
-            if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
-              const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
-              await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
-              return Response.json({ sucesso: true, pdf_url: file_url });
-            }
-          }
-        }
-        // Se redirecionou mas não seguiu, pegar URL do Location header
-        if (danfseResp.status === 302 || danfseResp.status === 301) {
-          const location = danfseResp.headers.get('location');
-          if (location) {
-            const r2 = await fetch(location, { redirect: 'follow' });
-            if (r2.ok) {
-              const blob = await r2.blob();
-              const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
-              await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
-              return Response.json({ sucesso: true, pdf_url: file_url });
-            }
-          }
-        }
-        console.log('[NFSe] PDF não disponível na Focus NFe, gerando HTML DANFSe...');
-      }
-
-      // 2) Fallback: gerar DANFSe HTML com dados do XML salvo
-      let x = {};
+      // Extrair id_tag real do XML (começa com NFS...) — o spedy_id/chave_acesso salvo é só o número
+      let idTagNfse = '';
+      let xmlText = '';
       const xmlUrl = nota.xml_url || '';
       if (xmlUrl) {
         try {
-          const xmlResp = await fetch(xmlUrl);
-          if (xmlResp.ok) {
-            const xmlText = await xmlResp.text();
+          const xr = await fetch(xmlUrl);
+          if (xr.ok) {
+            xmlText = await xr.text();
+            const mTag = xmlText.match(/<id_tag>([^<]+)<\/id_tag>/) || xmlText.match(/<ChaveAcesso>([^<]+)<\/ChaveAcesso>/);
+            if (mTag) idTagNfse = mTag[1].trim();
+          }
+        } catch (_) {}
+      }
+      console.log('[NFSe] id_tag extraído do XML:', idTagNfse);
+
+      // 1) Tentar PDF via Focus NFe usando o id_tag (endpoint de consulta NFSe recebida)
+      if (idTagNfse) {
+        const endpoints = [
+          `${FOCUSNFE_BASE}/nfsens_recebidas/${idTagNfse}`,
+          `${FOCUSNFE_BASE}/nfsens_recebidas/${idTagNfse}.pdf`,
+        ];
+        for (const ep of endpoints) {
+          const r = await fetch(ep, { headers: { 'Authorization': AUTH_HEADER }, redirect: 'follow' });
+          console.log('[NFSe] Tentando:', ep, '→', r.status, r.headers.get('content-type'));
+          if (r.ok) {
+            const ct = r.headers.get('content-type') || '';
+            if (ct.includes('pdf') || ct.includes('octet')) {
+              const blob = await r.blob();
+              const buf = await blob.arrayBuffer();
+              const h = new Uint8Array(buf, 0, 4);
+              if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
+                const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
+                await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+                return Response.json({ sucesso: true, pdf_url: file_url });
+              }
+            }
+            // Pode ser JSON com URL do PDF
+            if (ct.includes('json')) {
+              const data = await r.json().catch(() => null);
+              console.log('[NFSe] JSON retornado:', JSON.stringify(data).substring(0, 300));
+              const pdfPath = data?.caminho_pdf_nfsen || data?.url_danfse || data?.caminho_danfe || data?.url_pdf || '';
+              if (pdfPath) {
+                const pdfUrl = pdfPath.startsWith('http') ? pdfPath : `https://api.focusnfe.com.br${pdfPath}`;
+                const pr = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER }, redirect: 'follow' });
+                if (pr.ok) {
+                  const blob = await pr.blob();
+                  const buf = await blob.arrayBuffer();
+                  const h = new Uint8Array(buf, 0, 4);
+                  if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
+                    const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
+                    await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+                    return Response.json({ sucesso: true, pdf_url: file_url });
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      console.log('[NFSe] PDF real não disponível, gerando DANFSe HTML a partir do XML...');
+
+      // 2) Fallback: gerar DANFSe HTML com dados do XML salvo
+      let x = {};
+      if (xmlUrl || xmlText) {
+        try {
+          if (!xmlText && xmlUrl) {
+            const xmlResp = await fetch(xmlUrl);
+            if (xmlResp.ok) xmlText = await xmlResp.text();
+          }
+          if (xmlText) {
             const get = (tag) => { const m = xmlText.match(new RegExp(`<${tag}>([^<]*)</${tag}>`)); return m ? (m[1] || '').trim() : ''; };
             x = {
               // Prestador
