@@ -93,9 +93,47 @@ Deno.serve(async (req) => {
     // Para notas de entrada (Importada/Lançada), buscar pelo chave_acesso na SEFAZ via Focus NFe
     let result = null;
 
-    // NFSe recebida (Nacional): gerar DANFSe HTML fiel ao modelo oficial
+    // NFSe recebida (Nacional): buscar DANFSe PDF na Focus NFe, fallback para HTML gerado
     if (nota.tipo === 'NFSe' && (nota.status === 'Importada' || nota.status === 'Lançada')) {
-      // Ler XML salvo para extrair todos os campos detalhados
+      // 1) Tentar buscar PDF real via endpoint Focus NFe nfsens_recebidas
+      if (nota.chave_acesso) {
+        const chave = nota.chave_acesso.replace(/\D/g, '');
+        console.log('[NFSe] Tentando DANFSe PDF em Focus NFe para chave:', chave);
+        const danfseResp = await fetch(`${FOCUSNFE_BASE}/nfsens_recebidas/${chave}.pdf`, {
+          headers: { 'Authorization': AUTH_HEADER },
+          redirect: 'follow',
+        });
+        console.log('[NFSe] Resposta Focus NFe:', danfseResp.status, danfseResp.headers.get('content-type'));
+        if (danfseResp.ok) {
+          const ct = danfseResp.headers.get('content-type') || '';
+          if (ct.includes('pdf') || ct.includes('octet')) {
+            const blob = await danfseResp.blob();
+            const buf = await blob.arrayBuffer();
+            const h = new Uint8Array(buf, 0, 4);
+            if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
+              const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
+              await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+              return Response.json({ sucesso: true, pdf_url: file_url });
+            }
+          }
+        }
+        // Se redirecionou mas não seguiu, pegar URL do Location header
+        if (danfseResp.status === 302 || danfseResp.status === 301) {
+          const location = danfseResp.headers.get('location');
+          if (location) {
+            const r2 = await fetch(location, { redirect: 'follow' });
+            if (r2.ok) {
+              const blob = await r2.blob();
+              const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
+              await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+              return Response.json({ sucesso: true, pdf_url: file_url });
+            }
+          }
+        }
+        console.log('[NFSe] PDF não disponível na Focus NFe, gerando HTML DANFSe...');
+      }
+
+      // 2) Fallback: gerar DANFSe HTML com dados do XML salvo
       let x = {};
       const xmlUrl = nota.xml_url || '';
       if (xmlUrl) {
