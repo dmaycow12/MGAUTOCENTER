@@ -92,11 +92,6 @@ Deno.serve(async (req) => {
       // Filtrar notas anteriores a 01/03/2026
       if (data_emissao && data_emissao < '2026-03-01') continue;
 
-      // Debug: logar campos de prestador para identificar nota sem cliente
-      if (!nf.razao_social_prestador && !nf.razao_social_emitente) {
-        console.log(`[DEBUG] Nota ${nf.numero_dfse || nf.numero} sem razao_social_prestador. emitente_dps=${nf.emitente_dps} nome_fantasia_emitente=${nf.nome_fantasia_emitente} cnpj_prestador=${nf.cnpj_prestador} cnpj_emitente=${nf.cnpj_emitente}`);
-      }
-
       // Prestador = fornecedor (quem emitiu). Tomador = nossa empresa (quem recebeu o serviço)
       // Verificar todos os campos de nome disponíveis
       const nomePrestador = nf.razao_social_prestador || nf.razao_social_emitente || nf.nome_fantasia_emitente || nf.emitente_dps || '';
