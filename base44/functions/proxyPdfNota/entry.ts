@@ -28,11 +28,6 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: true, pdf_url: nota.pdf_url });
     }
 
-    // NFSe recebida (Importada/Lançada) — não tem PDF disponível via Focus NFe
-    if (nota.tipo === 'NFSe' && (nota.status === 'Importada' || nota.status === 'Lançada')) {
-      return Response.json({ sucesso: false, erro: 'PDF da NFSe não disponível. Solicite ao prestador de serviço.' });
-    }
-
     // Para NFCe emitida: a Focus NFe retorna HTML (DANFE simplificado), não PDF
     // Usamos o serviço gratuito screenshotmachine ou urlpdf para converter para PDF
     if (nota.tipo === 'NFCe' && nota.spedy_id) {
@@ -98,7 +93,37 @@ Deno.serve(async (req) => {
     // Para notas de entrada (Importada/Lançada), buscar pelo chave_acesso na SEFAZ via Focus NFe
     let result = null;
 
-    if (nota.spedy_id) {
+    // NFSe recebida: tentar buscar PDF diretamente pelo endpoint nfses_recebidas
+    if (nota.tipo === 'NFSe' && (nota.status === 'Importada' || nota.status === 'Lançada') && nota.chave_acesso) {
+      const chave = nota.chave_acesso.replace(/\D/g, '');
+      const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfses_recebidas/${chave}.pdf`, {
+        headers: { 'Authorization': AUTH_HEADER },
+      });
+      if (danfeResp.ok) {
+        const ct = danfeResp.headers.get('content-type') || '';
+        if (ct.includes('pdf') || ct.includes('octet')) {
+          const blob = await danfeResp.blob();
+          const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
+          await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+          return Response.json({ sucesso: true, pdf_url: file_url });
+        }
+      }
+      // Fallback: retornar a url direta da Focus NFe se existir no campo spedy_id (que para NFSe é a chave)
+      const infoResp = await fetch(`${FOCUSNFE_BASE}/nfses_recebidas/${chave}`, {
+        headers: { 'Authorization': AUTH_HEADER },
+      });
+      if (infoResp.ok) {
+        const info = await infoResp.json().catch(() => ({}));
+        const pdfUrl = info.url || info.url_danfse || '';
+        if (pdfUrl) {
+          await db.entities.NotaFiscal.update(nota_id, { pdf_url: pdfUrl });
+          return Response.json({ sucesso: true, pdf_url: pdfUrl });
+        }
+      }
+      return Response.json({ sucesso: false, erro: 'PDF da NFSe não disponível na Focus NFe.' });
+    }
+
+    if (nota.spedy_id && !(nota.status === 'Importada' || nota.status === 'Lançada')) {
       // Notas emitidas: buscar pelo spedy_id (referência interna)
       const ep = nota.tipo === 'NFSe' ? 'nfsen' : nota.tipo === 'NFCe' ? 'nfce' : 'nfe';
       const consultaResp = await fetch(`${FOCUSNFE_BASE}/${ep}/${nota.spedy_id}?completo=1`, {
@@ -108,9 +133,8 @@ Deno.serve(async (req) => {
         result = await consultaResp.json();
       }
     } else if (nota.chave_acesso) {
-      // Notas de entrada: buscar pelo endpoint de notas recebidas
+      // Notas de entrada NFe: buscar pelo endpoint de notas recebidas
       const chave = nota.chave_acesso.replace(/\D/g, '');
-      // Tenta endpoint de notas recebidas primeiro (NFe de entrada)
       const endpoints = [
         `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
         `${FOCUSNFE_BASE}/nfe/${chave}?completo=1`,

@@ -188,6 +188,25 @@ Deno.serve(async (req) => {
       // Filtrar notas anteriores a 01/03/2026
       if (data_emissao && data_emissao < '2026-03-01') continue;
 
+      // Tentar buscar PDF da NFSe recebida
+      let pdfNFSe = nf.url || '';
+      if (!pdfNFSe && chave) {
+        try {
+          const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfses_recebidas/${chave}.pdf`, {
+            headers: { 'Authorization': AUTH_HEADER },
+          });
+          if (danfeResp.ok) {
+            const ct = danfeResp.headers.get('content-type') || '';
+            if (ct.includes('pdf') || ct.includes('octet')) {
+              const blob = await danfeResp.blob();
+              const pdfFile = new File([blob], `NFSe-${nf.numero || chave}.pdf`, { type: 'application/pdf' });
+              const uploadPdf = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+              if (uploadPdf?.file_url) pdfNFSe = uploadPdf.file_url;
+            }
+          }
+        } catch (_) {}
+      }
+
       await base44.asServiceRole.entities.NotaFiscal.create({
         tipo: 'NFSe',
         numero: nf.numero || nf.numero_rps || '',
@@ -199,7 +218,7 @@ Deno.serve(async (req) => {
         cliente_cpf_cnpj: nf.documento_prestador || '',
         valor_total: valorTotal,
         data_emissao,
-        pdf_url: nf.url || '',
+        pdf_url: pdfNFSe,
         observacoes: `NFSe recebida via SEFAZ | Município: ${nf.nome_municipio || ''} ${nf.sigla_uf || ''}`,
         mensagem_sefaz: nf.status || '',
       });
