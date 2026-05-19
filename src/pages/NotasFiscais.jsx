@@ -1087,6 +1087,32 @@ export default function NotasFiscais() {
           {buscandoSefaz ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
           {buscandoSefaz ? 'Importando...' : 'Importar'}
         </button>
+        <button
+          onClick={async () => {
+            setBuscandoSefaz(true);
+            try {
+              const res = await base44.functions.invoke('importarNfseRecebidas', {});
+              const data = res.data;
+              if (data?.sucesso) {
+                feedback('sucesso', data.mensagem || 'NFSe importadas com sucesso.');
+                load();
+              } else {
+                feedback('erro', data?.erro || 'Erro ao importar NFSe.');
+              }
+            } catch (e) {
+              feedback('erro', 'Erro: ' + e.message);
+            }
+            setBuscandoSefaz(false);
+          }}
+          disabled={buscandoSefaz}
+          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+          style={{background:"#00ff00", color:"#000"}}
+          onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00dd00"; }}
+          onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
+        >
+          {buscandoSefaz ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+          {buscandoSefaz ? 'Importando...' : 'NFSe'}
+        </button>
         <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
           <BarChart2 className="w-4 h-4" /> Sintegra
         </button>
