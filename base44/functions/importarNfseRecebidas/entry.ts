@@ -92,27 +92,53 @@ Deno.serve(async (req) => {
       // Filtrar notas anteriores a 01/03/2026
       if (data_emissao && data_emissao < '2026-03-01') continue;
 
+      // Debug: logar campos de prestador para identificar nota sem cliente
+      if (!nf.razao_social_prestador && !nf.razao_social_emitente) {
+        console.log(`[DEBUG] Nota ${nf.numero_dfse || nf.numero} sem razao_social_prestador. emitente_dps=${nf.emitente_dps} nome_fantasia_emitente=${nf.nome_fantasia_emitente} cnpj_prestador=${nf.cnpj_prestador} cnpj_emitente=${nf.cnpj_emitente}`);
+      }
+
       // Prestador = fornecedor (quem emitiu). Tomador = nossa empresa (quem recebeu o serviço)
-      const nomePrestador = nf.razao_social_prestador || nf.nome_fantasia_emitente || '';
-      const docPrestador = nf.cnpj_prestador || nf.cpf_prestador || '';
+      // Verificar todos os campos de nome disponíveis
+      const nomePrestador = nf.razao_social_prestador || nf.razao_social_emitente || nf.nome_fantasia_emitente || nf.emitente_dps || '';
+      const docPrestador = nf.cnpj_prestador || nf.cpf_prestador || nf.cnpj_emitente || '';
       const descricaoServico = nf.descricao_servico || nf.descricao_tributacao_nacional || '';
       const municipio = nf.descricao_municipio_prestacao || nf.descricao_municipio_emissor || '';
 
       // Gerar e salvar XML com os dados da nota
-      let xmlParaSalvar = {};
+      let arquivosParaSalvar = {};
       try {
         const xmlText = gerarXmlNfse(nf);
         const xmlFile = new File([xmlText], `NFSe-${chave}.xml`, { type: 'text/xml' });
         const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
-        if (uploadResp?.file_url) xmlParaSalvar = { xml_url: uploadResp.file_url };
+        if (uploadResp?.file_url) arquivosParaSalvar.xml_url = uploadResp.file_url;
       } catch (_) {}
 
+      // Buscar PDF via endpoint da Focus NFe usando id_tag como chave
+      const idTag = nf.id_tag || '';
+      if (idTag) {
+        try {
+          const pdfUrl = `${FOCUSNFE_BASE}/nfsens_recebidas/${idTag}.pdf`;
+          const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER, 'accept': 'application/pdf' } });
+          if (pdfResp.ok) {
+            const pdfBlob = await pdfResp.blob();
+            const pdfFile = new File([pdfBlob], `NFSe-${chave}.pdf`, { type: 'application/pdf' });
+            const pdfUpload = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+            if (pdfUpload?.file_url) arquivosParaSalvar.pdf_url = pdfUpload.file_url;
+          }
+        } catch (_) {}
+      }
+
       if (chave && chavesExistentes.has(chave)) {
-        // Nota já existe — atualizar XML se estiver faltando
+        // Nota já existe — atualizar XML/PDF se estiver faltando
         const notaExistente = notasExistentes.find(n => n.chave_acesso === chave);
-        if (notaExistente && !notaExistente.xml_url && xmlParaSalvar.xml_url) {
-          await base44.asServiceRole.entities.NotaFiscal.update(notaExistente.id, { xml_url: xmlParaSalvar.xml_url });
-          atualizadas++;
+        if (notaExistente) {
+          const updates = {};
+          if (!notaExistente.xml_url && arquivosParaSalvar.xml_url) updates.xml_url = arquivosParaSalvar.xml_url;
+          if (!notaExistente.pdf_url && arquivosParaSalvar.pdf_url) updates.pdf_url = arquivosParaSalvar.pdf_url;
+          if (Object.keys(updates).length > 0) {
+            await base44.asServiceRole.entities.NotaFiscal.update(notaExistente.id, updates);
+            atualizadas++;
+          }
         }
         continue;
       }
@@ -133,7 +159,7 @@ Deno.serve(async (req) => {
           municipio ? `Município: ${municipio}` : null,
         ].filter(Boolean).join(' | '),
         mensagem_sefaz: nf.status_mensagem || '',
-        ...xmlParaSalvar,
+        ...arquivosParaSalvar,
       });
 
       importadas++;
