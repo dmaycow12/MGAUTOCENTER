@@ -108,28 +108,26 @@ Deno.serve(async (req) => {
         if (uploadResp?.file_url) arquivosParaSalvar.xml_url = uploadResp.file_url;
       } catch (_) {}
 
-      // Buscar PDF via endpoint da Focus NFe usando id_tag como chave
+      // Buscar PDF via endpoint da Focus NFe — tenta id_tag primeiro, depois numero_dfse
+      let pdfEncontrado = false;
       const idTag = nf.id_tag || '';
-      if (idTag) {
+      const numeroDfse = nf.numero_dfse || '';
+      
+      for (const [chavePdf, nomeCampo] of [[idTag, 'id_tag'], [numeroDfse, 'numero_dfse']]) {
+        if (!chavePdf || pdfEncontrado) continue;
         try {
-          const pdfUrl = `${FOCUSNFE_BASE}/nfsens_recebidas/${idTag}.pdf`;
+          const pdfUrl = `${FOCUSNFE_BASE}/nfsens_recebidas/${chavePdf}.pdf`;
           const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER, 'accept': 'application/pdf' } });
-          console.log(`[PDF] id_tag=${idTag} status=${pdfResp.status} content-type=${pdfResp.headers.get('content-type')}`);
-          if (!pdfResp.ok) {
-            const txt = await pdfResp.text().catch(() => '');
-            console.log(`[PDF] erro body: ${txt.substring(0, 300)}`);
-          } else {
+          if (pdfResp.ok) {
             const pdfBlob = await pdfResp.blob();
-            console.log(`[PDF] tamanho=${pdfBlob.size}`);
             const pdfFile = new File([pdfBlob], `NFSe-${chave}.pdf`, { type: 'application/pdf' });
             const pdfUpload = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
-            if (pdfUpload?.file_url) arquivosParaSalvar.pdf_url = pdfUpload.file_url;
+            if (pdfUpload?.file_url) {
+              arquivosParaSalvar.pdf_url = pdfUpload.file_url;
+              pdfEncontrado = true;
+            }
           }
-        } catch (e) {
-          console.log(`[PDF] exception: ${e.message}`);
-        }
-      } else {
-        console.log(`[PDF] sem id_tag para nota ${chave}`);
+        } catch (_) {}
       }
 
       if (chave && chavesExistentes.has(chave)) {
