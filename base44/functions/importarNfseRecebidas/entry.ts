@@ -114,13 +114,22 @@ Deno.serve(async (req) => {
         try {
           const pdfUrl = `${FOCUSNFE_BASE}/nfsens_recebidas/${idTag}.pdf`;
           const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER, 'accept': 'application/pdf' } });
-          if (pdfResp.ok) {
+          console.log(`[PDF] id_tag=${idTag} status=${pdfResp.status} content-type=${pdfResp.headers.get('content-type')}`);
+          if (!pdfResp.ok) {
+            const txt = await pdfResp.text().catch(() => '');
+            console.log(`[PDF] erro body: ${txt.substring(0, 300)}`);
+          } else {
             const pdfBlob = await pdfResp.blob();
+            console.log(`[PDF] tamanho=${pdfBlob.size}`);
             const pdfFile = new File([pdfBlob], `NFSe-${chave}.pdf`, { type: 'application/pdf' });
             const pdfUpload = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
             if (pdfUpload?.file_url) arquivosParaSalvar.pdf_url = pdfUpload.file_url;
           }
-        } catch (_) {}
+        } catch (e) {
+          console.log(`[PDF] exception: ${e.message}`);
+        }
+      } else {
+        console.log(`[PDF] sem id_tag para nota ${chave}`);
       }
 
       if (chave && chavesExistentes.has(chave)) {
