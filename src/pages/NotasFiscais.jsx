@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { appParams } from "@/lib/app-params";
 import {
   FileText, Plus, Upload, Search, Trash2, X,
-  CheckCircle, AlertCircle, PlusCircle, MinusCircle, RefreshCw, ChevronLeft, ChevronRight, LayoutGrid, List, BarChart2, Pencil, Ban, LogIn, Code, Download
+  CheckCircle, AlertCircle, PlusCircle, MinusCircle, RefreshCw, ChevronLeft, ChevronRight, LayoutGrid, List, BarChart2, Pencil, Ban, LogIn, Code, Download, ExternalLink
 } from "lucide-react";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
@@ -1194,6 +1194,16 @@ export default function NotasFiscais() {
                       className="w-7 h-7 flex items-center justify-center rounded-lg transition-all text-gray-400 hover:text-blue-400"
                     ><Download className="w-3.5 h-3.5"/></button>
                   )}
+                  {nota.tipo === 'NFSe' && nota.chave_acesso && (
+                    <a
+                      href="https://www.nfse.gov.br/consultapublica"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={`Consultar no Gov.br — clique para copiar a chave`}
+                      className="w-7 h-7 flex items-center justify-center rounded-lg transition-all text-gray-500 hover:text-cyan-400"
+                      onClick={() => { navigator.clipboard?.writeText(nota.chave_acesso).catch(()=>{}); }}
+                    ><ExternalLink className="w-3.5 h-3.5"/></a>
+                  )}
                   {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
                     <button title="Cancelar" onClick={() => cancelarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg transition-all"><Ban className="w-3.5 h-3.5"/></button>
                   )}
@@ -1324,6 +1334,18 @@ export default function NotasFiscais() {
                           >
                             <Download className="w-4 h-4" />
                           </button>
+                        )}
+                        {nota.tipo === 'NFSe' && nota.chave_acesso && (
+                          <a
+                            href="https://www.nfse.gov.br/consultapublica"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={`Consultar no Gov.br (chave: ${nota.chave_acesso})`}
+                            className="p-1 text-gray-500 hover:text-cyan-400 transition-all"
+                            onClick={() => { navigator.clipboard?.writeText(nota.chave_acesso).catch(()=>{}); }}
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
                         )}
                         {(nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional' || nota.status === 'Erro de Sincronia Governamental') && (
                           <button title="Atualizar Status" onClick={() => atualizarStatusNota(nota)} disabled={atualizandoStatus === nota.id} className="p-1 text-gray-500 hover:text-cyan-400 transition-all disabled:opacity-50">
