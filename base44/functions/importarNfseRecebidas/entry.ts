@@ -9,7 +9,7 @@ async function buscarNFSesRecebidas() {
   let todas = [];
   let versaoCursor = 0;
   for (let i = 0; i < 40; i++) {
-    const url = `${FOCUSNFE_BASE}/nfses_recebidas?cnpj=${CNPJ_EMITENTE}&versao=${versaoCursor}&completa=1`;
+    const url = `${FOCUSNFE_BASE}/nfsens_recebidas?cnpj=${CNPJ_EMITENTE}&versao=${versaoCursor}&completa=1`;
     const resp = await fetch(url, { method: 'GET', headers: { 'Authorization': AUTH_HEADER } });
     if (!resp.ok) {
       const txt = await resp.text().catch(() => '');
@@ -99,21 +99,16 @@ Deno.serve(async (req) => {
       const descricaoServico = nf.descricao_servico || nf.descricao_tributacao_nacional || '';
       const municipio = nf.descricao_municipio_prestacao || nf.descricao_municipio_emissor || '';
 
-      // Salvar XML: usar url_xml da Focus NFe se disponível, senão gerar XML com os dados
+      // Gerar e salvar XML com os dados da nota
       let arquivosParaSalvar = {};
-      if (nf.url_xml) {
-        arquivosParaSalvar.xml_url = nf.url_xml;
-      } else {
-        try {
-          const xmlText = gerarXmlNfse(nf);
-          const xmlFile = new File([xmlText], `NFSe-${chave}.xml`, { type: 'text/xml' });
-          const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
-          if (uploadResp?.file_url) arquivosParaSalvar.xml_url = uploadResp.file_url;
-        } catch (_) {}
-      }
+      try {
+        const xmlText = gerarXmlNfse(nf);
+        const xmlFile = new File([xmlText], `NFSe-${chave}.xml`, { type: 'text/xml' });
+        const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
+        if (uploadResp?.file_url) arquivosParaSalvar.xml_url = uploadResp.file_url;
+      } catch (_) {}
 
-      // PDF: usar url da Focus NFe (link da prefeitura) se disponível
-      if (nf.url) arquivosParaSalvar.pdf_url = nf.url;
+      // PDF não disponível no endpoint da Focus NFe para NFSe Nacional — campo permanece vazio
 
       if (chave && chavesExistentes.has(chave)) {
         // Nota já existe — atualizar XML/PDF se estiver faltando
@@ -121,7 +116,7 @@ Deno.serve(async (req) => {
         if (notaExistente) {
           const updates = {};
           if (!notaExistente.xml_url && arquivosParaSalvar.xml_url) updates.xml_url = arquivosParaSalvar.xml_url;
-          if ((!notaExistente.pdf_url || notaExistente.pdf_url.endsWith('.html')) && arquivosParaSalvar.pdf_url) updates.pdf_url = arquivosParaSalvar.pdf_url;
+          if (!notaExistente.pdf_url && arquivosParaSalvar.pdf_url) updates.pdf_url = arquivosParaSalvar.pdf_url;
           if (Object.keys(updates).length > 0) {
             await base44.asServiceRole.entities.NotaFiscal.update(notaExistente.id, updates);
             atualizadas++;
