@@ -13,6 +13,7 @@ export default function Servicos() {
   const [form, setForm] = useState(defaultForm());
   const [saving, setSaving] = useState(false);
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("servicos_viewmode") || "list");
+  const [tabAtual, setTabAtual] = useState("dados");
 
   useEffect(() => { load(); }, []);
 
@@ -22,8 +23,8 @@ export default function Servicos() {
     setLoading(false);
   };
 
-  const abrirNovo = () => { setForm(defaultForm()); setEditando(null); setShowForm(true); };
-  const abrirEditar = (item) => { setForm({ ...item }); setEditando(item); setShowForm(true); };
+  const abrirNovo = () => { setForm(defaultForm()); setEditando(null); setTabAtual("dados"); setShowForm(true); };
+  const abrirEditar = (item) => { setForm({ ...item }); setEditando(item); setTabAtual("dados"); setShowForm(true); };
 
   const salvar = async () => {
     if (!form.descricao) return alert("Informe a descrição do serviço.");
@@ -63,7 +64,6 @@ export default function Servicos() {
 
   return (
     <div className="space-y-4">
-      {/* Botão Novo */}
       <button
         onClick={abrirNovo}
         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
@@ -74,7 +74,6 @@ export default function Servicos() {
         <Plus className="w-4 h-4" /> Novo Serviço
       </button>
 
-      {/* Busca + Toggle */}
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -92,7 +91,6 @@ export default function Servicos() {
         </div>
       </div>
 
-      {/* Lista */}
       {filtrados.length === 0 ? (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
           <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -147,24 +145,78 @@ export default function Servicos() {
       {/* Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md">
-            <div className="flex items-center justify-between p-5 border-b border-gray-800">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl flex flex-col" style={{maxHeight:"90vh"}}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-gray-800 flex-shrink-0">
               <h2 className="text-white font-semibold">{editando ? "Editar Serviço" : "Novo Serviço"}</h2>
               <button onClick={() => setShowForm(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
             </div>
-            <div className="p-5 space-y-4">
-              <style>{`.inp { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .inp:focus { border-color:#f97316; } .inp::placeholder { color:#6b7280; }`}</style>
-              <F label="Código"><input value={form.codigo} onChange={e => setForm(f => ({ ...f, codigo: e.target.value }))} className="inp" placeholder="Ex: SRV001" /></F>
-              <F label="Descrição *"><input value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} className="inp" placeholder="Nome do serviço" /></F>
-              <F label="Descrição"><input value={form.categoria} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))} className="inp" placeholder="Ex: Mecânica, Elétrica..." /></F>
-              <F label="Valor (R$)"><input type="text" inputMode="decimal" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} className="inp" placeholder="0,00" /></F>
-              <F label="Observações"><textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} className="inp" rows={2} /></F>
+
+            {/* Abas (só mostra quando editando) */}
+            {editando && (
+              <div className="flex border-b border-gray-800 flex-shrink-0">
+                <button
+                  onClick={() => setTabAtual("dados")}
+                  className="px-6 py-3 text-sm font-medium transition-all"
+                  style={{
+                    color: tabAtual === "dados" ? "#fff" : "#6b7280",
+                    borderBottom: tabAtual === "dados" ? "2px solid #062C9B" : "2px solid transparent"
+                  }}
+                >
+                  Dados
+                </button>
+                <button
+                  onClick={() => setTabAtual("historico")}
+                  className="px-6 py-3 text-sm font-medium transition-all"
+                  style={{
+                    color: tabAtual === "historico" ? "#fff" : "#6b7280",
+                    borderBottom: tabAtual === "historico" ? "2px solid #062C9B" : "2px solid transparent"
+                  }}
+                >
+                  Histórico de Vendas {editando?.historico?.length > 0 && <span className="ml-1 text-xs bg-blue-700 text-white px-1.5 py-0.5 rounded-full">{editando.historico.length}</span>}
+                </button>
+              </div>
+            )}
+
+            {/* Conteúdo */}
+            <div className="p-5 overflow-y-auto flex-1">
+              {tabAtual === "dados" ? (
+                <div className="space-y-4">
+                  <style>{`.inp { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .inp:focus { border-color:#f97316; } .inp::placeholder { color:#6b7280; }`}</style>
+                  <F label="Código"><input value={form.codigo} onChange={e => setForm(f => ({ ...f, codigo: e.target.value }))} className="inp" placeholder="Ex: SRV001" /></F>
+                  <F label="Descrição *"><input value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))} className="inp" placeholder="Nome do serviço" /></F>
+                  <F label="Categoria"><input value={form.categoria} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))} className="inp" placeholder="Ex: Mecânica, Elétrica..." /></F>
+                  <F label="Valor (R$)"><input type="text" inputMode="decimal" value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} className="inp" placeholder="0,00" /></F>
+                  <F label="Observações"><textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} className="inp" rows={2} /></F>
+                </div>
+              ) : (
+                <HistoricoVendas historico={editando?.historico || []} />
+              )}
             </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
-              <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-white rounded-lg transition-all font-medium" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>Cancelar</button>
-              <button onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50" style={{background: "#062C9B"}} onMouseEnter={e => !saving && (e.currentTarget.style.background = "#041a4d")} onMouseLeave={e => e.currentTarget.style.background = "#062C9B"}>
-                {saving ? "Salvando..." : editando ? "Salvar Alterações" : "Cadastrar"}
+
+            {/* Footer */}
+            <div className="flex justify-end gap-3 p-5 border-t border-gray-800 flex-shrink-0">
+              <button
+                onClick={() => setShowForm(false)}
+                className="px-4 py-2 text-sm text-white rounded-lg transition-all font-medium"
+                style={{background: "#cc0000"}}
+                onMouseEnter={e => e.currentTarget.style.background = "#aa0000"}
+                onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}
+              >
+                {tabAtual === "historico" ? "Fechar" : "Cancelar"}
               </button>
+              {tabAtual === "dados" && (
+                <button
+                  onClick={salvar}
+                  disabled={saving}
+                  className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50"
+                  style={{background: "#062C9B"}}
+                  onMouseEnter={e => !saving && (e.currentTarget.style.background = "#041a4d")}
+                  onMouseLeave={e => e.currentTarget.style.background = "#062C9B"}
+                >
+                  {saving ? "Salvando..." : editando ? "Salvar Alterações" : "Cadastrar"}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -182,4 +234,46 @@ function F({ label, children }) {
   );
 }
 
-function Loader() { return null; }
+function HistoricoVendas({ historico }) {
+  if (!historico || historico.length === 0) {
+    return (
+      <div className="text-center py-12 text-gray-500 text-sm">
+        Nenhuma venda registrada para este serviço
+      </div>
+    );
+  }
+
+  const totalVendas = historico.length;
+  const totalReceita = historico.reduce((s, h) => s + (Number(h.valor_total) || 0), 0);
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="bg-gray-800 rounded-xl p-3 text-center">
+          <div className="text-2xl font-bold text-white">{totalVendas}</div>
+          <div className="text-xs text-gray-400 mt-1">Total de vendas</div>
+        </div>
+        <div className="bg-gray-800 rounded-xl p-3 text-center">
+          <div className="text-lg font-bold text-green-400">{totalReceita.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</div>
+          <div className="text-xs text-gray-400 mt-1">Receita total</div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {historico.slice().reverse().map((h, i) => (
+          <div key={i} className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-xs">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-gray-400 font-mono">{h.data ? h.data.split('T')[0] : '—'}</span>
+              <span className="text-green-400 font-bold text-sm">{Number(h.valor_total || 0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</span>
+            </div>
+            <div className="flex items-center justify-between text-gray-400">
+              <span>Qtd: <span className="text-white font-semibold">{h.quantidade || 1}x</span> · Unit: <span className="text-white font-semibold">{Number(h.valor_unitario || 0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</span></span>
+              {h.ordem_venda_numero && <span className="text-orange-400 font-mono">#{h.ordem_venda_numero}</span>}
+            </div>
+            {h.cliente && <div className="text-gray-500 mt-1 truncate">{h.cliente}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
