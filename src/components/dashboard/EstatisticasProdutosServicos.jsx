@@ -29,12 +29,14 @@ export default function EstatisticasProdutosServicos({ vendas }) {
         mapServicos[desc].receita += total;
         mapServicos[desc].quantidade += Number(s.quantidade || 1);
         mapServicos[desc].vezes += 1;
-        // Por código
-        const cod = (s.codigo || "SEM COD").toUpperCase().trim();
-        if (!mapServicosCodigo[cod]) mapServicosCodigo[cod] = { descricao: cod, receita: 0, quantidade: 0, vezes: 0 };
-        mapServicosCodigo[cod].receita += total;
-        mapServicosCodigo[cod].quantidade += Number(s.quantidade || 1);
-        mapServicosCodigo[cod].vezes += 1;
+        // Por código (ignora sem código)
+        if (s.codigo && s.codigo.trim()) {
+          const cod = s.codigo.toUpperCase().trim();
+          if (!mapServicosCodigo[cod]) mapServicosCodigo[cod] = { descricao: cod, receita: 0, quantidade: 0, vezes: 0 };
+          mapServicosCodigo[cod].receita += total;
+          mapServicosCodigo[cod].quantidade += Number(s.quantidade || 1);
+          mapServicosCodigo[cod].vezes += 1;
+        }
       });
 
       // Produtos (peças)
@@ -45,12 +47,14 @@ export default function EstatisticasProdutosServicos({ vendas }) {
         mapProdutos[desc].receita += total;
         mapProdutos[desc].quantidade += Number(p.quantidade || 1);
         mapProdutos[desc].vezes += 1;
-        // Por código
-        const cod = (p.codigo || "SEM COD").toUpperCase().trim();
-        if (!mapProdutosCodigo[cod]) mapProdutosCodigo[cod] = { descricao: cod, receita: 0, quantidade: 0, vezes: 0 };
-        mapProdutosCodigo[cod].receita += total;
-        mapProdutosCodigo[cod].quantidade += Number(p.quantidade || 1);
-        mapProdutosCodigo[cod].vezes += 1;
+        // Por código (ignora XX1 e sem código)
+        if (p.codigo && p.codigo.trim() && p.codigo.toUpperCase().trim() !== 'XX1') {
+          const cod = p.codigo.toUpperCase().trim();
+          if (!mapProdutosCodigo[cod]) mapProdutosCodigo[cod] = { descricao: cod, receita: 0, quantidade: 0, vezes: 0 };
+          mapProdutosCodigo[cod].receita += total;
+          mapProdutosCodigo[cod].quantidade += Number(p.quantidade || 1);
+          mapProdutosCodigo[cod].vezes += 1;
+        }
       });
     });
 
