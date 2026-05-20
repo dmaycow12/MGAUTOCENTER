@@ -16,7 +16,8 @@ export default function EstatisticasProdutosServicos({ vendas }) {
     const mapServicos = {};
     const mapProdutos = {};
 
-    vendas.forEach(venda => {
+    const vendasValidas = vendas.filter(v => v.status !== "Orçamento");
+    vendasValidas.forEach(venda => {
       // Serviços
       (venda.servicos || []).forEach(s => {
         const desc = (s.descricao || "SEM NOME").toUpperCase().trim();

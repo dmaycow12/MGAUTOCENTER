@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     // Agregar histórico por serviço (descrição como chave)
     const historicoMap = {};
 
-    for (const venda of todasVendas) {
+    for (const venda of todasVendas.filter(v => v.status !== 'Orçamento')) {
       const servicos = venda.servicos || [];
       for (const s of servicos) {
         if (!s.descricao) continue;
