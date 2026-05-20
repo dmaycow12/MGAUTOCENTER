@@ -20,12 +20,12 @@ export default function EstatisticasProdutosServicos({ vendas }) {
     vendasValidas.forEach(venda => {
       // Serviços
       (venda.servicos || []).forEach(s => {
-        const chave = s.codigo || (s.descricao || "SEM NOME").toUpperCase().trim();
+        const desc = (s.descricao || "SEM NOME").toUpperCase().trim();
         const total = Number(s.valor || 0) * Number(s.quantidade || 1);
-        if (!mapServicos[chave]) mapServicos[chave] = { codigo: s.codigo, descricao: s.descricao, receita: 0, quantidade: 0, vezes: 0 };
-        mapServicos[chave].receita += total;
-        mapServicos[chave].quantidade += Number(s.quantidade || 1);
-        mapServicos[chave].vezes += 1;
+        if (!mapServicos[desc]) mapServicos[desc] = { descricao: desc, receita: 0, quantidade: 0, vezes: 0 };
+        mapServicos[desc].receita += total;
+        mapServicos[desc].quantidade += Number(s.quantidade || 1);
+        mapServicos[desc].vezes += 1;
       });
 
       // Produtos (peças)
@@ -90,11 +90,7 @@ export default function EstatisticasProdutosServicos({ vendas }) {
           <BarChart data={topChart} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
             <XAxis type="number" tickFormatter={v => `R$${(v/1000).toFixed(0)}k`} tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} />
             <YAxis type="category" dataKey="descricao" width={120} tick={{ fill: "#9ca3af", fontSize: 9 }} axisLine={false} tickLine={false}
-              tickFormatter={v => {
-            const item = topChart.find(t => (t.codigo || t.descricao) === v);
-            const display = item?.codigo || v;
-            return display.length > 18 ? display.substring(0, 18) + "…" : display;
-            }}
+              tickFormatter={v => v.length > 18 ? v.substring(0, 18) + "…" : v}
             />
             <Tooltip
               formatter={(v) => [fmt(v), "Receita"]}
@@ -137,7 +133,7 @@ export default function EstatisticasProdutosServicos({ vendas }) {
                 {/* barra de fundo proporcional */}
                 <div className="absolute inset-0 rounded-lg opacity-20 transition-all" style={{ width: `${pct}%`, background: COLORS[Math.min(i, COLORS.length-1)] }} />
                 <span className="col-span-1 text-gray-500 text-xs z-10">{listaFiltrada.indexOf(item) + 1}</span>
-                <span className="col-span-5 text-white text-xs font-medium z-10 truncate">{item.codigo || item.descricao}</span>
+                <span className="col-span-5 text-white text-xs font-medium z-10 truncate">{item.descricao}</span>
                 <span className="col-span-2 text-gray-400 text-xs text-right z-10">{item.quantidade.toFixed(0)}</span>
                 <span className="col-span-4 text-green-400 text-xs font-bold text-right z-10">{fmt(item.receita)}</span>
               </div>
