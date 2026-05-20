@@ -11,10 +11,13 @@ export default function EstatisticasProdutosServicos({ vendas }) {
   const [aba, setAba] = useState("servicos");
   const [busca, setBusca] = useState("");
   const [mostrarTodos, setMostrarTodos] = useState(false);
+  const [modoAgrupamento, setModoAgrupamento] = useState("descricao");
 
-  const { rankServicos, rankProdutos, totalServicos, totalProdutos } = useMemo(() => {
+  const { rankServicos, rankProdutos, rankServicosCodigo, rankProdutosCodigo, totalServicos, totalProdutos } = useMemo(() => {
     const mapServicos = {};
     const mapProdutos = {};
+    const mapServicosCodigo = {};
+    const mapProdutosCodigo = {};
 
     const vendasValidas = vendas.filter(v => v.status !== "Orçamento");
     vendasValidas.forEach(venda => {
@@ -26,6 +29,12 @@ export default function EstatisticasProdutosServicos({ vendas }) {
         mapServicos[desc].receita += total;
         mapServicos[desc].quantidade += Number(s.quantidade || 1);
         mapServicos[desc].vezes += 1;
+        // Por código
+        const cod = (s.codigo || "SEM COD").toUpperCase().trim();
+        if (!mapServicosCodigo[cod]) mapServicosCodigo[cod] = { descricao: cod, receita: 0, quantidade: 0, vezes: 0 };
+        mapServicosCodigo[cod].receita += total;
+        mapServicosCodigo[cod].quantidade += Number(s.quantidade || 1);
+        mapServicosCodigo[cod].vezes += 1;
       });
 
       // Produtos (peças)
@@ -36,26 +45,36 @@ export default function EstatisticasProdutosServicos({ vendas }) {
         mapProdutos[desc].receita += total;
         mapProdutos[desc].quantidade += Number(p.quantidade || 1);
         mapProdutos[desc].vezes += 1;
+        // Por código
+        const cod = (p.codigo || "SEM COD").toUpperCase().trim();
+        if (!mapProdutosCodigo[cod]) mapProdutosCodigo[cod] = { descricao: cod, receita: 0, quantidade: 0, vezes: 0 };
+        mapProdutosCodigo[cod].receita += total;
+        mapProdutosCodigo[cod].quantidade += Number(p.quantidade || 1);
+        mapProdutosCodigo[cod].vezes += 1;
       });
     });
 
     const rankServicos = Object.values(mapServicos).sort((a, b) => b.receita - a.receita);
     const rankProdutos = Object.values(mapProdutos).sort((a, b) => b.receita - a.receita);
+    const rankServicosCodigo = Object.values(mapServicosCodigo).sort((a, b) => b.receita - a.receita);
+    const rankProdutosCodigo = Object.values(mapProdutosCodigo).sort((a, b) => b.receita - a.receita);
     const totalServicos = rankServicos.reduce((acc, s) => acc + s.receita, 0);
     const totalProdutos = rankProdutos.reduce((acc, p) => acc + p.receita, 0);
 
-    return { rankServicos, rankProdutos, totalServicos, totalProdutos };
+    return { rankServicos, rankProdutos, rankServicosCodigo, rankProdutosCodigo, totalServicos, totalProdutos };
   }, [vendas]);
 
-  const lista = aba === "servicos" ? rankServicos : rankProdutos;
+  const rankAtualServicos = modoAgrupamento === "descricao" ? rankServicos : rankServicosCodigo;
+  const rankAtualProdutos = modoAgrupamento === "descricao" ? rankProdutos : rankProdutosCodigo;
+  const lista = aba === "servicos" ? rankAtualServicos : rankAtualProdutos;
   const totalAtual = aba === "servicos" ? totalServicos : totalProdutos;
 
   const listaFiltrada = lista.filter(i =>
     i.descricao.toLowerCase().includes(busca.toLowerCase())
   );
+  const topChart = lista.slice(0, 8);
 
   const listaExibida = mostrarTodos ? listaFiltrada : listaFiltrada.slice(0, 10);
-  const topChart = lista.slice(0, 8);
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-4">
@@ -64,6 +83,24 @@ export default function EstatisticasProdutosServicos({ vendas }) {
         <span className="text-gray-400 text-xs">
           Total: <span className="text-green-400 font-bold">{fmt(totalAtual)}</span>
         </span>
+      </div>
+
+      {/* Toggle Descrição / Código */}
+      <div className="flex gap-1 bg-gray-800 p-1 rounded-lg">
+        <button
+          onClick={() => { setModoAgrupamento("descricao"); setBusca(""); setMostrarTodos(false); }}
+          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
+          style={modoAgrupamento === "descricao" ? { background: "#065f46", color: "#6ee7b7" } : { color: "#9ca3af" }}
+        >
+          Por Descrição
+        </button>
+        <button
+          onClick={() => { setModoAgrupamento("codigo"); setBusca(""); setMostrarTodos(false); }}
+          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
+          style={modoAgrupamento === "codigo" ? { background: "#065f46", color: "#6ee7b7" } : { color: "#9ca3af" }}
+        >
+          Por Código
+        </button>
       </div>
 
       {/* Abas */}
@@ -119,7 +156,7 @@ export default function EstatisticasProdutosServicos({ vendas }) {
       <div className="space-y-1">
         <div className="grid grid-cols-12 gap-1 px-2 py-1">
           <span className="col-span-1 text-gray-500 text-xs">#</span>
-          <span className="col-span-5 text-gray-500 text-xs">DESCRIÇÃO</span>
+          <span className="col-span-5 text-gray-500 text-xs">{modoAgrupamento === "descricao" ? "DESCRIÇÃO" : "CÓDIGO"}</span>
           <span className="col-span-2 text-gray-500 text-xs text-right">QTD</span>
           <span className="col-span-4 text-gray-500 text-xs text-right">RECEITA</span>
         </div>
