@@ -11,6 +11,7 @@ import {
   AlertCircle, ChevronLeft, ChevronRight, ChevronDown
 } from "lucide-react";
 import FluxoMes from "@/components/dashboard/FluxoMes";
+import EstatisticasProdutosServicos from "@/components/dashboard/EstatisticasProdutosServicos";
 
 const RED = "#cc0000";
 const ORANGE = "#f97316";
@@ -445,6 +446,9 @@ export default function Dashboard() {
           </>
         );
       })()}
+
+      {/* Estatísticas por Produto/Serviço */}
+      <EstatisticasProdutosServicos vendas={ordensPeriodo} />
 
       {/* Gráfico Receita x Despesa x Lucro */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
