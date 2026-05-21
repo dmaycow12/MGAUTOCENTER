@@ -502,19 +502,13 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     if (!os?.id) return;
     setPagandoParcela(i);
     const p = parcelas[i];
-    const financeiro = await base44.entities.Financeiro.create({
-      tipo: "Receita", categoria: "Ordem de Venda",
-      descricao: `Venda #${form.numero} — ${form.cliente_nome || ""} — Parcela ${p.numero}/${parcelas.length}`,
-      valor: p.valor,
-      data_vencimento: p.vencimento,
-      status: "Pago",
-      data_pagamento: new Date().toISOString().split("T")[0],
-      forma_pagamento: p.forma_pagamento || "A Combinar",
-      ordem_servico_id: os.id,
-      ordem_venda_id: os.id,
-      cliente_id: form.cliente_id || "",
-    });
-    const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_id: financeiro.id } : par);
+    if (p.financeiro_id) {
+      await base44.entities.Financeiro.update(p.financeiro_id, {
+        status: "Pago",
+        data_pagamento: new Date().toISOString().split("T")[0],
+      });
+    }
+    const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pago" } : par);
     setParcelas(novas);
     await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas });
     setPagandoParcela(null);
@@ -524,8 +518,11 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     const p = parcelas[i];
     if (!p.financeiro_id) return;
     setPagandoParcela(i);
-    await base44.entities.Financeiro.delete(p.financeiro_id);
-    const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_id: null } : par);
+    await base44.entities.Financeiro.update(p.financeiro_id, {
+      status: "Pendente",
+      data_pagamento: null,
+    });
+    const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pendente" } : par);
     setParcelas(novas);
     await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas });
     setPagandoParcela(null);
@@ -579,6 +576,30 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         savedId = criado.id;
       } else {
         await base44.entities.Vendas.update(os.id, formFinal);
+      }
+
+      // Criar lançamentos financeiros para parcelas sem financeiro_id
+      const parcelasAtualizadas = [...parcelasNormalizadas];
+      let algumaNova = false;
+      for (let idx = 0; idx < parcelasAtualizadas.length; idx++) {
+        if (!parcelasAtualizadas[idx].financeiro_id) {
+          const fin = await base44.entities.Financeiro.create({
+            tipo: "Receita",
+            categoria: "Ordem de Venda",
+            descricao: `Venda #${formFinal.numero} — ${formFinal.cliente_nome || ""} — Parcela ${idx+1}/${parcelasAtualizadas.length}`,
+            valor: parcelasAtualizadas[idx].valor || 0,
+            data_vencimento: parcelasAtualizadas[idx].vencimento,
+            status: "Pendente",
+            forma_pagamento: parcelasAtualizadas[idx].forma_pagamento || "A Combinar",
+            ordem_venda_id: savedId,
+            cliente_id: formFinal.cliente_id || "",
+          });
+          parcelasAtualizadas[idx] = { ...parcelasAtualizadas[idx], financeiro_id: fin.id, financeiro_status: "Pendente" };
+          algumaNova = true;
+        }
+      }
+      if (algumaNova) {
+        await base44.entities.Vendas.update(savedId, { parcelas_detalhes: parcelasAtualizadas });
       }
 
       if (eraAberta && ficouConcluida && savedId) {
@@ -910,42 +931,25 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                             <>
                               <button
                                 type="button"
-                                onClick={() => cancelarParcela(i)}
-                                disabled={pagandoParcela === i}
-                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-50"
-                                style={{background:"#4B5563"}}
+                                onClick={() => p.financeiro_status === "Pago" && cancelarParcela(i)}
+                                disabled={pagandoParcela === i || p.financeiro_status !== "Pago"}
+                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-40"
+                                style={{background: p.financeiro_status !== "Pago" ? "#374151" : "#4B5563"}}
                               >
                                 {pagandoParcela === i ? "..." : "Pendente"}
                               </button>
                               <button
                                 type="button"
-                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap"
-                                style={{background:"#00C957"}}
+                                onClick={() => p.financeiro_status !== "Pago" && pagarParcela(i)}
+                                disabled={pagandoParcela === i || p.financeiro_status === "Pago"}
+                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-40"
+                                style={{background: p.financeiro_status === "Pago" ? "#00C957" : "#4B5563"}}
                               >
-                                Pago
+                                {pagandoParcela === i ? "..." : "Pago"}
                               </button>
                             </>
                           ) : (
-                            os?.id && (
-                              <>
-                                <button
-                                  type="button"
-                                  className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap"
-                                  style={{background:"#4B5563"}}
-                                >
-                                  Pendente
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => pagarParcela(i)}
-                                  disabled={pagandoParcela === i}
-                                  className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-50"
-                                  style={{background:"#00C957"}}
-                                >
-                                  {pagandoParcela === i ? "..." : "Pago"}
-                                </button>
-                              </>
-                            )
+                            <span className="text-xs text-gray-500 italic">Salve primeiro</span>
                           )}
                         </div>
                       </div>

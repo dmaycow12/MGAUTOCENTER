@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Settings, Save, CheckCircle, ChevronDown } from "lucide-react";
+import { Settings, Save, CheckCircle, ChevronDown, DollarSign, RefreshCw } from "lucide-react";
 import BackupManager from "../components/backup/BackupManager";
 
 export default function Configuracoes() {
@@ -257,6 +257,10 @@ export default function Configuracoes() {
 
       <BackupManager />
 
+      <Section title="Ferramentas de Dados" icon={DollarSign}>
+        <CriarFinanceiroVendasBtn />
+      </Section>
+
       <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#22c55e; } .input-dark::placeholder { color:#6b7280; }`}</style>
     </form>
   );
@@ -309,6 +313,41 @@ function RadioAccordion({ id, label, value, open, onToggle, options, onChange })
               <span className="text-sm">{optLabel}</span>
             </label>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CriarFinanceiroVendasBtn() {
+  const [loading, setLoading] = useState(false);
+  const [resultado, setResultado] = useState(null);
+
+  const executar = async () => {
+    if (!confirm('Isso vai criar lançamentos financeiros PENDENTES para todas as vendas que ainda não têm. Continuar?')) return;
+    setLoading(true);
+    setResultado(null);
+    const res = await base44.functions.invoke('criarFinanceiroVendas', {});
+    setResultado(res.data);
+    setLoading(false);
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm text-gray-400">Cria lançamentos financeiros (Pendente) para todas as vendas que ainda não possuem lançamento nas parcelas.</p>
+      <button
+        type="button"
+        onClick={executar}
+        disabled={loading}
+        className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50 w-fit"
+        style={{background:'#062C9B'}}
+      >
+        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        {loading ? 'Processando...' : 'Criar Lançamentos Financeiros de Todas as Vendas'}
+      </button>
+      {resultado && (
+        <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm">
+          ✓ Financeiros criados: <strong>{resultado.financeiros_criados}</strong> — Vendas atualizadas: <strong>{resultado.vendas_atualizadas}</strong> (de {resultado.total_vendas} vendas)
         </div>
       )}
     </div>
