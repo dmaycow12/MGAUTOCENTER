@@ -19,6 +19,12 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
 
   const codigos = form.codigos || [];
   const historico = [...(form.historico || [])].reverse(); // mais recente primeiro
+  const originalLen = (form.historico || []).length;
+
+  const excluirHistorico = (reversedIdx) => {
+    const originalIdx = originalLen - 1 - reversedIdx;
+    setForm(f => ({ ...f, historico: (f.historico || []).filter((_, i) => i !== originalIdx) }));
+  };
 
   const adicionarCodigo = () => {
     const val = novoCodigoInput.trim().toUpperCase();
@@ -154,7 +160,8 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                         <th className="px-3 py-2 text-right text-gray-400 font-medium">Valor Unit.</th>
                         <th className="px-3 py-2 text-left text-gray-400 font-medium">Fornecedor / O.V.</th>
                         <th className="px-3 py-2 text-left text-gray-400 font-medium">Observação</th>
-                      </tr>
+                        <th className="px-3 py-2"></th>
+                        </tr>
                     </thead>
                     <tbody>
                       {historico.map((mov, i) => {
@@ -186,7 +193,12 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                             <td className="px-3 py-2 text-gray-500 italic max-w-[120px] truncate">
                               {mov.observacao || "—"}
                             </td>
-                          </tr>
+                            <td className="px-3 py-2">
+                              <button onClick={() => excluirHistorico(i)} className="text-gray-600 hover:text-red-400 transition-all">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                            </tr>
                         );
                       })}
                     </tbody>
