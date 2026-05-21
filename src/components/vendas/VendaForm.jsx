@@ -895,6 +895,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                       <label className="text-xs text-gray-500 mb-1 block">Total</label>
                                       <div className="input-dark text-gray-300 text-sm">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
                                     </div>
+                                    <div className="w-16 flex-shrink-0">
+                                      <label className="text-xs text-gray-500 mb-1 block">Estoque</label>
+                                      {(() => { const est = estoque.find(e => e.id === p.estoque_id || (p.codigo && e.codigo === p.codigo)); const qty = est?.quantidade ?? null; return <div className={`input-dark text-sm font-semibold ${qty === null ? 'text-gray-500' : qty <= 0 ? 'text-red-400' : qty <= (est?.estoque_minimo || 2) ? 'text-yellow-400' : 'text-green-400'}`}>{qty === null ? '—' : qty}</div>; })()}
+                                    </div>
                                     <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2 mb-0.5"><Trash2 className="w-4 h-4" /></button>
                                   </div>
                                 )}

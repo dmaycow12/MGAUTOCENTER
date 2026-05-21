@@ -185,7 +185,6 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
         }
       }
     }
-    if (eraConcluido && !ficaConcluido) { setStatusPendenteCard(novoStatus); setShowAvisoStatus(true); return; }
     onUpdate?.({ status: novoStatus });
     await base44.entities.Vendas.update(os.id, { status: novoStatus });
     if (!eraConcluido && ficaConcluido) {
@@ -342,26 +341,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
           </div>
         </div>
       )}
-      {showAvisoStatus && (
-        <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-red-500/30 rounded-2xl w-full max-w-md p-6 space-y-4">
-            <div className="flex items-center gap-3 text-red-400">
-              <AlertTriangle className="w-7 h-7 flex-shrink-0" />
-              <h3 className="text-lg font-bold">Atenção!</h3>
-            </div>
-            <p className="text-gray-300 text-sm leading-relaxed">
-              Ao alterar o status desta Venda:<br />
-              • <strong className="text-red-400">Lançamentos financeiros</strong> serão excluídos<br />
-              • <strong className="text-yellow-400">Peças usadas</strong> serão devolvidas ao estoque
-            </p>
-            <p className="text-gray-400 text-sm">Deseja continuar?</p>
-            <div className="flex gap-3 justify-end">
-              <button onClick={() => { setShowAvisoStatus(false); setStatusPendenteCard(null); }} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Cancelar</button>
-              <button onClick={confirmarMudancaStatus} className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all">Sim, confirmar</button>
-            </div>
-          </div>
-        </div>
-      )}
+
       <div className="bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
         <div className="flex items-center gap-2 px-3 py-2.5">
           <div ref={numeroEditRef} className="min-w-max"><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
