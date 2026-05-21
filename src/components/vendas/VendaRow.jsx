@@ -172,7 +172,7 @@ function PagamentoSelect({ os, onRefresh }) {
     await base44.entities.Vendas.update(os.id, updates);
     // Atualiza lançamentos financeiros vinculados
     try {
-      const fins = await base44.entities.Financeiro.filter({ ordem_servico_id: os.id });
+      const fins = await base44.entities.Financeiro.filter({ ordem_venda_id: os.id });
       for (const f of fins) {
         await base44.entities.Financeiro.update(f.id, {
           forma_pagamento: novaForma,
@@ -245,12 +245,9 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
 
 
   const gerarLancamentosFinanceiros = async (osData) => {
-    // Verifica se já existem lançamentos para esta venda (ambos os campos)
-    const [finPorVenda, finPorSvc] = await Promise.all([
-      base44.entities.Financeiro.filter({ ordem_venda_id: osData.id }, "-created_date", 100),
-      base44.entities.Financeiro.filter({ ordem_servico_id: osData.id }, "-created_date", 100),
-    ]);
-    if (finPorVenda.length > 0 || finPorSvc.length > 0) return; // já existem, não duplica
+    // Verifica se já existem lançamentos para esta venda
+    const finPorVenda = await base44.entities.Financeiro.filter({ ordem_venda_id: osData.id }, "-created_date", 100);
+    if (finPorVenda.length > 0) return; // já existem, não duplica
 
     const gerarParcelasBase = (total, qtd, dataBase) => {
       const valorParcela = total / Math.max(1, qtd);
@@ -278,7 +275,6 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
         data_pagamento: pago ? new Date().toISOString().split("T")[0] : "",
         forma_pagamento: forma,
         ordem_venda_id: osData.id || "",
-        ordem_servico_id: osData.id || "",
         cliente_id: osData.cliente_id || "",
       });
       parcelasAtualizadas[i] = { ...p, financeiro_id: fin.id, financeiro_status: pago ? "Pago" : "Pendente" };

@@ -715,13 +715,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         onSave();
         return;
       }
-      const [finPorVenda, finPorSvc] = await Promise.all([
-        base44.entities.Financeiro.filter({ ordem_venda_id: savedId }, "-created_date", 100),
-        base44.entities.Financeiro.filter({ ordem_servico_id: savedId }, "-created_date", 100),
-      ]);
-      // Mescla, priorizando registros com ordem_venda_id (sem duplicar)
-      const idsVenda = new Set(finPorVenda.map(f => f.id));
-      const finExistentes = [...finPorVenda, ...finPorSvc.filter(f => !idsVenda.has(f.id))];
+      const finExistentes = await base44.entities.Financeiro.filter({ ordem_venda_id: savedId }, "-created_date", 100);
       const parcelasAtualizadas = [...parcelasNormalizadas];
       let algumaNova = false;
       for (let idx = 0; idx < parcelasAtualizadas.length; idx++) {

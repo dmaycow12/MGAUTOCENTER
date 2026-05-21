@@ -510,7 +510,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
                 if (pd && pd.length > 0) updates.parcelas_detalhes = pd.map(p => ({ ...p, forma_pagamento: novaForma, vencimento: novoVenc }));
                 await base44.entities.Vendas.update(os.id, updates);
                 try {
-                  const fins = await base44.entities.Financeiro.filter({ ordem_servico_id: os.id });
+                  const fins = await base44.entities.Financeiro.filter({ ordem_venda_id: os.id });
                   for (const f of fins) await base44.entities.Financeiro.update(f.id, { forma_pagamento: novaForma, data_vencimento: novoVenc });
                 } catch (_) {}
                 onRefresh?.();

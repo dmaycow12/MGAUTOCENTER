@@ -215,9 +215,9 @@ export default function Financeiro() {
     }
 
     // Sincronizar com Vendas
-    if (item.ordem_servico_id) {
+    if (item.ordem_venda_id) {
       try {
-        const vendas = await base44.entities.Vendas.filter({ id: item.ordem_servico_id }, "-created_date", 1);
+        const vendas = await base44.entities.Vendas.filter({ id: item.ordem_venda_id }, "-created_date", 1);
         const venda = vendas[0];
         if (venda) {
           const match = item.descricao?.match(/Parcela (\d+)\//);
@@ -226,7 +226,7 @@ export default function Financeiro() {
             p.numero === numParcela ? { ...p, forma_pagamento: novaForma } : p
           );
           const formas = [...new Set(novasParcelas.map(p => p.forma_pagamento).filter(Boolean))];
-          await base44.entities.Vendas.update(item.ordem_servico_id, {
+          await base44.entities.Vendas.update(item.ordem_venda_id, {
             parcelas_detalhes: novasParcelas,
             forma_pagamento: formas.length === 1 ? formas[0] : novaForma,
           });
