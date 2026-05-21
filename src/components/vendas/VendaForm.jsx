@@ -603,11 +603,14 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
           : finExistentes.find(f => f.descricao?.includes(descParcela));
 
         if (jaExiste) {
-          // Sincroniza data_vencimento e forma_pagamento com o que está na parcela
+          // Sincroniza todos os campos da parcela com o financeiro
+          const statusFin = parcela.financeiro_status || "Pendente";
           await base44.entities.Financeiro.update(jaExiste.id, {
             data_vencimento: parcela.vencimento,
             forma_pagamento: parcela.forma_pagamento || "A Combinar",
             valor: parcela.valor || 0,
+            status: statusFin,
+            data_pagamento: statusFin === "Pago" ? (jaExiste.data_pagamento || new Date().toISOString().split("T")[0]) : "",
           });
           if (!parcela.financeiro_id) {
             parcelasAtualizadas[idx] = { ...parcela, financeiro_id: jaExiste.id };
