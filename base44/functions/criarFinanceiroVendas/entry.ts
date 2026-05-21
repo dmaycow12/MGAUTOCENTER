@@ -8,6 +8,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const saveProgress = async (msg, current, total, done = false) => {
+      try {
+        await base44.asServiceRole.entities.Configuracao.filter({ chave: "financeiro_progress" }, "-created_date", 1).then(async (rows) => {
+          const data = { chave: "financeiro_progress", valor: JSON.stringify({ msg, current, total, done, ts: Date.now() }) };
+          if (rows.length > 0) await base44.asServiceRole.entities.Configuracao.update(rows[0].id, data);
+          else await base44.asServiceRole.entities.Configuracao.create(data);
+        });
+      } catch (_) {}
+    };
+
+    await saveProgress("Carregando vendas...", 0, 0, false);
+
     // Busca todas as vendas
     let allVendas = [];
     let skip = 0;
@@ -19,7 +31,9 @@ Deno.serve(async (req) => {
       if (batch.length < 200) break;
     }
 
-    // Busca todos os financeiros existentes indexados por ordem_venda_id
+    await saveProgress("Carregando financeiros existentes...", 0, allVendas.length, false);
+
+    // Busca todos os financeiros existentes
     let allFin = [];
     let skipFin = 0;
     while (true) {
@@ -41,7 +55,8 @@ Deno.serve(async (req) => {
     let financeirosCriados = 0;
     let vendasAtualizadas = 0;
 
-    for (const venda of allVendas) {
+    for (let vi = 0; vi < allVendas.length; vi++) {
+      const venda = allVendas[vi];
       const parcelas = venda.parcelas_detalhes || [];
       if (!parcelas.length) continue;
 
@@ -51,13 +66,10 @@ Deno.serve(async (req) => {
 
       for (let i = 0; i < parcelasAtualizadas.length; i++) {
         const descParcela = `Parcela ${i+1}/${parcelasAtualizadas.length}`;
-
-        // Verifica se já existe lançamento para esta parcela
         const jaExiste = parcelasAtualizadas[i].financeiro_id
           || finVenda.find(f => f.descricao?.includes(descParcela));
 
         if (!jaExiste) {
-          // Pausa para evitar rate limit
           await new Promise(r => setTimeout(r, 80));
           const fin = await base44.asServiceRole.entities.Financeiro.create({
             tipo: "Receita",
@@ -70,17 +82,11 @@ Deno.serve(async (req) => {
             ordem_venda_id: venda.id,
             cliente_id: venda.cliente_id || "",
           });
-          parcelasAtualizadas[i] = {
-            ...parcelasAtualizadas[i],
-            financeiro_id: fin.id,
-            financeiro_status: "Pendente"
-          };
-          // Adiciona ao mapa para evitar duplicata na mesma execução
+          parcelasAtualizadas[i] = { ...parcelasAtualizadas[i], financeiro_id: fin.id, financeiro_status: "Pendente" };
           finVenda.push(fin);
           financeirosCriados++;
           changed = true;
         } else if (!parcelasAtualizadas[i].financeiro_id && jaExiste?.id) {
-          // Recupera o financeiro_id se estava faltando na parcela
           parcelasAtualizadas[i] = { ...parcelasAtualizadas[i], financeiro_id: jaExiste.id };
           changed = true;
         }
@@ -90,7 +96,19 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.Vendas.update(venda.id, { parcelas_detalhes: parcelasAtualizadas });
         vendasAtualizadas++;
       }
+
+      // Atualiza progresso a cada 10 vendas
+      if (vi % 10 === 0 || vi === allVendas.length - 1) {
+        await saveProgress(
+          `Processando venda ${vi + 1} de ${allVendas.length} — ${financeirosCriados} lançamentos criados`,
+          vi + 1,
+          allVendas.length,
+          false
+        );
+      }
     }
+
+    await saveProgress(`Concluído! ${financeirosCriados} lançamentos criados em ${vendasAtualizadas} vendas.`, allVendas.length, allVendas.length, true);
 
     return Response.json({
       success: true,

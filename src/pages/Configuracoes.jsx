@@ -322,14 +322,39 @@ function RadioAccordion({ id, label, value, open, onToggle, options, onChange })
 function CriarFinanceiroVendasBtn() {
   const [loading, setLoading] = useState(false);
   const [resultado, setResultado] = useState(null);
+  const [progresso, setProgresso] = useState(null);
+  const pollingRef = React.useRef(null);
+
+  const iniciarPolling = () => {
+    pollingRef.current = setInterval(async () => {
+      try {
+        const rows = await base44.entities.Configuracao.filter({ chave: 'financeiro_progress' }, '-updated_date', 1);
+        if (rows.length > 0) {
+          const p = JSON.parse(rows[0].valor || '{}');
+          setProgresso(p);
+          if (p.done) pararPolling();
+        }
+      } catch (_) {}
+    }, 1500);
+  };
+
+  const pararPolling = () => {
+    if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
+  };
 
   const executar = async () => {
     if (!confirm('Isso vai criar lançamentos financeiros PENDENTES para todas as vendas que ainda não têm. Continuar?')) return;
     setLoading(true);
     setResultado(null);
-    const res = await base44.functions.invoke('criarFinanceiroVendas', {});
-    setResultado(res.data);
-    setLoading(false);
+    setProgresso(null);
+    iniciarPolling();
+    try {
+      const res = await base44.functions.invoke('criarFinanceiroVendas', {});
+      setResultado(res.data);
+    } finally {
+      pararPolling();
+      setLoading(false);
+    }
   };
 
   return (
@@ -345,6 +370,22 @@ function CriarFinanceiroVendasBtn() {
         <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         {loading ? 'Processando...' : 'Criar Lançamentos Financeiros de Todas as Vendas'}
       </button>
+      {loading && progresso && (
+        <div className="flex flex-col gap-2">
+          <p className="text-xs text-gray-400">{progresso.msg}</p>
+          {progresso.total > 0 && (
+            <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+              <div
+                className="h-3 rounded-full transition-all duration-500"
+                style={{ width: `${Math.round((progresso.current / progresso.total) * 100)}%`, background: '#062C9B' }}
+              />
+            </div>
+          )}
+          {progresso.total > 0 && (
+            <p className="text-xs text-gray-500">{progresso.current} / {progresso.total} vendas ({Math.round((progresso.current / progresso.total) * 100)}%)</p>
+          )}
+        </div>
+      )}
       {resultado && (
         <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm">
           ✓ Financeiros criados: <strong>{resultado.financeiros_criados}</strong> — Vendas atualizadas: <strong>{resultado.vendas_atualizadas}</strong> (de {resultado.total_vendas} vendas)
