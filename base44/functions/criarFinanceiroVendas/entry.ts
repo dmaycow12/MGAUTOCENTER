@@ -8,7 +8,7 @@ async function withRetry(fn, retries = 5, delayMs = 1000) {
       return await fn();
     } catch (e) {
       if (i === retries - 1) throw e;
-      const wait = delayMs * Math.pow(2, i); // exponential backoff
+      const wait = delayMs * Math.pow(2, i);
       await sleep(wait);
     }
   }
@@ -45,6 +45,13 @@ Deno.serve(async (req) => {
       await sleep(500);
     }
 
+    // Ordena por número CRESCENTE para processar as mais antigas (1-225) primeiro
+    allVendas.sort((a, b) => {
+      const na = parseInt(a.numero) || 0;
+      const nb = parseInt(b.numero) || 0;
+      return na - nb;
+    });
+
     await saveProgress("Carregando financeiros existentes...", 0, allVendas.length, false);
 
     // Busca todos os financeiros existentes
@@ -69,43 +76,54 @@ Deno.serve(async (req) => {
 
     let financeirosCriados = 0;
     let vendasAtualizadas = 0;
+    let vendasPuladas = 0;
 
     for (let vi = 0; vi < allVendas.length; vi++) {
       const venda = allVendas[vi];
       const parcelas = venda.parcelas_detalhes || [];
       if (!parcelas.length) continue;
 
+      const finVenda = finMap[venda.id] || [];
+      const totalParcelas = parcelas.length;
+
+      // Se já tem o mesmo número de financeiros que parcelas, pula tudo
+      if (finVenda.length >= totalParcelas) {
+        vendasPuladas++;
+        continue;
+      }
+
       let changed = false;
       const parcelasAtualizadas = [...parcelas];
-      const finVenda = finMap[venda.id] || [];
 
       for (let i = 0; i < parcelasAtualizadas.length; i++) {
-        const descParcela = `Parcela ${i+1}/${parcelasAtualizadas.length}`;
-        const jaExiste = parcelasAtualizadas[i].financeiro_id
-          || finVenda.find(f => f.descricao?.includes(descParcela));
+        // Verificação 1: parcela já tem financeiro_id salvo
+        if (parcelasAtualizadas[i].financeiro_id) continue;
 
-        if (!jaExiste) {
-          // Delay generoso para evitar rate limit
-          await sleep(400);
-          const fin = await withRetry(() => base44.asServiceRole.entities.Financeiro.create({
-            tipo: "Receita",
-            categoria: "Ordem de Venda",
-            descricao: `Venda #${venda.numero} — ${venda.cliente_nome || ""} — Parcela ${i+1}/${parcelasAtualizadas.length}`,
-            valor: parcelasAtualizadas[i].valor || 0,
-            data_vencimento: parcelasAtualizadas[i].vencimento,
-            status: "Pendente",
-            forma_pagamento: parcelasAtualizadas[i].forma_pagamento || "A Combinar",
-            ordem_venda_id: venda.id,
-            cliente_id: venda.cliente_id || "",
-          }));
-          parcelasAtualizadas[i] = { ...parcelasAtualizadas[i], financeiro_id: fin.id, financeiro_status: "Pendente" };
-          finVenda.push(fin);
-          financeirosCriados++;
+        // Verificação 2: existe financeiro para esta venda neste índice (por posição)
+        const finExistente = finVenda[i];
+        if (finExistente) {
+          parcelasAtualizadas[i] = { ...parcelasAtualizadas[i], financeiro_id: finExistente.id, financeiro_status: finExistente.status };
           changed = true;
-        } else if (!parcelasAtualizadas[i].financeiro_id && jaExiste?.id) {
-          parcelasAtualizadas[i] = { ...parcelasAtualizadas[i], financeiro_id: jaExiste.id };
-          changed = true;
+          continue;
         }
+
+        // Criar novo lançamento
+        await sleep(400);
+        const fin = await withRetry(() => base44.asServiceRole.entities.Financeiro.create({
+          tipo: "Receita",
+          categoria: "Ordem de Venda",
+          descricao: `Venda #${venda.numero} — ${venda.cliente_nome || ""} — Parcela ${i+1}/${totalParcelas}`,
+          valor: parcelasAtualizadas[i].valor || 0,
+          data_vencimento: parcelasAtualizadas[i].vencimento,
+          status: "Pendente",
+          forma_pagamento: parcelasAtualizadas[i].forma_pagamento || "A Combinar",
+          ordem_venda_id: venda.id,
+          cliente_id: venda.cliente_id || "",
+        }));
+        parcelasAtualizadas[i] = { ...parcelasAtualizadas[i], financeiro_id: fin.id, financeiro_status: "Pendente" };
+        finVenda.push(fin);
+        financeirosCriados++;
+        changed = true;
       }
 
       if (changed) {
@@ -114,10 +132,9 @@ Deno.serve(async (req) => {
         vendasAtualizadas++;
       }
 
-      // Atualiza progresso a cada 5 vendas
       if (vi % 5 === 0 || vi === allVendas.length - 1) {
         await saveProgress(
-          `Processando venda ${vi + 1} de ${allVendas.length} — ${financeirosCriados} lançamentos criados`,
+          `Venda #${venda.numero} (${vi + 1}/${allVendas.length}) — ${financeirosCriados} criados, ${vendasPuladas} já tinham`,
           vi + 1,
           allVendas.length,
           false
@@ -125,12 +142,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    await saveProgress(`Concluído! ${financeirosCriados} lançamentos criados em ${vendasAtualizadas} vendas.`, allVendas.length, allVendas.length, true);
+    await saveProgress(`Concluído! ${financeirosCriados} lançamentos criados, ${vendasPuladas} vendas já estavam ok.`, allVendas.length, allVendas.length, true);
 
     return Response.json({
       success: true,
       financeiros_criados: financeirosCriados,
       vendas_atualizadas: vendasAtualizadas,
+      vendas_puladas: vendasPuladas,
       total_vendas: allVendas.length,
     });
   } catch (error) {
