@@ -1072,7 +1072,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     </div>
                     {parcelas.map((p, i) => (
                       <div key={i} className={`grid gap-2 px-3 py-2 items-center ${i % 2 === 0 ? "bg-gray-900" : "bg-gray-800/40"}`} style={{gridTemplateColumns:'1fr 1fr 1fr auto'}}>
-                        <input type="date" value={p.vencimento || ""} onChange={e => updateParcela(i, "vencimento", e.target.value)} className="input-dark text-xs py-1.5" disabled={!!p.financeiro_id} />
+                        <input type="date" value={p.vencimento || ""} onChange={e => updateParcela(i, "vencimento", e.target.value)} className="input-dark text-xs py-1.5" />
                         <input
                           type="text"
                           inputMode="decimal"
@@ -1080,7 +1080,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                           onChange={e => updateParcela(i, "valor", e.target.value)}
                           className="input-dark text-xs py-1.5"
                           style={{MozAppearance:"textfield", appearance:"textfield"}}
-                          disabled={!!p.financeiro_id}
                         />
                         <select
                           value={p.forma_pagamento || "A Combinar"}
