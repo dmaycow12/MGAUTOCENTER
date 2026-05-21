@@ -16,7 +16,7 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
 
 export const COLUNAS_PADRAO = {
   data: true, cliente: true, contato: false, veiculo: true, placa: true, km: true,
-  status: true, valor: true, pagamento: true, nfe: true, nfse: true,
+  status: true, valor: true, nfe: true, nfse: true,
 };
 
 const formatTelefone = (val) => {
@@ -498,9 +498,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
           </div>
         </td>}
         {colunas.valor && <td className="px-4 py-3 text-right font-bold whitespace-nowrap" style={{color:'#00ff00'}}>{fmtValor(os.valor_total)}</td>}
-        {colunas.pagamento && <td className="px-4 py-3 whitespace-nowrap">
-          <PagamentoSelect os={os} onRefresh={onRefresh} />
-        </td>}
+
         {colunas?.nfe && <td className="px-4 py-3">{(() => {
           const nfe = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
           const manual = os.nfe_manual;
