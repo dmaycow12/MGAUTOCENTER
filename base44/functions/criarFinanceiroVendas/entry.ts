@@ -8,6 +8,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // Busca todas as vendas
     let allVendas = [];
     let skip = 0;
     while (true) {
@@ -16,6 +17,25 @@ Deno.serve(async (req) => {
       allVendas = [...allVendas, ...batch];
       skip += 200;
       if (batch.length < 200) break;
+    }
+
+    // Busca todos os financeiros existentes indexados por ordem_venda_id
+    let allFin = [];
+    let skipFin = 0;
+    while (true) {
+      const batch = await base44.asServiceRole.entities.Financeiro.list('-created_date', 500, skipFin);
+      if (!batch || !batch.length) break;
+      allFin = [...allFin, ...batch];
+      skipFin += 500;
+      if (batch.length < 500) break;
+    }
+
+    // Mapa: ordem_venda_id -> array de financeiros
+    const finMap = {};
+    for (const f of allFin) {
+      if (!f.ordem_venda_id) continue;
+      if (!finMap[f.ordem_venda_id]) finMap[f.ordem_venda_id] = [];
+      finMap[f.ordem_venda_id].push(f);
     }
 
     let financeirosCriados = 0;
@@ -27,9 +47,16 @@ Deno.serve(async (req) => {
 
       let changed = false;
       const parcelasAtualizadas = [...parcelas];
+      const finVenda = finMap[venda.id] || [];
 
       for (let i = 0; i < parcelasAtualizadas.length; i++) {
-        if (!parcelasAtualizadas[i].financeiro_id) {
+        const descParcela = `Parcela ${i+1}/${parcelasAtualizadas.length}`;
+
+        // Verifica se já existe lançamento para esta parcela
+        const jaExiste = parcelasAtualizadas[i].financeiro_id
+          || finVenda.find(f => f.descricao?.includes(descParcela));
+
+        if (!jaExiste) {
           const fin = await base44.asServiceRole.entities.Financeiro.create({
             tipo: "Receita",
             categoria: "Ordem de Venda",
@@ -46,7 +73,13 @@ Deno.serve(async (req) => {
             financeiro_id: fin.id,
             financeiro_status: "Pendente"
           };
+          // Adiciona ao mapa para evitar duplicata na mesma execução
+          finVenda.push(fin);
           financeirosCriados++;
+          changed = true;
+        } else if (!parcelasAtualizadas[i].financeiro_id && jaExiste?.id) {
+          // Recupera o financeiro_id se estava faltando na parcela
+          parcelasAtualizadas[i] = { ...parcelasAtualizadas[i], financeiro_id: jaExiste.id };
           changed = true;
         }
       }
