@@ -425,8 +425,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       updated.valor_total = Number(updated.quantidade || 0) * Number(updated.valor_unitario || 0);
       return updated;
     });
-    // Ajusta estoque pela diferença quando quantidade muda
-    if (field === "quantidade" && pecaAntiga?.estoque_id && !pecaAntiga._new) {
+    // Ajusta estoque pela diferença quando quantidade muda (apenas se não for Orçamento)
+    if (field === "quantidade" && pecaAntiga?.estoque_id && !pecaAntiga._new && form.status !== "Orçamento") {
       const diff = parseNum(val) - Number(pecaAntiga.quantidade || 0);
       if (diff !== 0) {
         const itemEstoque = estoque.find(e => e.id === pecaAntiga.estoque_id);
@@ -461,12 +461,14 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       });
       return { ...f, pecas: novos, ...recalcular(f.servicos, novos, f.desconto) };
     });
-    // Subtrai do estoque imediatamente
-    const itemEstoque = estoque.find(e => e.id === item.id);
-    if (itemEstoque) {
-      const novaQty = (itemEstoque.quantidade || 0) - qtdSelecionada;
-      await base44.entities.Estoque.update(item.id, { quantidade: novaQty });
-      setEstoque(prev => prev.map(e => e.id === item.id ? { ...e, quantidade: novaQty } : e));
+    // Só subtrai do estoque se não for Orçamento
+    if (form.status !== "Orçamento") {
+      const itemEstoque = estoque.find(e => e.id === item.id);
+      if (itemEstoque) {
+        const novaQty = (itemEstoque.quantidade || 0) - qtdSelecionada;
+        await base44.entities.Estoque.update(item.id, { quantidade: novaQty });
+        setEstoque(prev => prev.map(e => e.id === item.id ? { ...e, quantidade: novaQty } : e));
+      }
     }
   };
 
@@ -475,8 +477,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     const novos = form.pecas.filter((_, idx) => idx !== i);
     const calc = recalcular(form.servicos, novos, form.desconto);
     setForm(f => ({ ...f, pecas: novos, ...calc }));
-    // Devolve ao estoque se tem estoque_id e quantidade
-    if (peca?.estoque_id && peca?.quantidade > 0) {
+    // Devolve ao estoque se tem estoque_id e quantidade (apenas se não for Orçamento)
+    if (peca?.estoque_id && peca?.quantidade > 0 && form.status !== "Orçamento") {
       const itemEstoque = estoque.find(e => e.id === peca.estoque_id);
       if (itemEstoque) {
         const novaQty = (itemEstoque.quantidade || 0) + peca.quantidade;
@@ -528,8 +530,34 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     });
   };
 
-  const onStatusChange = (novoStatus) => {
+  const onStatusChange = async (novoStatus) => {
+    const eraOrcamento = form.status === "Orçamento";
+    const ficaOrcamento = novoStatus === "Orçamento";
     setForm(f => ({ ...f, status: novoStatus }));
+    // Saindo de Orçamento → subtrai estoque dos produtos
+    if (eraOrcamento && !ficaOrcamento) {
+      for (const p of form.pecas) {
+        if (!p.estoque_id || !p.quantidade || p._new) continue;
+        const itemEstoque = estoque.find(e => e.id === p.estoque_id);
+        if (itemEstoque) {
+          const novaQty = (itemEstoque.quantidade || 0) - Number(p.quantidade);
+          await base44.entities.Estoque.update(p.estoque_id, { quantidade: novaQty });
+          setEstoque(prev => prev.map(e => e.id === p.estoque_id ? { ...e, quantidade: novaQty } : e));
+        }
+      }
+    }
+    // Entrando em Orçamento → devolve estoque dos produtos
+    if (!eraOrcamento && ficaOrcamento) {
+      for (const p of form.pecas) {
+        if (!p.estoque_id || !p.quantidade || p._new) continue;
+        const itemEstoque = estoque.find(e => e.id === p.estoque_id);
+        if (itemEstoque) {
+          const novaQty = (itemEstoque.quantidade || 0) + Number(p.quantidade);
+          await base44.entities.Estoque.update(p.estoque_id, { quantidade: novaQty });
+          setEstoque(prev => prev.map(e => e.id === p.estoque_id ? { ...e, quantidade: novaQty } : e));
+        }
+      }
+    }
   };
 
   const confirmarReabrir = async () => {
