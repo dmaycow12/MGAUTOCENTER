@@ -14,7 +14,8 @@ export default function Vendas() {
   const [search, setSearch] = useState("");
   const [filtroStatus, setFiltroStatus] = useState(() => {
     const saved = localStorage.getItem("os_filtroStatus");
-    return saved ? JSON.parse(saved) : [];
+    const parsed = saved ? JSON.parse(saved) : [];
+    return parsed.length > 0 ? parsed : ["Aberto"];
   });
   const [filtroTipo, setFiltroTipo] = useState(() => {
    const saved = localStorage.getItem("os_filtroTipo2");
@@ -161,7 +162,10 @@ export default function Vendas() {
   };
 
   const toggleStatus = (s) => {
-    setFiltroStatus(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+    setFiltroStatus(prev => {
+      if (prev.includes(s) && prev.length === 1) return prev; // mínimo 1
+      return prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s];
+    });
   };
 
   useEffect(() => { load(); }, []);
@@ -213,7 +217,7 @@ export default function Vendas() {
        const matchStatus = filtroStatus.length > 0 && filtroStatus.includes(o.status);
        const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
        const temVeiculo = !!(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo);
-       const matchTipo = filtroTipo.length === 0 || (filtroTipo.includes("patio") && temVeiculo) || (filtroTipo.includes("balcao") && !temVeiculo);
+       const matchTipo = filtroTipo.length > 0 && ((filtroTipo.includes("patio") && temVeiculo) || (filtroTipo.includes("balcao") && !temVeiculo));
        return matchSearch && matchStatus && matchPeriodo && matchTipo;
      })
      .sort((a, b) => {
@@ -296,7 +300,10 @@ export default function Vendas() {
             { key: "patio", label: "Pátio" },
             { key: "balcao", label: "Balcão" },
           ].map(({ key, label }) => (
-            <button key={key} onClick={() => setFiltroTipo(prev => prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key])}
+            <button key={key} onClick={() => setFiltroTipo(prev => {
+              if (prev.includes(key) && prev.length === 1) return prev; // mínimo 1
+              return prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key];
+            })}
               className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroTipo.includes(key) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {label}
             </button>
