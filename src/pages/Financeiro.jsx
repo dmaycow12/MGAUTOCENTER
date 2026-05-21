@@ -230,6 +230,16 @@ export default function Financeiro() {
     let va = a[sortCol] || "";
     let vb = b[sortCol] || "";
     if (sortCol === "valor") { va = Number(a.valor||0); vb = Number(b.valor||0); return sortDir === "asc" ? va-vb : vb-va; }
+    // Ordenar por número da venda (ex: "Venda #100" → 100) se for descrição
+    if (sortCol === "descricao") {
+      const matchA = va.match(/Venda #(\d+)/);
+      const matchB = vb.match(/Venda #(\d+)/);
+      if (matchA && matchB) {
+        const numA = parseInt(matchA[1]) || 0;
+        const numB = parseInt(matchB[1]) || 0;
+        return sortDir === "asc" ? numA - numB : numB - numA;
+      }
+    }
     return sortDir === "asc" ? va.localeCompare(vb) : vb.localeCompare(va);
   });
 
