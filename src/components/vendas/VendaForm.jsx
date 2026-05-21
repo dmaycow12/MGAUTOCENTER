@@ -905,31 +905,46 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                         >
                           {["A Combinar","Boleto","Cartão","Cheque","Dinheiro","PIX"].map(s => <option key={s}>{s}</option>)}
                         </select>
-                        <div className="flex items-center gap-1 flex-shrink-0">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           {p.financeiro_id ? (
                             <>
-                              <span className="text-xs text-green-400 font-bold whitespace-nowrap">✓ Pago</span>
                               <button
                                 type="button"
                                 onClick={() => cancelarParcela(i)}
                                 disabled={pagandoParcela === i}
-                                className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded ml-1 whitespace-nowrap"
-                                style={{background:"rgba(239,68,68,0.1)"}}
+                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-50"
+                                style={{background:"#4B5563"}}
                               >
-                                {pagandoParcela === i ? "..." : "Cancelar"}
+                                {pagandoParcela === i ? "..." : "Pendente"}
+                              </button>
+                              <button
+                                type="button"
+                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap"
+                                style={{background:"#00C957"}}
+                              >
+                                Pago
                               </button>
                             </>
                           ) : (
                             os?.id && (
-                              <button
-                                type="button"
-                                onClick={() => pagarParcela(i)}
-                                disabled={pagandoParcela === i}
-                                className="text-xs font-bold text-white px-3 py-1 rounded whitespace-nowrap disabled:opacity-50"
-                                style={{background:"#00C957"}}
-                              >
-                                {pagandoParcela === i ? "..." : "Pago"}
-                              </button>
+                              <>
+                                <button
+                                  type="button"
+                                  className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap"
+                                  style={{background:"#4B5563"}}
+                                >
+                                  Pendente
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => pagarParcela(i)}
+                                  disabled={pagandoParcela === i}
+                                  className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-50"
+                                  style={{background:"#00C957"}}
+                                >
+                                  {pagandoParcela === i ? "..." : "Pago"}
+                                </button>
+                              </>
                             )
                           )}
                         </div>
