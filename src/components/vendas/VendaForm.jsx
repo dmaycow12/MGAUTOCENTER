@@ -118,7 +118,12 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     return gerarParcelas(os?.valor_total || 0, os?.parcelas || 1, os?.data_entrada);
   });
   const parcelasRef = useRef(parcelas);
-  useEffect(() => { parcelasRef.current = parcelas; }, [parcelas]);
+  // Atualiza o ref sincronamente junto com o estado
+  const setParcelasSync = (val) => {
+    const next = typeof val === 'function' ? val(parcelasRef.current) : val;
+    parcelasRef.current = next;
+    setParcelas(next);
+  };
 
   const [saving, setSaving] = useState(false);
   const [erroTelefone, setErroTelefone] = useState(null);
@@ -259,7 +264,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       const n = Math.max(1, Number(form.parcelas) || 1);
       const valorParcela = parseFloat((form.valor_total / n).toFixed(2));
       const base = form.data_entrada ? new Date(form.data_entrada + "T00:00:00") : new Date();
-      setParcelas(prev => Array.from({ length: n }, (_, i) => {
+      setParcelasSync(prev => Array.from({ length: n }, (_, i) => {
         const d = new Date(base);
         d.setMonth(d.getMonth() + i);
         return {
@@ -267,12 +272,14 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
           valor: valorParcela,
           vencimento: prev[i]?.vencimento || d.toISOString().split("T")[0],
           forma_pagamento: prev[i]?.forma_pagamento || "A Combinar",
+          financeiro_id: prev[i]?.financeiro_id,
+          financeiro_status: prev[i]?.financeiro_status,
         };
       }));
     } else if (totalMudou) {
       const n = Math.max(1, Number(form.parcelas) || 1);
       const valorParcela = parseFloat((form.valor_total / n).toFixed(2));
-      setParcelas(prev => prev.map(p => ({ ...p, valor: valorParcela })));
+      setParcelasSync(prev => prev.map(p => ({ ...p, valor: valorParcela })));
     }
   }, [form.valor_total, form.parcelas]);
 
@@ -448,14 +455,14 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const updateParcela = (i, field, val) => {
     if (field === "forma_pagamento") {
       const novoVenc = calcularVencimentoParcela(val, new Date().toISOString().split("T")[0]);
-      setParcelas(prev => prev.map((p, idx) => idx === i ? { ...p, forma_pagamento: val, vencimento: novoVenc } : p));
+      setParcelasSync(prev => prev.map((p, idx) => idx === i ? { ...p, forma_pagamento: val, vencimento: novoVenc } : p));
       return;
     }
     if (field !== "valor") {
-      setParcelas(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: val } : p));
+      setParcelasSync(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: val } : p));
       return;
     }
-    setParcelas(prev => {
+    setParcelasSync(prev => {
       const novoValor = Number(val) || 0;
       const totalGeral = form.valor_total;
       const resto = parseFloat((totalGeral - novoValor).toFixed(2));
@@ -511,7 +518,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       });
     }
     const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pago" } : par);
-    setParcelas(novas);
+    setParcelasSync(novas);
     await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas });
     setPagandoParcela(null);
   };
@@ -525,7 +532,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       data_pagamento: "",
     });
     const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pendente" } : par);
-    setParcelas(novas);
+    setParcelasSync(novas);
     await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas });
     setPagandoParcela(null);
   };
@@ -533,7 +540,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const onFormaParcelaChange = async (i, val) => {
     const p = parcelas[i];
     const novas = parcelas.map((par, idx) => idx === i ? { ...par, forma_pagamento: val } : par);
-    setParcelas(novas);
+    setParcelasSync(novas);
     // Se já tem financeiro vinculado, atualiza em tempo real
     if (p.financeiro_id && os?.id) {
       await base44.entities.Financeiro.update(p.financeiro_id, { forma_pagamento: val });
