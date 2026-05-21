@@ -547,6 +547,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     const servicosPendentes = (form.servicos || []).filter(s => s._new);
     if (pecasPendentes.length > 0) return alert("Selecione o produto antes de salvar. Há produto(s) adicionados sem seleção.");
     if (servicosPendentes.length > 0) return alert("Selecione o serviço antes de salvar. Há serviço(s) adicionados sem seleção.");
+    const pecasSemCodigo = (form.pecas || []).filter(p => !p.codigo?.trim());
+    const servicosSemCodigo = (form.servicos || []).filter(s => !s.codigo?.trim());
+    if (pecasSemCodigo.length > 0) return alert(`Produto(s) sem código: ${pecasSemCodigo.map(p => p.descricao || 'sem descrição').join(', ')}. Preencha o código antes de salvar.`);
+    if (servicosSemCodigo.length > 0) return alert(`Serviço(s) sem código: ${servicosSemCodigo.map(s => s.descricao || 'sem descrição').join(', ')}. Preencha o código antes de salvar.`);
     if (saving) return;
     setSaving(true);
 
@@ -739,7 +743,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                     </div>
                                     <div className="w-20 flex-shrink-0">
                                       <label className="text-xs text-gray-500 mb-1 block">Código</label>
-                                      <div className="input-dark text-gray-400 text-sm truncate">{p.codigo || '—'}</div>
+                                      <input value={p.codigo || ''} onChange={e => updatePeca(i, "codigo", e.target.value)} className="input-dark text-sm" autoComplete="off" />
                                     </div>
                                     <div className="flex-1 min-w-[120px]">
                                       <label className="text-xs text-gray-500 mb-1 block">Produto</label>
@@ -806,7 +810,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                     </div>
                                     <div className="w-20 flex-shrink-0">
                                       <label className="text-xs text-gray-500 mb-1 block">Código</label>
-                                      <div className="input-dark text-gray-400 text-sm truncate">{s.codigo || '—'}</div>
+                                      <input value={s.codigo || ''} onChange={e => updateServico(i, "codigo", e.target.value)} className="input-dark text-sm" autoComplete="off" />
                                     </div>
                                     <div className="flex-1 min-w-[120px]">
                                       <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
