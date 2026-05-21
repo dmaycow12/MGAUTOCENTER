@@ -245,6 +245,13 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
 
 
   const gerarLancamentosFinanceiros = async (osData) => {
+    // Verifica se já existem lançamentos para esta venda (ambos os campos)
+    const [finPorVenda, finPorSvc] = await Promise.all([
+      base44.entities.Financeiro.filter({ ordem_venda_id: osData.id }, "-created_date", 100),
+      base44.entities.Financeiro.filter({ ordem_servico_id: osData.id }, "-created_date", 100),
+    ]);
+    if (finPorVenda.length > 0 || finPorSvc.length > 0) return; // já existem, não duplica
+
     const gerarParcelasBase = (total, qtd, dataBase) => {
       const valorParcela = total / Math.max(1, qtd);
       const base = dataBase ? new Date(dataBase + "T00:00:00") : new Date();
@@ -257,20 +264,27 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
     const parcelas = osData.parcelas_detalhes && osData.parcelas_detalhes.length > 0
       ? osData.parcelas_detalhes
       : gerarParcelasBase(osData.valor_total, Number(osData.parcelas) || 1, osData.data_entrada);
-    for (const p of parcelas) {
+    const parcelasAtualizadas = [...parcelas];
+    for (let i = 0; i < parcelasAtualizadas.length; i++) {
+      const p = parcelasAtualizadas[i];
       const forma = p.forma_pagamento || "A Combinar";
       const pago = ["Dinheiro", "PIX"].includes(forma);
-      await base44.entities.Financeiro.create({
+      const fin = await base44.entities.Financeiro.create({
         tipo: "Receita", categoria: "Ordem de Venda",
-        descricao: "Venda #" + osData.numero + " — " + (osData.cliente_nome || "") + " — Parcela " + p.numero + "/" + parcelas.length,
+        descricao: "Venda #" + osData.numero + " — " + (osData.cliente_nome || "") + " — Parcela " + (i+1) + "/" + parcelasAtualizadas.length,
         valor: p.valor,
         data_vencimento: p.vencimento,
         status: pago ? "Pago" : "Pendente",
         data_pagamento: pago ? new Date().toISOString().split("T")[0] : "",
         forma_pagamento: forma,
-        ordem_servico_id: osData.id || "", cliente_id: osData.cliente_id || "",
+        ordem_venda_id: osData.id || "",
+        ordem_servico_id: osData.id || "",
+        cliente_id: osData.cliente_id || "",
       });
+      parcelasAtualizadas[i] = { ...p, financeiro_id: fin.id, financeiro_status: pago ? "Pago" : "Pendente" };
     }
+    // Salva financeiro_id nas parcelas da venda
+    await base44.entities.Vendas.update(osData.id, { parcelas_detalhes: parcelasAtualizadas });
   };
 
   const alterarStatus = async (novoStatus) => {
