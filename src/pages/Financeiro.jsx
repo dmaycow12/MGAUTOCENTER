@@ -351,7 +351,15 @@ export default function Financeiro() {
 
           {/* Cards/Lista */}
           {filtrados.length === 0 ? (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-12 text-center text-gray-500">Nenhum lançamento encontrado</div>
+            <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-12 text-center space-y-3">
+              <p className="text-gray-500">Nenhum lançamento encontrado neste período</p>
+              {items.length > 0 && itemsNoPeriodo.length === 0 && (
+                <p className="text-yellow-400 text-sm">
+                  Há {items.length} lançamento(s) em outros períodos.{" "}
+                  <button onClick={() => aplicarAtalho('tudo')} className="underline hover:text-yellow-300">Clique aqui para ver tudo</button>
+                </p>
+              )}
+            </div>
           ) : viewMode === "cards" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {filtrados.map(item => (
