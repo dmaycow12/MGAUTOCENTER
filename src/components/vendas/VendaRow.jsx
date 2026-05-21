@@ -276,17 +276,17 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
   const alterarStatus = async (novoStatus) => {
     const eraConcluido = os.status === "Concluído";
     const ficaConcluido = novoStatus === "Concluído";
+    const eraOrcamento = os.status === "Orçamento";
+    const ficaOrcamento = novoStatus === "Orçamento";
     if (ficaConcluido && !eraConcluido) {
       const pd = os.parcelas_detalhes || [];
       if (pd.length > 0) {
-        // Busca status real do Financeiro para evitar dados desatualizados
         const fins = await base44.entities.Financeiro.filter({ ordem_venda_id: os.id }, "-created_date", 100);
         const receitas = fins.filter(f => f.tipo === "Receita");
         let pendentes = 0;
         if (receitas.length > 0) {
           pendentes = receitas.filter(f => f.status !== "Pago").length;
         } else {
-          // Fallback para cache local se não houver financeiro vinculado
           pendentes = pd.filter(p => p.financeiro_status !== "Pago").length;
         }
         if (pendentes > 0) {
@@ -305,6 +305,14 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
     if (!eraConcluido && ficaConcluido) {
       await gerarLancamentosFinanceiros(os);
       await reduzirEstoque(os.pecas, os);
+    }
+    // Saindo de Orçamento para Aberto: subtrai estoque
+    if (eraOrcamento && !ficaOrcamento && !ficaConcluido) {
+      await reduzirEstoque(os.pecas, os);
+    }
+    // Entrando em Orçamento vindo de Aberto: devolve estoque
+    if (!eraOrcamento && ficaOrcamento && !eraConcluido) {
+      await restaurarEstoque(os.pecas || []);
     }
     onRefresh?.();
   };
