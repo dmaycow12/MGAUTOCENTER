@@ -58,18 +58,18 @@ export default function Dashboard() {
   const [clientes, setClientes] = useState([]);
   const [estoque, setEstoque] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [periodoMeses, setPeriodoMeses] = useState(6);
+  const [periodoMeses, setPeriodoMeses] = useState(() => Number(localStorage.getItem("dash_periodoMeses")) || 6);
 
   const hoje = new Date();
   const anoAtual = hoje.getFullYear();
   const mesAtual = hoje.getMonth();
-  const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
-  const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
-  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(false);
+  const [filtroMes, setFiltroMes] = useState(() => Number(localStorage.getItem("dash_filtroMes")) || hoje.getMonth() + 1);
+  const [filtroAno, setFiltroAno] = useState(() => Number(localStorage.getItem("dash_filtroAno")) || hoje.getFullYear());
+  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(() => localStorage.getItem("dash_usandoOutro") === "true");
+  const [customRange, setCustomRange] = useState(() => { try { return JSON.parse(localStorage.getItem("dash_customRange")); } catch { return null; } });
   const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
   const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
   const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
-  const [customRange, setCustomRange] = useState(null);
   const periodoDropRef = useRef(null);
 
   useEffect(() => {
@@ -80,17 +80,19 @@ export default function Dashboard() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const salvarCustom = (range) => { setCustomRange(range); localStorage.setItem("dash_customRange", JSON.stringify(range)); setUsandoOutroPeriodo(true); localStorage.setItem("dash_usandoOutro", "true"); };
+  const salvarMes = (m, a) => { setFiltroMes(m); localStorage.setItem("dash_filtroMes", m); setFiltroAno(a); localStorage.setItem("dash_filtroAno", a); setUsandoOutroPeriodo(false); localStorage.setItem("dash_usandoOutro", "false"); setCustomRange(null); localStorage.removeItem("dash_customRange"); };
+
   const navegarMes = (dir) => {
-    setUsandoOutroPeriodo(false); setCustomRange(null);
     let m = filtroMes + dir, a = filtroAno;
     if (m > 12) { m = 1; a++; } if (m < 1) { m = 12; a--; }
-    setFiltroMes(m); setFiltroAno(a);
+    salvarMes(m, a);
   };
 
   const aplicarOutroPeriodo = () => {
     if (!outroPeriodoInicio || !outroPeriodoFim) return;
-    setCustomRange({ inicio: outroPeriodoInicio, fim: outroPeriodoFim });
-    setUsandoOutroPeriodo(true); setPeriodoDropOpen(false);
+    salvarCustom({ inicio: outroPeriodoInicio, fim: outroPeriodoFim });
+    setPeriodoDropOpen(false);
   };
 
   const pad = n => String(n).padStart(2, "0");
@@ -225,7 +227,7 @@ export default function Dashboard() {
             <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 hover:bg-white/20 transition-all" style={{borderRight:"1px solid rgba(255,255,255,0.15)"}}>
               <ChevronLeft className="w-3 h-3" />
             </button>
-            <button onClick={() => { setUsandoOutroPeriodo(false); setCustomRange(null); }} className="flex-1 text-center h-full hover:bg-white/10 transition-all cursor-pointer">{MESES[filtroMes - 1]} - {filtroAno}</button>
+            <button onClick={() => salvarMes(filtroMes, filtroAno)} className="flex-1 text-center h-full hover:bg-white/10 transition-all cursor-pointer">{MESES[filtroMes - 1]} - {filtroAno}</button>
             <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 hover:bg-white/20 transition-all" style={{borderLeft:"1px solid rgba(255,255,255,0.15)"}}>
               <ChevronRight className="w-3 h-3" />
             </button>
@@ -249,34 +251,29 @@ export default function Dashboard() {
                     return (
                     <button key={tipo} onClick={() => {
                       if (tipo === 'hoje') {
-                        const d = fmt(hoje); setCustomRange({ inicio: d, fim: d }); setUsandoOutroPeriodo(true);
+                        const d = fmt(hoje); salvarCustom({ inicio: d, fim: d });
                       } else if (tipo === 'ontem') {
-                        const d = new Date(hoje); d.setDate(hoje.getDate() - 1); const s = fmt(d);
-                        setCustomRange({ inicio: s, fim: s }); setUsandoOutroPeriodo(true);
+                        const d = new Date(hoje); d.setDate(hoje.getDate() - 1); const s = fmt(d); salvarCustom({ inicio: s, fim: s });
                       } else if (tipo === 'semana') {
                         const dow = hoje.getDay();
                         const ini = new Date(hoje); ini.setDate(hoje.getDate() - dow);
                         const fim = new Date(hoje); fim.setDate(hoje.getDate() + (6 - dow));
-                        setCustomRange({ inicio: fmt(ini), fim: fmt(fim) }); setUsandoOutroPeriodo(true);
+                        salvarCustom({ inicio: fmt(ini), fim: fmt(fim) });
                       } else if (tipo === 'semana_passada') {
                         const dow = hoje.getDay();
                         const ini = new Date(hoje); ini.setDate(hoje.getDate() - dow - 7);
                         const fim = new Date(hoje); fim.setDate(hoje.getDate() - dow - 1);
-                        setCustomRange({ inicio: fmt(ini), fim: fmt(fim) }); setUsandoOutroPeriodo(true);
+                        salvarCustom({ inicio: fmt(ini), fim: fmt(fim) });
                       } else if (tipo === 'mes') {
-                        setUsandoOutroPeriodo(false); setCustomRange(null);
-                        setFiltroMes(hoje.getMonth() + 1); setFiltroAno(hoje.getFullYear());
+                        salvarMes(hoje.getMonth() + 1, hoje.getFullYear());
                       } else if (tipo === 'mes_passado') {
-                        const d = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-                        setUsandoOutroPeriodo(false); setCustomRange(null);
-                        setFiltroMes(d.getMonth() + 1); setFiltroAno(d.getFullYear());
+                        const d = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1); salvarMes(d.getMonth() + 1, d.getFullYear());
                       } else if (tipo === 'ano') {
-                        setCustomRange({ inicio: `${hoje.getFullYear()}-01-01`, fim: `${hoje.getFullYear()}-12-31` }); setUsandoOutroPeriodo(true);
+                        salvarCustom({ inicio: `${hoje.getFullYear()}-01-01`, fim: `${hoje.getFullYear()}-12-31` });
                       } else if (tipo === 'ano_passado') {
-                        const a = hoje.getFullYear() - 1;
-                        setCustomRange({ inicio: `${a}-01-01`, fim: `${a}-12-31` }); setUsandoOutroPeriodo(true);
+                        const a = hoje.getFullYear() - 1; salvarCustom({ inicio: `${a}-01-01`, fim: `${a}-12-31` });
                       } else if (tipo === 'tudo') {
-                        setCustomRange({ inicio: '2000-01-01', fim: '2099-12-31' }); setUsandoOutroPeriodo(true);
+                        salvarCustom({ inicio: '2000-01-01', fim: '2099-12-31' });
                       }
                       setPeriodoDropOpen(false);
                     }}
@@ -458,7 +455,7 @@ export default function Dashboard() {
             {[3, 6, 12].map(m => (
               <button
                 key={m}
-                onClick={() => setPeriodoMeses(m)}
+                onClick={() => { setPeriodoMeses(m); localStorage.setItem("dash_periodoMeses", m); }}
                 className="px-3 py-1 rounded-lg text-xs font-medium transition-all"
                 style={periodoMeses === m ? { background: "#062C9B", color: "#fff" } : { background: "#1f2937", color: "#6b7280", border: "1px solid #374151" }}
               >
