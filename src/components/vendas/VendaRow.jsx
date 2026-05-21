@@ -210,6 +210,8 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
   const [showAviso, setShowAviso] = useState(false);
   const [statusPendente, setStatusPendente] = useState(null);
   const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
+  const [showBloqueio, setShowBloqueio] = useState(false);
+  const [bloqueioQtd, setBloqueioQtd] = useState(0);
   const [manualNFModal, setManualNFModal] = useState(null);
   const normalizarNF = (v) => v ? v.replace(/\(#?(\d+)\)/, '$1') : v;
   const numeroRef = useRef(null);
@@ -279,7 +281,8 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
       if (pd.length > 0) {
         const pendentes = pd.filter(p => p.financeiro_status !== "Pago");
         if (pendentes.length > 0) {
-          alert(`Não é possível concluir esta venda. ${pendentes.length} parcela(s) ainda não foram quitadas.`);
+          setBloqueioQtd(pendentes.length);
+          setShowBloqueio(true);
           return;
         }
       }
@@ -395,6 +398,34 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
 
   return (
     <>
+      {showBloqueio && (
+        <div className="fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-red-500/40 rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{background:"rgba(220,38,38,0.15)", border:"1px solid rgba(220,38,38,0.4)"}}>
+                <AlertTriangle className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-base">Pagamento Pendente</h3>
+                <p className="text-gray-400 text-xs">Não é possível concluir</p>
+              </div>
+            </div>
+            <div className="rounded-xl p-4" style={{background:"rgba(220,38,38,0.08)", border:"1px solid rgba(220,38,38,0.2)"}}>
+              <p className="text-gray-200 text-sm leading-relaxed">
+                Esta venda possui <strong className="text-red-400">{bloqueioQtd} parcela{bloqueioQtd > 1 ? 's' : ''}</strong> ainda não {bloqueioQtd > 1 ? 'quitadas' : 'quitada'}.
+              </p>
+              <p className="text-gray-400 text-xs mt-2">Quite todas as parcelas antes de concluir a venda.</p>
+            </div>
+            <div className="flex justify-end">
+              <button onClick={() => setShowBloqueio(false)}
+                className="px-5 py-2 text-sm font-semibold rounded-xl text-white transition-all"
+                style={{background:"#062C9B"}}>
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showAvisoExcluir && (
         <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
           <div className="bg-gray-900 border border-red-500/30 rounded-2xl w-full max-w-md p-6 space-y-4">
