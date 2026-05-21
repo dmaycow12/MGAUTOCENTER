@@ -112,18 +112,23 @@ export default function Financeiro() {
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const data = await base44.entities.Financeiro.list("-data_vencimento", 2000);
-    // Auto-marcar como Atrasado se vencido e não pago
-    const hoje = new Date().toISOString().split("T")[0];
-    const aAtualizar = data.filter(i => i.status === "Pendente" && i.data_vencimento && i.data_vencimento < hoje);
-    for (const item of aAtualizar) {
-      await base44.entities.Financeiro.update(item.id, { status: "Atrasado" });
+    try {
+      const data = await base44.entities.Financeiro.list("-data_vencimento", 2000);
+      // Auto-marcar como Atrasado se vencido e não pago
+      const hoje = new Date().toISOString().split("T")[0];
+      const aAtualizar = data.filter(i => i.status === "Pendente" && i.data_vencimento && i.data_vencimento < hoje);
+      for (const item of aAtualizar) {
+        try { await base44.entities.Financeiro.update(item.id, { status: "Atrasado" }); } catch (_) {}
+      }
+      const atualizado = aAtualizar.length > 0
+        ? await base44.entities.Financeiro.list("-data_vencimento", 2000)
+        : data;
+      setItems(atualizado);
+    } catch (err) {
+      console.error("Erro ao carregar financeiro:", err);
+    } finally {
+      setLoading(false);
     }
-    const atualizado = aAtualizar.length > 0
-      ? await base44.entities.Financeiro.list("-data_vencimento", 500)
-      : data;
-    setItems(atualizado);
-    setLoading(false);
   };
 
   const salvar = async () => {
