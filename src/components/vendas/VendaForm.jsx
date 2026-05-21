@@ -583,18 +583,20 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       let algumaNova = false;
       for (let idx = 0; idx < parcelasAtualizadas.length; idx++) {
         if (!parcelasAtualizadas[idx].financeiro_id) {
+          const statusSelecionado = parcelasAtualizadas[idx].financeiro_status || "Pendente";
           const fin = await base44.entities.Financeiro.create({
             tipo: "Receita",
             categoria: "Ordem de Venda",
             descricao: `Venda #${formFinal.numero} — ${formFinal.cliente_nome || ""} — Parcela ${idx+1}/${parcelasAtualizadas.length}`,
             valor: parcelasAtualizadas[idx].valor || 0,
             data_vencimento: parcelasAtualizadas[idx].vencimento,
-            status: "Pendente",
+            status: statusSelecionado,
+            data_pagamento: statusSelecionado === "Pago" ? new Date().toISOString().split("T")[0] : null,
             forma_pagamento: parcelasAtualizadas[idx].forma_pagamento || "A Combinar",
             ordem_venda_id: savedId,
             cliente_id: formFinal.cliente_id || "",
           });
-          parcelasAtualizadas[idx] = { ...parcelasAtualizadas[idx], financeiro_id: fin.id, financeiro_status: "Pendente" };
+          parcelasAtualizadas[idx] = { ...parcelasAtualizadas[idx], financeiro_id: fin.id, financeiro_status: statusSelecionado };
           algumaNova = true;
         }
       }
@@ -932,24 +934,41 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                               <button
                                 type="button"
                                 onClick={() => p.financeiro_status === "Pago" && cancelarParcela(i)}
-                                disabled={pagandoParcela === i || p.financeiro_status !== "Pago"}
-                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-40"
-                                style={{background: p.financeiro_status !== "Pago" ? "#374151" : "#4B5563"}}
+                                disabled={pagandoParcela === i}
+                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-50"
+                                style={{background: p.financeiro_status === "Pendente" ? "#4B5563" : "#374151"}}
                               >
                                 {pagandoParcela === i ? "..." : "Pendente"}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => p.financeiro_status !== "Pago" && pagarParcela(i)}
-                                disabled={pagandoParcela === i || p.financeiro_status === "Pago"}
-                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-40"
-                                style={{background: p.financeiro_status === "Pago" ? "#00C957" : "#4B5563"}}
+                                disabled={pagandoParcela === i}
+                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-50"
+                                style={{background: p.financeiro_status === "Pago" ? "#00C957" : "#374151"}}
                               >
                                 {pagandoParcela === i ? "..." : "Pago"}
                               </button>
                             </>
                           ) : (
-                            <span className="text-xs text-gray-500 italic">Salve primeiro</span>
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => updateParcela(i, "financeiro_status", "Pendente")}
+                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap"
+                                style={{background: p.financeiro_status === "Pendente" ? "#4B5563" : "#374151"}}
+                              >
+                                Pendente
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => updateParcela(i, "financeiro_status", "Pago")}
+                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap"
+                                style={{background: p.financeiro_status === "Pago" ? "#00C957" : "#374151"}}
+                              >
+                                Pago
+                              </button>
+                            </>
                           )}
                         </div>
                       </div>
