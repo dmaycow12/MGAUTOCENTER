@@ -506,6 +506,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       await base44.entities.Financeiro.update(p.financeiro_id, {
         status: "Pago",
         data_pagamento: new Date().toISOString().split("T")[0],
+        forma_pagamento: p.forma_pagamento || "A Combinar",
       });
     }
     const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pago" } : par);
@@ -520,12 +521,23 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     setPagandoParcela(i);
     await base44.entities.Financeiro.update(p.financeiro_id, {
       status: "Pendente",
-      data_pagamento: null,
+      data_pagamento: "",
     });
     const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pendente" } : par);
     setParcelas(novas);
     await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas });
     setPagandoParcela(null);
+  };
+
+  const onFormaParcelaChange = async (i, val) => {
+    const p = parcelas[i];
+    const novas = parcelas.map((par, idx) => idx === i ? { ...par, forma_pagamento: val } : par);
+    setParcelas(novas);
+    // Se já tem financeiro vinculado, atualiza em tempo real
+    if (p.financeiro_id && os?.id) {
+      await base44.entities.Financeiro.update(p.financeiro_id, { forma_pagamento: val });
+      await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas });
+    }
   };
 
   const validarTelefone = (val) => {
@@ -932,9 +944,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                         />
                         <select
                           value={p.forma_pagamento || "A Combinar"}
-                          onChange={e => updateParcela(i, "forma_pagamento", e.target.value)}
+                          onChange={e => onFormaParcelaChange(i, e.target.value)}
                           className="input-dark text-xs py-1.5"
-                          disabled={!!p.financeiro_id}
                         >
                           {["A Combinar","Boleto","Cartão","Cheque","Dinheiro","PIX"].map(s => <option key={s}>{s}</option>)}
                         </select>
