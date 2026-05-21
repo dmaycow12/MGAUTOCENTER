@@ -33,17 +33,17 @@ export default function Financeiro() {
   const [editando, setEditando] = useState(null);
   const [form, setForm] = useState(defaultForm());
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("financeiro_viewmode") || "cards");
-  const [filtroTipo, setFiltroTipo] = useState("Todos");
-  const [filtroStatus, setFiltroStatus] = useState("Todos");
-
   const hoje = new Date();
-  const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
-  const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
-  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(false);
+
+  const [filtroTipo, setFiltroTipo] = useState(() => localStorage.getItem("fin_filtroTipo") || "Todos");
+  const [filtroStatus, setFiltroStatus] = useState(() => localStorage.getItem("fin_filtroStatus") || "Todos");
+  const [filtroMes, setFiltroMes] = useState(() => Number(localStorage.getItem("fin_filtroMes")) || hoje.getMonth() + 1);
+  const [filtroAno, setFiltroAno] = useState(() => Number(localStorage.getItem("fin_filtroAno")) || hoje.getFullYear());
+  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(() => localStorage.getItem("fin_usandoOutro") === "true");
+  const [customRange, setCustomRange] = useState(() => { try { return JSON.parse(localStorage.getItem("fin_customRange")); } catch { return null; } });
   const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
   const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
   const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
-  const [customRange, setCustomRange] = useState(null);
   const periodoDropRef = useRef(null);
 
   useEffect(() => {
@@ -55,57 +55,58 @@ export default function Financeiro() {
   }, []);
 
   const navegarMes = (direcao) => {
-    setUsandoOutroPeriodo(false);
-    setCustomRange(null);
+    setUsandoOutroPeriodo(false); localStorage.setItem("fin_usandoOutro", "false");
+    setCustomRange(null); localStorage.removeItem("fin_customRange");
     let novoMes = filtroMes + direcao;
     let novoAno = filtroAno;
     if (novoMes > 12) { novoMes = 1; novoAno++; }
     if (novoMes < 1) { novoMes = 12; novoAno--; }
-    setFiltroMes(novoMes);
-    setFiltroAno(novoAno);
+    setFiltroMes(novoMes); localStorage.setItem("fin_filtroMes", novoMes);
+    setFiltroAno(novoAno); localStorage.setItem("fin_filtroAno", novoAno);
   };
 
   const aplicarAtalho = (tipo) => {
     const hoje = new Date();
     const pad = n => String(n).padStart(2, '0');
     const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    const salvarCustom = (range) => { setCustomRange(range); localStorage.setItem("fin_customRange", JSON.stringify(range)); setUsandoOutroPeriodo(true); localStorage.setItem("fin_usandoOutro", "true"); };
+    const salvarMes = (m, a) => { setFiltroMes(m); localStorage.setItem("fin_filtroMes", m); setFiltroAno(a); localStorage.setItem("fin_filtroAno", a); setUsandoOutroPeriodo(false); localStorage.setItem("fin_usandoOutro", "false"); setCustomRange(null); localStorage.removeItem("fin_customRange"); };
     if (tipo === 'hoje') {
-      const d = fmt(hoje); setCustomRange({ inicio: d, fim: d }); setUsandoOutroPeriodo(true);
+      const d = fmt(hoje); salvarCustom({ inicio: d, fim: d });
     } else if (tipo === 'ontem') {
       const d = new Date(hoje); d.setDate(hoje.getDate() - 1); const s = fmt(d);
-      setCustomRange({ inicio: s, fim: s }); setUsandoOutroPeriodo(true);
+      salvarCustom({ inicio: s, fim: s });
     } else if (tipo === 'semana') {
       const dow = hoje.getDay();
       const ini = new Date(hoje); ini.setDate(hoje.getDate() - dow);
       const fim = new Date(hoje); fim.setDate(hoje.getDate() + (6 - dow));
-      setCustomRange({ inicio: fmt(ini), fim: fmt(fim) }); setUsandoOutroPeriodo(true);
+      salvarCustom({ inicio: fmt(ini), fim: fmt(fim) });
     } else if (tipo === 'semana_passada') {
       const dow = hoje.getDay();
       const ini = new Date(hoje); ini.setDate(hoje.getDate() - dow - 7);
       const fim = new Date(hoje); fim.setDate(hoje.getDate() - dow - 1);
-      setCustomRange({ inicio: fmt(ini), fim: fmt(fim) }); setUsandoOutroPeriodo(true);
+      salvarCustom({ inicio: fmt(ini), fim: fmt(fim) });
     } else if (tipo === 'mes') {
-      setUsandoOutroPeriodo(false); setCustomRange(null);
-      setFiltroMes(hoje.getMonth() + 1); setFiltroAno(hoje.getFullYear());
+      salvarMes(hoje.getMonth() + 1, hoje.getFullYear());
     } else if (tipo === 'mes_passado') {
       const d = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-      setUsandoOutroPeriodo(false); setCustomRange(null);
-      setFiltroMes(d.getMonth() + 1); setFiltroAno(d.getFullYear());
+      salvarMes(d.getMonth() + 1, d.getFullYear());
     } else if (tipo === 'ano') {
-      setCustomRange({ inicio: `${hoje.getFullYear()}-01-01`, fim: `${hoje.getFullYear()}-12-31` }); setUsandoOutroPeriodo(true);
+      salvarCustom({ inicio: `${hoje.getFullYear()}-01-01`, fim: `${hoje.getFullYear()}-12-31` });
     } else if (tipo === 'ano_passado') {
       const a = hoje.getFullYear() - 1;
-      setCustomRange({ inicio: `${a}-01-01`, fim: `${a}-12-31` }); setUsandoOutroPeriodo(true);
+      salvarCustom({ inicio: `${a}-01-01`, fim: `${a}-12-31` });
     } else if (tipo === 'tudo') {
-      setCustomRange({ inicio: '2000-01-01', fim: '2099-12-31' }); setUsandoOutroPeriodo(true);
+      salvarCustom({ inicio: '2000-01-01', fim: '2099-12-31' });
     }
     setPeriodoDropOpen(false);
   };
 
   const aplicarOutroPeriodo = () => {
     if (!outroPeriodoInicio || !outroPeriodoFim) return;
-    setCustomRange({ inicio: outroPeriodoInicio, fim: outroPeriodoFim });
-    setUsandoOutroPeriodo(true);
+    const range = { inicio: outroPeriodoInicio, fim: outroPeriodoFim };
+    setCustomRange(range); localStorage.setItem("fin_customRange", JSON.stringify(range));
+    setUsandoOutroPeriodo(true); localStorage.setItem("fin_usandoOutro", "true");
     setPeriodoDropOpen(false);
   };
 
@@ -238,7 +239,7 @@ export default function Financeiro() {
             <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
               <ChevronLeft className="w-3 h-3" />
             </button>
-            <button onClick={() => { setUsandoOutroPeriodo(false); setCustomRange(null); }} className="flex-1 text-center truncate h-full hover:bg-white/10 transition-all cursor-pointer">{MESES[filtroMes - 1]} - {filtroAno}</button>
+            <button onClick={() => { setUsandoOutroPeriodo(false); localStorage.setItem("fin_usandoOutro","false"); setCustomRange(null); localStorage.removeItem("fin_customRange"); }} className="flex-1 text-center truncate h-full hover:bg-white/10 transition-all cursor-pointer">{MESES[filtroMes - 1]} - {filtroAno}</button>
             <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
               <ChevronRight className="w-3 h-3" />
             </button>
@@ -325,14 +326,14 @@ export default function Financeiro() {
         {/* Linha 3: filtro tipo — Receita / Despesa / Todos */}
             <div className="flex gap-2">
               {["Todos","Receita","Despesa"].map(t => (
-                <button key={t} onClick={() => setFiltroTipo(t)} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroTipo === t ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{t === "Todos" ? "Tudo" : t}</button>
+                <button key={t} onClick={() => { setFiltroTipo(t); localStorage.setItem("fin_filtroTipo", t); }} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroTipo === t ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{t === "Todos" ? "Tudo" : t}</button>
               ))}
             </div>
 
             {/* Linha 4: filtro status — Pendente / Atrasado / Pago / Todos */}
             <div className="flex gap-2">
               {["Todos","Pendente","Atrasado","Pago"].map(s => (
-                <button key={s} onClick={() => setFiltroStatus(s)} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroStatus === s ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{s === "Todos" ? "Tudo" : s}</button>
+                <button key={s} onClick={() => { setFiltroStatus(s); localStorage.setItem("fin_filtroStatus", s); }} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroStatus === s ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{s === "Todos" ? "Tudo" : s}</button>
               ))}
             </div>
 
