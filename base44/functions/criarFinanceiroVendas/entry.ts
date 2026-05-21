@@ -57,6 +57,8 @@ Deno.serve(async (req) => {
           || finVenda.find(f => f.descricao?.includes(descParcela));
 
         if (!jaExiste) {
+          // Pausa para evitar rate limit
+          await new Promise(r => setTimeout(r, 80));
           const fin = await base44.asServiceRole.entities.Financeiro.create({
             tipo: "Receita",
             categoria: "Ordem de Venda",
