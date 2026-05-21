@@ -253,6 +253,27 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     }
   }, [form.cliente_id, veiculos]);
 
+  // Sincroniza financeiro_status das parcelas com o status real do Financeiro ao abrir
+  useEffect(() => {
+    if (!os?.id) return;
+    base44.entities.Financeiro.filter({ ordem_venda_id: os.id }, "-created_date", 100).then(fins => {
+      if (!fins || fins.length === 0) return;
+      setParcelasSync(prev => prev.map(p => {
+        if (!p.financeiro_id) {
+          // tenta associar pelo índice/descrição
+          const idx = prev.indexOf(p);
+          const desc = `Parcela ${idx+1}/${prev.length}`;
+          const fin = fins.find(f => f.id === p.financeiro_id || f.descricao?.includes(desc));
+          if (fin) return { ...p, financeiro_id: fin.id, financeiro_status: fin.status };
+          return p;
+        }
+        const fin = fins.find(f => f.id === p.financeiro_id);
+        if (fin && fin.status !== p.financeiro_status) return { ...p, financeiro_status: fin.status };
+        return p;
+      }));
+    });
+  }, [os?.id]);
+
   const prevTotalRef = useRef(form.valor_total);
   const prevQtdRef = useRef(form.parcelas);
   useEffect(() => {
