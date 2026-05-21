@@ -417,13 +417,26 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const parseNum = (val) => Number(String(val).replace(',', '.')) || 0;
 
-  const updatePeca = (i, field, val) => {
+  const updatePeca = async (i, field, val) => {
+    const pecaAntiga = form.pecas[i];
     const novos = form.pecas.map((p, idx) => {
       if (idx !== i) return p;
       const updated = { ...p, _new: false, [field]: ["quantidade", "valor_unitario"].includes(field) ? parseNum(val) : val };
       updated.valor_total = Number(updated.quantidade || 0) * Number(updated.valor_unitario || 0);
       return updated;
     });
+    // Ajusta estoque pela diferença quando quantidade muda
+    if (field === "quantidade" && pecaAntiga?.estoque_id && !pecaAntiga._new) {
+      const diff = parseNum(val) - Number(pecaAntiga.quantidade || 0);
+      if (diff !== 0) {
+        const itemEstoque = estoque.find(e => e.id === pecaAntiga.estoque_id);
+        if (itemEstoque) {
+          const novaQty = (itemEstoque.quantidade || 0) - diff;
+          await base44.entities.Estoque.update(pecaAntiga.estoque_id, { quantidade: novaQty });
+          setEstoque(prev => prev.map(e => e.id === pecaAntiga.estoque_id ? { ...e, quantidade: novaQty } : e));
+        }
+      }
+    }
     if ((field === "codigo" || field === "descricao") && val.length > 0) {
       setProdutoSugestoes({ idx: i, lista: estoque.filter(e =>
         e.codigo?.toLowerCase().includes(val.toLowerCase()) || e.descricao?.toLowerCase().includes(val.toLowerCase())
@@ -435,17 +448,26 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     setForm(f => ({ ...f, pecas: novos, ...calc }));
   };
 
-  const selecionarProduto = (i, item) => {
+  const selecionarProduto = async (i, item) => {
     setProdutoSugestoes({ idx: null, lista: [] });
+    let qtdSelecionada = 1;
     setForm(f => {
       const novos = f.pecas.map((p, idx) => {
         if (idx !== i) return p;
+        qtdSelecionada = Number(p.quantidade || 1);
         const updated = { ...p, _new: false, estoque_id: item.id, codigo: item.codigo || "", descricao: item.descricao || "", valor_unitario: Number(item.valor_venda || 0) };
         updated.valor_total = Number(updated.quantidade || 1) * updated.valor_unitario;
         return updated;
       });
       return { ...f, pecas: novos, ...recalcular(f.servicos, novos, f.desconto) };
     });
+    // Subtrai do estoque imediatamente
+    const itemEstoque = estoque.find(e => e.id === item.id);
+    if (itemEstoque) {
+      const novaQty = (itemEstoque.quantidade || 0) - qtdSelecionada;
+      await base44.entities.Estoque.update(item.id, { quantidade: novaQty });
+      setEstoque(prev => prev.map(e => e.id === item.id ? { ...e, quantidade: novaQty } : e));
+    }
   };
 
   const removePeca = async (i) => {
