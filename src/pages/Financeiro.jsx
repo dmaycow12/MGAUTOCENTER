@@ -166,11 +166,27 @@ export default function Financeiro() {
     load();
   };
 
+  const verificarEConcluirVenda = async (vendaId) => {
+    if (!vendaId) return;
+    const fins = await base44.entities.Financeiro.filter({ ordem_venda_id: vendaId }, "-created_date", 100);
+    const receitas = fins.filter(f => f.tipo === "Receita");
+    if (receitas.length > 0 && receitas.every(f => f.status === "Pago")) {
+      const vendas = await base44.entities.Vendas.filter({ id: vendaId }, "-created_date", 1);
+      const venda = vendas[0];
+      if (venda && venda.status !== "Concluído") {
+        await base44.entities.Vendas.update(vendaId, { status: "Concluído", data_conclusao: new Date().toISOString().split("T")[0] });
+      }
+    }
+  };
+
   const alterarStatus = async (item, novoStatus) => {
     const update = { status: novoStatus };
     if (novoStatus === "Pago") update.data_pagamento = new Date().toISOString().split("T")[0];
     if (novoStatus === "Pendente" || novoStatus === "Atrasado") update.data_pagamento = "";
     await base44.entities.Financeiro.update(item.id, update);
+    if (novoStatus === "Pago" && item.ordem_venda_id) {
+      await verificarEConcluirVenda(item.ordem_venda_id);
+    }
     load();
   };
 
@@ -181,6 +197,9 @@ export default function Financeiro() {
       update.data_pagamento = new Date().toISOString().split("T")[0];
     }
     await base44.entities.Financeiro.update(item.id, update);
+    if (update.status === "Pago" && item.ordem_venda_id) {
+      await verificarEConcluirVenda(item.ordem_venda_id);
+    }
 
     // Sincronizar com Vendas
     if (item.ordem_servico_id) {

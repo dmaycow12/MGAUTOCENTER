@@ -570,7 +570,13 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     }
     const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pago" } : par);
     setParcelasSync(novas);
-    await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas });
+    const todasPagas = novas.length > 0 && novas.every(par => par.financeiro_status === "Pago");
+    if (todasPagas && form.status !== "Concluído") {
+      await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas, status: "Concluído", data_conclusao: new Date().toISOString().split("T")[0] });
+      setForm(f => ({ ...f, status: "Concluído", data_conclusao: new Date().toISOString().split("T")[0] }));
+    } else {
+      await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas });
+    }
     setPagandoParcela(null);
   };
 
