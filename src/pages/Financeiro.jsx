@@ -642,6 +642,7 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
       <div className="flex gap-1 flex-shrink-0">
         {STATUS_OPTIONS.map(s => {
           const bloqueado = s === "Pago" && (!item.forma_pagamento || item.forma_pagamento === "A Combinar");
+          const isActive = item.status === s || (s === "Pendente" && item.status === "Atrasado");
           return (
             <button key={s}
               onClick={() => {
@@ -653,9 +654,9 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
               }}
               className="px-2 py-1 rounded-lg text-xs font-bold transition-all"
               style={{
-                background: item.status === s ? STATUS_BG_LIST[s] : "#374151",
+                background: isActive ? STATUS_BG_LIST[s] : "#374151",
                 color: "#fff",
-                opacity: item.status === s ? 1 : bloqueado ? 0.25 : 0.45,
+                opacity: isActive ? 1 : bloqueado ? 0.25 : 0.45,
                 cursor: bloqueado ? "not-allowed" : "pointer",
               }}
               title={bloqueado ? "Selecione a forma de pagamento primeiro" : undefined}
