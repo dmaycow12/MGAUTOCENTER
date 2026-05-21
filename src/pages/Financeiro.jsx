@@ -128,16 +128,29 @@ export default function Financeiro() {
 
   const load = async () => {
     try {
-      const data = await base44.entities.Financeiro.list("-data_vencimento", 9999);
+      const [data, vendas] = await Promise.all([
+        base44.entities.Financeiro.list("-data_vencimento", 9999),
+        base44.entities.Vendas.list("-created_date", 9999),
+      ]);
+      // IDs de vendas com status Orçamento
+      const idsOrcamento = new Set(vendas.filter(v => v.status === "Orçamento").map(v => v.id));
+      // Filtra lançamentos vinculados a Orçamentos
+      const semOrcamento = data.filter(i => {
+        const vinculo = i.ordem_venda_id || i.ordem_servico_id;
+        return !vinculo || !idsOrcamento.has(vinculo);
+      });
       // Auto-marcar como Atrasado se vencido e não pago
       const hoje = new Date().toISOString().split("T")[0];
-      const aAtualizar = data.filter(i => i.status === "Pendente" && i.data_vencimento && i.data_vencimento < hoje);
+      const aAtualizar = semOrcamento.filter(i => i.status === "Pendente" && i.data_vencimento && i.data_vencimento < hoje);
       for (const item of aAtualizar) {
         try { await base44.entities.Financeiro.update(item.id, { status: "Atrasado" }); } catch (_) {}
       }
       const atualizado = aAtualizar.length > 0
-        ? await base44.entities.Financeiro.list("-data_vencimento", 9999)
-        : data;
+        ? (await base44.entities.Financeiro.list("-data_vencimento", 9999)).filter(i => {
+            const vinculo = i.ordem_venda_id || i.ordem_servico_id;
+            return !vinculo || !idsOrcamento.has(vinculo);
+          })
+        : semOrcamento;
       setItems(atualizado);
     } catch (err) {
       console.error("Erro ao carregar financeiro:", err);
