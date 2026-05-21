@@ -591,35 +591,44 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         await base44.entities.Vendas.update(os.id, formFinal);
       }
 
-      // Criar lançamentos financeiros para parcelas sem financeiro_id
-      // Busca lançamentos já existentes para evitar duplicatas
+      // Criar ou sincronizar lançamentos financeiros
       const finExistentes = await base44.entities.Financeiro.filter({ ordem_venda_id: savedId }, "-created_date", 100);
       const parcelasAtualizadas = [...parcelasNormalizadas];
       let algumaNova = false;
       for (let idx = 0; idx < parcelasAtualizadas.length; idx++) {
-        // Verifica se já existe lançamento para essa parcela (por financeiro_id ou pela descrição)
+        const parcela = parcelasAtualizadas[idx];
         const descParcela = `Parcela ${idx+1}/${parcelasAtualizadas.length}`;
-        const jaExiste = parcelasAtualizadas[idx].financeiro_id
-          || finExistentes.find(f => f.descricao?.includes(descParcela));
-        if (!jaExiste) {
-          const statusSelecionado = parcelasAtualizadas[idx].financeiro_status || "Pendente";
+        const jaExiste = parcela.financeiro_id
+          ? finExistentes.find(f => f.id === parcela.financeiro_id)
+          : finExistentes.find(f => f.descricao?.includes(descParcela));
+
+        if (jaExiste) {
+          // Sincroniza data_vencimento e forma_pagamento com o que está na parcela
+          await base44.entities.Financeiro.update(jaExiste.id, {
+            data_vencimento: parcela.vencimento,
+            forma_pagamento: parcela.forma_pagamento || "A Combinar",
+            valor: parcela.valor || 0,
+          });
+          if (!parcela.financeiro_id) {
+            parcelasAtualizadas[idx] = { ...parcela, financeiro_id: jaExiste.id };
+            algumaNova = true;
+          }
+        } else {
+          // Cria novo lançamento
+          const statusSelecionado = parcela.financeiro_status || "Pendente";
           const fin = await base44.entities.Financeiro.create({
             tipo: "Receita",
             categoria: "Ordem de Venda",
             descricao: `Venda #${formFinal.numero} — ${formFinal.cliente_nome || ""} — Parcela ${idx+1}/${parcelasAtualizadas.length}`,
-            valor: parcelasAtualizadas[idx].valor || 0,
-            data_vencimento: parcelasAtualizadas[idx].vencimento,
+            valor: parcela.valor || 0,
+            data_vencimento: parcela.vencimento,
             status: statusSelecionado,
-            data_pagamento: statusSelecionado === "Pago" ? new Date().toISOString().split("T")[0] : null,
-            forma_pagamento: parcelasAtualizadas[idx].forma_pagamento || "A Combinar",
+            data_pagamento: statusSelecionado === "Pago" ? new Date().toISOString().split("T")[0] : "",
+            forma_pagamento: parcela.forma_pagamento || "A Combinar",
             ordem_venda_id: savedId,
             cliente_id: formFinal.cliente_id || "",
           });
-          parcelasAtualizadas[idx] = { ...parcelasAtualizadas[idx], financeiro_id: fin.id, financeiro_status: statusSelecionado };
-          algumaNova = true;
-        } else if (!parcelasAtualizadas[idx].financeiro_id && jaExiste?.id) {
-          // Recupera o financeiro_id se estava faltando na parcela
-          parcelasAtualizadas[idx] = { ...parcelasAtualizadas[idx], financeiro_id: jaExiste.id };
+          parcelasAtualizadas[idx] = { ...parcela, financeiro_id: fin.id, financeiro_status: statusSelecionado };
           algumaNova = true;
         }
       }
