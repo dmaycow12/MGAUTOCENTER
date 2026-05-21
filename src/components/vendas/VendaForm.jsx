@@ -761,6 +761,13 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       if (algumaNova) {
         await base44.entities.Vendas.update(savedId, { parcelas_detalhes: parcelasAtualizadas });
       }
+      // Remove lançamentos financeiros órfãos (ex: era 1 parcela, virou 2)
+      const idsNovos = new Set(parcelasAtualizadas.map(p => p.financeiro_id).filter(Boolean));
+      for (const fin of finExistentes) {
+        if (!idsNovos.has(fin.id)) {
+          await base44.entities.Financeiro.delete(fin.id);
+        }
+      }
 
       if (eraAberta && ficouConcluida && savedId) {
         await reduzirEstoque(formFinal.pecas);
