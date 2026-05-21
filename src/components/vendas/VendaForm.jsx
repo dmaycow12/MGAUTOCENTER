@@ -448,10 +448,20 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     });
   };
 
-  const removePeca = (i) => {
+  const removePeca = async (i) => {
+    const peca = form.pecas[i];
     const novos = form.pecas.filter((_, idx) => idx !== i);
     const calc = recalcular(form.servicos, novos, form.desconto);
     setForm(f => ({ ...f, pecas: novos, ...calc }));
+    // Devolve ao estoque se tem estoque_id e quantidade
+    if (peca?.estoque_id && peca?.quantidade > 0) {
+      const itemEstoque = estoque.find(e => e.id === peca.estoque_id);
+      if (itemEstoque) {
+        const novaQty = (itemEstoque.quantidade || 0) + peca.quantidade;
+        await base44.entities.Estoque.update(peca.estoque_id, { quantidade: novaQty });
+        setEstoque(prev => prev.map(e => e.id === peca.estoque_id ? { ...e, quantidade: novaQty } : e));
+      }
+    }
   };
 
   const onDragEnd = (result, tipo) => {
@@ -497,11 +507,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const onStatusChange = (novoStatus) => {
-    if (form.status === "Concluído" && novoStatus !== "Concluído") {
-      setStatusPendente(novoStatus);
-      setShowAvisoReabrir(true);
-      return;
-    }
     setForm(f => ({ ...f, status: novoStatus }));
   };
 
@@ -1192,23 +1197,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       </div>
     )}
 
-    {showAvisoReabrir && (
-      <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
-        <div className="bg-gray-900 border border-red-500/30 rounded-2xl w-full max-w-md p-6 space-y-4">
-          <div className="flex items-center gap-3 text-red-400">
-            <AlertTriangle className="w-7 h-7 flex-shrink-0" />
-            <h3 className="text-lg font-bold">Atenção!</h3>
-          </div>
-          <p className="text-gray-300 text-sm leading-relaxed">
-            Ao reabrir esta Venda, <strong className="text-red-400">todos os lançamentos financeiros</strong> serão <strong className="text-red-400">excluídos automaticamente</strong>.
-          </p>
-          <div className="flex gap-3 justify-end">
-            <button onClick={() => { setShowAvisoReabrir(false); setStatusPendente(null); }} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg">Cancelar</button>
-            <button onClick={confirmarReabrir} className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium">Sim, reabrir</button>
-          </div>
-        </div>
-      </div>
-    )}
+
     </>
   );
 }
