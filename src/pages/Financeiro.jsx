@@ -57,7 +57,7 @@ export default function Financeiro() {
   const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
   const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
   const [sortCol, setSortCol] = useState("data_vencimento");
-  const [sortDir, setSortDir] = useState("desc");
+  const [sortDir, setSortDir] = useState("asc");
   const periodoDropRef = useRef(null);
 
   useEffect(() => {
