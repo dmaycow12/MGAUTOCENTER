@@ -128,37 +128,17 @@ export default function Financeiro() {
 
   const load = async () => {
     try {
-      // Busca todos os registros com paginação
-      let all = [];
-      let skip = 0;
-      while (true) {
-        const batch = await base44.entities.Financeiro.list("-data_vencimento", 500, skip);
-        if (!batch || batch.length === 0) break;
-        all = [...all, ...batch];
-        skip += 500;
-        if (batch.length < 500) break;
-      }
+      const data = await base44.entities.Financeiro.list("-data_vencimento", 9999);
       // Auto-marcar como Atrasado se vencido e não pago
       const hoje = new Date().toISOString().split("T")[0];
-      const aAtualizar = all.filter(i => i.status === "Pendente" && i.data_vencimento && i.data_vencimento < hoje);
+      const aAtualizar = data.filter(i => i.status === "Pendente" && i.data_vencimento && i.data_vencimento < hoje);
       for (const item of aAtualizar) {
         try { await base44.entities.Financeiro.update(item.id, { status: "Atrasado" }); } catch (_) {}
       }
-      if (aAtualizar.length > 0) {
-        // Recarrega após atualização
-        let all2 = [];
-        let skip2 = 0;
-        while (true) {
-          const batch = await base44.entities.Financeiro.list("-data_vencimento", 500, skip2);
-          if (!batch || batch.length === 0) break;
-          all2 = [...all2, ...batch];
-          skip2 += 500;
-          if (batch.length < 500) break;
-        }
-        setItems(all2);
-      } else {
-        setItems(all);
-      }
+      const atualizado = aAtualizar.length > 0
+        ? await base44.entities.Financeiro.list("-data_vencimento", 9999)
+        : data;
+      setItems(atualizado);
     } catch (err) {
       console.error("Erro ao carregar financeiro:", err);
     } finally {
