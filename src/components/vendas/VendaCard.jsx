@@ -159,35 +159,6 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const gerarLancamentosFinanceiros = async (osData) => {
-    const gerarParcelasBase = (total, qtd, dataBase) => {
-      const valorParcela = total / Math.max(1, qtd);
-      const base = dataBase ? new Date(dataBase + "T00:00:00") : new Date();
-      return Array.from({ length: qtd }, (_, i) => {
-        const d = new Date(base);
-        d.setMonth(d.getMonth() + i);
-        return { numero: i + 1, valor: parseFloat(valorParcela.toFixed(2)), vencimento: d.toISOString().split("T")[0], forma_pagamento: "A Combinar" };
-      });
-    };
-    const parcelas = osData.parcelas_detalhes && osData.parcelas_detalhes.length > 0
-      ? osData.parcelas_detalhes
-      : gerarParcelasBase(osData.valor_total, Number(osData.parcelas) || 1, osData.data_entrada);
-    for (const p of parcelas) {
-      const forma = p.forma_pagamento || "A Combinar";
-      const pago = ["Dinheiro", "PIX"].includes(forma);
-      await base44.entities.Financeiro.create({
-        tipo: "Receita", categoria: "Ordem de Venda",
-        descricao: "Venda #" + osData.numero + " — " + (osData.cliente_nome || "") + " — Parcela " + p.numero + "/" + parcelas.length,
-        valor: p.valor,
-        data_vencimento: p.vencimento,
-        status: pago ? "Pago" : "Pendente",
-        data_pagamento: pago ? new Date().toISOString().split("T")[0] : "",
-        forma_pagamento: forma,
-        ordem_venda_id: osData.id || "", cliente_id: osData.cliente_id || "",
-      });
-    }
-  };
-
   const alterarStatus = async (novoStatus) => {
     setStatusOpen(false);
     const eraConcluido = os.status === "Concluído";
@@ -196,7 +167,6 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
     onUpdate?.({ status: novoStatus });
     await base44.entities.Vendas.update(os.id, { status: novoStatus });
     if (!eraConcluido && ficaConcluido) {
-      await gerarLancamentosFinanceiros(os);
       await reduzirEstoque(os.pecas, os);
     }
     onRefresh?.();
@@ -208,6 +178,16 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
       const osAtualizada = todasOS.find(o => o.id === os.id);
       const osData = osAtualizada || os;
       await excluirLancamentosOS(os.id);
+      // Cancela lançamentos criados pelo novo fluxo (por parcela)
+      try {
+        const fins = await base44.entities.Financeiro.filter({ ordem_venda_id: os.id });
+        for (const f of fins) await base44.entities.Financeiro.delete(f.id);
+      } catch(_) {}
+      // Limpa financeiro_id das parcelas
+      if (osData.parcelas_detalhes?.length > 0) {
+        const novasParcelas = osData.parcelas_detalhes.map(p => ({ ...p, financeiro_id: null }));
+        await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novasParcelas });
+      }
       await restaurarEstoque(osData.pecas || []);
       onUpdate?.({ status: statusPendenteCard });
       await base44.entities.Vendas.update(os.id, { status: statusPendenteCard });

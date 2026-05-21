@@ -104,7 +104,6 @@ function recalcular(servicos, pecas, desconto) {
 }
 
 export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
-  const isConcluida = os?.status === "Concluído";
   const [form, setForm] = useState(() => {
     const base = os ? { ...defaultForm(), ...os, fotos: os.fotos || [] } : defaultForm();
     if (!os && !base.data_entrada) {
@@ -186,6 +185,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const [statusPendente, setStatusPendente] = useState(null);
   const [showDadosCliente, setShowDadosCliente] = useState(false);
   const [showDadosVeiculo, setShowDadosVeiculo] = useState(false);
+  const [descontoInput, setDescontoInput] = useState(0);
+  const [pagandoParcela, setPagandoParcela] = useState(null);
 
   useEffect(() => {
     Promise.all([
@@ -481,27 +482,53 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     setStatusPendente(null);
   };
 
-  const gerarLancamentosFinanceiros = async (osData, parcelasData) => {
-    const lista = parcelasData && parcelasData.length > 0
-      ? parcelasData
-      : gerarParcelas(osData.valor_total, Number(osData.parcelas) || 1, osData.data_entrada);
+  const aplicarDesconto = () => {
+    const d = Number(descontoInput) || 0;
+    if (d <= 0) return;
+    const totalBruto = form.valor_servicos + form.valor_pecas;
+    if (totalBruto <= 0) return;
+    const fator = 1 - d / totalBruto;
+    const novosServicos = form.servicos.map(s => ({ ...s, valor: parseFloat((Number(s.valor||0) * fator).toFixed(2)) }));
+    const novasPecas = form.pecas.map(p => {
+      const novoUnit = parseFloat((Number(p.valor_unitario||0) * fator).toFixed(2));
+      return { ...p, valor_unitario: novoUnit, valor_total: parseFloat((novoUnit * Number(p.quantidade||1)).toFixed(2)) };
+    });
+    const calc = recalcular(novosServicos, novasPecas, 0);
+    setForm(f => ({ ...f, servicos: novosServicos, pecas: novasPecas, desconto: 0, ...calc }));
+    setDescontoInput(0);
+  };
 
-    for (const p of lista) {
-      const formaParc = p.forma_pagamento || "A Combinar";
-      const pago = ["Dinheiro", "PIX"].includes(formaParc);
-      await base44.entities.Financeiro.create({
-        tipo: "Receita",
-        categoria: "Ordem de Venda",
-        descricao: `Venda #${osData.numero} — ${osData.cliente_nome || ""} — Parcela ${p.numero}/${lista.length}`,
-        valor: p.valor,
-        data_vencimento: p.vencimento,
-        status: pago ? "Pago" : "Pendente",
-        data_pagamento: pago ? new Date().toISOString().split("T")[0] : "",
-        forma_pagamento: formaParc,
-        ordem_venda_id: osData.id || "",
-        cliente_id: osData.cliente_id || "",
-      });
-    }
+  const pagarParcela = async (i) => {
+    if (!os?.id) return;
+    setPagandoParcela(i);
+    const p = parcelas[i];
+    const financeiro = await base44.entities.Financeiro.create({
+      tipo: "Receita", categoria: "Ordem de Venda",
+      descricao: `Venda #${form.numero} — ${form.cliente_nome || ""} — Parcela ${p.numero}/${parcelas.length}`,
+      valor: p.valor,
+      data_vencimento: p.vencimento,
+      status: "Pago",
+      data_pagamento: new Date().toISOString().split("T")[0],
+      forma_pagamento: p.forma_pagamento || "A Combinar",
+      ordem_servico_id: os.id,
+      ordem_venda_id: os.id,
+      cliente_id: form.cliente_id || "",
+    });
+    const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_id: financeiro.id } : par);
+    setParcelas(novas);
+    await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas });
+    setPagandoParcela(null);
+  };
+
+  const cancelarParcela = async (i) => {
+    const p = parcelas[i];
+    if (!p.financeiro_id) return;
+    setPagandoParcela(i);
+    await base44.entities.Financeiro.delete(p.financeiro_id);
+    const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_id: null } : par);
+    setParcelas(novas);
+    await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas });
+    setPagandoParcela(null);
   };
 
   const validarTelefone = (val) => {
@@ -543,55 +570,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       const ficouConcluida = formFinal.status === "Concluído";
       let savedId = os?.id;
 
-      const formToSave = {
-        ...formFinal,
-        quilometragem: formFinal.quilometragem === "" || formFinal.quilometragem === null || formFinal.quilometragem === undefined
-          ? "" : String(formFinal.quilometragem),
-      };
-
-      if (os) {
-        await base44.entities.Vendas.update(os.id, formToSave);
-      } else {
-        const criada = await base44.entities.Vendas.create(formToSave);
-        savedId = criada.id;
-        // Operações secundárias não bloqueiam o salvamento
-        if (formFinal.veiculo_placa && formFinal.cliente_id && formFinal.cliente_nome?.toUpperCase() !== "CONSUMIDOR") {
-          const veiculo_marca = formFinal.veiculo_modelo?.split(" ")[0] || "";
-          const veiculo_modelo = formFinal.veiculo_modelo?.substring(veiculo_marca.length).trim() || "";
-          base44.functions.invoke('autoRegistrarVeiculo', {
-            cliente_id: formFinal.cliente_id,
-            veiculo_placa: formFinal.veiculo_placa,
-            veiculo_marca, veiculo_modelo,
-            veiculo_ano: formFinal.veiculo_ano,
-          }).catch(() => {}); // silencia erro sem bloquear
-        }
-      }
-
       if (eraAberta && ficouConcluida && savedId) {
-        await gerarLancamentosFinanceiros({ ...formFinal, id: savedId }, parcelasRef.current);
         await reduzirEstoque(formFinal.pecas);
-      }
-
-      // Se já estava concluída, sincronizar lançamentos financeiros existentes
-      if (!eraAberta && !ficouConcluida && os && savedId) {
-        try {
-          const lancamentos = await base44.entities.Financeiro.list("-created_date", 500);
-          const lancamentosOS = lancamentos.filter(f => f.ordem_servico_id === savedId);
-          for (const lanc of lancamentosOS) {
-            const match = lanc.descricao?.match(/Parcela (\d+)\//);
-            const numParcela = match ? parseInt(match[1]) : 1;
-            const parcela = parcelasRef.current.find(p => p.numero === numParcela) || parcelasRef.current[0];
-            if (parcela) {
-              const pago = ["Dinheiro", "PIX"].includes(parcela.forma_pagamento);
-              await base44.entities.Financeiro.update(lanc.id, {
-                valor: parcela.valor,
-                forma_pagamento: parcela.forma_pagamento || lanc.forma_pagamento,
-                data_vencimento: parcela.vencimento || lanc.data_vencimento,
-                ...(pago ? { status: "Pago", data_pagamento: lanc.data_pagamento || new Date().toISOString().split("T")[0] } : {}),
-              });
-            }
-          }
-        } catch (_) {}
       }
 
       onSave();
@@ -620,17 +600,12 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
           <button type="button" onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
         </div>
 
-        {isConcluida && (
-          <div className="mx-5 mt-4 flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-3 text-yellow-400 text-sm">
-            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-            <span>Venda Concluída — apenas o status pode ser alterado. Para editar, mude o status para <b>Aberto</b>.</span>
-          </div>
-        )}
+
 
         <div className="p-5 space-y-5">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <Field label="Número Venda">
-              <input value={form.numero} disabled={isConcluida} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} className={`input-dark ${isConcluida ? "opacity-50 cursor-not-allowed" : ""}`} autoComplete="off" />
+              <input value={form.numero} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} className="input-dark" autoComplete="off" />
             </Field>
             <Field label="Status">
               <select value={form.status} onChange={e => onStatusChange(e.target.value)} className="input-dark">
@@ -638,12 +613,11 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
               </select>
             </Field>
             <Field label="Data Entrada">
-              <input type="date" value={form.data_entrada} disabled={isConcluida} onChange={e => setForm(f => ({ ...f, data_entrada: e.target.value }))} className={`input-dark ${isConcluida ? "opacity-50 cursor-not-allowed" : ""}`} autoComplete="off" />
+              <input type="date" value={form.data_entrada} onChange={e => setForm(f => ({ ...f, data_entrada: e.target.value }))} className="input-dark" autoComplete="off" />
             </Field>
           </div>
 
-          {!isConcluida && (
-            <React.Fragment>
+          <React.Fragment>
               <Section title="Cliente">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="col-span-1 md:col-span-2">
@@ -873,9 +847,16 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
               </Section>
 
               <Section title="Pagamento">
+                <div className="flex items-end gap-2 mb-4 p-3 bg-gray-800/50 rounded-xl border border-gray-700">
+                  <div className="flex-1">
+                    <label className="block text-xs text-gray-400 mb-1">Aplicar Desconto (R$)</label>
+                    <input type="text" inputMode="decimal" value={descontoInput} onChange={e => setDescontoInput(e.target.value)} className="input-dark" placeholder="0.00" autoComplete="off" />
+                  </div>
+                  <button type="button" onClick={aplicarDesconto} className="px-4 py-2 text-sm font-semibold text-white rounded-lg flex-shrink-0" style={{background:"#062C9B",height:"42px"}}>Aplicar Desconto</button>
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                  <Field label="Desconto (R$)">
-                    <input value={form.desconto} onChange={e => onDesconto(e.target.value)} className="input-dark" autoComplete="off" />
+                  <Field label="Desconto atual (R$)">
+                    <div className="input-dark text-gray-400 text-sm">{fmt(form.desconto)}</div>
                   </Field>
                   <Field label="Nº de Parcelas">
                     <input value={form.parcelas} onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} className="input-dark" autoComplete="off" />
@@ -887,14 +868,15 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
                 {parcelas.length > 0 && (
                   <div className="border border-gray-700 rounded-xl overflow-hidden">
-                    <div className="bg-gray-800 px-3 py-2 text-xs text-gray-400 font-semibold uppercase tracking-wider grid grid-cols-3 gap-2">
+                    <div className="bg-gray-800 px-3 py-2 text-xs text-gray-400 font-semibold uppercase tracking-wider grid gap-2" style={{gridTemplateColumns:'1fr 1fr 1fr auto'}}>
                       <span>Vencimento</span>
                       <span>Valor (R$)</span>
                       <span>Forma Pgto</span>
+                      <span>Status</span>
                     </div>
                     {parcelas.map((p, i) => (
-                      <div key={i} className={`grid grid-cols-3 gap-2 px-3 py-2 items-center ${i % 2 === 0 ? "bg-gray-900" : "bg-gray-800/40"}`}>
-                        <input type="date" value={p.vencimento || ""} onChange={e => updateParcela(i, "vencimento", e.target.value)} className="input-dark text-xs py-1.5" />
+                      <div key={i} className={`grid gap-2 px-3 py-2 items-center ${i % 2 === 0 ? "bg-gray-900" : "bg-gray-800/40"}`} style={{gridTemplateColumns:'1fr 1fr 1fr auto'}}>
+                        <input type="date" value={p.vencimento || ""} onChange={e => updateParcela(i, "vencimento", e.target.value)} className="input-dark text-xs py-1.5" disabled={!!p.financeiro_id} />
                         <input
                           type="text"
                           inputMode="decimal"
@@ -902,14 +884,44 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                           onChange={e => updateParcela(i, "valor", e.target.value)}
                           className="input-dark text-xs py-1.5"
                           style={{MozAppearance:"textfield", appearance:"textfield"}}
+                          disabled={!!p.financeiro_id}
                         />
                         <select
                           value={p.forma_pagamento || "A Combinar"}
                           onChange={e => updateParcela(i, "forma_pagamento", e.target.value)}
                           className="input-dark text-xs py-1.5"
+                          disabled={!!p.financeiro_id}
                         >
                           {["A Combinar","Boleto","Cartão","Cheque","Dinheiro","PIX"].map(s => <option key={s}>{s}</option>)}
                         </select>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {p.financeiro_id ? (
+                            <>
+                              <span className="text-xs text-green-400 font-bold whitespace-nowrap">✓ Pago</span>
+                              <button
+                                type="button"
+                                onClick={() => cancelarParcela(i)}
+                                disabled={pagandoParcela === i}
+                                className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded ml-1 whitespace-nowrap"
+                                style={{background:"rgba(239,68,68,0.1)"}}
+                              >
+                                {pagandoParcela === i ? "..." : "Cancelar"}
+                              </button>
+                            </>
+                          ) : (
+                            os?.id && (
+                              <button
+                                type="button"
+                                onClick={() => pagarParcela(i)}
+                                disabled={pagandoParcela === i}
+                                className="text-xs font-bold text-white px-3 py-1 rounded whitespace-nowrap disabled:opacity-50"
+                                style={{background:"#00C957"}}
+                              >
+                                {pagandoParcela === i ? "..." : "Pago"}
+                              </button>
+                            )
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -919,8 +931,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
               <Field label="Observações">
                 <textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} className="input-dark" rows={4} autoComplete="off" />
               </Field>
-            </React.Fragment>
-          )}
+          </React.Fragment>
         </div>
 
         <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
