@@ -579,10 +579,16 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       }
 
       // Criar lançamentos financeiros para parcelas sem financeiro_id
+      // Busca lançamentos já existentes para evitar duplicatas
+      const finExistentes = await base44.entities.Financeiro.filter({ ordem_venda_id: savedId }, "-created_date", 100);
       const parcelasAtualizadas = [...parcelasNormalizadas];
       let algumaNova = false;
       for (let idx = 0; idx < parcelasAtualizadas.length; idx++) {
-        if (!parcelasAtualizadas[idx].financeiro_id) {
+        // Verifica se já existe lançamento para essa parcela (por financeiro_id ou pela descrição)
+        const descParcela = `Parcela ${idx+1}/${parcelasAtualizadas.length}`;
+        const jaExiste = parcelasAtualizadas[idx].financeiro_id
+          || finExistentes.find(f => f.descricao?.includes(descParcela));
+        if (!jaExiste) {
           const statusSelecionado = parcelasAtualizadas[idx].financeiro_status || "Pendente";
           const fin = await base44.entities.Financeiro.create({
             tipo: "Receita",
@@ -597,6 +603,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
             cliente_id: formFinal.cliente_id || "",
           });
           parcelasAtualizadas[idx] = { ...parcelasAtualizadas[idx], financeiro_id: fin.id, financeiro_status: statusSelecionado };
+          algumaNova = true;
+        } else if (!parcelasAtualizadas[idx].financeiro_id && jaExiste?.id) {
+          // Recupera o financeiro_id se estava faltando na parcela
+          parcelasAtualizadas[idx] = { ...parcelasAtualizadas[idx], financeiro_id: jaExiste.id };
           algumaNova = true;
         }
       }
