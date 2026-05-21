@@ -5,6 +5,18 @@ import { toast } from "sonner";
 import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Edit, Trash2 } from "lucide-react";
 
 const STATUS_OPTIONS = ["Pendente", "Pago"];
+
+function SortHeader({ label, col, sortCol, sortDir, onClick, className = "" }) {
+  return (
+    <button onClick={onClick} className={`flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-white transition-all ${className}`}>
+      {label}
+      <span className="flex flex-col" style={{lineHeight:1, gap:1}}>
+        <span style={{opacity: sortCol===col && sortDir==="asc" ? 1 : 0.3, fontSize:8}}>▲</span>
+        <span style={{opacity: sortCol===col && sortDir==="desc" ? 1 : 0.3, fontSize:8}}>▼</span>
+      </span>
+    </button>
+  );
+}
 const PAGAMENTO_OPTIONS = ["A Combinar", "Boleto", "Cartão", "Dinheiro", "PIX"];
 const STATUS_BG_LIST = { "Pendente": "#062C9B", "Pago": "#16a34a", "Atrasado": "#dc2626" };
 import FinanceiroCard from "@/components/financeiro/FinanceiroCard";
@@ -44,6 +56,8 @@ export default function Financeiro() {
   const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
   const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
   const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
+  const [sortCol, setSortCol] = useState("data_vencimento");
+  const [sortDir, setSortDir] = useState("desc");
   const periodoDropRef = useRef(null);
 
   useEffect(() => {
@@ -207,12 +221,19 @@ export default function Financeiro() {
     return matchSearch && matchTipo && matchStatus;
   });
 
+  const toggleSort = (col) => {
+    if (sortCol === col) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortCol(col); setSortDir("asc"); }
+  };
+
+  const sortedFiltrados = [...filtrados].sort((a, b) => {
+    let va = a[sortCol] || "";
+    let vb = b[sortCol] || "";
+    if (sortCol === "valor") { va = Number(a.valor||0); vb = Number(b.valor||0); return sortDir === "asc" ? va-vb : vb-va; }
+    return sortDir === "asc" ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+
   // Cálculos (baseados no período selecionado)
-  const receitas = itemsNoPeriodo.filter(i => i.tipo === "Receita");
-  const despesas = itemsNoPeriodo.filter(i => i.tipo === "Despesa");
-  const receitaTotal = receitas.filter(i => i.status === "Pago").reduce((a, i) => a + Number(i.valor || 0), 0);
-  const despesaTotal = despesas.filter(i => i.status === "Pago").reduce((a, i) => a + Number(i.valor || 0), 0);
-  const saldo = receitaTotal - despesaTotal;
   const pendente = itemsNoPeriodo.filter(i => i.status === "Pendente").reduce((a, i) => a + Number(i.valor || 0), 0);
   const atrasado = itemsNoPeriodo.filter(i => i.status === "Atrasado").reduce((a, i) => a + Number(i.valor || 0), 0);
 
@@ -369,7 +390,17 @@ export default function Financeiro() {
             </div>
           ) : (
             <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-              {filtrados.map(item => (
+              {/* Cabeçalho com ordenação */}
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-700 bg-gray-800/50">
+                <SortHeader label="Tipo" col="tipo" sortCol={sortCol} sortDir={sortDir} onClick={() => toggleSort("tipo")} className="w-16 flex-shrink-0" />
+                <SortHeader label="Descrição" col="descricao" sortCol={sortCol} sortDir={sortDir} onClick={() => toggleSort("descricao")} className="flex-1" />
+                <SortHeader label="Data" col="data_vencimento" sortCol={sortCol} sortDir={sortDir} onClick={() => toggleSort("data_vencimento")} className="w-24 flex-shrink-0" />
+                <div className="w-[148px] flex-shrink-0" />
+                <div className="w-36 flex-shrink-0" />
+                <SortHeader label="Valor" col="valor" sortCol={sortCol} sortDir={sortDir} onClick={() => toggleSort("valor")} className="w-28 flex-shrink-0 text-right" />
+                <div className="w-16 flex-shrink-0" />
+              </div>
+              {sortedFiltrados.map(item => (
                 <ListRow key={item.id} item={item}
                   onEdit={() => { setForm({...defaultForm(),...item}); setEditando(item); setShowForm(true); }}
                   onDelete={() => excluir(item.id)}
@@ -555,11 +586,16 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
       {/* Tipo badge */}
       <span className={`text-xs px-2 py-1 rounded-full font-medium flex-shrink-0 w-16 text-center ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo}</span>
 
-      {/* Descrição + categoria */}
+      {/* Descrição */}
       <div className="flex-1 min-w-0">
         <p className="text-white font-semibold text-sm truncate">{item.descricao}</p>
-        <p className="text-gray-500 text-xs truncate">{item.categoria || "—"} • {item.data_vencimento ? item.data_vencimento.split("-").reverse().join("-") : "—"}</p>
+        {item.categoria && item.categoria !== "Ordem de Venda" && (
+          <p className="text-gray-500 text-xs truncate">{item.categoria}</p>
+        )}
       </div>
+
+      {/* Data */}
+      <span className="text-gray-400 text-xs flex-shrink-0 w-24">{item.data_vencimento ? item.data_vencimento.split("-").reverse().join("/") : "—"}</span>
 
       {/* Status — botões sempre visíveis */}
       <div className="flex gap-1 flex-shrink-0">
