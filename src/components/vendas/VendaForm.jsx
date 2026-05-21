@@ -574,6 +574,13 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       const ficouConcluida = formFinal.status === "Concluído";
       let savedId = os?.id;
 
+      if (!os) {
+        const criado = await base44.entities.Vendas.create(formFinal);
+        savedId = criado.id;
+      } else {
+        await base44.entities.Vendas.update(os.id, formFinal);
+      }
+
       if (eraAberta && ficouConcluida && savedId) {
         await reduzirEstoque(formFinal.pecas);
       }
