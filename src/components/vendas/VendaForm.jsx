@@ -512,18 +512,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const aplicarDesconto = () => {
-    const d = Number(descontoInput) || 0;
+    const d = Number(String(descontoInput).replace(',', '.')) || 0;
     if (d <= 0) return;
-    const totalBruto = form.valor_servicos + form.valor_pecas;
-    if (totalBruto <= 0) return;
-    const fator = 1 - d / totalBruto;
-    const novosServicos = form.servicos.map(s => ({ ...s, valor: parseFloat((Number(s.valor||0) * fator).toFixed(2)) }));
-    const novasPecas = form.pecas.map(p => {
-      const novoUnit = parseFloat((Number(p.valor_unitario||0) * fator).toFixed(2));
-      return { ...p, valor_unitario: novoUnit, valor_total: parseFloat((novoUnit * Number(p.quantidade||1)).toFixed(2)) };
-    });
-    const calc = recalcular(novosServicos, novasPecas, 0);
-    setForm(f => ({ ...f, servicos: novosServicos, pecas: novasPecas, desconto: 0, ...calc }));
+    const calc = recalcular(form.servicos, form.pecas, d);
+    setForm(f => ({ ...f, desconto: d, ...calc }));
     setDescontoInput(0);
   };
 
