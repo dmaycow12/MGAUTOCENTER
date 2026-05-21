@@ -274,6 +274,16 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
   const alterarStatus = async (novoStatus) => {
     const eraConcluido = os.status === "Concluído";
     const ficaConcluido = novoStatus === "Concluído";
+    if (ficaConcluido && !eraConcluido) {
+      const pd = os.parcelas_detalhes || [];
+      if (pd.length > 0) {
+        const pendentes = pd.filter(p => p.financeiro_status !== "Pago");
+        if (pendentes.length > 0) {
+          alert(`Não é possível concluir esta venda. ${pendentes.length} parcela(s) ainda não foram quitadas.`);
+          return;
+        }
+      }
+    }
     if (eraConcluido && !ficaConcluido) { setStatusPendente(novoStatus); setShowAviso(true); return; }
     onUpdate?.({ status: novoStatus });
     const updateData = { status: novoStatus };

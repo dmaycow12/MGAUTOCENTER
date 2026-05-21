@@ -163,6 +163,16 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
     setStatusOpen(false);
     const eraConcluido = os.status === "Concluído";
     const ficaConcluido = novoStatus === "Concluído";
+    if (ficaConcluido && !eraConcluido) {
+      const pd = os.parcelas_detalhes || [];
+      if (pd.length > 0) {
+        const pendentes = pd.filter(p => p.financeiro_status !== "Pago");
+        if (pendentes.length > 0) {
+          alert(`Não é possível concluir esta venda. ${pendentes.length} parcela(s) ainda não foram quitadas.`);
+          return;
+        }
+      }
+    }
     if (eraConcluido && !ficaConcluido) { setStatusPendenteCard(novoStatus); setShowAvisoStatus(true); return; }
     onUpdate?.({ status: novoStatus });
     await base44.entities.Vendas.update(os.id, { status: novoStatus });
