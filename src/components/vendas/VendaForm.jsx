@@ -935,8 +935,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                 type="button"
                                 onClick={() => p.financeiro_status === "Pago" && cancelarParcela(i)}
                                 disabled={pagandoParcela === i}
-                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-50"
-                                style={{background: p.financeiro_status === "Pendente" ? "#4B5563" : "#374151"}}
+                                className="text-xs font-semibold px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-50 transition-all"
+                                style={{background: p.financeiro_status === "Pendente" ? "#4B7FBF" : "#374151", color: p.financeiro_status === "Pendente" ? "#fff" : "#9ca3af"}}
                               >
                                 {pagandoParcela === i ? "..." : "Pendente"}
                               </button>
@@ -944,8 +944,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                 type="button"
                                 onClick={() => p.financeiro_status !== "Pago" && pagarParcela(i)}
                                 disabled={pagandoParcela === i}
-                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-50"
-                                style={{background: p.financeiro_status === "Pago" ? "#00C957" : "#374151"}}
+                                className="text-xs font-semibold px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-50 transition-all"
+                                style={{background: p.financeiro_status === "Pago" ? "#00C957" : "#374151", color: p.financeiro_status === "Pago" ? "#fff" : "#9ca3af"}}
                               >
                                 {pagandoParcela === i ? "..." : "Pago"}
                               </button>
@@ -955,16 +955,16 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                               <button
                                 type="button"
                                 onClick={() => updateParcela(i, "financeiro_status", "Pendente")}
-                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap"
-                                style={{background: p.financeiro_status === "Pendente" ? "#4B5563" : "#374151"}}
+                                className="text-xs font-semibold px-3 py-1.5 rounded whitespace-nowrap transition-all"
+                                style={{background: p.financeiro_status === "Pendente" ? "#4B7FBF" : "#374151", color: p.financeiro_status === "Pendente" ? "#fff" : "#9ca3af"}}
                               >
                                 Pendente
                               </button>
                               <button
                                 type="button"
                                 onClick={() => updateParcela(i, "financeiro_status", "Pago")}
-                                className="text-xs font-semibold text-white px-3 py-1.5 rounded whitespace-nowrap"
-                                style={{background: p.financeiro_status === "Pago" ? "#00C957" : "#374151"}}
+                                className="text-xs font-semibold px-3 py-1.5 rounded whitespace-nowrap transition-all"
+                                style={{background: p.financeiro_status === "Pago" ? "#00C957" : "#374151", color: p.financeiro_status === "Pago" ? "#fff" : "#9ca3af"}}
                               >
                                 Pago
                               </button>
