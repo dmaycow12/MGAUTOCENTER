@@ -1012,7 +1012,9 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   <button onClick={addPeca} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
                     <Plus className="w-4 h-4" /> Adicionar
                   </button>
-                  <span className="text-sm font-semibold text-orange-400">Total Produtos: R$ {fmt(form.valor_pecas)}</span>
+                  <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
+                    <span className="text-sm font-semibold text-orange-400">Total Produtos: R$ {fmt(form.valor_pecas)}</span>
+                  </div>
                 </div>
               </Section>
 
@@ -1082,7 +1084,9 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   <button onClick={addServico} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
                     <Plus className="w-4 h-4" /> Adicionar
                   </button>
-                  <span className="text-sm font-semibold text-orange-400">Total Serviços: R$ {fmt(form.valor_servicos)}</span>
+                  <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
+                    <span className="text-sm font-semibold text-orange-400">Total Serviços: R$ {fmt(form.valor_servicos)}</span>
+                  </div>
                 </div>
               </Section>
 
