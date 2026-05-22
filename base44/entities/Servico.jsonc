@@ -61,11 +61,7 @@
         "role": "admin"
       }
     },
-    "read": {
-      "user_condition": {
-        "isAuthenticated": true
-      }
-    },
+    "read": {},
     "update": {
       "user_condition": {
         "role": "admin"
