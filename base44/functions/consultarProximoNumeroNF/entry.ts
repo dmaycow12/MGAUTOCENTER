@@ -3,11 +3,19 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
 const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
 const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
-const CNPJ_EMITENTE = '54043647000120';
+
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado', proximo_numero: 1 }, { status: 401 });
+
+    const allConfigs = await base44.asServiceRole.entities.Configuracao.list('-created_date', 200);
+    const getConf = (chave, padrao = '') => allConfigs.find(c => c.chave === chave)?.valor || padrao;
+    const CNPJ_EMITENTE = getConf('cnpj', '').replace(/\D/g, '');
+    if (!CNPJ_EMITENTE) return Response.json({ sucesso: false, erro: 'CNPJ da empresa não configurado', proximo_numero: 1 }, { status: 400 });
+
     const body = await req.json();
     const tipo = (body.tipo || 'NFe');
 

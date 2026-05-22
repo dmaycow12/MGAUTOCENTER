@@ -40,6 +40,8 @@ const salvarPdfPermanente = async (base44, pdfUrl, nota_id) => {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
     const body = await req.json().catch(() => ({}));
 
     // Modo: consulta específica (nota_id + ref) OU varredura geral (Processando + Aguardando)

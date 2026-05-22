@@ -7,8 +7,15 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Valida secret do webhook
+    const secret = new URL(req.url).searchParams.get('secret') || req.headers.get('X-Webhook-Secret');
+    const expectedSecret = Deno.env.get('AUTH_SECRET');
+    if (!expectedSecret || secret !== expectedSecret) {
+      return Response.json({ erro: 'Não autorizado' }, { status: 401 });
+    }
+
     const base44 = createClientFromRequest(req);
-    
+
     // Processa o body do webhook
     const body = await req.json();
     

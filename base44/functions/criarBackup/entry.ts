@@ -7,13 +7,8 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Tentar autenticar, mas não bloquear se falhar (app sem auth obrigatória)
-    try {
-      const user = await base44.auth.me();
-      if (!user) return Response.json({ error: 'Autenticação necessária' }, { status: 401 });
-    } catch (_) {
-      // Ignora erro de auth — app público
-    }
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Autenticação necessária' }, { status: 401 });
 
     const backup = {};
 

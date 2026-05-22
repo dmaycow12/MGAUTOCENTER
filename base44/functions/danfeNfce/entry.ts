@@ -43,6 +43,8 @@ const converterHtmlParaPdf = async (htmlContent) => {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
     const db = base44.asServiceRole;
     const body = await req.json();
     const { nota_id } = body;

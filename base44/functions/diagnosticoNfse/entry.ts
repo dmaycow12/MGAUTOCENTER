@@ -6,6 +6,8 @@ const ID_TAG = 'NFS31480042237075339000167000000000065726040861935164';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (user?.role !== 'admin') return Response.json({ erro: 'Acesso restrito a administradores' }, { status: 403 });
 
     const resultados = {};
 

@@ -11,9 +11,9 @@ const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
 const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
 
 // Valores padrão — serão sobrescritos pelas configs do banco
-const CNPJ_EMITENTE_PADRAO = '54043647000120';
-const COD_MUNICIPIO_PATOS = '3148004';
-const INSCRICAO_MUNICIPAL_PADRAO = '2024000738';
+const CNPJ_EMITENTE_PADRAO = '';
+const COD_MUNICIPIO_PATOS = '';
+const INSCRICAO_MUNICIPAL_PADRAO = '';
 
 const normalizarUrl = (url) => {
   if (!url) return '';
@@ -72,6 +72,8 @@ const consultarFocusNFe = async (ref, tipo) => {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
     const body = await req.json();
 
     const {

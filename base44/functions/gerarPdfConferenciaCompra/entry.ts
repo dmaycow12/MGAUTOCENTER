@@ -4,6 +4,8 @@ import { jsPDF } from 'npm:jspdf@4.0.0';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ erro: 'Não autorizado' }, { status: 401 });
     const { nota_id } = await req.json();
 
     if (!nota_id) {

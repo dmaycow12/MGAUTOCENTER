@@ -7,6 +7,8 @@ const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
     const { nota_id, ref, chave_acesso } = await req.json();
 
     if (!nota_id) return Response.json({ sucesso: false, erro: 'nota_id obrigatório' }, { status: 400 });

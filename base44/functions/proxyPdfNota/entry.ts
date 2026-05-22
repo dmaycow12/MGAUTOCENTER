@@ -13,6 +13,8 @@ const normalizarUrl = (url) => {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
     const db = base44.asServiceRole;
     const body = await req.json();
     const { nota_id } = body;
@@ -59,11 +61,17 @@ Deno.serve(async (req) => {
       // Converte HTML → PDF usando screenshotapi.net (gratuito com limite)
       // Alternativa: urlbox, browserless, etc.
       // Usamos o serviço do screenshotapi que aceita HTML content para PDF
+      const screenshotApiToken = Deno.env.get('SCREENSHOTAPI_TOKEN');
+      if (!screenshotApiToken) {
+        // Token não configurado — pula conversão, retorna HTML para fallback
+        await db.entities.NotaFiscal.update(nota_id, { pdf_url: htmlUrl, chave_acesso: chave });
+        return Response.json({ sucesso: true, pdf_url: htmlUrl, is_html: true });
+      }
       const pdfConvertResp = await fetch('https://screenshotapi.net/api/v1/screenshot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          token: 'DEMO',
+          token: screenshotApiToken,
           html: htmlContent,
           output: 'pdf',
           width: 400,

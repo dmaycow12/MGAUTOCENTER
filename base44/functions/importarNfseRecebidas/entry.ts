@@ -3,13 +3,12 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
 const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
 const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
-const CNPJ_EMITENTE = '54043647000120';
 
-async function buscarNFSesRecebidas() {
+async function buscarNFSesRecebidas(cnpjEmitente) {
   let todas = [];
   let versaoCursor = 0;
   for (let i = 0; i < 40; i++) {
-    const url = `${FOCUSNFE_BASE}/nfsens_recebidas?cnpj=${CNPJ_EMITENTE}&versao=${versaoCursor}&completa=1`;
+    const url = `${FOCUSNFE_BASE}/nfsens_recebidas?cnpj=${cnpjEmitente}&versao=${versaoCursor}&completa=1`;
     const resp = await fetch(url, { method: 'GET', headers: { 'Authorization': AUTH_HEADER } });
     if (!resp.ok) {
       const txt = await resp.text().catch(() => '');
@@ -67,12 +66,19 @@ function gerarXmlNfse(nf) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
+
+    // Carrega CNPJ das configurações
+    const allConfigs = await base44.asServiceRole.entities.Configuracao.list('-created_date', 200);
+    const getConf = (chave, padrao = '') => allConfigs.find(c => c.chave === chave)?.valor || padrao;
+    const CNPJ_EMITENTE = getConf('cnpj', '').replace(/\D/g, '');
+    if (!CNPJ_EMITENTE) return Response.json({ sucesso: false, erro: 'CNPJ da empresa não configurado' }, { status: 400 });
 
     const notasExistentes = await base44.asServiceRole.entities.NotaFiscal.list('-created_date', 2000);
-    // Usar numero_dfse como identificador único (mais estável que id_tag)
     const chavesExistentes = new Set(notasExistentes.map(n => n.chave_acesso).filter(Boolean));
 
-    const { notas: nfses, erro } = await buscarNFSesRecebidas();
+    const { notas: nfses, erro } = await buscarNFSesRecebidas(CNPJ_EMITENTE);
 
     if (erro && nfses.length === 0) {
       return Response.json({ sucesso: false, erro });
@@ -82,24 +88,19 @@ Deno.serve(async (req) => {
     let atualizadas = 0;
 
     for (const nf of nfses) {
-      // Usar numero_dfse como chave de acesso (identificador único da NFSe Nacional)
       const chave = nf.numero_dfse || nf.id_tag || '';
       const situacao = (nf.status_mensagem || '').toLowerCase();
       const status = situacao.includes('cancel') ? 'Cancelada' : 'Importada';
       const data_emissao = (nf.data_emissao || nf.data_competencia || '').substring(0, 10);
       const valorTotal = parseFloat(nf.valor_servico || nf.valor_liquido || '0');
 
-      // Filtrar notas anteriores a 01/03/2026
       if (data_emissao && data_emissao < '2026-03-01') continue;
 
-      // Prestador = fornecedor (quem emitiu). Tomador = nossa empresa (quem recebeu o serviço)
-      // Verificar todos os campos de nome disponíveis
       const nomePrestador = nf.razao_social_prestador || nf.razao_social_emitente || nf.nome_fantasia_emitente || nf.emitente_dps || '';
       const docPrestador = nf.cnpj_prestador || nf.cpf_prestador || nf.cnpj_emitente || '';
       const descricaoServico = nf.descricao_servico || nf.descricao_tributacao_nacional || '';
       const municipio = nf.descricao_municipio_prestacao || nf.descricao_municipio_emissor || '';
 
-      // Gerar e salvar XML com os dados da nota
       let arquivosParaSalvar = {};
       try {
         const xmlText = gerarXmlNfse(nf);
@@ -108,10 +109,7 @@ Deno.serve(async (req) => {
         if (uploadResp?.file_url) arquivosParaSalvar.xml_url = uploadResp.file_url;
       } catch (_) {}
 
-      // PDF não disponível no endpoint da Focus NFe para NFSe Nacional — campo permanece vazio
-
       if (chave && chavesExistentes.has(chave)) {
-        // Nota já existe — atualizar XML/PDF se estiver faltando
         const notaExistente = notasExistentes.find(n => n.chave_acesso === chave);
         if (notaExistente) {
           const updates = {};

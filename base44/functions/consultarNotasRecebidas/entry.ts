@@ -3,14 +3,13 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
 const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
 const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
-const CNPJ_EMITENTE = '54043647000120';
 
 // Busca paginada NFe recebidas usando cursor de versão
-async function buscarNFesRecebidas() {
+async function buscarNFesRecebidas(cnpjEmitente) {
   let todas = [];
   let versaoCursor = 0;
   for (let i = 0; i < 40; i++) {
-    const url = `${FOCUSNFE_BASE}/nfes_recebidas?cnpj=${CNPJ_EMITENTE}&versao=${versaoCursor}`;
+    const url = `${FOCUSNFE_BASE}/nfes_recebidas?cnpj=${cnpjEmitente}&versao=${versaoCursor}`;
     const resp = await fetch(url, { method: 'GET', headers: { 'Authorization': AUTH_HEADER } });
     if (!resp.ok) break;
     const lote = await resp.json().catch(() => []);
@@ -25,20 +24,18 @@ async function buscarNFesRecebidas() {
 }
 
 // Busca paginada NFSe recebidas usando X-Max-Version header
-async function buscarNFSesRecebidas() {
+async function buscarNFSesRecebidas(cnpjEmitente) {
   let todas = [];
   let versaoCursor = 0;
   for (let i = 0; i < 40; i++) {
-    const url = `${FOCUSNFE_BASE}/nfses_recebidas?cnpj=${CNPJ_EMITENTE}&versao=${versaoCursor}`;
+    const url = `${FOCUSNFE_BASE}/nfses_recebidas?cnpj=${cnpjEmitente}&versao=${versaoCursor}`;
     const resp = await fetch(url, { method: 'GET', headers: { 'Authorization': AUTH_HEADER } });
     if (!resp.ok) {
-      // 400 pode significar município não integrado - retorna vazio sem erro
       break;
     }
     const lote = await resp.json().catch(() => []);
     if (!Array.isArray(lote) || lote.length === 0) break;
     todas = todas.concat(lote);
-    // Usar X-Max-Version conforme documentação
     const maxVersionHeader = resp.headers.get('X-Max-Version');
     if (!maxVersionHeader) break;
     const maxVersao = parseInt(maxVersionHeader, 10);
@@ -52,6 +49,14 @@ async function buscarNFSesRecebidas() {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
+
+    // Carrega CNPJ das configurações
+    const allConfigs = await base44.asServiceRole.entities.Configuracao.list('-created_date', 200);
+    const getConf = (chave, padrao = '') => allConfigs.find(c => c.chave === chave)?.valor || padrao;
+    const CNPJ_EMITENTE = getConf('cnpj', '').replace(/\D/g, '');
+    if (!CNPJ_EMITENTE) return Response.json({ sucesso: false, erro: 'CNPJ da empresa não configurado' }, { status: 400 });
 
     // Busca notas já existentes para evitar duplicatas
     const notasExistentes = await base44.asServiceRole.entities.NotaFiscal.list('-created_date', 2000);
@@ -61,20 +66,18 @@ Deno.serve(async (req) => {
     let importadas = 0;
 
     // ===== NFe RECEBIDAS =====
-    const nfes = await buscarNFesRecebidas();
+    const nfes = await buscarNFesRecebidas(CNPJ_EMITENTE);
     for (const nf of nfes) {
       const chave = nf.chave_nfe || '';
       if (chave && chavesExistentes.has(chave)) continue;
 
       const data_emissao = (nf.data_emissao || '').substring(0, 10);
 
-      // Filtrar ANTES de qualquer request extra — notas anteriores a 01/03/2026
       if (data_emissao && data_emissao < '2026-03-01') continue;
 
       const situacao = (nf.situacao || '').toLowerCase();
       const status = situacao.includes('cancel') ? 'Cancelada' : 'Importada';
 
-      // Manifestação para liberar XML
       if (chave) {
         try {
           await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}/manifestacoes`, {
@@ -85,7 +88,6 @@ Deno.serve(async (req) => {
         } catch (_) {}
       }
 
-      // Extrair número e série da chave de acesso
       let numeroNF = nf.numero || '';
       let serieNF = nf.serie || '1';
       if (!numeroNF && chave && chave.length === 44) {
@@ -93,7 +95,6 @@ Deno.serve(async (req) => {
         numeroNF = String(parseInt(chave.substring(25, 34), 10));
       }
 
-      // Tentar buscar XML completo
       let xmlOriginal = null;
       if (chave) {
         try {
@@ -124,7 +125,6 @@ Deno.serve(async (req) => {
         } catch (_) {}
       }
 
-      // Salvar XML sempre via upload de arquivo
       let xmlParaSalvar = {};
       if (xmlOriginal) {
         try {
@@ -134,7 +134,6 @@ Deno.serve(async (req) => {
         } catch (_) {}
       }
 
-      // Buscar DANFE (PDF) da nota de entrada
       let pdfParaSalvar = {};
       if (chave) {
         try {
@@ -174,7 +173,7 @@ Deno.serve(async (req) => {
     }
 
     // ===== NFSe RECEBIDAS =====
-    const nfses = await buscarNFSesRecebidas();
+    const nfses = await buscarNFSesRecebidas(CNPJ_EMITENTE);
     for (const nf of nfses) {
       const chave = nf.chave || '';
       if (chave && chavesExistentes.has(chave)) continue;
@@ -185,10 +184,8 @@ Deno.serve(async (req) => {
       const data_emissao = (nf.data_emissao || '').substring(0, 10);
       const valorTotal = parseFloat(nf.valor_servicos || '0');
 
-      // Filtrar notas anteriores a 01/03/2026
       if (data_emissao && data_emissao < '2026-03-01') continue;
 
-      // Tentar buscar PDF da NFSe recebida
       let pdfNFSe = nf.url || '';
       if (!pdfNFSe && chave) {
         try {
@@ -276,7 +273,6 @@ Deno.serve(async (req) => {
         } catch (_) {}
       }
 
-      // Tenta buscar PDF se também estiver faltando
       if (!nota.pdf_url) {
         try {
           const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {

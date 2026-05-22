@@ -19,6 +19,8 @@ const endpointPorTipo = (tipo) => {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ erro: 'Não autorizado' }, { status: 401 });
     const { nota_id } = await req.json();
     if (!nota_id) return Response.json({ erro: 'nota_id obrigatório' }, { status: 400 });
 

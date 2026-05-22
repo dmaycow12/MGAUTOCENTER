@@ -4,6 +4,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Não autorizado' }, { status: 401 });
+
     const { cliente_id, veiculo_placa, veiculo_marca, veiculo_modelo, veiculo_ano } = await req.json();
 
     if (!cliente_id || !veiculo_placa) {
