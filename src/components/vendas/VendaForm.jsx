@@ -616,14 +616,45 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     if (!os?.id) return;
     setPagandoParcela(i);
     const p = parcelas[i];
-    if (p.financeiro_id) {
-      await base44.entities.Financeiro.update(p.financeiro_id, {
+    let financeiroId = p.financeiro_id;
+    if (financeiroId) {
+      try {
+        await base44.entities.Financeiro.update(financeiroId, {
+          status: "Pago",
+          data_pagamento: new Date().toISOString().split("T")[0],
+          forma_pagamento: p.forma_pagamento || "A Combinar",
+        });
+      } catch (_) {
+        // Registro não encontrado — cria novo
+        const fin = await base44.entities.Financeiro.create({
+          tipo: "Receita", categoria: "Ordem de Venda",
+          descricao: `Venda #${form.numero} — ${form.cliente_nome || ""} — Parcela ${i+1}/${parcelas.length}`,
+          valor: p.valor || 0,
+          data_vencimento: p.vencimento,
+          status: "Pago",
+          data_pagamento: new Date().toISOString().split("T")[0],
+          forma_pagamento: p.forma_pagamento || "A Combinar",
+          ordem_venda_id: os.id,
+          cliente_id: form.cliente_id || "",
+        });
+        financeiroId = fin.id;
+      }
+    } else {
+      // Sem financeiro_id — cria novo
+      const fin = await base44.entities.Financeiro.create({
+        tipo: "Receita", categoria: "Ordem de Venda",
+        descricao: `Venda #${form.numero} — ${form.cliente_nome || ""} — Parcela ${i+1}/${parcelas.length}`,
+        valor: p.valor || 0,
+        data_vencimento: p.vencimento,
         status: "Pago",
         data_pagamento: new Date().toISOString().split("T")[0],
         forma_pagamento: p.forma_pagamento || "A Combinar",
+        ordem_venda_id: os.id,
+        cliente_id: form.cliente_id || "",
       });
+      financeiroId = fin.id;
     }
-    const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pago" } : par);
+    const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pago", financeiro_id: financeiroId } : par);
     setParcelasSync(novas);
     const todasPagas = novas.length > 0 && novas.every(par => par.financeiro_status === "Pago");
     if (todasPagas && form.status !== "Concluído") {
