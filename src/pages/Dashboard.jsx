@@ -188,7 +188,7 @@ export default function Dashboard() {
     const osSemOrcamento = ordensPeriodo.filter(o => o.status !== "Orçamento");
     let pagas = 0, pendentes = 0, atrasadas = 0, semLancamento = 0;
     osSemOrcamento.forEach(o => {
-      const parcelas = financeiro.filter(f => f.ordem_servico_id === o.id);
+      const parcelas = financeiro.filter(f => f.ordem_venda_id === o.id);
       if (parcelas.length === 0) { semLancamento++; return; }
       if (parcelas.every(p => p.status === "Pago")) { pagas++; }
       else if (parcelas.some(p => p.status === "Atrasado")) { atrasadas++; }
