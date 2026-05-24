@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { X, Plus, Trash2, AlertTriangle, Camera, Image, GripVertical } from "lucide-react";
 import SearchableSelect from "@/components/notas/SearchableSelect";
@@ -118,7 +118,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     return gerarParcelas(os?.valor_total || 0, os?.parcelas || 1, os?.data_entrada);
   });
   const parcelasRef = useRef(parcelas);
-  // Atualiza o ref sincronamente junto com o estado
   const setParcelasSync = (val) => {
     const next = typeof val === 'function' ? val(parcelasRef.current) : val;
     parcelasRef.current = next;
@@ -208,7 +207,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         return (a.descricao || '').localeCompare(b.descricao || '', 'pt-BR');
       });
       setServicosCad(sortedServicos);
-      // Auto-preenche codigo faltando nos serviços existentes
       setForm(f => ({
         ...f,
         servicos: f.servicos.map(svc => {
@@ -240,7 +238,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   }, []);
 
   useEffect(() => {
-    // Só auto-seleciona CONSUMIDOR em NOVA venda (sem os)
     if (!os && clientes.length > 0 && !form.cliente_id) {
       const consumidor = clientes.find(c => c.nome?.toUpperCase() === "CONSUMIDOR");
       if (consumidor) onClienteChange(consumidor.id);
@@ -253,14 +250,12 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     }
   }, [form.cliente_id, veiculos]);
 
-  // Sincroniza financeiro_status das parcelas com o status real do Financeiro ao abrir
   useEffect(() => {
     if (!os?.id) return;
     base44.entities.Financeiro.filter({ ordem_venda_id: os.id }, "-created_date", 100).then(fins => {
       if (!fins || fins.length === 0) return;
       setParcelasSync(prev => prev.map(p => {
         if (!p.financeiro_id) {
-          // tenta associar pelo índice/descrição
           const idx = prev.indexOf(p);
           const desc = `Parcela ${idx+1}/${prev.length}`;
           const fin = fins.find(f => f.id === p.financeiro_id || f.descricao?.includes(desc));
@@ -312,7 +307,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       ...f,
       cliente_id: clienteId,
       cliente_nome: c?.nome || "",
-      // Para CONSUMIDOR, preserva nome_fantasia e telefone já salvos na venda. Para outros, pega do cadastro.
       cliente_nome_fantasia: isConsumidorSelecionado ? (f.cliente_nome_fantasia || "") : (c?.nome_fantasia || ""),
       cliente_telefone: isConsumidorSelecionado ? (f.cliente_telefone || "") : (c?.telefone || ""),
       cliente_email: isConsumidorSelecionado ? (f.cliente_email || "") : (c?.email || ""),
@@ -425,7 +419,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       updated.valor_total = Number(updated.quantidade || 0) * Number(updated.valor_unitario || 0);
       return updated;
     });
-    // Ajusta estoque pela diferença quando quantidade muda (apenas se não for Orçamento)
     if (field === "quantidade" && pecaAntiga?.estoque_id && !pecaAntiga._new && form.status !== "Orçamento") {
       const diff = parseNum(val) - Number(pecaAntiga.quantidade || 0);
       if (diff !== 0) {
@@ -461,7 +454,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       });
       return { ...f, pecas: novos, ...recalcular(f.servicos, novos, f.desconto) };
     });
-    // Só subtrai do estoque se não for Orçamento
     if (form.status !== "Orçamento") {
       const itemEstoque = estoque.find(e => e.id === item.id);
       if (itemEstoque) {
@@ -477,7 +469,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     const novos = form.pecas.filter((_, idx) => idx !== i);
     const calc = recalcular(form.servicos, novos, form.desconto);
     setForm(f => ({ ...f, pecas: novos, ...calc }));
-    // Devolve ao estoque se tem estoque_id e quantidade (apenas se não for Orçamento)
     if (peca?.estoque_id && peca?.quantidade > 0 && form.status !== "Orçamento") {
       const itemEstoque = estoque.find(e => e.id === peca.estoque_id);
       if (itemEstoque) {
@@ -534,7 +525,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     const eraOrcamento = form.status === "Orçamento";
     const ficaOrcamento = novoStatus === "Orçamento";
     setForm(f => ({ ...f, status: novoStatus }));
-    // Saindo de Orçamento → subtrai estoque dos produtos
     if (eraOrcamento && !ficaOrcamento) {
       for (const p of form.pecas) {
         if (!p.estoque_id || !p.quantidade || p._new) continue;
@@ -546,7 +536,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         }
       }
     }
-    // Entrando em Orçamento → devolve estoque dos produtos
     if (!eraOrcamento && ficaOrcamento) {
       for (const p of form.pecas) {
         if (!p.estoque_id || !p.quantidade || p._new) continue;
@@ -573,19 +562,16 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     if (totalBruto <= 0) return;
     const fator = 1 - d / totalBruto;
 
-    // Distribui proporcionalmente nos serviços
     let novosServicos = form.servicos.map(s => ({
       ...s,
       valor: parseFloat((Number(s.valor || 0) * fator).toFixed(2))
     }));
 
-    // Distribui proporcionalmente nas peças
     let novasPecas = form.pecas.map(p => {
       const novoUnit = parseFloat((Number(p.valor_unitario || 0) * fator).toFixed(2));
       return { ...p, valor_unitario: novoUnit, valor_total: parseFloat((novoUnit * Number(p.quantidade || 1)).toFixed(2)) };
     });
 
-    // Calcula o total distribuído
     const totalDistribuido = parseFloat((
       novosServicos.reduce((s, x) => s + Number(x.valor || 0), 0) +
       novasPecas.reduce((s, x) => s + Number(x.valor_total || 0), 0)
@@ -594,7 +580,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     const totalEsperado = parseFloat((totalBruto - d).toFixed(2));
     const diff = parseFloat((totalEsperado - totalDistribuido).toFixed(2));
 
-    // Ajusta o último item com qualquer centavo residual
     if (diff !== 0) {
       if (novasPecas.length > 0) {
         const last = novasPecas[novasPecas.length - 1];
@@ -625,7 +610,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
           forma_pagamento: p.forma_pagamento || "A Combinar",
         });
       } catch (_) {
-        // Registro não encontrado — cria novo
         const fin = await base44.entities.Financeiro.create({
           tipo: "Receita", categoria: "Ordem de Venda",
           descricao: `Venda #${form.numero} — ${form.cliente_nome || ""} — Parcela ${i+1}/${parcelas.length}`,
@@ -640,7 +624,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         financeiroId = fin.id;
       }
     } else {
-      // Sem financeiro_id — cria novo
       const fin = await base44.entities.Financeiro.create({
         tipo: "Receita", categoria: "Ordem de Venda",
         descricao: `Venda #${form.numero} — ${form.cliente_nome || ""} — Parcela ${i+1}/${parcelas.length}`,
@@ -684,7 +667,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     const p = parcelas[i];
     const novas = parcelas.map((par, idx) => idx === i ? { ...par, forma_pagamento: val } : par);
     setParcelasSync(novas);
-    // Se já tem financeiro vinculado, atualiza em tempo real
     if (p.financeiro_id && os?.id) {
       await base44.entities.Financeiro.update(p.financeiro_id, { forma_pagamento: val });
       await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas });
@@ -741,7 +723,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         await base44.entities.Vendas.update(os.id, formFinal);
       }
 
-      // Criar ou sincronizar lançamentos financeiros (não criar para Orçamento)
       if (formFinal.status === "Orçamento") {
         onSave();
         return;
@@ -757,7 +738,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
           : finExistentes.find(f => f.descricao?.includes(descParcela));
 
         if (jaExiste) {
-          // Sincroniza todos os campos da parcela com o financeiro
           const statusFin = parcela.financeiro_status || "Pendente";
           await base44.entities.Financeiro.update(jaExiste.id, {
             data_vencimento: parcela.vencimento,
@@ -771,7 +751,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
             algumaNova = true;
           }
         } else {
-          // Cria novo lançamento
           const statusSelecionado = parcela.financeiro_status || "Pendente";
           const fin = await base44.entities.Financeiro.create({
             tipo: "Receita",
@@ -792,7 +771,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       if (algumaNova) {
         await base44.entities.Vendas.update(savedId, { parcelas_detalhes: parcelasAtualizadas });
       }
-      // Remove lançamentos financeiros órfãos (ex: era 1 parcela, virou 2)
       const idsNovos = new Set(parcelasAtualizadas.map(p => p.financeiro_id).filter(Boolean));
       for (const fin of finExistentes) {
         if (!idsNovos.has(fin.id)) {
@@ -867,9 +845,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                               </button>
                             ))}
                           </div>
-                          )}
-
-                          </div>
+                        )}
+                      </div>
                       <button type="button" onClick={() => setShowNovoCliente(true)}
                         className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-white flex-shrink-0"
                         style={{background:"#062C9B"}}>
@@ -964,9 +941,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                     <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2"><Trash2 className="w-4 h-4" /></button>
                                   </div>
                                 ) : (
-                                  <>
-                                    {/* Desktop */}
-                                    <div className="hidden md:flex gap-2 items-end">
+                                  <div className="space-y-2">
+                                    <div className="hidden md:flex flex-wrap md:flex-nowrap gap-2 items-end">
                                       <div {...drag.dragHandleProps} className="flex items-center self-center pb-0.5 cursor-grab text-gray-600 hover:text-gray-400 flex-shrink-0">
                                         <GripVertical className="w-4 h-4" />
                                       </div>
@@ -974,7 +950,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                         <label className="text-xs text-gray-500 mb-1 block">Código</label>
                                         <input value={p.codigo || ''} onChange={e => updatePeca(i, "codigo", e.target.value)} className="input-dark text-sm" autoComplete="off" />
                                       </div>
-                                      <div className="flex-1">
+                                      <div className="flex-1 min-w-[120px]">
                                         <label className="text-xs text-gray-500 mb-1 block">Produto</label>
                                         <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
                                       </div>
@@ -984,7 +960,12 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                       </div>
                                       <div className="w-24 flex-shrink-0">
                                         <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                                        <input type="text" inputMode="decimal" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" autoComplete="off" />
+                                        <input
+                                          type="text"
+                                          inputMode="decimal"
+                                          value={p.valor_unitario}
+                                          onChange={e => updatePeca(i, "valor_unitario", e.target.value)}
+                                          className="input-dark" autoComplete="off" />
                                       </div>
                                       <div className="w-24 flex-shrink-0">
                                         <label className="text-xs text-gray-500 mb-1 block">Total</label>
@@ -994,34 +975,31 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                         <label className="text-xs text-gray-500 mb-1 block">Estoque</label>
                                         {(() => { const est = estoque.find(e => e.id === p.estoque_id || (p.codigo && e.codigo === p.codigo)); const qty = est?.quantidade ?? null; return <div className={`input-dark text-sm font-semibold ${qty === null ? 'text-gray-500' : qty <= 0 ? 'text-red-400' : qty <= (est?.estoque_minimo || 2) ? 'text-yellow-400' : 'text-green-400'}`}>{qty === null ? '—' : qty}</div>; })()}
                                       </div>
-                                      <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2"><Trash2 className="w-4 h-4" /></button>
+                                      <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2 mb-0.5"><Trash2 className="w-4 h-4" /></button>
                                     </div>
-                                    {/* Mobile */}
-                                    <div className="md:hidden space-y-2">
-                                      <div>
+                                    <div className="md:hidden grid grid-cols-2 gap-2">
+                                      <div className="col-span-2">
                                         <label className="text-xs text-gray-500 mb-1 block">Produto</label>
                                         <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
                                       </div>
-                                      <div className="grid grid-cols-3 gap-2">
-                                        <div>
-                                          <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
-                                          <input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
-                                        </div>
-                                        <div>
-                                          <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                                          <input type="text" inputMode="decimal" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" autoComplete="off" />
-                                        </div>
+                                      <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
+                                        <input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
+                                      </div>
+                                      <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
+                                        <input type="text" inputMode="decimal" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" autoComplete="off" />
+                                      </div>
+                                      <div className="col-span-2 flex items-center justify-between">
                                         <div>
                                           <label className="text-xs text-gray-500 mb-1 block">Total</label>
-                                          <div className="input-dark text-gray-300 text-sm font-semibold">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
+                                          <div className="text-gray-300 text-sm font-semibold">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
                                         </div>
-                                      </div>
-                                      <div className="flex justify-end">
-                                        <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 p-1"><Trash2 className="w-4 h-4" /></button>
+                                        <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 p-2"><Trash2 className="w-4 h-4" /></button>
                                       </div>
                                     </div>
-                                  </>
-                                 )}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </Draggable>
@@ -1062,9 +1040,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                     <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2"><Trash2 className="w-4 h-4" /></button>
                                   </div>
                                 ) : (
-                                  <>
-                                    {/* Desktop */}
-                                    <div className="hidden md:flex gap-2 items-end">
+                                  <div className="space-y-2">
+                                    <div className="hidden md:flex flex-wrap md:flex-nowrap gap-2 items-end">
                                       <div {...drag.dragHandleProps} className="flex items-center self-center pb-0.5 cursor-grab text-gray-600 hover:text-gray-400 flex-shrink-0">
                                         <GripVertical className="w-4 h-4" />
                                       </div>
@@ -1072,7 +1049,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                         <label className="text-xs text-gray-500 mb-1 block">Código</label>
                                         <input value={s.codigo || ''} onChange={e => updateServico(i, "codigo", e.target.value)} className="input-dark text-sm" autoComplete="off" />
                                       </div>
-                                      <div className="flex-1">
+                                      <div className="flex-1 min-w-[120px]">
                                         <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
                                         <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
                                       </div>
@@ -1082,40 +1059,42 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                       </div>
                                       <div className="w-24 flex-shrink-0">
                                         <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                                        <input type="text" inputMode="decimal" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" autoComplete="off" />
+                                        <input
+                                          type="text"
+                                          inputMode="decimal"
+                                          value={s.valor}
+                                          onChange={e => updateServico(i, "valor", e.target.value)}
+                                          className="input-dark" autoComplete="off" />
                                       </div>
                                       <div className="w-24 flex-shrink-0">
                                         <label className="text-xs text-gray-500 mb-1 block">Total</label>
                                         <div className="input-dark text-gray-300 text-sm">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
                                       </div>
-                                      <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2"><Trash2 className="w-4 h-4" /></button>
+                                      <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2 mb-0.5"><Trash2 className="w-4 h-4" /></button>
                                     </div>
-                                    {/* Mobile */}
-                                    <div className="md:hidden space-y-2">
-                                      <div>
+                                    <div className="md:hidden grid grid-cols-2 gap-2">
+                                      <div className="col-span-2">
                                         <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
                                         <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
                                       </div>
-                                      <div className="grid grid-cols-3 gap-2">
-                                        <div>
-                                          <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
-                                          <input value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
-                                        </div>
-                                        <div>
-                                          <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                                          <input type="text" inputMode="decimal" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" autoComplete="off" />
-                                        </div>
+                                      <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
+                                        <input value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
+                                      </div>
+                                      <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
+                                        <input type="text" inputMode="decimal" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" autoComplete="off" />
+                                      </div>
+                                      <div className="col-span-2 flex items-center justify-between">
                                         <div>
                                           <label className="text-xs text-gray-500 mb-1 block">Total</label>
-                                          <div className="input-dark text-gray-300 text-sm font-semibold">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
+                                          <div className="text-gray-300 text-sm font-semibold">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
                                         </div>
-                                      </div>
-                                      <div className="flex justify-end">
-                                        <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 p-1"><Trash2 className="w-4 h-4" /></button>
+                                        <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 p-2"><Trash2 className="w-4 h-4" /></button>
                                       </div>
                                     </div>
-                                  </>
-                                 )}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </Draggable>
