@@ -1,6 +1,16 @@
 import React, { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
+function normalizar(str) {
+  if (!str) return str;
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x00-\x7F]/g, '')
+    .toUpperCase()
+    .trim();
+}
+
 function fmt(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
@@ -23,7 +33,7 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [] 
     vendasValidas.forEach(venda => {
       // Serviços
       (venda.servicos || []).forEach(s => {
-        const desc = (s.descricao || "SEM NOME").toUpperCase().trim();
+        const desc = normalizar(s.descricao || "SEM NOME");
         const total = Number(s.valor || 0) * Number(s.quantidade || 1);
         if (!mapServicos[desc]) mapServicos[desc] = { descricao: desc, receita: 0, quantidade: 0, vezes: 0 };
         mapServicos[desc].receita += total;
@@ -45,7 +55,7 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [] 
 
       // Produtos (peças)
       (venda.pecas || []).forEach(p => {
-        const desc = (p.descricao || "SEM NOME").toUpperCase().trim();
+        const desc = normalizar(p.descricao || "SEM NOME");
         const total = Number(p.valor_total || 0) || Number(p.valor_unitario || 0) * Number(p.quantidade || 1);
         if (!mapProdutos[desc]) mapProdutos[desc] = { descricao: desc, receita: 0, quantidade: 0, vezes: 0 };
         mapProdutos[desc].receita += total;
