@@ -847,9 +847,12 @@ function CellEdit({ item, field, className = "", editandoCell, onIniciar, onSalv
         type="text"
         value={localVal}
         onChange={e => {
-          const v = CAMPOS_NUMERICOS.includes(field)
-            ? e.target.value.replace(/[^0-9.]/g, "")
-            : e.target.value.toUpperCase();
+          let v = e.target.value;
+          if (CAMPOS_NUMERICOS.includes(field)) {
+            v = v.replace(/[^0-9.]/g, "");
+          } else {
+            v = v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x00-\x7F]/g, '').toUpperCase();
+          }
           setLocalVal(v);
         }}
         onBlur={() => {

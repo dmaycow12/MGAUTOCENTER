@@ -97,6 +97,10 @@ function gerarParcelas(total, qtd, dataBase) {
   });
 }
 
+function sanitizar(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x00-\x7F]/g, '').toUpperCase();
+}
+
 function recalcular(servicos, pecas, desconto) {
   const vs = (servicos || []).reduce((acc, s) => acc + Number(s.valor || 0) * Number(s.quantidade ?? 1), 0);
   const vp = (pecas || []).reduce((acc, p) => acc + Number(p.valor_total || 0), 0);
@@ -377,7 +381,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const updateServico = (i, field, val) => {
-    const novos = form.servicos.map((s, idx) => idx === i ? { ...s, _new: false, [field]: field === "valor" ? parseNum(val) : val } : s);
+    const valFinal = field === "descricao" ? sanitizar(val) : (field === "valor" ? parseNum(val) : val);
+    const novos = form.servicos.map((s, idx) => idx === i ? { ...s, _new: false, [field]: valFinal } : s);
     if ((field === "codigo" || field === "descricao") && val.length > 0) {
       setServicoSugestoes({ idx: i, lista: servicosCad.filter(s =>
         s.codigo?.toLowerCase().includes(val.toLowerCase()) || s.descricao?.toLowerCase().includes(val.toLowerCase())
@@ -413,9 +418,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const updatePeca = async (i, field, val) => {
     const pecaAntiga = form.pecas[i];
+    const valFinal = field === "descricao" ? sanitizar(val) : val;
     const novos = form.pecas.map((p, idx) => {
       if (idx !== i) return p;
-      const updated = { ...p, _new: false, [field]: ["quantidade", "valor_unitario"].includes(field) ? parseNum(val) : val };
+      const updated = { ...p, _new: false, [field]: ["quantidade", "valor_unitario"].includes(field) ? parseNum(valFinal) : valFinal };
       updated.valor_total = Number(updated.quantidade || 0) * Number(updated.valor_unitario || 0);
       return updated;
     });
