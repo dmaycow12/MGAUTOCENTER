@@ -21,7 +21,7 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [] 
   const [aba, setAba] = useState("servicos");
   const [busca, setBusca] = useState("");
   const [mostrarTodos, setMostrarTodos] = useState(false);
-  const [modoAgrupamento, setModoAgrupamento] = useState("descricao");
+  const [modoAgrupamento, setModoAgrupamento] = useState("codigo");
 
   const { rankServicos, rankProdutos, rankServicosCodigo, rankProdutosCodigo, totalServicos, totalProdutos } = useMemo(() => {
     const mapServicos = {};
@@ -101,21 +101,21 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [] 
         </span>
       </div>
 
-      {/* Toggle Descrição / Código */}
+      {/* Toggle Código / Descrição */}
       <div className="flex gap-1 bg-gray-800 p-1 rounded-lg">
-        <button
-          onClick={() => { setModoAgrupamento("descricao"); setBusca(""); setMostrarTodos(false); }}
-          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
-          style={modoAgrupamento === "descricao" ? { background: "#065f46", color: "#6ee7b7" } : { color: "#9ca3af" }}
-        >
-          Por Descrição
-        </button>
         <button
           onClick={() => { setModoAgrupamento("codigo"); setBusca(""); setMostrarTodos(false); }}
           className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
           style={modoAgrupamento === "codigo" ? { background: "#065f46", color: "#6ee7b7" } : { color: "#9ca3af" }}
         >
           Por Código
+        </button>
+        <button
+          onClick={() => { setModoAgrupamento("descricao"); setBusca(""); setMostrarTodos(false); }}
+          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
+          style={modoAgrupamento === "descricao" ? { background: "#065f46", color: "#6ee7b7" } : { color: "#9ca3af" }}
+        >
+          Por Descrição
         </button>
       </div>
 
