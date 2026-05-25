@@ -35,7 +35,8 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [] 
           : servicosCad.find(sc => sc.descricao?.toLowerCase().trim() === (s.descricao || '').toLowerCase().trim())?.codigo || '';
         if (codigoServico) {
           const cod = codigoServico.toUpperCase().trim();
-          if (!mapServicosCodigo[cod]) mapServicosCodigo[cod] = { descricao: cod, receita: 0, quantidade: 0, vezes: 0 };
+          const servicoDesc = servicosCad.find(sc => sc.codigo?.toUpperCase().trim() === cod)?.descricao || cod;
+          if (!mapServicosCodigo[cod]) mapServicosCodigo[cod] = { codigo: cod, descricao: servicoDesc, receita: 0, quantidade: 0, vezes: 0 };
           mapServicosCodigo[cod].receita += total;
           mapServicosCodigo[cod].quantidade += Number(s.quantidade || 1);
           mapServicosCodigo[cod].vezes += 1;
@@ -163,7 +164,7 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [] 
       <div className="space-y-1">
         <div className="grid grid-cols-12 gap-1 px-2 py-1">
           <span className="col-span-1 text-gray-500 text-xs">#</span>
-          <span className="col-span-5 text-gray-500 text-xs">{modoAgrupamento === "descricao" ? "DESCRIÇÃO" : "CÓDIGO"}</span>
+          <span className="col-span-5 text-gray-500 text-xs">{modoAgrupamento === "descricao" ? "DESCRIÇÃO" : "CÓDIGO / DESCRIÇÃO"}</span>
           <span className="col-span-2 text-gray-500 text-xs text-right">QTD</span>
           <span className="col-span-4 text-gray-500 text-xs text-right">RECEITA</span>
         </div>
@@ -177,7 +178,9 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [] 
                 {/* barra de fundo proporcional */}
                 <div className="absolute inset-0 rounded-lg opacity-20 transition-all" style={{ width: `${pct}%`, background: COLORS[Math.min(i, COLORS.length-1)] }} />
                 <span className="col-span-1 text-gray-500 text-xs z-10">{listaFiltrada.indexOf(item) + 1}</span>
-                <span className="col-span-5 text-white text-xs font-medium z-10 truncate">{item.descricao}</span>
+                <span className="col-span-5 text-white text-xs font-medium z-10 truncate">
+                  {modoAgrupamento === "codigo" && item.codigo ? `${item.codigo} - ${item.descricao}` : item.descricao}
+                </span>
                 <span className="col-span-2 text-gray-400 text-xs text-right z-10">{item.quantidade.toFixed(0)}</span>
                 <span className="col-span-4 text-green-400 text-xs font-bold text-right z-10">{fmt(item.receita)}</span>
               </div>
