@@ -29,12 +29,14 @@ export default function EstatisticasProdutosServicos({ vendas }) {
         mapServicos[desc].receita += total;
         mapServicos[desc].quantidade += Number(s.quantidade || 1);
         mapServicos[desc].vezes += 1;
-        // Por código (usa código se disponível, senão usa descrição)
-        const codServico = (s.codigo && s.codigo.trim()) ? s.codigo.toUpperCase().trim() : (s.descricao || "SEM NOME").toUpperCase().trim();
-        if (!mapServicosCodigo[codServico]) mapServicosCodigo[codServico] = { descricao: codServico, receita: 0, quantidade: 0, vezes: 0 };
-        mapServicosCodigo[codServico].receita += total;
-        mapServicosCodigo[codServico].quantidade += Number(s.quantidade || 1);
-        mapServicosCodigo[codServico].vezes += 1;
+        // Por código (ignora sem código)
+        if (s.codigo && s.codigo.trim()) {
+          const cod = s.codigo.toUpperCase().trim();
+          if (!mapServicosCodigo[cod]) mapServicosCodigo[cod] = { descricao: cod, receita: 0, quantidade: 0, vezes: 0 };
+          mapServicosCodigo[cod].receita += total;
+          mapServicosCodigo[cod].quantidade += Number(s.quantidade || 1);
+          mapServicosCodigo[cod].vezes += 1;
+        }
       });
 
       // Produtos (peças)
