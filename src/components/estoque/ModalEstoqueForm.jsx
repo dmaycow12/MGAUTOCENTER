@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import { X, Plus, Trash2, Package, History, ArrowDown, ArrowUp } from "lucide-react";
 
 const GREEN = "#00ff00";
+
+function sanitizar(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x00-\x7F]/g, '').toUpperCase();
+}
 const arredondarVendaParaCinco = (valor) => Math.ceil(valor / 5) * 5;
 
 function F({ label, children, className = "" }) {
@@ -72,7 +76,7 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                   <input type="text" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: Number(e.target.value.replace(/[^0-9.]/g, "") || 0) })} className="input-dark" />
                 </F>
                 <F label="Descrição *" className="col-span-2">
-                  <input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} className="input-dark" />
+                  <input value={form.descricao} onChange={e => setForm({ ...form, descricao: sanitizar(e.target.value) })} className="input-dark" />
                 </F>
                 <F label="Marca">
                   <input value={form.marca || ""} onChange={e => setForm({ ...form, marca: e.target.value })} className="input-dark" />
