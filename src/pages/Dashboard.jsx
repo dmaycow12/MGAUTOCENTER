@@ -54,6 +54,7 @@ function SectionTitle({ children }) {
 
 export default function Dashboard() {
   const [ordens, setOrdens] = useState([]);
+  const [servicosCad, setServicosCad] = useState([]);
   const [financeiro, setFinanceiro] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [estoque, setEstoque] = useState([]);
@@ -114,12 +115,14 @@ export default function Dashboard() {
       base44.entities.Cadastro.list("-created_date", 2000),
       base44.entities.Estoque.list("-created_date", 2000),
       base44.entities.Ativo.list("-created_date", 2000),
-    ]).then(([o, f, c, e, a]) => {
+      base44.entities.Servico.list("-created_date", 1000),
+    ]).then(([o, f, c, e, a, s]) => {
       setOrdens(o);
       setFinanceiro(f);
       setClientes(c);
       setEstoque(e);
       setAtivos(a);
+      setServicosCad(s);
       setLoading(false);
     });
   }, []);
@@ -445,7 +448,7 @@ export default function Dashboard() {
       })()}
 
       {/* Estatísticas por Produto/Serviço */}
-      <EstatisticasProdutosServicos vendas={ordensPeriodo} />
+      <EstatisticasProdutosServicos vendas={ordensPeriodo} servicosCad={servicosCad} />
 
       {/* Gráfico Receita x Despesa x Lucro */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">

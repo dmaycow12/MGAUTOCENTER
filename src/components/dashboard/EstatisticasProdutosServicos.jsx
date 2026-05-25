@@ -7,7 +7,7 @@ function fmt(v) {
 
 const COLORS = ["#062C9B", "#1d4ed8", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"];
 
-export default function EstatisticasProdutosServicos({ vendas }) {
+export default function EstatisticasProdutosServicos({ vendas, servicosCad = [] }) {
   const [aba, setAba] = useState("servicos");
   const [busca, setBusca] = useState("");
   const [mostrarTodos, setMostrarTodos] = useState(false);
@@ -29,9 +29,12 @@ export default function EstatisticasProdutosServicos({ vendas }) {
         mapServicos[desc].receita += total;
         mapServicos[desc].quantidade += Number(s.quantidade || 1);
         mapServicos[desc].vezes += 1;
-        // Por código (ignora sem código)
-        if (s.codigo && s.codigo.trim()) {
-          const cod = s.codigo.toUpperCase().trim();
+        // Por código: usa codigo salvo ou busca no catálogo pela descrição
+        const codigoServico = (s.codigo && s.codigo.trim())
+          ? s.codigo.trim()
+          : servicosCad.find(sc => sc.descricao?.toLowerCase().trim() === (s.descricao || '').toLowerCase().trim())?.codigo || '';
+        if (codigoServico) {
+          const cod = codigoServico.toUpperCase().trim();
           if (!mapServicosCodigo[cod]) mapServicosCodigo[cod] = { descricao: cod, receita: 0, quantidade: 0, vezes: 0 };
           mapServicosCodigo[cod].receita += total;
           mapServicosCodigo[cod].quantidade += Number(s.quantidade || 1);
