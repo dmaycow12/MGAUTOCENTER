@@ -35,14 +35,12 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [] 
       (venda.servicos || []).forEach(s => {
         const desc = normalizar(s.descricao || "SEM NOME");
         const total = Number(s.valor || 0) * Number(s.quantidade || 1);
-        if (!mapServicos[desc]) mapServicos[desc] = { descricao: desc, receita: 0, quantidade: 0, vezes: 0 };
+        const codigoServico = (s.codigo && s.codigo.trim()) ? s.codigo.trim() : servicosCad.find(sc => sc.descricao?.toLowerCase().trim() === (s.descricao || '').toLowerCase().trim())?.codigo || '';
+        if (!mapServicos[desc]) mapServicos[desc] = { descricao: desc, codigo: codigoServico, receita: 0, quantidade: 0, vezes: 0 };
         mapServicos[desc].receita += total;
         mapServicos[desc].quantidade += Number(s.quantidade || 1);
         mapServicos[desc].vezes += 1;
-        // Por código: usa codigo salvo ou busca no catálogo pela descrição
-        const codigoServico = (s.codigo && s.codigo.trim())
-          ? s.codigo.trim()
-          : servicosCad.find(sc => sc.descricao?.toLowerCase().trim() === (s.descricao || '').toLowerCase().trim())?.codigo || '';
+
         if (codigoServico) {
           const cod = codigoServico.toUpperCase().trim();
           const servicoDesc = servicosCad.find(sc => sc.codigo?.toUpperCase().trim() === cod)?.descricao || cod;
@@ -57,14 +55,14 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [] 
       (venda.pecas || []).forEach(p => {
         const desc = normalizar(p.descricao || "SEM NOME");
         const total = Number(p.valor_total || 0) || Number(p.valor_unitario || 0) * Number(p.quantidade || 1);
-        if (!mapProdutos[desc]) mapProdutos[desc] = { descricao: desc, receita: 0, quantidade: 0, vezes: 0 };
+        if (!mapProdutos[desc]) mapProdutos[desc] = { descricao: desc, codigo: p.codigo || '', receita: 0, quantidade: 0, vezes: 0 };
         mapProdutos[desc].receita += total;
         mapProdutos[desc].quantidade += Number(p.quantidade || 1);
         mapProdutos[desc].vezes += 1;
         // Por código (ignora XX1 e sem código)
         if (p.codigo && p.codigo.trim() && p.codigo.toUpperCase().trim() !== 'XX1') {
           const cod = p.codigo.toUpperCase().trim();
-          if (!mapProdutosCodigo[cod]) mapProdutosCodigo[cod] = { descricao: cod, receita: 0, quantidade: 0, vezes: 0 };
+          if (!mapProdutosCodigo[cod]) mapProdutosCodigo[cod] = { codigo: cod, descricao: p.descricao || cod, receita: 0, quantidade: 0, vezes: 0 };
           mapProdutosCodigo[cod].receita += total;
           mapProdutosCodigo[cod].quantidade += Number(p.quantidade || 1);
           mapProdutosCodigo[cod].vezes += 1;
@@ -189,7 +187,7 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [] 
                 <div className="absolute inset-0 rounded-lg opacity-20 transition-all" style={{ width: `${pct}%`, background: COLORS[Math.min(i, COLORS.length-1)] }} />
                 <span className="col-span-1 text-gray-500 text-xs z-10">{listaFiltrada.indexOf(item) + 1}</span>
                 <span className="col-span-5 text-white text-xs font-medium z-10 truncate">
-                  {modoAgrupamento === "codigo" && item.codigo ? `${item.codigo} - ${item.descricao}` : item.descricao}
+                  {item.codigo ? `${item.codigo} - ${item.descricao}` : item.descricao}
                 </span>
                 <span className="col-span-2 text-gray-400 text-xs text-right z-10">{item.quantidade.toFixed(0)}</span>
                 <span className="col-span-4 text-green-400 text-xs font-bold text-right z-10">{fmt(item.receita)}</span>
