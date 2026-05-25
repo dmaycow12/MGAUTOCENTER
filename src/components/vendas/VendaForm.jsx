@@ -784,7 +784,17 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         }
       }
 
-      if (eraAberta && ficouConcluida && savedId) {
+      // Auto-concluir se todas as parcelas estiverem pagas
+      const todasPagas = parcelasAtualizadas.length > 0 && parcelasAtualizadas.every(p => (p.financeiro_status || "Pendente") === "Pago");
+      if (todasPagas && formFinal.status !== "Concluído") {
+        const dataConclusao = new Date().toISOString().split("T")[0];
+        formFinal = { ...formFinal, status: "Concluído", data_conclusao: dataConclusao };
+        await base44.entities.Vendas.update(savedId, { status: "Concluído", data_conclusao: dataConclusao });
+      }
+
+      const eraAbertaFinal = os?.status !== "Concluído";
+      const ficouConcluidaFinal = formFinal.status === "Concluído";
+      if (eraAbertaFinal && ficouConcluidaFinal && savedId) {
         await reduzirEstoque(formFinal.pecas);
       }
 
