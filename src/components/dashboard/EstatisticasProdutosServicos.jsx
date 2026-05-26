@@ -17,7 +17,7 @@ function fmt(v) {
 
 const COLORS = ["#062C9B", "#1d4ed8", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"];
 
-export default function EstatisticasProdutosServicos({ vendas, servicosCad = [] }) {
+export default function EstatisticasProdutosServicos({ vendas, servicosCad = [], estoque = [] }) {
   const [aba, setAba] = useState("servicos");
   const [busca, setBusca] = useState("");
   const [mostrarTodos, setMostrarTodos] = useState(false);
@@ -62,7 +62,10 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [] 
         // Por código (ignora XX1 e sem código)
         if (p.codigo && p.codigo.trim() && p.codigo.toUpperCase().trim() !== 'XX1') {
           const cod = p.codigo.toUpperCase().trim();
-          if (!mapProdutosCodigo[cod]) mapProdutosCodigo[cod] = { codigo: cod, descricao: p.descricao || cod, receita: 0, quantidade: 0, vezes: 0 };
+          // Sempre usa a descrição real do cadastro, nunca a editada na venda
+          const itemCadastro = estoque.find(e => e.codigo?.toUpperCase().trim() === cod);
+          const descReal = itemCadastro?.descricao ? normalizar(itemCadastro.descricao) : cod;
+          if (!mapProdutosCodigo[cod]) mapProdutosCodigo[cod] = { codigo: cod, descricao: descReal, receita: 0, quantidade: 0, vezes: 0 };
           mapProdutosCodigo[cod].receita += total;
           mapProdutosCodigo[cod].quantidade += Number(p.quantidade || 1);
           mapProdutosCodigo[cod].vezes += 1;

@@ -448,7 +448,7 @@ export default function Dashboard() {
       })()}
 
       {/* Estatísticas por Produto/Serviço */}
-      <EstatisticasProdutosServicos vendas={ordensPeriodo} servicosCad={servicosCad} />
+      <EstatisticasProdutosServicos vendas={ordensPeriodo} servicosCad={servicosCad} estoque={estoque} />
 
       {/* Gráfico Receita x Despesa x Lucro */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
