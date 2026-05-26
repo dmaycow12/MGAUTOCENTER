@@ -382,7 +382,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const updateServico = (i, field, val) => {
     const valFinal = field === "descricao" ? sanitizar(val) : (field === "valor" ? parseNum(val) : val);
-    const novos = form.servicos.map((s, idx) => idx === i ? { ...s, _new: false, [field]: valFinal } : s);
     if ((field === "codigo" || field === "descricao") && val.length > 0) {
       setServicoSugestoes({ idx: i, lista: servicosCad.filter(s =>
         s.codigo?.toLowerCase().includes(val.toLowerCase()) || s.descricao?.toLowerCase().includes(val.toLowerCase())
@@ -390,8 +389,11 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     } else if (val === "") {
       setServicoSugestoes({ idx: null, lista: [] });
     }
-    const calc = recalcular(novos, form.pecas, form.desconto);
-    setForm(f => ({ ...f, servicos: novos, ...calc }));
+    setForm(f => {
+      const novos = f.servicos.map((s, idx) => idx === i ? { ...s, _new: false, [field]: valFinal } : s);
+      const calc = recalcular(novos, f.pecas, f.desconto);
+      return { ...f, servicos: novos, ...calc };
+    });
   };
 
   const selecionarServico = (i, item) => {
