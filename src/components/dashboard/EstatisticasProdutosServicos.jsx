@@ -144,7 +144,6 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
       {topChart.length > 0 && (
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={topChart} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
-            <XAxis type="number" tickFormatter={v => `R$${(v/1000).toFixed(0)}k`} tick={{ fill: "#6b7280", fontSize: 10 }} axisLine={false} tickLine={false} />
             <YAxis type="category" dataKey="descricao" width={120} tick={{ fill: "#9ca3af", fontSize: 9 }} axisLine={false} tickLine={false}
               tickFormatter={v => v.length > 18 ? v.substring(0, 18) + "…" : v}
             />
