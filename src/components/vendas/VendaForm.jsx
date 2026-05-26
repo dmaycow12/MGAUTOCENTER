@@ -695,8 +695,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     const servicosPendentes = (form.servicos || []).filter(s => s._new);
     if (pecasPendentes.length > 0) return alert("Selecione o produto antes de salvar. Há produto(s) adicionados sem seleção.");
     if (servicosPendentes.length > 0) return alert("Selecione o serviço antes de salvar. Há serviço(s) adicionados sem seleção.");
-    const pecasSemCodigo = (form.pecas || []).filter(p => !p.codigo?.trim());
-    const servicosSemCodigo = (form.servicos || []).filter(s => !s.codigo?.trim());
+    const pecasSemCodigo = form.status !== "Orçamento" ? (form.pecas || []).filter(p => !p.codigo?.trim()) : [];
+    const servicosSemCodigo = form.status !== "Orçamento" ? (form.servicos || []).filter(s => !s.codigo?.trim()) : [];
     if (pecasSemCodigo.length > 0) return alert(`Produto(s) sem código: ${pecasSemCodigo.map(p => p.descricao || 'sem descrição').join(', ')}. Preencha o código antes de salvar.`);
     if (servicosSemCodigo.length > 0) return alert(`Serviço(s) sem código: ${servicosSemCodigo.map(s => s.descricao || 'sem descrição').join(', ')}. Preencha o código antes de salvar.`);
     if (saving) return;
