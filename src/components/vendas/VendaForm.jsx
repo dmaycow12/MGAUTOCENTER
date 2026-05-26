@@ -216,7 +216,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         servicos: f.servicos.map(svc => {
           if (svc.codigo) return svc;
           const match = s.find(sc => sc.descricao?.toLowerCase().trim() === svc.descricao?.toLowerCase().trim());
-          return match ? { ...svc, codigo: match.codigo } : svc;
+          return { ...svc, codigo: match?.codigo || "101" };
         }),
         pecas: f.pecas.map(p => {
           if (p.codigo) return p;
@@ -399,7 +399,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const selecionarServico = (i, item) => {
     setServicoSugestoes({ idx: null, lista: [] });
     setForm(f => {
-      const novos = f.servicos.map((s, idx) => idx === i ? { ...s, _new: false, codigo: item.codigo || "", descricao: item.descricao || "", valor: Number(item.valor || 0) } : s);
+      const novos = f.servicos.map((s, idx) => idx === i ? { ...s, _new: false, codigo: item.codigo || "101", descricao: item.descricao || "", valor: Number(item.valor || 0) } : s);
       return { ...f, servicos: novos, ...recalcular(novos, f.pecas, f.desconto) };
     });
   };
@@ -708,7 +708,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       const parcelasNormalizadas = parcelasRef.current.map(p => ({ ...p, valor: Number(p.valor) || 0 }));
       const formaPrincipal = parcelasNormalizadas[0]?.forma_pagamento || form.forma_pagamento || "A Combinar";
       const pecasLimpas = (form.pecas || []).map(({ _new, ...p }) => p);
-      const servicosLimpos = (form.servicos || []).map(({ _new, ...s }) => s);
+      const servicosLimpos = (form.servicos || []).map(({ _new, ...s }) => ({ ...s, codigo: s.codigo?.trim() || "101" }));
       let formFinal = { ...form, pecas: pecasLimpas, servicos: servicosLimpos, parcelas_detalhes: parcelasNormalizadas, forma_pagamento: formaPrincipal };
 
       if (!os) {
