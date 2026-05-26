@@ -148,12 +148,7 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
             <YAxis type="category" dataKey="descricao" width={120} tick={{ fill: "#9ca3af", fontSize: 9 }} axisLine={false} tickLine={false}
               tickFormatter={v => v.length > 18 ? v.substring(0, 18) + "…" : v}
             />
-            <Tooltip
-              formatter={(v) => [fmt(v), "Receita"]}
-              contentStyle={{ background: "#111827", border: "1px solid #374151", borderRadius: 8, fontSize: 11 }}
-              labelStyle={{ color: "#fff" }}
-            />
-            <Bar dataKey="receita" radius={[0, 4, 4, 0]}>
+            <Bar dataKey="receita" radius={[0, 4, 4, 0]} label={{ position: 'right', formatter: (v) => fmt(v), fill: '#9ca3af', fontSize: 10 }}>
               {topChart.map((_, i) => (
                 <Cell key={i} fill={COLORS[Math.min(i, COLORS.length - 1)]} />
               ))}
@@ -162,52 +157,7 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
         </ResponsiveContainer>
       )}
 
-      {/* Busca */}
-      <input
-        type="text"
-        placeholder={`Buscar ${aba === "servicos" ? "serviço" : "produto"}...`}
-        value={busca}
-        onChange={e => setBusca(e.target.value)}
-        className="w-full bg-gray-800 border border-gray-700 text-white text-xs rounded-lg px-3 py-2 focus:outline-none placeholder-gray-500"
-      />
 
-      {/* Tabela */}
-      <div className="space-y-1">
-        <div className="grid grid-cols-12 gap-1 px-2 py-1">
-          <span className="col-span-1 text-gray-500 text-xs">#</span>
-          <span className="col-span-5 text-gray-500 text-xs">{modoAgrupamento === "descricao" ? "DESCRIÇÃO" : "CÓDIGO / DESCRIÇÃO"}</span>
-          <span className="col-span-2 text-gray-500 text-xs text-right">QTD</span>
-          <span className="col-span-4 text-gray-500 text-xs text-right">RECEITA</span>
-        </div>
-        {listaExibida.length === 0 ? (
-          <p className="text-gray-500 text-xs text-center py-4">Sem dados</p>
-        ) : (
-          listaExibida.map((item, i) => {
-            const pct = totalAtual > 0 ? (item.receita / totalAtual) * 100 : 0;
-            return (
-              <div key={i} className="grid grid-cols-12 gap-1 px-2 py-2 rounded-lg hover:bg-gray-800 transition-all relative overflow-hidden group">
-                {/* barra de fundo proporcional */}
-                <div className="absolute inset-0 rounded-lg opacity-20 transition-all" style={{ width: `${pct}%`, background: COLORS[Math.min(i, COLORS.length-1)] }} />
-                <span className="col-span-1 text-gray-500 text-xs z-10">{listaFiltrada.indexOf(item) + 1}</span>
-                <span className="col-span-5 text-white text-xs font-medium z-10 truncate">
-                  {item.codigo ? `${item.codigo} - ${item.descricao}` : item.descricao}
-                </span>
-                <span className="col-span-2 text-gray-400 text-xs text-right z-10">{item.quantidade.toFixed(0)}</span>
-                <span className="col-span-4 text-green-400 text-xs font-bold text-right z-10">{fmt(item.receita)}</span>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      {listaFiltrada.length > 10 && (
-        <button
-          onClick={() => setMostrarTodos(v => !v)}
-          className="w-full py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white hover:border-gray-500 transition-all"
-        >
-          {mostrarTodos ? "Mostrar menos" : `Ver todos (${listaFiltrada.length})`}
-        </button>
-      )}
     </div>
   );
 }
