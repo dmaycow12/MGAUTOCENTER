@@ -196,6 +196,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const [showDadosVeiculo, setShowDadosVeiculo] = useState(false);
   const [descontoInput, setDescontoInput] = useState(0);
   const [pagandoParcela, setPagandoParcela] = useState(null);
+  const [custoXXInputs, setCustoXXInputs] = useState({});
 
   useEffect(() => {
     Promise.all([
@@ -994,22 +995,27 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                           className="input-dark" autoComplete="off" />
                                       </div>
                                       <div className="w-20 flex-shrink-0">
-                                        <label className="text-xs text-gray-500 mb-1 block">Custo</label>
-                                        {(p.codigo || '').toUpperCase() === 'XX' ? (
-                                          <input
-                                            type="text"
-                                            inputMode="decimal"
-                                            value={p.valor_custo || 0}
-                                            onChange={e => {
-                                              const val = Number(String(e.target.value).replace(',','.')) || 0;
-                                              setForm(f => ({ ...f, pecas: f.pecas.map((x, idx) => idx === i ? { ...x, valor_custo: val } : x) }));
-                                            }}
-                                            className="input-dark text-yellow-400 text-sm"
-                                            autoComplete="off"
-                                          />
-                                        ) : (
-                                          <div className="input-dark text-yellow-400 text-sm">{Number(p.valor_custo || 0).toFixed(2)}</div>
-                                        )}
+                                      <label className="text-xs text-gray-500 mb-1 block">Custo</label>
+                                      {(p.codigo || '').toUpperCase() === 'XX' ? (
+                                        <input
+                                          type="text"
+                                          inputMode="decimal"
+                                          value={custoXXInputs[i] !== undefined ? custoXXInputs[i] : String(p.valor_custo || 0)}
+                                          onChange={e => {
+                                            const raw = e.target.value;
+                                            setCustoXXInputs(prev => ({ ...prev, [i]: raw }));
+                                          }}
+                                          onBlur={e => {
+                                            const val = parseFloat(String(e.target.value).replace(',', '.')) || 0;
+                                            setCustoXXInputs(prev => ({ ...prev, [i]: String(val) }));
+                                            setForm(f => ({ ...f, pecas: f.pecas.map((x, idx) => idx === i ? { ...x, valor_custo: val } : x) }));
+                                          }}
+                                          className="input-dark text-yellow-400 text-sm"
+                                          autoComplete="off"
+                                        />
+                                      ) : (
+                                        <div className="input-dark text-yellow-400 text-sm">{Number(p.valor_custo || 0).toFixed(2)}</div>
+                                      )}
                                       </div>
                                       <div className="w-24 flex-shrink-0">
                                         <label className="text-xs text-gray-500 mb-1 block">Total</label>
