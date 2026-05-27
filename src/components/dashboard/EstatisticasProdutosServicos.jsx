@@ -157,11 +157,9 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
       {/* Gráfico top 8 */}
       {topChart.length > 0 && (
         <ResponsiveContainer width="100%" height={topChart.length * 26 + 10}>
-          <BarChart data={topChart} layout="vertical" margin={{ top: 0, right: 80, left: 0, bottom: 0 }}>
+          <BarChart data={topChart} layout="vertical" margin={{ top: 0, right: 80, left: 0, bottom: 0 }} data-truncate={false}>
             <XAxis type="number" hide />
-            <YAxis type="category" dataKey="label" width={170} tick={{ fill: "#9ca3af", fontSize: 9 }} axisLine={false} tickLine={false}
-              tickFormatter={v => v.length > 26 ? v.substring(0, 26) + "…" : v}
-            />
+            <YAxis type="category" dataKey="label" width={200} tick={{ fill: "#9ca3af", fontSize: 9, textAnchor: "end" }} axisLine={false} tickLine={false} />
             <Bar dataKey="valor" barSize={14} radius={[0, 4, 4, 0]} label={{ position: 'insideRight', formatter: (v) => fmt(v), fill: '#fff', fontSize: 10, dx: 75 }}>
               {topChart.map((_, i) => (
                 <Cell key={i} fill={COLORS[Math.min(i, COLORS.length - 1)]} />
