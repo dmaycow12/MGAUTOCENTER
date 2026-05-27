@@ -121,6 +121,7 @@ Deno.serve(async (req) => {
     const OPCAO_SIMPLES = parseInt(getConf('opcao_simples_nacional', '3'), 10);
     const REGIME_TRIBUTARIO = parseInt(getConf('regime_tributario', '1'), 10);
     const REGIME_ESPECIAL = parseInt(getConf('regime_especial', '0'), 10);
+    const COD_MUNICIPIO = getConf('cod_municipio', '') || getConf('codigo_municipio', '');
 
     // ============================================================
     // PROTEÇÃO ANTI-DUPLICATA: Verifica nota existente
@@ -262,7 +263,7 @@ Deno.serve(async (req) => {
         data_competencia: dataBase,
         serie_dps: '900',
         numero_dps: String(proximoRps),
-        codigo_municipio_emissora: COD_MUNICIPIO_PATOS,
+        codigo_municipio_emissora: COD_MUNICIPIO,
         cnpj_prestador: CNPJ_EMITENTE,
         inscricao_municipal_prestador: INSCRICAO_MUNICIPAL,
         codigo_opcao_simples_nacional: OPCAO_SIMPLES,
@@ -271,12 +272,12 @@ Deno.serve(async (req) => {
         ...(cpfCnpjLimpo.length === 14 ? { cnpj_tomador: cpfCnpjLimpo } : (cpfCnpjLimpo.length === 11 ? { cpf_tomador: cpfCnpjLimpo } : {})),
         razao_social_tomador: (cliente_nome || 'Consumidor Final').substring(0, 100),
         ...(cliente_email ? { email_tomador: cliente_email } : {}),
-        codigo_municipio_tomador: codigoMunicipioTomador || COD_MUNICIPIO_PATOS,
+        codigo_municipio_tomador: codigoMunicipioTomador || COD_MUNICIPIO,
         cep_tomador: cepLimpo,
         logradouro_tomador: cliente_endereco || 'Rua Rui Barbosa',
         numero_tomador: cliente_numero || '1355',
         bairro_tomador: cliente_bairro || 'Santa Terezinha',
-        codigo_municipio_prestacao: COD_MUNICIPIO_PATOS,
+        codigo_municipio_prestacao: COD_MUNICIPIO,
         codigo_tributacao_nacional_iss: '140101',
         descricao_servico: discriminacao.substring(0, 1000),
         valor_servico: valorServico,
