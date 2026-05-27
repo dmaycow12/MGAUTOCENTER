@@ -127,7 +127,7 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-white font-semibold text-base">{modoValor === "lucro" ? "Lucro Real por Produto/Serviço" : "Receita por Produto/Serviço"}</h2>
+        <h2 className="text-white font-semibold text-base">{modoValor === "lucro" ? "Lucro Bruto por Produto/Serviço" : "Receita por Produto/Serviço"}</h2>
         <span className="text-gray-400 text-xs">
           Total: <span className="text-green-400 font-bold">{fmt(totalAtual)}</span>
         </span>
@@ -136,19 +136,19 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
       {/* Toggle Receita / Lucro */}
       <div className="flex gap-1 bg-gray-800 p-1 rounded-lg">
         <button
-          onClick={() => { setModoValor("receita"); localStorage.setItem("eps_modoValor", "receita"); }}
-          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
-          style={modoValor === "receita" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
-        >
-          Receita Bruta
-        </button>
-        <button
-          onClick={() => { setModoValor("lucro"); localStorage.setItem("eps_modoValor", "lucro"); }}
-          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
-          style={modoValor === "lucro" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
-        >
-          Lucro Real
-        </button>
+           onClick={() => { setModoValor("receita"); localStorage.setItem("eps_modoValor", "receita"); }}
+           className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
+           style={modoValor === "receita" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
+         >
+           Receita
+         </button>
+         <button
+           onClick={() => { setModoValor("lucro"); localStorage.setItem("eps_modoValor", "lucro"); }}
+           className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
+           style={modoValor === "lucro" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
+         >
+           Lucro Bruto
+         </button>
       </div>
 
 
@@ -169,13 +169,7 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
         >
           Serviços ({rankServicos.length})
         </button>
-        <button
-          onClick={() => { setAba("semcodigo"); localStorage.setItem("eps_aba", "semcodigo"); setMostrarTodos(false); setBusca(""); }}
-          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
-          style={aba === "semcodigo" ? { background: "#b91c1c", color: "#fff" } : { color: "#f87171" }}
-        >
-          Sem Código ({semCodigoProdutos.length + semCodigoServicos.length})
-        </button>
+
       </div>
 
       {/* Gráfico top 8 */}
