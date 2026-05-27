@@ -1307,10 +1307,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     <div className="lg:hidden space-y-2 p-3">
                       {parcelas.map((p, i) => (
                         <div key={i} className="bg-gray-800/50 rounded-lg p-3 border border-gray-700 space-y-2">
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-2">
                             <div>
                               <label className="text-xs text-gray-400 block mb-1">Vencimento</label>
-                              <input type="date" value={p.vencimento || ""} onChange={e => updateParcela(i, "vencimento", e.target.value)} className="input-dark text-sm w-full" style={{paddingRight: '8px'}} />
+                              <input type="date" value={p.vencimento || ""} onChange={e => updateParcela(i, "vencimento", e.target.value)} className="input-dark text-sm w-full" style={{paddingRight: '32px'}} />
                             </div>
                             <div>
                               <label className="text-xs text-gray-400 block mb-1">Valor</label>
