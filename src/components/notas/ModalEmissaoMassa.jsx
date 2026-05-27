@@ -9,12 +9,16 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
   const [resultados, setResultados] = useState([]);
   const [concluido, setConcluido] = useState(false);
   const [clientes, setClientes] = useState(clientesProp);
+  const [notasCarregadas, setNotasCarregadas] = useState(notas);
   const [notasFinais, setNotasFinais] = useState(null);
 
-  // Carrega TODOS os cadastros diretamente — garante dados completos e frescos
+  // Carrega TODOS os cadastros e notas diretamente — garante dados completos e frescos
   useEffect(() => {
     base44.entities.Cadastro.list('-created_date', 5000).then(res => {
       if (res && res.length > 0) setClientes(res);
+    }).catch(() => {});
+    base44.entities.NotaFiscal.list('-created_date', 2000).then(res => {
+      if (res && res.length > 0) setNotasCarregadas(res);
     }).catch(() => {});
   }, []);
 
@@ -39,7 +43,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
   const vendasElegiveis = vendas.filter(venda => {
     if (venda.status !== 'Concluído') return false;
     const isConsumidor = venda.cliente_nome?.toUpperCase() === 'CONSUMIDOR';
-    const notasVenda = notas.filter(n => n.ordem_venda_id === venda.id && n.status !== 'Cancelada' && n.status !== 'Rascunho');
+    const notasVenda = notasCarregadas.filter(n => n.ordem_venda_id === venda.id && n.status !== 'Cancelada' && n.status !== 'Rascunho');
     const temNFe = notasVenda.some(n => n.tipo === 'NFe') || !!(venda.nfe_manual?.trim());
     const temNFCe = notasVenda.some(n => n.tipo === 'NFCe') || !!(venda.nfe_manual?.trim());
     const temNFSe = notasVenda.some(n => n.tipo === 'NFSe') || !!(venda.nfse_manual?.trim());
