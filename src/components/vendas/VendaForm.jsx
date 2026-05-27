@@ -1277,7 +1277,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 </div>
                 <div>
                   <div className="text-xs text-gray-400 mb-1">Custo Peças</div>
-                  <div className="text-sm font-bold text-gray-300">{fmt(custoTotal)}</div>
+                  <div className="text-sm font-bold text-red-400">{fmt(custoTotal)}</div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-400 mb-1">Lucro Bruto Total</div>
