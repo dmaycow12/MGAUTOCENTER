@@ -21,7 +21,6 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
   const [aba, setAba] = useState("servicos");
   const [busca, setBusca] = useState("");
   const [mostrarTodos, setMostrarTodos] = useState(false);
-  const [modoAgrupamento, setModoAgrupamento] = useState("codigo");
   const [modoValor, setModoValor] = useState("receita");
 
   const { rankServicos, rankProdutos, rankServicosCodigo, rankProdutosCodigo, totalServicos, totalProdutos } = useMemo(() => {
@@ -91,8 +90,8 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
     return { rankServicos, rankProdutos, rankServicosCodigo, rankProdutosCodigo, totalServicos, totalProdutos };
   }, [vendas]);
 
-  const rankAtualServicos = modoAgrupamento === "descricao" ? rankServicos : rankServicosCodigo;
-  const rankAtualProdutos = modoAgrupamento === "descricao" ? rankProdutos : rankProdutosCodigo;
+  const rankAtualServicos = rankServicosCodigo;
+  const rankAtualProdutos = rankProdutosCodigo;
   const lista = (aba === "servicos" ? rankAtualServicos : rankAtualProdutos).map(item => ({
     ...item,
     valor: modoValor === "lucro" ? Math.max(0, item.receita - item.custo) : item.receita,
@@ -132,23 +131,7 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
         </button>
       </div>
 
-      {/* Toggle Código / Descrição */}
-      <div className="flex gap-1 bg-gray-800 p-1 rounded-lg">
-        <button
-          onClick={() => { setModoAgrupamento("codigo"); setBusca(""); setMostrarTodos(false); }}
-          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
-          style={modoAgrupamento === "codigo" ? { background: "#065f46", color: "#6ee7b7" } : { color: "#9ca3af" }}
-        >
-          Por Código
-        </button>
-        <button
-          onClick={() => { setModoAgrupamento("descricao"); setBusca(""); setMostrarTodos(false); }}
-          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
-          style={modoAgrupamento === "descricao" ? { background: "#065f46", color: "#6ee7b7" } : { color: "#9ca3af" }}
-        >
-          Por Descrição
-        </button>
-      </div>
+
 
       {/* Abas */}
       <div className="flex gap-1 bg-gray-800 p-1 rounded-lg">
