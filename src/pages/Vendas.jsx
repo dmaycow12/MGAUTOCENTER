@@ -33,6 +33,7 @@ export default function Vendas() {
   const [notas, setNotas] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [veiculos, setVeiculos] = useState([]);
+  const [estoque, setEstoque] = useState([]);
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("os_viewmode") || "cards");
   const [colunasVisiveis, setColunasVisiveis] = useState(() => {
     const saved = localStorage.getItem("os_colunasVisiveis");
@@ -173,15 +174,17 @@ export default function Vendas() {
   const load = async () => {
     try {
       console.log("Iniciando carregamento de Vendas...");
-      const [o, c, n] = await Promise.all([
+      const [o, c, n, e] = await Promise.all([
         base44.entities.Vendas.list("-created_date", 2000),
-      base44.entities.Cadastro.list("-created_date", 2000),
-      base44.entities.NotaFiscal.list("-created_date", 1000),
-    ]);
+        base44.entities.Cadastro.list("-created_date", 2000),
+        base44.entities.NotaFiscal.list("-created_date", 1000),
+        base44.entities.Estoque.list("-created_date", 500),
+      ]);
       console.log("Vendas carregadas:", o?.length || 0);
       setOrdens(o);
       setClientes(c);
       setNotas(n);
+      setEstoque(e);
     } catch (err) {
       console.error("Erro ao carregar Vendas:", err);
       console.error("Stack:", err.stack);
@@ -256,8 +259,16 @@ export default function Vendas() {
   });
   const totalPatio = ordensComFiltrosBase.filter(o => !!(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo)).reduce((acc, o) => acc + (o.valor_total || 0), 0);
   const totalBalcao = ordensComFiltrosBase.filter(o => !(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo)).reduce((acc, o) => acc + (o.valor_total || 0), 0);
+  const getCustoPeca = (p) => {
+    if (Number(p.valor_custo || 0) > 0) return Number(p.valor_custo);
+    if (p.estoque_id) {
+      const item = estoque.find(e => e.id === p.estoque_id);
+      if (item) return Number(item.valor_custo || 0);
+    }
+    return 0;
+  };
   const totalCusto = ordensComFiltrosBase.reduce((acc, o) => {
-    const custoPecas = (o.pecas || []).reduce((s, p) => s + Number(p.valor_custo || 0) * Number(p.quantidade || 1), 0);
+    const custoPecas = (o.pecas || []).reduce((s, p) => s + getCustoPeca(p) * Number(p.quantidade || 1), 0);
     const custoServicos = (o.servicos || []).reduce((s, sv) => s + Number(sv.valor_custo || 0) * Number(sv.quantidade ?? 1), 0);
     return acc + custoPecas + custoServicos;
   }, 0);
@@ -266,7 +277,7 @@ export default function Vendas() {
     return acc + (o.valor_servicos || 0) - custoServicos;
   }, 0);
   const totalLucroBruto = ordensComFiltrosBase.reduce((acc, o) => {
-    const custoPecas = (o.pecas || []).reduce((s, p) => s + Number(p.valor_custo || 0) * Number(p.quantidade || 1), 0);
+    const custoPecas = (o.pecas || []).reduce((s, p) => s + getCustoPeca(p) * Number(p.quantidade || 1), 0);
     const custoServicos = (o.servicos || []).reduce((s, sv) => s + Number(sv.valor_custo || 0) * Number(sv.quantidade ?? 1), 0);
     return acc + (o.valor_servicos || 0) - custoServicos + (o.valor_pecas || 0) - custoPecas;
   }, 0);
