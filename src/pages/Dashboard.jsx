@@ -103,7 +103,13 @@ export default function Dashboard() {
 
   const financeiroPeriodo = financeiro.filter(i => {
     const ref = i.data_vencimento || i.data_pagamento || "";
-    return ref >= periodoRange.inicio && ref <= periodoRange.fim;
+    if (!(ref >= periodoRange.inicio && ref <= periodoRange.fim)) return false;
+    // Ignora lançamentos vinculados a vendas com status Orçamento
+    if (i.ordem_venda_id) {
+      const venda = ordens.find(o => o.id === i.ordem_venda_id);
+      if (venda?.status === "Or\u00e7amento") return false;
+    }
+    return true;
   });
 
   const [ativos, setAtivos] = useState([]);
