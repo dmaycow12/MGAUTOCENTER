@@ -1117,15 +1117,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                         <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
                                         <input value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
                                       </div>
-                                      <div className="w-24 flex-shrink-0">
-                                        <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                                        <input
-                                          type="text"
-                                          inputMode="decimal"
-                                          value={s.valor}
-                                          onChange={e => updateServico(i, "valor", e.target.value)}
-                                          className="input-dark" autoComplete="off" />
-                                      </div>
                                       <div className="w-20 flex-shrink-0">
                                         <label className="text-xs text-gray-500 mb-1 block">Custo</label>
                                         <input
