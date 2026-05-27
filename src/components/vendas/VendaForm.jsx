@@ -931,30 +931,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field label="Defeito Relatado"><textarea value={form.defeito_relatado} onChange={e => setForm(f => ({ ...f, defeito_relatado: e.target.value }))} className="input-dark" rows={2} autoComplete="off" /></Field>
-                <Field label="Diagnóstico"><textarea value={form.diagnostico} onChange={e => setForm(f => ({ ...f, diagnostico: e.target.value }))} className="input-dark" rows={2} autoComplete="off" /></Field>
-              </div>
 
-              <Section title="Fotos do Veículo / Serviço">
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {(form.fotos || []).map((foto, i) => (
-                    <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden group">
-                      <img src={foto} alt="" className="w-full h-full object-cover" />
-                      <button onClick={() => removerFoto(i)} className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
-                        <X className="w-5 h-5 text-white" />
-                      </button>
-                    </div>
-                  ))}
-                  {uploadingFoto && <div className="w-20 h-20 rounded-lg bg-gray-800 flex items-center justify-center"><div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" /></div>}
-                </div>
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => cameraInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 hover:text-white rounded-lg text-xs"><Camera className="w-4 h-4" /> Câmera</button>
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 hover:text-white rounded-lg text-xs"><Image className="w-4 h-4" /> Galeria</button>
-                </div>
-                <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { if (e.target.files?.[0]) handleFotoUpload(e.target.files[0]); e.target.value = ""; }} />
-                <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { Array.from(e.target.files || []).forEach(f => handleFotoUpload(f)); e.target.value = ""; }} />
-              </Section>
 
               <Section title="Produtos">
                 <DragDropContext onDragEnd={r => onDragEnd(r, 'pecas')}>
