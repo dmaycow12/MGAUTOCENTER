@@ -1264,9 +1264,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
               </Section>
 
               <Section title="Pagamento">
-                <div className="grid grid-cols-4 gap-4 mb-4">
+                {/* Desktop */}
+                <div className="hidden lg:grid grid-cols-4 gap-4 mb-4">
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Tipo de Desconto</label>
+                    <label className="block text-xs text-gray-400 mb-1">Desconto</label>
                     <select value={form.tipo_desconto || 'reais'} onChange={e => setForm({...form, tipo_desconto: e.target.value})} className="input-dark">
                       <option value="reais">Em Reais</option>
                       <option value="percentual">Em Porcentagem</option>
@@ -1285,6 +1286,32 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Total Geral</label>
                     <div className="input-dark font-bold text-orange-400">R$ {fmt(form.valor_total)}</div>
+                  </div>
+                </div>
+                {/* Mobile/Tablet */}
+                <div className="lg:hidden space-y-3 mb-4">
+                  <div className="grid grid-cols-3 gap-2 items-end">
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Desconto</label>
+                      <select value={form.tipo_desconto || 'reais'} onChange={e => setForm({...form, tipo_desconto: e.target.value})} className="input-dark text-sm">
+                        <option value="reais">Em Reais</option>
+                        <option value="percentual">Em %</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Valor</label>
+                      <input type="text" inputMode="decimal" value={descontoInput} onChange={e => handleDescontoChange(e.target.value)} className="input-dark text-sm" placeholder="0" autoComplete="off" />
+                    </div>
+                    <button type="button" onClick={aplicarDescontoAgora} className="px-2 py-2 rounded bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold">Aplicar</button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Field label="Nº de Parcelas">
+                      <input value={form.parcelas} onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} className="input-dark text-sm" autoComplete="off" />
+                    </Field>
+                    <div>
+                      <label className="block text-xs text-gray-400 mb-1">Total Geral</label>
+                      <div className="input-dark font-bold text-orange-400 text-sm">R$ {fmt(form.valor_total)}</div>
+                    </div>
                   </div>
                 </div>
 
