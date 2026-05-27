@@ -1231,14 +1231,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 <div className="space-y-3 mb-4 p-3 bg-gray-800/50 rounded-xl border border-gray-700">
                   <div className="flex items-end gap-2">
                     <div className="flex-1">
-                      <label className="block text-xs text-gray-400 mb-1">Tipo de Desconto</label>
-                      <select value={form.tipo_desconto || 'reais'} onChange={e => setForm({...form, tipo_desconto: e.target.value})} className="input-dark">
-                        <option value="reais">Em Reais (R$)</option>
-                        <option value="percentual">Em Porcentagem (%)</option>
-                      </select>
-                    </div>
-                    <div className="flex-1">
-                      <label className="block text-xs text-gray-400 mb-1">Valor</label>
+                      <label className="block text-xs text-gray-400 mb-1">Desconto</label>
                       <input type="text" inputMode="decimal" value={descontoInput} onChange={e => setDescontoInput(e.target.value)} className="input-dark" placeholder="0" autoComplete="off" />
                     </div>
                     <button type="button" onClick={aplicarDesconto} className="px-4 py-2 text-sm font-semibold text-white rounded-lg flex-shrink-0 h-[42px]" style={{background:"#062C9B"}}>Aplicar</button>
