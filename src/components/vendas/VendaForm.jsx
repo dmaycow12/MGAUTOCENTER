@@ -456,7 +456,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       const novos = f.pecas.map((p, idx) => {
         if (idx !== i) return p;
         qtdSelecionada = Number(p.quantidade || 1);
-        const updated = { ...p, _new: false, estoque_id: item.id, codigo: item.codigo || "", descricao: item.descricao || "", valor_unitario: Number(item.valor_venda || 0) };
+        const updated = { ...p, _new: false, estoque_id: item.id, codigo: item.codigo || "", descricao: item.descricao || "", valor_unitario: Number(item.valor_venda || 0), valor_custo: Number(item.valor_custo || 0) };
         updated.valor_total = Number(updated.quantidade || 1) * updated.valor_unitario;
         return updated;
       });
@@ -985,6 +985,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                           onChange={e => updatePeca(i, "valor_unitario", e.target.value)}
                                           className="input-dark" autoComplete="off" />
                                       </div>
+                                      <div className="w-20 flex-shrink-0">
+                                        <label className="text-xs text-gray-500 mb-1 block">Custo</label>
+                                        <div className="input-dark text-yellow-400 text-sm">R$ {Number(p.valor_custo || 0).toFixed(2)}</div>
+                                      </div>
                                       <div className="w-24 flex-shrink-0">
                                         <label className="text-xs text-gray-500 mb-1 block">Total</label>
                                         <div className="input-dark text-gray-300 text-sm">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
@@ -1233,6 +1237,31 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
           </React.Fragment>
         </div>
 
+        {/* Lucro Bruto */}
+        {(() => {
+          const custoTotal = (form.pecas || []).reduce((acc, p) => acc + Number(p.valor_custo || 0) * Number(p.quantidade || 1), 0);
+          const lucroPecas = form.valor_pecas - custoTotal;
+          const lucroBruto = form.valor_servicos + lucroPecas;
+          return (
+            <div className="mx-5 mb-4 p-3 rounded-xl border border-green-500/30 bg-green-500/5">
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div>
+                  <div className="text-xs text-gray-400 mb-1">Lucro Mão de Obra</div>
+                  <div className="text-sm font-bold text-green-400">R$ {fmt(form.valor_servicos)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-400 mb-1">Lucro Peças</div>
+                  <div className={`text-sm font-bold ${lucroPecas >= 0 ? 'text-green-400' : 'text-red-400'}`}>R$ {fmt(lucroPecas)}</div>
+                  <div className="text-xs text-gray-500">Custo: R$ {fmt(custoTotal)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-400 mb-1">Lucro Bruto Total</div>
+                  <div className={`text-base font-bold ${lucroBruto >= 0 ? 'text-green-400' : 'text-red-400'}`}>R$ {fmt(lucroBruto)}</div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
         <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg">Cancelar</button>
           <button type="button" onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-white rounded-lg font-medium disabled:opacity-50" style={{background:"#00ff00"}}>
