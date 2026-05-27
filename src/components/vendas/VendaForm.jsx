@@ -1153,7 +1153,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     <Plus className="w-4 h-4" /> Adicionar
                   </button>
                   <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
-                    <span className="text-sm font-semibold text-orange-400">Total Serviços: {fmt(form.valor_servicos)}</span>
+                    <span className="text-sm font-semibold text-orange-400">Total Serviços: R$ {fmt(form.valor_servicos)}</span>
                   </div>
                 </div>
               </Section>
@@ -1266,15 +1266,18 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
           const lucroBruto = form.valor_servicos + lucroPecas;
           return (
             <div className="mx-5 mb-4 p-3 rounded-xl border border-green-500/30 bg-green-500/5">
-              <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="grid grid-cols-4 gap-3 text-center">
                 <div>
                   <div className="text-xs text-gray-400 mb-1">Lucro Mão de Obra</div>
-                  <div className="text-sm font-bold text-green-400">{fmt(form.valor_servicos)}</div>
+                  <div className="text-sm font-bold text-green-400">R$ {fmt(form.valor_servicos)}</div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-400 mb-1">Lucro Peças</div>
                   <div className={`text-sm font-bold ${lucroPecas >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmt(lucroPecas)}</div>
-                  <div className="text-xs text-gray-500">Custo: {fmt(custoTotal)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-400 mb-1">Custo Peças</div>
+                  <div className="text-sm font-bold text-gray-300">{fmt(custoTotal)}</div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-400 mb-1">Lucro Bruto Total</div>
