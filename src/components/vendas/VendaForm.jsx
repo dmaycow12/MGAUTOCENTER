@@ -1110,6 +1110,20 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                           onChange={e => updateServico(i, "valor", e.target.value)}
                                           className="input-dark" autoComplete="off" />
                                       </div>
+                                      <div className="w-20 flex-shrink-0">
+                                        <label className="text-xs text-gray-500 mb-1 block">Custo</label>
+                                        <input
+                                          type="text"
+                                          inputMode="decimal"
+                                          value={s.valor_custo || 0}
+                                          onChange={e => {
+                                            const val = Number(String(e.target.value).replace(',', '.')) || 0;
+                                            setForm(f => ({ ...f, servicos: f.servicos.map((x, idx) => idx === i ? { ...x, valor_custo: val } : x) }));
+                                          }}
+                                          className="input-dark text-yellow-400 text-sm"
+                                          autoComplete="off"
+                                        />
+                                      </div>
                                       <div className="w-24 flex-shrink-0">
                                         <label className="text-xs text-gray-500 mb-1 block">Total</label>
                                         <div className="input-dark text-gray-300 text-sm">{(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
