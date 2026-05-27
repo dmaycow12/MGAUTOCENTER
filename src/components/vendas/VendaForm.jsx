@@ -196,6 +196,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const [showDadosVeiculo, setShowDadosVeiculo] = useState(false);
   const [descontoInput, setDescontoInput] = useState(0);
   const [pagandoParcela, setPagandoParcela] = useState(null);
+  const custoInputRefs = useRef({});
 
   useEffect(() => {
     Promise.all([
@@ -715,10 +716,15 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     try {
       const parcelasNormalizadas = parcelasRef.current.map(p => ({ ...p, valor: Number(p.valor) || 0 }));
       const formaPrincipal = parcelasNormalizadas[0]?.forma_pagamento || form.forma_pagamento || "A Combinar";
-      const pecasLimpas = (form.pecas || []).map(({ _new, _custoStr, ...p }) => ({
-        ...p,
-        valor_custo: _custoStr !== undefined ? (parseFloat(_custoStr.replace(',', '.')) || p.valor_custo || 0) : (p.valor_custo || 0)
-      }));
+      const pecasLimpas = (form.pecas || []).map(({ _new, _custoStr, ...p }, idx) => {
+        const isXX = (p.codigo || '').toUpperCase() === 'XX';
+        if (isXX) {
+          const domEl = custoInputRefs.current[idx];
+          const val = domEl ? (parseFloat(domEl.value.replace(',', '.')) || 0) : (p.valor_custo || 0);
+          return { ...p, valor_custo: val };
+        }
+        return { ...p };
+      });
       const servicosLimpos = (form.servicos || []).map(({ _new, ...s }) => ({ ...s, codigo: s.codigo?.trim() || "101" }));
       let formFinal = { ...form, pecas: pecasLimpas, servicos: servicosLimpos, parcelas_detalhes: parcelasNormalizadas, forma_pagamento: formaPrincipal };
 
@@ -1000,17 +1006,14 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                       <label className="text-xs text-gray-500 mb-1 block">Custo</label>
                                       {(p.codigo || '').toUpperCase() === 'XX' ? (
                                         <input
+                                          key={`custo-${i}-${p.estoque_id || i}`}
+                                          ref={el => { if (el) custoInputRefs.current[i] = el; }}
                                           type="text"
                                           inputMode="decimal"
-                                          value={p._custoStr !== undefined ? p._custoStr : String(p.valor_custo || 0)}
+                                          defaultValue={String(p.valor_custo || 0)}
                                           onChange={e => {
-                                            const raw = e.target.value;
-                                            const num = parseFloat(raw.replace(',', '.'));
-                                            setForm(f => ({ ...f, pecas: f.pecas.map((x, idx) => idx !== i ? x : { ...x, _custoStr: raw, valor_custo: isNaN(num) ? x.valor_custo : num }) }));
-                                          }}
-                                          onBlur={e => {
-                                            const val = parseFloat(String(e.target.value).replace(',', '.')) || 0;
-                                            setForm(f => ({ ...f, pecas: f.pecas.map((x, idx) => idx !== i ? x : { ...x, _custoStr: String(val), valor_custo: val }) }));
+                                            const val = parseFloat(e.target.value.replace(',', '.'));
+                                            if (!isNaN(val)) setForm(f => ({ ...f, pecas: f.pecas.map((x, idx) => idx !== i ? x : { ...x, valor_custo: val }) }));
                                           }}
                                           className="input-dark text-yellow-400 text-sm"
                                           autoComplete="off"
