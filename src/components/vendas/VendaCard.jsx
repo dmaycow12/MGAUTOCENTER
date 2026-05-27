@@ -125,14 +125,13 @@ function InlineEdit({ value, onSave, placeholder = "", onNext, isPhone = false }
    );
 }
 
-export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh, onUpdate }) {
+export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh, onUpdate, camposVisiveis = { cliente: true, contato: true, veiculo: true, data: true, placa: true, km: true, pagamento: true, valor: true } }) {
   const notasOs = notas.filter(n => n.ordem_venda_id === os.id && n.status !== 'Rascunho');
   const navigate = useNavigate();
   const veiculoEditRef = useRef(null);
   const placaEditRef = useRef(null);
   const kmEditRef = useRef(null);
-  const [statusOpen, setStatusOpen] = useState(false);
-   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
    const [showAvisoStatus, setShowAvisoStatus] = useState(false);
    const [statusPendenteCard, setStatusPendenteCard] = useState(null);
    const [showAvisoExcluir, setShowAvisoExcluir] = useState(false);
@@ -147,14 +146,11 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
     onRefresh?.();
   };
 
-  const statusRef = useRef(null);
-  const statusBtnRef = useRef(null);
   const menuRef = useRef(null);
   const menuBtnRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
-      if (statusRef.current && !statusRef.current.contains(e.target) && statusBtnRef.current && !statusBtnRef.current.contains(e.target)) setStatusOpen(false);
       if (menuRef.current && !menuRef.current.contains(e.target) && menuBtnRef.current && !menuBtnRef.current.contains(e.target)) setMenuOpen(false);
     };
     document.addEventListener("mousedown", handler);
@@ -347,7 +343,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
       )}
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
-        <div className="flex items-center gap-2 px-3 py-2.5">
+        <div className="flex items-center gap-2 px-3 py-2.5 flex-wrap">
           <div ref={numeroEditRef} className="text-white text-sm font-bold"><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
           {(() => {
             const nfeProduto = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
@@ -359,6 +355,18 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
               </div>
             );
           })()}
+
+          <div className="flex gap-1 flex-1 min-w-full">
+            {["Aberto", "Orçamento", "Concluído"].filter(s => s !== os.status).map(s => (
+              <button key={s} onClick={() => alterarStatus(s)}
+                className="text-xs px-2.5 py-1 rounded-lg font-medium transition-all flex-1 border border-gray-700 bg-gray-800 text-gray-300 hover:text-white">
+                {s}
+              </button>
+            ))}
+            <button className="text-xs px-2.5 py-1 rounded-lg font-medium flex-1 whitespace-nowrap flex-shrink-0" style={{background: STATUS_STYLE[os.status]?.style?.background || "#374151", color: "#fff", border: "none"}}>
+              {os.status}
+            </button>
+          </div>
 
           {manualNFModal && (
             <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
@@ -388,32 +396,14 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
             </div>
           )}
 
-          <div className="relative flex-1">
-            <button ref={statusBtnRef} onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
-              className="w-full flex items-center justify-center gap-2 text-sm font-semibold hover:opacity-90 transition-all"
-              style={{...style.style, height: "34px", borderRadius: "8px"}}>
-              {os.status || "—"}
-              <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform ${statusOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {statusOpen && (
-              <div ref={statusRef} className="absolute left-0 top-full mt-1 z-[9999] overflow-hidden rounded-lg shadow-2xl w-full">
-                {STATUS_OPTIONS.filter(s => s !== os.status).map(s => (
-                  <button key={s} onClick={() => alterarStatus(s)}
-                    className="flex items-center justify-center text-sm font-semibold w-full"
-                    style={{ background: STATUS_STYLE[s].style.background, color: "#fff", height: "34px" }}>
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+
 
           <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all flex-shrink-0" title="Editar"><Pencil className="w-3.5 h-3.5" /></button>
           <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all flex-shrink-0" title="Imprimir"><Printer className="w-3.5 h-3.5" /></button>
           <button onClick={handleExcluir} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all flex-shrink-0" title="Excluir"><Trash2 className="w-3.5 h-3.5" /></button>
 
           <div className="relative flex-shrink-0">
-            <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
+            <button ref={menuBtnRef} onClick={() => { setMenuOpen(v => !v); }}
               className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
               <MoreVertical className="w-3.5 h-3.5" />
             </button>
@@ -435,38 +425,54 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
         </div>
 
         <div className="border-t border-gray-800 grid grid-cols-2 gap-0">
-          <div className="px-3 py-2.5 border-b border-r border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
-            <p className="text-white text-sm font-medium">{os.cliente_nome_fantasia || os.cliente_nome || "—"}</p>
-          </div>
-          <div className="px-3 py-2.5 border-b border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Contato</p>
-            <p className="text-gray-300 text-sm font-medium">{os.cliente_telefone || "—"}</p>
-          </div>
-          <div className="px-3 py-2.5 border-b border-r border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Veículo</p>
-            <p className="text-white text-sm font-medium">{os.veiculo_modelo || "—"}</p>
-          </div>
-          <div className="px-3 py-2.5 border-b border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Data</p>
-            <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
-          </div>
-          <div className="px-3 py-2.5 border-b border-r border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Placa</p>
-            <p className="text-white text-sm font-medium">{os.veiculo_placa?.toUpperCase() || "—"}</p>
-          </div>
-          <div className="px-3 py-2.5 border-b border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">KM</p>
-            <p className="text-white text-sm font-medium">{os.quilometragem || "—"}</p>
-          </div>
-          <div className="px-3 py-2.5 border-b border-r border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Pagamento</p>
-            <p className="text-white text-sm font-medium">{os.forma_pagamento || "—"}</p>
-          </div>
-          <div className="px-3 py-2.5 border-b border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>
-            <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
-          </div>
+          {camposVisiveis.cliente && (
+            <div className="px-3 py-2.5 border-b border-r border-gray-800">
+              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
+              <p className="text-white text-sm font-medium truncate">{os.cliente_nome_fantasia || os.cliente_nome || "—"}</p>
+            </div>
+          )}
+          {camposVisiveis.contato && (
+            <div className="px-3 py-2.5 border-b border-gray-800">
+              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Contato</p>
+              <p className="text-gray-300 text-sm font-medium truncate">{os.cliente_telefone || "—"}</p>
+            </div>
+          )}
+          {camposVisiveis.veiculo && (
+            <div className="px-3 py-2.5 border-b border-r border-gray-800">
+              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Veículo</p>
+              <p className="text-white text-sm font-medium truncate">{os.veiculo_modelo || "—"}</p>
+            </div>
+          )}
+          {camposVisiveis.data && (
+            <div className="px-3 py-2.5 border-b border-gray-800">
+              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Data</p>
+              <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
+            </div>
+          )}
+          {camposVisiveis.placa && (
+            <div className="px-3 py-2.5 border-b border-r border-gray-800">
+              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Placa</p>
+              <p className="text-white text-sm font-medium">{os.veiculo_placa?.toUpperCase() || "—"}</p>
+            </div>
+          )}
+          {camposVisiveis.km && (
+            <div className="px-3 py-2.5 border-b border-gray-800">
+              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">KM</p>
+              <p className="text-white text-sm font-medium">{os.quilometragem || "—"}</p>
+            </div>
+          )}
+          {camposVisiveis.pagamento && (
+            <div className="px-3 py-2.5 border-b border-r border-gray-800">
+              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Pagamento</p>
+              <p className="text-white text-sm font-medium truncate">{os.forma_pagamento || "—"}</p>
+            </div>
+          )}
+          {camposVisiveis.valor && (
+            <div className="px-3 py-2.5 border-b border-gray-800">
+              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>
+              <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
+            </div>
+          )}
         </div>
       </div>
     </>
