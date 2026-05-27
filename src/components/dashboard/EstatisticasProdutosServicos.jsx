@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { base44 } from "@/api/base44Client";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 function normalizar(str) {
@@ -19,6 +20,18 @@ const COLORS = ["#062C9B", "#1d4ed8", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"
 
 export default function EstatisticasProdutosServicos({ vendas, servicosCad = [], estoque = [] }) {
   const [aba, setAba] = useState(() => localStorage.getItem("eps_aba") || "produtos");
+  const [showDiag, setShowDiag] = useState(false);
+  const [diagData, setDiagData] = useState(null);
+  const [loadingDiag, setLoadingDiag] = useState(false);
+
+  const abrirDiagnostico = async () => {
+    setShowDiag(true);
+    if (diagData) return;
+    setLoadingDiag(true);
+    const res = await base44.functions.invoke('diagnosticarSemCodigo', {});
+    setDiagData(res.data);
+    setLoadingDiag(false);
+  };
   const [busca, setBusca] = useState("");
   const [mostrarTodos, setMostrarTodos] = useState(false);
   const [modoValor, setModoValor] = useState(() => localStorage.getItem("eps_modoValor") || "receita");
@@ -115,6 +128,67 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
           Total: <span className="text-green-400 font-bold">{fmt(totalAtual)}</span>
         </span>
       </div>
+
+      {/* Botão diagnóstico */}
+      <div className="flex justify-end">
+        <button onClick={abrirDiagnostico} className="text-xs px-3 py-1 rounded" style={{background:"#1f2937",color:"#f59e0b"}}>
+          ⚠ Itens sem código
+        </button>
+      </div>
+
+      {/* Modal diagnóstico */}
+      {showDiag && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{background:"rgba(0,0,0,0.8)"}}>
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-5 w-full max-w-3xl max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-bold text-sm">Vendas com itens SEM CÓDIGO</h3>
+              <button onClick={() => setShowDiag(false)} className="text-gray-400 hover:text-white text-lg">✕</button>
+            </div>
+            {loadingDiag ? (
+              <div className="text-gray-400 text-sm text-center py-8">Carregando...</div>
+            ) : diagData ? (
+              <>
+                <div className="mb-3 text-xs" style={{color:"#f59e0b"}}>
+                  {diagData.totalVendas} vendas • Receita não contabilizada: {fmt(diagData.totalReceita)}
+                </div>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-gray-500 border-b border-gray-700">
+                      <th className="text-left pb-1">Venda</th>
+                      <th className="text-left pb-1">Cliente</th>
+                      <th className="text-left pb-1">Status</th>
+                      <th className="text-left pb-1">Item sem código</th>
+                      <th className="text-right pb-1">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {diagData.vendas.map(v => [
+                      ...v.pecasSemCodigo.map((p, i) => (
+                        <tr key={v.id+'p'+i} className="border-b border-gray-800">
+                          {i === 0 && <td className="py-1 text-blue-400" rowSpan={v.pecasSemCodigo.length + v.servicosSemCodigo.length}>#{v.numero}</td>}
+                          {i === 0 && <td className="py-1 text-gray-300" rowSpan={v.pecasSemCodigo.length + v.servicosSemCodigo.length}>{v.cliente}</td>}
+                          {i === 0 && <td className="py-1 text-gray-400" rowSpan={v.pecasSemCodigo.length + v.servicosSemCodigo.length}>{v.status}</td>}
+                          <td className="py-1 text-yellow-300">[PEÇA] {p.descricao} x{p.quantidade}</td>
+                          <td className="py-1 text-right text-white">{fmt(p.valor * (p.quantidade || 1))}</td>
+                        </tr>
+                      )),
+                      ...v.servicosSemCodigo.map((s, i) => (
+                        <tr key={v.id+'s'+i} className="border-b border-gray-800">
+                          {i === 0 && v.pecasSemCodigo.length === 0 && <td className="py-1 text-blue-400" rowSpan={v.servicosSemCodigo.length}>#{v.numero}</td>}
+                          {i === 0 && v.pecasSemCodigo.length === 0 && <td className="py-1 text-gray-300" rowSpan={v.servicosSemCodigo.length}>{v.cliente}</td>}
+                          {i === 0 && v.pecasSemCodigo.length === 0 && <td className="py-1 text-gray-400" rowSpan={v.servicosSemCodigo.length}>{v.status}</td>}
+                          <td className="py-1 text-green-300">[SERV] {s.descricao} x{s.quantidade}</td>
+                          <td className="py-1 text-right text-white">{fmt(s.valor * (s.quantidade || 1))}</td>
+                        </tr>
+                      ))
+                    ])}
+                  </tbody>
+                </table>
+              </>
+            ) : null}
+          </div>
+        </div>
+      )}
 
       {/* Toggle Receita / Lucro */}
       <div className="flex gap-1 bg-gray-800 p-1 rounded-lg">
