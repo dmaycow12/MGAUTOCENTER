@@ -335,9 +335,10 @@ export default function Dashboard() {
           };
 
           const [saldoAno, saldoMesNum] = saldoMesSeguro.split("-").map(Number);
-          const totalRecebido = financeiro.filter(f => f.tipo === "Receita" && f.status === "Pago" && (f.data_pagamento || f.data_vencimento || "").startsWith(saldoMesSeguro)).reduce((acc, f) => acc + Number(f.valor || 0), 0);
-          const totalPago = financeiro.filter(f => f.tipo === "Despesa" && f.status === "Pago" && (f.data_pagamento || f.data_vencimento || "").startsWith(saldoMesSeguro)).reduce((acc, f) => acc + Number(f.valor || 0), 0);
-          const saldo = totalRecebido - totalPago;
+          const totalRecebido = financeiro.filter(f => f.tipo === "Receita" && f.status === "Pago" && (f.data_vencimento || "").startsWith(saldoMesSeguro)).reduce((acc, f) => acc + Number(f.valor || 0), 0);
+          const totalPago = financeiro.filter(f => f.tipo === "Despesa" && f.status === "Pago" && (f.data_vencimento || "").startsWith(saldoMesSeguro)).reduce((acc, f) => acc + Number(f.valor || 0), 0);
+          const saldoAnterior = financeiro.filter(f => f.status === "Pago" && (f.data_vencimento || "") < saldoMesSeguro).reduce((acc, f) => acc + (f.tipo === "Receita" ? 1 : -1) * Number(f.valor || 0), 0);
+          const saldo = saldoAnterior + totalRecebido - totalPago;
           return (
             <div className="rounded-2xl p-4" style={{background: "linear-gradient(135deg, #0a1929 0%, #132642 100%)", border: "1px solid #1e4d7b"}}>
               <div className="flex items-center justify-between mb-3">
@@ -354,6 +355,10 @@ export default function Dashboard() {
               </div>
               <div className="flex gap-2">
                 <div className="flex-1 rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1 min-w-0" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
+                  <span className="text-xs font-semibold text-gray-400 tracking-wide">Saldo Anterior</span>
+                  <span className="text-xs font-bold truncate" style={{color: saldoAnterior >= 0 ? "#60a5fa" : "#FF4444"}}>{saldoAnterior >= 0 ? fmt(saldoAnterior) : `- ${fmt(Math.abs(saldoAnterior))}`}</span>
+                </div>
+                <div className="flex-1 rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1 min-w-0" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
                   <span className="text-xs font-semibold text-gray-400 tracking-wide">Recebido</span>
                   <span className="text-xs font-bold text-green-400 truncate">{fmt(totalRecebido)}</span>
                 </div>
@@ -362,7 +367,7 @@ export default function Dashboard() {
                   <span className="text-xs font-bold text-red-400 truncate">{fmt(totalPago)}</span>
                 </div>
                 <div className="flex-1 rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1 min-w-0" style={{background: saldo >= 0 ? "#0d1b2a" : "#2a0d0d", border: saldo >= 0 ? "1px solid #1e3a5f" : "1px solid #5f1e1e"}}>
-                  <span className="text-xs font-semibold text-gray-400 tracking-wide">Saldo</span>
+                  <span className="text-xs font-semibold text-gray-400 tracking-wide">Saldo Real</span>
                   <span className="text-xs font-bold truncate" style={{color: saldo >= 0 ? "#00C957" : "#FF4444"}}>{saldo >= 0 ? fmt(saldo) : `- ${fmt(Math.abs(saldo))}`}</span>
                 </div>
               </div>
