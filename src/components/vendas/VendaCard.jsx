@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
@@ -347,8 +347,18 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
       )}
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
-        <div className="flex items-center gap-2 px-3 py-2.5 flex-wrap">
-          <div ref={numeroEditRef} className="min-w-max"><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
+        <div className="flex items-center gap-2 px-3 py-2.5">
+          <div ref={numeroEditRef} className="text-white text-sm font-bold"><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
+          {(() => {
+            const nfeProduto = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
+            const nfeServico = notasOs.find(n => n.tipo === 'NFSe');
+            return (
+              <div className="flex items-center gap-1.5">
+                {nfeProduto && <span className="text-xs text-gray-500">+ NF</span>}
+                {nfeServico && <span className="text-xs text-gray-500">+ NFSe</span>}
+              </div>
+            );
+          })()}
 
           {manualNFModal && (
             <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
@@ -378,10 +388,10 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
             </div>
           )}
 
-          <div className="relative flex-1 min-w-max">
+          <div className="relative flex-1">
             <button ref={statusBtnRef} onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
-              className="flex items-center justify-center gap-2 text-sm font-semibold hover:opacity-90 transition-all"
-              style={{...style.style, height: "34px", borderRadius: "8px", minWidth: "120px"}}>
+              className="w-full flex items-center justify-center gap-2 text-sm font-semibold hover:opacity-90 transition-all"
+              style={{...style.style, height: "34px", borderRadius: "8px"}}>
               {os.status || "—"}
               <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform ${statusOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -424,99 +434,40 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
           </div>
         </div>
 
-        <div className="border-t border-gray-800 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0">
+        <div className="border-t border-gray-800 grid grid-cols-2 gap-0">
           <div className="px-3 py-2.5 border-b border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
-            <p className="text-white text-sm font-medium truncate">{os.cliente_nome_fantasia || os.cliente_nome || "—"}</p>
-          </div>
-          <div className="px-3 py-2.5 border-b border-r border-gray-800 md:col-span-1 lg:col-span-1">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Contato</p>
-            <p className="text-gray-300 text-sm font-medium truncate">{os.cliente_telefone || "—"}</p>
+            <p className="text-white text-sm font-medium">{os.cliente_nome_fantasia || os.cliente_nome || "—"}</p>
           </div>
           <div className="px-3 py-2.5 border-b border-gray-800">
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Contato</p>
+            <p className="text-gray-300 text-sm font-medium">{os.cliente_telefone || "—"}</p>
+          </div>
+          <div className="px-3 py-2.5 border-b border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Veículo</p>
-            <p className="text-white text-sm font-medium truncate">{os.veiculo_modelo || "—"}</p>
+            <p className="text-white text-sm font-medium">{os.veiculo_modelo || "—"}</p>
+          </div>
+          <div className="px-3 py-2.5 border-b border-gray-800">
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Data</p>
+            <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
           </div>
           <div className="px-3 py-2.5 border-b border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Placa</p>
             <p className="text-white text-sm font-medium">{os.veiculo_placa?.toUpperCase() || "—"}</p>
           </div>
-          <div className="px-3 py-2.5 border-b border-r border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Data</p>
-            <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
-          </div>
           <div className="px-3 py-2.5 border-b border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">KM</p>
             <p className="text-white text-sm font-medium">{os.quilometragem || "—"}</p>
           </div>
-
+          <div className="px-3 py-2.5 border-b border-r border-gray-800">
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Pagamento</p>
+            <p className="text-white text-sm font-medium">{os.forma_pagamento || "—"}</p>
+          </div>
           <div className="px-3 py-2.5 border-b border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>
             <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
           </div>
         </div>
-
-        {((os.pecas?.length || 0) + (os.servicos?.length || 0)) > 0 && (
-          <div className="border-t border-gray-800 overflow-x-auto">
-            <div className="text-xs text-gray-400 px-3 py-2 bg-gray-800/50 font-semibold tracking-wider">
-              Produtos e Serviços
-            </div>
-            {(os.pecas || []).length > 0 && (
-              <div className="px-3 py-2.5 border-b border-gray-800">
-                <div className="text-xs text-gray-400 font-bold mb-2 uppercase">Peças</div>
-                <table className="w-full text-xs text-gray-300">
-                  <thead className="text-gray-500 uppercase tracking-wider text-xs">
-                    <tr>
-                      <th className="text-left pb-1.5">Código</th>
-                      <th className="text-left pb-1.5 min-w-64">Descrição</th>
-                      <th className="text-center pb-1.5 min-w-12">Qtd</th>
-                      <th className="text-center pb-1.5 min-w-16">Unit.</th>
-                      <th className="text-right pb-1.5 min-w-20">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(os.pecas || []).map((p, i) => (
-                      <tr key={i} className="border-t border-gray-800/30 hover:bg-gray-800/20 transition-colors">
-                        <td className="py-1.5 text-gray-500">{p.codigo || "—"}</td>
-                        <td className="py-1.5 text-white font-medium" title={p.descricao}>{p.descricao || "—"}</td>
-                        <td className="py-1.5 text-center">{p.quantidade || 1}</td>
-                        <td className="py-1.5 text-center text-gray-400">{fmtValor(p.valor_unitario)}</td>
-                        <td className="py-1.5 text-right text-green-400 font-semibold">{fmtValor(p.valor_total)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            {(os.servicos || []).length > 0 && (
-              <div className="px-3 py-2.5">
-                <div className="text-xs text-gray-400 font-bold mb-2 uppercase">Serviços</div>
-                <table className="w-full text-xs text-gray-300">
-                  <thead className="text-gray-500 uppercase tracking-wider text-xs">
-                    <tr>
-                      <th className="text-left pb-1.5">Código</th>
-                      <th className="text-left pb-1.5 min-w-64">Descrição</th>
-                      <th className="text-center pb-1.5 min-w-12">Qtd</th>
-                      <th className="text-center pb-1.5 min-w-16">Unit.</th>
-                      <th className="text-right pb-1.5 min-w-20">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(os.servicos || []).map((s, i) => (
-                      <tr key={i} className="border-t border-gray-800/30 hover:bg-gray-800/20 transition-colors">
-                        <td className="py-1.5 text-gray-500">{s.codigo || "—"}</td>
-                        <td className="py-1.5 text-white font-medium" title={s.descricao}>{s.descricao || "—"}</td>
-                        <td className="py-1.5 text-center">{s.quantidade ?? 1}</td>
-                        <td className="py-1.5 text-center text-gray-400">{fmtValor(s.valor)}</td>
-                        <td className="py-1.5 text-right text-green-400 font-semibold">{fmtValor(Number(s.valor || 0) * Number(s.quantidade ?? 1))}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </>
   );
