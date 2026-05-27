@@ -219,12 +219,20 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
           return { ...svc, codigo: match?.codigo || "101" };
         }),
         pecas: f.pecas.map(p => {
-          if (p.codigo) return p;
           const match = e.find(est =>
             (p.estoque_id && est.id === p.estoque_id) ||
-            est.descricao?.toLowerCase().trim() === p.descricao?.toLowerCase().trim()
+            (!p.estoque_id && est.descricao?.toLowerCase().trim() === p.descricao?.toLowerCase().trim())
           );
-          return match ? { ...p, codigo: match.codigo, estoque_id: p.estoque_id || match.id } : p;
+          if (match) {
+            const isXX = (p.codigo || match.codigo || '').toUpperCase() === 'XX';
+            return {
+              ...p,
+              codigo: p.codigo || match.codigo,
+              estoque_id: p.estoque_id || match.id,
+              valor_custo: isXX ? (p.valor_custo || 0) : Number(match.valor_custo || 0),
+            };
+          }
+          return p;
         }),
       }));
     });
@@ -987,7 +995,21 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                       </div>
                                       <div className="w-20 flex-shrink-0">
                                         <label className="text-xs text-gray-500 mb-1 block">Custo</label>
-                                        <div className="input-dark text-yellow-400 text-sm">R$ {Number(p.valor_custo || 0).toFixed(2)}</div>
+                                        {(p.codigo || '').toUpperCase() === 'XX' ? (
+                                          <input
+                                            type="text"
+                                            inputMode="decimal"
+                                            value={p.valor_custo || 0}
+                                            onChange={e => {
+                                              const val = Number(String(e.target.value).replace(',','.')) || 0;
+                                              setForm(f => ({ ...f, pecas: f.pecas.map((x, idx) => idx === i ? { ...x, valor_custo: val } : x) }));
+                                            }}
+                                            className="input-dark text-yellow-400 text-sm"
+                                            autoComplete="off"
+                                          />
+                                        ) : (
+                                          <div className="input-dark text-yellow-400 text-sm">R$ {Number(p.valor_custo || 0).toFixed(2)}</div>
+                                        )}
                                       </div>
                                       <div className="w-24 flex-shrink-0">
                                         <label className="text-xs text-gray-500 mb-1 block">Total</label>
