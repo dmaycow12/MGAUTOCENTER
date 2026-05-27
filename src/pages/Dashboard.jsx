@@ -307,7 +307,6 @@ export default function Dashboard() {
             )}
           </div>
         </div>
-        <FluxoMes financeiro={financeiroPeriodo} />
 
         {/* Saldo do Caixa */}
         {(() => {
@@ -340,13 +339,13 @@ export default function Dashboard() {
               </div>
             </div>
           );
-        })()}
-      </div>
+          })()}
+          <FluxoMes financeiro={financeiroPeriodo} />
+          </div>
 
 
 
-
-      {/* Cards Produtos e Ativos */}
+          {/* Cards Produtos e Ativos */}
       {(() => {
         const totalItens = estoque.length;
         const estoqueBaixo = estoque.filter(e => Number(e.quantidade || 0) <= Number(e.estoque_minimo || 0)).length;
