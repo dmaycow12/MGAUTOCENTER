@@ -349,28 +349,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
       <div className="bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
         <div className="flex items-center gap-2 px-3 py-2.5 flex-wrap">
           <div ref={numeroEditRef} className="min-w-max"><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {(() => {
-              const nfeProduto = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
-              const nfeServico = notasOs.find(n => n.tipo === 'NFSe');
-              return (
-                <>
-                  {nfeProduto
-                    ? <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => emitirNF(nfeProduto.tipo || 'NFe')}>{nfeProduto.tipo}(#{nfeProduto.numero})</span>
-                    : os.nfe_manual
-                      ? <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer" onClick={() => emitirNF('NFe')}>{normalizarNF(os.nfe_manual)}</span>
-                      : <button onClick={() => emitirNF('NFe')} className="text-gray-600 hover:text-green-400 text-xs transition-all">+ NF</button>
-                  }
-                  {nfeServico
-                    ? <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => emitirNF('NFSe')}>NFSe(#{nfeServico.numero})</span>
-                    : os.nfse_manual
-                      ? <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer" onClick={() => emitirNF('NFSe')}>{normalizarNF(os.nfse_manual)}</span>
-                      : <button onClick={() => emitirNF('NFSe')} className="text-gray-600 hover:text-blue-400 text-xs transition-all">+ NFSe</button>
-                  }
-                </>
-              );
-            })()}
-          </div>
+
           {manualNFModal && (
             <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
               <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm p-5 space-y-4">
@@ -470,14 +449,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">KM</p>
             <p className="text-white text-sm font-medium">{os.quilometragem || "—"}</p>
           </div>
-          <div className="px-3 py-2.5 border-b border-r border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Pagamento</p>
-            <p className="text-white text-sm font-medium">{os.forma_pagamento || "A Combinar"}</p>
-          </div>
-          <div className="px-3 py-2.5 border-b border-r border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Parcelas</p>
-            <p className="text-white text-sm font-medium">{os.parcelas || 1}</p>
-          </div>
+
           <div className="px-3 py-2.5 border-b border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>
             <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
