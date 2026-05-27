@@ -69,8 +69,6 @@ export default function Dashboard() {
   const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(() => localStorage.getItem("dash_usandoOutro") === "true");
   const [customRange, setCustomRange] = useState(() => { try { return JSON.parse(localStorage.getItem("dash_customRange")); } catch { return null; } });
   const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
-  const hojeKey = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
-  const [saldoMesKey, setSaldoMesKey] = useState(() => localStorage.getItem("dash_saldoMes") || hojeKey);
   const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
   const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
   const periodoDropRef = useRef(null);
@@ -313,45 +311,14 @@ export default function Dashboard() {
 
         {/* Saldo do Caixa */}
         {(() => {
-          // Meses disponíveis: com movimentação paga + mês atual + meses futuros com lançamentos
-          const mesesComMovimento = new Set(financeiro
-            .filter(f => f.status === "Pago" && (f.data_pagamento || f.data_vencimento))
-            .map(f => (f.data_pagamento || f.data_vencimento).substring(0, 7)));
-          const mesesFuturos = new Set(financeiro
-            .filter(f => (f.data_vencimento || "") > hojeKey)
-            .map(f => f.data_vencimento.substring(0, 7)));
-          const todosMeses = Array.from(new Set([...mesesComMovimento, ...mesesFuturos, hojeKey])).sort();
-          const idxAtual = todosMeses.indexOf(saldoMesKey);
-          const saldoMesSeguro = idxAtual === -1 ? hojeKey : saldoMesKey;
-          const idxSeguro = idxAtual === -1 ? todosMeses.indexOf(hojeKey) : idxAtual;
-
-          const navSaldo = (dir) => {
-            const novoIdx = idxSeguro + dir;
-            if (novoIdx >= 0 && novoIdx < todosMeses.length) {
-              const novo = todosMeses[novoIdx];
-              setSaldoMesKey(novo);
-              localStorage.setItem("dash_saldoMes", novo);
-            }
-          };
-
-          const [saldoAno, saldoMesNum] = saldoMesSeguro.split("-").map(Number);
-          const totalRecebido = financeiro.filter(f => f.tipo === "Receita" && f.status === "Pago" && (f.data_vencimento || "").startsWith(saldoMesSeguro)).reduce((acc, f) => acc + Number(f.valor || 0), 0);
-          const totalPago = financeiro.filter(f => f.tipo === "Despesa" && f.status === "Pago" && (f.data_vencimento || "").startsWith(saldoMesSeguro)).reduce((acc, f) => acc + Number(f.valor || 0), 0);
-          const saldoAnterior = financeiro.filter(f => f.status === "Pago" && (f.data_vencimento || "") < saldoMesSeguro).reduce((acc, f) => acc + (f.tipo === "Receita" ? 1 : -1) * Number(f.valor || 0), 0);
+          const totalRecebido = financeiro.filter(f => f.tipo === "Receita" && f.status === "Pago" && f.data_vencimento >= periodoRange.inicio && f.data_vencimento <= periodoRange.fim).reduce((acc, f) => acc + Number(f.valor || 0), 0);
+          const totalPago = financeiro.filter(f => f.tipo === "Despesa" && f.status === "Pago" && f.data_vencimento >= periodoRange.inicio && f.data_vencimento <= periodoRange.fim).reduce((acc, f) => acc + Number(f.valor || 0), 0);
+          const saldoAnterior = financeiro.filter(f => f.status === "Pago" && (f.data_vencimento || "") < periodoRange.inicio).reduce((acc, f) => acc + (f.tipo === "Receita" ? 1 : -1) * Number(f.valor || 0), 0);
           const saldo = saldoAnterior + totalRecebido - totalPago;
           return (
             <div className="rounded-2xl p-4" style={{background: "linear-gradient(135deg, #0a1929 0%, #132642 100%)", border: "1px solid #1e4d7b"}}>
-              <div className="flex items-center justify-between mb-3">
+              <div className="mb-3">
                 <h2 className="text-white font-bold text-lg">Saldo do Caixa</h2>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => navSaldo(-1)} disabled={idxSeguro === 0} className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-white/10 disabled:opacity-30 transition-all" style={{background:"rgba(255,255,255,0.07)"}}>
-                    <ChevronLeft className="w-3 h-3 text-white" />
-                  </button>
-                  <span className="text-white text-xs font-semibold px-2 min-w-[110px] text-center">{MESES[saldoMesNum - 1]} - {saldoAno}</span>
-                  <button onClick={() => navSaldo(1)} disabled={idxSeguro === todosMeses.length - 1} className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-white/10 disabled:opacity-30 transition-all" style={{background:"rgba(255,255,255,0.07)"}}>
-                    <ChevronRight className="w-3 h-3 text-white" />
-                  </button>
-                </div>
               </div>
               <div className="flex gap-2">
                 <div className="flex-1 rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1 min-w-0" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
