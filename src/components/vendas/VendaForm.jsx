@@ -963,11 +963,99 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
               </div>
 
               <Section title="Produtos">
-                <div className="text-gray-400 text-sm mb-4">Total Produtos: {fmt(form.valor_pecas)}</div>
+                <DragDropContext onDragEnd={r => onDragEnd(r, 'pecas')}>
+                  <Droppable droppableId="pecas">
+                    {provided => (
+                      <div ref={provided.innerRef} {...provided.droppableProps}>
+                        {(form.pecas || []).map((p, i) => (
+                          <Draggable key={p.estoque_id ? `peca-${p.estoque_id}-${i}` : `peca-new-${i}`} draggableId={p.estoque_id ? `peca-${p.estoque_id}-${i}` : `peca-new-${i}`} index={i} isDragDisabled={p._new}>
+                            {(drag, snap) => (
+                              <div ref={drag.innerRef} {...drag.draggableProps} className={`bg-gray-800/50 rounded-xl p-3 mb-2 ${snap.isDragging ? 'ring-2 ring-orange-500' : ''}`}>
+                                {p._new ? (
+                                  <div className="flex gap-2 items-center">
+                                    <div className="flex-1">
+                                      <SearchableSelect
+                                        placeholder="Selecionar produto..."
+                                        options={estoque.map(e => ({ value: e.id, label: e.descricao, sublabel: e.codigo ? `Cód: ${e.codigo}` : '' }))}
+                                        onSelect={opt => { const item = estoque.find(e => e.id === opt.value); if (item) selecionarProduto(i, item); }}
+                                      />
+                                    </div>
+                                    <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2"><Trash2 className="w-4 h-4" /></button>
+                                  </div>
+                                ) : (
+                                  <div className="flex gap-2 items-center text-sm">
+                                    <div {...drag.dragHandleProps} className="cursor-grab"><GripVertical className="w-4 h-4 text-gray-500" /></div>
+                                    <span className="flex-1">{p.descricao}</span>
+                                    <span className="text-gray-400">{p.quantidade}x</span>
+                                    <span className="w-20 text-right font-semibold">R$ {Number(p.valor_total || 0).toFixed(2)}</span>
+                                    <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+                <div className="flex items-center justify-between mt-2">
+                  <button onClick={addPeca} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
+                    <Plus className="w-4 h-4" /> Adicionar
+                  </button>
+                  <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
+                    <span className="text-sm font-semibold text-orange-400">R$ {fmt(form.valor_pecas)}</span>
+                  </div>
+                </div>
               </Section>
 
               <Section title="Serviços">
-                <div className="text-gray-400 text-sm mb-4">Total Serviços: {fmt(form.valor_servicos)}</div>
+                <DragDropContext onDragEnd={r => onDragEnd(r, 'servicos')}>
+                  <Droppable droppableId="servicos">
+                    {provided => (
+                      <div ref={provided.innerRef} {...provided.droppableProps}>
+                        {(form.servicos || []).map((s, i) => (
+                          <Draggable key={s.codigo ? `servico-${s.codigo}-${i}` : `servico-new-${i}`} draggableId={s.codigo ? `servico-${s.codigo}-${i}` : `servico-new-${i}`} index={i} isDragDisabled={s._new}>
+                            {(drag, snap) => (
+                              <div ref={drag.innerRef} {...drag.draggableProps} className={`bg-gray-800/50 rounded-xl p-3 mb-2 ${snap.isDragging ? 'ring-2 ring-orange-500' : ''}`}>
+                                {s._new ? (
+                                  <div className="flex gap-2 items-center">
+                                    <div className="flex-1">
+                                      <SearchableSelect
+                                        placeholder="Selecionar serviço..."
+                                        options={servicosCad.map(sv => ({ value: sv.id, label: sv.descricao, sublabel: sv.valor ? `R$ ${Number(sv.valor).toFixed(2)}` : '' }))}
+                                        onSelect={opt => { const item = servicosCad.find(sv => sv.id === opt.value); if (item) selecionarServico(i, item); }}
+                                      />
+                                    </div>
+                                    <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2"><Trash2 className="w-4 h-4" /></button>
+                                  </div>
+                                ) : (
+                                  <div className="flex gap-2 items-center text-sm">
+                                    <div {...drag.dragHandleProps} className="cursor-grab"><GripVertical className="w-4 h-4 text-gray-500" /></div>
+                                    <span className="flex-1">{s.descricao}</span>
+                                    <span className="text-gray-400">{s.quantidade ?? 1}x</span>
+                                    <span className="w-20 text-right font-semibold">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</span>
+                                    <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+                <div className="flex items-center justify-between mt-2">
+                  <button onClick={addServico} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
+                    <Plus className="w-4 h-4" /> Adicionar
+                  </button>
+                  <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
+                    <span className="text-sm font-semibold text-orange-400">R$ {fmt(form.valor_servicos)}</span>
+                  </div>
+                </div>
               </Section>
 
               <Section title="Pagamento">
