@@ -342,9 +342,16 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
       )}
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-        {/* Topo: Número | Botões */}
-        <div className="flex items-center justify-between gap-2 px-3 py-3 border-b border-gray-800">
-          <div className="text-white text-base font-bold"><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
+        {/* Topo: Número + Data | Status buttons | Ações */}
+        <div className="flex items-center justify-between gap-3 px-3 py-3 border-b border-gray-800">
+          <div className="flex items-center gap-3">
+            <div className="text-white text-base font-bold"><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
+            <span className="text-gray-500 text-sm">{fmtData(os.data_entrada)}</span>
+          </div>
+          <div className="flex gap-1">
+            <button onClick={() => alterarStatus("Aberto")} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${os.status === "Aberto" ? "bg-red-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}>Aberto</button>
+            <button onClick={() => alterarStatus("Concluído")} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${os.status === "Concluído" ? "bg-green-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}>Concluído</button>
+          </div>
           <div className="flex gap-1 flex-shrink-0">
             <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Editar"><Pencil className="w-3.5 h-3.5" /></button>
             <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Imprimir"><Printer className="w-3.5 h-3.5" /></button>
@@ -372,20 +379,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
           </div>
         </div>
 
-        {/* Status em abas */}
-        <div className="flex gap-0 border-b border-gray-800">
-          {STATUS_OPTIONS.map(s => (
-            <button key={s} onClick={() => alterarStatus(s)}
-              className="flex-1 py-2.5 text-xs font-medium transition-all border-b-2"
-              style={{
-                borderColor: s === os.status ? (STATUS_STYLE[s]?.style?.background || "#374151") : "transparent",
-                background: s === os.status ? STATUS_STYLE[s]?.style?.background + "20" : "transparent",
-                color: s === os.status ? (STATUS_STYLE[s]?.style?.color || "#fff") : "#9ca3af"
-              }}>
-              {s}
-            </button>
-          ))}
-        </div>
+
 
         {manualNFModal && (
           <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
@@ -429,12 +423,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
               <p className="text-white text-sm font-medium truncate">{os.veiculo_modelo || "—"}</p>
             </div>
           )}
-          {camposVisiveis.data && (
-            <div className="px-3 py-2.5 border-r border-b border-gray-800">
-              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Data</p>
-              <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
-            </div>
-          )}
+
           {camposVisiveis.placa && (
             <div className="px-3 py-2.5 border-b border-gray-800">
               <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Placa</p>
@@ -447,12 +436,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
               <p className="text-white text-sm font-medium">{os.quilometragem || "—"}</p>
             </div>
           )}
-          {camposVisiveis.pagamento && (
-            <div className="px-3 py-2.5 border-b border-gray-800">
-              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Pagamento</p>
-              <p className="text-white text-sm font-medium truncate">{os.forma_pagamento || "—"}</p>
-            </div>
-          )}
+
           {camposVisiveis.valor && (
             <div className="px-3 py-2.5 border-r border-gray-800">
               <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Valor</p>
