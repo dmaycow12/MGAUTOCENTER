@@ -81,6 +81,10 @@ export default function NotasFiscais() {
   const [filtroTipo, setFiltroTipo] = useState(() => { try { const s = localStorage.getItem("nf_filtroTipo"); return s ? JSON.parse(s) : ["Saída"]; } catch { return ["Saída"]; } });
   const [filtroModeloNF, setFiltroModeloNF] = useState(() => { try { const s = localStorage.getItem("nf_filtroModelo"); const parsed = s ? JSON.parse(s) : null; return parsed && parsed.length > 0 ? parsed : ["NFe", "NFCe", "NFSe"]; } catch { return ["NFe", "NFCe", "NFSe"]; } });
   const [gerandoZip, setGerandoZip] = useState(false);
+  const [showImportBackup, setShowImportBackup] = useState(false);
+  const [importandoBackup, setImportandoBackup] = useState(false);
+  const [resultadoImportBackup, setResultadoImportBackup] = useState(null);
+  const [nfseParaImportar, setNfseParaImportar] = useState(null);
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
   const [atualizandoStatus, setAtualizandoStatus] = useState(null);
@@ -1116,6 +1120,9 @@ export default function NotasFiscais() {
         <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
           <BarChart2 className="w-4 h-4" /> Sintegra
         </button>
+        <button onClick={() => { setShowImportBackup(true); setResultadoImportBackup(null); setNfseParaImportar(null); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#062C9B", color:"#fff"}} onMouseEnter={e => e.currentTarget.style.background="#041a4d"} onMouseLeave={e => e.currentTarget.style.background="#062C9B"}>
+          <Upload className="w-4 h-4" /> Backup
+        </button>
         <button onClick={() => exportarZip()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
           {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />} {gerandoZip ? 'Exportando...' : 'Exportar'}
         </button>
@@ -1696,6 +1703,98 @@ export default function NotasFiscais() {
           <div className="text-center">
             <p className="text-white text-xl font-bold">Transmitindo nota fiscal...</p>
             <p className="text-gray-400 text-sm mt-2">Aguardando autorização da SEFAZ</p>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Importar NFSe do Backup */}
+      {showImportBackup && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-gray-800">
+              <div>
+                <h2 className="text-white font-semibold">Importar NFSe do Backup</h2>
+                <p className="text-gray-500 text-xs mt-0.5">Selecione o arquivo .zip ou .json do backup completo</p>
+              </div>
+              <button onClick={() => setShowImportBackup(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              {!nfseParaImportar ? (
+                <label className="flex flex-col items-center justify-center gap-3 w-full border-2 border-dashed border-gray-700 hover:border-blue-500 rounded-xl p-8 cursor-pointer transition-all group">
+                  <Upload className="w-8 h-8 text-gray-500 group-hover:text-blue-400 transition-all" />
+                  <div className="text-center">
+                    <p className="text-gray-300 text-sm font-medium">Clique para selecionar</p>
+                    <p className="text-gray-500 text-xs mt-1">Arquivo .zip ou .json do backup completo</p>
+                  </div>
+                  <input type="file" accept=".zip,.json" className="hidden" onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      let jsonData;
+                      if (file.name.endsWith('.zip')) {
+                        const JSZipLib = (await import('jszip')).default;
+                        const zip = await JSZipLib.loadAsync(file);
+                        const jsonFile = Object.values(zip.files).find(f => f.name.endsWith('.json') && !f.dir);
+                        if (!jsonFile) { alert('Nenhum arquivo JSON encontrado no ZIP.'); return; }
+                        const text = await jsonFile.async('text');
+                        jsonData = JSON.parse(text);
+                      } else {
+                        const text = await file.text();
+                        jsonData = JSON.parse(text);
+                      }
+                      // Suporta formato { backup: { NotaFiscal: [...] } } ou { NotaFiscal: [...] }
+                      const notasArray = jsonData?.backup?.NotaFiscal || jsonData?.NotaFiscal || [];
+                      const nfse = notasArray.filter(n => n.tipo === 'NFSe');
+                      if (nfse.length === 0) { alert('Nenhuma NFSe encontrada no backup.'); return; }
+                      setNfseParaImportar(nfse);
+                    } catch (err) {
+                      alert('Erro ao ler arquivo: ' + err.message);
+                    }
+                  }} />
+                </label>
+              ) : (
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 space-y-2">
+                  <p className="text-blue-300 font-semibold text-sm">{nfseParaImportar.length} NFSe encontradas no backup</p>
+                  <p className="text-gray-400 text-xs">As que já existirem no banco serão ignoradas automaticamente.</p>
+                </div>
+              )}
+              {resultadoImportBackup && (
+                <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm ${
+                  resultadoImportBackup.sucesso
+                    ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                    : 'bg-red-500/10 border-red-500/20 text-red-400'
+                }`}>
+                  {resultadoImportBackup.sucesso ? <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
+                  <span>{resultadoImportBackup.mensagem || resultadoImportBackup.erro}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
+              <button onClick={() => { setShowImportBackup(false); setNfseParaImportar(null); setResultadoImportBackup(null); }} className="px-4 py-2 text-sm text-white rounded-lg font-medium bg-gray-700 hover:bg-gray-600 transition-all">Fechar</button>
+              {nfseParaImportar && !resultadoImportBackup?.sucesso && (
+                <button
+                  onClick={async () => {
+                    setImportandoBackup(true);
+                    try {
+                      const res = await base44.functions.invoke('importarNfseDeBackup', { registros: nfseParaImportar });
+                      setResultadoImportBackup(res.data);
+                      if (res.data?.sucesso) load();
+                    } catch (e) {
+                      setResultadoImportBackup({ sucesso: false, erro: e.message });
+                    }
+                    setImportandoBackup(false);
+                  }}
+                  disabled={importandoBackup}
+                  className="px-6 py-2 text-sm text-white rounded-lg font-medium disabled:opacity-50 flex items-center gap-2"
+                  style={{background: '#062C9B'}}
+                  onMouseEnter={e => !importandoBackup && (e.currentTarget.style.background = '#041a4d')}
+                  onMouseLeave={e => e.currentTarget.style.background = '#062C9B'}
+                >
+                  {importandoBackup && <RefreshCw className="w-4 h-4 animate-spin" />}
+                  {importandoBackup ? 'Importando...' : `Importar ${nfseParaImportar.length} NFSe`}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
