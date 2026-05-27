@@ -65,8 +65,8 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
         mapProdutos[desc].custo += custoPeca;
         mapProdutos[desc].quantidade += Number(p.quantidade || 1);
         mapProdutos[desc].vezes += 1;
-        // Por código (ignora XX1 e sem código)
-        if (p.codigo && p.codigo.trim() && p.codigo.toUpperCase().trim() !== 'XX1') {
+        // Por código (ignora sem código)
+        if (p.codigo && p.codigo.trim()) {
           const cod = p.codigo.toUpperCase().trim();
           // Sempre usa a descrição real do cadastro, nunca a editada na venda
           const itemCadastro = estoque.find(e => e.codigo?.toUpperCase().trim() === cod);
