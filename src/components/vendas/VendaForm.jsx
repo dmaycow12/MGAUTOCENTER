@@ -197,8 +197,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const [descontoInput, setDescontoInput] = useState(0);
   const [pagandoParcela, setPagandoParcela] = useState(null);
   const custoInputRefs = useRef({});
-  // Track XX custo strings separately to avoid decimal typing issues
-  const xxCustoRef = useRef({});
+  const [xxCustos, setXXCustos] = useState({});
 
   useEffect(() => {
     Promise.all([
@@ -721,20 +720,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       const pecasLimpas = (form.pecas || []).map(({ _new, _custoStr, ...p }, idx) => {
         const isXX = (p.codigo || '').toUpperCase() === 'XX';
         if (isXX) {
-          // Try multiple sources: xxCustoRef > DOM ref > form state
-          let val = p.valor_custo || 0;
-          const refStr = xxCustoRef.current[idx];
-          if (refStr !== undefined && refStr !== '') {
-            const parsed = parseFloat(String(refStr).replace(',', '.'));
-            if (!isNaN(parsed)) val = parsed;
-          } else {
-            const domEl = custoInputRefs.current[idx];
-            if (domEl) {
-              const parsed = parseFloat(domEl.value.replace(',', '.'));
-              if (!isNaN(parsed)) val = parsed;
-            }
-          }
-          console.log(`[SAVE] XX peca idx=${idx}, xxCustoRef=${refStr}, valor_custo=${val}`);
+          const custoStr = xxCustos[idx];
+          const val = custoStr !== undefined
+            ? (parseFloat(String(custoStr).replace(',', '.')) || 0)
+            : (p.valor_custo || 0);
           return { ...p, valor_custo: val };
         }
         return { ...p };
@@ -1023,16 +1012,15 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                         <input
                                           type="text"
                                           inputMode="decimal"
-                                          value={xxCustoRef.current[i] !== undefined ? xxCustoRef.current[i] : String(p.valor_custo || 0)}
+                                          value={xxCustos[i] !== undefined ? xxCustos[i] : String(p.valor_custo || 0)}
                                           onChange={e => {
                                             const raw = e.target.value;
-                                            xxCustoRef.current[i] = raw;
-                                            const num = parseFloat(raw.replace(',', '.'));
-                                            setForm(f => ({ ...f, pecas: f.pecas.map((x, xi) => xi !== i ? x : { ...x, valor_custo: isNaN(num) ? (x.valor_custo || 0) : num }) }));
+                                            setXXCustos(prev => ({ ...prev, [i]: raw }));
                                           }}
                                           onBlur={e => {
-                                            const val = parseFloat(e.target.value.replace(',', '.')) || 0;
-                                            xxCustoRef.current[i] = String(val);
+                                            const raw = e.target.value;
+                                            const val = parseFloat(raw.replace(',', '.')) || 0;
+                                            setXXCustos(prev => ({ ...prev, [i]: String(val) }));
                                             setForm(f => ({ ...f, pecas: f.pecas.map((x, xi) => xi !== i ? x : { ...x, valor_custo: val }) }));
                                           }}
                                           className="input-dark text-yellow-400 text-sm"
