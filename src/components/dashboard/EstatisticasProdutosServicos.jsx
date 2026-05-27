@@ -18,10 +18,10 @@ function fmt(v) {
 const COLORS = ["#062C9B", "#1d4ed8", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"];
 
 export default function EstatisticasProdutosServicos({ vendas, servicosCad = [], estoque = [] }) {
-  const [aba, setAba] = useState("servicos");
+  const [aba, setAba] = useState(() => localStorage.getItem("eps_aba") || "servicos");
   const [busca, setBusca] = useState("");
   const [mostrarTodos, setMostrarTodos] = useState(false);
-  const [modoValor, setModoValor] = useState("receita");
+  const [modoValor, setModoValor] = useState(() => localStorage.getItem("eps_modoValor") || "receita");
 
   const { rankServicos, rankProdutos, rankServicosCodigo, rankProdutosCodigo, totalServicos, totalProdutos } = useMemo(() => {
     const mapServicos = {};
@@ -92,11 +92,13 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
 
   const rankAtualServicos = rankServicosCodigo;
   const rankAtualProdutos = rankProdutosCodigo;
-  const lista = (aba === "servicos" ? rankAtualServicos : rankAtualProdutos).map(item => ({
-    ...item,
-    valor: modoValor === "lucro" ? Math.max(0, item.receita - item.custo) : item.receita,
-    label: item.codigo ? `${item.codigo} - ${item.descricao}` : item.descricao,
-  }));
+  const lista = (aba === "servicos" ? rankAtualServicos : rankAtualProdutos)
+    .map(item => ({
+      ...item,
+      valor: modoValor === "lucro" ? Math.max(0, item.receita - item.custo) : item.receita,
+      label: item.codigo ? `${item.codigo} - ${item.descricao}` : item.descricao,
+    }))
+    .sort((a, b) => b.valor - a.valor);
   const totalAtual = lista.reduce((acc, i) => acc + i.valor, 0);
 
   const listaFiltrada = lista.filter(i =>
@@ -117,14 +119,14 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
       {/* Toggle Receita / Lucro */}
       <div className="flex gap-1 bg-gray-800 p-1 rounded-lg">
         <button
-          onClick={() => setModoValor("receita")}
+          onClick={() => { setModoValor("receita"); localStorage.setItem("eps_modoValor", "receita"); }}
           className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
           style={modoValor === "receita" ? { background: "#374151", color: "#fff" } : { color: "#9ca3af" }}
         >
           Receita Bruta
         </button>
         <button
-          onClick={() => setModoValor("lucro")}
+          onClick={() => { setModoValor("lucro"); localStorage.setItem("eps_modoValor", "lucro"); }}
           className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
           style={modoValor === "lucro" ? { background: "#166534", color: "#86efac" } : { color: "#9ca3af" }}
         >
@@ -137,14 +139,14 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
       {/* Abas */}
       <div className="flex gap-1 bg-gray-800 p-1 rounded-lg">
         <button
-          onClick={() => { setAba("servicos"); setMostrarTodos(false); setBusca(""); }}
+          onClick={() => { setAba("servicos"); localStorage.setItem("eps_aba", "servicos"); setMostrarTodos(false); setBusca(""); }}
           className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
           style={aba === "servicos" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
         >
           Serviços ({rankServicos.length})
         </button>
         <button
-          onClick={() => { setAba("produtos"); setMostrarTodos(false); setBusca(""); }}
+          onClick={() => { setAba("produtos"); localStorage.setItem("eps_aba", "produtos"); setMostrarTodos(false); setBusca(""); }}
           className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
           style={aba === "produtos" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
         >
@@ -154,13 +156,13 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
 
       {/* Gráfico top 8 */}
       {topChart.length > 0 && (
-        <ResponsiveContainer width="100%" height={180}>
+        <ResponsiveContainer width="100%" height={topChart.length * 26 + 10}>
           <BarChart data={topChart} layout="vertical" margin={{ top: 0, right: 80, left: 0, bottom: 0 }}>
             <XAxis type="number" hide />
-            <YAxis type="category" dataKey="label" width={120} tick={{ fill: "#9ca3af", fontSize: 9 }} axisLine={false} tickLine={false}
-              tickFormatter={v => v.length > 18 ? v.substring(0, 18) + "…" : v}
+            <YAxis type="category" dataKey="label" width={170} tick={{ fill: "#9ca3af", fontSize: 9 }} axisLine={false} tickLine={false}
+              tickFormatter={v => v.length > 26 ? v.substring(0, 26) + "…" : v}
             />
-            <Bar dataKey="valor" radius={[0, 4, 4, 0]} label={{ position: 'insideRight', formatter: (v) => fmt(v), fill: '#fff', fontSize: 10, dx: 75 }}>
+            <Bar dataKey="valor" barSize={14} radius={[0, 4, 4, 0]} label={{ position: 'insideRight', formatter: (v) => fmt(v), fill: '#fff', fontSize: 10, dx: 75 }}>
               {topChart.map((_, i) => (
                 <Cell key={i} fill={COLORS[Math.min(i, COLORS.length - 1)]} />
               ))}
