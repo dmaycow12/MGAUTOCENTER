@@ -1310,10 +1310,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                           <div className="grid grid-cols-2 gap-2">
                             <div>
                               <label className="text-xs text-gray-400 block mb-1">Vencimento</label>
-                              <input type="date" value={p.vencimento || ""} onChange={e => updateParcela(i, "vencimento", e.target.value)} className="input-dark text-sm w-full" />
+                              <input type="date" value={p.vencimento || ""} onChange={e => updateParcela(i, "vencimento", e.target.value)} className="input-dark text-sm w-full" style={{paddingRight: '8px'}} />
                             </div>
                             <div>
-                              <label className="text-xs text-gray-400 block mb-1">Valor (R$)</label>
+                              <label className="text-xs text-gray-400 block mb-1">Valor</label>
                               <input type="text" inputMode="decimal" value={p.valor} onChange={e => updateParcela(i, "valor", e.target.value)} className="input-dark text-sm w-full" />
                             </div>
                           </div>
