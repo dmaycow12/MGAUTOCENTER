@@ -728,9 +728,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         }
         return { ...p };
       });
-      // DIAGNÓSTICO TEMPORÁRIO
-      const xxInfo = pecasLimpas.filter(p => (p.codigo||'').toUpperCase()==='XX').map((p,i) => `[${i}] custo=${p.valor_custo}`);
-      if (xxInfo.length > 0) alert('CUSTO XX A SALVAR:\n' + xxInfo.join('\n') + '\n\nxxCustos state: ' + JSON.stringify(xxCustos));
+
       const servicosLimpos = (form.servicos || []).map(({ _new, ...s }) => ({ ...s, codigo: s.codigo?.trim() || "101" }));
       let formFinal = { ...form, pecas: pecasLimpas, servicos: servicosLimpos, parcelas_detalhes: parcelasNormalizadas, forma_pagamento: formaPrincipal };
 
