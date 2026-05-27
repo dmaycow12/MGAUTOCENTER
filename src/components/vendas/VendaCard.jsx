@@ -158,7 +158,6 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
   }, []);
 
   const alterarStatus = async (novoStatus) => {
-    setStatusOpen(false);
     const eraConcluido = os.status === "Concluído";
     const ficaConcluido = novoStatus === "Concluído";
     const eraOrcamento = os.status === "Orçamento";
@@ -342,135 +341,128 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
         </div>
       )}
 
-      <div className="bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
-        <div className="flex items-center gap-2 px-3 py-2.5 flex-wrap">
-          <div ref={numeroEditRef} className="text-white text-sm font-bold"><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
-          {(() => {
-            const nfeProduto = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
-            const nfeServico = notasOs.find(n => n.tipo === 'NFSe');
-            return (
-              <div className="flex items-center gap-1.5">
-                {nfeProduto && <span className="text-xs text-gray-500">+ NF</span>}
-                {nfeServico && <span className="text-xs text-gray-500">+ NFSe</span>}
-              </div>
-            );
-          })()}
-
-          <div className="flex gap-1 flex-1 min-w-full">
-            {["Aberto", "Orçamento", "Concluído"].filter(s => s !== os.status).map(s => (
-              <button key={s} onClick={() => alterarStatus(s)}
-                className="text-xs px-2.5 py-1 rounded-lg font-medium transition-all flex-1 border border-gray-700 bg-gray-800 text-gray-300 hover:text-white">
-                {s}
+      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        {/* Topo: Número | Botões */}
+        <div className="flex items-center justify-between gap-2 px-3 py-3 border-b border-gray-800">
+          <div className="text-white text-base font-bold"><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
+          <div className="flex gap-1 flex-shrink-0">
+            <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Editar"><Pencil className="w-3.5 h-3.5" /></button>
+            <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Imprimir"><Printer className="w-3.5 h-3.5" /></button>
+            <button onClick={handleExcluir} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all" title="Excluir"><Trash2 className="w-3.5 h-3.5" /></button>
+            <div className="relative flex-shrink-0">
+              <button ref={menuBtnRef} onClick={() => { setMenuOpen(v => !v); }}
+                className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
+                <MoreVertical className="w-3.5 h-3.5" />
               </button>
-            ))}
-            <button className="text-xs px-2.5 py-1 rounded-lg font-medium flex-1 whitespace-nowrap flex-shrink-0" style={{background: STATUS_STYLE[os.status]?.style?.background || "#374151", color: "#fff", border: "none"}}>
-              {os.status}
-            </button>
-          </div>
-
-          {manualNFModal && (
-            <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
-              <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm p-5 space-y-4">
-                <h3 className="text-white font-semibold">Histórico Manual de NF</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs text-gray-400 mb-1">Tipo</label>
-                    <select value={manualNFModal.tipo} onChange={e => setManualNFModal(m => ({...m, tipo: e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm">
-                      {manualNFModal.campo === 'nfe_manual' ? <><option value="NFCe">NFCe</option><option value="NFe">NFe</option></> : <option value="NFSe">NFSe</option>}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-400 mb-1">Número</label>
-                    <input value={manualNFModal.numero} onChange={e => setManualNFModal(m => ({...m, numero: e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm" placeholder="170" autoFocus autoComplete="off" />
-                  </div>
+              {menuOpen && (
+                <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-[9999]">
+                  {menuItems.map((item, i) => {
+                    const Icon = item.icon;
+                    return (
+                      <button key={i} onClick={item.action}
+                        className="w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-700 transition-all">
+                        <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                        {item.label}
+                      </button>
+                    );
+                  })}
                 </div>
-                <p className="text-gray-500 text-xs">Prévia: <span className="text-green-400 font-mono">{manualNFModal.tipo}{manualNFModal.numero || '170'}</span></p>
-                <div className="flex gap-2 justify-end">
-                  {(manualNFModal.campo === 'nfe_manual' ? os.nfe_manual : os.nfse_manual) && (
-                    <button onClick={async () => { await saveField(manualNFModal.campo, ''); setManualNFModal(null); }} className="px-3 py-1.5 text-xs text-red-400 border border-red-500/30 rounded-lg">Remover</button>
-                  )}
-                  <button onClick={() => setManualNFModal(null)} className="px-3 py-1.5 text-xs text-gray-400 border border-gray-700 rounded-lg">Cancelar</button>
-                  <button onClick={async () => { await saveField(manualNFModal.campo, `${manualNFModal.tipo}${manualNFModal.numero}`); setManualNFModal(null); }} className="px-4 py-1.5 text-xs font-semibold rounded-lg" style={{background:'#00ff00',color:'#000'}}>Salvar</button>
-                </div>
-              </div>
+              )}
             </div>
-          )}
-
-
-
-          <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all flex-shrink-0" title="Editar"><Pencil className="w-3.5 h-3.5" /></button>
-          <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all flex-shrink-0" title="Imprimir"><Printer className="w-3.5 h-3.5" /></button>
-          <button onClick={handleExcluir} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all flex-shrink-0" title="Excluir"><Trash2 className="w-3.5 h-3.5" /></button>
-
-          <div className="relative flex-shrink-0">
-            <button ref={menuBtnRef} onClick={() => { setMenuOpen(v => !v); }}
-              className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
-              <MoreVertical className="w-3.5 h-3.5" />
-            </button>
-            {menuOpen && (
-              <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-[9999]">
-                {menuItems.map((item, i) => {
-                  const Icon = item.icon;
-                  return (
-                    <button key={i} onClick={item.action}
-                      className="w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-700 transition-all">
-                      <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                      {item.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </div>
         </div>
 
-        <div className="border-t border-gray-800 grid grid-cols-2 gap-0">
+        {/* Status em abas */}
+        <div className="flex gap-0 border-b border-gray-800">
+          {STATUS_OPTIONS.map(s => (
+            <button key={s} onClick={() => alterarStatus(s)}
+              className="flex-1 py-2.5 text-xs font-medium transition-all border-b-2"
+              style={{
+                borderColor: s === os.status ? (STATUS_STYLE[s]?.style?.background || "#374151") : "transparent",
+                background: s === os.status ? STATUS_STYLE[s]?.style?.background + "20" : "transparent",
+                color: s === os.status ? (STATUS_STYLE[s]?.style?.color || "#fff") : "#9ca3af"
+              }}>
+              {s}
+            </button>
+          ))}
+        </div>
+
+        {manualNFModal && (
+          <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
+            <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm p-5 space-y-4">
+              <h3 className="text-white font-semibold">Histórico Manual de NF</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Tipo</label>
+                  <select value={manualNFModal.tipo} onChange={e => setManualNFModal(m => ({...m, tipo: e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm">
+                    {manualNFModal.campo === 'nfe_manual' ? <><option value="NFCe">NFCe</option><option value="NFe">NFe</option></> : <option value="NFSe">NFSe</option>}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Número</label>
+                  <input value={manualNFModal.numero} onChange={e => setManualNFModal(m => ({...m, numero: e.target.value}))} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm" placeholder="170" autoFocus autoComplete="off" />
+                </div>
+              </div>
+              <p className="text-gray-500 text-xs">Prévia: <span className="text-green-400 font-mono">{manualNFModal.tipo}{manualNFModal.numero || '170'}</span></p>
+              <div className="flex gap-2 justify-end">
+                {(manualNFModal.campo === 'nfe_manual' ? os.nfe_manual : os.nfse_manual) && (
+                  <button onClick={async () => { await saveField(manualNFModal.campo, ''); setManualNFModal(null); }} className="px-3 py-1.5 text-xs text-red-400 border border-red-500/30 rounded-lg">Remover</button>
+                )}
+                <button onClick={() => setManualNFModal(null)} className="px-3 py-1.5 text-xs text-gray-400 border border-gray-700 rounded-lg">Cancelar</button>
+                <button onClick={async () => { await saveField(manualNFModal.campo, `${manualNFModal.tipo}${manualNFModal.numero}`); setManualNFModal(null); }} className="px-4 py-1.5 text-xs font-semibold rounded-lg" style={{background:'#00ff00',color:'#000'}}>Salvar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Grid 2 colunas com campos */}
+        <div className="grid grid-cols-2 gap-0">
           {camposVisiveis.cliente && (
-            <div className="px-3 py-2.5 border-b border-r border-gray-800">
-              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
+            <div className="px-3 py-2.5 border-r border-b border-gray-800">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Cliente</p>
               <p className="text-white text-sm font-medium truncate">{os.cliente_nome_fantasia || os.cliente_nome || "—"}</p>
             </div>
           )}
-          {camposVisiveis.contato && (
-            <div className="px-3 py-2.5 border-b border-gray-800">
-              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Contato</p>
-              <p className="text-gray-300 text-sm font-medium truncate">{os.cliente_telefone || "—"}</p>
-            </div>
-          )}
           {camposVisiveis.veiculo && (
-            <div className="px-3 py-2.5 border-b border-r border-gray-800">
-              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Veículo</p>
+            <div className="px-3 py-2.5 border-b border-gray-800">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Veículo</p>
               <p className="text-white text-sm font-medium truncate">{os.veiculo_modelo || "—"}</p>
             </div>
           )}
           {camposVisiveis.data && (
-            <div className="px-3 py-2.5 border-b border-gray-800">
-              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Data</p>
+            <div className="px-3 py-2.5 border-r border-b border-gray-800">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Data</p>
               <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
             </div>
           )}
           {camposVisiveis.placa && (
-            <div className="px-3 py-2.5 border-b border-r border-gray-800">
-              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Placa</p>
+            <div className="px-3 py-2.5 border-b border-gray-800">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Placa</p>
               <p className="text-white text-sm font-medium">{os.veiculo_placa?.toUpperCase() || "—"}</p>
             </div>
           )}
           {camposVisiveis.km && (
-            <div className="px-3 py-2.5 border-b border-gray-800">
-              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">KM</p>
+            <div className="px-3 py-2.5 border-r border-b border-gray-800">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">KM</p>
               <p className="text-white text-sm font-medium">{os.quilometragem || "—"}</p>
             </div>
           )}
           {camposVisiveis.pagamento && (
-            <div className="px-3 py-2.5 border-b border-r border-gray-800">
-              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Pagamento</p>
+            <div className="px-3 py-2.5 border-b border-gray-800">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Pagamento</p>
               <p className="text-white text-sm font-medium truncate">{os.forma_pagamento || "—"}</p>
             </div>
           )}
           {camposVisiveis.valor && (
-            <div className="px-3 py-2.5 border-b border-gray-800">
-              <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>
+            <div className="px-3 py-2.5 border-r border-gray-800">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Valor</p>
               <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
+            </div>
+          )}
+          {camposVisiveis.contato && (
+            <div className="px-3 py-2.5">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Contato</p>
+              <p className="text-gray-300 text-sm font-medium truncate">{os.cliente_telefone || "—"}</p>
             </div>
           )}
         </div>
