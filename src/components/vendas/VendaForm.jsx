@@ -1069,12 +1069,12 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                     <div className="md:hidden space-y-2">
                                       <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-700">
                                         <div className="flex items-start justify-between gap-2 mb-2">
-                                          <div className="flex-1 min-w-0">
-                                            <label className="text-xs text-gray-400 block mb-1">Produto</label>
-                                            <p className="text-sm text-gray-300 truncate font-medium">{p.descricao || '—'}</p>
+                                            <div className="flex-1 min-w-0">
+                                              <label className="text-xs text-gray-400 block mb-1">Produto</label>
+                                              <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} className="input-dark text-sm w-full" autoComplete="off" />
+                                            </div>
+                                            <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-1 mt-6"><Trash2 className="w-4 h-4" /></button>
                                           </div>
-                                          <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-1 mt-1"><Trash2 className="w-4 h-4" /></button>
-                                        </div>
                                         <div className="grid grid-cols-3 gap-2">
                                           <div>
                                             <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
@@ -1103,13 +1103,13 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   </Droppable>
                 </DragDropContext>
                 <div className="flex items-center justify-between">
-                  <button onClick={addPeca} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
-                    <Plus className="w-4 h-4" /> Adicionar
-                  </button>
-                  <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
-                    <span className="text-sm font-semibold text-orange-400">Total Produtos: {fmt(form.valor_pecas)}</span>
-                  </div>
-                </div>
+                   <button onClick={addPeca} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
+                     <Plus className="w-4 h-4" /> Adicionar
+                   </button>
+                   <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
+                     <span className="text-sm font-semibold text-orange-400">{fmt(form.valor_pecas)}</span>
+                   </div>
+                 </div>
               </Section>
 
               <Section title="Serviços">
@@ -1207,12 +1207,12 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                    <div className="md:hidden space-y-2">
                                      <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-700">
                                        <div className="flex items-start justify-between gap-2 mb-2">
-                                         <div className="flex-1 min-w-0">
-                                           <label className="text-xs text-gray-400 block mb-1">Serviço</label>
-                                           <p className="text-sm text-gray-300 truncate font-medium">{s.descricao || '—'}</p>
+                                           <div className="flex-1 min-w-0">
+                                             <label className="text-xs text-gray-400 block mb-1">Serviço</label>
+                                             <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark text-sm w-full" autoComplete="off" />
+                                           </div>
+                                           <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-1 mt-6"><Trash2 className="w-4 h-4" /></button>
                                          </div>
-                                         <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-1 mt-1"><Trash2 className="w-4 h-4" /></button>
-                                       </div>
                                        <div className="grid grid-cols-3 gap-2">
                                          <div>
                                            <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
@@ -1241,13 +1241,13 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   </Droppable>
                 </DragDropContext>
                 <div className="flex items-center justify-between">
-                  <button onClick={addServico} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
-                    <Plus className="w-4 h-4" /> Adicionar
-                  </button>
-                  <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
-                    <span className="text-sm font-semibold text-orange-400">Total Serviços: R$ {fmt(form.valor_servicos)}</span>
-                  </div>
-                </div>
+                   <button onClick={addServico} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
+                     <Plus className="w-4 h-4" /> Adicionar
+                   </button>
+                   <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
+                     <span className="text-sm font-semibold text-orange-400">{fmt(form.valor_servicos)}</span>
+                   </div>
+                 </div>
               </Section>
 
               <Section title="Pagamento">
