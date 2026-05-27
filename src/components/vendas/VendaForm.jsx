@@ -1261,22 +1261,25 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
         {/* Lucro Bruto */}
         {(() => {
-          const custoTotal = (form.pecas || []).reduce((acc, p) => acc + Number(p.valor_custo || 0) * Number(p.quantidade || 1), 0);
-          const lucroPecas = form.valor_pecas - custoTotal;
-          const lucroBruto = form.valor_servicos + lucroPecas;
+          const custoPecas = (form.pecas || []).reduce((acc, p) => acc + Number(p.valor_custo || 0) * Number(p.quantidade || 1), 0);
+          const custoServicos = (form.servicos || []).reduce((acc, s) => acc + Number(s.valor_custo || 0) * Number(s.quantidade ?? 1), 0);
+          const custoTotal = custoPecas + custoServicos;
+          const lucroMaoDeObra = form.valor_servicos - custoServicos;
+          const lucroPecas = form.valor_pecas - custoPecas;
+          const lucroBruto = lucroMaoDeObra + lucroPecas;
           return (
             <div className="mx-5 mb-4 p-3 rounded-xl border border-green-500/30 bg-green-500/5">
               <div className="grid grid-cols-4 gap-3 text-center">
                 <div>
                   <div className="text-xs text-gray-400 mb-1">Lucro Mão de Obra</div>
-                  <div className="text-sm font-bold text-green-400">{fmt(form.valor_servicos)}</div>
+                  <div className={`text-sm font-bold ${lucroMaoDeObra >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmt(lucroMaoDeObra)}</div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-400 mb-1">Lucro Peças</div>
                   <div className={`text-sm font-bold ${lucroPecas >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmt(lucroPecas)}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-400 mb-1">Custo Peças</div>
+                  <div className="text-xs text-gray-400 mb-1">Custo Total</div>
                   <div className="text-sm font-bold text-red-400">{fmt(custoTotal)}</div>
                 </div>
                 <div>

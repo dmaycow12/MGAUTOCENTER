@@ -256,10 +256,19 @@ export default function Vendas() {
   });
   const totalPatio = ordensComFiltrosBase.filter(o => !!(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo)).reduce((acc, o) => acc + (o.valor_total || 0), 0);
   const totalBalcao = ordensComFiltrosBase.filter(o => !(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo)).reduce((acc, o) => acc + (o.valor_total || 0), 0);
+  const totalCusto = ordensComFiltrosBase.reduce((acc, o) => {
+    const custoPecas = (o.pecas || []).reduce((s, p) => s + Number(p.valor_custo || 0) * Number(p.quantidade || 1), 0);
+    const custoServicos = (o.servicos || []).reduce((s, sv) => s + Number(sv.valor_custo || 0) * Number(sv.quantidade ?? 1), 0);
+    return acc + custoPecas + custoServicos;
+  }, 0);
+  const totalLucroServicos = ordensComFiltrosBase.reduce((acc, o) => {
+    const custoServicos = (o.servicos || []).reduce((s, sv) => s + Number(sv.valor_custo || 0) * Number(sv.quantidade ?? 1), 0);
+    return acc + (o.valor_servicos || 0) - custoServicos;
+  }, 0);
   const totalLucroBruto = ordensComFiltrosBase.reduce((acc, o) => {
-    const custoTotal = (o.pecas || []).reduce((s, p) => s + Number(p.valor_custo || 0) * Number(p.quantidade || 1), 0);
-    const lucroPecas = (o.valor_pecas || 0) - custoTotal;
-    return acc + (o.valor_servicos || 0) + lucroPecas;
+    const custoPecas = (o.pecas || []).reduce((s, p) => s + Number(p.valor_custo || 0) * Number(p.quantidade || 1), 0);
+    const custoServicos = (o.servicos || []).reduce((s, sv) => s + Number(sv.valor_custo || 0) * Number(sv.quantidade ?? 1), 0);
+    return acc + (o.valor_servicos || 0) - custoServicos + (o.valor_pecas || 0) - custoPecas;
   }, 0);
   const fmtTotal = v => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 
@@ -315,19 +324,33 @@ export default function Vendas() {
           ))}
         </div>
 
-        {/* Cards de totais */}
-        <div className="flex gap-2">
+        {/* Cards de totais - linha 1 */}
+        <div className="grid grid-cols-3 gap-2">
           {[
             { label: "PÁTIO", value: totalPatio },
             { label: "BALCÃO", value: totalBalcao },
             { label: "TOTAL", value: totalPatio + totalBalcao },
-            { label: "LUCRO BRUTO", value: totalLucroBruto, color: "#10b981" },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="flex-1 rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
+          ].map(({ label, value }) => (
+            <div key={label} className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
               <span className="text-xs font-semibold text-gray-400 tracking-wide">{label}</span>
               <span className="text-sm font-bold text-green-400">{fmtTotal(value)}</span>
             </div>
           ))}
+        </div>
+        {/* Cards de totais - linha 2 */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
+            <span className="text-xs font-semibold text-gray-400 tracking-wide">CUSTO</span>
+            <span className="text-sm font-bold text-red-400">{fmtTotal(totalCusto)}</span>
+          </div>
+          <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
+            <span className="text-xs font-semibold text-gray-400 tracking-wide">SERVIÇOS</span>
+            <span className={`text-sm font-bold ${totalLucroServicos >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmtTotal(totalLucroServicos)}</span>
+          </div>
+          <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
+            <span className="text-xs font-semibold text-gray-400 tracking-wide">LUCRO BRUTO</span>
+            <span className={`text-sm font-bold ${totalLucroBruto >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmtTotal(totalLucroBruto)}</span>
+          </div>
         </div>
 
         {/* Linha 3: filtro período */}
