@@ -1245,9 +1245,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                  <Field label="Desconto atual (R$)">
-                    <div className="input-dark text-gray-400 text-sm">{fmt(form.desconto)}</div>
-                  </Field>
                   <Field label="Nº de Parcelas">
                     <input value={form.parcelas} onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} className="input-dark" autoComplete="off" />
                   </Field>
