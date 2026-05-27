@@ -1066,27 +1066,31 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                      </div>
                                    </div>
                                    {/* Mobile */}
-                                   <div className="md:hidden grid gap-2 grid-cols-2">
-                                     <div className="col-span-2">
-                                       <label className="text-xs text-gray-500 mb-1 block">Produto</label>
-                                       <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
-                                     </div>
-                                     <div>
-                                       <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
-                                       <input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
-                                     </div>
-                                     <div>
-                                       <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                                       <input type="text" inputMode="decimal" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" autoComplete="off" />
-                                     </div>
-                                     <div className="col-span-2 flex items-center justify-between">
-                                       <div>
-                                         <label className="text-xs text-gray-500 mb-1 block">Total</label>
-                                         <div className="text-gray-300 text-sm font-semibold">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
-                                       </div>
-                                       <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 p-2"><Trash2 className="w-4 h-4" /></button>
-                                     </div>
-                                   </div>
+                                    <div className="md:hidden space-y-2">
+                                      <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-700">
+                                        <div className="flex items-start justify-between gap-2 mb-2">
+                                          <div className="flex-1 min-w-0">
+                                            <label className="text-xs text-gray-400 block mb-1">Produto</label>
+                                            <p className="text-sm text-gray-300 truncate font-medium">{p.descricao || '—'}</p>
+                                          </div>
+                                          <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-1 mt-1"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2">
+                                          <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
+                                            <input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark text-sm" inputMode="numeric" autoComplete="off" />
+                                          </div>
+                                          <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
+                                            <input type="text" inputMode="decimal" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark text-sm" autoComplete="off" />
+                                          </div>
+                                          <div>
+                                            <label className="text-xs text-gray-500 mb-1 block">Total</label>
+                                            <div className="input-dark text-sm text-orange-400 font-semibold text-center">{Number(p.valor_total || 0).toFixed(2)}</div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -1200,25 +1204,29 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                      </div>
                                    </div>
                                    {/* Mobile */}
-                                   <div className="md:hidden grid gap-2 grid-cols-2">
-                                     <div className="col-span-2">
-                                       <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
-                                       <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
-                                     </div>
-                                     <div>
-                                       <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
-                                       <input value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
-                                     </div>
-                                     <div>
-                                       <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                                       <input type="text" inputMode="decimal" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" autoComplete="off" />
-                                     </div>
-                                     <div className="col-span-2 flex items-center justify-between">
-                                       <div>
-                                         <label className="text-xs text-gray-500 mb-1 block">Total</label>
-                                         <div className="text-gray-300 text-sm font-semibold">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
+                                   <div className="md:hidden space-y-2">
+                                     <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-700">
+                                       <div className="flex items-start justify-between gap-2 mb-2">
+                                         <div className="flex-1 min-w-0">
+                                           <label className="text-xs text-gray-400 block mb-1">Serviço</label>
+                                           <p className="text-sm text-gray-300 truncate font-medium">{s.descricao || '—'}</p>
+                                         </div>
+                                         <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-1 mt-1"><Trash2 className="w-4 h-4" /></button>
                                        </div>
-                                       <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 p-2"><Trash2 className="w-4 h-4" /></button>
+                                       <div className="grid grid-cols-3 gap-2">
+                                         <div>
+                                           <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
+                                           <input value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark text-sm" inputMode="numeric" autoComplete="off" />
+                                         </div>
+                                         <div>
+                                           <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
+                                           <input type="text" inputMode="decimal" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark text-sm" autoComplete="off" />
+                                         </div>
+                                         <div>
+                                           <label className="text-xs text-gray-500 mb-1 block">Total</label>
+                                           <div className="input-dark text-sm text-orange-400 font-semibold text-center">{(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
+                                         </div>
+                                       </div>
                                      </div>
                                    </div>
                                   </div>
