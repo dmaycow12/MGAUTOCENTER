@@ -121,14 +121,14 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
         <button
           onClick={() => { setModoValor("receita"); localStorage.setItem("eps_modoValor", "receita"); }}
           className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
-          style={modoValor === "receita" ? { background: "#374151", color: "#fff" } : { color: "#9ca3af" }}
+          style={modoValor === "receita" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
         >
           Receita Bruta
         </button>
         <button
           onClick={() => { setModoValor("lucro"); localStorage.setItem("eps_modoValor", "lucro"); }}
           className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
-          style={modoValor === "lucro" ? { background: "#166534", color: "#86efac" } : { color: "#9ca3af" }}
+          style={modoValor === "lucro" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
         >
           Lucro Real
         </button>
