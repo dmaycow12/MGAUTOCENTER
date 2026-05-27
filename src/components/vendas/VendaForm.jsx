@@ -196,7 +196,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const [showDadosVeiculo, setShowDadosVeiculo] = useState(false);
   const [descontoInput, setDescontoInput] = useState(0);
   const [pagandoParcela, setPagandoParcela] = useState(null);
-  const [custoXXInputs, setCustoXXInputs] = useState({});
 
   useEffect(() => {
     Promise.all([
@@ -702,19 +701,11 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       setErroTelefone("O telefone de contato deve ter exatamente 10 ou 11 dígitos (DDD + número).\nEx: 34 3822 2085 ou 34 98885 1245");
       return;
     }
-    // Flush any pending XX custo inputs before saving
-    const pecasFlush = form.pecas.map((p, i) => {
-      if ((p.codigo || '').toUpperCase() === 'XX' && custoXXInputs[i] !== undefined) {
-        const val = parseFloat(String(custoXXInputs[i]).replace(',', '.')) || 0;
-        return { ...p, valor_custo: val };
-      }
-      return p;
-    });
-    const pecasPendentes = (pecasFlush || []).filter(p => p._new);
+    const pecasPendentes = (form.pecas || []).filter(p => p._new);
     const servicosPendentes = (form.servicos || []).filter(s => s._new);
     if (pecasPendentes.length > 0) return alert("Selecione o produto antes de salvar. Há produto(s) adicionados sem seleção.");
     if (servicosPendentes.length > 0) return alert("Selecione o serviço antes de salvar. Há serviço(s) adicionados sem seleção.");
-    const pecasSemCodigo = form.status !== "Orçamento" ? (pecasFlush || []).filter(p => !p.codigo?.trim()) : [];
+    const pecasSemCodigo = form.status !== "Orçamento" ? (form.pecas || []).filter(p => !p.codigo?.trim()) : [];
     const servicosSemCodigo = form.status !== "Orçamento" ? (form.servicos || []).filter(s => !s.codigo?.trim()) : [];
     if (pecasSemCodigo.length > 0) return alert(`Produto(s) sem código: ${pecasSemCodigo.map(p => p.descricao || 'sem descrição').join(', ')}. Preencha o código antes de salvar.`);
     if (servicosSemCodigo.length > 0) return alert(`Serviço(s) sem código: ${servicosSemCodigo.map(s => s.descricao || 'sem descrição').join(', ')}. Preencha o código antes de salvar.`);
@@ -724,7 +715,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     try {
       const parcelasNormalizadas = parcelasRef.current.map(p => ({ ...p, valor: Number(p.valor) || 0 }));
       const formaPrincipal = parcelasNormalizadas[0]?.forma_pagamento || form.forma_pagamento || "A Combinar";
-      const pecasLimpas = (pecasFlush || []).map(({ _new, ...p }) => p);
+      const pecasLimpas = (form.pecas || []).map(({ _new, _custoStr, ...p }) => ({
+        ...p,
+        valor_custo: _custoStr !== undefined ? (parseFloat(_custoStr.replace(',', '.')) || p.valor_custo || 0) : (p.valor_custo || 0)
+      }));
       const servicosLimpos = (form.servicos || []).map(({ _new, ...s }) => ({ ...s, codigo: s.codigo?.trim() || "101" }));
       let formFinal = { ...form, pecas: pecasLimpas, servicos: servicosLimpos, parcelas_detalhes: parcelasNormalizadas, forma_pagamento: formaPrincipal };
 
@@ -1008,17 +1002,15 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                         <input
                                           type="text"
                                           inputMode="decimal"
-                                          value={custoXXInputs[i] !== undefined ? custoXXInputs[i] : String(p.valor_custo || 0)}
+                                          value={p._custoStr !== undefined ? p._custoStr : String(p.valor_custo || 0)}
                                           onChange={e => {
                                             const raw = e.target.value;
-                                            setCustoXXInputs(prev => ({ ...prev, [i]: raw }));
-                                            const val = parseFloat(String(raw).replace(',', '.'));
-                                            if (!isNaN(val)) setForm(f => ({ ...f, pecas: f.pecas.map((x, idx) => idx === i ? { ...x, valor_custo: val } : x) }));
+                                            const num = parseFloat(raw.replace(',', '.'));
+                                            setForm(f => ({ ...f, pecas: f.pecas.map((x, idx) => idx !== i ? x : { ...x, _custoStr: raw, valor_custo: isNaN(num) ? x.valor_custo : num }) }));
                                           }}
                                           onBlur={e => {
                                             const val = parseFloat(String(e.target.value).replace(',', '.')) || 0;
-                                            setCustoXXInputs(prev => ({ ...prev, [i]: String(val) }));
-                                            setForm(f => ({ ...f, pecas: f.pecas.map((x, idx) => idx === i ? { ...x, valor_custo: val } : x) }));
+                                            setForm(f => ({ ...f, pecas: f.pecas.map((x, idx) => idx !== i ? x : { ...x, _custoStr: String(val), valor_custo: val }) }));
                                           }}
                                           className="input-dark text-yellow-400 text-sm"
                                           autoComplete="off"
