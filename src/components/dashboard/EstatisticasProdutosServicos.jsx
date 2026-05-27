@@ -22,6 +22,7 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
   const [busca, setBusca] = useState("");
   const [mostrarTodos, setMostrarTodos] = useState(false);
   const [modoAgrupamento, setModoAgrupamento] = useState("codigo");
+  const [modoValor, setModoValor] = useState("receita");
 
   const { rankServicos, rankProdutos, rankServicosCodigo, rankProdutosCodigo, totalServicos, totalProdutos } = useMemo(() => {
     const mapServicos = {};
@@ -35,17 +36,20 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
       (venda.servicos || []).forEach(s => {
         const desc = normalizar(s.descricao || "SEM NOME");
         const total = Number(s.valor || 0) * Number(s.quantidade || 1);
+        const custo = Number(s.valor_custo || 0) * Number(s.quantidade || 1);
         const codigoServico = (s.codigo && s.codigo.trim()) ? s.codigo.trim() : servicosCad.find(sc => sc.descricao?.toLowerCase().trim() === (s.descricao || '').toLowerCase().trim())?.codigo || '';
-        if (!mapServicos[desc]) mapServicos[desc] = { descricao: desc, codigo: codigoServico, receita: 0, quantidade: 0, vezes: 0 };
+        if (!mapServicos[desc]) mapServicos[desc] = { descricao: desc, codigo: codigoServico, receita: 0, custo: 0, quantidade: 0, vezes: 0 };
         mapServicos[desc].receita += total;
+        mapServicos[desc].custo += custo;
         mapServicos[desc].quantidade += Number(s.quantidade || 1);
         mapServicos[desc].vezes += 1;
 
         if (codigoServico) {
           const cod = codigoServico.toUpperCase().trim();
           const servicoDesc = servicosCad.find(sc => sc.codigo?.toUpperCase().trim() === cod)?.descricao || cod;
-          if (!mapServicosCodigo[cod]) mapServicosCodigo[cod] = { codigo: cod, descricao: servicoDesc, receita: 0, quantidade: 0, vezes: 0 };
+          if (!mapServicosCodigo[cod]) mapServicosCodigo[cod] = { codigo: cod, descricao: servicoDesc, receita: 0, custo: 0, quantidade: 0, vezes: 0 };
           mapServicosCodigo[cod].receita += total;
+          mapServicosCodigo[cod].custo += custo;
           mapServicosCodigo[cod].quantidade += Number(s.quantidade || 1);
           mapServicosCodigo[cod].vezes += 1;
         }
@@ -55,8 +59,11 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
       (venda.pecas || []).forEach(p => {
         const desc = normalizar(p.descricao || "SEM NOME");
         const total = Number(p.valor_total || 0) || Number(p.valor_unitario || 0) * Number(p.quantidade || 1);
-        if (!mapProdutos[desc]) mapProdutos[desc] = { descricao: desc, codigo: p.codigo || '', receita: 0, quantidade: 0, vezes: 0 };
+        const itemEst = estoque.find(e => e.id === p.estoque_id || (p.codigo && e.codigo?.toUpperCase().trim() === p.codigo?.toUpperCase().trim()));
+        const custoPeca = (Number(p.valor_custo || 0) > 0 ? Number(p.valor_custo) : Number(itemEst?.valor_custo || 0)) * Number(p.quantidade || 1);
+        if (!mapProdutos[desc]) mapProdutos[desc] = { descricao: desc, codigo: p.codigo || '', receita: 0, custo: 0, quantidade: 0, vezes: 0 };
         mapProdutos[desc].receita += total;
+        mapProdutos[desc].custo += custoPeca;
         mapProdutos[desc].quantidade += Number(p.quantidade || 1);
         mapProdutos[desc].vezes += 1;
         // Por código (ignora XX1 e sem código)
@@ -65,8 +72,9 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
           // Sempre usa a descrição real do cadastro, nunca a editada na venda
           const itemCadastro = estoque.find(e => e.codigo?.toUpperCase().trim() === cod);
           const descReal = itemCadastro?.descricao ? normalizar(itemCadastro.descricao) : cod;
-          if (!mapProdutosCodigo[cod]) mapProdutosCodigo[cod] = { codigo: cod, descricao: descReal, receita: 0, quantidade: 0, vezes: 0 };
+          if (!mapProdutosCodigo[cod]) mapProdutosCodigo[cod] = { codigo: cod, descricao: descReal, receita: 0, custo: 0, quantidade: 0, vezes: 0 };
           mapProdutosCodigo[cod].receita += total;
+          mapProdutosCodigo[cod].custo += custoPeca;
           mapProdutosCodigo[cod].quantidade += Number(p.quantidade || 1);
           mapProdutosCodigo[cod].vezes += 1;
         }
@@ -85,23 +93,43 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
 
   const rankAtualServicos = modoAgrupamento === "descricao" ? rankServicos : rankServicosCodigo;
   const rankAtualProdutos = modoAgrupamento === "descricao" ? rankProdutos : rankProdutosCodigo;
-  const lista = aba === "servicos" ? rankAtualServicos : rankAtualProdutos;
-  const totalAtual = aba === "servicos" ? totalServicos : totalProdutos;
+  const lista = (aba === "servicos" ? rankAtualServicos : rankAtualProdutos).map(item => ({
+    ...item,
+    valor: modoValor === "lucro" ? Math.max(0, item.receita - item.custo) : item.receita,
+  }));
+  const totalAtual = lista.reduce((acc, i) => acc + i.valor, 0);
 
   const listaFiltrada = lista.filter(i =>
     i.descricao.toLowerCase().includes(busca.toLowerCase())
   );
   const topChart = lista.slice(0, 8);
-
   const listaExibida = mostrarTodos ? listaFiltrada : listaFiltrada.slice(0, 10);
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-white font-semibold text-base">Receita por Produto/Serviço</h2>
+        <h2 className="text-white font-semibold text-base">{modoValor === "lucro" ? "Lucro Real por Produto/Serviço" : "Receita por Produto/Serviço"}</h2>
         <span className="text-gray-400 text-xs">
           Total: <span className="text-green-400 font-bold">{fmt(totalAtual)}</span>
         </span>
+      </div>
+
+      {/* Toggle Receita / Lucro */}
+      <div className="flex gap-1 bg-gray-800 p-1 rounded-lg">
+        <button
+          onClick={() => setModoValor("receita")}
+          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
+          style={modoValor === "receita" ? { background: "#374151", color: "#fff" } : { color: "#9ca3af" }}
+        >
+          Receita Bruta
+        </button>
+        <button
+          onClick={() => setModoValor("lucro")}
+          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
+          style={modoValor === "lucro" ? { background: "#166534", color: "#86efac" } : { color: "#9ca3af" }}
+        >
+          Lucro Real
+        </button>
       </div>
 
       {/* Toggle Código / Descrição */}
@@ -148,7 +176,7 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
             <YAxis type="category" dataKey="descricao" width={120} tick={{ fill: "#9ca3af", fontSize: 9 }} axisLine={false} tickLine={false}
               tickFormatter={v => v.length > 18 ? v.substring(0, 18) + "…" : v}
             />
-            <Bar dataKey="receita" radius={[0, 4, 4, 0]} label={{ position: 'insideRight', formatter: (v) => fmt(v), fill: '#fff', fontSize: 10, dx: 75 }}>
+            <Bar dataKey="valor" radius={[0, 4, 4, 0]} label={{ position: 'insideRight', formatter: (v) => fmt(v), fill: '#fff', fontSize: 10, dx: 75 }}>
               {topChart.map((_, i) => (
                 <Cell key={i} fill={COLORS[Math.min(i, COLORS.length - 1)]} />
               ))}
