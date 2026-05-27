@@ -98,16 +98,24 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
 
   const rankAtualServicos = rankServicosCodigo;
   const rankAtualProdutos = rankProdutosCodigo;
-  const lista = (aba === "servicos" ? rankAtualServicos : aba === "semcodigo" ? [] : rankAtualProdutos)
+  const listaProdutos = rankAtualProdutos
     .map(item => ({
       ...item,
       valor: modoValor === "lucro" ? Math.max(0, item.receita - item.custo) : item.receita,
       label: item.codigo ? `${item.codigo} - ${item.descricao}` : item.descricao,
     }))
     .sort((a, b) => b.valor - a.valor);
-  const totalAtual = aba === "semcodigo"
-    ? [...semCodigoProdutos, ...semCodigoServicos].reduce((acc, i) => acc + i.valor, 0)
-    : lista.reduce((acc, i) => acc + i.valor, 0);
+  const listaServicos = rankAtualServicos
+    .map(item => ({
+      ...item,
+      valor: modoValor === "lucro" ? Math.max(0, item.receita - item.custo) : item.receita,
+      label: item.codigo ? `${item.codigo} - ${item.descricao}` : item.descricao,
+    }))
+    .sort((a, b) => b.valor - a.valor);
+  const listaTudo = [...listaProdutos, ...listaServicos].sort((a, b) => b.valor - a.valor);
+  
+  const lista = aba === "servicos" ? listaServicos : aba === "tudo" ? listaTudo : listaProdutos;
+  const totalAtual = lista.reduce((acc, i) => acc + i.valor, 0);
 
   const listaFiltrada = lista.filter(i =>
     i.descricao.toLowerCase().includes(busca.toLowerCase())
@@ -155,21 +163,27 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
 
       {/* Abas */}
       <div className="flex gap-1 bg-gray-800 p-1 rounded-lg">
-        <button
-          onClick={() => { setAba("produtos"); localStorage.setItem("eps_aba", "produtos"); setMostrarTodos(false); setBusca(""); }}
-          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
-          style={aba === "produtos" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
-        >
-          Produtos ({rankProdutos.length})
-        </button>
-        <button
-          onClick={() => { setAba("servicos"); localStorage.setItem("eps_aba", "servicos"); setMostrarTodos(false); setBusca(""); }}
-          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
-          style={aba === "servicos" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
-        >
-          Serviços ({rankServicos.length})
-        </button>
-
+       <button
+         onClick={() => { setAba("produtos"); localStorage.setItem("eps_aba", "produtos"); setMostrarTodos(false); setBusca(""); }}
+         className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
+         style={aba === "produtos" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
+       >
+         Produtos ({rankProdutos.length})
+       </button>
+       <button
+         onClick={() => { setAba("servicos"); localStorage.setItem("eps_aba", "servicos"); setMostrarTodos(false); setBusca(""); }}
+         className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
+         style={aba === "servicos" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
+       >
+         Serviços ({rankServicos.length})
+       </button>
+       <button
+         onClick={() => { setAba("tudo"); localStorage.setItem("eps_aba", "tudo"); setMostrarTodos(false); setBusca(""); }}
+         className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
+         style={aba === "tudo" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
+       >
+         Tudo ({rankProdutos.length + rankServicos.length})
+       </button>
       </div>
 
       {/* Gráfico top 8 */}
