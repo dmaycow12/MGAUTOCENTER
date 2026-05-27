@@ -449,6 +449,18 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
               <p className="text-gray-300 text-sm font-medium truncate">{os.cliente_telefone || "—"}</p>
             </div>
           )}
+          {camposVisiveis.nfe && (
+            <div className="px-3 py-2.5 border-r border-gray-800">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">NFe/NFCe</p>
+              <p className="text-gray-300 text-sm font-medium truncate">{notasOs.find(n => n.tipo === 'NFe' || n.tipo === 'NFCe')?.numero || "—"}</p>
+            </div>
+          )}
+          {camposVisiveis.nfse && (
+            <div className="px-3 py-2.5">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">NFSe</p>
+              <p className="text-gray-300 text-sm font-medium truncate">{notasOs.find(n => n.tipo === 'NFSe')?.numero || "—"}</p>
+            </div>
+          )}
         </div>
       </div>
     </>

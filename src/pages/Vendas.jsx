@@ -472,7 +472,6 @@ export default function Vendas() {
                     { key: 'valor', label: 'Valor' },
                     { key: 'nfe', label: 'NFe/NFCe' },
                     { key: 'nfse', label: 'NFSe' },
-                    { key: 'pagamento', label: 'Pagamento' },
                   ].map(({ key, label }) => (
                     <label key={key} className="flex items-center gap-2 cursor-pointer">
                       <input
