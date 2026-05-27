@@ -836,7 +836,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     <>
     <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto">
       <div className="min-h-full flex items-start justify-center p-4 pt-8">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-3xl my-4">
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-5xl my-4">
         <div style={{display:"none"}} aria-hidden="true">
           <input type="text" name="username" autoComplete="username" tabIndex={-1} />
           <input type="password" name="password" autoComplete="current-password" tabIndex={-1} />
