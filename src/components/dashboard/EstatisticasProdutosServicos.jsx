@@ -162,27 +162,27 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
 
 
       {/* Abas */}
-      <div className="flex gap-1 bg-gray-800 p-1 rounded-lg">
+      <div className="flex gap-1 bg-gray-800 p-1 rounded-lg w-fit">
+       <button
+         onClick={() => { setAba("tudo"); localStorage.setItem("eps_aba", "tudo"); setMostrarTodos(false); setBusca(""); }}
+         className="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+         style={aba === "tudo" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
+       >
+         Tudo ({rankProdutos.length + rankServicos.length})
+       </button>
        <button
          onClick={() => { setAba("produtos"); localStorage.setItem("eps_aba", "produtos"); setMostrarTodos(false); setBusca(""); }}
-         className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
+         className="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
          style={aba === "produtos" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
        >
          Produtos ({rankProdutos.length})
        </button>
        <button
          onClick={() => { setAba("servicos"); localStorage.setItem("eps_aba", "servicos"); setMostrarTodos(false); setBusca(""); }}
-         className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
+         className="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
          style={aba === "servicos" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
        >
          Serviços ({rankServicos.length})
-       </button>
-       <button
-         onClick={() => { setAba("tudo"); localStorage.setItem("eps_aba", "tudo"); setMostrarTodos(false); setBusca(""); }}
-         className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
-         style={aba === "tudo" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
-       >
-         Tudo ({rankProdutos.length + rankServicos.length})
        </button>
       </div>
 
