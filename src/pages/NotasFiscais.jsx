@@ -82,10 +82,6 @@ export default function NotasFiscais() {
   const [filtroModeloNF, setFiltroModeloNF] = useState(() => { try { const s = localStorage.getItem("nf_filtroModelo"); const parsed = s ? JSON.parse(s) : null; return parsed && parsed.length > 0 ? parsed : ["NFe", "NFCe", "NFSe"]; } catch { return ["NFe", "NFCe", "NFSe"]; } });
   const [gerandoZip, setGerandoZip] = useState(false);
   const [showImportBackup, setShowImportBackup] = useState(false);
-  const [showImportZipXml, setShowImportZipXml] = useState(false);
-  const [importandoZipXml, setImportandoZipXml] = useState(false);
-  const [zipXmlUrl, setZipXmlUrl] = useState("");
-  const [resultadoZipXml, setResultadoZipXml] = useState(null);
   const [importandoBackup, setImportandoBackup] = useState(false);
   const [resultadoImportBackup, setResultadoImportBackup] = useState(null);
   const [nfseParaImportar, setNfseParaImportar] = useState(null);
@@ -1124,9 +1120,6 @@ export default function NotasFiscais() {
         <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
           <BarChart2 className="w-4 h-4" /> Sintegra
         </button>
-        <button onClick={() => { setShowImportZipXml(true); setResultadoZipXml(null); setZipXmlUrl(""); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#7c3aed", color:"#fff"}} onMouseEnter={e => e.currentTarget.style.background="#5b21b6"} onMouseLeave={e => e.currentTarget.style.background="#7c3aed"}>
-          <Upload className="w-4 h-4" /> XMLs
-        </button>
         <button onClick={() => { setShowImportBackup(true); setResultadoImportBackup(null); setNfseParaImportar(null); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#062C9B", color:"#fff"}} onMouseEnter={e => e.currentTarget.style.background="#041a4d"} onMouseLeave={e => e.currentTarget.style.background="#062C9B"}>
           <Upload className="w-4 h-4" /> Backup
         </button>
@@ -1801,74 +1794,6 @@ export default function NotasFiscais() {
                   {importandoBackup ? 'Importando...' : `Importar ${nfseParaImportar.length} NFSe`}
                 </button>
               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Importar XMLs de ZIP */}
-      {showImportZipXml && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md">
-            <div className="flex items-center justify-between p-5 border-b border-gray-800">
-              <div>
-                <h2 className="text-white font-semibold">Importar XMLs de ZIP (NFSe)</h2>
-                <p className="text-gray-500 text-xs mt-0.5">Cole a URL do arquivo ZIP com XMLs na pasta saida/nfse</p>
-              </div>
-              <button onClick={() => setShowImportZipXml(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
-            </div>
-            <div className="p-5 space-y-4">
-              <div>
-                <label className="block text-xs text-gray-400 mb-2">URL do arquivo ZIP</label>
-                <input
-                  type="text"
-                  value={zipXmlUrl}
-                  onChange={e => setZipXmlUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
-                />
-              </div>
-              {resultadoZipXml && (
-                <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm ${
-                  resultadoZipXml.sucesso ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'
-                }`}>
-                  {resultadoZipXml.sucesso ? <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
-                  <div>
-                    <span>{resultadoZipXml.mensagem || resultadoZipXml.error}</span>
-                    {resultadoZipXml.sem_match_arquivos?.length > 0 && (
-                      <details className="mt-2">
-                        <summary className="text-xs text-gray-400 cursor-pointer">Ver arquivos sem correspondência</summary>
-                        <ul className="mt-1 text-xs text-gray-500 space-y-0.5">{resultadoZipXml.sem_match_arquivos.map(f => <li key={f}>{f}</li>)}</ul>
-                      </details>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
-              <button onClick={() => setShowImportZipXml(false)} className="px-4 py-2 text-sm text-white rounded-lg font-medium bg-gray-700 hover:bg-gray-600 transition-all">Fechar</button>
-              <button
-                onClick={async () => {
-                  if (!zipXmlUrl.trim()) return;
-                  setImportandoZipXml(true);
-                  try {
-                    const res = await base44.functions.invoke('importarXmlsDeZip', { zip_url: zipXmlUrl.trim() });
-                    setResultadoZipXml(res.data);
-                    if (res.data?.sucesso) load();
-                  } catch (e) {
-                    setResultadoZipXml({ sucesso: false, error: e.message });
-                  }
-                  setImportandoZipXml(false);
-                }}
-                disabled={importandoZipXml || !zipXmlUrl.trim()}
-                className="px-6 py-2 text-sm text-white rounded-lg font-medium disabled:opacity-50 flex items-center gap-2"
-                style={{background: '#7c3aed'}}
-                onMouseEnter={e => !importandoZipXml && (e.currentTarget.style.background = '#5b21b6')}
-                onMouseLeave={e => e.currentTarget.style.background = '#7c3aed'}
-              >
-                {importandoZipXml && <RefreshCw className="w-4 h-4 animate-spin" />}
-                {importandoZipXml ? 'Processando...' : 'Importar XMLs'}
-              </button>
             </div>
           </div>
         </div>
