@@ -516,6 +516,41 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     setForm(f => ({ ...f, desconto: d, ...calc }));
   };
 
+  const handleDescontoChange = (val) => {
+    setDescontoInput(val);
+    const d = parseFloat(String(val).replace(',', '.')) || 0;
+    if (d > 0) {
+      const totalBruto = form.valor_servicos + form.valor_pecas;
+      if (totalBruto > 0) {
+        if (form.tipo_desconto === 'reais') {
+          let novasPecas = [...form.pecas];
+          let novosServicos = [...form.servicos];
+          if (novasPecas.length > 0) {
+            const last = novasPecas[novasPecas.length - 1];
+            const novoTotal = parseFloat((Number(last.valor_total || 0) - d).toFixed(2));
+            const novoUnit = parseFloat((novoTotal / Number(last.quantidade || 1)).toFixed(2));
+            novasPecas = [...novasPecas.slice(0, -1), { ...last, valor_unitario: novoUnit, valor_total: novoTotal }];
+          } else if (novosServicos.length > 0) {
+            const last = novosServicos[novosServicos.length - 1];
+            novosServicos = [...novosServicos.slice(0, -1), { ...last, valor: parseFloat((Number(last.valor || 0) - d).toFixed(2)) }];
+          }
+          const calc = recalcular(novosServicos, novasPecas, 0);
+          setForm(f => ({ ...f, servicos: novosServicos, pecas: novasPecas, desconto: 0, ...calc }));
+        } else {
+          const fator = 1 - d / totalBruto;
+          let novosServicos = form.servicos.map(s => ({ ...s, valor: parseFloat((Number(s.valor || 0) * fator).toFixed(2)) }));
+          let novasPecas = form.pecas.map(p => { const novoUnit = parseFloat((Number(p.valor_unitario || 0) * fator).toFixed(2)); return { ...p, valor_unitario: novoUnit, valor_total: parseFloat((novoUnit * Number(p.quantidade || 1)).toFixed(2)) }; });
+          const totalDistribuido = parseFloat((novosServicos.reduce((s, x) => s + Number(x.valor || 0), 0) + novasPecas.reduce((s, x) => s + Number(x.valor_total || 0), 0)).toFixed(2));
+          const totalEsperado = parseFloat((totalBruto - d).toFixed(2));
+          const diff = parseFloat((totalEsperado - totalDistribuido).toFixed(2));
+          if (diff !== 0) { if (novasPecas.length > 0) { const last = novasPecas[novasPecas.length - 1]; const novoTotal = parseFloat((Number(last.valor_total || 0) + diff).toFixed(2)); const novoUnit = parseFloat((novoTotal / Number(last.quantidade || 1)).toFixed(2)); novasPecas = [...novasPecas.slice(0, -1), { ...last, valor_unitario: novoUnit, valor_total: novoTotal }]; } else if (novosServicos.length > 0) { const last = novosServicos[novosServicos.length - 1]; novosServicos = [...novosServicos.slice(0, -1), { ...last, valor: parseFloat((Number(last.valor || 0) + diff).toFixed(2)) }]; } }
+          const calc = recalcular(novosServicos, novasPecas, 0);
+          setForm(f => ({ ...f, servicos: novosServicos, pecas: novasPecas, desconto: 0, ...calc }));
+        }
+      }
+    }
+  };
+
   const updateParcela = (i, field, val) => {
     if (field === "forma_pagamento") {
       const novoVenc = calcularVencimentoParcela(val, new Date().toISOString().split("T")[0]);
@@ -808,7 +843,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         }
       }
 
-      // Auto-concluir se todas as parcelas estiverem pagas
       const todasPagas = parcelasAtualizadas.length > 0 && parcelasAtualizadas.every(p => (p.financeiro_status || "Pendente") === "Pago");
       if (todasPagas && formFinal.status !== "Concluído") {
         const dataConclusao = new Date().toISOString().split("T")[0];
@@ -978,27 +1012,27 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                      </div>
                                      <div className="w-20 flex-shrink-0">
                                       <label className="text-xs text-gray-500 mb-1 block">Custo</label>
-                                     {(p.codigo || '').toUpperCase() === 'XX' ? (
-                                       <input
-                                         type="text"
-                                         inputMode="decimal"
-                                         value={xxCustos[i] !== undefined ? xxCustos[i] : String(p.valor_custo || 0)}
-                                         onChange={e => {
-                                           const raw = e.target.value;
-                                           setXXCustos(prev => ({ ...prev, [i]: raw }));
-                                         }}
-                                         onBlur={e => {
-                                           const raw = e.target.value;
-                                           const val = parseFloat(raw.replace(',', '.')) || 0;
-                                           setXXCustos(prev => ({ ...prev, [i]: String(val) }));
-                                           setForm(f => ({ ...f, pecas: f.pecas.map((x, xi) => xi !== i ? x : { ...x, valor_custo: val }) }));
-                                         }}
-                                         className="input-dark text-yellow-400 text-sm"
-                                         autoComplete="off"
-                                       />
-                                     ) : (
-                                       <div className="input-dark text-yellow-400 text-sm">{Number(p.valor_custo || 0).toFixed(2)}</div>
-                                     )}
+                                      {(p.codigo || '').toUpperCase() === 'XX' ? (
+                                        <input
+                                          type="text"
+                                          inputMode="decimal"
+                                          value={xxCustos[i] !== undefined ? xxCustos[i] : String(p.valor_custo || 0)}
+                                          onChange={e => {
+                                            const raw = e.target.value;
+                                            setXXCustos(prev => ({ ...prev, [i]: raw }));
+                                          }}
+                                          onBlur={e => {
+                                            const raw = e.target.value;
+                                            const val = parseFloat(raw.replace(',', '.')) || 0;
+                                            setXXCustos(prev => ({ ...prev, [i]: String(val) }));
+                                            setForm(f => ({ ...f, pecas: f.pecas.map((x, xi) => xi !== i ? x : { ...x, valor_custo: val }) }));
+                                          }}
+                                          className="input-dark text-yellow-400 text-sm"
+                                          autoComplete="off"
+                                        />
+                                      ) : (
+                                        <div className="input-dark text-yellow-400 text-sm">{Number(p.valor_custo || 0).toFixed(2)}</div>
+                                      )}
                                      </div>
                                      <div className="w-20 flex-shrink-0">
                                        <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
@@ -1238,7 +1272,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   </div>
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Valor</label>
-                    <input type="text" inputMode="decimal" value={descontoInput} onChange={e => { setDescontoInput(e.target.value); const d = parseFloat(String(e.target.value).replace(',', '.')) || 0; if (d > 0) { const totalBruto = form.valor_servicos + form.valor_pecas; if (totalBruto > 0) { const fator = 1 - d / totalBruto; let novosServicos = form.servicos.map(s => ({ ...s, valor: parseFloat((Number(s.valor || 0) * fator).toFixed(2)) })); let novasPecas = form.pecas.map(p => { const novoUnit = parseFloat((Number(p.valor_unitario || 0) * fator).toFixed(2)); return { ...p, valor_unitario: novoUnit, valor_total: parseFloat((novoUnit * Number(p.quantidade || 1)).toFixed(2)) }; }); const totalDistribuido = parseFloat((novosServicos.reduce((s, x) => s + Number(x.valor || 0), 0) + novasPecas.reduce((s, x) => s + Number(x.valor_total || 0), 0)).toFixed(2)); const totalEsperado = parseFloat((totalBruto - d).toFixed(2)); const diff = parseFloat((totalEsperado - totalDistribuido).toFixed(2)); if (diff !== 0) { if (novasPecas.length > 0) { const last = novasPecas[novasPecas.length - 1]; const novoTotal = parseFloat((Number(last.valor_total || 0) + diff).toFixed(2)); const novoUnit = parseFloat((novoTotal / Number(last.quantidade || 1)).toFixed(2)); novasPecas = [...novasPecas.slice(0, -1), { ...last, valor_unitario: novoUnit, valor_total: novoTotal }]; } else if (novosServicos.length > 0) { const last = novosServicos[novosServicos.length - 1]; novosServicos = [...novosServicos.slice(0, -1), { ...last, valor: parseFloat((Number(last.valor || 0) + diff).toFixed(2)) }]; } } const calc = recalcular(novosServicos, novasPecas, 0); setForm(f => ({ ...f, servicos: novosServicos, pecas: novasPecas, desconto: 0, ...calc })); } } }} className="input-dark" placeholder="0" autoComplete="off" />
+                    <input type="text" inputMode="decimal" value={descontoInput} onChange={e => handleDescontoChange(e.target.value)} className="input-dark" placeholder="0" autoComplete="off" />
                   </div>
                   <Field label="Nº de Parcelas">
                     <input value={form.parcelas} onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} className="input-dark" autoComplete="off" />
