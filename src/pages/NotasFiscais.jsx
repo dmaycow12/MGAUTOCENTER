@@ -1721,42 +1721,67 @@ export default function NotasFiscais() {
             <div className="p-5 space-y-4">
               {!nfseParaImportar ? (
                 <label className="flex flex-col items-center justify-center gap-3 w-full border-2 border-dashed border-gray-700 hover:border-blue-500 rounded-xl p-8 cursor-pointer transition-all group">
-                  <Upload className="w-8 h-8 text-gray-500 group-hover:text-blue-400 transition-all" />
-                  <div className="text-center">
-                    <p className="text-gray-300 text-sm font-medium">Clique para selecionar</p>
-                    <p className="text-gray-500 text-xs mt-1">Arquivo .zip ou .json do backup completo</p>
-                  </div>
-                  <input type="file" accept=".zip,.json" className="hidden" onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    try {
-                      let jsonData;
-                      if (file.name.endsWith('.zip')) {
-                        const JSZipLib = (await import('jszip')).default;
-                        const zip = await JSZipLib.loadAsync(file);
-                        const jsonFile = Object.values(zip.files).find(f => f.name.endsWith('.json') && !f.dir);
-                        if (!jsonFile) { alert('Nenhum arquivo JSON encontrado no ZIP.'); return; }
-                        const text = await jsonFile.async('text');
-                        jsonData = JSON.parse(text);
-                      } else {
-                        const text = await file.text();
-                        jsonData = JSON.parse(text);
-                      }
-                      // Suporta formato { backup: { NotaFiscal: [...] } } ou { NotaFiscal: [...] }
-                      const notasArray = jsonData?.backup?.NotaFiscal || jsonData?.NotaFiscal || [];
-                      const nfse = notasArray.filter(n => n.tipo === 'NFSe');
-                      if (nfse.length === 0) { alert('Nenhuma NFSe encontrada no backup.'); return; }
-                      setNfseParaImportar(nfse);
-                    } catch (err) {
-                      alert('Erro ao ler arquivo: ' + err.message);
-                    }
-                  }} />
-                </label>
+                   <Upload className="w-8 h-8 text-gray-500 group-hover:text-blue-400 transition-all" />
+                   <div className="text-center">
+                     <p className="text-gray-300 text-sm font-medium">Clique para selecionar</p>
+                     <p className="text-gray-500 text-xs mt-1">Arquivo .zip, .json ou .xml (NFSe)</p>
+                   </div>
+                   <input type="file" accept=".zip,.json,.xml" multiple className="hidden" onChange={async (e) => {
+                     const files = Array.from(e.target.files || []);
+                     if (files.length === 0) return;
+                     try {
+                       // Múltiplos XML ou XML único
+                       const xmlFiles = files.filter(f => f.name.toLowerCase().endsWith('.xml'));
+                       if (xmlFiles.length > 0) {
+                         const registros = [];
+                         for (const file of xmlFiles) {
+                           const text = await file.text();
+                           // Extrai chave_acesso do nome do arquivo (44 dígitos) ou do XML
+                           const match44 = file.name.match(/(\d{44})/);
+                           const chaveAcesso = match44 ? match44[1] : null;
+                           const nNFSeMatch = text.match(/<nNFSe>(\d+)<\/nNFSe>/);
+                           const numero = nNFSeMatch ? nNFSeMatch[1] : null;
+                           if (chaveAcesso || numero) {
+                             registros.push({ chave_acesso: chaveAcesso, numero, xml_original: text, tipo: 'NFSe' });
+                           }
+                         }
+                         if (registros.length === 0) { alert('Nenhum XML de NFSe válido encontrado.'); return; }
+                         setNfseParaImportar({ _xmlMode: true, registros });
+                         return;
+                       }
+                       // ZIP ou JSON (lógica original)
+                       const file = files[0];
+                       let jsonData;
+                       if (file.name.endsWith('.zip')) {
+                         const JSZipLib = (await import('jszip')).default;
+                         const zip = await JSZipLib.loadAsync(file);
+                         const jsonFile = Object.values(zip.files).find(f => f.name.endsWith('.json') && !f.dir);
+                         if (!jsonFile) { alert('Nenhum arquivo JSON encontrado no ZIP.'); return; }
+                         const text = await jsonFile.async('text');
+                         jsonData = JSON.parse(text);
+                       } else {
+                         const text = await file.text();
+                         jsonData = JSON.parse(text);
+                       }
+                       const notasArray = jsonData?.backup?.NotaFiscal || jsonData?.NotaFiscal || [];
+                       const nfse = notasArray.filter(n => n.tipo === 'NFSe');
+                       if (nfse.length === 0) { alert('Nenhuma NFSe encontrada no backup.'); return; }
+                       setNfseParaImportar(nfse);
+                     } catch (err) {
+                       alert('Erro ao ler arquivo: ' + err.message);
+                     }
+                   }} />
+                 </label>
               ) : (
-                <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 space-y-2">
-                  <p className="text-blue-300 font-semibold text-sm">{nfseParaImportar.length} NFSe encontradas no backup</p>
-                  <p className="text-gray-400 text-xs">As que já existirem no banco serão ignoradas automaticamente.</p>
-                </div>
+                 <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 space-y-2">
+                   {nfseParaImportar?._xmlMode
+                     ? <p className="text-blue-300 font-semibold text-sm">{nfseParaImportar.registros.length} arquivo(s) XML selecionado(s)</p>
+                     : <p className="text-blue-300 font-semibold text-sm">{nfseParaImportar.length} NFSe encontradas no backup</p>
+                   }
+                   <p className="text-gray-400 text-xs">
+                     {nfseParaImportar?._xmlMode ? 'Os XMLs serão salvos nos registros correspondentes.' : 'As que já existirem no banco serão ignoradas automaticamente.'}
+                   </p>
+                 </div>
               )}
               {resultadoImportBackup && (
                 <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm ${
@@ -1776,9 +1801,27 @@ export default function NotasFiscais() {
                   onClick={async () => {
                     setImportandoBackup(true);
                     try {
-                      const res = await base44.functions.invoke('importarNfseDeBackup', { registros: nfseParaImportar });
-                      setResultadoImportBackup(res.data);
-                      if (res.data?.sucesso) load();
+                      if (nfseParaImportar?._xmlMode) {
+                        // Modo XML: atualizar xml_original nos registros existentes
+                        const todasNotas = await base44.entities.NotaFiscal.list('-created_date', 500);
+                        const porChave = {}; const porNumero = {};
+                        for (const n of todasNotas) {
+                          if (n.chave_acesso) porChave[n.chave_acesso] = n;
+                          if (n.tipo === 'NFSe' && n.numero) porNumero[n.numero] = n;
+                        }
+                        let atualizados = 0; let semMatch = 0;
+                        for (const reg of nfseParaImportar.registros) {
+                          const nota = (reg.chave_acesso && porChave[reg.chave_acesso]) || (reg.numero && porNumero[reg.numero]);
+                          if (nota) { await base44.entities.NotaFiscal.update(nota.id, { xml_original: reg.xml_original }); atualizados++; }
+                          else semMatch++;
+                        }
+                        setResultadoImportBackup({ sucesso: true, mensagem: `${atualizados} XML(s) salvos. ${semMatch} sem correspondência.` });
+                        load();
+                      } else {
+                        const res = await base44.functions.invoke('importarNfseDeBackup', { registros: nfseParaImportar });
+                        setResultadoImportBackup(res.data);
+                        if (res.data?.sucesso) load();
+                      }
                     } catch (e) {
                       setResultadoImportBackup({ sucesso: false, erro: e.message });
                     }
