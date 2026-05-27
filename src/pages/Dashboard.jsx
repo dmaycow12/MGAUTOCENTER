@@ -344,70 +344,7 @@ export default function Dashboard() {
       </div>
 
 
-      {/* Pizza linha */}
-      <div className="w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-        {/* Status OS */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <SectionTitle>Vendas Status</SectionTitle>
-          {statusData.length > 0 ? (
-            <div className="flex items-center justify-center gap-4">
-              <ResponsiveContainer width={160} height={160}>
-                <PieChart>
-                  <Pie data={statusData} cx="50%" cy="50%" innerRadius={45} outerRadius={72} dataKey="value">
-                    {statusData.map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-2">
-                {statusData.map((d, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: d.color }} />
-                    <span className="text-gray-400 text-sm">{d.name}</span>
-                    <span className="text-white font-semibold text-sm">{d.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-500 text-sm text-center py-8">Sem dados</p>
-          )}
-        </div>
 
-        {/* OS Pagas pelo Financeiro */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <SectionTitle>Vendas Financeiro</SectionTitle>
-          {osPagasData.length > 0 ? (
-            <div className="flex items-center justify-center gap-4">
-              <ResponsiveContainer width={160} height={160}>
-                <PieChart>
-                  <Pie data={osPagasData} cx="50%" cy="50%" innerRadius={45} outerRadius={72} dataKey="value">
-                    {osPagasData.map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="space-y-2">
-                {osPagasData.map((d, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: d.color }} />
-                    <span className="text-gray-400 text-sm">{d.name}</span>
-                    <span className="text-white font-semibold text-sm">{d.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-500 text-sm text-center py-8">Sem dados</p>
-          )}
-        </div>
-        </div>
-      </div>
 
       {/* Cards Produtos e Ativos */}
       {(() => {
