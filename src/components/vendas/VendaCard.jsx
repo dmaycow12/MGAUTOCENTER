@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
@@ -190,11 +190,9 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
     if (!eraConcluido && ficaConcluido) {
       await reduzirEstoque(os.pecas, os);
     }
-    // Saindo de Orçamento para Aberto: subtrai estoque
     if (eraOrcamento && !ficaOrcamento && !ficaConcluido) {
       await reduzirEstoque(os.pecas, os);
     }
-    // Entrando em Orçamento vindo de Aberto: devolve estoque
     if (!eraOrcamento && ficaOrcamento && !eraConcluido) {
       await restaurarEstoque(os.pecas || []);
     }
@@ -207,12 +205,10 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
       const osAtualizada = todasOS.find(o => o.id === os.id);
       const osData = osAtualizada || os;
       await excluirLancamentosOS(os.id);
-      // Cancela lançamentos criados pelo novo fluxo (por parcela)
       try {
         const fins = await base44.entities.Financeiro.filter({ ordem_venda_id: os.id });
         for (const f of fins) await base44.entities.Financeiro.delete(f.id);
       } catch(_) {}
-      // Limpa financeiro_id das parcelas
       if (osData.parcelas_detalhes?.length > 0) {
         const novasParcelas = osData.parcelas_detalhes.map(p => ({ ...p, financeiro_id: null }));
         await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novasParcelas });
@@ -351,7 +347,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
       )}
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-all">
-        <div className="flex items-center gap-2 px-3 py-2.5">
+        <div className="flex items-center gap-2 px-3 py-2.5 flex-wrap">
           <div ref={numeroEditRef} className="min-w-max"><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
           <div className="flex items-center gap-2 flex-wrap">
             {(() => {
@@ -403,10 +399,10 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
             </div>
           )}
 
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-max">
             <button ref={statusBtnRef} onClick={() => { setMenuOpen(false); setStatusOpen(v => !v); }}
-              className="flex items-center justify-center gap-2 text-sm font-semibold hover:opacity-90 transition-all w-full"
-              style={{...style.style, height: "34px", borderRadius: "8px"}}>
+              className="flex items-center justify-center gap-2 text-sm font-semibold hover:opacity-90 transition-all"
+              style={{...style.style, height: "34px", borderRadius: "8px", minWidth: "120px"}}>
               {os.status || "—"}
               <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform ${statusOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -423,11 +419,11 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
             )}
           </div>
 
-          <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Editar"><Pencil className="w-3.5 h-3.5" /></button>
-          <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Imprimir"><Printer className="w-3.5 h-3.5" /></button>
-          <button onClick={handleExcluir} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all" title="Excluir"><Trash2 className="w-3.5 h-3.5" /></button>
+          <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all flex-shrink-0" title="Editar"><Pencil className="w-3.5 h-3.5" /></button>
+          <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all flex-shrink-0" title="Imprimir"><Printer className="w-3.5 h-3.5" /></button>
+          <button onClick={handleExcluir} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all flex-shrink-0" title="Excluir"><Trash2 className="w-3.5 h-3.5" /></button>
 
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             <button ref={menuBtnRef} onClick={() => { setStatusOpen(false); setMenuOpen(v => !v); }}
               className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
               <MoreVertical className="w-3.5 h-3.5" />
@@ -449,86 +445,106 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
           </div>
         </div>
 
-        <div className="grid grid-cols-2 border-t border-gray-800">
-          {(() => {
-            const isConsumidor = os.cliente_nome?.toUpperCase() === "CONSUMIDOR";
-            return isConsumidor ? (
-              <>
-                <div className="px-3 py-2.5 border-b border-r border-gray-800">
-                  <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
-                  <InlineEdit value={os.cliente_nome_fantasia || "CONSUMIDOR"} onSave={v => saveField("cliente_nome_fantasia", v)} placeholder="CONSUMIDOR" />
-                </div>
-                <div className="px-3 py-2.5 border-b border-gray-800">
-                  <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Contato</p>
-                  <InlineEdit value={os.cliente_telefone} onSave={v => saveField("cliente_telefone", v)} placeholder="—" isPhone={true} />
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
-                  <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
-                  <p className="text-white text-sm font-medium truncate">{os.cliente_nome_fantasia || os.cliente_nome || "—"}</p>
-                </div>
-                <div className="col-span-2 px-3 py-2.5 border-b border-gray-800">
-                  <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Contato</p>
-                  <p className="text-gray-300 text-sm font-medium truncate">{os.cliente_telefone || "—"}</p>
-                </div>
-              </>
-            );
-          })()}
+        <div className="border-t border-gray-800 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0">
           <div className="px-3 py-2.5 border-b border-r border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Veículo</p>
-            <InlineEdit value={os.veiculo_modelo} onSave={v => saveField("veiculo_modelo", v)} placeholder="—" onNext={() => placaEditRef.current?.click()} />
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Cliente</p>
+            <p className="text-white text-sm font-medium truncate">{os.cliente_nome_fantasia || os.cliente_nome || "—"}</p>
+          </div>
+          <div className="px-3 py-2.5 border-b border-r border-gray-800 md:col-span-1 lg:col-span-1">
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Contato</p>
+            <p className="text-gray-300 text-sm font-medium truncate">{os.cliente_telefone || "—"}</p>
           </div>
           <div className="px-3 py-2.5 border-b border-gray-800">
-            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Data</p>
-            <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Veículo</p>
+            <p className="text-white text-sm font-medium truncate">{os.veiculo_modelo || "—"}</p>
           </div>
           <div className="px-3 py-2.5 border-b border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Placa</p>
-            <div ref={placaEditRef}><InlineEdit value={os.veiculo_placa?.toUpperCase()} onSave={v => saveField("veiculo_placa", v.toUpperCase())} placeholder="—" onNext={() => kmEditRef.current?.click()} /></div>
+            <p className="text-white text-sm font-medium">{os.veiculo_placa?.toUpperCase() || "—"}</p>
+          </div>
+          <div className="px-3 py-2.5 border-b border-r border-gray-800">
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Data</p>
+            <p className="text-white text-sm font-medium">{fmtData(os.data_entrada)}</p>
           </div>
           <div className="px-3 py-2.5 border-b border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">KM</p>
-            <div ref={kmEditRef}><InlineEdit value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v)} placeholder="—" /></div>
+            <p className="text-white text-sm font-medium">{os.quilometragem || "—"}</p>
           </div>
-          <div className="px-3 py-2.5 border-r border-gray-800">
+          <div className="px-3 py-2.5 border-b border-r border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Pagamento</p>
-            {(() => {
-              const pd = os.parcelas_detalhes;
-              const formaAtual = (() => {
-                if (!pd || pd.length === 0) return os.forma_pagamento || "A Combinar";
-                const formas = [...new Set(pd.map(p => p.forma_pagamento).filter(Boolean))];
-                if (formas.length === 0) return os.forma_pagamento || "A Combinar";
-                if (formas.length === 1) return formas[0];
-                return "Misto";
-              })();
-              if (formaAtual === "Misto") return <p className="text-white text-sm font-medium">Misto</p>;
-              const handleChange = async (novaForma) => {
-                const novoVenc = calcularVencimento(novaForma, new Date().toISOString().split("T")[0]);
-                const updates = { forma_pagamento: novaForma };
-                if (pd && pd.length > 0) updates.parcelas_detalhes = pd.map(p => ({ ...p, forma_pagamento: novaForma, vencimento: novoVenc }));
-                await base44.entities.Vendas.update(os.id, updates);
-                try {
-                  const fins = await base44.entities.Financeiro.filter({ ordem_venda_id: os.id });
-                  for (const f of fins) await base44.entities.Financeiro.update(f.id, { forma_pagamento: novaForma, data_vencimento: novoVenc });
-                } catch (_) {}
-                onRefresh?.();
-              };
-              return (
-                <select value={formaAtual} onChange={e => handleChange(e.target.value)}
-                  className="text-white text-sm font-medium border-0 outline-none cursor-pointer hover:opacity-80 transition-opacity w-full"
-                  style={{ background: "transparent", appearance: "none", WebkitAppearance: "none", MozAppearance: "none" }}>
-                  {FORMAS_PAGAMENTO.map(f => <option key={f} value={f} style={{ background: "#1f2937", color: "#fff" }}>{f}</option>)}
-                </select>
-              );
-            })()}
+            <p className="text-white text-sm font-medium">{os.forma_pagamento || "A Combinar"}</p>
           </div>
-          <div className="px-3 py-2.5">
+          <div className="px-3 py-2.5 border-b border-r border-gray-800">
+            <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Parcelas</p>
+            <p className="text-white text-sm font-medium">{os.parcelas || 1}</p>
+          </div>
+          <div className="px-3 py-2.5 border-b border-gray-800">
             <p className="text-white text-xs font-bold uppercase tracking-wider mb-1">Valor</p>
             <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
           </div>
         </div>
+
+        {((os.pecas?.length || 0) + (os.servicos?.length || 0)) > 0 && (
+          <div className="border-t border-gray-800 overflow-x-auto">
+            <div className="text-xs text-gray-400 px-3 py-2 bg-gray-800/50 font-semibold tracking-wider">
+              Produtos e Serviços
+            </div>
+            {(os.pecas || []).length > 0 && (
+              <div className="px-3 py-2.5 border-b border-gray-800">
+                <div className="text-xs text-gray-400 font-bold mb-2 uppercase">Peças</div>
+                <table className="w-full text-xs text-gray-300">
+                  <thead className="text-gray-500 uppercase tracking-wider text-xs">
+                    <tr>
+                      <th className="text-left pb-1.5">Código</th>
+                      <th className="text-left pb-1.5 min-w-64">Descrição</th>
+                      <th className="text-center pb-1.5 min-w-12">Qtd</th>
+                      <th className="text-center pb-1.5 min-w-16">Unit.</th>
+                      <th className="text-right pb-1.5 min-w-20">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(os.pecas || []).map((p, i) => (
+                      <tr key={i} className="border-t border-gray-800/30 hover:bg-gray-800/20 transition-colors">
+                        <td className="py-1.5 text-gray-500">{p.codigo || "—"}</td>
+                        <td className="py-1.5 text-white font-medium" title={p.descricao}>{p.descricao || "—"}</td>
+                        <td className="py-1.5 text-center">{p.quantidade || 1}</td>
+                        <td className="py-1.5 text-center text-gray-400">{fmtValor(p.valor_unitario)}</td>
+                        <td className="py-1.5 text-right text-green-400 font-semibold">{fmtValor(p.valor_total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {(os.servicos || []).length > 0 && (
+              <div className="px-3 py-2.5">
+                <div className="text-xs text-gray-400 font-bold mb-2 uppercase">Serviços</div>
+                <table className="w-full text-xs text-gray-300">
+                  <thead className="text-gray-500 uppercase tracking-wider text-xs">
+                    <tr>
+                      <th className="text-left pb-1.5">Código</th>
+                      <th className="text-left pb-1.5 min-w-64">Descrição</th>
+                      <th className="text-center pb-1.5 min-w-12">Qtd</th>
+                      <th className="text-center pb-1.5 min-w-16">Unit.</th>
+                      <th className="text-right pb-1.5 min-w-20">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(os.servicos || []).map((s, i) => (
+                      <tr key={i} className="border-t border-gray-800/30 hover:bg-gray-800/20 transition-colors">
+                        <td className="py-1.5 text-gray-500">{s.codigo || "—"}</td>
+                        <td className="py-1.5 text-white font-medium" title={s.descricao}>{s.descricao || "—"}</td>
+                        <td className="py-1.5 text-center">{s.quantidade ?? 1}</td>
+                        <td className="py-1.5 text-center text-gray-400">{fmtValor(s.valor)}</td>
+                        <td className="py-1.5 text-right text-green-400 font-semibold">{fmtValor(Number(s.valor || 0) * Number(s.quantidade ?? 1))}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </>
   );
