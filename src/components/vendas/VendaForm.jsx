@@ -1269,8 +1269,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Desconto</label>
                     <select value={form.tipo_desconto || 'reais'} onChange={e => setForm({...form, tipo_desconto: e.target.value})} className="input-dark">
-                      <option value="reais">Em Reais</option>
-                      <option value="percentual">Em Porcentagem</option>
+                      <option value="reais">Em R$</option>
+                      <option value="percentual">Em %</option>
                     </select>
                   </div>
                   <div>
@@ -1294,7 +1294,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     <div>
                       <label className="block text-xs text-gray-400 mb-1">Desconto</label>
                       <select value={form.tipo_desconto || 'reais'} onChange={e => setForm({...form, tipo_desconto: e.target.value})} className="input-dark text-sm" style={{paddingRight: '24px'}}>
-                        <option value="reais">Em Reais</option>
+                        <option value="reais">Em R$</option>
                         <option value="percentual">Em %</option>
                       </select>
                     </div>
