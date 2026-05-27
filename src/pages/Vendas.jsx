@@ -460,58 +460,30 @@ export default function Vendas() {
               <Settings className="w-4 h-4" /> Filtro
             </button>
             {showColunasFilter && (
-              <div className="absolute right-0 top-full mt-1 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 z-50 space-y-4">
-                <div>
-                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase">Colunas da Lista</p>
-                  <div className="space-y-2">
-                    {[
-                      { key: 'data', label: 'Data' },
-                      { key: 'cliente', label: 'Cliente' },
-                      { key: 'contato', label: 'Contato' },
-                      { key: 'veiculo', label: 'Veículo' },
-                      { key: 'placa', label: 'Placa' },
-                      { key: 'km', label: 'KM' },
-                      { key: 'status', label: 'Status' },
-                      { key: 'valor', label: 'Valor' },
-                      { key: 'nfe', label: 'NFe/NFCe' },
-                      { key: 'nfse', label: 'NFSe' },
-                    ].map(({ key, label }) => (
-                      <label key={key} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={colunasVisiveis[key]}
-                          onChange={(e) => setColunasVisiveis(prev => ({ ...prev, [key]: e.target.checked }))}
-                          className="w-4 h-4 rounded border-gray-600 accent-blue-600"
-                        />
-                        <span className="text-sm text-gray-300">{label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <div className="border-t border-gray-700 pt-3">
-                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase">Campos dos Cards</p>
-                  <div className="space-y-2">
-                    {[
-                      { key: 'cliente', label: 'Cliente' },
-                      { key: 'contato', label: 'Contato' },
-                      { key: 'veiculo', label: 'Veículo' },
-                      { key: 'data', label: 'Data' },
-                      { key: 'placa', label: 'Placa' },
-                      { key: 'km', label: 'KM' },
-                      { key: 'pagamento', label: 'Pagamento' },
-                      { key: 'valor', label: 'Valor' },
-                    ].map(({ key, label }) => (
-                      <label key={key} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={colunasVisiveis[key]}
-                          onChange={(e) => setColunasVisiveis(prev => ({ ...prev, [key]: e.target.checked }))}
-                          className="w-4 h-4 rounded border-gray-600 accent-blue-600"
-                        />
-                        <span className="text-sm text-gray-300">{label}</span>
-                      </label>
-                    ))}
-                  </div>
+              <div className="absolute right-0 top-full mt-1 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 z-50">
+                <p className="text-xs text-gray-400 font-semibold mb-3 uppercase">Colunas da Lista</p>
+                <div className="space-y-2">
+                  {[
+                    { key: 'cliente', label: 'Cliente' },
+                    { key: 'contato', label: 'Contato' },
+                    { key: 'veiculo', label: 'Veículo' },
+                    { key: 'placa', label: 'Placa' },
+                    { key: 'km', label: 'KM' },
+                    { key: 'valor', label: 'Valor' },
+                    { key: 'nfe', label: 'NFe/NFCe' },
+                    { key: 'nfse', label: 'NFSe' },
+                    { key: 'pagamento', label: 'Pagamento' },
+                  ].map(({ key, label }) => (
+                    <label key={key} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={colunasVisiveis[key]}
+                        onChange={(e) => setColunasVisiveis(prev => ({ ...prev, [key]: e.target.checked }))}
+                        className="w-4 h-4 rounded border-gray-600 accent-blue-600"
+                      />
+                      <span className="text-sm text-gray-300">{label}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
             )}
@@ -540,13 +512,13 @@ export default function Vendas() {
               <thead>
                <tr className="border-b border-gray-800">
                   <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-12 cursor-pointer hover:text-white transition-colors whitespace-nowrap" onClick={() => setOrderNumero(orderNumero === "asc" ? "desc" : "asc")}>Nº <span style={{fontSize:"14px",fontWeight:"900",color:"#60a5fa"}}>{orderNumero === "asc" ? "▲" : "▼"}</span></th>
-                  {colunasVisiveis.data && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20 cursor-pointer hover:text-white transition-colors whitespace-nowrap" onClick={() => setOrderData(orderData === "asc" ? "desc" : "asc")}>Data <span style={{fontSize:"14px",fontWeight:"900",color:"#60a5fa"}}>{orderData === "asc" ? "▲" : "▼"}</span></th>}
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20 cursor-pointer hover:text-white transition-colors whitespace-nowrap" onClick={() => setOrderData(orderData === "asc" ? "desc" : "asc")}>Data <span style={{fontSize:"14px",fontWeight:"900",color:"#60a5fa"}}>{orderData === "asc" ? "▲" : "▼"}</span></th>
                   {colunasVisiveis.cliente && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider flex-1">Cliente</th>}
                   {colunasVisiveis.contato && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Contato</th>}
                   {colunasVisiveis.veiculo && filtroTipo.includes("patio") && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Veículo</th>}
                   {colunasVisiveis.placa && filtroTipo.includes("patio") && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">Placa</th>}
                   {colunasVisiveis.km && filtroTipo.includes("patio") && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">KM</th>}
-                  {colunasVisiveis.status && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Status</th>}
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Status</th>
                   {colunasVisiveis.valor && <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Valor</th>}
                   {colunasVisiveis.nfe && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">NFe/NFCe</th>}
                   {colunasVisiveis.nfse && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">NFSe</th>}
