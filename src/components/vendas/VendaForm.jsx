@@ -197,6 +197,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const [descontoInput, setDescontoInput] = useState(0);
   const [pagandoParcela, setPagandoParcela] = useState(null);
   const custoInputRefs = useRef({});
+  // Track XX custo strings separately to avoid decimal typing issues
+  const xxCustoRef = useRef({});
 
   useEffect(() => {
     Promise.all([
@@ -719,8 +721,20 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       const pecasLimpas = (form.pecas || []).map(({ _new, _custoStr, ...p }, idx) => {
         const isXX = (p.codigo || '').toUpperCase() === 'XX';
         if (isXX) {
-          const domEl = custoInputRefs.current[idx];
-          const val = domEl ? (parseFloat(domEl.value.replace(',', '.')) || 0) : (p.valor_custo || 0);
+          // Try multiple sources: xxCustoRef > DOM ref > form state
+          let val = p.valor_custo || 0;
+          const refStr = xxCustoRef.current[idx];
+          if (refStr !== undefined && refStr !== '') {
+            const parsed = parseFloat(String(refStr).replace(',', '.'));
+            if (!isNaN(parsed)) val = parsed;
+          } else {
+            const domEl = custoInputRefs.current[idx];
+            if (domEl) {
+              const parsed = parseFloat(domEl.value.replace(',', '.'));
+              if (!isNaN(parsed)) val = parsed;
+            }
+          }
+          console.log(`[SAVE] XX peca idx=${idx}, xxCustoRef=${refStr}, valor_custo=${val}`);
           return { ...p, valor_custo: val };
         }
         return { ...p };
@@ -745,6 +759,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         const criado = await base44.entities.Vendas.create(formFinal);
         savedId = criado.id;
       } else {
+        console.log('SALVANDO PECAS:', JSON.stringify(formFinal.pecas.map(p => ({ codigo: p.codigo, valor_custo: p.valor_custo }))));
         await base44.entities.Vendas.update(os.id, formFinal);
       }
 
@@ -1006,14 +1021,19 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                       <label className="text-xs text-gray-500 mb-1 block">Custo</label>
                                       {(p.codigo || '').toUpperCase() === 'XX' ? (
                                         <input
-                                          key={`custo-${i}-${p.estoque_id || i}`}
-                                          ref={el => { if (el) custoInputRefs.current[i] = el; }}
                                           type="text"
                                           inputMode="decimal"
-                                          defaultValue={String(p.valor_custo || 0)}
+                                          value={xxCustoRef.current[i] !== undefined ? xxCustoRef.current[i] : String(p.valor_custo || 0)}
                                           onChange={e => {
-                                            const val = parseFloat(e.target.value.replace(',', '.'));
-                                            if (!isNaN(val)) setForm(f => ({ ...f, pecas: f.pecas.map((x, idx) => idx !== i ? x : { ...x, valor_custo: val }) }));
+                                            const raw = e.target.value;
+                                            xxCustoRef.current[i] = raw;
+                                            const num = parseFloat(raw.replace(',', '.'));
+                                            setForm(f => ({ ...f, pecas: f.pecas.map((x, xi) => xi !== i ? x : { ...x, valor_custo: isNaN(num) ? (x.valor_custo || 0) : num }) }));
+                                          }}
+                                          onBlur={e => {
+                                            const val = parseFloat(e.target.value.replace(',', '.')) || 0;
+                                            xxCustoRef.current[i] = String(val);
+                                            setForm(f => ({ ...f, pecas: f.pecas.map((x, xi) => xi !== i ? x : { ...x, valor_custo: val }) }));
                                           }}
                                           className="input-dark text-yellow-400 text-sm"
                                           autoComplete="off"
