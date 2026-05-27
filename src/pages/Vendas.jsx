@@ -256,6 +256,11 @@ export default function Vendas() {
   });
   const totalPatio = ordensComFiltrosBase.filter(o => !!(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo)).reduce((acc, o) => acc + (o.valor_total || 0), 0);
   const totalBalcao = ordensComFiltrosBase.filter(o => !(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo)).reduce((acc, o) => acc + (o.valor_total || 0), 0);
+  const totalLucroBruto = ordensComFiltrosBase.reduce((acc, o) => {
+    const custoTotal = (o.pecas || []).reduce((s, p) => s + Number(p.valor_custo || 0) * Number(p.quantidade || 1), 0);
+    const lucroPecas = (o.valor_pecas || 0) - custoTotal;
+    return acc + (o.valor_servicos || 0) + lucroPecas;
+  }, 0);
   const fmtTotal = v => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 
   return (
@@ -316,7 +321,8 @@ export default function Vendas() {
             { label: "PÁTIO", value: totalPatio },
             { label: "BALCÃO", value: totalBalcao },
             { label: "TOTAL", value: totalPatio + totalBalcao },
-          ].map(({ label, value }) => (
+            { label: "LUCRO BRUTO", value: totalLucroBruto, color: "#10b981" },
+          ].map(({ label, value, color }) => (
             <div key={label} className="flex-1 rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
               <span className="text-xs font-semibold text-gray-400 tracking-wide">{label}</span>
               <span className="text-sm font-bold text-green-400">{fmtTotal(value)}</span>
