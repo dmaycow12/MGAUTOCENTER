@@ -1008,12 +1008,12 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                             autoComplete="off"
                                           />
                                         ) : (
-                                          <div className="input-dark text-yellow-400 text-sm">R$ {Number(p.valor_custo || 0).toFixed(2)}</div>
+                                          <div className="input-dark text-yellow-400 text-sm">{Number(p.valor_custo || 0).toFixed(2)}</div>
                                         )}
                                       </div>
                                       <div className="w-24 flex-shrink-0">
                                         <label className="text-xs text-gray-500 mb-1 block">Total</label>
-                                        <div className="input-dark text-gray-300 text-sm">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
+                                        <div className="input-dark text-gray-300 text-sm">{Number(p.valor_total || 0).toFixed(2)}</div>
                                       </div>
                                       <div className="w-16 flex-shrink-0">
                                         <label className="text-xs text-gray-500 mb-1 block">Estoque</label>
@@ -1058,7 +1058,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     <Plus className="w-4 h-4" /> Adicionar
                   </button>
                   <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
-                    <span className="text-sm font-semibold text-orange-400">Total Produtos: R$ {fmt(form.valor_pecas)}</span>
+                    <span className="text-sm font-semibold text-orange-400">Total Produtos: {fmt(form.valor_pecas)}</span>
                   </div>
                 </div>
               </Section>
@@ -1153,7 +1153,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     <Plus className="w-4 h-4" /> Adicionar
                   </button>
                   <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
-                    <span className="text-sm font-semibold text-orange-400">Total Serviços: R$ {fmt(form.valor_servicos)}</span>
+                    <span className="text-sm font-semibold text-orange-400">Total Serviços: {fmt(form.valor_servicos)}</span>
                   </div>
                 </div>
               </Section>
@@ -1269,16 +1269,16 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div>
                   <div className="text-xs text-gray-400 mb-1">Lucro Mão de Obra</div>
-                  <div className="text-sm font-bold text-green-400">R$ {fmt(form.valor_servicos)}</div>
+                  <div className="text-sm font-bold text-green-400">{fmt(form.valor_servicos)}</div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-400 mb-1">Lucro Peças</div>
-                  <div className={`text-sm font-bold ${lucroPecas >= 0 ? 'text-green-400' : 'text-red-400'}`}>R$ {fmt(lucroPecas)}</div>
-                  <div className="text-xs text-gray-500">Custo: R$ {fmt(custoTotal)}</div>
+                  <div className={`text-sm font-bold ${lucroPecas >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmt(lucroPecas)}</div>
+                  <div className="text-xs text-gray-500">Custo: {fmt(custoTotal)}</div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-400 mb-1">Lucro Bruto Total</div>
-                  <div className={`text-base font-bold ${lucroBruto >= 0 ? 'text-green-400' : 'text-red-400'}`}>R$ {fmt(lucroBruto)}</div>
+                  <div className={`text-base font-bold ${lucroBruto >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmt(lucroBruto)}</div>
                 </div>
               </div>
             </div>
