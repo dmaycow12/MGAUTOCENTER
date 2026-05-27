@@ -1271,76 +1271,74 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 </div>
 
                 {parcelas.length > 0 && (
-                  <div className="border border-gray-700 rounded-xl overflow-hidden">
-                    <div className="bg-gray-800 px-3 py-2 text-xs text-gray-400 font-semibold uppercase tracking-wider grid gap-2" style={{gridTemplateColumns:'1fr 1fr 1fr auto'}}>
-                      <span>Vencimento</span>
-                      <span>Valor (R$)</span>
-                      <span>Forma Pgto</span>
-                      <span>Status</span>
-                    </div>
-                    {parcelas.map((p, i) => (
-                      <div key={i} className={`grid gap-2 px-3 py-2 items-center ${i % 2 === 0 ? "bg-gray-900" : "bg-gray-800/40"}`} style={{gridTemplateColumns:'1fr 1fr 1fr auto'}}>
-                        <input type="date" value={p.vencimento || ""} onChange={e => updateParcela(i, "vencimento", e.target.value)} className="input-dark text-xs py-1.5" />
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={p.valor}
-                          onChange={e => updateParcela(i, "valor", e.target.value)}
-                          className="input-dark text-xs py-1.5"
-                          style={{MozAppearance:"textfield", appearance:"textfield"}}
-                        />
-                        <select
-                          value={p.forma_pagamento || "A Combinar"}
-                          onChange={e => onFormaParcelaChange(i, e.target.value)}
-                          className="input-dark text-xs py-1.5"
-                        >
-                          {["A Combinar","Boleto","Cartão","Cheque","Dinheiro","PIX"].map(s => <option key={s}>{s}</option>)}
-                        </select>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          {p.financeiro_id ? (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => (p.financeiro_status || "Pendente") === "Pago" && cancelarParcela(i)}
-                                disabled={pagandoParcela === i}
-                                className="text-xs font-semibold px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-50 transition-all"
-                                style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}
-                              >
-                                {pagandoParcela === i ? "..." : "Pendente"}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => (p.financeiro_status || "Pendente") !== "Pago" && pagarParcela(i)}
-                                disabled={pagandoParcela === i}
-                                className="text-xs font-semibold px-3 py-1.5 rounded whitespace-nowrap disabled:opacity-50 transition-all"
-                                style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}
-                              >
-                                {pagandoParcela === i ? "..." : "Pago"}
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => updateParcela(i, "financeiro_status", "Pendente")}
-                                className="text-xs font-semibold px-3 py-1.5 rounded whitespace-nowrap transition-all"
-                                style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}
-                              >
-                                Pendente
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => updateParcela(i, "financeiro_status", "Pago")}
-                                className="text-xs font-semibold px-3 py-1.5 rounded whitespace-nowrap transition-all"
-                                style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}
-                              >
-                                Pago
-                              </button>
-                            </>
-                          )}
-                        </div>
+                  <div className="border border-gray-700 rounded-xl overflow-x-auto">
+                    {/* Desktop */}
+                    <div className="hidden lg:block">
+                      <div className="bg-gray-800 px-3 py-2 text-xs text-gray-400 font-semibold uppercase tracking-wider grid gap-2" style={{gridTemplateColumns:'1fr 1fr 1fr auto'}}>
+                        <span>Vencimento</span>
+                        <span>Valor (R$)</span>
+                        <span>Forma Pgto</span>
+                        <span>Status</span>
                       </div>
-                    ))}
+                      {parcelas.map((p, i) => (
+                        <div key={i} className={`grid gap-2 px-3 py-2 items-center ${i % 2 === 0 ? "bg-gray-900" : "bg-gray-800/40"}`} style={{gridTemplateColumns:'1fr 1fr 1fr auto'}}>
+                          <input type="date" value={p.vencimento || ""} onChange={e => updateParcela(i, "vencimento", e.target.value)} className="input-dark text-xs py-1.5" />
+                          <input type="text" inputMode="decimal" value={p.valor} onChange={e => updateParcela(i, "valor", e.target.value)} className="input-dark text-xs py-1.5" style={{MozAppearance:"textfield", appearance:"textfield"}} />
+                          <select value={p.forma_pagamento || "A Combinar"} onChange={e => onFormaParcelaChange(i, e.target.value)} className="input-dark text-xs py-1.5">
+                            {["A Combinar","Boleto","Cartão","Cheque","Dinheiro","PIX"].map(s => <option key={s}>{s}</option>)}
+                          </select>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            {p.financeiro_id ? (
+                              <>
+                                <button type="button" onClick={() => (p.financeiro_status || "Pendente") === "Pago" && cancelarParcela(i)} disabled={pagandoParcela === i} className="text-xs font-semibold px-2 py-1.5 rounded whitespace-nowrap disabled:opacity-50 transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>{pagandoParcela === i ? "..." : "Pend"}</button>
+                                <button type="button" onClick={() => (p.financeiro_status || "Pendente") !== "Pago" && pagarParcela(i)} disabled={pagandoParcela === i} className="text-xs font-semibold px-2 py-1.5 rounded whitespace-nowrap disabled:opacity-50 transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}>{pagandoParcela === i ? "..." : "Pago"}</button>
+                              </>
+                            ) : (
+                              <>
+                                <button type="button" onClick={() => updateParcela(i, "financeiro_status", "Pendente")} className="text-xs font-semibold px-2 py-1.5 rounded whitespace-nowrap transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>Pend</button>
+                                <button type="button" onClick={() => updateParcela(i, "financeiro_status", "Pago")} className="text-xs font-semibold px-2 py-1.5 rounded whitespace-nowrap transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}>Pago</button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Mobile/Tablet */}
+                    <div className="lg:hidden space-y-2 p-3">
+                      {parcelas.map((p, i) => (
+                        <div key={i} className="bg-gray-800/50 rounded-lg p-3 border border-gray-700 space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="text-xs text-gray-400 block mb-1">Vencimento</label>
+                              <input type="date" value={p.vencimento || ""} onChange={e => updateParcela(i, "vencimento", e.target.value)} className="input-dark text-sm w-full" />
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray-400 block mb-1">Valor (R$)</label>
+                              <input type="text" inputMode="decimal" value={p.valor} onChange={e => updateParcela(i, "valor", e.target.value)} className="input-dark text-sm w-full" />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-400 block mb-1">Forma de Pagamento</label>
+                            <select value={p.forma_pagamento || "A Combinar"} onChange={e => onFormaParcelaChange(i, e.target.value)} className="input-dark text-sm w-full">
+                              {["A Combinar","Boleto","Cartão","Cheque","Dinheiro","PIX"].map(s => <option key={s}>{s}</option>)}
+                            </select>
+                          </div>
+                          <div className="flex gap-2">
+                            {p.financeiro_id ? (
+                              <>
+                                <button type="button" onClick={() => (p.financeiro_status || "Pendente") === "Pago" && cancelarParcela(i)} disabled={pagandoParcela === i} className="flex-1 text-sm font-semibold py-2 rounded disabled:opacity-50 transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>{pagandoParcela === i ? "..." : "Pendente"}</button>
+                                <button type="button" onClick={() => (p.financeiro_status || "Pendente") !== "Pago" && pagarParcela(i)} disabled={pagandoParcela === i} className="flex-1 text-sm font-semibold py-2 rounded disabled:opacity-50 transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}>{pagandoParcela === i ? "..." : "Pago"}</button>
+                              </>
+                            ) : (
+                              <>
+                                <button type="button" onClick={() => updateParcela(i, "financeiro_status", "Pendente")} className="flex-1 text-sm font-semibold py-2 rounded transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>Pendente</button>
+                                <button type="button" onClick={() => updateParcela(i, "financeiro_status", "Pago")} className="flex-1 text-sm font-semibold py-2 rounded transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}>Pago</button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </Section>
