@@ -1269,7 +1269,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
               <div className="grid grid-cols-4 gap-3 text-center">
                 <div>
                   <div className="text-xs text-gray-400 mb-1">Lucro Mão de Obra</div>
-                  <div className="text-sm font-bold text-green-400">R$ {fmt(form.valor_servicos)}</div>
+                  <div className="text-sm font-bold text-green-400">{fmt(form.valor_servicos)}</div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-400 mb-1">Lucro Peças</div>
