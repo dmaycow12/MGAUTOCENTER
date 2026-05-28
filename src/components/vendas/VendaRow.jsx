@@ -322,7 +322,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
     }
     // Entrando em Orçamento vindo de Aberto: devolve estoque
     if (!eraOrcamento && ficaOrcamento && !eraConcluido) {
-      await restaurarEstoque(os.pecas || []);
+      await restaurarEstoque(os.pecas || [], os.id);
     }
     onRefresh?.();
   };
@@ -330,7 +330,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
   const confirmarMudancaStatus = async () => {
     try {
       await excluirLancamentosOS(os.id);
-      await restaurarEstoque(os.pecas);
+      await restaurarEstoque(os.pecas, os.id);
       onUpdate?.({ status: statusPendente });
       const updateData = { status: statusPendente };
       if (os.quilometragem !== undefined && os.quilometragem !== null) {
@@ -348,7 +348,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
   const confirmarExcluir = async () => {
     if (os.status === "Concluído") {
       await excluirLancamentosOS(os.id);
-      await restaurarEstoque(os.pecas);
+      await restaurarEstoque(os.pecas, os.id);
     }
     await base44.entities.Vendas.delete(os.id);
     setShowAvisoExcluir(false);

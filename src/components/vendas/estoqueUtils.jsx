@@ -51,7 +51,7 @@ export async function reduzirEstoque(pecas, venda = null) {
   }
 }
 
-export async function restaurarEstoque(pecas) {
+export async function restaurarEstoque(pecas, vendaId = null) {
   if (!pecas || pecas.length === 0) return;
   const estoqueList = await base44.entities.Estoque.list("-created_date", 1000);
   for (const peca of pecas) {
@@ -60,7 +60,12 @@ export async function restaurarEstoque(pecas) {
     const item = encontrarItemEstoque(estoqueList, peca);
     if (item) {
       const novaQtd = Number(item.quantidade || 0) + qtd;
-      await base44.entities.Estoque.update(item.id, { quantidade: novaQtd });
+      const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
+      // Remove entradas de saída vinculadas a esta venda (ou por estoque_id/peca match)
+      const historicoFiltrado = vendaId
+        ? historicoAtual.filter(m => !(m.tipo === "saída" && m.ordem_venda_id === vendaId))
+        : historicoAtual;
+      await base44.entities.Estoque.update(item.id, { quantidade: novaQtd, historico: historicoFiltrado });
     }
   }
 }

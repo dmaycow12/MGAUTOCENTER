@@ -189,7 +189,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
       await reduzirEstoque(os.pecas, os);
     }
     if (!eraOrcamento && ficaOrcamento && !eraConcluido) {
-      await restaurarEstoque(os.pecas || []);
+      await restaurarEstoque(os.pecas || [], os.id);
     }
     onRefresh?.();
   };
@@ -208,7 +208,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
         const novasParcelas = osData.parcelas_detalhes.map(p => ({ ...p, financeiro_id: null }));
         await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novasParcelas });
       }
-      await restaurarEstoque(osData.pecas || []);
+      await restaurarEstoque(osData.pecas || [], os.id);
       onUpdate?.({ status: statusPendenteCard });
       await base44.entities.Vendas.update(os.id, { status: statusPendenteCard });
       setShowAvisoStatus(false);
@@ -226,7 +226,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
         const osAtualizada = todasOS.find(o => o.id === os.id);
         const osData = osAtualizada || os;
         await excluirLancamentosOS(os.id);
-        await restaurarEstoque(osData.pecas || []);
+        await restaurarEstoque(osData.pecas || [], os.id);
       } catch (err) {
         console.error("Erro ao restaurar estoque na exclusão:", err);
       }
