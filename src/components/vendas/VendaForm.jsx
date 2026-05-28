@@ -196,6 +196,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const [showDadosVeiculo, setShowDadosVeiculo] = useState(false);
   const [descontoInput, setDescontoInput] = useState(0);
   const [pagandoParcela, setPagandoParcela] = useState(null);
+  const [showConfirmCustoZero, setShowConfirmCustoZero] = useState(false);
+  const [parcelaAPagar, setParcelaAPagar] = useState(null);
   const custoInputRefs = useRef({});
   const [xxCustos, setXXCustos] = useState({});
 
@@ -652,8 +654,13 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     setDescontoInput(0);
   };
 
-  const pagarParcela = async (i) => {
-    if (!os?.id) return;
+  const temCustoZero = () => {
+    const temPecaZero = (form.pecas || []).some(p => Number(p.valor_custo || 0) === 0);
+    const temServicoZero = (form.servicos || []).some(s => Number(s.valor_custo || 0) === 0);
+    return temPecaZero || temServicoZero;
+  };
+
+  const pagarParcelaInternal = async (i) => {
     setPagandoParcela(i);
     const p = parcelas[i];
     let financeiroId = p.financeiro_id;
@@ -702,6 +709,16 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas });
     }
     setPagandoParcela(null);
+  };
+
+  const pagarParcela = async (i) => {
+    if (!os?.id) return;
+    if (temCustoZero()) {
+      setParcelaAPagar(i);
+      setShowConfirmCustoZero(true);
+      return;
+    }
+    await pagarParcelaInternal(i);
   };
 
   const cancelarParcela = async (i) => {
@@ -1507,6 +1524,34 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
             style={{background:"#f97316"}}>
             Corrigir
           </button>
+        </div>
+      </div>
+    )}
+
+    {showConfirmCustoZero && (
+      <div className="fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4">
+        <div className="bg-gray-900 border border-yellow-500/40 rounded-2xl w-full max-w-sm p-6 space-y-4">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
+              <span className="text-2xl">⚠️</span>
+            </div>
+            <div>
+              <h3 className="text-white font-bold text-lg">Custo Zero Detectado</h3>
+              <p className="text-gray-300 text-sm mt-2">
+                Este orçamento contém produtos ou serviços sem custo registrado. Você realmente deseja marcar a parcela como paga?
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-3 justify-end pt-4 border-t border-gray-700">
+            <button onClick={() => { setShowConfirmCustoZero(false); setParcelaAPagar(null); }}
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-300 border border-gray-600 hover:border-gray-500">
+              Cancelar
+            </button>
+            <button onClick={() => { setShowConfirmCustoZero(false); pagarParcelaInternal(parcelaAPagar); }}
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{background:"#16a34a"}}>
+              Confirmar
+            </button>
+          </div>
         </div>
       </div>
     )}
