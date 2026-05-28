@@ -612,84 +612,24 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     return temPecaZero || temServicoZero;
   };
 
-  const pagarParcelaInternal = async (i) => {
-    setPagandoParcela(i);
-    const p = parcelas[i];
-    let financeiroId = p.financeiro_id;
-    if (financeiroId) {
-      try {
-        await base44.entities.Financeiro.update(financeiroId, {
-          status: "Pago",
-          data_pagamento: new Date().toISOString().split("T")[0],
-          forma_pagamento: p.forma_pagamento || "A Combinar",
-        });
-      } catch (_) {
-        const fin = await base44.entities.Financeiro.create({
-          tipo: "Receita", categoria: "Ordem de Venda",
-          descricao: `Venda #${form.numero} — ${form.cliente_nome || ""} — Parcela ${i+1}/${parcelas.length}`,
-          valor: p.valor || 0,
-          data_vencimento: p.vencimento,
-          status: "Pago",
-          data_pagamento: new Date().toISOString().split("T")[0],
-          forma_pagamento: p.forma_pagamento || "A Combinar",
-          ordem_venda_id: os.id,
-          cliente_id: form.cliente_id || "",
-        });
-        financeiroId = fin.id;
-      }
-    } else {
-      const fin = await base44.entities.Financeiro.create({
-        tipo: "Receita", categoria: "Ordem de Venda",
-        descricao: `Venda #${form.numero} — ${form.cliente_nome || ""} — Parcela ${i+1}/${parcelas.length}`,
-        valor: p.valor || 0,
-        data_vencimento: p.vencimento,
-        status: "Pago",
-        data_pagamento: new Date().toISOString().split("T")[0],
-        forma_pagamento: p.forma_pagamento || "A Combinar",
-        ordem_venda_id: os.id,
-        cliente_id: form.cliente_id || "",
-      });
-      financeiroId = fin.id;
-    }
-    const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pago", financeiro_id: financeiroId } : par);
-    setParcelasSync(novas);
-    const todasPagas = novas.length > 0 && novas.every(par => par.financeiro_status === "Pago");
-    if (todasPagas && form.status !== "Concluído") {
-      await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas, status: "Concluído", data_conclusao: new Date().toISOString().split("T")[0] });
-      setForm(f => ({ ...f, status: "Concluído", data_conclusao: new Date().toISOString().split("T")[0] }));
-    } else {
-      await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas });
-    }
-    setPagandoParcela(null);
+  const pagarParcelaInternal = (i) => {
+    setParcelasSync(prev => prev.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pago" } : par));
   };
 
-  const pagarParcela = async (i) => {
-    if (!os?.id) return;
+  const pagarParcela = (i) => {
     if (temCustoZero()) {
       setParcelaAPagar(i);
       setShowConfirmCustoZero(true);
       return;
     }
-    await pagarParcelaInternal(i);
+    pagarParcelaInternal(i);
   };
 
-  const cancelarParcela = async (i) => {
-    const p = parcelas[i];
-    if (!p.financeiro_id) return;
-    setPagandoParcela(i);
-    await base44.entities.Financeiro.update(p.financeiro_id, {
-      status: "Pendente",
-      data_pagamento: "",
-    });
-    const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pendente" } : par);
-    setParcelasSync(novas);
-    const updates = { parcelas_detalhes: novas };
+  const cancelarParcela = (i) => {
+    setParcelasSync(prev => prev.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pendente" } : par));
     if (form.status === "Concluído") {
-      updates.status = "Aberto";
       setForm(f => ({ ...f, status: "Aberto" }));
     }
-    await base44.entities.Vendas.update(os.id, updates);
-    setPagandoParcela(null);
   };
 
   const onFormaParcelaChange = async (i, val) => {
@@ -1299,8 +1239,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                           <div className="flex items-center gap-1 flex-shrink-0">
                             {p.financeiro_id ? (
                               <>
-                                <button type="button" onClick={() => (p.financeiro_status || "Pendente") === "Pago" && cancelarParcela(i)} disabled={pagandoParcela === i} className="text-xs font-semibold px-2 py-1.5 rounded whitespace-nowrap disabled:opacity-50 transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>{pagandoParcela === i ? "..." : "Pend"}</button>
-                                <button type="button" onClick={() => (p.financeiro_status || "Pendente") !== "Pago" && pagarParcela(i)} disabled={pagandoParcela === i} className="text-xs font-semibold px-2 py-1.5 rounded whitespace-nowrap disabled:opacity-50 transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}>{pagandoParcela === i ? "..." : "Pago"}</button>
+                                <button type="button" onClick={() => cancelarParcela(i)} className="text-xs font-semibold px-2 py-1.5 rounded whitespace-nowrap transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>Pend</button>
+                                <button type="button" onClick={() => pagarParcela(i)} className="text-xs font-semibold px-2 py-1.5 rounded whitespace-nowrap transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}>Pago</button>
                               </>
                             ) : (
                               <>
@@ -1335,8 +1275,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                           <div className="flex gap-2">
                             {p.financeiro_id ? (
                               <>
-                                <button type="button" onClick={() => (p.financeiro_status || "Pendente") === "Pago" && cancelarParcela(i)} disabled={pagandoParcela === i} className="flex-1 text-sm font-semibold py-2 rounded disabled:opacity-50 transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>{pagandoParcela === i ? "..." : "Pendente"}</button>
-                                <button type="button" onClick={() => (p.financeiro_status || "Pendente") !== "Pago" && pagarParcela(i)} disabled={pagandoParcela === i} className="flex-1 text-sm font-semibold py-2 rounded disabled:opacity-50 transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}>{pagandoParcela === i ? "..." : "Pago"}</button>
+                                <button type="button" onClick={() => cancelarParcela(i)} className="flex-1 text-sm font-semibold py-2 rounded transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>Pendente</button>
+                                <button type="button" onClick={() => pagarParcela(i)} className="flex-1 text-sm font-semibold py-2 rounded transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}>Pago</button>
                               </>
                             ) : (
                               <>
