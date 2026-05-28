@@ -1283,17 +1283,9 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   <Field label="Nº de Parcelas">
                     <input value={form.parcelas} onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} className="input-dark" autoComplete="off" />
                   </Field>
-                  <div className="col-span-2">
-                    <label className="block text-xs text-gray-400 mb-1">Total de Produtos e Serviços</label>
-                    <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
-                      <span className="text-sm font-semibold text-orange-400">R$ {fmt(form.valor_servicos + form.valor_pecas)}</span>
-                    </div>
-                  </div>
                   <div>
                     <label className="block text-xs text-gray-400 mb-1">Total Geral</label>
-                    <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
-                      <span className="text-sm font-semibold text-orange-400">R$ {fmt(form.valor_total)}</span>
-                    </div>
+                    <div className="input-dark font-bold text-orange-400">R$ {fmt(form.valor_total)}</div>
                   </div>
                 </div>
                 {/* Mobile/Tablet */}
@@ -1312,23 +1304,13 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     </div>
                     <button type="button" onClick={aplicarDescontoAgora} className="px-2 py-2 rounded bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold">Aplicar</button>
                   </div>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Field label="Nº de Parcelas">
+                      <input value={form.parcelas} onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} className="input-dark text-sm" autoComplete="off" />
+                    </Field>
                     <div>
-                      <label className="block text-xs text-gray-400 mb-1">Total de Produtos e Serviços</label>
-                      <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
-                        <span className="text-sm font-semibold text-orange-400">R$ {fmt(form.valor_servicos + form.valor_pecas)}</span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Field label="Nº de Parcelas">
-                        <input value={form.parcelas} onChange={e => setForm(f => ({ ...f, parcelas: e.target.value }))} className="input-dark text-sm" autoComplete="off" />
-                      </Field>
-                      <div>
-                        <label className="block text-xs text-gray-400 mb-1">Total Geral</label>
-                        <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
-                          <span className="text-sm font-semibold text-orange-400">R$ {fmt(form.valor_total)}</span>
-                        </div>
-                      </div>
+                      <label className="block text-xs text-gray-400 mb-1">Total Geral</label>
+                      <div className="input-dark font-bold text-orange-400 text-sm">R$ {fmt(form.valor_total)}</div>
                     </div>
                   </div>
                 </div>
