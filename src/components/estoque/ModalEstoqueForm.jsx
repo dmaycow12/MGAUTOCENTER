@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Plus, Trash2, Package, History, ArrowDown, ArrowUp } from "lucide-react";
+import { X, Plus, Trash2, Package, History, ArrowDown, ArrowUp, TrendingUp } from "lucide-react";
 
 const GREEN = "#00ff00";
 
@@ -57,10 +57,16 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
             <Package className="w-4 h-4" /> Dados
           </button>
           {editando && (
-            <button onClick={() => setAba("historico")}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all -mb-px ${aba === "historico" ? "bg-gray-800 text-white border border-gray-700 border-b-gray-800" : "text-gray-500 hover:text-gray-300"}`}>
-              <History className="w-4 h-4" /> Histórico {historico.length > 0 && <span className="bg-gray-700 text-gray-300 text-xs px-1.5 py-0.5 rounded-full">{historico.length}</span>}
-            </button>
+            <>
+              <button onClick={() => setAba("historico")}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all -mb-px ${aba === "historico" ? "bg-gray-800 text-white border border-gray-700 border-b-gray-800" : "text-gray-500 hover:text-gray-300"}`}>
+                <History className="w-4 h-4" /> Histórico {historico.length > 0 && <span className="bg-gray-700 text-gray-300 text-xs px-1.5 py-0.5 rounded-full">{historico.length}</span>}
+              </button>
+              <button onClick={() => setAba("lucro")}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all -mb-px ${aba === "lucro" ? "bg-gray-800 text-white border border-gray-700 border-b-gray-800" : "text-gray-500 hover:text-gray-300"}`}>
+                <TrendingUp className="w-4 h-4" /> Lucro
+              </button>
+            </>
           )}
         </div>
 
@@ -144,6 +150,92 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
               </F>
             </div>
           )}
+
+          {/* ABA LUCRO */}
+          {aba === "lucro" && (() => {
+            const entradas = historico.filter(m => m.tipo === "entrada");
+            const saidas = historico.filter(m => m.tipo === "saída");
+            const custoTotal = entradas.reduce((acc, m) => acc + (Number(m.valor_unitario || 0) * Number(m.quantidade || 0)), 0);
+            const qtdEntrada = entradas.reduce((acc, m) => acc + (Number(m.quantidade || 0)), 0);
+            const custoPorUnidade = qtdEntrada > 0 ? custoTotal / qtdEntrada : 0;
+            const receitaSaidas = saidas.reduce((acc, m) => acc + (Number(m.valor_unitario || 0) * Number(m.quantidade || 0)), 0);
+            const qtdSaida = saidas.reduce((acc, m) => acc + (Number(m.quantidade || 0)), 0);
+            const lucroBruto = receitaSaidas - (qtdSaida * custoPorUnidade);
+            const margemLucro = receitaSaidas > 0 ? (lucroBruto / receitaSaidas) * 100 : 0;
+
+            return (
+              <div className="space-y-4">
+                {/* Resumo */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                    <p className="text-xs text-gray-400 mb-1">CUSTO MÉDIO UNITÁRIO</p>
+                    <p className="text-lg font-bold text-white">R$ {Number(custoPorUnidade).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</p>
+                    <p className="text-xs text-gray-500 mt-2">{qtdEntrada} unidade(s) entrada</p>
+                  </div>
+                  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                    <p className="text-xs text-gray-400 mb-1">CUSTO TOTAL ENTRADA</p>
+                    <p className="text-lg font-bold text-red-400">R$ {Number(custoTotal).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</p>
+                  </div>
+                  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                    <p className="text-xs text-gray-400 mb-1">RECEITA VENDAS</p>
+                    <p className="text-lg font-bold text-green-400">R$ {Number(receitaSaidas).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</p>
+                    <p className="text-xs text-gray-500 mt-2">{qtdSaida} unidade(s) saída</p>
+                  </div>
+                  <div className={`bg-gray-800/50 border rounded-lg p-4 ${lucroBruto >= 0 ? "border-green-500/30" : "border-red-500/30"}`}>
+                    <p className="text-xs text-gray-400 mb-1">LUCRO BRUTO</p>
+                    <p className={`text-lg font-bold ${lucroBruto >= 0 ? "text-green-400" : "text-red-400"}`}>R$ {Number(lucroBruto).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</p>
+                  </div>
+                  <div className={`col-span-2 bg-gray-800/50 border rounded-lg p-4 ${margemLucro >= 0 ? "border-green-500/30" : "border-red-500/30"}`}>
+                    <p className="text-xs text-gray-400 mb-1">MARGEM DE LUCRO (%)</p>
+                    <p className={`text-2xl font-bold ${margemLucro >= 0 ? "text-green-400" : "text-red-400"}`}>{Number(margemLucro).toFixed(1)}%</p>
+                  </div>
+                </div>
+
+                {/* Detalhamento Saídas */}
+                {saidas.length > 0 ? (
+                  <div className="border-t border-gray-700 pt-4">
+                    <p className="text-sm font-semibold text-white mb-3">Detalhamento de Saídas (Vendas)</p>
+                    <div className="overflow-x-auto rounded-lg border border-gray-800">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-gray-800 bg-gray-800/60">
+                            <th className="px-3 py-2 text-left text-gray-400 font-medium">Data</th>
+                            <th className="px-3 py-2 text-right text-gray-400 font-medium">Qtd</th>
+                            <th className="px-3 py-2 text-right text-gray-400 font-medium">Vl. Unit.</th>
+                            <th className="px-3 py-2 text-right text-gray-400 font-medium">Receita</th>
+                            <th className="px-3 py-2 text-right text-gray-400 font-medium">Lucro Unit.</th>
+                            <th className="px-3 py-2 text-right text-gray-400 font-medium">Lucro Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {saidas.map((mov, i) => {
+                            const receitaMov = Number(mov.valor_unitario || 0) * Number(mov.quantidade || 0);
+                            const lucroUnitMov = Number(mov.valor_unitario || 0) - custoPorUnidade;
+                            const lucroTotalMov = lucroUnitMov * Number(mov.quantidade || 0);
+                            return (
+                              <tr key={i} className="border-b border-gray-800/60 last:border-0 bg-red-500/5">
+                                <td className="px-3 py-2 text-gray-400">{mov.data ? new Date(mov.data).toLocaleDateString("pt-BR") : "—"}</td>
+                                <td className="px-3 py-2 text-right text-white font-medium">{mov.quantidade}</td>
+                                <td className="px-3 py-2 text-right text-white font-medium">R$ {Number(mov.valor_unitario || 0).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</td>
+                                <td className="px-3 py-2 text-right text-green-400 font-medium">R$ {Number(receitaMov).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</td>
+                                <td className={`px-3 py-2 text-right font-medium ${lucroUnitMov >= 0 ? "text-green-400" : "text-red-400"}`}>R$ {Number(lucroUnitMov).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</td>
+                                <td className={`px-3 py-2 text-right font-bold ${lucroTotalMov >= 0 ? "text-green-400" : "text-red-400"}`}>R$ {Number(lucroTotalMov).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <ArrowUp className="w-10 h-10 text-gray-600 mx-auto mb-2" />
+                    <p className="text-gray-500 text-sm">Nenhuma saída (venda) registrada</p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* ABA HISTÓRICO */}
           {aba === "historico" && (
