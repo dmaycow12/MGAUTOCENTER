@@ -1115,15 +1115,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     )}
                   </Droppable>
                 </DragDropContext>
-                <div className="flex items-center justify-between">
-                   <button onClick={addPeca} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
-                     <Plus className="w-4 h-4" /> Adicionar
-                   </button>
-                   <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
-                     <span className="text-sm font-semibold text-orange-400">{fmt(form.valor_pecas)}</span>
-                   </div>
-                 </div>
-              </Section>
+                <button onClick={addPeca} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium mb-3" style={{background:"#00ff00"}}>
+                  <Plus className="w-4 h-4" /> Adicionar
+                </button>
+                </Section>
 
               <Section title="Serviços">
                 <DragDropContext onDragEnd={r => onDragEnd(r, 'servicos')}>
@@ -1253,17 +1248,23 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     )}
                   </Droppable>
                 </DragDropContext>
-                <div className="flex items-center justify-between">
-                   <button onClick={addServico} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
-                     <Plus className="w-4 h-4" /> Adicionar
-                   </button>
-                   <div className="px-4 py-2 rounded-xl border border-orange-500/40 bg-orange-500/10">
-                     <span className="text-sm font-semibold text-orange-400">{fmt(form.valor_servicos)}</span>
-                   </div>
-                 </div>
-              </Section>
+                <button onClick={addServico} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
+                  <Plus className="w-4 h-4" /> Adicionar
+                </button>
+                </Section>
 
               <Section title="Pagamento">
+                {/* Totais de Produtos e Serviços */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Total Produtos</label>
+                    <div className="input-dark font-bold text-orange-400 text-center">R$ {fmt(form.valor_pecas)}</div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Total Serviços</label>
+                    <div className="input-dark font-bold text-orange-400 text-center">R$ {fmt(form.valor_servicos)}</div>
+                  </div>
+                </div>
                 {/* Desktop */}
                 <div className="hidden lg:grid grid-cols-4 gap-4 mb-4">
                   <div>
