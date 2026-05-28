@@ -35,11 +35,12 @@ export async function reduzirEstoque(pecas, venda = null) {
     const item = encontrarItemEstoque(estoqueList, peca);
     if (item) {
       const novaQtd = Math.max(0, Number(item.quantidade || 0) - qtd);
+      const valorUnitario = Number(peca.valor_unitario || peca.valor_venda || item.valor_venda || 0);
       const movSaida = {
-        tipo: "saida",
-        data: new Date().toISOString(),
+        tipo: "saída",
+        data: new Date().toISOString().split('T')[0],
         quantidade: qtd,
-        valor_unitario: Number(peca.valor_unitario || 0),
+        valor_unitario: valorUnitario,
         ordem_venda_numero: venda?.numero || "",
         ordem_venda_id: venda?.id || "",
         observacao: "",
