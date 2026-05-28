@@ -1377,11 +1377,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   </div>
                 )}
               </Section>
-
-              <Field label="Observações">
-                <textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} className="input-dark" rows={4} autoComplete="off" />
-              </Field>
-          </React.Fragment>
+              </React.Fragment>
         </div>
 
         {/* Lucro Bruto */}
