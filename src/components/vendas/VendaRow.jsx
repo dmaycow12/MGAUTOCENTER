@@ -239,6 +239,14 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
   };
 
   const saveField = async (field, val) => {
+    if (field === "numero" && val && val !== os.numero) {
+      const existentes = await base44.entities.Vendas.filter({ numero: val }, "-created_date", 5);
+      const duplicado = existentes.find(v => v.id !== os.id);
+      if (duplicado) {
+        alert(`O número ${val} já está em uso pela venda do cliente "${duplicado.cliente_nome || "—"}". Escolha outro número.`);
+        return;
+      }
+    }
     await base44.entities.Vendas.update(os.id, { [field]: val });
     onUpdate?.({ [field]: val }); // atualiza local sem recarregar tudo
   };
