@@ -607,9 +607,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const temCustoZero = () => {
-    const temPecaZero = (form.pecas || []).some(p => Number(p.valor_custo || 0) === 0);
-    const temServicoZero = (form.servicos || []).some(s => Number(s.valor_custo || 0) === 0);
-    return temPecaZero || temServicoZero;
+    return (form.pecas || []).some(p => Number(p.valor_custo || 0) === 0);
   };
 
   const pagarParcelaInternal = (i) => {
