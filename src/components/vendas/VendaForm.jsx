@@ -1304,7 +1304,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                               </>
                             ) : (
                               <>
-                                <button type="button" onClick={() => updateParcela(i, "financeiro_status", "Pendente")} className="text-xs font-semibold px-2 py-1.5 rounded whitespace-nowrap transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>Pend</button>
+                                <button type="button" onClick={() => { updateParcela(i, "financeiro_status", "Pendente"); if (form.status === "Conclu\u00eddo") { setForm(f => ({ ...f, status: "Aberto" })); if (os?.id) base44.entities.Vendas.update(os.id, { status: "Aberto" }); } }} className="text-xs font-semibold px-2 py-1.5 rounded whitespace-nowrap transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>Pend</button>
                                 <button type="button" onClick={() => updateParcela(i, "financeiro_status", "Pago")} className="text-xs font-semibold px-2 py-1.5 rounded whitespace-nowrap transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}>Pago</button>
                               </>
                             )}
@@ -1340,7 +1340,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                               </>
                             ) : (
                               <>
-                                <button type="button" onClick={() => updateParcela(i, "financeiro_status", "Pendente")} className="flex-1 text-sm font-semibold py-2 rounded transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>Pendente</button>
+                                <button type="button" onClick={() => { updateParcela(i, "financeiro_status", "Pendente"); if (form.status === "Conclu\u00eddo") { setForm(f => ({ ...f, status: "Aberto" })); if (os?.id) base44.entities.Vendas.update(os.id, { status: "Aberto" }); } }} className="flex-1 text-sm font-semibold py-2 rounded transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>Pendente</button>
                                 <button type="button" onClick={() => updateParcela(i, "financeiro_status", "Pago")} className="flex-1 text-sm font-semibold py-2 rounded transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}>Pago</button>
                               </>
                             )}
