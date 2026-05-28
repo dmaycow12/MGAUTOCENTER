@@ -240,7 +240,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
 
   const saveField = async (field, val) => {
     await base44.entities.Vendas.update(os.id, { [field]: val });
-    onRefresh?.();
+    onUpdate?.({ [field]: val }); // atualiza local sem recarregar tudo
   };
 
 
