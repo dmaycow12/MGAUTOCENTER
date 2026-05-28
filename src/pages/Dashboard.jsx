@@ -396,44 +396,6 @@ export default function Dashboard() {
         );
       })()}
 
-      {/* Cards Vendas - Custo, Lucro Peças, Serviços */}
-      {(() => {
-        const vendasPeriodo = ordensPeriodo.filter(o => o.status !== "Orçamento");
-        const custoPecas = vendasPeriodo.reduce((acc, v) => {
-          const custo = (v.pecas || []).reduce((s, p) => s + (Number(p.valor_custo || 0) * Number(p.quantidade || 0)), 0);
-          return acc + custo;
-        }, 0);
-        const vendaPecas = vendasPeriodo.reduce((acc, v) => {
-          const venda = (v.pecas || []).reduce((s, p) => s + (Number(p.valor_total || 0)), 0);
-          return acc + venda;
-        }, 0);
-        const lucroPecas = vendaPecas - custoPecas;
-        const custoServicos = vendasPeriodo.reduce((acc, v) => {
-          const custo = (v.servicos || []).reduce((s, sv) => s + (Number(sv.valor_custo || 0) * Number(sv.quantidade || 0)), 0);
-          return acc + custo;
-        }, 0);
-        const vendaServicos = vendasPeriodo.reduce((acc, v) => {
-          const venda = (v.servicos || []).reduce((s, sv) => s + (Number(sv.valor || 0) * Number(sv.quantidade || 0)), 0);
-          return acc + venda;
-        }, 0);
-        return (
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-              <p className="text-gray-400 text-xs">Custo</p>
-              <p className="text-red-400 font-bold text-sm">{fmt(custoPecas + custoServicos)}</p>
-            </div>
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-              <p className="text-gray-400 text-xs">Lucro Peças</p>
-              <p className={`font-bold text-sm ${lucroPecas >= 0 ? "text-green-400" : "text-red-400"}`}>{fmt(lucroPecas)}</p>
-            </div>
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-              <p className="text-gray-400 text-xs">Serviços</p>
-              <p className="text-blue-400 font-bold text-sm">{fmt(vendaServicos)}</p>
-            </div>
-          </div>
-        );
-      })()}
-
       {/* Estatísticas por Produto/Serviço */}
       <EstatisticasProdutosServicos vendas={ordensPeriodo} servicosCad={servicosCad} estoque={estoque} />
 
