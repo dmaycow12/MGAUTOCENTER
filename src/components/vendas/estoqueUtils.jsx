@@ -26,48 +26,60 @@ function encontrarItemEstoque(estoqueList, peca) {
   return null;
 }
 
-export async function reduzirEstoque(pecas, venda = null) {
+export async function reduzirEstoque(pecas, venda = null, estoqueList = null) {
   if (!pecas || pecas.length === 0) return;
-  const estoqueList = await base44.entities.Estoque.list("-created_date", 1000);
+  const lista = estoqueList || await base44.entities.Estoque.list("-created_date", 1000);
+  // Agrupa todas as peças pelo mesmo item de estoque
+  const porItem = new Map();
   for (const peca of pecas) {
     const qtd = Number(peca.quantidade);
     if (!qtd || qtd <= 0) continue;
-    const item = encontrarItemEstoque(estoqueList, peca);
-    if (item) {
-      const novaQtd = Math.max(0, Number(item.quantidade || 0) - qtd);
-      const valorUnitario = Number(peca.valor_unitario || peca.valor_venda || item.valor_venda || 0);
-      const movSaida = {
-        tipo: "saída",
-        data: new Date().toISOString().split('T')[0],
-        quantidade: qtd,
-        valor_unitario: valorUnitario,
-        ordem_venda_numero: venda?.numero || "",
-        ordem_venda_id: venda?.id || "",
-        observacao: "",
-      };
-      const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
-      await base44.entities.Estoque.update(item.id, { quantidade: novaQtd, historico: [...historicoAtual, movSaida] });
-    }
+    const item = encontrarItemEstoque(lista, peca);
+    if (!item) continue;
+    if (!porItem.has(item.id)) porItem.set(item.id, { item, saidas: [] });
+    porItem.get(item.id).saidas.push({
+      tipo: "saída",
+      data: new Date().toISOString().split('T')[0],
+      quantidade: qtd,
+      valor_unitario: Number(peca.valor_unitario || peca.valor_venda || item.valor_venda || 0),
+      ordem_venda_numero: venda?.numero || "",
+      ordem_venda_id: venda?.id || "",
+      observacao: "",
+    });
   }
+  // Um update por item
+  const updates = Array.from(porItem.values()).map(({ item, saidas }) => {
+    const totalQtd = saidas.reduce((s, m) => s + m.quantidade, 0);
+    const novaQtd = Math.max(0, Number(item.quantidade || 0) - totalQtd);
+    const historico = [...(Array.isArray(item.historico) ? item.historico : []), ...saidas];
+    return base44.entities.Estoque.update(item.id, { quantidade: novaQtd, historico });
+  });
+  await Promise.all(updates);
 }
 
-export async function restaurarEstoque(pecas, vendaId = null) {
+export async function restaurarEstoque(pecas, vendaId = null, estoqueList = null) {
   if (!pecas || pecas.length === 0) return;
-  const estoqueList = await base44.entities.Estoque.list("-created_date", 1000);
+  const lista = estoqueList || await base44.entities.Estoque.list("-created_date", 1000);
+  // Agrupa todas as peças pelo mesmo item de estoque
+  const porItem = new Map();
   for (const peca of pecas) {
     const qtd = Number(peca.quantidade);
     if (!qtd || qtd <= 0) continue;
-    const item = encontrarItemEstoque(estoqueList, peca);
-    if (item) {
-      const novaQtd = Number(item.quantidade || 0) + qtd;
-      const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
-      // Remove entradas de saída vinculadas a esta venda (ou por estoque_id/peca match)
-      const historicoFiltrado = vendaId
-        ? historicoAtual.filter(m => !(m.tipo === "saída" && m.ordem_venda_id === vendaId))
-        : historicoAtual;
-      await base44.entities.Estoque.update(item.id, { quantidade: novaQtd, historico: historicoFiltrado });
-    }
+    const item = encontrarItemEstoque(lista, peca);
+    if (!item) continue;
+    if (!porItem.has(item.id)) porItem.set(item.id, { item, totalQtd: 0 });
+    porItem.get(item.id).totalQtd += qtd;
   }
+  // Um update por item
+  const updates = Array.from(porItem.values()).map(({ item, totalQtd }) => {
+    const novaQtd = Number(item.quantidade || 0) + totalQtd;
+    const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
+    const historico = vendaId
+      ? historicoAtual.filter(m => !(m.tipo === "saída" && m.ordem_venda_id === vendaId))
+      : historicoAtual;
+    return base44.entities.Estoque.update(item.id, { quantidade: novaQtd, historico });
+  });
+  await Promise.all(updates);
 }
 
 export async function excluirLancamentosOS(osId) {

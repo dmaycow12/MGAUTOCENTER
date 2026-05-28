@@ -768,10 +768,12 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       if (savedId) {
         const oldPecas = os?.pecas || [];
         const newPecas = formFinal.pecas || [];
+        // Busca o estoque UMA VEZ e reutiliza em todas as operações
+        const estoqueAtual = await base44.entities.Estoque.list("-created_date", 1000);
 
         if (!os) {
           // Nova venda: reduzir todas as peças
-          if (newPecas.length > 0) await reduzirEstoque(newPecas, { id: savedId, numero: formFinal.numero });
+          if (newPecas.length > 0) await reduzirEstoque(newPecas, { id: savedId, numero: formFinal.numero }, estoqueAtual);
         } else {
           // Editando: diff old vs new
           const removidas = oldPecas.filter(op => op.estoque_id && !newPecas.find(np => np.estoque_id === op.estoque_id));
@@ -781,13 +783,15 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
             const old = oldPecas.find(op => op.estoque_id === np.estoque_id);
             return old && Number(old.quantidade) !== Number(np.quantidade);
           });
-          if (removidas.length > 0) await restaurarEstoque(removidas, os.id);
+          if (removidas.length > 0) await restaurarEstoque(removidas, os.id, estoqueAtual);
           if (alteradas.length > 0) {
             const oldAlteradas = alteradas.map(np => oldPecas.find(op => op.estoque_id === np.estoque_id));
-            await restaurarEstoque(oldAlteradas, os.id);
-            await reduzirEstoque(alteradas, { id: savedId, numero: formFinal.numero });
+            // Após restaurar, atualiza o snapshot local antes de reduzir
+            await restaurarEstoque(oldAlteradas, os.id, estoqueAtual);
+            const estoquePos = await base44.entities.Estoque.list("-created_date", 1000);
+            await reduzirEstoque(alteradas, { id: savedId, numero: formFinal.numero }, estoquePos);
           }
-          if (adicionadas.length > 0) await reduzirEstoque(adicionadas, { id: savedId, numero: formFinal.numero });
+          if (adicionadas.length > 0) await reduzirEstoque(adicionadas, { id: savedId, numero: formFinal.numero }, estoqueAtual);
         }
       }
 
