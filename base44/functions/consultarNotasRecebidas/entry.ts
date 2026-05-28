@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
 
       const data_emissao = (nf.data_emissao || '').substring(0, 10);
 
-      if (data_emissao && data_emissao < '2026-03-01') continue;
+      if (data_emissao && data_emissao < '2026-04-01') continue;
 
       const situacao = (nf.situacao || '').toLowerCase();
       const status = situacao.includes('cancel') ? 'Cancelada' : 'Importada';
@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
       const data_emissao = (nf.data_emissao || '').substring(0, 10);
       const valorTotal = parseFloat(nf.valor_servicos || '0');
 
-      if (data_emissao && data_emissao < '2026-03-01') continue;
+      if (data_emissao && data_emissao < '2026-04-01') continue;
 
       let pdfNFSe = nf.url || '';
       if (!pdfNFSe && chave) {

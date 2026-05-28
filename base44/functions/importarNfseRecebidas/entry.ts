@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
       const data_emissao = (nf.data_emissao || nf.data_competencia || '').substring(0, 10);
       const valorTotal = parseFloat(nf.valor_servico || nf.valor_liquido || '0');
 
-      if (data_emissao && data_emissao < '2026-03-01') continue;
+      if (data_emissao && data_emissao < '2026-04-01') continue;
 
       const nomePrestador = nf.razao_social_prestador || nf.razao_social_emitente || nf.nome_fantasia_emitente || nf.emitente_dps || '';
       const docPrestador = nf.cnpj_prestador || nf.cpf_prestador || nf.cnpj_emitente || '';
