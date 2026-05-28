@@ -683,7 +683,12 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     });
     const novas = parcelas.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pendente" } : par);
     setParcelasSync(novas);
-    await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas });
+    const updates = { parcelas_detalhes: novas };
+    if (form.status === "Concluído") {
+      updates.status = "Aberto";
+      setForm(f => ({ ...f, status: "Aberto" }));
+    }
+    await base44.entities.Vendas.update(os.id, updates);
     setPagandoParcela(null);
   };
 
