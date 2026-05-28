@@ -766,19 +766,31 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         await base44.entities.Vendas.update(savedId, { status: "Concluído", data_conclusao: dataConclusao });
       }
 
-      const eraAbertaFinal = os?.status !== "Concluído";
-      const ficouConcluidaFinal = formFinal.status === "Concluído";
-      if (eraAbertaFinal && ficouConcluidaFinal && savedId) {
-        await reduzirEstoque(formFinal.pecas, { id: savedId, numero: formFinal.numero });
-      }
-      // Se venda já era Concluída: restaurar peças removidas e reduzir peças adicionadas
-      if (!eraAbertaFinal && ficouConcluidaFinal && os?.id) {
-        const oldPecas = os.pecas || [];
+      // Ajuste de estoque: SEMPRE ao salvar (exceto Orçamento)
+      if (savedId) {
+        const oldPecas = os?.pecas || [];
         const newPecas = formFinal.pecas || [];
-        const removidas = oldPecas.filter(op => op.estoque_id && !newPecas.find(np => np.estoque_id === op.estoque_id));
-        const adicionadas = newPecas.filter(np => np.estoque_id && !oldPecas.find(op => op.estoque_id === np.estoque_id));
-        if (removidas.length > 0) await restaurarEstoque(removidas, os.id);
-        if (adicionadas.length > 0) await reduzirEstoque(adicionadas, { id: savedId, numero: formFinal.numero });
+
+        if (!os) {
+          // Nova venda: reduzir todas as peças
+          if (newPecas.length > 0) await reduzirEstoque(newPecas, { id: savedId, numero: formFinal.numero });
+        } else {
+          // Editando: diff old vs new
+          const removidas = oldPecas.filter(op => op.estoque_id && !newPecas.find(np => np.estoque_id === op.estoque_id));
+          const adicionadas = newPecas.filter(np => np.estoque_id && !oldPecas.find(op => op.estoque_id === np.estoque_id));
+          const alteradas = newPecas.filter(np => {
+            if (!np.estoque_id) return false;
+            const old = oldPecas.find(op => op.estoque_id === np.estoque_id);
+            return old && Number(old.quantidade) !== Number(np.quantidade);
+          });
+          if (removidas.length > 0) await restaurarEstoque(removidas, os.id);
+          if (alteradas.length > 0) {
+            const oldAlteradas = alteradas.map(np => oldPecas.find(op => op.estoque_id === np.estoque_id));
+            await restaurarEstoque(oldAlteradas, os.id);
+            await reduzirEstoque(alteradas, { id: savedId, numero: formFinal.numero });
+          }
+          if (adicionadas.length > 0) await reduzirEstoque(adicionadas, { id: savedId, numero: formFinal.numero });
+        }
       }
 
       onSave();
