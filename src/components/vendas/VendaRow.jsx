@@ -37,16 +37,18 @@ const InlineEdit = forwardRef(function InlineEdit({ value, onSave, placeholder =
     startEdit: () => setEditing(true),
   }));
 
-  const commit = () => {
+  const commit = async () => {
     if (isPhone) {
       const digits = val.replace(/\D/g, '');
       if (digits.length > 0 && (digits.length < 10 || digits.length > 11)) {
         alert("O telefone deve ter entre 10 e 11 dígitos.");
         return;
       }
-      onSave(digits.length > 0 ? formatTelefone(val) : "");
+      const result = await onSave(digits.length > 0 ? formatTelefone(val) : "");
+      if (result === false) return;
     } else {
-      onSave(val);
+      const result = await onSave(val);
+      if (result === false) return;
     }
     setEditing(false);
   };
@@ -244,7 +246,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
       const duplicado = existentes.find(v => v.id !== os.id);
       if (duplicado) {
         alert(`O número ${val} já está em uso pela venda do cliente "${duplicado.cliente_nome || "—"}". Escolha outro número.`);
-        return;
+        return false;
       }
     }
     await base44.entities.Vendas.update(os.id, { [field]: val });
