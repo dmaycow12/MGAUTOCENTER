@@ -948,6 +948,19 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                        <input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
                                      </div>
                                      <div className="w-20 flex-shrink-0">
+                                       <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
+                                       <input
+                                         type="text"
+                                         inputMode="decimal"
+                                         value={p.valor_unitario}
+                                         onChange={e => updatePeca(i, "valor_unitario", e.target.value)}
+                                         className="input-dark" autoComplete="off" />
+                                     </div>
+                                     <div className="w-20 flex-shrink-0">
+                                       <label className="text-xs text-gray-500 mb-1 block">Total</label>
+                                       <div className="input-dark text-gray-300 text-sm">{Number(p.valor_total || 0).toFixed(2)}</div>
+                                     </div>
+                                     <div className="w-20 flex-shrink-0">
                                       <label className="text-xs text-gray-500 mb-1 block">Custo</label>
                                       {(p.codigo || '').toUpperCase() === 'XX' ? (
                                         <input
@@ -971,19 +984,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                         <div className="input-dark text-yellow-400 text-sm">{Number(p.valor_custo || 0).toFixed(2)}</div>
                                       )}
                                      </div>
-                                     <div className="w-20 flex-shrink-0">
-                                       <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                                       <input
-                                         type="text"
-                                         inputMode="decimal"
-                                         value={p.valor_unitario}
-                                         onChange={e => updatePeca(i, "valor_unitario", e.target.value)}
-                                         className="input-dark" autoComplete="off" />
-                                     </div>
-                                     <div className="w-20 flex-shrink-0">
-                                       <label className="text-xs text-gray-500 mb-1 block">Total</label>
-                                       <div className="input-dark text-gray-300 text-sm">{Number(p.valor_total || 0).toFixed(2)}</div>
-                                     </div>
                                      <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2 mb-0.5"><Trash2 className="w-4 h-4" /></button>
                                    </div>
                                    {/* Tablet */}
@@ -997,19 +997,22 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                        <input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
                                      </div>
                                      <div>
-                                       <label className="text-xs text-gray-500 mb-1 block">Custo</label>
-                                       {(p.codigo || '').toUpperCase() === 'XX' ? (
-                                         <input type="text" inputMode="decimal" value={xxCustos[i] !== undefined ? xxCustos[i] : String(p.valor_custo || 0)} onChange={e => setXXCustos(prev => ({ ...prev, [i]: e.target.value }))} className="input-dark text-yellow-400 text-sm" autoComplete="off" />
-                                       ) : (
-                                         <div className="input-dark text-yellow-400 text-sm">{Number(p.valor_custo || 0).toFixed(2)}</div>
-                                       )}
-                                     </div>
-                                     <div>
                                        <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
                                        <input type="text" inputMode="decimal" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" autoComplete="off" />
                                      </div>
+                                     <div>
+                                       <label className="text-xs text-gray-500 mb-1 block">Total</label>
+                                       <div className="text-gray-300 text-sm font-semibold">R$ {Number(p.valor_total || 0).toFixed(2)}</div>
+                                     </div>
                                      <div className="col-span-3 flex justify-between items-end">
-                                       <div><label className="text-xs text-gray-500 mb-1 block">Total</label><div className="text-gray-300 text-sm font-semibold">R$ {Number(p.valor_total || 0).toFixed(2)}</div></div>
+                                       <div>
+                                         <label className="text-xs text-gray-500 mb-1 block">Custo</label>
+                                         {(p.codigo || '').toUpperCase() === 'XX' ? (
+                                           <input type="text" inputMode="decimal" value={xxCustos[i] !== undefined ? xxCustos[i] : String(p.valor_custo || 0)} onChange={e => setXXCustos(prev => ({ ...prev, [i]: e.target.value }))} className="input-dark text-yellow-400 text-sm" autoComplete="off" />
+                                         ) : (
+                                           <div className="input-dark text-yellow-400 text-sm">{Number(p.valor_custo || 0).toFixed(2)}</div>
+                                         )}
+                                       </div>
                                        <button onClick={() => removePeca(i)} className="text-red-400 hover:text-red-300 p-2"><Trash2 className="w-4 h-4" /></button>
                                      </div>
                                    </div>
@@ -1095,6 +1098,19 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                        <input value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
                                      </div>
                                      <div className="w-20 flex-shrink-0">
+                                       <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
+                                       <input
+                                         type="text"
+                                         inputMode="decimal"
+                                         value={s.valor}
+                                         onChange={e => updateServico(i, "valor", e.target.value)}
+                                         className="input-dark" autoComplete="off" />
+                                     </div>
+                                     <div className="w-20 flex-shrink-0">
+                                       <label className="text-xs text-gray-500 mb-1 block">Total</label>
+                                       <div className="input-dark text-gray-300 text-sm">{(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
+                                     </div>
+                                     <div className="w-20 flex-shrink-0">
                                        <label className="text-xs text-gray-500 mb-1 block">Custo</label>
                                        <input
                                          type="text"
@@ -1107,19 +1123,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                          className="input-dark text-yellow-400 text-sm"
                                          autoComplete="off"
                                        />
-                                     </div>
-                                     <div className="w-20 flex-shrink-0">
-                                       <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                                       <input
-                                         type="text"
-                                         inputMode="decimal"
-                                         value={s.valor}
-                                         onChange={e => updateServico(i, "valor", e.target.value)}
-                                         className="input-dark" autoComplete="off" />
-                                     </div>
-                                     <div className="w-20 flex-shrink-0">
-                                       <label className="text-xs text-gray-500 mb-1 block">Total</label>
-                                       <div className="input-dark text-gray-300 text-sm">{(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
                                      </div>
                                      <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2 mb-0.5"><Trash2 className="w-4 h-4" /></button>
                                    </div>
@@ -1134,15 +1137,18 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                        <input value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
                                      </div>
                                      <div>
-                                       <label className="text-xs text-gray-500 mb-1 block">Custo</label>
-                                       <input type="text" inputMode="decimal" value={s.valor_custo || 0} onChange={e => { const val = Number(String(e.target.value).replace(',', '.')) || 0; setForm(f => ({ ...f, servicos: f.servicos.map((x, idx) => idx === i ? { ...x, valor_custo: val } : x) })); }} className="input-dark text-yellow-400 text-sm" autoComplete="off" />
-                                     </div>
-                                     <div>
                                        <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
                                        <input type="text" inputMode="decimal" value={s.valor} onChange={e => updateServico(i, "valor", e.target.value)} className="input-dark" autoComplete="off" />
                                      </div>
+                                     <div>
+                                       <label className="text-xs text-gray-500 mb-1 block">Total</label>
+                                       <div className="text-gray-300 text-sm font-semibold">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div>
+                                     </div>
                                      <div className="col-span-3 flex justify-between items-end">
-                                       <div><label className="text-xs text-gray-500 mb-1 block">Total</label><div className="text-gray-300 text-sm font-semibold">R$ {(Number(s.valor || 0) * Number(s.quantidade ?? 1)).toFixed(2)}</div></div>
+                                       <div>
+                                         <label className="text-xs text-gray-500 mb-1 block">Custo</label>
+                                         <input type="text" inputMode="decimal" value={s.valor_custo || 0} onChange={e => { const val = Number(String(e.target.value).replace(',', '.')) || 0; setForm(f => ({ ...f, servicos: f.servicos.map((x, idx) => idx === i ? { ...x, valor_custo: val } : x) })); }} className="input-dark text-yellow-400 text-sm" autoComplete="off" />
+                                       </div>
                                        <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 p-2"><Trash2 className="w-4 h-4" /></button>
                                      </div>
                                    </div>
