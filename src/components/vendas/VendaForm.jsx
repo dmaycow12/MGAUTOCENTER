@@ -439,17 +439,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       updated.valor_total = Number(updated.quantidade || 0) * Number(updated.valor_unitario || 0);
       return updated;
     });
-    if (field === "quantidade" && pecaAntiga?.estoque_id && !pecaAntiga._new && form.status !== "Orçamento") {
-      const diff = parseNum(val) - Number(pecaAntiga.quantidade || 0);
-      if (diff !== 0) {
-        const itemEstoque = estoque.find(e => e.id === pecaAntiga.estoque_id);
-        if (itemEstoque) {
-          const novaQty = (itemEstoque.quantidade || 0) - diff;
-          await base44.entities.Estoque.update(pecaAntiga.estoque_id, { quantidade: novaQty });
-          setEstoque(prev => prev.map(e => e.id === pecaAntiga.estoque_id ? { ...e, quantidade: novaQty } : e));
-        }
-      }
-    }
+
     if ((field === "codigo" || field === "descricao") && val.length > 0) {
       setProdutoSugestoes({ idx: i, lista: estoque.filter(e =>
         e.codigo?.toLowerCase().includes(val.toLowerCase()) || e.descricao?.toLowerCase().includes(val.toLowerCase())
@@ -474,14 +464,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       });
       return { ...f, pecas: novos, ...recalcular(f.servicos, novos, f.desconto) };
     });
-    if (form.status !== "Orçamento") {
-      const itemEstoque = estoque.find(e => e.id === item.id);
-      if (itemEstoque) {
-        const novaQty = (itemEstoque.quantidade || 0) - qtdSelecionada;
-        await base44.entities.Estoque.update(item.id, { quantidade: novaQty });
-        setEstoque(prev => prev.map(e => e.id === item.id ? { ...e, quantidade: novaQty } : e));
-      }
-    }
+
   };
 
   const removePeca = async (i) => {
@@ -489,14 +472,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     const novos = form.pecas.filter((_, idx) => idx !== i);
     const calc = recalcular(form.servicos, novos, form.desconto);
     setForm(f => ({ ...f, pecas: novos, ...calc }));
-    if (peca?.estoque_id && peca?.quantidade > 0 && form.status !== "Orçamento") {
-      const itemEstoque = estoque.find(e => e.id === peca.estoque_id);
-      if (itemEstoque) {
-        const novaQty = (itemEstoque.quantidade || 0) + peca.quantidade;
-        await base44.entities.Estoque.update(peca.estoque_id, { quantidade: novaQty });
-        setEstoque(prev => prev.map(e => e.id === peca.estoque_id ? { ...e, quantidade: novaQty } : e));
-      }
-    }
+
   };
 
   const onDragEnd = (result, tipo) => {
@@ -578,32 +554,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     });
   };
 
-  const onStatusChange = async (novoStatus) => {
-    const eraOrcamento = form.status === "Orçamento";
-    const ficaOrcamento = novoStatus === "Orçamento";
+  const onStatusChange = (novoStatus) => {
     setForm(f => ({ ...f, status: novoStatus }));
-    if (eraOrcamento && !ficaOrcamento) {
-      for (const p of form.pecas) {
-        if (!p.estoque_id || !p.quantidade || p._new) continue;
-        const itemEstoque = estoque.find(e => e.id === p.estoque_id);
-        if (itemEstoque) {
-          const novaQty = (itemEstoque.quantidade || 0) - Number(p.quantidade);
-          await base44.entities.Estoque.update(p.estoque_id, { quantidade: novaQty });
-          setEstoque(prev => prev.map(e => e.id === p.estoque_id ? { ...e, quantidade: novaQty } : e));
-        }
-      }
-    }
-    if (!eraOrcamento && ficaOrcamento) {
-      for (const p of form.pecas) {
-        if (!p.estoque_id || !p.quantidade || p._new) continue;
-        const itemEstoque = estoque.find(e => e.id === p.estoque_id);
-        if (itemEstoque) {
-          const novaQty = (itemEstoque.quantidade || 0) + Number(p.quantidade);
-          await base44.entities.Estoque.update(p.estoque_id, { quantidade: novaQty });
-          setEstoque(prev => prev.map(e => e.id === p.estoque_id ? { ...e, quantidade: novaQty } : e));
-        }
-      }
-    }
   };
 
   const confirmarReabrir = async () => {
