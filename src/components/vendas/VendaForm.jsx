@@ -1254,17 +1254,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 </Section>
 
               <Section title="Pagamento">
-                {/* Totais de Produtos e Serviços */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div>
-                    <label className="block text-xs text-gray-400 mb-1">Total Produtos</label>
-                    <div className="input-dark font-bold text-orange-400 text-center">R$ {fmt(form.valor_pecas)}</div>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-400 mb-1">Total Serviços</label>
-                    <div className="input-dark font-bold text-orange-400 text-center">R$ {fmt(form.valor_servicos)}</div>
-                  </div>
-                </div>
                 {/* Desktop */}
                 <div className="hidden lg:grid grid-cols-4 gap-4 mb-4">
                   <div>
