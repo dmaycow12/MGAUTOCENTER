@@ -29,7 +29,6 @@ function encontrarItemEstoque(estoqueList, peca) {
 export async function reduzirEstoque(pecas, venda = null, estoqueList = null) {
   if (!pecas || pecas.length === 0) return;
   const lista = estoqueList || await base44.entities.Estoque.list("-created_date", 1000);
-  // Agrupa todas as peças pelo mesmo item de estoque
   const porItem = new Map();
   for (const peca of pecas) {
     const qtd = Number(peca.quantidade);
@@ -47,11 +46,22 @@ export async function reduzirEstoque(pecas, venda = null, estoqueList = null) {
       observacao: "",
     });
   }
-  // Um update por item
   const updates = Array.from(porItem.values()).map(({ item, saidas }) => {
+    const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
+    // Remove saídas anteriores desta mesma venda (idempotente)
+    const vendaId = venda?.id;
+    const historicoSemVenda = vendaId
+      ? historicoAtual.filter(m => !(m.tipo === "saída" && m.ordem_venda_id === vendaId))
+      : historicoAtual;
+    // Quantidade já deduçada anteriormente por esta venda
+    const qtdAnterior = vendaId
+      ? historicoAtual.filter(m => m.tipo === "saída" && m.ordem_venda_id === vendaId)
+          .reduce((s, m) => s + Number(m.quantidade || 0), 0)
+      : 0;
     const totalQtd = saidas.reduce((s, m) => s + m.quantidade, 0);
-    const novaQtd = Math.max(0, Number(item.quantidade || 0) - totalQtd);
-    const historico = [...(Array.isArray(item.historico) ? item.historico : []), ...saidas];
+    // Ajusta quantidade: reverte o que foi deduzido antes e aplica o novo
+    const novaQtd = Math.max(0, Number(item.quantidade || 0) + qtdAnterior - totalQtd);
+    const historico = [...historicoSemVenda, ...saidas];
     return base44.entities.Estoque.update(item.id, { quantidade: novaQtd, historico });
   });
   await Promise.all(updates);
