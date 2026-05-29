@@ -359,10 +359,10 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
     try {
       await excluirLancamentosVenda(os.id);
       await restaurarEstoque(os.pecas, os.id);
+      await base44.entities.Vendas.delete(os.id);
     } catch (err) {
-      console.error("Erro ao limpar estoque/financeiro:", err);
+      console.error("Erro ao excluir venda:", err);
     }
-    await base44.entities.Vendas.delete(os.id);
     setShowAvisoExcluir(false);
     onRefresh?.();
   };
