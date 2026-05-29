@@ -38,9 +38,12 @@ export async function reduzirEstoque(pecas, venda = null, estoqueList = null) {
     if (!porItem.has(item.id)) porItem.set(item.id, { item, saidas: [] });
     porItem.get(item.id).saidas.push({
       tipo: "saída",
-      data: venda?.data_entrada
-        ? new Date(venda.data_entrada).toLocaleDateString('en-CA')
-        : new Date().toLocaleDateString('en-CA'),
+      data: (() => {
+        const d = venda?.data_entrada;
+        if (!d) return new Date().toLocaleDateString('en-CA');
+        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d; // já é YYYY-MM-DD, usa direto
+        return new Date(d).toLocaleDateString('en-CA'); // datetime ISO, converte local
+      })(),
       quantidade: qtd,
       valor_unitario: Number(peca.valor_unitario || peca.valor_venda || item.valor_venda || 0),
       ordem_venda_numero: venda?.numero || "",
