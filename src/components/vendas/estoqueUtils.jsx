@@ -38,7 +38,7 @@ export async function reduzirEstoque(pecas, venda = null, estoqueList = null) {
     if (!porItem.has(item.id)) porItem.set(item.id, { item, saidas: [] });
     porItem.get(item.id).saidas.push({
       tipo: "saída",
-      data: venda?.data_entrada || new Date().toISOString().split('T')[0],
+      data: (venda?.data_entrada || new Date().toISOString()).split('T')[0],
       quantidade: qtd,
       valor_unitario: Number(peca.valor_unitario || peca.valor_venda || item.valor_venda || 0),
       ordem_venda_numero: venda?.numero || "",
