@@ -60,25 +60,28 @@ export async function reduzirEstoque(pecas, venda = null, estoqueList = null) {
 export async function restaurarEstoque(pecas, vendaId = null, estoqueList = null) {
   if (!pecas || pecas.length === 0) return;
   const lista = estoqueList || await base44.entities.Estoque.list("-created_date", 1000);
-  // Agrupa todas as peças pelo mesmo item de estoque
   const porItem = new Map();
   for (const peca of pecas) {
     const qtd = Number(peca.quantidade);
     if (!qtd || qtd <= 0) continue;
     const item = encontrarItemEstoque(lista, peca);
     if (!item) continue;
-    if (!porItem.has(item.id)) porItem.set(item.id, { item, totalQtd: 0 });
-    porItem.get(item.id).totalQtd += qtd;
+    if (!porItem.has(item.id)) porItem.set(item.id, { item });
   }
-  // Um update por item
-  const updates = Array.from(porItem.values()).map(({ item, totalQtd }) => {
-    const novaQtd = Number(item.quantidade || 0) + totalQtd;
+  const updates = Array.from(porItem.values()).map(({ item }) => {
     const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
-    const historico = vendaId
-      ? historicoAtual.filter(m => !(m.tipo === "saída" && m.ordem_venda_id === vendaId))
-      : historicoAtual;
-    return base44.entities.Estoque.update(item.id, { quantidade: novaQtd, historico });
-  });
+    if (vendaId) {
+      // Calcula a devolução pelo que está no histórico real (evita dobrar se chamado 2x)
+      const saidasVenda = historicoAtual.filter(m => m.tipo === "saída" && m.ordem_venda_id === vendaId);
+      const qtdNaHistoria = saidasVenda.reduce((s, m) => s + Number(m.quantidade || 0), 0);
+      if (qtdNaHistoria === 0) return null; // Já restaurado, não faz nada
+      const historico = historicoAtual.filter(m => !(m.tipo === "saída" && m.ordem_venda_id === vendaId));
+      const novaQtd = Number(item.quantidade || 0) + qtdNaHistoria;
+      return base44.entities.Estoque.update(item.id, { quantidade: novaQtd, historico });
+    } else {
+      return null;
+    }
+  }).filter(Boolean);
   await Promise.all(updates);
 }
 
