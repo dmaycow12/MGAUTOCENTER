@@ -360,6 +360,24 @@ Deno.serve(async (req) => {
         console.log(`[NFe] Próximo número: ${proximoNfe} (era: ${ultimoNfeConfig})`);
       }
 
+      // Busca código IBGE do município destinatário
+      let codigoMunicipioDestinatario = null;
+      if (cliente_cidade && cliente_estado) {
+        try {
+          const cidadeNorm = cliente_cidade.trim().toUpperCase();
+          const estadoNorm = cliente_estado.trim().toUpperCase();
+          const ibgeResp = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estadoNorm}/municipios`);
+          if (ibgeResp.ok) {
+            const municipios = await ibgeResp.json();
+            const normalizar = (str) => str.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+            const match = municipios.find(m => normalizar(m.nome) === normalizar(cidadeNorm));
+            if (match) codigoMunicipioDestinatario = String(match.id);
+          }
+        } catch (e) {
+          console.error('[MUNICIPIO NFe ERROR]', e.message);
+        }
+      }
+
       const prodItems = (items && items.length > 0) ? items : [
         { descricao: 'Peças de Automóveis', quantidade: 1, valor_unitario: Number(valor_total) || 1.0, valor_total: Number(valor_total) || 1.0, ncm: '87089990', cfop: '5102' }
       ];
@@ -381,6 +399,7 @@ Deno.serve(async (req) => {
         numero_destinatario: cliente_numero || '1355',
         bairro_destinatario: cliente_bairro || 'Santa Terezinha',
         municipio_destinatario: cliente_cidade || 'Patos de Minas',
+        ...(codigoMunicipioDestinatario ? { codigo_municipio_destinatario: codigoMunicipioDestinatario } : {}),
         uf_destinatario: cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
         indicador_inscricao_estadual_destinatario: cpfCnpjLimpo.length === 14
