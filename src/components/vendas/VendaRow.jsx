@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { Pencil, Printer, Trash2, AlertTriangle } from "lucide-react";
 import { gerarHTMLImpressao } from "./vendaImpressao";
-import { reduzirEstoque, restaurarEstoque, excluirLancamentosOS } from "./estoqueUtils";
+import { reduzirEstoque, restaurarEstoque, excluirLancamentosVenda } from "./estoqueUtils";
 
 function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
   return (
@@ -339,7 +339,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
 
   const confirmarMudancaStatus = async () => {
     try {
-      await excluirLancamentosOS(os.id);
+      await excluirLancamentosVenda(os.id);
       await restaurarEstoque(os.pecas, os.id);
       onUpdate?.({ status: statusPendente });
       const updateData = { status: statusPendente };
@@ -356,9 +356,11 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
   };
 
   const confirmarExcluir = async () => {
-    if (os.status === "Concluído") {
-      await excluirLancamentosOS(os.id);
+    try {
+      await excluirLancamentosVenda(os.id);
       await restaurarEstoque(os.pecas, os.id);
+    } catch (err) {
+      console.error("Erro ao limpar estoque/financeiro:", err);
     }
     await base44.entities.Vendas.delete(os.id);
     setShowAvisoExcluir(false);
@@ -366,8 +368,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
   };
 
   const handleExcluir = () => {
-    if (os.status === "Concluído") { setShowAvisoExcluir(true); return; }
-    onDelete?.();
+    setShowAvisoExcluir(true);
   };
 
   const imprimir = () => {
@@ -467,10 +468,10 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
           <div className="bg-gray-900 border border-red-500/30 rounded-2xl w-full max-w-md p-6 space-y-4">
             <div className="flex items-center gap-3 text-red-400">
               <AlertTriangle className="w-7 h-7 flex-shrink-0" />
-              <h3 className="text-lg font-bold">Excluir Venda Concluída</h3>
+              <h3 className="text-lg font-bold">Excluir Venda</h3>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">
-              Esta Venda está <strong className="text-green-400">Concluída</strong>. Ao excluir:<br />
+              Ao excluir esta venda:<br />
               • <strong className="text-red-400">Lançamentos financeiros</strong> serão excluídos<br />
               • <strong className="text-yellow-400">Peças usadas</strong> serão devolvidas ao estoque
             </p>

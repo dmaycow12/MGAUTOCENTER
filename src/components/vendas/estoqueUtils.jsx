@@ -87,3 +87,9 @@ export async function excluirLancamentosOS(osId) {
   const vinculados = financeiros.filter(f => f.ordem_servico_id === osId);
   for (const f of vinculados) await base44.entities.Financeiro.delete(f.id);
 }
+
+export async function excluirLancamentosVenda(vendaId) {
+  const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
+  const vinculados = financeiros.filter(f => f.ordem_venda_id === vendaId || f.ordem_servico_id === vendaId);
+  for (const f of vinculados) await base44.entities.Financeiro.delete(f.id);
+}
