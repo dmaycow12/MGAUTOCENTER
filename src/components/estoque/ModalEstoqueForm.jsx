@@ -214,7 +214,7 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                             const lucroTotalMov = lucroUnitMov * Number(mov.quantidade || 0);
                             return (
                               <tr key={i} className="border-b border-gray-800/60 last:border-0 bg-red-500/5">
-                                <td className="px-3 py-2 text-gray-400">{mov.data ? new Date(mov.data).toLocaleDateString("pt-BR") : "—"}</td>
+                                <td className="px-3 py-2 text-gray-400">{mov.data ? new Date(mov.data.replace(/-/g, '/')).toLocaleDateString("pt-BR") : "—"}</td>
                                 <td className="px-3 py-2 text-right text-white font-medium">{mov.quantidade}</td>
                                 <td className="px-3 py-2 text-right text-white font-medium">R$ {Number(mov.valor_unitario || 0).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</td>
                                 <td className="px-3 py-2 text-right text-green-400 font-medium">R$ {Number(receitaMov).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</td>
@@ -275,7 +275,7 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                               </div>
                             </td>
                             <td className="px-3 py-2 text-gray-400 whitespace-nowrap">
-                              {mov.data ? new Date(mov.data).toLocaleDateString("pt-BR") : "—"}
+                              {mov.data ? new Date(mov.data.replace(/-/g, '/')).toLocaleDateString("pt-BR") : "—"}
                             </td>
                             <td className="px-3 py-2 text-right text-white font-medium">{mov.quantidade ?? "—"}</td>
                             <td className="px-3 py-2 text-right text-white font-medium whitespace-nowrap">
