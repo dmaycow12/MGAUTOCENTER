@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Plus, Trash2, Package, History, ArrowDown, ArrowUp, TrendingUp } from "lucide-react";
+import { X, Plus, Trash2, Package, History, ArrowDown, ArrowUp } from "lucide-react";
 
 const GREEN = "#00ff00";
 
@@ -74,10 +74,6 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
               <button onClick={() => setAba("historico")}
                 className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all -mb-px ${aba === "historico" ? "bg-gray-800 text-white border border-gray-700 border-b-gray-800" : "text-gray-500 hover:text-gray-300"}`}>
                 <History className="w-4 h-4" /> Histórico {historico.length > 0 && <span className="bg-gray-700 text-gray-300 text-xs px-1.5 py-0.5 rounded-full">{historico.length}</span>}
-              </button>
-              <button onClick={() => setAba("lucro")}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all -mb-px ${aba === "lucro" ? "bg-gray-800 text-white border border-gray-700 border-b-gray-800" : "text-gray-500 hover:text-gray-300"}`}>
-                <TrendingUp className="w-4 h-4" /> Lucro
               </button>
             </>
           )}
@@ -164,8 +160,9 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
             </div>
           )}
 
-          {/* ABA LUCRO */}
-          {aba === "lucro" && (() => {
+          {/* ABA HISTÓRICO (com Lucro) */}
+          {aba === "historico" && (() => {
+            // Seção de Lucro
             const entradas = historico.filter(m => m.tipo === "entrada");
             const saidas = historico.filter(m => m.tipo === "saída");
             const custoTotal = entradas.reduce((acc, m) => acc + (Number(m.valor_unitario || 0) * Number(m.quantidade || 0)), 0);
@@ -178,7 +175,7 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
 
             return (
               <div className="space-y-4">
-                {/* Resumo */}
+                {/* Resumo Lucro */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
                     <p className="text-xs text-gray-400 mb-1">CUSTO MÉDIO UNITÁRIO</p>
@@ -246,76 +243,75 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                     <p className="text-gray-500 text-sm">Nenhuma saída (venda) registrada</p>
                   </div>
                 )}
+
+                {/* Tabela de Histórico */}
+                {historico.length === 0 ? (
+                  <div className="text-center py-12">
+                    <History className="w-10 h-10 text-gray-600 mx-auto mb-2" />
+                    <p className="text-gray-500 text-sm">Nenhuma movimentação registrada</p>
+                  </div>
+                ) : (
+                  <div className="border-t border-gray-700 pt-4">
+                    <p className="text-sm font-semibold text-white mb-3">Histórico de Movimentações</p>
+                    <div className="overflow-x-auto rounded-xl border border-gray-800">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-gray-800 bg-gray-800/60">
+                            <th className="px-3 py-2 text-left text-gray-400 font-medium">Tipo</th>
+                            <th className="px-3 py-2 text-left text-gray-400 font-medium">Data</th>
+                            <th className="px-3 py-2 text-right text-gray-400 font-medium">Qtd</th>
+                            <th className="px-3 py-2 text-right text-gray-400 font-medium">Valor Unit.</th>
+                            <th className="px-3 py-2 text-left text-gray-400 font-medium">Fornecedor / O.V.</th>
+                            <th className="px-3 py-2 text-left text-gray-400 font-medium">Observação</th>
+                            <th className="px-3 py-2"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {historico.map((mov, i) => {
+                            const isEntrada = mov.tipo === "entrada";
+                            return (
+                              <tr key={i} className={`border-b border-gray-800/60 last:border-0 ${isEntrada ? "bg-green-500/5" : "bg-red-500/5"}`}>
+                                <td className="px-3 py-2">
+                                  <div className="flex items-center gap-1.5">
+                                    {isEntrada
+                                      ? <ArrowDown className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
+                                      : <ArrowUp className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />}
+                                    <span className={`font-bold uppercase ${isEntrada ? "text-green-400" : "text-red-400"}`}>
+                                      {isEntrada ? "Entrada" : "Saída"}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-3 py-2 text-gray-400 whitespace-nowrap">
+                                  {formatarData(mov.data)}
+                                </td>
+                                <td className="px-3 py-2 text-right text-white font-medium">{mov.quantidade ?? "—"}</td>
+                                <td className="px-3 py-2 text-right text-white font-medium whitespace-nowrap">
+                                  R$ {Number(mov.valor_unitario || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                                </td>
+                                <td className="px-3 py-2 text-gray-300 max-w-[160px] truncate">
+                                  {isEntrada
+                                    ? (mov.fornecedor || "—")
+                                    : (mov.ordem_venda_numero ? `#${mov.ordem_venda_numero}` : "—")}
+                                </td>
+                                <td className="px-3 py-2 text-gray-500 italic max-w-[120px] truncate">
+                                  {mov.observacao || "—"}
+                                </td>
+                                <td className="px-3 py-2">
+                                  <button onClick={() => excluirHistorico(historico.indexOf(mov))} className="text-gray-600 hover:text-red-400 transition-all">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })()}
-
-          {/* ABA HISTÓRICO */}
-          {aba === "historico" && (
-            <div>
-              {historico.length === 0 ? (
-                <div className="text-center py-12">
-                  <History className="w-10 h-10 text-gray-600 mx-auto mb-2" />
-                  <p className="text-gray-500 text-sm">Nenhuma movimentação registrada</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto rounded-xl border border-gray-800">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-gray-800 bg-gray-800/60">
-                        <th className="px-3 py-2 text-left text-gray-400 font-medium">Tipo</th>
-                        <th className="px-3 py-2 text-left text-gray-400 font-medium">Data</th>
-                        <th className="px-3 py-2 text-right text-gray-400 font-medium">Qtd</th>
-                        <th className="px-3 py-2 text-right text-gray-400 font-medium">Valor Unit.</th>
-                        <th className="px-3 py-2 text-left text-gray-400 font-medium">Fornecedor / O.V.</th>
-                        <th className="px-3 py-2 text-left text-gray-400 font-medium">Observação</th>
-                        <th className="px-3 py-2"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                      {historico.map((mov, i) => {
-                        const isEntrada = mov.tipo === "entrada";
-                        return (
-                          <tr key={i} className={`border-b border-gray-800/60 last:border-0 ${isEntrada ? "bg-green-500/5" : "bg-red-500/5"}`}>
-                            <td className="px-3 py-2">
-                              <div className="flex items-center gap-1.5">
-                                {isEntrada
-                                  ? <ArrowDown className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
-                                  : <ArrowUp className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />}
-                                <span className={`font-bold uppercase ${isEntrada ? "text-green-400" : "text-red-400"}`}>
-                                  {isEntrada ? "Entrada" : "Saída"}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-3 py-2 text-gray-400 whitespace-nowrap">
-                              {formatarData(mov.data)}
-                            </td>
-                            <td className="px-3 py-2 text-right text-white font-medium">{mov.quantidade ?? "—"}</td>
-                            <td className="px-3 py-2 text-right text-white font-medium whitespace-nowrap">
-                              R$ {Number(mov.valor_unitario || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                            </td>
-                            <td className="px-3 py-2 text-gray-300 max-w-[160px] truncate">
-                              {isEntrada
-                                ? (mov.fornecedor || "—")
-                                : (mov.ordem_venda_numero ? `#${mov.ordem_venda_numero}` : "—")}
-                            </td>
-                            <td className="px-3 py-2 text-gray-500 italic max-w-[120px] truncate">
-                              {mov.observacao || "—"}
-                            </td>
-                            <td className="px-3 py-2">
-                              <button onClick={() => excluirHistorico(i)} className="text-gray-600 hover:text-red-400 transition-all">
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </td>
-                            </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Footer */}
