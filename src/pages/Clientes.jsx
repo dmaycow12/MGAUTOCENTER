@@ -118,7 +118,7 @@ export default function Clientes() {
   }, []);
 
   const load = async () => {
-    const c = await base44.entities.Cadastro.list("-created_date", 200);
+    const c = await base44.entities.Cadastro.list("-created_date", 2000);
     setClientes(c);
     setLoading(false);
   };
@@ -175,15 +175,19 @@ export default function Clientes() {
       );
       if (duplicado) return alert(`Já existe um cadastro com este CPF/CNPJ: ${duplicado.nome}`);
     }
-    if (editando) {
-      await base44.entities.Cadastro.update(editando.id, formNormalizado);
-    } else {
-      await base44.entities.Cadastro.create(formNormalizado);
+    try {
+      if (editando) {
+        await base44.entities.Cadastro.update(editando.id, formNormalizado);
+      } else {
+        await base44.entities.Cadastro.create(formNormalizado);
+      }
+      setShowForm(false);
+      setEditando(null);
+      setForm(defaultForm());
+      load();
+    } catch (e) {
+      alert('Erro ao salvar cadastro: ' + (e?.message || e));
     }
-    setShowForm(false);
-    setEditando(null);
-    setForm(defaultForm());
-    load();
   };
 
   const excluir = async (c) => {
