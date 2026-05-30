@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Download, ClipboardCheck } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, ChevronUp, ChevronDown, Download, ClipboardCheck } from "lucide-react";
 import ProgressoReajuste from "../components/estoque/ProgressoReajuste";
 import ModalEstoqueForm from "../components/estoque/ModalEstoqueForm";
 import MovimentacoesEstoque from "../components/estoque/MovimentacoesEstoque";
@@ -17,9 +17,6 @@ const defaultForm = () => ({
 
 export default function Estoque() {
   const [items, setItems] = useState([]);
-  const [vendas, setVendas] = useState([]);
-  const hoje = new Date();
-  const [mesLucro, setMesLucro] = useState(`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -52,7 +49,6 @@ export default function Estoque() {
   const [conferidos, setConferidos] = useState(new Set());
   const [checklistSalvoEm, setChecklistSalvoEm] = useState(null);
   const [checklistConfigId, setChecklistConfigId] = useState(null);
-  const [mesSelecionado, setMesSelecionado] = useState("2026-05");
   const [colunas, setColunas] = useState(() => {
     const saved = localStorage.getItem("estoque_colunas");
     return saved ? JSON.parse(saved) : { codigo: true, marca: true, estoque_minimo: true, valor_custo: true, valor_venda: true };
@@ -107,12 +103,10 @@ export default function Estoque() {
   }, []);
 
   const load = async () => {
-    const [data, vendasData, configs] = await Promise.all([
-      base44.entities.Estoque.list("-updated_date", 5000),
-      base44.entities.Vendas.list("-created_date", 5000),
-      base44.entities.Configuracao.list(),
+    const [data, configs] = await Promise.all([
+      base44.entities.Estoque.list("-created_date", 500),
+      base44.entities.Configuracao.list("-created_date", 100),
     ]);
-    setVendas(vendasData);
     setItems(data);
     const cfg = configs.find(c => c.chave === "checklist_estoque_ids");
     if (cfg) {
@@ -405,99 +399,28 @@ export default function Estoque() {
       </button>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-          <p className="text-white text-sm font-medium mb-2">Produtos</p>
+          <p className="text-white text-sm font-medium mb-2">Total de Itens</p>
           <p className="text-white text-sm font-medium">{items.length}</p>
         </div>
-
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-          <p className="text-white text-sm font-medium mb-2">Valor/Custo</p>
+          <p className="text-white text-sm font-medium mb-2">Estoque Baixo</p>
+          <p className="text-white text-sm font-medium">{estoqueBaixo}</p>
+        </div>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+          <p className="text-white text-sm font-medium mb-2">Valor Total (Custo)</p>
           <p className="text-white text-sm font-medium">
             R$ {items.reduce((acc, i) => acc + (i.quantidade * i.valor_custo || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-          <p className="text-white text-sm font-medium mb-2">Valor/Venda</p>
+          <p className="text-white text-sm font-medium mb-2">Valor Total (Venda)</p>
           <p className="text-green-400 text-sm font-bold">
             R$ {items.reduce((acc, i) => acc + (i.quantidade * i.valor_venda || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         </div>
       </div>
-
-      {/* Card Lucro de Peças por Mês */}
-      {(() => {
-        const navMes = (dir) => {
-          const [a, m] = mesLucro.split("-").map(Number);
-          const d = new Date(a, m - 1 + dir, 1);
-          setMesLucro(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
-        };
-        const nomeMes = new Date(Number(mesLucro.split("-")[0]), Number(mesLucro.split("-")[1])-1, 1)
-          .toLocaleString("pt-BR", {month:"long", year:"numeric"});
-        const toMes = (s) => {
-          if (!s) return null;
-          s = String(s).trim();
-          if (/^\d{4}-\d{2}/.test(s)) return s.substring(0, 7);
-          const p = s.split("/");
-          if (p.length === 3) return `${p[2].substring(0,4)}-${p[1].padStart(2,'0')}`;
-          return null;
-        };
-        const vendasMes = vendas.filter(v => {
-          const st = (v.status||"")
-            .normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
-          if (st !== "concluido") return false;
-          const mes = toMes(v.data_conclusao) || toMes(v.data_entrada);
-          return mes === mesLucro;
-        });
-        let receita = 0, custo = 0;
-        vendasMes.forEach(v => {
-          (v.pecas||[]).forEach(p => {
-            const qtd = Number(p.quantidade||1);
-            receita += Number(p.valor_unitario||0) * qtd;
-            custo   += Number(p.valor_custo||0) * qtd;
-          });
-        });
-        const lucro = receita - custo;
-        const margem = receita > 0 ? ((lucro/receita)*100).toFixed(1) : "0.0";
-        const fmtR = v => Number(v).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-        const corMargem = Number(margem)>=30?"#00C957":Number(margem)>=15?"#FFCC00":"#FF4444";
-        return (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <button onClick={()=>navMes(-1)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all">
-                <ChevronLeft className="w-4 h-4 text-gray-400" />
-              </button>
-              <div className="text-center">
-                <p className="text-gray-400 text-xs">Lucro de Peças Vendidas</p>
-                <p className="text-white text-sm font-bold capitalize">{nomeMes}</p>
-              </div>
-              <button onClick={()=>navMes(1)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all">
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </button>
-            </div>
-            <div className="grid grid-cols-4 gap-3">
-              <div className="text-center">
-                <p className="text-gray-400 text-xs mb-1">Receita</p>
-                <p className="text-blue-400 text-sm font-bold">{fmtR(receita)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-gray-400 text-xs mb-1">Custo</p>
-                <p className="text-red-400 text-sm font-bold">{fmtR(custo)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-gray-400 text-xs mb-1">Lucro</p>
-                <p className="text-sm font-bold" style={{color:lucro>=0?"#00C957":"#FF4444"}}>{fmtR(lucro)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-gray-400 text-xs mb-1">Margem</p>
-                <p className="text-sm font-bold" style={{color:corMargem}}>{margem}%</p>
-              </div>
-            </div>
-            <p className="text-center text-gray-600 text-xs mt-2">{vendasMes.length} venda(s) concluída(s) com peças</p>
-          </div>
-        );
-      })()}
-
 
       {/* Header */}
       <div className="flex flex-col gap-2">
