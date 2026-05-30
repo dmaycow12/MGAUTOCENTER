@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, ChevronUp, ChevronDown, Download, ClipboardCheck } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Download, ClipboardCheck } from "lucide-react";
 import ProgressoReajuste from "../components/estoque/ProgressoReajuste";
 import ModalEstoqueForm from "../components/estoque/ModalEstoqueForm";
 import MovimentacoesEstoque from "../components/estoque/MovimentacoesEstoque";
@@ -455,8 +455,8 @@ export default function Estoque() {
         const [ano, mes] = mesSelecionado.split('-');
         const nomeMes = new Date(Number(ano), Number(mes)-1, 1).toLocaleString('pt-BR',{month:'long',year:'numeric'});
         return (
-          <div className="bg-gradient-to-br from-blue-900/40 to-gray-900 border border-blue-800/50 rounded-2xl p-4 space-y-3">
-            <p className="text-center text-white text-sm font-semibold">Desempenho Mensal de Peças</p>
+          <div className="rounded-2xl p-4 space-y-3" style={{background: "linear-gradient(135deg, #0a1929 0%, #132642 100%)", border: "1px solid #1e4d7b"}}>
+            <p className="text-center text-white font-bold text-lg">Peças</p>
             {(() => {
               const handlePrevMes = () => {
                 const cur = new Date(mesSelecionado + '-01');
@@ -471,23 +471,27 @@ export default function Estoque() {
               const [ano, mes] = mesSelecionado.split('-');
               const nomeMes = new Date(Number(ano), Number(mes)-1, 1).toLocaleString('pt-BR',{month:'long',year:'numeric'});
               return (
-                <div className="flex items-center justify-between px-4 py-2 bg-blue-950/60 rounded-xl border border-blue-800/30">
-                  <button onClick={handlePrevMes} className="text-blue-400 hover:text-blue-300 transition-all text-lg font-bold">‹</button>
-                  <p className="text-white font-bold text-center flex-1 capitalize">{nomeMes}</p>
-                  <button onClick={handleNextMes} className="text-blue-400 hover:text-blue-300 transition-all text-lg font-bold">›</button>
+                <div className="flex items-center h-11 rounded-xl overflow-hidden text-sm font-semibold" style={{background: "#062C9B"}}>
+                  <button onClick={handlePrevMes} className="flex items-center justify-center h-full px-3 hover:bg-white/20 transition-all" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
+                    <ChevronLeft className="w-4 h-4 text-white" />
+                  </button>
+                  <span className="flex-1 text-center text-white capitalize">{nomeMes}</span>
+                  <button onClick={handleNextMes} className="flex items-center justify-center h-full px-3 hover:bg-white/20 transition-all" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
+                    <ChevronRight className="w-4 h-4 text-white" />
+                  </button>
                 </div>
               );
             })()}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gray-800/50 rounded-xl p-3 text-center">
-                <p className="text-gray-500 text-xs mb-1">Custo de Entradas no Estoque</p>
-                <p className="text-yellow-400 font-bold text-sm">{fmt(custoEntradas)}</p>
-                <p className="text-gray-600 text-xs mt-0.5">{qtdEntradas} peça(s) lançada(s)</p>
+              <div className="rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
+                <p className="text-xs font-semibold text-gray-400 tracking-wide">Custo de Entradas</p>
+                <p className="text-xs font-bold text-yellow-400">{fmt(custoEntradas)}</p>
+                <p className="text-xs text-gray-600">{qtdEntradas} peça(s) lançada(s)</p>
               </div>
-              <div className="bg-gray-800/50 rounded-xl p-3 text-center">
-                <p className="text-gray-500 text-xs mb-1">Lucro das Peças</p>
-                <p className={`font-bold text-sm ${lucro >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmt(lucro)}</p>
-                <p className="text-gray-600 text-xs mt-0.5">Receita: {fmt(receitaSaidas)}</p>
+              <div className="rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
+                <p className="text-xs font-semibold text-gray-400 tracking-wide">Lucro das Peças</p>
+                <p className={`text-xs font-bold ${lucro >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmt(lucro)}</p>
+                <p className="text-xs text-gray-600">Receita: {fmt(receitaSaidas)}</p>
               </div>
             </div>
           </div>
