@@ -260,12 +260,8 @@ export default function Vendas() {
   const totalPatio = ordensComFiltrosBase.filter(o => !!(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo)).reduce((acc, o) => acc + (o.valor_total || 0), 0);
   const totalBalcao = ordensComFiltrosBase.filter(o => !(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo)).reduce((acc, o) => acc + (o.valor_total || 0), 0);
   const getCustoPeca = (p) => {
-    if (Number(p.valor_custo || 0) > 0) return Number(p.valor_custo);
-    if (p.estoque_id) {
-      const item = estoque.find(e => e.id === p.estoque_id);
-      if (item) return Number(item.valor_custo || 0);
-    }
-    return 0;
+    // Usa APENAS o custo salvo na venda — nunca busca do estoque atual
+    return Number(p.valor_custo || 0);
   };
   const totalCusto = ordensComFiltrosBase.reduce((acc, o) => {
     const custoPecas = (o.pecas || []).reduce((s, p) => s + getCustoPeca(p) * Number(p.quantidade || 1), 0);

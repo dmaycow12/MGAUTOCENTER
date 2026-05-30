@@ -233,8 +233,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
               ...p,
               codigo: p.codigo || match.codigo,
               estoque_id: p.estoque_id || match.id,
-              // Preserva custo já salvo na venda — não sobrescreve com valor atual do estoque
-              valor_custo: isXX ? (p.valor_custo || 0) : (p.valor_custo !== undefined && p.valor_custo !== null ? Number(p.valor_custo) : Number(match.valor_custo || 0)),
+              // Preserva custo já salvo na venda — NUNCA sobrescreve com valor atual do estoque
+              valor_custo: isXX ? (p.valor_custo || 0) : Number(p.valor_custo ?? match.valor_custo ?? 0),
             };
           }
           return p;

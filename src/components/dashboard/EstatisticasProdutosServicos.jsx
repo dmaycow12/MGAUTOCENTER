@@ -62,8 +62,8 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
       (venda.pecas || []).forEach(p => {
         const desc = normalizar(p.descricao || "SEM NOME");
         const total = Number(p.valor_total || 0) || Number(p.valor_unitario || 0) * Number(p.quantidade || 1);
-        const itemEst = estoque.find(e => e.id === p.estoque_id || (p.codigo && e.codigo?.toUpperCase().trim() === p.codigo?.toUpperCase().trim()));
-        const custoPeca = (Number(p.valor_custo || 0) > 0 ? Number(p.valor_custo) : Number(itemEst?.valor_custo || 0)) * Number(p.quantidade || 1);
+        // Usa APENAS o custo salvo na venda — nunca busca do estoque atual
+        const custoPeca = Number(p.valor_custo || 0) * Number(p.quantidade || 1);
         if (!mapProdutos[desc]) mapProdutos[desc] = { descricao: desc, codigo: p.codigo || '', receita: 0, custo: 0, quantidade: 0, vezes: 0 };
         mapProdutos[desc].receita += total;
         mapProdutos[desc].custo += custoPeca;
