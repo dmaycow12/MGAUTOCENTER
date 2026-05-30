@@ -401,9 +401,9 @@ export default function Dashboard() {
 
       {/* Gráfico Receita x Despesa x Lucro */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-white font-semibold text-base">Receita x Despesa x Lucro</h2>
-          <div className="flex gap-1">
+        <div className="relative flex items-center justify-center mb-3">
+          <h2 className="text-white font-semibold text-base text-center">Receita x Despesa x Lucro</h2>
+          <div className="absolute right-0 flex gap-1">
             {[3, 6, 12].map(m => (
               <button
                 key={m}

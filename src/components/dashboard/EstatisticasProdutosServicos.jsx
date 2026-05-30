@@ -134,9 +134,9 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-white font-semibold text-base">{modoValor === "lucro" ? "Lucro por Produto/Serviço" : "Receita por Produto/Serviço"}</h2>
-        <span className="text-gray-400 text-xs">
+      <div className="relative flex items-center justify-center">
+        <h2 className="text-white font-semibold text-base text-center">{modoValor === "lucro" ? "Lucro por Produto/Serviço" : "Receita por Produto/Serviço"}</h2>
+        <span className="absolute right-0 text-gray-400 text-xs">
           Total: <span className="text-green-400 font-bold">{fmt(totalAtual)}</span>
         </span>
       </div>
@@ -162,27 +162,27 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
 
 
       {/* Abas */}
-      <div className="flex gap-1 bg-gray-800 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-gray-800 p-1 rounded-lg">
        <button
          onClick={() => { setAba("tudo"); localStorage.setItem("eps_aba", "tudo"); setMostrarTodos(false); setBusca(""); }}
-         className="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+         className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
          style={aba === "tudo" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
        >
-         Tudo ({rankProdutos.length + rankServicos.length})
+         Tudo
        </button>
        <button
          onClick={() => { setAba("produtos"); localStorage.setItem("eps_aba", "produtos"); setMostrarTodos(false); setBusca(""); }}
-         className="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+         className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
          style={aba === "produtos" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
        >
-         Produtos ({rankProdutos.length})
+         Produtos
        </button>
        <button
          onClick={() => { setAba("servicos"); localStorage.setItem("eps_aba", "servicos"); setMostrarTodos(false); setBusca(""); }}
-         className="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+         className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
          style={aba === "servicos" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
        >
-         Serviços ({rankServicos.length})
+         Serviços
        </button>
       </div>
 
