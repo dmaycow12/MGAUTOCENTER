@@ -4,6 +4,7 @@ import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Uplo
 import ProgressoReajuste from "../components/estoque/ProgressoReajuste";
 import ModalEstoqueForm from "../components/estoque/ModalEstoqueForm";
 import MovimentacoesEstoque from "../components/estoque/MovimentacoesEstoque";
+import LucroPecas from "../components/estoque/LucroPecas";
 
 const arredondarVendaParaCinco = (valor) => {
   return Math.ceil(valor / 5) * 5;
@@ -382,9 +383,11 @@ export default function Estoque() {
       <div className="flex bg-gray-900 border border-gray-800 rounded-xl p-1 gap-1">
         <button onClick={() => setAbaEstoque("produtos")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={abaEstoque==="produtos"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Produtos</button>
         <button onClick={() => setAbaEstoque("movimentacoes")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={abaEstoque==="movimentacoes"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Movimentações</button>
+        <button onClick={() => setAbaEstoque("lucro")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={abaEstoque==="lucro"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Lucro por Peça</button>
       </div>
 
       {abaEstoque === "movimentacoes" && <MovimentacoesEstoque items={items} onReload={load} />}
+      {abaEstoque === "lucro" && <LucroPecas items={items} />}
 
       {abaEstoque === "produtos" && <>
       {/* Botão Principal */}
