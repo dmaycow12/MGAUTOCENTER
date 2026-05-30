@@ -435,20 +435,20 @@ export default function Estoque() {
         const nomeMes = new Date(Number(mesLucro.split("-")[0]), Number(mesLucro.split("-")[1])-1, 1)
           .toLocaleString("pt-BR", {month:"long", year:"numeric"});
 
-        // data_entrada vem como DD/MM/YYYY — converter para YYYY-MM para comparar
-        const parseMes = (dataStr) => {
-          if (!dataStr) return "";
-          // ISO: 2026-05-30T... ou 2026-05-30
-          if (dataStr.includes("-") && dataStr.length >= 7) return dataStr.substring(0, 7);
-          // BR: 30/05/2026
-          const parts = dataStr.split("/");
-          if (parts.length === 3) return `${parts[2]}-${parts[1]}`;
-          return "";
+        // Converte DD/MM/YYYY ou ISO para YYYY-MM
+        const toMes = (s) => {
+          if (!s) return null;
+          if (/^\d{4}-\d{2}/.test(s)) return s.substring(0, 7);
+          const p = s.split("/");
+          if (p.length === 3) return `${p[2].substring(0,4)}-${p[1]}`;
+          return null;
         };
 
         const vendasMes = vendas.filter(v => {
-          if (v.status !== "Conclu\u00eddo") return false;
-          const mes = parseMes(v.data_conclusao) || parseMes(v.data_entrada) || parseMes(v.created_date);
+          const status = (v.status || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+          if (status !== "concluido") return false;
+          // Só usa datas da venda, NUNCA created_date
+          const mes = toMes(v.data_conclusao) || toMes(v.data_entrada);
           return mes === mesLucro;
         });
 
@@ -463,43 +463,35 @@ export default function Estoque() {
         const lucro = receitaPecas - custoPecas;
         const margem = receitaPecas > 0 ? ((lucro / receitaPecas) * 100).toFixed(1) : "0.0";
         const fmtR = v => Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-        const margemColor = Number(margem) >= 30 ? "#00C957" : Number(margem) >= 15 ? "#FFCC00" : "#FF4444";
 
         return (
-          <div style={{background: "linear-gradient(135deg, #0a1929 0%, #0d2137 100%)", border: "1px solid #1e4d7b", borderRadius: "16px", padding: "16px"}}>
-            {/* Título + Navegação */}
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+            {/* Navegação de mês */}
             <div className="flex items-center justify-between mb-3">
-              <button onClick={() => navMes(-1)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all">
-                <ChevronLeft className="w-4 h-4 text-white" />
+              <button onClick={() => navMes(-1)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all">
+                <ChevronLeft className="w-4 h-4 text-gray-400" />
               </button>
+              <p className="text-white text-sm font-medium capitalize">Lucro de Peças — {nomeMes}</p>
+              <button onClick={() => navMes(1)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all">
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+            <div className="grid grid-cols-4 gap-3">
               <div className="text-center">
-                <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Lucro de Peças</p>
-                <p className="text-white font-bold text-sm capitalize">{nomeMes}</p>
+                <p className="text-gray-400 text-xs mb-1">Receita</p>
+                <p className="text-blue-400 text-sm font-bold">{fmtR(receitaPecas)}</p>
               </div>
-              <button onClick={() => navMes(1)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all">
-                <ChevronRight className="w-4 h-4 text-white" />
-              </button>
-            </div>
-
-            {/* Lucro destaque */}
-            <div className="text-center mb-3">
-              <p className="text-3xl font-bold" style={{color: lucro >= 0 ? "#00C957" : "#FF4444"}}>{fmtR(lucro)}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{vendasMes.length} venda(s) com peças</p>
-            </div>
-
-            {/* 3 métricas */}
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-xl p-2 text-center" style={{background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)"}}>
-                <p className="text-xs text-gray-400 mb-1">Receita</p>
-                <p className="text-xs font-bold text-blue-400">{fmtR(receitaPecas)}</p>
+              <div className="text-center">
+                <p className="text-gray-400 text-xs mb-1">Custo</p>
+                <p className="text-red-400 text-sm font-bold">{fmtR(custoPecas)}</p>
               </div>
-              <div className="rounded-xl p-2 text-center" style={{background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)"}}>
-                <p className="text-xs text-gray-400 mb-1">Custo</p>
-                <p className="text-xs font-bold text-red-400">{fmtR(custoPecas)}</p>
+              <div className="text-center">
+                <p className="text-gray-400 text-xs mb-1">Lucro</p>
+                <p className="text-sm font-bold" style={{color: lucro >= 0 ? "#00C957" : "#FF4444"}}>{fmtR(lucro)}</p>
               </div>
-              <div className="rounded-xl p-2 text-center" style={{background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)"}}>
-                <p className="text-xs text-gray-400 mb-1">Margem</p>
-                <p className="text-xs font-bold" style={{color: margemColor}}>{margem}%</p>
+              <div className="text-center">
+                <p className="text-gray-400 text-xs mb-1">Margem</p>
+                <p className="text-sm font-bold" style={{color: Number(margem) >= 30 ? "#00C957" : Number(margem) >= 15 ? "#FFCC00" : "#FF4444"}}>{margem}%</p>
               </div>
             </div>
           </div>
