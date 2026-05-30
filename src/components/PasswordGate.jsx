@@ -35,13 +35,13 @@ export default function PasswordGate({ children }) {
         <div style={{ color: "#fff", fontSize: "22px", fontWeight: "bold", letterSpacing: "2px" }}>
           MG AUTO
         </div>
-        <div style={{ color: "#9ca3af", fontSize: "13px" }}>ACESSO RESTRITO</div>
+
 
         <input
           type="password"
           value={senha}
           onChange={e => setSenha(e.target.value)}
-          placeholder="Senha"
+          placeholder=""
           autoFocus
           style={{
             width: "100%", padding: "12px 16px",
