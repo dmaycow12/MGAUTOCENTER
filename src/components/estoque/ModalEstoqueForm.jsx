@@ -163,8 +163,9 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
           {/* ABA HISTÓRICO (com Lucro) */}
           {aba === "historico" && (() => {
             // Seção de Lucro
-            const entradas = historico.filter(m => m.tipo === "entrada");
-            const saidas = historico.filter(m => m.tipo === "saída");
+            const normTipo = (t) => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            const entradas = historico.filter(m => normTipo(m.tipo) === 'entrada');
+            const saidas = historico.filter(m => normTipo(m.tipo) === 'saida');
             const custoTotal = entradas.reduce((acc, m) => acc + (Number(m.valor_unitario || 0) * Number(m.quantidade || 0)), 0);
             const qtdEntrada = entradas.reduce((acc, m) => acc + (Number(m.quantidade || 0)), 0);
             const custoPorUnidade = qtdEntrada > 0 ? custoTotal / qtdEntrada : 0;
