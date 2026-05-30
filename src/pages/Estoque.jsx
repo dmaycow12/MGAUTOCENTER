@@ -455,21 +455,29 @@ export default function Estoque() {
         const [ano, mes] = mesSelecionado.split('-');
         const nomeMes = new Date(Number(ano), Number(mes)-1, 1).toLocaleString('pt-BR',{month:'long',year:'numeric'});
         return (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wide">Desempenho Mensal de Peças</p>
-              <select
-                value={mesSelecionado}
-                onChange={e => setMesSelecionado(e.target.value)}
-                className="bg-gray-800 border border-gray-700 text-white text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-500"
-              >
-                {meses.map(m => {
-                  const [a, mo] = m.split('-');
-                  const label = new Date(Number(a), Number(mo)-1, 1).toLocaleString('pt-BR',{month:'long',year:'numeric'});
-                  return <option key={m} value={m}>{label}</option>;
-                })}
-              </select>
-            </div>
+          <div className="bg-gradient-to-br from-blue-900/40 to-gray-900 border border-blue-800/50 rounded-2xl p-4 space-y-3">
+            <p className="text-center text-white text-sm font-semibold">Desempenho Mensal de Peças</p>
+            {(() => {
+              const handlePrevMes = () => {
+                const cur = new Date(mesSelecionado + '-01');
+                cur.setMonth(cur.getMonth() - 1);
+                setMesSelecionado(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
+              };
+              const handleNextMes = () => {
+                const cur = new Date(mesSelecionado + '-01');
+                cur.setMonth(cur.getMonth() + 1);
+                setMesSelecionado(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
+              };
+              const [ano, mes] = mesSelecionado.split('-');
+              const nomeMes = new Date(Number(ano), Number(mes)-1, 1).toLocaleString('pt-BR',{month:'long',year:'numeric'});
+              return (
+                <div className="flex items-center justify-between px-4 py-2 bg-blue-950/60 rounded-xl border border-blue-800/30">
+                  <button onClick={handlePrevMes} className="text-blue-400 hover:text-blue-300 transition-all text-lg font-bold">‹</button>
+                  <p className="text-white font-bold text-center flex-1 capitalize">{nomeMes}</p>
+                  <button onClick={handleNextMes} className="text-blue-400 hover:text-blue-300 transition-all text-lg font-bold">›</button>
+                </div>
+              );
+            })()}
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-gray-800/50 rounded-xl p-3 text-center">
                 <p className="text-gray-500 text-xs mb-1">Custo de Entradas no Estoque</p>
