@@ -66,8 +66,6 @@ function gerarXmlNfse(nf) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
 
     // Carrega CNPJ das configurações
     const allConfigs = await base44.asServiceRole.entities.Configuracao.list('-created_date', 200);
