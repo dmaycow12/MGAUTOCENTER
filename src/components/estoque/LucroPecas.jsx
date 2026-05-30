@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from "lucide-react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, ChevronDown } from "lucide-react";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
@@ -12,32 +12,53 @@ const fmt = (v) => Number(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2}
 
 export default function LucroPecas({ items }) {
   const hoje = new Date();
-  const [mes, setMes] = useState(hoje.getMonth());
-  const [ano, setAno] = useState(hoje.getFullYear());
+  const [filtroMes, setFiltroMes] = useState(() => Number(localStorage.getItem("lucro_filtroMes")) || hoje.getMonth() + 1);
+  const [filtroAno, setFiltroAno] = useState(() => Number(localStorage.getItem("lucro_filtroAno")) || hoje.getFullYear());
+  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(() => localStorage.getItem("lucro_usandoOutro") === "true");
+  const [customRange, setCustomRange] = useState(() => { try { return JSON.parse(localStorage.getItem("lucro_customRange")); } catch { return null; } });
+  const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
+  const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
+  const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
+  const periodoDropRef = useRef(null);
 
-  const irMesAnterior = () => {
-    if (mes === 0) { setMes(11); setAno(a => a - 1); }
-    else setMes(m => m - 1);
+  useEffect(() => {
+    const handler = (e) => {
+      if (periodoDropRef.current && !periodoDropRef.current.contains(e.target)) setPeriodoDropOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const salvarCustom = (range) => { setCustomRange(range); localStorage.setItem("lucro_customRange", JSON.stringify(range)); setUsandoOutroPeriodo(true); localStorage.setItem("lucro_usandoOutro", "true"); };
+  const salvarMes = (m, a) => { setFiltroMes(m); localStorage.setItem("lucro_filtroMes", m); setFiltroAno(a); localStorage.setItem("lucro_filtroAno", a); setUsandoOutroPeriodo(false); localStorage.setItem("lucro_usandoOutro", "false"); setCustomRange(null); localStorage.removeItem("lucro_customRange"); };
+
+  const navegarMes = (dir) => {
+    let m = filtroMes + dir, a = filtroAno;
+    if (m > 12) { m = 1; a++; } if (m < 1) { m = 12; a--; }
+    salvarMes(m, a);
   };
-  const irProximoMes = () => {
-    if (mes === 11) { setMes(0); setAno(a => a + 1); }
-    else setMes(m => m + 1);
+
+  const aplicarOutroPeriodo = () => {
+    if (!outroPeriodoInicio || !outroPeriodoFim) return;
+    salvarCustom({ inicio: outroPeriodoInicio, fim: outroPeriodoFim });
+    setPeriodoDropOpen(false);
   };
 
-  const inicioMes = new Date(ano, mes, 1);
-  const fimMes = new Date(ano, mes + 1, 0, 23, 59, 59);
-  const fmtData = (d) => d.toLocaleDateString("pt-BR");
+  const pad = n => String(n).padStart(2, "0");
+  const periodoRange = usandoOutroPeriodo && customRange
+    ? customRange
+    : { inicio: `${filtroAno}-${pad(filtroMes)}-01`, fim: `${filtroAno}-${pad(filtroMes)}-31` };
 
-  const dados = useMemo(() => {
+  const margemTotal = useMemo(() => {
     const resultado = [];
     for (const item of items) {
       const historico = item.historico || [];
       const saidas = historico.filter(h => {
         const tipo = normalizarTipo(h.tipo);
         if (tipo !== "saida") return false;
-        const data = h.data ? new Date(h.data) : null;
-        if (!data) return false;
-        return data >= inicioMes && data <= fimMes;
+        const dataStr = h.data || "";
+        if (!dataStr) return false;
+        return dataStr >= periodoRange.inicio && dataStr <= periodoRange.fim;
       });
       if (saidas.length === 0) continue;
 
@@ -50,33 +71,93 @@ export default function LucroPecas({ items }) {
       resultado.push({ item, qtdVendida, receita, custo, lucro, margem });
     }
     return resultado.sort((a, b) => b.lucro - a.lucro);
-  }, [items, mes, ano]);
+  }, [items, periodoRange]);
 
   const totais = useMemo(() => ({
-    receita: dados.reduce((s, d) => s + d.receita, 0),
-    custo: dados.reduce((s, d) => s + d.custo, 0),
-    lucro: dados.reduce((s, d) => s + d.lucro, 0),
-  }), [dados]);
+    receita: margemTotal.reduce((s, d) => s + d.receita, 0),
+    custo: margemTotal.reduce((s, d) => s + d.custo, 0),
+    lucro: margemTotal.reduce((s, d) => s + d.lucro, 0),
+  }), [margemTotal]);
 
-  const margemTotal = totais.receita > 0 ? (totais.lucro / totais.receita) * 100 : 0;
+  const margemTotalPct = totais.receita > 0 ? (totais.lucro / totais.receita) * 100 : 0;
 
   return (
     <div className="space-y-4">
-      {/* Seletor de Mês */}
-      <div className="flex gap-2">
-        <div className="flex items-center flex-1 bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-          <button onClick={irMesAnterior} className="px-3 py-3 hover:bg-gray-800 text-gray-400 hover:text-white transition-all flex-shrink-0">
-            <ChevronLeft className="w-4 h-4" />
+      {/* Filtro de Período */}
+      <div className="flex gap-2 items-center">
+        <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
+          <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 hover:bg-white/20 transition-all" style={{borderRight:"1px solid rgba(255,255,255,0.15)"}}>
+            <ChevronLeft className="w-3 h-3" />
           </button>
-          <div className="flex-1 text-center text-sm font-bold text-white py-3">
-            {MESES[mes]} - {ano}
-          </div>
-          <button onClick={irProximoMes} className="px-3 py-3 hover:bg-gray-800 text-gray-400 hover:text-white transition-all flex-shrink-0">
-            <ChevronRight className="w-4 h-4" />
+          <button onClick={() => salvarMes(filtroMes, filtroAno)} className="flex-1 text-center h-full hover:bg-white/10 transition-all cursor-pointer">{MESES[filtroMes - 1]} - {filtroAno}</button>
+          <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 hover:bg-white/20 transition-all" style={{borderLeft:"1px solid rgba(255,255,255,0.15)"}}>
+            <ChevronRight className="w-3 h-3" />
           </button>
         </div>
-        <div className="flex items-center bg-gray-900 border border-gray-800 rounded-xl px-4 text-xs text-gray-400 whitespace-nowrap">
-          {fmtData(inicioMes)} — {fmtData(fimMes)}
+        <div className="relative flex-1" ref={periodoDropRef}>
+          <button onClick={() => setPeriodoDropOpen(v => !v)}
+            className={`w-full flex items-center justify-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}>
+            {usandoOutroPeriodo && customRange
+              ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}`
+              : `${String(1).padStart(2, "0")}/${String(filtroMes).padStart(2, "0")}/${filtroAno} — ${String(new Date(filtroAno, filtroMes, 0).getDate()).padStart(2, "0")}/${String(filtroMes).padStart(2, "0")}/${filtroAno}`}
+            <ChevronDown className={`w-4 h-4 transition-transform ${periodoDropOpen ? "rotate-180" : ""}`} />
+          </button>
+          {periodoDropOpen && (
+            <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
+              <p className="text-xs text-gray-400 font-medium">Atalhos</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                {[["hoje","Hoje"],["ontem","Ontem"],["semana","Semana"],["semana_passada","Sem. Passada"],["mes","Mês"],["mes_passado","Mês Passado"],["ano","Ano"],["ano_passado","Ano Passado"],["tudo","Tudo"]].map(([tipo, label]) => {
+                  const hoje = new Date();
+                  const pad = n => String(n).padStart(2, "0");
+                  const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+                  return (
+                  <button key={tipo} onClick={() => {
+                    if (tipo === "hoje") {
+                      const d = fmt(hoje); salvarCustom({ inicio: d, fim: d });
+                    } else if (tipo === "ontem") {
+                      const d = new Date(hoje); d.setDate(hoje.getDate() - 1); const s = fmt(d); salvarCustom({ inicio: s, fim: s });
+                    } else if (tipo === "semana") {
+                      const dow = hoje.getDay();
+                      const ini = new Date(hoje); ini.setDate(hoje.getDate() - dow);
+                      const fim = new Date(hoje); fim.setDate(hoje.getDate() + (6 - dow));
+                      salvarCustom({ inicio: fmt(ini), fim: fmt(fim) });
+                    } else if (tipo === "semana_passada") {
+                      const dow = hoje.getDay();
+                      const ini = new Date(hoje); ini.setDate(hoje.getDate() - dow - 7);
+                      const fim = new Date(hoje); fim.setDate(hoje.getDate() - dow - 1);
+                      salvarCustom({ inicio: fmt(ini), fim: fmt(fim) });
+                    } else if (tipo === "mes") {
+                      salvarMes(hoje.getMonth() + 1, hoje.getFullYear());
+                    } else if (tipo === "mes_passado") {
+                      const d = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1); salvarMes(d.getMonth() + 1, d.getFullYear());
+                    } else if (tipo === "ano") {
+                      salvarCustom({ inicio: `${hoje.getFullYear()}-01-01`, fim: `${hoje.getFullYear()}-12-31` });
+                    } else if (tipo === "ano_passado") {
+                      const a = hoje.getFullYear() - 1; salvarCustom({ inicio: `${a}-01-01`, fim: `${a}-12-31` });
+                    } else if (tipo === "tudo") {
+                      salvarCustom({ inicio: "2000-01-01", fim: "2099-12-31" });
+                    }
+                    setPeriodoDropOpen(false);
+                  }}
+                    className="py-2 text-xs text-white bg-gray-800 hover:bg-[#062C9B] border border-gray-700 rounded-lg font-medium transition-all">
+                    {label}
+                  </button>
+                  );
+                })}
+              </div>
+              <div className="border-t border-gray-700 pt-3 space-y-3">
+              <p className="text-xs text-gray-400 font-medium">Período personalizado</p>
+              <div><label className="block text-xs text-gray-500 mb-1">De</label>
+                <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none" /></div>
+              <div><label className="block text-xs text-gray-500 mb-1">Até</label>
+                <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none" /></div>
+              <div className="flex gap-2">
+                <button onClick={() => setPeriodoDropOpen(false)} className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white">Cancelar</button>
+                <button onClick={aplicarOutroPeriodo} className="flex-1 py-2 text-xs text-white rounded-lg font-medium" style={{background: "#062C9B"}} onMouseEnter={e => e.currentTarget.style.background = "#041a4d"} onMouseLeave={e => e.currentTarget.style.background = "#062C9B"}>Aplicar</button>
+              </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -84,7 +165,7 @@ export default function LucroPecas({ items }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
           <p className="text-gray-500 text-xs mb-1">Produtos Vendidos</p>
-          <p className="text-white font-bold text-lg">{dados.length}</p>
+          <p className="text-white font-bold text-lg">{margemTotal.length}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
           <p className="text-gray-500 text-xs mb-1">Receita Total</p>
@@ -98,16 +179,16 @@ export default function LucroPecas({ items }) {
           <p className="text-gray-500 text-xs mb-1">Lucro Bruto</p>
           <p className={`font-bold ${totais.lucro >= 0 ? "text-green-400" : "text-red-400"}`}>
             R$ {fmt(totais.lucro)}
-            <span className="text-xs ml-1 font-normal text-gray-400">({margemTotal.toFixed(1)}%)</span>
+            <span className="text-xs ml-1 font-normal text-gray-400">({margemTotalPct.toFixed(1)}%)</span>
           </p>
         </div>
       </div>
 
       {/* Tabela */}
-      {dados.length === 0 ? (
+      {margemTotal.length === 0 ? (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
           <TrendingUp className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-          <p className="text-gray-400 text-sm">Nenhuma venda registrada em {MESES[mes]} {ano}</p>
+          <p className="text-gray-400 text-sm">Nenhuma venda registrada neste período</p>
         </div>
       ) : (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
@@ -125,7 +206,7 @@ export default function LucroPecas({ items }) {
                 </tr>
               </thead>
               <tbody>
-                {dados.map(({ item, qtdVendida, receita, custo, lucro, margem }, idx) => (
+                {margemTotal.map(({ item, qtdVendida, receita, custo, lucro, margem }, idx) => (
                   <tr key={item.id} className={`border-b border-gray-800 transition-all hover:bg-gray-800/40 ${idx % 2 === 0 ? "" : "bg-gray-900/30"}`}>
                     <td className="px-4 py-3 text-gray-600 text-xs">{idx + 1}</td>
                     <td className="px-4 py-3">
