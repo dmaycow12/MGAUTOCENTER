@@ -827,7 +827,11 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         <div className="p-5 space-y-5">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <Field label="Número Venda">
-              <input value={form.numero} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} className="input-dark" autoComplete="off" />
+              {os ? (
+                <div className="input-dark text-gray-400" style={{cursor:'default'}}>{form.numero}</div>
+              ) : (
+                <input value={form.numero} onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} className="input-dark" autoComplete="off" />
+              )}
             </Field>
             <Field label="Status">
               <select value={form.status} onChange={e => onStatusChange(e.target.value)} className="input-dark">
