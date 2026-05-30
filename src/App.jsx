@@ -7,6 +7,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
+import PasswordGate from '@/components/PasswordGate';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -53,6 +54,7 @@ const AppRoutes = () => {
 
 function App() {
   return (
+    <PasswordGate>
     <QueryClientProvider client={queryClientInstance}>
       <Router>
         <AuthProvider>
@@ -61,6 +63,7 @@ function App() {
       </Router>
       <Toaster />
     </QueryClientProvider>
+    </PasswordGate>
   )
 }
 
