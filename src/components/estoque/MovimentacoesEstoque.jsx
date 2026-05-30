@@ -214,11 +214,7 @@ export default function MovimentacoesEstoque({ items, onReload }) {
             style={{ background: "#062C9B" }}>
             <Edit className="w-3.5 h-3.5" /> Editar em Massa
           </button>
-          <button onClick={excluirSelecionados} disabled={deletando}
-            className="flex items-center gap-2 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition-all disabled:opacity-50"
-            style={{ background: "#cc0000" }}>
-            <Trash2 className="w-3.5 h-3.5" /> {deletando ? "Excluindo..." : "Excluir"}
-          </button>
+
         </div>
       )}
 
