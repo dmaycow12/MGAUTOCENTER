@@ -340,7 +340,11 @@ export default function Vendas() {
         </div>
 
         {/* Cards de totais - linha 1 */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
+          <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
+            <span className="text-xs font-semibold text-gray-400 tracking-wide">VENDAS</span>
+            <span className="text-sm font-bold text-blue-400">{ordensComFiltrosBase.length}</span>
+          </div>
           {[
             { label: "PÁTIO", value: totalPatio },
             { label: "BALCÃO", value: totalBalcao },
