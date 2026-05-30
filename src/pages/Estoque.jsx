@@ -427,51 +427,79 @@ export default function Estoque() {
 
       {/* Card Lucro de Peças por Mês */}
       {(() => {
-        const vendasMes = vendas.filter(v => v.status === "Concluído" && (v.data_entrada || v.created_date || "").startsWith(mesLucro));
-        let receitaPecas = 0, custoPecas = 0;
-        vendasMes.forEach(v => {
-          (v.pecas || []).forEach(p => {
-            receitaPecas += Number(p.valor_unitario || 0) * Number(p.quantidade || 1);
-            custoPecas += Number(p.valor_custo || 0) * Number(p.quantidade || 1);
-          });
-        });
-        const lucro = receitaPecas - custoPecas;
-        const margem = receitaPecas > 0 ? ((lucro / receitaPecas) * 100).toFixed(1) : "0.0";
-        const fmtR = v => Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
         const navMes = (dir) => {
           const [a, m] = mesLucro.split("-").map(Number);
           const d = new Date(a, m - 1 + dir, 1);
           setMesLucro(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
         };
-        const nomeMes = new Date(Number(mesLucro.split("-")[0]), Number(mesLucro.split("-")[1])-1, 1).toLocaleString("pt-BR", {month:"long", year:"numeric"});
+        const nomeMes = new Date(Number(mesLucro.split("-")[0]), Number(mesLucro.split("-")[1])-1, 1)
+          .toLocaleString("pt-BR", {month:"long", year:"numeric"});
+
+        // data_entrada vem como DD/MM/YYYY — converter para YYYY-MM para comparar
+        const parseMes = (dataStr) => {
+          if (!dataStr) return "";
+          // ISO: 2026-05-30T... ou 2026-05-30
+          if (dataStr.includes("-") && dataStr.length >= 7) return dataStr.substring(0, 7);
+          // BR: 30/05/2026
+          const parts = dataStr.split("/");
+          if (parts.length === 3) return `${parts[2]}-${parts[1]}`;
+          return "";
+        };
+
+        const vendasMes = vendas.filter(v => {
+          if (v.status !== "Conclu\u00eddo") return false;
+          const mes = parseMes(v.data_conclusao) || parseMes(v.data_entrada) || parseMes(v.created_date);
+          return mes === mesLucro;
+        });
+
+        let receitaPecas = 0, custoPecas = 0;
+        vendasMes.forEach(v => {
+          (v.pecas || []).forEach(p => {
+            const qtd = Number(p.quantidade || 1);
+            receitaPecas += Number(p.valor_unitario || 0) * qtd;
+            custoPecas   += Number(p.valor_custo   || 0) * qtd;
+          });
+        });
+        const lucro = receitaPecas - custoPecas;
+        const margem = receitaPecas > 0 ? ((lucro / receitaPecas) * 100).toFixed(1) : "0.0";
+        const fmtR = v => Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        const margemColor = Number(margem) >= 30 ? "#00C957" : Number(margem) >= 15 ? "#FFCC00" : "#FF4444";
+
         return (
-          <div className="rounded-2xl p-4 space-y-3" style={{background: "linear-gradient(135deg, #0a1929 0%, #132642 100%)", border: "1px solid #1e4d7b"}}>
-            <p className="text-center text-white font-bold text-lg">Lucro de Peças</p>
-            <div className="flex items-center h-11 rounded-xl overflow-hidden text-sm font-semibold" style={{background: "#062C9B"}}>
-              <button onClick={() => navMes(-1)} className="flex items-center justify-center h-full px-3 hover:bg-white/20 transition-all" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
+          <div style={{background: "linear-gradient(135deg, #0a1929 0%, #0d2137 100%)", border: "1px solid #1e4d7b", borderRadius: "16px", padding: "16px"}}>
+            {/* Título + Navegação */}
+            <div className="flex items-center justify-between mb-3">
+              <button onClick={() => navMes(-1)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all">
                 <ChevronLeft className="w-4 h-4 text-white" />
               </button>
-              <span className="flex-1 text-center text-white capitalize">{nomeMes}</span>
-              <button onClick={() => navMes(1)} className="flex items-center justify-center h-full px-3 hover:bg-white/20 transition-all" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
+              <div className="text-center">
+                <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Lucro de Peças</p>
+                <p className="text-white font-bold text-sm capitalize">{nomeMes}</p>
+              </div>
+              <button onClick={() => navMes(1)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all">
                 <ChevronRight className="w-4 h-4 text-white" />
               </button>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <div className="rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
-                <span className="text-xs font-semibold text-gray-400 tracking-wide">Receita Peças</span>
-                <span className="text-xs font-bold text-blue-400">{fmtR(receitaPecas)}</span>
+
+            {/* Lucro destaque */}
+            <div className="text-center mb-3">
+              <p className="text-3xl font-bold" style={{color: lucro >= 0 ? "#00C957" : "#FF4444"}}>{fmtR(lucro)}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{vendasMes.length} venda(s) com peças</p>
+            </div>
+
+            {/* 3 métricas */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-xl p-2 text-center" style={{background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)"}}>
+                <p className="text-xs text-gray-400 mb-1">Receita</p>
+                <p className="text-xs font-bold text-blue-400">{fmtR(receitaPecas)}</p>
               </div>
-              <div className="rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
-                <span className="text-xs font-semibold text-gray-400 tracking-wide">Custo Peças</span>
-                <span className="text-xs font-bold text-red-400">{fmtR(custoPecas)}</span>
+              <div className="rounded-xl p-2 text-center" style={{background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)"}}>
+                <p className="text-xs text-gray-400 mb-1">Custo</p>
+                <p className="text-xs font-bold text-red-400">{fmtR(custoPecas)}</p>
               </div>
-              <div className="rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1" style={{background: lucro >= 0 ? "#0d1b2a" : "#2a0d0d", border: lucro >= 0 ? "1px solid #1e3a5f" : "1px solid #5f1e1e"}}>
-                <span className="text-xs font-semibold text-gray-400 tracking-wide">Lucro</span>
-                <span className="text-xs font-bold" style={{color: lucro >= 0 ? "#00C957" : "#FF4444"}}>{fmtR(lucro)}</span>
-              </div>
-              <div className="rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
-                <span className="text-xs font-semibold text-gray-400 tracking-wide">Margem</span>
-                <span className="text-xs font-bold" style={{color: Number(margem) >= 30 ? "#00C957" : Number(margem) >= 15 ? "#FFCC00" : "#FF4444"}}>{margem}%</span>
+              <div className="rounded-xl p-2 text-center" style={{background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)"}}>
+                <p className="text-xs text-gray-400 mb-1">Margem</p>
+                <p className="text-xs font-bold" style={{color: margemColor}}>{margem}%</p>
               </div>
             </div>
           </div>
