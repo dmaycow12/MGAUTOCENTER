@@ -17,9 +17,6 @@ const defaultForm = () => ({
 
 export default function Estoque() {
   const [items, setItems] = useState([]);
-  const [vendas, setVendas] = useState([]);
-  const hoje = new Date();
-  const [mesLucro, setMesLucro] = useState(() => `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -107,12 +104,10 @@ export default function Estoque() {
   }, []);
 
   const load = async () => {
-    const [data, vendasData, configs] = await Promise.all([
+    const [data, configs] = await Promise.all([
       base44.entities.Estoque.list("-updated_date", 5000),
-      base44.entities.Vendas.list("-created_date", 2000),
       base44.entities.Configuracao.list(),
     ]);
-    setVendas(vendasData);
     setItems(data);
     const cfg = configs.find(c => c.chave === "checklist_estoque_ids");
     if (cfg) {
@@ -425,73 +420,33 @@ export default function Estoque() {
         </div>
       </div>
 
-      {/* Card Lucro de Peças por Mês */}
+      {/* Card Margem Potencial do Estoque */}
       {(() => {
-        const navMes = (dir) => {
-          const [a, m] = mesLucro.split("-").map(Number);
-          const d = new Date(a, m - 1 + dir, 1);
-          setMesLucro(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
-        };
-        const nomeMes = new Date(Number(mesLucro.split("-")[0]), Number(mesLucro.split("-")[1])-1, 1)
-          .toLocaleString("pt-BR", {month:"long", year:"numeric"});
-
-        // Converte DD/MM/YYYY ou ISO para YYYY-MM
-        const toMes = (s) => {
-          if (!s) return null;
-          if (/^\d{4}-\d{2}/.test(s)) return s.substring(0, 7);
-          const p = s.split("/");
-          if (p.length === 3) return `${p[2].substring(0,4)}-${p[1]}`;
-          return null;
-        };
-
-        const vendasMes = vendas.filter(v => {
-          const status = (v.status || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-          if (status !== "concluido") return false;
-          // Só usa datas da venda, NUNCA created_date
-          const mes = toMes(v.data_conclusao) || toMes(v.data_entrada);
-          return mes === mesLucro;
-        });
-
-        let receitaPecas = 0, custoPecas = 0;
-        vendasMes.forEach(v => {
-          (v.pecas || []).forEach(p => {
-            const qtd = Number(p.quantidade || 1);
-            receitaPecas += Number(p.valor_unitario || 0) * qtd;
-            custoPecas   += Number(p.valor_custo   || 0) * qtd;
-          });
-        });
-        const lucro = receitaPecas - custoPecas;
-        const margem = receitaPecas > 0 ? ((lucro / receitaPecas) * 100).toFixed(1) : "0.0";
+        const totalCusto = items.reduce((acc, i) => acc + (Number(i.quantidade||0) * Number(i.valor_custo||0)), 0);
+        const totalVenda = items.reduce((acc, i) => acc + (Number(i.quantidade||0) * Number(i.valor_venda||0)), 0);
+        const lucro = totalVenda - totalCusto;
+        const margem = totalVenda > 0 ? ((lucro / totalVenda) * 100).toFixed(1) : "0.0";
         const fmtR = v => Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
+        const margemColor = Number(margem) >= 30 ? "#00C957" : Number(margem) >= 15 ? "#FFCC00" : "#FF4444";
         return (
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            {/* Navegação de mês */}
-            <div className="flex items-center justify-between mb-3">
-              <button onClick={() => navMes(-1)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all">
-                <ChevronLeft className="w-4 h-4 text-gray-400" />
-              </button>
-              <p className="text-white text-sm font-medium capitalize">Lucro de Peças — {nomeMes}</p>
-              <button onClick={() => navMes(1)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all">
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </button>
-            </div>
+            <p className="text-white text-sm font-medium text-center mb-3">Margem Potencial do Estoque</p>
             <div className="grid grid-cols-4 gap-3">
               <div className="text-center">
-                <p className="text-gray-400 text-xs mb-1">Receita</p>
-                <p className="text-blue-400 text-sm font-bold">{fmtR(receitaPecas)}</p>
+                <p className="text-gray-400 text-xs mb-1">Custo Total</p>
+                <p className="text-white text-sm font-medium">{fmtR(totalCusto)}</p>
               </div>
               <div className="text-center">
-                <p className="text-gray-400 text-xs mb-1">Custo</p>
-                <p className="text-red-400 text-sm font-bold">{fmtR(custoPecas)}</p>
+                <p className="text-gray-400 text-xs mb-1">Venda Total</p>
+                <p className="text-green-400 text-sm font-bold">{fmtR(totalVenda)}</p>
               </div>
               <div className="text-center">
-                <p className="text-gray-400 text-xs mb-1">Lucro</p>
+                <p className="text-gray-400 text-xs mb-1">Lucro Potencial</p>
                 <p className="text-sm font-bold" style={{color: lucro >= 0 ? "#00C957" : "#FF4444"}}>{fmtR(lucro)}</p>
               </div>
               <div className="text-center">
                 <p className="text-gray-400 text-xs mb-1">Margem</p>
-                <p className="text-sm font-bold" style={{color: Number(margem) >= 30 ? "#00C957" : Number(margem) >= 15 ? "#FFCC00" : "#FF4444"}}>{margem}%</p>
+                <p className="text-sm font-bold" style={{color: margemColor}}>{margem}%</p>
               </div>
             </div>
           </div>
