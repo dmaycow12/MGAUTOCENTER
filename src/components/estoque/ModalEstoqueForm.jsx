@@ -10,13 +10,11 @@ const arredondarVendaParaCinco = (valor) => Math.ceil(valor / 5) * 5;
 
 function formatarData(dataStr) {
   if (!dataStr) return "—";
-  // YYYY-MM-DD (ISO date-only) — parseia como local adicionando hora
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dataStr)) {
-    return new Date(dataStr + 'T12:00:00').toLocaleDateString('pt-BR');
-  }
   // DD/MM/YYYY
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(dataStr)) return dataStr;
-  // Qualquer outro formato ISO com hora
+  // Qualquer ISO — extrai apenas YYYY-MM-DD e parseia como local (evita fuso UTC-3)
+  const match = dataStr.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (match) return new Date(match[1] + 'T12:00:00').toLocaleDateString('pt-BR');
   const d = new Date(dataStr);
   return isNaN(d) ? dataStr : d.toLocaleDateString('pt-BR');
 }
