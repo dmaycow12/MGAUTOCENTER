@@ -49,6 +49,7 @@ export default function Estoque() {
   const [conferidos, setConferidos] = useState(new Set());
   const [checklistSalvoEm, setChecklistSalvoEm] = useState(null);
   const [checklistConfigId, setChecklistConfigId] = useState(null);
+  const [mesSelecionado, setMesSelecionado] = useState("2026-05");
   const [colunas, setColunas] = useState(() => {
     const saved = localStorage.getItem("estoque_colunas");
     return saved ? JSON.parse(saved) : { codigo: true, marca: true, estoque_minimo: true, valor_custo: true, valor_venda: true };
@@ -421,6 +422,67 @@ export default function Estoque() {
           </p>
         </div>
       </div>
+
+      {/* Cards Mensais Peças */}
+      {(() => {
+        const meses = [];
+        const inicio = new Date(2026, 3, 1); // abril 2026
+        const agora = new Date();
+        let cur = new Date(inicio.getFullYear(), inicio.getMonth(), 1);
+        while (cur <= agora) {
+          meses.push(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
+          cur.setMonth(cur.getMonth()+1);
+        }
+        let custoTotal = 0, receitaTotal = 0, qtdTotal = 0;
+        items.forEach(item => {
+          (item.historico || []).forEach(mov => {
+            const tipo = (mov.tipo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+            if (tipo !== 'saida') return;
+            const dataMov = (mov.data || '').substring(0,7);
+            if (dataMov !== mesSelecionado) return;
+            const qtd = Number(mov.quantidade || 0);
+            const venda = Number(mov.valor_unitario || 0);
+            const custo = Number(item.valor_custo || 0);
+            receitaTotal += qtd * venda;
+            custoTotal += qtd * custo;
+            qtdTotal += qtd;
+          });
+        });
+        const lucro = receitaTotal - custoTotal;
+        const fmt = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+        const [ano, mes] = mesSelecionado.split('-');
+        const nomeMes = new Date(Number(ano), Number(mes)-1, 1).toLocaleString('pt-BR',{month:'long',year:'numeric'});
+        return (
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wide">Desempenho Mensal de Peças</p>
+              <select
+                value={mesSelecionado}
+                onChange={e => setMesSelecionado(e.target.value)}
+                className="bg-gray-800 border border-gray-700 text-white text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-500"
+              >
+                {meses.map(m => {
+                  const [a, mo] = m.split('-');
+                  const label = new Date(Number(a), Number(mo)-1, 1).toLocaleString('pt-BR',{month:'long',year:'numeric'});
+                  return <option key={m} value={m}>{label}</option>;
+                })}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-800/50 rounded-xl p-3 text-center">
+                <p className="text-gray-500 text-xs mb-1">Custo Total de Saídas</p>
+                <p className="text-yellow-400 font-bold text-sm">{fmt(custoTotal)}</p>
+                <p className="text-gray-600 text-xs mt-0.5">{qtdTotal} peça(s) vendida(s)</p>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-3 text-center">
+                <p className="text-gray-500 text-xs mb-1">Lucro das Peças</p>
+                <p className={`font-bold text-sm ${lucro >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmt(lucro)}</p>
+                <p className="text-gray-600 text-xs mt-0.5">Receita: {fmt(receitaTotal)}</p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Header */}
       <div className="flex flex-col gap-2">
