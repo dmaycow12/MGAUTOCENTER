@@ -341,19 +341,6 @@ export default function Dashboard() {
           );
           })()}
           <FluxoMes financeiro={financeiroPeriodo} />
-          {/* Card de Vendas Abertas */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-xs font-medium mb-2">VENDAS</p>
-                <p className="text-white font-bold text-3xl">{osAbertas}</p>
-                <p className="text-gray-500 text-xs mt-1">Abertos no Pátio</p>
-              </div>
-              <div className="text-5xl opacity-20">
-                <ClipboardList className="w-16 h-16" style={{ color: BLUE }} />
-              </div>
-            </div>
-          </div>
           </div>
 
 
