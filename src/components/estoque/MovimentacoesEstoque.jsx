@@ -1,12 +1,17 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { Search, Trash2, Edit, X, Check, Filter, ChevronDown } from "lucide-react";
+import { Search, Trash2, Edit, X, Check } from "lucide-react";
 
 const TIPO_CORES = {
   entrada: { bg: "#00ff0022", color: "#00ff00", border: "#00ff0044", label: "ENTRADA" },
   saida: { bg: "#ef444422", color: "#ef4444", border: "#ef444444", label: "SAÍDA" },
   ajuste: { bg: "#f9731622", color: "#f97316", border: "#f9731644", label: "AJUSTE" },
 };
+
+// Normaliza o tipo removendo acentos e lowercase (para compatibilidade com dados antigos como "saída")
+function normalizarTipo(tipo) {
+  return String(tipo || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
 
 function fmtData(str) {
   if (!str) return "—";
@@ -22,9 +27,9 @@ function fmtVal(v) {
 export default function MovimentacoesEstoque({ items, onReload }) {
   const [search, setSearch] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("Todos");
-  const [selecionados, setSelecionados] = useState([]); // array de { itemId, movIdx }
+  const [selecionados, setSelecionados] = useState([]);
   const [deletando, setDeletando] = useState(false);
-  const [editando, setEditando] = useState(null); // { itemId, movIdx, mov }
+  const [editando, setEditando] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [bulkForm, setBulkForm] = useState({ tipo: "", observacao: "" });
@@ -34,13 +39,12 @@ export default function MovimentacoesEstoque({ items, onReload }) {
   const todasMovimentacoes = useMemo(() => {
     const lista = [];
     for (const item of items) {
-      if (item.codigo?.toUpperCase() === "XX") continue; // Pular produto coringa
+      if (item.codigo?.toUpperCase() === "XX") continue;
       const hist = Array.isArray(item.historico) ? item.historico : [];
       hist.forEach((mov, idx) => {
         lista.push({ itemId: item.id, produtoDescricao: item.descricao, produtoCodigo: item.codigo, movIdx: idx, mov });
       });
     }
-    // Sort by date desc
     lista.sort((a, b) => {
       const da = a.mov.data || "";
       const db = b.mov.data || "";
@@ -58,7 +62,7 @@ export default function MovimentacoesEstoque({ items, onReload }) {
         m.mov.fornecedor?.toLowerCase().includes(q) ||
         m.mov.observacao?.toLowerCase().includes(q) ||
         m.mov.ordem_venda_numero?.toLowerCase().includes(q);
-      const matchTipo = filtroTipo === "Todos" || m.mov.tipo === filtroTipo.toLowerCase();
+      const matchTipo = filtroTipo === "Todos" || normalizarTipo(m.mov.tipo) === filtroTipo.toLowerCase();
       return matchSearch && matchTipo;
     });
   }, [todasMovimentacoes, search, filtroTipo]);
@@ -80,13 +84,11 @@ export default function MovimentacoesEstoque({ items, onReload }) {
 
   const selecionadosSet = new Set(selecionados);
 
-  // Excluir selecionados
   const excluirSelecionados = async () => {
     if (!selecionados.length) return;
     if (!confirm(`Excluir ${selecionados.length} movimentação(ões)?`)) return;
     setDeletando(true);
 
-    // Group by itemId
     const porItem = {};
     for (const k of selecionados) {
       const [itemId, movIdxStr] = k.split("_");
@@ -107,7 +109,6 @@ export default function MovimentacoesEstoque({ items, onReload }) {
     onReload();
   };
 
-  // Editar individual
   const abrirEdicao = (m) => {
     setEditando({ itemId: m.itemId, movIdx: m.movIdx });
     setEditForm({ ...m.mov });
@@ -123,7 +124,6 @@ export default function MovimentacoesEstoque({ items, onReload }) {
     onReload();
   };
 
-  // Edição em massa
   const aplicarBulkEdit = async () => {
     if (!selecionados.length) return;
     setSalvandoBulk(true);
@@ -156,7 +156,11 @@ export default function MovimentacoesEstoque({ items, onReload }) {
     onReload();
   };
 
-  const tipoOpcoes = ["Todos", "Entrada", "Saída", "Ajuste"];
+  const tipoOpcoes = ["Todos", "Entrada", "Saida", "Ajuste"];
+  const tipoLabels = { "Todos": "TODOS", "Entrada": "ENTRADAS", "Saida": "SAÍDAS", "Ajuste": "AJUSTES" };
+
+  const totalEntradas = todasMovimentacoes.filter(m => normalizarTipo(m.mov.tipo) === "entrada").length;
+  const totalSaidas = todasMovimentacoes.filter(m => normalizarTipo(m.mov.tipo) === "saida").length;
 
   return (
     <div className="space-y-4">
@@ -168,11 +172,11 @@ export default function MovimentacoesEstoque({ items, onReload }) {
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
           <p className="text-gray-500 text-xs mb-1">Entradas</p>
-          <p className="font-bold" style={{ color: "#00ff00" }}>{todasMovimentacoes.filter(m => m.mov.tipo === "entrada").length}</p>
+          <p className="font-bold" style={{ color: "#00ff00" }}>{totalEntradas}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
           <p className="text-gray-500 text-xs mb-1">Saídas</p>
-          <p className="text-red-400 font-bold">{todasMovimentacoes.filter(m => m.mov.tipo === "saida").length}</p>
+          <p className="text-red-400 font-bold">{totalSaidas}</p>
         </div>
       </div>
 
@@ -182,7 +186,7 @@ export default function MovimentacoesEstoque({ items, onReload }) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
-            placeholder="Buscar produto, fornecedor, OS..."
+            placeholder="Buscar produto, fornecedor, O.V...."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500"
@@ -194,7 +198,7 @@ export default function MovimentacoesEstoque({ items, onReload }) {
               className="px-3 py-2 text-xs font-semibold transition-all"
               style={{ background: filtroTipo === t ? "#062C9B" : "transparent", color: filtroTipo === t ? "#fff" : "#6b7280" }}
             >
-              {t}
+              {tipoLabels[t]}
             </button>
           ))}
         </div>
@@ -235,7 +239,7 @@ export default function MovimentacoesEstoque({ items, onReload }) {
                 <th className="px-4 py-3">Data</th>
                 <th className="px-4 py-3 text-right">Qtd</th>
                 <th className="px-4 py-3 text-right">Valor Unit.</th>
-                <th className="px-4 py-3">Fornecedor / OS</th>
+                <th className="px-4 py-3">Fornecedor / O.V.</th>
                 <th className="px-4 py-3">Observação</th>
                 <th className="px-4 py-3 text-center">Ações</th>
               </tr>
@@ -245,7 +249,8 @@ export default function MovimentacoesEstoque({ items, onReload }) {
                 <tr><td colSpan={9} className="px-4 py-12 text-center text-gray-500">Nenhuma movimentação encontrada</td></tr>
               ) : filtradas.map((m) => {
                 const k = chaveUnica(m);
-                const cor = TIPO_CORES[m.mov.tipo] || TIPO_CORES["ajuste"];
+                const tipoNorm = normalizarTipo(m.mov.tipo);
+                const cor = TIPO_CORES[tipoNorm] || TIPO_CORES["ajuste"];
                 return (
                   <tr key={k} className={`border-b border-gray-800 transition-all hover:bg-gray-800/40 ${selecionadosSet.has(k) ? "bg-blue-500/5" : ""}`}>
                     <td className="px-4 py-3">
@@ -262,12 +267,12 @@ export default function MovimentacoesEstoque({ items, onReload }) {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-400 text-xs">{fmtData(m.mov.data)}</td>
-                    <td className="px-4 py-3 text-right font-bold" style={{ color: m.mov.tipo === "saida" ? "#ef4444" : "#00ff00" }}>
-                      {m.mov.tipo === "saida" ? "-" : "+"}{m.mov.quantidade || 0}
+                    <td className="px-4 py-3 text-right font-bold" style={{ color: tipoNorm === "saida" ? "#ef4444" : "#00ff00" }}>
+                      {tipoNorm === "saida" ? "-" : "+"}{m.mov.quantidade || 0}
                     </td>
                     <td className="px-4 py-3 text-right text-gray-300 text-xs">{m.mov.valor_unitario ? fmtVal(m.mov.valor_unitario) : "—"}</td>
                     <td className="px-4 py-3 text-gray-400 text-xs max-w-[140px] truncate">
-                      {m.mov.fornecedor || m.mov.ordem_venda_numero || "—"}
+                      {m.mov.fornecedor ? m.mov.fornecedor : m.mov.ordem_venda_numero ? `O.V. ${m.mov.ordem_venda_numero}` : "—"}
                     </td>
                     <td className="px-4 py-3 text-gray-500 text-xs max-w-[140px] truncate">{m.mov.observacao || "—"}</td>
                     <td className="px-4 py-3 text-center">
@@ -312,6 +317,9 @@ export default function MovimentacoesEstoque({ items, onReload }) {
               </div>
               <Field label="Fornecedor">
                 <input type="text" value={editForm.fornecedor || ""} onChange={e => setEditForm(f => ({ ...f, fornecedor: e.target.value }))} className="input-mov" />
+              </Field>
+              <Field label="N° O.V.">
+                <input type="text" value={editForm.ordem_venda_numero || ""} onChange={e => setEditForm(f => ({ ...f, ordem_venda_numero: e.target.value }))} className="input-mov" />
               </Field>
               <Field label="Observação">
                 <input type="text" value={editForm.observacao || ""} onChange={e => setEditForm(f => ({ ...f, observacao: e.target.value }))} className="input-mov" />

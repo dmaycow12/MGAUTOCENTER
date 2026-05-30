@@ -37,7 +37,7 @@ export async function reduzirEstoque(pecas, venda = null, estoqueList = null) {
     if (!item) continue;
     if (!porItem.has(item.id)) porItem.set(item.id, { item, saidas: [] });
     porItem.get(item.id).saidas.push({
-      tipo: "saída",
+      tipo: "saida",
       data: (() => {
         const d = venda?.data_entrada;
         if (!d) return new Date().toLocaleDateString('en-CA');
