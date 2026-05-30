@@ -433,22 +433,24 @@ export default function Estoque() {
           meses.push(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
           cur.setMonth(cur.getMonth()+1);
         }
-        let custoTotal = 0, receitaTotal = 0, qtdTotal = 0;
+        let custoEntradas = 0, qtdEntradas = 0;
+        let receitaSaidas = 0, custoSaidas = 0;
         items.forEach(item => {
           (item.historico || []).forEach(mov => {
             const tipo = (mov.tipo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-            if (tipo !== 'saida') return;
             const dataMov = (mov.data || '').substring(0,7);
             if (dataMov !== mesSelecionado) return;
             const qtd = Number(mov.quantidade || 0);
-            const venda = Number(mov.valor_unitario || 0);
-            const custo = Number(item.valor_custo || 0);
-            receitaTotal += qtd * venda;
-            custoTotal += qtd * custo;
-            qtdTotal += qtd;
+            if (tipo === 'entrada') {
+              custoEntradas += qtd * Number(mov.valor_unitario || 0);
+              qtdEntradas += qtd;
+            } else if (tipo === 'saida') {
+              receitaSaidas += qtd * Number(mov.valor_unitario || 0);
+              custoSaidas += qtd * Number(item.valor_custo || 0);
+            }
           });
         });
-        const lucro = receitaTotal - custoTotal;
+        const lucro = receitaSaidas - custoSaidas;
         const fmt = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
         const [ano, mes] = mesSelecionado.split('-');
         const nomeMes = new Date(Number(ano), Number(mes)-1, 1).toLocaleString('pt-BR',{month:'long',year:'numeric'});
@@ -470,14 +472,14 @@ export default function Estoque() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-gray-800/50 rounded-xl p-3 text-center">
-                <p className="text-gray-500 text-xs mb-1">Custo Total de Saídas</p>
-                <p className="text-yellow-400 font-bold text-sm">{fmt(custoTotal)}</p>
-                <p className="text-gray-600 text-xs mt-0.5">{qtdTotal} peça(s) vendida(s)</p>
+                <p className="text-gray-500 text-xs mb-1">Custo de Entradas no Estoque</p>
+                <p className="text-yellow-400 font-bold text-sm">{fmt(custoEntradas)}</p>
+                <p className="text-gray-600 text-xs mt-0.5">{qtdEntradas} peça(s) lançada(s)</p>
               </div>
               <div className="bg-gray-800/50 rounded-xl p-3 text-center">
                 <p className="text-gray-500 text-xs mb-1">Lucro das Peças</p>
                 <p className={`font-bold text-sm ${lucro >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmt(lucro)}</p>
-                <p className="text-gray-600 text-xs mt-0.5">Receita: {fmt(receitaTotal)}</p>
+                <p className="text-gray-600 text-xs mt-0.5">Receita: {fmt(receitaSaidas)}</p>
               </div>
             </div>
           </div>
