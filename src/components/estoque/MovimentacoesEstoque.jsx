@@ -30,10 +30,11 @@ export default function MovimentacoesEstoque({ items, onReload }) {
   const [bulkForm, setBulkForm] = useState({ tipo: "", observacao: "" });
   const [salvandoBulk, setSalvandoBulk] = useState(false);
 
-  // Flatten all movements
+  // Flatten all movements (excluir produto XX coringa)
   const todasMovimentacoes = useMemo(() => {
     const lista = [];
     for (const item of items) {
+      if (item.codigo?.toUpperCase() === "XX") continue; // Pular produto coringa
       const hist = Array.isArray(item.historico) ? item.historico : [];
       hist.forEach((mov, idx) => {
         lista.push({ itemId: item.id, produtoDescricao: item.descricao, produtoCodigo: item.codigo, movIdx: idx, mov });
