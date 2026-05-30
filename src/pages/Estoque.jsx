@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, ChevronUp, ChevronDown, Download, ClipboardCheck } from "lucide-react";
 import ProgressoReajuste from "../components/estoque/ProgressoReajuste";
 import ModalEstoqueForm from "../components/estoque/ModalEstoqueForm";
+import MovimentacoesEstoque from "../components/estoque/MovimentacoesEstoque";
 
 const arredondarVendaParaCinco = (valor) => {
   return Math.ceil(valor / 5) * 5;
@@ -39,6 +40,7 @@ export default function Estoque() {
   const [editandoCell, setEditandoCell] = useState(null); // { id, field }
   const [ordenacao, setOrdenacao] = useState({ campo: "descricao", direcao: "asc" });
   const [deletando, setDeletando] = useState(false);
+  const [abaEstoque, setAbaEstoque] = useState("produtos");
   const [progressoReajuste, setProgressoReajuste] = useState({ isOpen: false, progresso: 0, status: 'processando', sucessos: 0, erro: null });
   const [filtroMarcas, setFiltroMarcas] = useState([]);
   const [showMarcaDropdown, setShowMarcaDropdown] = useState(false);
@@ -376,6 +378,15 @@ export default function Estoque() {
 
   return (
     <div className="space-y-4">
+      {/* Tabs */}
+      <div className="flex bg-gray-900 border border-gray-800 rounded-xl p-1 gap-1">
+        <button onClick={() => setAbaEstoque("produtos")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={abaEstoque==="produtos"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Produtos</button>
+        <button onClick={() => setAbaEstoque("movimentacoes")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={abaEstoque==="movimentacoes"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Movimentações</button>
+      </div>
+
+      {abaEstoque === "movimentacoes" && <MovimentacoesEstoque items={items} onReload={load} />}
+
+      {abaEstoque === "produtos" && <>
       {/* Botão Principal */}
       <button
         onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
@@ -825,6 +836,7 @@ export default function Estoque() {
       />
 
       <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; text-transform:uppercase; } .input-dark:focus { border-color:#f97316; } .input-dark::placeholder { color:#6b7280; text-transform:none; }`}</style>
+      </>}
     </div>
   );
 }
