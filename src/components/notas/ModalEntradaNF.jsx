@@ -503,7 +503,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-start justify-center p-4 overflow-y-auto">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-3xl my-4">
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-3xl my-12">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-800">
           <div>
