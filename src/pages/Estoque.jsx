@@ -399,66 +399,99 @@ export default function Estoque() {
         <Plus className="w-5 h-5" /> Novo Item
       </button>
 
-      {/* Stats + Cards Mensais */}
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+          <p className="text-white text-sm font-medium mb-2">Total de Itens</p>
+          <p className="text-white text-sm font-medium">{items.length}</p>
+        </div>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+          <p className="text-white text-sm font-medium mb-2">Estoque Baixo</p>
+          <p className="text-white text-sm font-medium">{estoqueBaixo}</p>
+        </div>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+          <p className="text-white text-sm font-medium mb-2">Valor Total (Custo)</p>
+          <p className="text-white text-sm font-medium">
+            R$ {items.reduce((acc, i) => acc + (i.quantidade * i.valor_custo || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+          </p>
+        </div>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+          <p className="text-white text-sm font-medium mb-2">Valor Total (Venda)</p>
+          <p className="text-green-400 text-sm font-bold">
+            R$ {items.reduce((acc, i) => acc + (i.quantidade * i.valor_venda || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+          </p>
+        </div>
+      </div>
+
+      {/* Cards Mensais Peças */}
       {(() => {
-        const handlePrevMes = () => {
-          const cur = new Date(mesSelecionado + '-01');
-          cur.setMonth(cur.getMonth() - 1);
-          setMesSelecionado(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
-        };
-        const handleNextMes = () => {
-          const cur = new Date(mesSelecionado + '-01');
-          cur.setMonth(cur.getMonth() + 1);
-          setMesSelecionado(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
-        };
-        const [ano, mes] = mesSelecionado.split('-');
-        const nomeMes = new Date(Number(ano), Number(mes)-1, 1).toLocaleString('pt-BR',{month:'long',year:'numeric'});
-        let custoEntradas = 0, qtdEntradas = 0, receitaSaidas = 0, custoSaidas = 0;
+        const meses = [];
+        const inicio = new Date(2026, 3, 1); // abril 2026
+        const agora = new Date();
+        let cur = new Date(inicio.getFullYear(), inicio.getMonth(), 1);
+        while (cur <= agora) {
+          meses.push(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
+          cur.setMonth(cur.getMonth()+1);
+        }
+        let custoEntradas = 0, qtdEntradas = 0;
+        let receitaSaidas = 0, custoSaidas = 0;
         items.forEach(item => {
           (item.historico || []).forEach(mov => {
             const tipo = (mov.tipo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
             const dataMov = (mov.data || '').substring(0,7);
             if (dataMov !== mesSelecionado) return;
             const qtd = Number(mov.quantidade || 0);
-            if (tipo === 'entrada') { custoEntradas += qtd * Number(mov.valor_unitario || 0); qtdEntradas += qtd; }
-            else if (tipo === 'saida') { receitaSaidas += qtd * Number(mov.valor_unitario || 0); custoSaidas += qtd * Number(item.valor_custo || 0); }
+            if (tipo === 'entrada') {
+              custoEntradas += qtd * Number(mov.valor_unitario || 0);
+              qtdEntradas += qtd;
+            } else if (tipo === 'saida') {
+              receitaSaidas += qtd * Number(mov.valor_unitario || 0);
+              custoSaidas += qtd * Number(item.valor_custo || 0);
+            }
           });
         });
         const lucro = receitaSaidas - custoSaidas;
-        const fmt = v => Number(v||0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+        const fmt = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+        const [ano, mes] = mesSelecionado.split('-');
+        const nomeMes = new Date(Number(ano), Number(mes)-1, 1).toLocaleString('pt-BR',{month:'long',year:'numeric'});
         return (
           <div className="rounded-2xl p-4 space-y-3" style={{background: "linear-gradient(135deg, #0a1929 0%, #132642 100%)", border: "1px solid #1e4d7b"}}>
-            <div className="flex items-center h-11 rounded-xl overflow-hidden text-sm font-semibold" style={{background: "#062C9B"}}>
-              <button onClick={handlePrevMes} className="flex items-center justify-center h-full px-3 hover:bg-white/20 transition-all" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
-                <ChevronLeft className="w-4 h-4 text-white" />
-              </button>
-              <span className="flex-1 text-center text-white capitalize">{nomeMes}</span>
-              <button onClick={handleNextMes} className="flex items-center justify-center h-full px-3 hover:bg-white/20 transition-all" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
-                <ChevronRight className="w-4 h-4 text-white" />
-              </button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-              <div className="rounded-xl px-2 py-3 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
-                <span className="text-xs font-semibold text-gray-400 tracking-wide">Total de Itens</span>
-                <span className="text-xs font-bold text-white">{items.length}</span>
+            <p className="text-center text-white font-bold text-lg">Peças</p>
+            {(() => {
+              const handlePrevMes = () => {
+                const cur = new Date(mesSelecionado + '-01');
+                cur.setMonth(cur.getMonth() - 1);
+                setMesSelecionado(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
+              };
+              const handleNextMes = () => {
+                const cur = new Date(mesSelecionado + '-01');
+                cur.setMonth(cur.getMonth() + 1);
+                setMesSelecionado(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
+              };
+              const [ano, mes] = mesSelecionado.split('-');
+              const nomeMes = new Date(Number(ano), Number(mes)-1, 1).toLocaleString('pt-BR',{month:'long',year:'numeric'});
+              return (
+                <div className="flex items-center h-11 rounded-xl overflow-hidden text-sm font-semibold" style={{background: "#062C9B"}}>
+                  <button onClick={handlePrevMes} className="flex items-center justify-center h-full px-3 hover:bg-white/20 transition-all" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
+                    <ChevronLeft className="w-4 h-4 text-white" />
+                  </button>
+                  <span className="flex-1 text-center text-white capitalize">{nomeMes}</span>
+                  <button onClick={handleNextMes} className="flex items-center justify-center h-full px-3 hover:bg-white/20 transition-all" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
+                    <ChevronRight className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              );
+            })()}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
+                <p className="text-xs font-semibold text-gray-400 tracking-wide">Custo de Entradas</p>
+                <p className="text-xs font-bold text-yellow-400">{fmt(custoEntradas)}</p>
+                <p className="text-xs text-gray-600">{qtdEntradas} peça(s) lançada(s)</p>
               </div>
-              <div className="rounded-xl px-2 py-3 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
-                <span className="text-xs font-semibold text-gray-400 tracking-wide">Valor Total (Custo)</span>
-                <span className="text-xs font-bold text-white">{fmt(items.reduce((a,i) => a+(i.quantidade*i.valor_custo||0),0))}</span>
-              </div>
-              <div className="rounded-xl px-2 py-3 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
-                <span className="text-xs font-semibold text-gray-400 tracking-wide">Valor Total (Venda)</span>
-                <span className="text-xs font-bold text-green-400">{fmt(items.reduce((a,i) => a+(i.quantidade*i.valor_venda||0),0))}</span>
-              </div>
-              <div className="rounded-xl px-2 py-3 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
-                <span className="text-xs font-semibold text-gray-400 tracking-wide">Custo de Entradas</span>
-                <span className="text-xs font-bold text-yellow-400">{fmt(custoEntradas)}</span>
-                <span className="text-xs text-gray-600">{qtdEntradas} peça(s)</span>
-              </div>
-              <div className="rounded-xl px-2 py-3 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
-                <span className="text-xs font-semibold text-gray-400 tracking-wide">Lucro das Peças</span>
-                <span className={`text-xs font-bold ${lucro >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmt(lucro)}</span>
-                <span className="text-xs text-gray-600">Receita: {fmt(receitaSaidas)}</span>
+              <div className="rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
+                <p className="text-xs font-semibold text-gray-400 tracking-wide">Lucro das Peças</p>
+                <p className={`text-xs font-bold ${lucro >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmt(lucro)}</p>
+                <p className="text-xs text-gray-600">Receita: {fmt(receitaSaidas)}</p>
               </div>
             </div>
           </div>
