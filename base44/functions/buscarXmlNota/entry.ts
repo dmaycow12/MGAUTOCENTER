@@ -1,8 +1,10 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
 const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
 const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
+
+const STATUS_CANCELADO = ['cancelado', 'cancelada', 'inutilizado', 'denegado'];
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
@@ -26,7 +28,7 @@ Deno.serve(async (req) => {
 
   await new Promise(r => setTimeout(r, 1500));
 
-  // Passo 2: tentar endpoints em ordem até achar XML com <det>
+  // Passo 2: tentar endpoints em ordem até achar XML com <det> ou detectar cancelamento
   const endpoints = [
     `${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}.xml`,
     `${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}/xml`,
@@ -43,8 +45,25 @@ Deno.serve(async (req) => {
       let candidate = '';
       if (ct.includes('xml')) {
         candidate = await resp.text();
+        // Detectar cancelamento no XML
+        if (candidate && (candidate.includes('<evCanc') || candidate.includes('110111') || candidate.includes('Cancelamento'))) {
+          if (nota_id) {
+            await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { status: 'Cancelada' });
+          }
+          return Response.json({ sucesso: false, cancelada: true, erro: 'Nota cancelada pelo fornecedor. Status atualizado para Cancelada.' });
+        }
       } else {
         const data = await resp.json().catch(() => ({}));
+
+        // Detectar cancelamento no JSON da Focus NFe
+        const situacao = (data.situacao || data.status || data.status_sefaz || '').toLowerCase();
+        if (STATUS_CANCELADO.some(s => situacao.includes(s))) {
+          if (nota_id) {
+            await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { status: 'Cancelada' });
+          }
+          return Response.json({ sucesso: false, cancelada: true, erro: 'Nota cancelada pelo fornecedor. Status atualizado para Cancelada.' });
+        }
+
         candidate = data.xml || data.xml_nota || data.xml_nfe || '';
         if (!candidate && data.caminho_xml_nota_fiscal) {
           const r2 = await fetch(data.caminho_xml_nota_fiscal, { headers: { 'Authorization': AUTH_HEADER } });
@@ -68,7 +87,15 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Salva XML na nota: se pequeno salva direto, se grande faz upload e salva URL
+  // Detectar cancelamento no XML encontrado
+  if (xml.includes('<evCanc') || xml.includes('110111')) {
+    if (nota_id) {
+      await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { status: 'Cancelada' });
+    }
+    return Response.json({ sucesso: false, cancelada: true, erro: 'Nota cancelada pelo fornecedor. Status atualizado para Cancelada.' });
+  }
+
+  // Salva XML na nota
   if (nota_id) {
     try {
       if (xml.length <= 50000) {
@@ -83,6 +110,5 @@ Deno.serve(async (req) => {
     } catch (_) {}
   }
 
-  // Sempre retorna o XML completo para o frontend usar, independente de salvar no banco
   return Response.json({ sucesso: true, xml });
 });

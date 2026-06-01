@@ -1290,16 +1290,18 @@ export default function NotasFiscais() {
                               feedback('sucesso', 'Buscando XML na SEFAZ...');
                               try {
                                 const res = await base44.functions.invoke('buscarXmlNota', { chave_acesso: nota.chave_acesso, nota_id: nota.id });
-                                if (res.data?.sucesso && res.data?.xml) {
+                                if (res.data?.cancelada) {
+                                  feedback('erro', 'Esta nota foi cancelada pelo fornecedor. Status atualizado para Cancelada.');
+                                  load();
+                                } else if (res.data?.sucesso && res.data?.xml) {
                                   setMsgFeedback(null);
                                   setNotaIdParaEntrada(nota.id);
                                   setXmlParaEntrada(res.data.xml);
                                   setShowEntrada(true);
                                 } else {
-                                  // XML não disponível na SEFAZ — abrir modal com dados básicos para lançamento manual
                                   feedback('erro', 'XML não disponível na SEFAZ ainda. Use "Importar XML" para carregar o arquivo manualmente, ou aguarde a manifestação ser processada.');
                                 }
-                              } catch (e) {
+                                } catch (e) {
                                 feedback('erro', 'Erro ao buscar XML: ' + e.message);
                               }
                             } else {
