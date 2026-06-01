@@ -406,9 +406,9 @@ export default function Estoque() {
       <button
         onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
         className="w-full flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-bold transition-all"
-        style={{background: "#00ff00", color: "#fff"}}
-        onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
-        onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
+        style={{background: "#00ff00", color: "#fff", border: "2px solid #33ff33", boxShadow: "0 0 14px #00ff00aa"}}
+        onMouseEnter={e => { e.currentTarget.style.background = "#00dd00"; e.currentTarget.style.boxShadow = "0 0 22px #00ff00cc"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "#00ff00"; e.currentTarget.style.boxShadow = "0 0 14px #00ff00aa"; }}
       >
         <Plus className="w-5 h-5" /> Novo Item
       </button>
