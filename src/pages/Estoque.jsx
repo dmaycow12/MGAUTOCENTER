@@ -286,7 +286,8 @@ export default function Estoque() {
         tipo: item._diferenca > 0 ? 'entrada' : 'saida',
         data: agora,
         quantidade: Math.abs(item._diferenca),
-        observacao: 'Regularização de Saldo - Ajuste Manual',
+        valor_unitario: Number(item.valor_custo || 0),
+        observacao: 'Ajuste',
       };
       const historico = [...(item.historico || []), novaEntrada];
       await base44.entities.Estoque.update(item.id, { historico });
