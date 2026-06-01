@@ -1146,6 +1146,13 @@ export default function NotasFiscais() {
                   {nota.status === 'Lançada' && (
                     <button title="Cancelar Lançamento" onClick={() => cancelarLancamento(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg transition-all"><Ban className="w-3.5 h-3.5"/></button>
                   )}
+                  {nota.status === 'Importada' && (
+                    <button title="Marcar como Cancelada" onClick={async () => {
+                      if (!confirm('Marcar esta nota como Cancelada?')) return;
+                      await base44.entities.NotaFiscal.update(nota.id, { status: 'Cancelada' });
+                      load();
+                    }} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Ban className="w-3.5 h-3.5"/></button>
+                  )}
 
                   <button onClick={() => excluir(nota.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
                 </div>
@@ -1289,6 +1296,15 @@ export default function NotasFiscais() {
                         )}
                         {nota.status === 'Lançada' && (
                           <button title="Cancelar Lançamento" onClick={() => cancelarLancamento(nota)} className="p-1 text-gray-500 hover:text-orange-400 transition-all">
+                            <Ban className="w-4 h-4" />
+                          </button>
+                        )}
+                        {nota.status === 'Importada' && (
+                          <button title="Marcar como Cancelada" onClick={async () => {
+                            if (!confirm('Marcar esta nota como Cancelada?')) return;
+                            await base44.entities.NotaFiscal.update(nota.id, { status: 'Cancelada' });
+                            load();
+                          }} className="p-1 text-gray-500 hover:text-red-400 transition-all">
                             <Ban className="w-4 h-4" />
                           </button>
                         )}
