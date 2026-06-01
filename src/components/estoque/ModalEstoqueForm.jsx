@@ -200,6 +200,26 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                   </div>
                 </div>
 
+                {entradas.length === 0 && form.quantidade > 0 && (
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-yellow-400 text-sm font-semibold">Sem entrada registrada</p>
+                      <p className="text-gray-400 text-xs mt-0.5">{form.quantidade} unidade(s) sem origem. Crie uma entrada de saldo inicial.</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const hoje = new Date().toISOString().split('T')[0] + 'T12:00:00.000Z';
+                        const mov = { tipo: 'entrada', data: hoje, quantidade: form.quantidade, valor_unitario: form.valor_custo || 0, observacao: 'SALDO INICIAL' };
+                        setForm(f => ({ ...f, historico: [...(f.historico || []), mov] }));
+                      }}
+                      className="flex-shrink-0 px-3 py-2 text-xs font-bold rounded-lg text-black whitespace-nowrap"
+                      style={{ background: '#00ff00' }}
+                    >
+                      + Criar Entrada
+                    </button>
+                  </div>
+                )}
+
                 {/* Detalhamento Saídas */}
                 {saidas.length > 0 ? (
                   <div className="border-t border-gray-700 pt-4">

@@ -252,6 +252,22 @@ export default function Estoque() {
   };
   const grupos = ["Todos"];
 
+  const regularizarSaldoInicial = async () => {
+    const normTipo = t => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const semEntrada = items.filter(i =>
+      i.quantidade > 0 && !(i.historico || []).some(h => normTipo(h.tipo) === 'entrada')
+    );
+    if (semEntrada.length === 0) return alert("Todos os produtos com saldo já possuem entrada registrada.");
+    if (!confirm(`Criar entrada de Saldo Inicial para ${semEntrada.length} produto(s)?`)) return;
+    const hoje = new Date().toISOString().split('T')[0] + 'T12:00:00.000Z';
+    for (const item of semEntrada) {
+      const mov = { tipo: 'entrada', data: hoje, quantidade: item.quantidade, valor_unitario: item.valor_custo || 0, observacao: 'SALDO INICIAL' };
+      await base44.entities.Estoque.update(item.id, { historico: [...(item.historico || []), mov] });
+    }
+    alert(`${semEntrada.length} produto(s) regularizados com sucesso.`);
+    load();
+  };
+
   const aplicarReajuste = async () => {
     if (!reajusteValor || Number(reajusteValor) <= 0) return alert("Informe um valor válido.");
     const alvo = reajusteGrupo === "Todos" ? items : items.filter(i => i.categoria === reajusteGrupo);
@@ -539,6 +555,16 @@ export default function Estoque() {
             onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
           >
             <Download className="w-4 h-4" /> {selecionados.length > 0 ? `Exportar (${selecionados.length})` : "Exportar"}
+          </button>
+          <button
+            onClick={regularizarSaldoInicial}
+            title="Cria entrada de 'Saldo Inicial' para todos os produtos com saldo mas sem entrada registrada"
+            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
+            style={{background: "#7c3aed", color: "#fff"}}
+            onMouseEnter={e => e.currentTarget.style.background = "#6d28d9"}
+            onMouseLeave={e => e.currentTarget.style.background = "#7c3aed"}
+          >
+            <Package className="w-4 h-4" /> Regularizar Saldo
           </button>
         </div>
 
