@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, ChevronUp, ChevronDown, Download, ClipboardCheck } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, ChevronUp, ChevronDown, Download, ClipboardCheck, Scale } from "lucide-react";
 import ProgressoReajuste from "../components/estoque/ProgressoReajuste";
 import ModalEstoqueForm from "../components/estoque/ModalEstoqueForm";
 import MovimentacoesEstoque from "../components/estoque/MovimentacoesEstoque";
@@ -50,6 +50,9 @@ export default function Estoque() {
   const [conferidos, setConferidos] = useState(new Set());
   const [checklistSalvoEm, setChecklistSalvoEm] = useState(null);
   const [checklistConfigId, setChecklistConfigId] = useState(null);
+  const [showRegularizar, setShowRegularizar] = useState(false);
+  const [discrepancias, setDiscrepancias] = useState([]);
+  const [regularizando, setRegularizando] = useState(false);
   const [colunas, setColunas] = useState(() => {
     const saved = localStorage.getItem("estoque_colunas");
     return saved ? JSON.parse(saved) : { codigo: true, marca: true, estoque_minimo: true, valor_custo: true, valor_venda: true };
@@ -252,15 +255,45 @@ export default function Estoque() {
   };
   const grupos = ["Todos"];
 
-  const regularizarSaldoInicial = async () => {
+  const abrirRegularizar = () => {
     const normTipo = t => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-    const semEntrada = items.filter(i =>
-      i.quantidade > 0 && !(i.historico || []).some(h => normTipo(h.tipo) === 'entrada')
-    );
-    if (semEntrada.length === 0) return alert('Todos os produtos com saldo j\u00e1 possuem entrada registrada.');
-    if (!confirm(`Criar entrada de Saldo Inicial para ${semEntrada.length} produto(s)?`)) return;
-    const res = await base44.functions.invoke('regularizarSaldoInicial', {});
-    alert(res.data?.msg || 'Conclu\u00eddo.');
+    const lista = items.map(item => {
+      const hist = item.historico || [];
+      const totalEntradas = hist.filter(h => normTipo(h.tipo) === 'entrada').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
+      const totalSaidas = hist.filter(h => normTipo(h.tipo) === 'saida').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
+      const semHistorico = hist.length === 0;
+      const esperado = totalEntradas - totalSaidas;
+      const diferenca = Number(item.quantidade || 0) - esperado;
+      if (diferenca !== 0 || (semHistorico && item.quantidade > 0)) {
+        return { ...item, _esperado: esperado, _diferenca: diferenca };
+      }
+      return null;
+    }).filter(Boolean);
+    if (lista.length === 0) {
+      alert('Nenhuma divergência encontrada. Todos os saldos estão consistentes com o histórico.');
+      return;
+    }
+    setDiscrepancias(lista);
+    setShowRegularizar(true);
+  };
+
+  const confirmarRegularizar = async () => {
+    if (!confirm(`Criar entradas de ajuste para ${discrepancias.length} produto(s)?`)) return;
+    setRegularizando(true);
+    const agora = new Date().toISOString().split('T')[0];
+    for (const item of discrepancias) {
+      const novaEntrada = {
+        tipo: item._diferenca > 0 ? 'entrada' : 'saida',
+        data: agora,
+        quantidade: Math.abs(item._diferenca),
+        observacao: 'Regularização de Saldo - Ajuste Manual',
+      };
+      const historico = [...(item.historico || []), novaEntrada];
+      await base44.entities.Estoque.update(item.id, { historico });
+    }
+    setRegularizando(false);
+    setShowRegularizar(false);
+    alert(`${discrepancias.length} produto(s) regularizados com sucesso.`);
     load();
   };
 
@@ -501,7 +534,7 @@ export default function Estoque() {
           </button>
 
           <button
-            onClick={regularizarSaldoInicial}
+            onClick={abrirRegularizar}
             title="Cria entrada de 'Saldo Inicial' para todos os produtos com saldo mas sem entrada registrada"
             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
             style={{background: "#00ff00", color: "#000"}}
@@ -715,6 +748,53 @@ export default function Estoque() {
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Regularizar Saldo */}
+      {showRegularizar && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-gray-800">
+              <h2 className="text-white font-semibold flex items-center gap-2"><Scale className="w-4 h-4 text-yellow-400" /> Regularizar Saldo do Estoque</h2>
+              <button onClick={() => setShowRegularizar(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
+            </div>
+            <div className="p-5 overflow-y-auto flex-1 space-y-3">
+              <p className="text-sm text-gray-400">Os produtos abaixo possuem divergência entre a quantidade atual e o histórico de movimentações. Será criada uma entrada ou saída de ajuste para corrigir.</p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-gray-500 border-b border-gray-800">
+                      <th className="text-left py-2 px-3">Produto</th>
+                      <th className="text-center py-2 px-3">Qtd Atual</th>
+                      <th className="text-center py-2 px-3">Esperado</th>
+                      <th className="text-center py-2 px-3">Ajuste</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {discrepancias.map(item => (
+                      <tr key={item.id} className="border-b border-gray-800 hover:bg-gray-800/40">
+                        <td className="py-2 px-3 text-white font-medium">{item.descricao}</td>
+                        <td className="py-2 px-3 text-center text-white">{item.quantidade}</td>
+                        <td className="py-2 px-3 text-center text-gray-400">{item._esperado}</td>
+                        <td className="py-2 px-3 text-center font-bold">
+                          <span className={item._diferenca > 0 ? 'text-green-400' : 'text-red-400'}>
+                            {item._diferenca > 0 ? '+' : ''}{item._diferenca}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
+              <button onClick={() => setShowRegularizar(false)} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Cancelar</button>
+              <button onClick={confirmarRegularizar} disabled={regularizando} className="px-4 py-2 text-sm font-bold rounded-lg transition-all disabled:opacity-50" style={{background:'#00ff00', color:'#000'}}>
+                {regularizando ? 'Regularizando...' : `Regularizar ${discrepancias.length} Produto(s)`}
+              </button>
+            </div>
           </div>
         </div>
       )}
