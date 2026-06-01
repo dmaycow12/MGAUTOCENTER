@@ -478,12 +478,12 @@ export default function Financeiro() {
             <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
               {/* Cabeçalho com ordenação */}
               <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-700 bg-gray-800/50">
-                <SortHeader label="Tipo" col="tipo" sortCol={sortCol} sortDir={sortDir} onClick={() => toggleSort("tipo")} className="w-16 flex-shrink-0" />
-                <SortHeader label="Descrição" col="descricao" sortCol={sortCol} sortDir={sortDir} onClick={() => toggleSort("descricao")} className="flex-1" />
-                <SortHeader label="Data" col="data_vencimento" sortCol={sortCol} sortDir={sortDir} onClick={() => toggleSort("data_vencimento")} className="w-24 flex-shrink-0" />
+                <span className="text-xs font-semibold text-gray-400 w-16 flex-shrink-0">Tipo</span>
+                <span className="text-xs font-semibold text-gray-400 flex-1">Descrição</span>
+                <span className="text-xs font-semibold text-gray-400 w-24 flex-shrink-0">Data</span>
                 <div className="w-[148px] flex-shrink-0" />
                 <div className="w-36 flex-shrink-0" />
-                <SortHeader label="Valor" col="valor" sortCol={sortCol} sortDir={sortDir} onClick={() => toggleSort("valor")} className="w-28 flex-shrink-0 text-right" />
+                <span className="text-xs font-semibold text-gray-400 w-28 flex-shrink-0 text-right">Valor</span>
                 <div className="w-16 flex-shrink-0" />
               </div>
               {sortedFiltrados.map(item => (
