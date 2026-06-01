@@ -486,14 +486,14 @@ export default function Estoque() {
               localStorage.setItem("estoque_checklist_ativo", novo ? "1" : "0");
             }}
             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
-            style={{background: checklistMode ? "#f97316" : "#062C9B", color: "#fff"}}
+            style={{background: checklistMode ? "#f97316" : "#00ff00", color: "#000"}}
           >
             <ClipboardCheck className="w-4 h-4" /> {checklistMode ? "Sair do Check List" : "Check List"}
           </button>
           <button
             onClick={() => setShowReajuste(true)}
             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
-            style={{background: "#00ff00", color: "#fff"}}
+            style={{background: "#00ff00", color: "#000"}}
             onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
             onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
           >
@@ -504,9 +504,9 @@ export default function Estoque() {
             onClick={regularizarSaldoInicial}
             title="Cria entrada de 'Saldo Inicial' para todos os produtos com saldo mas sem entrada registrada"
             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
-            style={{background: "#7c3aed", color: "#fff"}}
-            onMouseEnter={e => e.currentTarget.style.background = "#6d28d9"}
-            onMouseLeave={e => e.currentTarget.style.background = "#7c3aed"}
+            style={{background: "#00ff00", color: "#000"}}
+            onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
+            onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
           >
             <Package className="w-4 h-4" /> Regularizar Saldo
           </button>
