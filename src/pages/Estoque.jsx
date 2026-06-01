@@ -476,50 +476,6 @@ export default function Estoque() {
           </div>
         </div>
 
-        {/* Linha 2: filtros azuis flexíveis */}
-        <div className="flex gap-2">
-          {/* Filtro Marca */}
-          <div ref={marcaDropdownRef} className="relative flex-1">
-            <button
-              onClick={() => setShowMarcaDropdown(v => !v)}
-              className="w-full flex items-center justify-center gap-2 h-11 px-3 rounded-xl text-sm font-semibold transition-all relative"
-              style={{background: filtroMarcas.length > 0 ? "#0a4fd4" : "#062C9B", color: "#fff", border: "1px solid #1a5ce6"}}
-            >
-              <span className="truncate">{filtroMarcas.length > 0 ? `Marca (${filtroMarcas.length})` : "Marca"}</span>
-              {filtroMarcas.length > 0 && (
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 transition-all"
-                  onClick={e => { e.stopPropagation(); setFiltroMarcas([]); }}>
-                  <X className="w-3 h-3" />
-                </span>
-              )}
-            </button>
-            {showMarcaDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-gray-900 border border-gray-700 rounded-xl z-20 shadow-xl p-2 max-h-56 overflow-y-auto space-y-0.5">
-                {Array.from(new Set(items.map(i => i.marca).filter(Boolean))).sort().map(marca => (
-                  <label key={marca} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800 cursor-pointer transition-all">
-                    <input type="checkbox" checked={filtroMarcas.includes(marca)}
-                      onChange={() => setFiltroMarcas(prev => prev.includes(marca) ? prev.filter(m => m !== marca) : [...prev, marca])}
-                      className="accent-blue-500 w-4 h-4 cursor-pointer" />
-                    <span className="text-sm text-gray-300 flex-1">{marca}</span>
-                    <span className="text-xs text-gray-600">{items.filter(i => i.marca === marca).length}</span>
-                  </label>
-                ))}
-                {items.filter(i => i.marca).length === 0 && <p className="text-gray-500 text-xs text-center py-3">Sem marcas</p>}
-              </div>
-            )}
-          </div>
-
-
-              {/* Filtro Estoque Baixo */}
-          <button
-            onClick={() => setFiltro(filtro === "Estoque Baixo" ? "Todos" : "Estoque Baixo")}
-            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
-            style={{background: filtro === "Estoque Baixo" ? "#dc2626" : "#062C9B", color: "#fff", border: `1px solid ${filtro === "Estoque Baixo" ? "#ef4444" : "#1a5ce6"}`}}
-          >
-            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-            <span>Estoque Baixo{filtro === "Estoque Baixo" ? ` (${filtrados.length})` : ` (${estoqueBaixo})`}</span>
-          </button>
-        </div>
 
         {/* Linha 3: ações */}
         <div className="flex gap-2">
@@ -543,15 +499,7 @@ export default function Estoque() {
           >
             <TrendingUp className="w-4 h-4" /> Reajustar
           </button>
-          <button
-            onClick={exportarSelecionados}
-            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
-            style={{background: "#00ff00", color: "#fff"}}
-            onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
-            onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
-          >
-            <Download className="w-4 h-4" /> {selecionados.length > 0 ? `Exportar (${selecionados.length})` : "Exportar"}
-          </button>
+
           <button
             onClick={regularizarSaldoInicial}
             title="Cria entrada de 'Saldo Inicial' para todos os produtos com saldo mas sem entrada registrada"
