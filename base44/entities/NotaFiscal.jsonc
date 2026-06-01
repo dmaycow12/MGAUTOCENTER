@@ -143,10 +143,6 @@
     "create": {},
     "read": {},
     "update": {},
-    "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
-    }
+    "delete": {}
   }
 }

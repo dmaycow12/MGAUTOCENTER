@@ -516,22 +516,20 @@ export default function NotasFiscais() {
     load();
   };
 
-  const parsearItensXML = (xmlContent) => {
-    try {
-      const parsed = JSON.parse(xmlContent);
-      if (Array.isArray(parsed)) return parsed.filter(i => i.descricao);
-    } catch {}
-    return [];
-  };
-
   const importarXML = async () => {
     if (!xmlTexto.trim()) return alert("Cole o conteúdo do XML.");
     setImportando(true);
+    if (xmlTexto.includes('<tpEvento>110111</tpEvento>') || xmlTexto.includes('<procCancNFe')) {
+      const chaveM = xmlTexto.match(/<chNFe>(\d{44})<\/chNFe>/);
+      const notas2 = chaveM ? await base44.entities.NotaFiscal.list('-created_date', 500) : [];
+      const notaEx = notas2.find(n => n.chave_acesso === chaveM?.[1]);
+      if (notaEx) await base44.entities.NotaFiscal.update(notaEx.id, { status: 'Cancelada', xml_original: xmlTexto });
+      else if (chaveM) await base44.entities.NotaFiscal.create({ tipo:'NFe', status:'Cancelada', chave_acesso: chaveM[1], xml_original: xmlTexto });
+      feedback('sucesso', notaEx ? `NF ${notaEx.numero} marcada como Cancelada.` : 'Nota cancelada importada.');
+      load(); setXmlTexto(""); setShowImport(false); setImportando(false); return;
+    }
     setXmlParaEntrada(xmlTexto);
-    setXmlTexto("");
-    setShowImport(false);
-    setImportando(false);
-    setShowEntrada(true);
+    setXmlTexto(""); setShowImport(false); setImportando(false); setShowEntrada(true);
   };
 
   const feedback = (tipo, msg) => {
@@ -889,23 +887,6 @@ export default function NotasFiscais() {
     setMsgFeedback(null);
   };
 
-  const gerarPdfConferencia = async (nota) => {
-    if (nota.status !== 'Importada') { feedback('erro', 'Apenas notas importadas podem gerar relatório de conferência.'); return; }
-    try {
-      feedback('sucesso', 'Gerando PDF de conferência...');
-      const res = await base44.functions.invoke('gerarPdfConferenciaCompra', { nota_id: nota.id });
-      const blob = new Blob([res.data], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `conferencia_${nota.numero || 'nota'}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-      setMsgFeedback(null);
-    } catch (e) {
-      feedback('erro', 'Erro ao gerar PDF: ' + e.message);
-    }
-  };
 
   const gerarExcelNotas = (notasList) => {
     const cabecalho = ["Tipo","Número","Série","Status","Cliente","CPF/CNPJ","Data Emissão","Valor Total","Chave Acesso","Observações"];
@@ -987,48 +968,6 @@ export default function NotasFiscais() {
     setGerandoZip(false);
   };
 
-  const gerarSintegra = () => {
-    setGerandoSintegra(true);
-    const nfes = filtradas.filter(n => n.tipo === "NFe");
-    const mes = String(filtroMes).padStart(2, "0");
-    const ano = String(filtroAno);
-    const dtIni = `${ano}${mes}01`;
-    const dtFin = `${ano}${mes}31`;
-    let linhas = [];
-    linhas.push(`10MG AUTOCENTER LTDA              54043647000120Patos de Minas       MG${dtIni}${dtFin}1`.padEnd(125, " ").substring(0, 125) + "\r\n");
-    linhas.push(`11Rua Rui Barbosa                1355Santa Terezinha    38700000                         34998791260          1`.padEnd(85, " ").substring(0, 85) + "\r\n");
-    let totalNotasEntrada = 0, totalValorEntrada = 0;
-    let totalNotasSaida = 0, totalValorSaida = 0;
-    for (const nota of nfes) {
-      const isEntrada = nota.status === "Importada";
-      const codSit = nota.status === "Cancelada" ? "2" : "N";
-      const tipo = isEntrada ? "E" : "S";
-      const cfop = "5405";
-      const data = (nota.data_emissao || "").replace(/-/g, "").substring(2);
-      const valor = String(Math.round(Number(nota.valor_total || 0) * 100)).padStart(13, "0");
-      const cnpj = (nota.cliente_cpf_cnpj || "").replace(/\D/g, "").padStart(14, "0");
-      const ie = "ISENTO         ";
-      const uf = "MG";
-      const num = (nota.numero || "0").padStart(6, "0");
-      const serie = (nota.serie || "1").padStart(3, " ");
-      const modelo = "55";
-      linhas.push(`50${cnpj}${ie}${uf}${data}${num}${serie}${modelo}${cfop}${valor}${valor}00000000000000000000000000000000000000000000000000000000${tipo}${codSit}\r\n`);
-      if (isEntrada) { totalNotasEntrada++; totalValorEntrada += Number(nota.valor_total || 0); }
-      else { totalNotasSaida++; totalValorSaida += Number(nota.valor_total || 0); }
-    }
-    linhas.push(`9010         ${String(totalNotasEntrada).padStart(5,"0")}${String(Math.round(totalValorEntrada*100)).padStart(13,"0")}50E\r\n`);
-    linhas.push(`9010         ${String(totalNotasSaida).padStart(5,"0")}${String(Math.round(totalValorSaida*100)).padStart(13,"0")}50S\r\n`);
-    linhas.push(`99${String(linhas.length + 1).padStart(12, "0")}\r\n`);
-    const conteudo = linhas.join("");
-    const blob = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `SINTEGRA_${ano}${mes}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setGerandoSintegra(false);
-  };
 
   if (loading) return <Loader />;
 
@@ -1270,6 +1209,10 @@ export default function NotasFiscais() {
                             const xmlContent = nota.xml_content?.trim() || "";
                             const xmlDisponivel = xmlOriginal.startsWith("<") ? xmlOriginal : (xmlContent.startsWith("<") ? xmlContent : "");
                             if (xmlDisponivel) {
+                              if (xmlDisponivel.includes('<tpEvento>110111</tpEvento>') || xmlDisponivel.includes('<procCancNFe')) {
+                                await base44.entities.NotaFiscal.update(nota.id, { status: 'Cancelada', xml_original: xmlDisponivel });
+                                feedback('sucesso', 'Esta nota está cancelada. Status atualizado para Cancelada.'); load(); return;
+                              }
                               setNotaIdParaEntrada(nota.id);
                               setXmlParaEntrada(xmlDisponivel);
                               setShowEntrada(true);
