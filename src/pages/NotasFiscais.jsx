@@ -321,6 +321,11 @@ export default function NotasFiscais() {
       return (n.cliente_nome || "").toLowerCase().includes(s) || (n.numero || "").includes(s) || (n.chave_acesso || "").includes(s);
     }
     return true;
+  }).sort((a, b) => {
+    const dateA = a.data_emissao || "";
+    const dateB = b.data_emissao || "";
+    if (dateA !== dateB) return dateA.localeCompare(dateB);
+    return (parseInt(a.numero, 10) || 0) - (parseInt(b.numero, 10) || 0);
   });
 
   const totalNFeEmitida = filtradas.filter(n => n.tipo === 'NFe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
