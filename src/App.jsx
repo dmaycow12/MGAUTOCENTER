@@ -1,3 +1,4 @@
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -17,8 +18,25 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
+function getMsUntilMidnightBRT() {
+  // BRT = UTC-3
+  const now = new Date();
+  const nowBRT = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const midnightBRT = new Date(nowBRT);
+  midnightBRT.setHours(24, 0, 0, 0);
+  return midnightBRT - nowBRT;
+}
+
 const AppRoutes = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated } = useAuth();
+
+  React.useEffect(() => {
+    const ms = getMsUntilMidnightBRT();
+    const timer = setTimeout(() => {
+      base44.auth.logout();
+    }, ms);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
