@@ -535,6 +535,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                 <InfoField label="Data de Emissão" value={fmtData(dados.dataEmissao)} />
                 <InfoField label="Valor Total" value={`R$ ${Number(dados.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} highlight />
                 <InfoField label="Fornecedor / Emitente" value={dados.emitente || "—"} className="col-span-2" />
+                {dados.natOp && <InfoField label="Natureza da Operação" value={dados.natOp} className="col-span-2 md:col-span-3" highlight={dados.natOp?.toLowerCase().includes("devol")} />}
                 <InfoField label="CNPJ Emitente" value={dados.cnpjEmit || "—"} />
               </div>
               {dados.chave && (
