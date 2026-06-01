@@ -226,6 +226,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
   const [erro, setErro] = useState("");
   const [estoqueExistente, setEstoqueExistente] = useState([]);
   const [fornecedorJaCadastrado, setFornecedorJaCadastrado] = useState(false);
+  const [fornecedorChecked, setFornecedorChecked] = useState(false);
   const [cadastrarFornecedor, setCadastrarFornecedor] = useState(false);
   const [nomeFornecedor, setNomeFornecedor] = useState("");
   const [erroDuplicada, setErroDuplicada] = useState("");
@@ -307,6 +308,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
         setFornecedorJaCadastrado(false);
         setCadastrarFornecedor(true);
       }
+      setFornecedorChecked(true);
     });
   }, []);
 
@@ -543,7 +545,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
               )}
 
 
-              {!fornecedorJaCadastrado ? (
+              {!fornecedorChecked ? null : !fornecedorJaCadastrado ? (
                 <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-medium flex items-center gap-2" style={{ color: GREEN }}>
