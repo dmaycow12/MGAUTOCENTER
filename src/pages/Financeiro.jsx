@@ -56,7 +56,7 @@ export default function Financeiro() {
   const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
   const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
   const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
-  const [sortCol, setSortCol] = useState("descricao");
+  const [sortCol, setSortCol] = useState("data_vencimento");
   const [sortDir, setSortDir] = useState("asc");
   const periodoDropRef = useRef(null);
   const hojeKey = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
@@ -260,11 +260,18 @@ export default function Financeiro() {
     else { setSortCol(col); setSortDir("asc"); }
   };
 
+  const extractNum = (desc) => { const m = (desc || "").match(/(\d+)/g); return m ? parseInt(m[m.length - 1]) || 0 : 0; };
+
   const sortedFiltrados = [...filtrados].sort((a, b) => {
     let va = a[sortCol] || "";
     let vb = b[sortCol] || "";
     if (sortCol === "valor") { va = Number(a.valor||0); vb = Number(b.valor||0); return sortDir === "asc" ? va-vb : vb-va; }
-    // Ordenar por número da venda (ex: "Venda #100" → 100) se for descrição
+    if (sortCol === "data_vencimento") {
+      const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+      if (cmp !== 0) return sortDir === "asc" ? cmp : -cmp;
+      // mesma data: ordenar por número na descrição
+      return extractNum(a.descricao) - extractNum(b.descricao);
+    }
     if (sortCol === "descricao") {
       const matchA = va.match(/Venda #(\d+)/);
       const matchB = vb.match(/Venda #(\d+)/);
@@ -463,7 +470,7 @@ export default function Financeiro() {
             </div>
           ) : viewMode === "cards" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {filtrados.map(item => (
+              {sortedFiltrados.map(item => (
                 <FinanceiroCard key={item.id} item={item} onEdit={(i) => { setForm({ ...defaultForm(), ...i }); setEditando(i); setShowForm(true); }} onDelete={excluir} onAlterarStatus={alterarStatus} onAlterarPagamento={alterarPagamento} />
               ))}
             </div>
