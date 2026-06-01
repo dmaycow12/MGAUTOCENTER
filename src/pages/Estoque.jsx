@@ -260,9 +260,14 @@ export default function Estoque() {
     if (semEntrada.length === 0) return alert("Todos os produtos com saldo já possuem entrada registrada.");
     if (!confirm(`Criar entrada de Saldo Inicial para ${semEntrada.length} produto(s)?`)) return;
     const hoje = new Date().toISOString().split('T')[0] + 'T12:00:00.000Z';
-    for (const item of semEntrada) {
-      const mov = { tipo: 'entrada', data: hoje, quantidade: item.quantidade, valor_unitario: item.valor_custo || 0, observacao: 'SALDO INICIAL' };
-      await base44.entities.Estoque.update(item.id, { historico: [...(item.historico || []), mov] });
+    const batchSize = 5;
+    for (let i = 0; i < semEntrada.length; i += batchSize) {
+      const batch = semEntrada.slice(i, i + batchSize);
+      await Promise.all(batch.map(item => {
+        const mov = { tipo: 'entrada', data: hoje, quantidade: item.quantidade, valor_unitario: item.valor_custo || 0, observacao: 'SALDO INICIAL' };
+        return base44.entities.Estoque.update(item.id, { historico: [...(item.historico || []), mov] });
+      }));
+      if (i + batchSize < semEntrada.length) await new Promise(r => setTimeout(r, 400));
     }
     alert(`${semEntrada.length} produto(s) regularizados com sucesso.`);
     load();
