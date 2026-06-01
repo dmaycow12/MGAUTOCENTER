@@ -410,13 +410,13 @@ export default function Estoque() {
         onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
         onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
       >
-        <Plus className="w-5 h-5" /> Novo Item
+        <Plus className="w-5 h-5" /> Novo Produto
       </button>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-          <p className="text-white text-sm font-medium mb-2">Total de Produtos</p>
+          <p className="text-white text-sm font-medium mb-2">Produtos</p>
           <p className="text-white text-sm font-medium">{items.length}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
