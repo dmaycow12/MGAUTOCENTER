@@ -260,7 +260,7 @@ export default function Financeiro() {
     else { setSortCol(col); setSortDir("asc"); }
   };
 
-  const extractNum = (desc) => { const m = (desc || "").match(/(\d+)/g); return m ? parseInt(m[m.length - 1]) || 0 : 0; };
+  const extractNum = (desc) => { const m = (desc || "").match(/#(\d+)/); if (m) return parseInt(m[1]) || 0; const n = (desc || "").match(/(\d+)/); return n ? parseInt(n[1]) || 0 : 0; };
 
   const sortedFiltrados = [...filtrados].sort((a, b) => {
     let va = a[sortCol] || "";
