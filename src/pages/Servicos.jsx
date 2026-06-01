@@ -71,9 +71,9 @@ export default function Servicos() {
       <button
         onClick={abrirNovo}
         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
-        style={{background: "#00ff00", color: "#fff", border: "2px solid #33ff33", boxShadow: "0 0 14px #00ff00aa"}}
-        onMouseEnter={e => { e.currentTarget.style.background = "#00dd00"; e.currentTarget.style.boxShadow = "0 0 22px #00ff00cc"; }}
-        onMouseLeave={e => { e.currentTarget.style.background = "#00ff00"; e.currentTarget.style.boxShadow = "0 0 14px #00ff00aa"; }}
+        style={{background: "#00ff00", color: "#fff"}}
+        onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
+        onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
       >
         <Plus className="w-4 h-4" /> Novo Serviço
       </button>
