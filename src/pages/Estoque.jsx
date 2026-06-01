@@ -87,7 +87,7 @@ export default function Estoque() {
   const colunasDisponiveis = [
     { key: "codigo", label: "CÓDIGO" },
     { key: "marca", label: "MARCA" },
-    { key: "estoque_minimo", label: "MÍN. ESTOQUE" },
+    { key: "estoque_minimo", label: "ESTOQUE" },
     { key: "valor_custo", label: "CUSTO" },
     { key: "valor_venda", label: "VENDA" },
   ];
@@ -204,7 +204,7 @@ export default function Estoque() {
       (i.codigos || []).some(c => c?.toLowerCase().includes(search.toLowerCase())) ||
       i.categoria?.toLowerCase().includes(search.toLowerCase()) ||
       i.marca?.toLowerCase().includes(search.toLowerCase());
-    const matchFiltro = filtro === "Todos" || (filtro === "Estoque Baixo" && i.quantidade <= i.estoque_minimo);
+    const matchFiltro = filtro === "Todos" || (filtro === "Estoque Baixo" && i.quantidade < i.estoque_minimo);
     const matchMarca = filtroMarcas.length === 0 || filtroMarcas.includes(i.marca);
     return matchSearch && matchFiltro && matchMarca;
   });
@@ -229,7 +229,7 @@ export default function Estoque() {
     });
   }
 
-  const estoqueBaixo = items.filter(i => i.quantidade <= i.estoque_minimo).length;
+  const estoqueBaixo = items.filter(i => i.quantidade < i.estoque_minimo).length;
 
   const exportarSelecionados = () => {
     const lista = selecionados.length > 0
@@ -630,7 +630,7 @@ export default function Estoque() {
             const isConf = conferidos.has(item.id);
             return (
             <div key={item.id}
-              className={`bg-gray-900 border rounded-2xl overflow-hidden transition-all ${isConf ? "border-green-500/60 opacity-60" : item.quantidade <= item.estoque_minimo ? "border-red-500/40" : "border-gray-800"}`}>
+              className={`bg-gray-900 border rounded-2xl overflow-hidden transition-all ${isConf ? "border-green-500/60 opacity-60" : item.quantidade < item.estoque_minimo ? "border-red-500/40" : "border-gray-800"}`}>
               {/* Cabeçalho do card */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
                 <div className="flex items-center gap-2 min-w-0">
@@ -638,7 +638,7 @@ export default function Estoque() {
                     ? <div onClick={e => { e.stopPropagation(); setConferidos(prev => { const s = new Set(prev); s.has(item.id) ? s.delete(item.id) : s.add(item.id); return s; }); }} className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 cursor-pointer ${isConf ? "border-green-500 bg-green-500" : "border-gray-600 hover:border-green-400"}`}>{isConf && <span className="text-black text-xs font-bold">✓</span>}</div>
                     : <input type="checkbox" checked={selecionados.includes(item.id)} onChange={() => toggleSelecionado(item.id)} className="accent-red-500 cursor-pointer w-4 h-4 flex-shrink-0" />}
                   {item.codigo && <span className="text-orange-400 font-mono text-xs font-bold flex-shrink-0">#{item.codigo}</span>}
-                  {item.quantidade <= item.estoque_minimo && (
+                  {item.quantidade < item.estoque_minimo && (
                     <span className="flex items-center gap-1 bg-red-500/10 text-red-400 text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0">
                       <AlertTriangle className="w-3 h-3" /> Baixo
                     </span>
@@ -659,10 +659,10 @@ export default function Estoque() {
               <div className="grid grid-cols-2 border-b border-gray-800">
                 <div className="px-4 py-3 border-r border-gray-800">
                   <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Quantidade</p>
-                  <p className={`font-bold text-sm ${item.quantidade <= item.estoque_minimo ? "text-red-400" : "text-white"}`}>{item.quantidade} {item.unidade || "UN"}</p>
+                  <p className={`font-bold text-sm ${item.quantidade < item.estoque_minimo ? "text-red-400" : "text-white"}`}>{item.quantidade} {item.unidade || "UN"}</p>
                 </div>
                 <div className="px-4 py-3">
-                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Mín. Estoque</p>
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Estoque</p>
                   <p className="text-white font-bold text-sm">{item.estoque_minimo}</p>
                 </div>
               </div>
@@ -700,7 +700,7 @@ export default function Estoque() {
                   <th className="px-4 py-3 text-center cursor-pointer hover:text-white transition-all" onClick={() => handleSort("quantidade")}>
                     <div className="flex items-center justify-center gap-1">Qtd {ordenacao.campo === "quantidade" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div>
                   </th>
-                  {colunas.estoque_minimo && <th className="px-4 py-3 text-center cursor-pointer hover:text-white transition-all" onClick={() => handleSort("estoque_minimo")}><div className="flex items-center justify-center gap-1">Mín. {ordenacao.campo === "estoque_minimo" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
+                  {colunas.estoque_minimo && <th className="px-4 py-3 text-center cursor-pointer hover:text-white transition-all" onClick={() => handleSort("estoque_minimo")}><div className="flex items-center justify-center gap-1">Estoque {ordenacao.campo === "estoque_minimo" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
                   {colunas.valor_custo && <th className="px-4 py-3 text-right cursor-pointer hover:text-white transition-all" onClick={() => handleSort("valor_custo")}><div className="flex items-center justify-end gap-1">Custo {ordenacao.campo === "valor_custo" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
                   {colunas.valor_venda && <th className="px-4 py-3 text-right cursor-pointer hover:text-white transition-all" onClick={() => handleSort("valor_venda")}><div className="flex items-center justify-end gap-1">Venda {ordenacao.campo === "valor_venda" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
                   <th className="px-4 py-3 text-center">Ações</th>
@@ -712,7 +712,7 @@ export default function Estoque() {
                   const isConferido = conferidos.has(item.id);
                   return (
                   <tr key={item.id}
-                    className={`border-b border-gray-800 transition-all hover:bg-gray-800/50 ${isConferido ? "bg-green-500/10 opacity-60" : selecionados.includes(item.id) ? "bg-red-500/5" : item.quantidade <= item.estoque_minimo ? "bg-red-500/5" : ""}`}>
+                    className={`border-b border-gray-800 transition-all hover:bg-gray-800/50 ${isConferido ? "bg-green-500/10 opacity-60" : selecionados.includes(item.id) ? "bg-red-500/5" : item.quantidade < item.estoque_minimo ? "bg-red-500/5" : ""}`}>
                     <td className="px-4 py-3">
                       {checklistMode
                         ? <div onClick={() => setConferidos(prev => { const s = new Set(prev); s.has(item.id) ? s.delete(item.id) : s.add(item.id); return s; })} className={`w-5 h-5 rounded-full border-2 flex items-center justify-center cursor-pointer ${isConferido ? "border-green-500 bg-green-500" : "border-gray-600 hover:border-green-400"}`}>{isConferido && <span className="text-black text-xs font-bold">✓</span>}</div>
@@ -721,14 +721,14 @@ export default function Estoque() {
                     {colunas.codigo && <td className="px-4 py-3 text-gray-400 font-mono text-xs"><CellEdit item={item} field="codigo" className="text-gray-400 font-mono text-xs" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        {item.quantidade <= item.estoque_minimo && <AlertTriangle className="w-3 h-3 text-red-400 flex-shrink-0" />}
+                        {item.quantidade < item.estoque_minimo && <AlertTriangle className="w-3 h-3 text-red-400 flex-shrink-0" />}
                         <CellEdit item={item} field="descricao" className="text-white font-medium" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} />
                       </div>
                     </td>
                     {colunas.marca && <td className="px-4 py-3 text-gray-400"><CellEdit item={item} field="marca" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
                     <td className="px-4 py-3 text-center">
-                      <span className={`font-bold ${item.quantidade <= item.estoque_minimo ? "text-red-400" : "text-white"}`}>
-                        <CellEdit item={item} field="quantidade" className={item.quantidade <= item.estoque_minimo ? "text-red-400 font-bold" : "text-white font-bold"} editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} checklistMode={checklistMode} onMarcarConferido={() => setConferidos(prev => { const s = new Set(prev); s.add(item.id); return s; })} />
+                      <span className={`font-bold ${item.quantidade < item.estoque_minimo ? "text-red-400" : "text-white"}`}>
+                        <CellEdit item={item} field="quantidade" className={item.quantidade < item.estoque_minimo ? "text-red-400 font-bold" : "text-white font-bold"} editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} checklistMode={checklistMode} onMarcarConferido={() => setConferidos(prev => { const s = new Set(prev); s.add(item.id); return s; })} />
                       </span>
                     </td>
                     {colunas.estoque_minimo && <td className="px-4 py-3 text-center text-gray-500"><CellEdit item={item} field="estoque_minimo" className="text-gray-500" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
