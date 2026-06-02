@@ -31,9 +31,6 @@ export default function MovimentacoesEstoque({ items, onReload }) {
   const [deletando, setDeletando] = useState(false);
   const [editando, setEditando] = useState(null);
   const [editForm, setEditForm] = useState({});
-  const [showBulkEdit, setShowBulkEdit] = useState(false);
-  const [bulkForm, setBulkForm] = useState({ tipo: "", observacao: "" });
-  const [salvandoBulk, setSalvandoBulk] = useState(false);
 
   // Flatten all movements (excluir produto XX coringa)
   const todasMovimentacoes = useMemo(() => {
@@ -128,38 +125,6 @@ export default function MovimentacoesEstoque({ items, onReload }) {
     onReload();
   };
 
-  const aplicarBulkEdit = async () => {
-    if (!selecionados.length) return;
-    setSalvandoBulk(true);
-
-    const porItem = {};
-    for (const k of selecionados) {
-      const [itemId, movIdxStr] = k.split("_");
-      const movIdx = parseInt(movIdxStr);
-      if (!porItem[itemId]) porItem[itemId] = [];
-      porItem[itemId].push(movIdx);
-    }
-
-    for (const [itemId, idxs] of Object.entries(porItem)) {
-      const item = items.find(i => i.id === itemId);
-      if (!item) continue;
-      const novoHistorico = [...(item.historico || [])].map((mov, idx) => {
-        if (!idxs.includes(idx)) return mov;
-        const atualizado = { ...mov };
-        if (bulkForm.tipo) atualizado.tipo = bulkForm.tipo;
-        if (bulkForm.observacao) atualizado.observacao = bulkForm.observacao;
-        if (bulkForm.fornecedor) atualizado.fornecedor = bulkForm.fornecedor;
-        return atualizado;
-      });
-      await base44.entities.Estoque.update(itemId, { historico: novoHistorico });
-    }
-
-    setSalvandoBulk(false);
-    setShowBulkEdit(false);
-    setSelecionados([]);
-    onReload();
-  };
-
   const tipoOpcoes = ["Todos", "Entrada", "Saida", "Ajuste"];
   const tipoLabels = { "Todos": "TODOS", "Entrada": "ENTRADAS", "Saida": "SAÍDAS", "Ajuste": "AJUSTES" };
 
@@ -210,15 +175,14 @@ export default function MovimentacoesEstoque({ items, onReload }) {
 
       {/* Ações selecionados */}
       {selecionados.length > 0 && (
-        <div className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/30 rounded-xl px-4 py-2.5">
-          <span className="text-blue-400 text-sm font-medium flex-1">{selecionados.length} selecionada(s)</span>
+        <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2.5">
+          <span className="text-red-400 text-sm font-medium flex-1">{selecionados.length} ajuste(s) selecionado(s)</span>
           <button onClick={() => setSelecionados([])} className="text-gray-400 text-xs px-3 py-1.5 border border-gray-700 rounded-lg hover:text-white transition-all">Cancelar</button>
-          <button onClick={() => { setShowBulkEdit(true); setBulkForm({ tipo: "", observacao: "", fornecedor: "" }); }}
-            className="flex items-center gap-2 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
-            style={{ background: "#062C9B" }}>
-            <Edit className="w-3.5 h-3.5" /> Editar em Massa
+          <button onClick={excluirSelecionados} disabled={deletando}
+            className="flex items-center gap-2 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition-all disabled:opacity-50"
+            style={{ background: "#ef4444" }}>
+            <Trash2 className="w-3.5 h-3.5" /> {deletando ? "Excluindo..." : "Excluir em Massa"}
           </button>
-
         </div>
       )}
 
@@ -256,8 +220,10 @@ export default function MovimentacoesEstoque({ items, onReload }) {
                 return (
                   <tr key={k} className={`border-b border-gray-800 transition-all hover:bg-gray-800/40 ${selecionadosSet.has(k) ? "bg-blue-500/5" : ""}`}>
                     <td className="px-4 py-3">
-                      <input type="checkbox" checked={selecionadosSet.has(k)} onChange={() => toggleSel(m)}
-                        className="accent-blue-500 cursor-pointer w-4 h-4" />
+                      {isAjusteVisual ? (
+                        <input type="checkbox" checked={selecionadosSet.has(k)} onChange={() => toggleSel(m)}
+                          className="accent-blue-500 cursor-pointer w-4 h-4" />
+                      ) : <span className="w-4 h-4 block" />}
                     </td>
                     <td className="px-4 py-3">
                       <p className="text-white font-medium text-xs">{m.produtoDescricao}</p>
@@ -331,43 +297,6 @@ export default function MovimentacoesEstoque({ items, onReload }) {
               <button onClick={() => setEditando(null)} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Cancelar</button>
               <button onClick={salvarEdicao} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all" style={{ background: "#00ff00", color: "#000" }}>
                 <Check className="w-4 h-4" /> Salvar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Edição em Massa */}
-      {showBulkEdit && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md">
-            <div className="flex items-center justify-between p-5 border-b border-gray-800">
-              <h2 className="text-white font-semibold text-sm">Editar em Massa — {selecionados.length} item(s)</h2>
-              <button onClick={() => setShowBulkEdit(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
-            </div>
-            <div className="p-5 space-y-4">
-              <p className="text-xs text-gray-500">Preencha apenas os campos que deseja alterar. Campos em branco serão ignorados.</p>
-              <Field label="Tipo (opcional)">
-                <select value={bulkForm.tipo} onChange={e => setBulkForm(f => ({ ...f, tipo: e.target.value }))} className="input-mov">
-                  <option value="">— Não alterar —</option>
-                  <option value="entrada">Entrada</option>
-                  <option value="saida">Saída</option>
-                  <option value="ajuste">Ajuste</option>
-                </select>
-              </Field>
-              <Field label="Fornecedor (opcional)">
-                <input type="text" value={bulkForm.fornecedor || ""} onChange={e => setBulkForm(f => ({ ...f, fornecedor: e.target.value }))} className="input-mov" placeholder="Deixe vazio para não alterar" />
-              </Field>
-              <Field label="Observação (opcional)">
-                <input type="text" value={bulkForm.observacao} onChange={e => setBulkForm(f => ({ ...f, observacao: e.target.value }))} className="input-mov" placeholder="Deixe vazio para não alterar" />
-              </Field>
-            </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
-              <button onClick={() => setShowBulkEdit(false)} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Cancelar</button>
-              <button onClick={aplicarBulkEdit} disabled={salvandoBulk}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all disabled:opacity-50"
-                style={{ background: "#062C9B", color: "#fff" }}>
-                <Check className="w-4 h-4" /> {salvandoBulk ? "Salvando..." : "Aplicar"}
               </button>
             </div>
           </div>
