@@ -491,10 +491,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const removePeca = async (i) => {
     const peca = form.pecas[i];
-    // Se é uma venda já salva e a peça tem estoque, precisa restaurar o histórico
+    // Se é uma venda já salva e a peça tem estoque, limpa completamente do histórico
     if (os?.id && peca.estoque_id && Number(peca.quantidade) > 0) {
       try {
-        await restaurarEstoque([peca], os.id, estoque, true);
+        await restaurarEstoque([peca], os.id, estoque);
       } catch (e) {
         console.warn("Erro ao restaurar estoque na exclusão:", e);
       }

@@ -72,7 +72,7 @@ export async function reduzirEstoque(pecas, venda = null, estoqueList = null) {
   await Promise.all(updates);
 }
 
-export async function restaurarEstoque(pecas, vendaId = null, estoqueList = null, removerUmaOnly = false) {
+export async function restaurarEstoque(pecas, vendaId = null, estoqueList = null) {
   if (!pecas || pecas.length === 0) return;
   const lista = estoqueList || await base44.entities.Estoque.list("-created_date", 1000);
   const porItem = new Map();
@@ -81,41 +81,18 @@ export async function restaurarEstoque(pecas, vendaId = null, estoqueList = null
     if (!qtd || qtd <= 0) continue;
     const item = encontrarItemEstoque(lista, peca);
     if (!item) continue;
-    if (!porItem.has(item.id)) porItem.set(item.id, { item, pecas: [] });
-    porItem.get(item.id).pecas.push(peca);
+    if (!porItem.has(item.id)) porItem.set(item.id, { item });
   }
-  const updates = Array.from(porItem.values()).map(({ item, pecas: pecasItem }) => {
+  const updates = Array.from(porItem.values()).map(({ item }) => {
     const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
     if (vendaId) {
-      let historico = historicoAtual;
-      let qtdRestaurada = 0;
+      // Remove TODAS as saídas da venda e restaura a quantidade
+      const saidasVenda = historicoAtual.filter(m => m.tipo === "saída" && m.ordem_venda_id === vendaId);
+      const qtdNaHistoria = saidasVenda.reduce((s, m) => s + Number(m.quantidade || 0), 0);
+      if (qtdNaHistoria === 0) return null; // Nada a restaurar
       
-      if (removerUmaOnly) {
-        // Remove apenas UMA saída por peça (apaga completamente do histórico)
-        for (const peca of pecasItem) {
-          let removeuUma = false;
-          historico = historico.filter(m => {
-            if (removeuUma) return true; // Já removeu, mantém resto
-            const isSaidaVenda = m.tipo === "saída" && m.ordem_venda_id === vendaId;
-            if (isSaidaVenda) {
-              removeuUma = true;
-              qtdRestaurada += Number(m.quantidade || 0);
-              return false; // Remove completamente este registro
-            }
-            return true;
-          });
-        }
-      } else {
-        // Remove TODAS as saídas da venda (para alteração de quantidade)
-        const saidasVenda = historicoAtual.filter(m => m.tipo === "saída" && m.ordem_venda_id === vendaId);
-        const qtdNaHistoria = saidasVenda.reduce((s, m) => s + Number(m.quantidade || 0), 0);
-        if (qtdNaHistoria === 0) return null;
-        historico = historicoAtual.filter(m => !(m.tipo === "saída" && m.ordem_venda_id === vendaId));
-        qtdRestaurada = qtdNaHistoria;
-      }
-      
-      if (qtdRestaurada === 0) return null;
-      const novaQtd = Number(item.quantidade || 0) + qtdRestaurada;
+      const historico = historicoAtual.filter(m => !(m.tipo === "saída" && m.ordem_venda_id === vendaId));
+      const novaQtd = Number(item.quantidade || 0) + qtdNaHistoria;
       return base44.entities.Estoque.update(item.id, { quantidade: novaQtd, historico });
     } else {
       return null;
