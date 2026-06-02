@@ -682,14 +682,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       const servicosLimpos = (form.servicos || []).map(({ _new, ...s }) => ({ ...s, codigo: s.codigo?.trim() || "101" }));
       let formFinal = { ...form, pecas: pecasLimpas, servicos: servicosLimpos, parcelas_detalhes: parcelasNormalizadas, forma_pagamento: formaPrincipal };
 
-      if (!os) {
-        const todas = await base44.entities.Vendas.list("-created_date", 9999);
-        const usadosSalvar = new Set(todas.map(o => parseInt(o.numero, 10)).filter(n => !isNaN(n) && n > 0));
-        let numeroTentativa = 1;
-        while (usadosSalvar.has(numeroTentativa)) numeroTentativa++;
-        formFinal = { ...formFinal, numero: String(numeroTentativa) };
-        setForm(f => ({ ...f, numero: String(numeroTentativa) }));
-      }
+      // Para nova venda, usa o número já calculado no useEffect (form.numero)
+      // Não precisa fazer list novamente
 
       const eraAberta = os?.status !== "Concluído";
       const ficouConcluida = formFinal.status === "Concluído";
@@ -704,7 +698,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       }
 
       if (formFinal.status === "Orçamento") {
-        onSave();
+        onSave({ ...formFinal, id: savedId });
         return;
       }
       const finExistentes = await base44.entities.Financeiro.filter({ ordem_venda_id: savedId }, "-created_date", 100);
@@ -787,16 +781,15 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
           if (removidas.length > 0) await restaurarEstoque(removidas, os.id, estoqueAtual);
           if (alteradas.length > 0) {
             const oldAlteradas = alteradas.map(np => oldPecas.find(op => op.estoque_id === np.estoque_id));
-            // Após restaurar, atualiza o snapshot local antes de reduzir
             await restaurarEstoque(oldAlteradas, os.id, estoqueAtual);
-            const estoquePos = await base44.entities.Estoque.list("-created_date", 1000);
-            await reduzirEstoque(alteradas, { id: savedId, numero: formFinal.numero }, estoquePos);
+            // Reutiliza estoqueAtual após restaurar (otimização: evita novo list)
+            await reduzirEstoque(alteradas, { id: savedId, numero: formFinal.numero }, estoqueAtual);
           }
           if (adicionadas.length > 0) await reduzirEstoque(adicionadas, { id: savedId, numero: formFinal.numero }, estoqueAtual);
         }
       }
 
-      onSave();
+      onSave({ ...formFinal, id: savedId });
     } catch (err) {
       alert("Erro ao salvar: " + (err?.message || "Erro desconhecido"));
     } finally {

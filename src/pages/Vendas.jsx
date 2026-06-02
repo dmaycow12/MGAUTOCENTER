@@ -632,11 +632,23 @@ export default function Vendas() {
       {/* Form Modal */}
       {showForm && (
        <VendaForm
-          os={editando}
-           clientes={clientes}
-           onClose={() => { setShowForm(false); setEditando(null); }}
-           onSave={() => { setShowForm(false); setEditando(null); load(); }}
-         />
+           os={editando}
+            clientes={clientes}
+            onClose={() => { setShowForm(false); setEditando(null); }}
+            onSave={(vendaSalva) => {
+              setShowForm(false);
+              setEditando(null);
+              if (vendaSalva?.id) {
+                setOrdens(prev => {
+                  const exists = prev.find(o => o.id === vendaSalva.id);
+                  if (exists) return prev.map(o => o.id === vendaSalva.id ? { ...o, ...vendaSalva } : o);
+                  return [vendaSalva, ...prev];
+                });
+              } else {
+                load();
+              }
+            }}
+          />
       )}
 
       {showEmissaoMassa && (
