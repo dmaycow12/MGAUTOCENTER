@@ -157,11 +157,14 @@ export async function limparHistoricoVenda(vendaId) {
 export async function restaurarEstoqueCompletoPeca(peca, vendaId, estoqueList = null) {
    // Restaura e DELETA completamente a movimentação de uma peça específica
    if (!peca || !vendaId) return;
-   const lista = estoqueList || await base44.entities.Estoque.list("-created_date", 1000);
+   
+   // SEMPRE busca fresco do banco para garantir dados atualizados
+   const lista = await base44.entities.Estoque.list("-created_date", 1000);
    const item = encontrarItemEstoque(lista, peca);
    if (!item) return;
 
    const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
+   
    // Remove TODAS as movimentações (saída) desta peça nesta venda
    const saidasVenda = historicoAtual.filter(m => {
      const tipo = String(m.tipo || '').toLowerCase();
@@ -175,6 +178,8 @@ export async function restaurarEstoqueCompletoPeca(peca, vendaId, estoqueList = 
        return !(tipo === 'saída' && m.ordem_venda_id === vendaId);
      });
      const novaQtd = Number(item.quantidade || 0) + qtdNaHistoria;
+     
+     // Atualiza com o histórico limpo
      await base44.entities.Estoque.update(item.id, { quantidade: novaQtd, historico });
    }
 }
