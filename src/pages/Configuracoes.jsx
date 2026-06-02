@@ -61,15 +61,17 @@ export default function Configuracoes() {
   const salvar = async () => {
     setSalvando(true);
     try {
-      for (const chave of CHAVES) {
+      const novosIds = { ...configIds };
+      await Promise.all(CHAVES.map(async (chave) => {
         const valor = String(config[chave] ?? "");
         if (configIds[chave]) {
           await base44.entities.Configuracao.update(configIds[chave], { chave, valor });
         } else {
           const novo = await base44.entities.Configuracao.create({ chave, valor });
-          setConfigIds(prev => ({ ...prev, [chave]: novo.id }));
+          novosIds[chave] = novo.id;
         }
-      }
+      }));
+      setConfigIds(novosIds);
       setSalvo(true);
       setTimeout(() => setSalvo(false), 3000);
     } finally {
