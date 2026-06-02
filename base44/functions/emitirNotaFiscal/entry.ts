@@ -510,7 +510,9 @@ Deno.serve(async (req) => {
     let mensagemSefaz = result.erros?.[0]?.mensagem || result.mensagem_sefaz || result.mensagem || '';
     let resultFinal = result;
 
-    for (let i = 0; i < 10; i++) {
+    const epConsultaFinal = tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfe';
+    // NFCe e NFe costumam ser síncronas — verifica primeiro sem esperar
+    for (let i = 0; i < 8; i++) {
       const st = resultFinal.status || '';
       if (st === 'autorizado') {
         statusNota = 'Emitida';
@@ -524,9 +526,11 @@ Deno.serve(async (req) => {
         statusNota = mensagemSefaz.includes('E0160') ? 'Erro de Sincronia Governamental' : 'Erro';
         break;
       }
-      if (i < 9) {
-        await new Promise(r => setTimeout(r, 3000));
-        const consultaResp = await fetch(`${FOCUSNFE_BASE}/${tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfe'}/${ref}?completo=1`, {
+      if (i < 7) {
+        // Intervalo progressivo: 1s, 1s, 1.5s, 1.5s, 2s, 2s, 2s
+        const intervalo = i < 2 ? 1000 : i < 4 ? 1500 : 2000;
+        await new Promise(r => setTimeout(r, intervalo));
+        const consultaResp = await fetch(`${FOCUSNFE_BASE}/${epConsultaFinal}/${ref}?completo=1`, {
           headers: { 'Authorization': AUTH_HEADER },
         });
         if (consultaResp.ok) {
