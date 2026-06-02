@@ -253,7 +253,11 @@ export default function NotasFiscais() {
           forma_pagamento: venda?.parcelas_detalhes?.[0]?.forma_pagamento || venda?.forma_pagamento || "A Combinar",
         };
 
-        setForm({ ...defaultForm(), tipo, ordem_venda_id: venda_id, ...dadosCliente, valor_total, items });
+        // Se cliente é CONSUMIDOR (sem CPF/CNPJ), forçar NFCe
+        const isConsumidor = !dadosCliente.cliente_cpf_cnpj?.trim() || (dadosCliente.cliente_nome || "").toUpperCase() === "CONSUMIDOR";
+        const tipoFinal = isConsumidor ? "NFCe" : tipo;
+
+        setForm({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, valor_total, items });
         setAbaForm("cliente");
         setShowForm(true);
       })();
@@ -1392,16 +1396,27 @@ export default function NotasFiscais() {
 
             <div className="px-5 pt-4 flex-shrink-0 grid grid-cols-3 gap-4">
               <F label="Tipo de Nota Fiscal">
-                <select value={form.tipo} onChange={e => {
-                    const novoTipo = e.target.value;
-                    let numero = proximoNumero(notas, novoTipo);
-                    let serie = proximaSerie(notas, novoTipo);
-                    setForm(f => ({ ...f, tipo: novoTipo, items: [defaultItem()], numero, serie }));
-                }} className="input-dark">
-                  <option value="NFSe">NFSe — Serviço</option>
-                  <option value="NFe">NFe — Produto</option>
-                  <option value="NFCe">NFCe — Consumidor</option>
-                </select>
+                {(() => {
+                  const isConsumidor = !form.cliente_cpf_cnpj?.trim() || form.cliente_nome?.toUpperCase() === "CONSUMIDOR";
+                  if (isConsumidor) {
+                    return (
+                      <div className="input-dark text-gray-300 cursor-not-allowed opacity-80">NFCe — Consumidor</div>
+                    );
+                  }
+                  return (
+                    <select value={form.tipo} onChange={e => {
+                        const novoTipo = e.target.value;
+                        let numero = proximoNumero(notas, novoTipo);
+                        let serie = proximaSerie(notas, novoTipo);
+                        // Preserva os items ao mudar tipo — não limpa
+                        setForm(f => ({ ...f, tipo: novoTipo, numero, serie }));
+                    }} className="input-dark">
+                      <option value="NFSe">NFSe — Serviço</option>
+                      <option value="NFe">NFe — Produto</option>
+                      <option value="NFCe">NFCe — Consumidor</option>
+                    </select>
+                  );
+                })()}
               </F>
               <F label="Data de Emissão">
                 <input type="date" value={form.data_emissao} onChange={e => setForm(f => ({ ...f, data_emissao: e.target.value }))} className="input-dark" />
