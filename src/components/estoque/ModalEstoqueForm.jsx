@@ -94,8 +94,8 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                 <F label="Marca">
                   <input value={form.marca || ""} onChange={e => setForm({ ...form, marca: e.target.value })} className="input-dark" />
                 </F>
-                <F label="Estoque Mínimo">
-                  <input type="text" value={form.estoque_minimo} onChange={e => setForm({ ...form, estoque_minimo: Number(e.target.value.replace(/[^0-9.]/g, "") || 0) })} className="input-dark" />
+                <F label="Estoque Alocado">
+                 <input type="text" value={form.estoque_minimo} onChange={e => setForm({ ...form, estoque_minimo: Number(e.target.value.replace(/[^0-9.]/g, "") || 0) })} className="input-dark" />
                 </F>
                 <F label="Valor de Custo (R$)">
                   <input type="text" value={form.valor_custo} onChange={e => setForm({ ...form, valor_custo: Number(e.target.value.replace(/[^0-9.]/g, "") || 0) })} className="input-dark" />
@@ -194,10 +194,49 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                     <p className="text-xs text-gray-400 mb-1">LUCRO BRUTO</p>
                     <p className={`text-lg font-bold ${lucroBruto >= 0 ? "text-green-400" : "text-red-400"}`}>R$ {Number(lucroBruto).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</p>
                   </div>
-                  <div className={`col-span-2 bg-gray-800/50 border rounded-lg p-4 ${margemLucro >= 0 ? "border-green-500/30" : "border-red-500/30"}`}>
+                  <div className={`bg-gray-800/50 border rounded-lg p-4 ${margemLucro >= 0 ? "border-green-500/30" : "border-red-500/30"}`}>
                     <p className="text-xs text-gray-400 mb-1">MARGEM DE LUCRO (%)</p>
                     <p className={`text-2xl font-bold ${margemLucro >= 0 ? "text-green-400" : "text-red-400"}`}>{Number(margemLucro).toFixed(1)}%</p>
                   </div>
+                  {(() => {
+                    // Lucro mensal médio: estoque_alocado x custo_medio = investimento alocado
+                    // lucro por unidade vendida x qtd_saida_media_mensal
+                    const estoqueAlocado = Number(form.estoque_minimo || 0);
+                    const custoMedioUnit = custoPorUnidade || Number(form.valor_custo || 0);
+                    const vlVenda = Number(form.valor_venda || 0);
+                    const lucroUnitario = vlVenda - custoMedioUnit;
+                    // Calcula média de saídas por mês
+                    const datas = saidas.map(m => m.data).filter(Boolean).sort();
+                    let qtdMediaMensal = 0;
+                    if (datas.length > 0) {
+                      const primeira = new Date(datas[0]);
+                      const ultima = new Date(datas[datas.length - 1]);
+                      const diffMeses = Math.max(1, (ultima.getFullYear() - primeira.getFullYear()) * 12 + (ultima.getMonth() - primeira.getMonth()) + 1);
+                      qtdMediaMensal = qtdSaida / diffMeses;
+                    }
+                    const lucroMensal = lucroUnitario * qtdMediaMensal;
+                    const investimentoAlocado = estoqueAlocado * custoMedioUnit;
+                    const roiMensal = investimentoAlocado > 0 ? (lucroMensal / investimentoAlocado) * 100 : 0;
+                    return (
+                      <div className="bg-gray-800/50 border border-blue-500/30 rounded-lg p-4">
+                        <p className="text-xs text-gray-400 mb-1">LUCRO MÉDIO MENSAL</p>
+                        <p className={`text-2xl font-bold ${lucroMensal >= 0 ? "text-green-400" : "text-red-400"}`}>
+                          R$ {Number(lucroMensal).toLocaleString("pt-BR", {minimumFractionDigits: 2})}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {qtdMediaMensal.toFixed(1)} un/mês × R$ {Number(lucroUnitario).toLocaleString("pt-BR", {minimumFractionDigits: 2})} lucro unit.
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Investimento alocado: R$ {Number(investimentoAlocado).toLocaleString("pt-BR", {minimumFractionDigits: 2})} ({estoqueAlocado} un × custo médio)
+                        </p>
+                        {investimentoAlocado > 0 && (
+                          <p className={`text-xs font-bold mt-1 ${roiMensal >= 0 ? "text-blue-400" : "text-red-400"}`}>
+                            ROI mensal: {Number(roiMensal).toFixed(1)}%
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {entradas.length === 0 && form.quantidade > 0 && (
