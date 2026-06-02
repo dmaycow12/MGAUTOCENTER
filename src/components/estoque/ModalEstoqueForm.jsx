@@ -199,41 +199,51 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                     <p className={`text-2xl font-bold ${margemLucro >= 0 ? "text-green-400" : "text-red-400"}`}>{Number(margemLucro).toFixed(1)}%</p>
                   </div>
                   {(() => {
-                    // Lucro mensal médio: estoque_alocado x custo_medio = investimento alocado
-                    // lucro por unidade vendida x qtd_saida_media_mensal
                     const estoqueAlocado = Number(form.estoque_minimo || 0);
                     const custoMedioUnit = custoPorUnidade || Number(form.valor_custo || 0);
-                    const vlVenda = Number(form.valor_venda || 0);
-                    const lucroUnitario = vlVenda - custoMedioUnit;
-                    // Calcula média de saídas por mês
-                    const datas = saidas.map(m => m.data).filter(Boolean).sort();
-                    let qtdMediaMensal = 0;
-                    if (datas.length > 0) {
-                      const primeira = new Date(datas[0]);
-                      const ultima = new Date(datas[datas.length - 1]);
-                      const diffMeses = Math.max(1, (ultima.getFullYear() - primeira.getFullYear()) * 12 + (ultima.getMonth() - primeira.getMonth()) + 1);
-                      qtdMediaMensal = qtdSaida / diffMeses;
-                    }
-                    const lucroMensal = lucroUnitario * qtdMediaMensal;
                     const investimentoAlocado = estoqueAlocado * custoMedioUnit;
-                    const roiMensal = investimentoAlocado > 0 ? (lucroMensal / investimentoAlocado) * 100 : 0;
+
+                    // Agrupa lucro bruto por mês/ano de todas as saídas
+                    const lucroPorMes = {};
+                    saidas.forEach(m => {
+                      if (!m.data) return;
+                      const d = new Date(m.data);
+                      const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+                      const lucroMov = (Number(m.valor_unitario || 0) - custoMedioUnit) * Number(m.quantidade || 0);
+                      lucroPorMes[chave] = (lucroPorMes[chave] || 0) + lucroMov;
+                    });
+
+                    // Descobre o range de meses desde a primeira movimentação (entradas ou saídas) até hoje
+                    const todasDatas = historico.map(m => m.data).filter(Boolean).sort();
+                    let totalMeses = 1;
+                    if (todasDatas.length > 0) {
+                      const primeira = new Date(todasDatas[todasDatas.length - 1]); // historico é reversed, então última é a mais antiga
+                      const hoje = new Date();
+                      totalMeses = Math.max(1, (hoje.getFullYear() - primeira.getFullYear()) * 12 + (hoje.getMonth() - primeira.getMonth()) + 1);
+                    }
+
+                    // Soma total de lucro bruto de todos os meses e divide pelo total de meses (incluindo meses sem venda = 0)
+                    const lucroTotalAcumulado = Object.values(lucroPorMes).reduce((a, b) => a + b, 0);
+                    const lucroMedioMensal = lucroTotalAcumulado / totalMeses;
+                    const pctMedioMensal = investimentoAlocado > 0 ? (lucroMedioMensal / investimentoAlocado) * 100 : 0;
+
+                    const mesesComVenda = Object.keys(lucroPorMes).length;
+
                     return (
                       <div className="bg-gray-800/50 border border-blue-500/30 rounded-lg p-4">
                         <p className="text-xs text-gray-400 mb-1">LUCRO MÉDIO MENSAL</p>
-                        <p className={`text-2xl font-bold ${lucroMensal >= 0 ? "text-green-400" : "text-red-400"}`}>
-                          R$ {Number(lucroMensal).toLocaleString("pt-BR", {minimumFractionDigits: 2})}
+                        <p className={`text-2xl font-bold ${pctMedioMensal >= 0 ? "text-blue-400" : "text-red-400"}`}>
+                          {Number(pctMedioMensal).toFixed(1)}%
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {qtdMediaMensal.toFixed(1)} un/mês × R$ {Number(lucroUnitario).toLocaleString("pt-BR", {minimumFractionDigits: 2})} lucro unit.
+                          Lucro médio: R$ {Number(lucroMedioMensal).toLocaleString("pt-BR", {minimumFractionDigits: 2})}/mês
                         </p>
                         <p className="text-xs text-gray-500 mt-0.5">
-                          Investimento alocado: R$ {Number(investimentoAlocado).toLocaleString("pt-BR", {minimumFractionDigits: 2})} ({estoqueAlocado} un × custo médio)
+                          Base: {estoqueAlocado} un alocadas × R$ {Number(custoMedioUnit).toLocaleString("pt-BR", {minimumFractionDigits: 2})} = R$ {Number(investimentoAlocado).toLocaleString("pt-BR", {minimumFractionDigits: 2})}
                         </p>
-                        {investimentoAlocado > 0 && (
-                          <p className={`text-xs font-bold mt-1 ${roiMensal >= 0 ? "text-blue-400" : "text-red-400"}`}>
-                            ROI mensal: {Number(roiMensal).toFixed(1)}%
-                          </p>
-                        )}
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {mesesComVenda} mês(es) com venda / {totalMeses} mês(es) totais
+                        </p>
                       </div>
                     );
                   })()}
