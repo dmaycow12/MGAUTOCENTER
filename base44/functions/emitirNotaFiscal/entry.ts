@@ -208,8 +208,8 @@ Deno.serve(async (req) => {
     if (tipo === 'NFSe') {
       endpoint = `/nfsen?ref=${ref}`;
 
-      // Só reutiliza o número do rascunho se ele já foi enviado para a SEFAZ (tem spedy_id)
-      if (notaExistente?.numero && notaExistente?.spedy_id) {
+      // Reutiliza o número do rascunho se já tiver um reservado
+      if (notaExistente?.numero) {
         proximoRps = parseInt(notaExistente.numero, 10);
         proximoNfseNumero = proximoRps;
       } else {
