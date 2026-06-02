@@ -194,9 +194,12 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                     <p className="text-xs text-gray-400 mb-1">LUCRO BRUTO</p>
                     <p className={`text-lg font-bold ${lucroBruto >= 0 ? "text-green-400" : "text-red-400"}`}>R$ {Number(lucroBruto).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</p>
                   </div>
-                  <div className={`bg-gray-800/50 border rounded-lg p-4 ${margemLucro >= 0 ? "border-green-500/30" : "border-red-500/30"}`}>
-                    <p className="text-xs text-gray-400 mb-1">MARGEM DE LUCRO (%)</p>
-                    <p className={`text-2xl font-bold ${margemLucro >= 0 ? "text-green-400" : "text-red-400"}`}>{Number(margemLucro).toFixed(1)}%</p>
+                  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                    <p className="text-xs text-gray-400 mb-1">VALOR ALOCADO</p>
+                    <p className="text-2xl font-bold text-white">
+                      R$ {Number((Number(form.estoque_minimo || 0)) * (custoPorUnidade || Number(form.valor_custo || 0))).toLocaleString("pt-BR", {minimumFractionDigits: 2})}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">{Number(form.estoque_minimo || 0)} un × R$ {Number(custoPorUnidade || Number(form.valor_custo || 0)).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</p>
                   </div>
                   {(() => {
                     const estoqueAlocado = Number(form.estoque_minimo || 0);
@@ -235,15 +238,7 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                         <p className={`text-2xl font-bold ${pctMedioMensal >= 0 ? "text-blue-400" : "text-red-400"}`}>
                           {Number(pctMedioMensal).toFixed(1)}%
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Lucro médio: R$ {Number(lucroMedioMensal).toLocaleString("pt-BR", {minimumFractionDigits: 2})}/mês
-                        </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          Base: {estoqueAlocado} un alocadas × R$ {Number(custoMedioUnit).toLocaleString("pt-BR", {minimumFractionDigits: 2})} = R$ {Number(investimentoAlocado).toLocaleString("pt-BR", {minimumFractionDigits: 2})}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          {mesesComVenda} mês(es) com venda / {totalMeses} mês(es) totais
-                        </p>
+
                       </div>
                     );
                   })()}
