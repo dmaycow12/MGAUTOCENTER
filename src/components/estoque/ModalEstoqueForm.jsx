@@ -179,7 +179,7 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                   <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
                     <p className="text-xs text-gray-400 mb-1">CUSTO MÉDIO UNITÁRIO</p>
                     <p className="text-lg font-bold text-white">R$ {Number(custoPorUnidade).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</p>
-                    <p className="text-xs text-gray-500 mt-2">{qtdEntrada} unidade(s) entrada</p>
+
                   </div>
                   <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
                     <p className="text-xs text-gray-400 mb-1">CUSTO TOTAL ENTRADA</p>
@@ -188,7 +188,7 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                   <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
                     <p className="text-xs text-gray-400 mb-1">RECEITA VENDAS</p>
                     <p className="text-lg font-bold text-green-400">R$ {Number(receitaSaidas).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</p>
-                    <p className="text-xs text-gray-500 mt-2">{qtdSaida} unidade(s) saída</p>
+
                   </div>
                   <div className={`bg-gray-800/50 border rounded-lg p-4 ${lucroBruto >= 0 ? "border-green-500/30" : "border-red-500/30"}`}>
                     <p className="text-xs text-gray-400 mb-1">LUCRO BRUTO</p>
@@ -199,7 +199,7 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                     <p className="text-2xl font-bold text-white">
                       R$ {Number((Number(form.estoque_minimo || 0)) * (custoPorUnidade || Number(form.valor_custo || 0))).toLocaleString("pt-BR", {minimumFractionDigits: 2})}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">{Number(form.estoque_minimo || 0)} un × R$ {Number(custoPorUnidade || Number(form.valor_custo || 0)).toLocaleString("pt-BR", {minimumFractionDigits: 2})}</p>
+
                   </div>
                   {(() => {
                     const estoqueAlocado = Number(form.estoque_minimo || 0);
