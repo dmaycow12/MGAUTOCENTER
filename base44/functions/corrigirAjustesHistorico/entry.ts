@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
         return {
           ...h,
           observacao: 'Ajuste',
-          valor_unitario: h.valor_unitario && h.valor_unitario > 0 ? h.valor_unitario : Number(item.valor_custo || 0),
+          valor_unitario: 0,
         };
       }
       return h;
