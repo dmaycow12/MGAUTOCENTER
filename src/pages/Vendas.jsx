@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, FileText, Settings, RefreshCw } from "lucide-react";
+import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, FileText, Settings, RefreshCw, AlertTriangle } from "lucide-react";
 import ModalEmissaoMassa from "@/components/notas/ModalEmissaoMassa";
 import VendaForm from "@/components/vendas/VendaForm";
 import VendaCard from "@/components/vendas/VendaCard";
@@ -283,8 +283,79 @@ export default function Vendas() {
   }, 0);
   const fmtTotal = v => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 
+  // Vendas com peças sem custo (valor_custo === 0 ou undefined)
+  const vendasSemCusto = ordens.filter(o =>
+    (o.pecas || []).some(p => !p.valor_custo || Number(p.valor_custo) === 0)
+  ).sort((a, b) => parseInt(b.numero || 0) - parseInt(a.numero || 0));
+
+  const [showAlertaSemCusto, setShowAlertaSemCusto] = useState(false);
+
   return (
     <div className="space-y-4">
+
+      {/* Alerta: Vendas com peças sem custo */}
+      {vendasSemCusto.length > 0 && (
+        <div className="rounded-xl overflow-hidden" style={{border: "1px solid #854d0e", background: "#1c1003"}}>
+          <button
+            onClick={() => setShowAlertaSemCusto(v => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-yellow-900/20 transition-all"
+          >
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+              <span className="text-sm font-semibold text-yellow-400">
+                {vendasSemCusto.length} VENDA{vendasSemCusto.length > 1 ? "S" : ""} COM PEÇAS SEM CUSTO
+              </span>
+            </div>
+            <ChevronDown className={`w-4 h-4 text-yellow-500 transition-transform ${showAlertaSemCusto ? "rotate-180" : ""}`} />
+          </button>
+          {showAlertaSemCusto && (
+            <div style={{overflowX: "auto"}}>
+              <table className="w-full min-w-[500px]" style={{borderTop: "1px solid #854d0e"}}>
+                <thead>
+                  <tr style={{background: "#2a1800"}}>
+                    <th className="text-left px-4 py-2 text-xs font-semibold text-yellow-600 uppercase">Nº</th>
+                    <th className="text-left px-4 py-2 text-xs font-semibold text-yellow-600 uppercase">Data</th>
+                    <th className="text-left px-4 py-2 text-xs font-semibold text-yellow-600 uppercase">Cliente</th>
+                    <th className="text-left px-4 py-2 text-xs font-semibold text-yellow-600 uppercase">Peças Sem Custo</th>
+                    <th className="text-left px-4 py-2 text-xs font-semibold text-yellow-600 uppercase">Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {vendasSemCusto.map(o => {
+                    const pecasSemCusto = (o.pecas || []).filter(p => !p.valor_custo || Number(p.valor_custo) === 0);
+                    return (
+                      <tr key={o.id} className="border-t" style={{borderColor: "#3d2000"}}>
+                        <td className="px-4 py-2 text-sm font-bold text-yellow-300">#{o.numero}</td>
+                        <td className="px-4 py-2 text-sm text-gray-300">{o.data_entrada ? o.data_entrada.split("-").reverse().join("/") : "—"}</td>
+                        <td className="px-4 py-2 text-sm text-gray-200">{o.cliente_nome || "—"}</td>
+                        <td className="px-4 py-2">
+                          <div className="flex flex-wrap gap-1">
+                            {pecasSemCusto.map((p, i) => (
+                              <span key={i} className="px-2 py-0.5 rounded text-xs" style={{background: "#3d2000", color: "#fbbf24", border: "1px solid #854d0e"}}>
+                                {p.descricao || p.codigo || "Sem nome"}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-4 py-2">
+                          <button
+                            onClick={() => { setEditando(o); setShowForm(true); }}
+                            className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all"
+                            style={{background: "#062C9B", color: "#fff"}}
+                          >
+                            Editar
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Controles — mesmo padrão do Financeiro */}
       <div className="flex flex-col gap-2">
         {/* Linha 1: Nova OS — ocupa linha toda */}
