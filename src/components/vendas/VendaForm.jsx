@@ -703,9 +703,9 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       }
       const finExistentes = await base44.entities.Financeiro.filter({ ordem_venda_id: savedId }, "-created_date", 100);
       const parcelasAtualizadas = [...parcelasNormalizadas];
-      let algumaNova = false;
-      for (let idx = 0; idx < parcelasAtualizadas.length; idx++) {
-        const parcela = parcelasAtualizadas[idx];
+
+      // Processar todas as parcelas em PARALELO
+      await Promise.all(parcelasAtualizadas.map(async (parcela, idx) => {
         const descParcela = `Parcela ${idx+1}/${parcelasAtualizadas.length}`;
         const jaExiste = parcela.financeiro_id
           ? finExistentes.find(f => f.id === parcela.financeiro_id)
@@ -722,7 +722,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
           });
           if (!parcela.financeiro_id) {
             parcelasAtualizadas[idx] = { ...parcela, financeiro_id: jaExiste.id };
-            algumaNova = true;
           }
         } else {
           const statusSelecionado = parcela.financeiro_status || "Pendente";
@@ -739,18 +738,16 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
             cliente_id: formFinal.cliente_id || "",
           });
           parcelasAtualizadas[idx] = { ...parcela, financeiro_id: fin.id, financeiro_status: statusSelecionado };
-          algumaNova = true;
         }
-      }
-      if (algumaNova) {
-        await base44.entities.Vendas.update(savedId, { parcelas_detalhes: parcelasAtualizadas });
-      }
+      }));
+
+      // Salvar parcelas atualizadas e deletar financeiros órfãos em paralelo
       const idsNovos = new Set(parcelasAtualizadas.map(p => p.financeiro_id).filter(Boolean));
-      for (const fin of finExistentes) {
-        if (!idsNovos.has(fin.id)) {
-          await base44.entities.Financeiro.delete(fin.id);
-        }
-      }
+      const finParaDeletar = finExistentes.filter(fin => !idsNovos.has(fin.id));
+      await Promise.all([
+        base44.entities.Vendas.update(savedId, { parcelas_detalhes: parcelasAtualizadas }),
+        ...finParaDeletar.map(fin => base44.entities.Financeiro.delete(fin.id)),
+      ]);
 
       const todasPagas = parcelasAtualizadas.length > 0 && parcelasAtualizadas.every(p => (p.financeiro_status || "Pendente") === "Pago");
       if (todasPagas && formFinal.status !== "Concluído") {
