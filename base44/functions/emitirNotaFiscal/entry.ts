@@ -477,11 +477,16 @@ Deno.serve(async (req) => {
     // ============================================================
     // ENVIA PARA A FOCUS NFE
     // ============================================================
-    const resp = await fetch(`${FOCUSNFE_BASE}${endpoint}`, {
+    const urlCompleta = `${FOCUSNFE_BASE}${endpoint}`;
+    console.log('[FOCUS URL]', urlCompleta);
+    console.log('[FOCUS PAYLOAD]', JSON.stringify(payload).substring(0, 1000));
+    const resp = await fetch(urlCompleta, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': AUTH_HEADER },
       body: JSON.stringify(payload),
     });
+    const respStatusCode = resp.status;
+    console.log('[FOCUS RESPONSE STATUS]', respStatusCode);
 
     const responseText = await resp.text();
     let result;
@@ -490,6 +495,7 @@ Deno.serve(async (req) => {
     }
 
     if (!resp.ok) {
+      console.log('[FOCUS ERROR BODY]', JSON.stringify(result));
       const msgErro = result.erros
         ? result.erros.map(e => e.mensagem).join('; ')
         : (result.mensagem || JSON.stringify(result));
