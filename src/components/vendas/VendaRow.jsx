@@ -16,7 +16,7 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
 
 export const COLUNAS_PADRAO = {
   data: true, cliente: true, contato: false, veiculo: true, placa: true, km: true,
-  status: true, valor: true, nfe: true, nfse: true,
+  status: true, custo: true, valor: true, lucro: true, nfe: true, nfse: true,
 };
 
 const formatTelefone = (val) => {
@@ -561,18 +561,18 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
             ))}
           </div>
         </td>}
-        <td className="px-4 py-3 text-right text-gray-300 text-sm whitespace-nowrap">
+        {colunas.custo && <td className="px-4 py-3 text-right text-gray-300 text-sm whitespace-nowrap">
           {fmtValorInteiro((os.pecas || []).reduce((acc, p) => acc + Number(p.valor_custo || 0) * Number(p.quantidade || 1), 0) + (os.servicos || []).reduce((acc, s) => acc + Number(s.valor_custo || 0) * Number(s.quantidade ?? 1), 0))}
-        </td>
+        </td>}
         {colunas.valor && <td className="px-4 py-3 text-right text-gray-300 text-sm whitespace-nowrap">{fmtValorInteiro(os.valor_total)}</td>}
-        <td className="px-4 py-3 text-right text-gray-300 text-sm whitespace-nowrap">
+        {colunas.lucro && <td className="px-4 py-3 text-right text-gray-300 text-sm whitespace-nowrap">
           {(() => {
             const custo = (os.pecas || []).reduce((acc, p) => acc + Number(p.valor_custo || 0) * Number(p.quantidade || 1), 0) + (os.servicos || []).reduce((acc, s) => acc + Number(s.valor_custo || 0) * Number(s.quantidade ?? 1), 0);
             const lucro = os.valor_total - custo;
             const margem = os.valor_total > 0 ? (lucro / os.valor_total) * 100 : 0;
-            return <div style={{display:'flex',justifyContent:'flex-end',gap:'6px',alignItems:'baseline'}}>{fmtValorInteiro(lucro)}<span style={{fontSize:'11px',color:'#9ca3af'}}>{margem.toFixed(1)}%</span></div>;
+            return <div style={{display:'flex',justifyContent:'flex-end',gap:'6px',alignItems:'baseline'}}>{fmtValorInteiro(lucro)}<span style={{fontSize:'13px',color:'#9ca3af'}}>{margem.toFixed(1)}%</span></div>;
           })()}
-        </td>
+        </td>}
 
         {colunas?.nfe && <td className="px-4 py-3">{(() => {
           const nfe = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
