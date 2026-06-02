@@ -62,7 +62,11 @@ export default function MovimentacoesEstoque({ items, onReload }) {
         m.mov.fornecedor?.toLowerCase().includes(q) ||
         m.mov.observacao?.toLowerCase().includes(q) ||
         m.mov.ordem_venda_numero?.toLowerCase().includes(q);
-      const matchTipo = filtroTipo === "Todos" || normalizarTipo(m.mov.tipo) === filtroTipo.toLowerCase();
+      const tipoNorm = normalizarTipo(m.mov.tipo);
+      const obsNorm = String(m.mov.observacao || "").toLowerCase();
+      const isSaldoOuAjuste = tipoNorm === "ajuste" || obsNorm.includes("saldo inicial") || obsNorm.includes("ajuste");
+      const matchTipo = filtroTipo === "Todos" ||
+        (filtroTipo === "Ajuste" ? isSaldoOuAjuste : (tipoNorm === filtroTipo.toLowerCase() && !isSaldoOuAjuste));
       return matchSearch && matchTipo;
     });
   }, [todasMovimentacoes, search, filtroTipo]);
@@ -246,7 +250,9 @@ export default function MovimentacoesEstoque({ items, onReload }) {
               ) : filtradas.map((m) => {
                 const k = chaveUnica(m);
                 const tipoNorm = normalizarTipo(m.mov.tipo);
-                const cor = TIPO_CORES[tipoNorm] || TIPO_CORES["ajuste"];
+                const obsNorm2 = String(m.mov.observacao || "").toLowerCase();
+                const isAjusteVisual = tipoNorm === "ajuste" || obsNorm2.includes("saldo inicial") || obsNorm2.includes("ajuste");
+                const cor = isAjusteVisual ? TIPO_CORES["ajuste"] : (TIPO_CORES[tipoNorm] || TIPO_CORES["ajuste"]);
                 return (
                   <tr key={k} className={`border-b border-gray-800 transition-all hover:bg-gray-800/40 ${selecionadosSet.has(k) ? "bg-blue-500/5" : ""}`}>
                     <td className="px-4 py-3">
@@ -263,7 +269,7 @@ export default function MovimentacoesEstoque({ items, onReload }) {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-400 text-xs">{fmtData(m.mov.data)}</td>
-                    <td className="px-4 py-3 text-right font-bold" style={{ color: tipoNorm === "saida" ? "#ef4444" : "#00ff00" }}>
+                    <td className="px-4 py-3 text-right font-bold" style={{ color: isAjusteVisual ? "#f97316" : (tipoNorm === "saida" ? "#ef4444" : "#00ff00") }}>
                       {tipoNorm === "saida" ? "-" : "+"}{m.mov.quantidade || 0}
                     </td>
                     <td className="px-4 py-3 text-right text-gray-300 text-xs">{m.mov.valor_unitario ? fmtVal(m.mov.valor_unitario) : "—"}</td>
