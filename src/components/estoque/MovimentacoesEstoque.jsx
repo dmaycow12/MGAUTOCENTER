@@ -87,7 +87,7 @@ export default function MovimentacoesEstoque({ items, onReload }) {
 
   const excluirSelecionados = async () => {
     if (!selecionados.length) return;
-    if (!confirm(`Excluir ${selecionados.length} movimentação(ões)?`)) return;
+    if (!confirm(`Excluir ${selecionados.length} ajuste(s) e corrigir o saldo de cada produto afetado?`)) return;
     setDeletando(true);
 
     const porItem = {};
@@ -101,8 +101,20 @@ export default function MovimentacoesEstoque({ items, onReload }) {
     for (const [itemId, idxSet] of Object.entries(porItem)) {
       const item = items.find(i => i.id === itemId);
       if (!item) continue;
+
+      // Calcula a quantidade total dos ajustes que serão excluídos
+      const qtdAjustesExcluidos = (item.historico || []).reduce((acc, mov, idx) => {
+        if (idxSet.has(idx)) return acc + Number(mov.quantidade || 0);
+        return acc;
+      }, 0);
+
       const novoHistorico = (item.historico || []).filter((_, idx) => !idxSet.has(idx));
-      await base44.entities.Estoque.update(itemId, { historico: novoHistorico });
+      const novaQuantidade = Number(item.quantidade || 0) - qtdAjustesExcluidos;
+
+      await base44.entities.Estoque.update(itemId, {
+        historico: novoHistorico,
+        quantidade: novaQuantidade
+      });
     }
 
     setSelecionados([]);
