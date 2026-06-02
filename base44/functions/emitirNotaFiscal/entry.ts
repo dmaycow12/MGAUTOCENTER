@@ -62,9 +62,12 @@ const salvarPdfPermanente = async (base44, pdfUrl, nota_id) => {
 // Consulta status na Focus NFe
 const consultarFocusNFe = async (ref, tipo) => {
   const epConsulta = tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfe';
-  const resp = await fetch(`${FOCUSNFE_BASE}/${epConsulta}/${ref}?completo=1`, {
+  const url = `${FOCUSNFE_BASE}/${epConsulta}/${ref}?completo=1`;
+  console.log('[CONSULTA FOCUS]', url);
+  const resp = await fetch(url, {
     headers: { 'Authorization': AUTH_HEADER },
   });
+  console.log('[CONSULTA FOCUS STATUS]', resp.status);
   if (!resp.ok) return null;
   return await resp.json();
 };
@@ -135,10 +138,16 @@ Deno.serve(async (req) => {
     // SE JÁ TEM spedy_id salvo, consulta na Focus NFe ANTES de enviar novamente
     if (notaExistente?.spedy_id) {
       console.log('[ANTI-DUPLICATA] Nota tem spedy_id:', notaExistente.spedy_id, '- consultando Focus NFe...');
-      const statusExistente = await consultarFocusNFe(notaExistente.spedy_id, tipo);
+      let statusExistente = null;
+      try {
+        statusExistente = await consultarFocusNFe(notaExistente.spedy_id, tipo);
+        console.log('[ANTI-DUPLICATA] Resposta Focus NFe:', JSON.stringify(statusExistente)?.substring(0, 200));
+      } catch (e) {
+        console.error('[ANTI-DUPLICATA ERROR]', e.message);
+      }
       
       if (statusExistente) {
-        const st = statusExistente.status || '';
+        const st = (statusExistente.status || '').toLowerCase();
         console.log('[ANTI-DUPLICATA] Status na Focus NFe:', st);
         
         if (st === 'autorizado') {
