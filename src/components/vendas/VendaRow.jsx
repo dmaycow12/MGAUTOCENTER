@@ -561,10 +561,10 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
             ))}
           </div>
         </td>}
+        {colunas.valor && <td className="px-4 py-3 text-right text-gray-300 text-sm whitespace-nowrap">{fmtValorInteiro(os.valor_total)}</td>}
         {colunas.custo && <td className="px-4 py-3 text-right text-gray-300 text-sm whitespace-nowrap">
           {fmtValorInteiro((os.pecas || []).reduce((acc, p) => acc + Number(p.valor_custo || 0) * Number(p.quantidade || 1), 0) + (os.servicos || []).reduce((acc, s) => acc + Number(s.valor_custo || 0) * Number(s.quantidade ?? 1), 0))}
         </td>}
-        {colunas.valor && <td className="px-4 py-3 text-right text-gray-300 text-sm whitespace-nowrap">{fmtValorInteiro(os.valor_total)}</td>}
         {colunas.lucro && <td className="px-4 py-3 text-right text-gray-300 text-sm whitespace-nowrap">
           {(() => {
             const custo = (os.pecas || []).reduce((acc, p) => acc + Number(p.valor_custo || 0) * Number(p.quantidade || 1), 0) + (os.servicos || []).reduce((acc, s) => acc + Number(s.valor_custo || 0) * Number(s.quantidade ?? 1), 0);
