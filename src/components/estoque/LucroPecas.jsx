@@ -61,7 +61,6 @@ export default function LucroPecas({ items }) {
        if (!dataStr) return false;
        return dataStr >= periodoRange.inicio && dataStr <= periodoRange.fim;
      });
-     if (saidas.length === 0) continue;
 
       const qtdVendida = saidas.reduce((s, h) => s + Number(h.quantidade || 0), 0);
       const receita = saidas.reduce((s, h) => s + Number(h.valor_unitario || 0) * Number(h.quantidade || 0), 0);
@@ -74,7 +73,7 @@ export default function LucroPecas({ items }) {
 
       resultado.push({ item, qtdVendida, receita, valorAlocado, lucro, margem });
     }
-    return resultado.sort((a, b) => b.lucro - a.lucro);
+    return resultado.sort((a, b) => b.margem - a.margem);
   }, [items, periodoRange]);
 
   const totais = useMemo(() => ({
@@ -169,7 +168,7 @@ export default function LucroPecas({ items }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
           <p className="text-gray-500 text-xs mb-1">Produtos Vendidos</p>
-          <p className="text-white font-bold text-lg">{margemTotal.length}</p>
+          <p className="text-white font-bold text-lg">{margemTotal.filter(d => d.qtdVendida > 0).length}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
           <p className="text-gray-500 text-xs mb-1">Receita Total</p>
@@ -189,7 +188,7 @@ export default function LucroPecas({ items }) {
       </div>
 
       {/* Tabela */}
-      {margemTotal.length === 0 ? (
+      {items.filter(i => i.descricao?.toUpperCase() !== "PRODUTO").length === 0 ? (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
           <TrendingUp className="w-12 h-12 text-gray-600 mx-auto mb-3" />
           <p className="text-gray-400 text-sm">Nenhuma venda registrada neste período</p>
