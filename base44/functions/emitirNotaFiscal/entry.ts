@@ -146,6 +146,15 @@ Deno.serve(async (req) => {
         console.error('[ANTI-DUPLICATA ERROR]', e.message);
       }
       
+      if (!statusExistente) {
+        // 404 — nota nunca chegou na Focus NFe, limpa o spedy_id para reenviar normalmente
+        console.log('[ANTI-DUPLICATA] 404 na Focus NFe - nota não existe lá, vai reenviar com novo ref');
+        if (nota_id) {
+          await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { spedy_id: null, status: 'Rascunho' });
+          notaExistente = { ...notaExistente, spedy_id: null };
+        }
+      }
+
       if (statusExistente) {
         const st = (statusExistente.status || '').toLowerCase();
         console.log('[ANTI-DUPLICATA] Status na Focus NFe:', st);
