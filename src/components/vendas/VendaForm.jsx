@@ -665,6 +665,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     setSaving(true);
 
     try {
+      const t0 = performance.now();
+      const log = (msg) => console.log(`[SALVAR] ${msg} — ${(performance.now()-t0).toFixed(0)}ms`);
       const parcelasNormalizadas = parcelasRef.current.map(p => ({ ...p, valor: Number(p.valor) || 0 }));
       const formaPrincipal = parcelasNormalizadas[0]?.forma_pagamento || form.forma_pagamento || "A Combinar";
       const pecasLimpas = (form.pecas || []).map(({ _new, _custoStr, ...p }, idx) => {
@@ -692,9 +694,10 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       if (!os) {
         const criado = await base44.entities.Vendas.create(formFinal);
         savedId = criado.id;
+        log('Venda criada');
       } else {
-        console.log('SALVANDO PECAS:', JSON.stringify(formFinal.pecas.map(p => ({ codigo: p.codigo, valor_custo: p.valor_custo }))));
         await base44.entities.Vendas.update(os.id, formFinal);
+        log('Venda atualizada');
       }
 
       if (formFinal.status === "Orçamento") {
@@ -702,6 +705,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         return;
       }
       const finExistentes = await base44.entities.Financeiro.filter({ ordem_venda_id: savedId }, "-created_date", 100);
+      log('Financeiro buscado');
       const parcelasAtualizadas = [...parcelasNormalizadas];
 
       // Processar todas as parcelas em PARALELO
@@ -748,6 +752,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         base44.entities.Vendas.update(savedId, { parcelas_detalhes: parcelasAtualizadas }),
         ...finParaDeletar.map(fin => base44.entities.Financeiro.delete(fin.id)),
       ]);
+      log('Parcelas/financeiro salvos');
 
       const todasPagas = parcelasAtualizadas.length > 0 && parcelasAtualizadas.every(p => (p.financeiro_status || "Pendente") === "Pago");
       if (todasPagas && formFinal.status !== "Concluído") {
@@ -756,6 +761,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         await base44.entities.Vendas.update(savedId, { status: "Concluído", data_conclusao: dataConclusao });
       }
 
+      log('Iniciando ajuste estoque');
       // Ajuste de estoque: SEMPRE ao salvar (exceto Orçamento)
       if (savedId) {
         const oldPecas = os?.pecas || [];
@@ -786,6 +792,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         }
       }
 
+      log('FIM - tudo concluído');
       onSave({ ...formFinal, id: savedId });
     } catch (err) {
       alert("Erro ao salvar: " + (err?.message || "Erro desconhecido"));
