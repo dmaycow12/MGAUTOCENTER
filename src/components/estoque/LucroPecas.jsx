@@ -50,17 +50,18 @@ export default function LucroPecas({ items }) {
     : { inicio: `${filtroAno}-${pad(filtroMes)}-01`, fim: `${filtroAno}-${pad(filtroMes)}-31` };
 
   const margemTotal = useMemo(() => {
-    const resultado = [];
-    for (const item of items) {
-      const historico = item.historico || [];
-      const saidas = historico.filter(h => {
-        const tipo = normalizarTipo(h.tipo);
-        if (tipo !== "saida") return false;
-        const dataStr = h.data || "";
-        if (!dataStr) return false;
-        return dataStr >= periodoRange.inicio && dataStr <= periodoRange.fim;
-      });
-      if (saidas.length === 0) continue;
+   const resultado = [];
+   for (const item of items) {
+     if (item.descricao?.toUpperCase() === "PRODUTO") continue;
+     const historico = item.historico || [];
+     const saidas = historico.filter(h => {
+       const tipo = normalizarTipo(h.tipo);
+       if (tipo !== "saida") return false;
+       const dataStr = h.data || "";
+       if (!dataStr) return false;
+       return dataStr >= periodoRange.inicio && dataStr <= periodoRange.fim;
+     });
+     if (saidas.length === 0) continue;
 
       const qtdVendida = saidas.reduce((s, h) => s + Number(h.quantidade || 0), 0);
       const receita = saidas.reduce((s, h) => s + Number(h.valor_unitario || 0) * Number(h.quantidade || 0), 0);
