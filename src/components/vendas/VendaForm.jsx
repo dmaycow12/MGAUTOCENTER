@@ -494,7 +494,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     // Se é uma venda já salva e a peça tem estoque, precisa restaurar o histórico
     if (os?.id && peca.estoque_id && Number(peca.quantidade) > 0) {
       try {
-        await restaurarEstoque([peca], os.id, estoque);
+        await restaurarEstoque([peca], os.id, estoque, true);
       } catch (e) {
         console.warn("Erro ao restaurar estoque na exclusão:", e);
       }
