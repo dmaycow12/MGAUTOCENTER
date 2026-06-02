@@ -294,69 +294,6 @@ export default function Vendas() {
   return (
     <div className="space-y-4">
 
-      {/* Alerta: Vendas com peças sem custo */}
-      {vendasSemCusto.length > 0 && (
-        <div className="rounded-xl overflow-hidden" style={{border: "1px solid #854d0e", background: "#1c1003"}}>
-          <button
-            onClick={() => setShowAlertaSemCusto(v => !v)}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-yellow-900/20 transition-all"
-          >
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-              <span className="text-sm font-semibold text-yellow-400">
-                {vendasSemCusto.length} VENDA{vendasSemCusto.length > 1 ? "S" : ""} COM PEÇAS SEM CUSTO
-              </span>
-            </div>
-            <ChevronDown className={`w-4 h-4 text-yellow-500 transition-transform ${showAlertaSemCusto ? "rotate-180" : ""}`} />
-          </button>
-          {showAlertaSemCusto && (
-            <div style={{overflowX: "auto"}}>
-              <table className="w-full min-w-[500px]" style={{borderTop: "1px solid #854d0e"}}>
-                <thead>
-                  <tr style={{background: "#2a1800"}}>
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-yellow-600 uppercase">Nº</th>
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-yellow-600 uppercase">Data</th>
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-yellow-600 uppercase">Cliente</th>
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-yellow-600 uppercase">Peças Sem Custo</th>
-                    <th className="text-left px-4 py-2 text-xs font-semibold text-yellow-600 uppercase">Ação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {vendasSemCusto.map(o => {
-                    const pecasSemCusto = (o.pecas || []).filter(p => !p.valor_custo || Number(p.valor_custo) === 0);
-                    return (
-                      <tr key={o.id} className="border-t" style={{borderColor: "#3d2000"}}>
-                        <td className="px-4 py-2 text-sm font-bold text-yellow-300">#{o.numero}</td>
-                        <td className="px-4 py-2 text-sm text-gray-300">{o.data_entrada ? o.data_entrada.split("-").reverse().join("/") : "—"}</td>
-                        <td className="px-4 py-2 text-sm text-gray-200">{o.cliente_nome || "—"}</td>
-                        <td className="px-4 py-2">
-                          <div className="flex flex-wrap gap-1">
-                            {pecasSemCusto.map((p, i) => (
-                              <span key={i} className="px-2 py-0.5 rounded text-xs" style={{background: "#3d2000", color: "#fbbf24", border: "1px solid #854d0e"}}>
-                                {p.descricao || p.codigo || "Sem nome"}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-4 py-2">
-                          <button
-                            onClick={() => { setEditando(o); setShowForm(true); }}
-                            className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all"
-                            style={{background: "#062C9B", color: "#fff"}}
-                          >
-                            Editar
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Controles — mesmo padrão do Financeiro */}
       <div className="flex flex-col gap-2">
         {/* Linha 1: Nova OS — ocupa linha toda */}
@@ -570,9 +507,72 @@ export default function Vendas() {
             )}
           </div>
          </div>
-      </div>
+         </div>
 
-      {/* Lista */}
+         {/* Alerta: Vendas com peças sem custo */}
+         {vendasSemCusto.length > 0 && (
+         <div className="rounded-xl overflow-hidden" style={{border: "1px solid #854d0e", background: "#1c1003"}}>
+           <button
+             onClick={() => setShowAlertaSemCusto(v => !v)}
+             className="w-full flex items-center justify-between px-4 py-3 hover:bg-yellow-900/20 transition-all"
+           >
+             <div className="flex items-center gap-2">
+               <AlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+               <span className="text-sm font-semibold text-yellow-400">
+                 {vendasSemCusto.length} VENDA{vendasSemCusto.length > 1 ? "S" : ""} COM PEÇAS SEM CUSTO
+               </span>
+             </div>
+             <ChevronDown className={`w-4 h-4 text-yellow-500 transition-transform ${showAlertaSemCusto ? "rotate-180" : ""}`} />
+           </button>
+           {showAlertaSemCusto && (
+             <div style={{overflowX: "auto"}}>
+               <table className="w-full min-w-[500px]" style={{borderTop: "1px solid #854d0e"}}>
+                 <thead>
+                   <tr style={{background: "#2a1800"}}>
+                     <th className="text-left px-4 py-2 text-xs font-semibold text-yellow-600 uppercase">Nº</th>
+                     <th className="text-left px-4 py-2 text-xs font-semibold text-yellow-600 uppercase">Data</th>
+                     <th className="text-left px-4 py-2 text-xs font-semibold text-yellow-600 uppercase">Cliente</th>
+                     <th className="text-left px-4 py-2 text-xs font-semibold text-yellow-600 uppercase">Peças Sem Custo</th>
+                     <th className="text-left px-4 py-2 text-xs font-semibold text-yellow-600 uppercase">Ação</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   {vendasSemCusto.map(o => {
+                     const pecasSemCusto = (o.pecas || []).filter(p => !p.valor_custo || Number(p.valor_custo) === 0);
+                     return (
+                       <tr key={o.id} className="border-t" style={{borderColor: "#3d2000"}}>
+                         <td className="px-4 py-2 text-sm font-bold text-yellow-300">#{o.numero}</td>
+                         <td className="px-4 py-2 text-sm text-gray-300">{o.data_entrada ? o.data_entrada.split("-").reverse().join("/") : "—"}</td>
+                         <td className="px-4 py-2 text-sm text-gray-200">{o.cliente_nome || "—"}</td>
+                         <td className="px-4 py-2">
+                           <div className="flex flex-wrap gap-1">
+                             {pecasSemCusto.map((p, i) => (
+                               <span key={i} className="px-2 py-0.5 rounded text-xs" style={{background: "#3d2000", color: "#fbbf24", border: "1px solid #854d0e"}}>
+                                 {p.descricao || p.codigo || "Sem nome"}
+                               </span>
+                             ))}
+                           </div>
+                         </td>
+                         <td className="px-4 py-2">
+                           <button
+                             onClick={() => { setEditando(o); setShowForm(true); }}
+                             className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all"
+                             style={{background: "#062C9B", color: "#fff"}}
+                           >
+                             Editar
+                           </button>
+                         </td>
+                       </tr>
+                     );
+                   })}
+                 </tbody>
+               </table>
+             </div>
+           )}
+         </div>
+         )}
+
+         {/* Lista */}
       {filtradas.length === 0 ? (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
           <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
