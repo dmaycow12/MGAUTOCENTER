@@ -766,8 +766,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       if (savedId) {
         const oldPecas = os?.pecas || [];
         const newPecas = formFinal.pecas || [];
-        // Busca o estoque UMA VEZ e reutiliza em todas as operações
-        const estoqueAtual = await base44.entities.Estoque.list("-created_date", 1000);
+        // Reutiliza o estoque já carregado em memória — evita nova chamada ao banco
+        const estoqueAtual = estoque;
 
         if (!os) {
           // Nova venda: reduzir todas as peças
