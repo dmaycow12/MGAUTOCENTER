@@ -285,6 +285,7 @@ export default function Vendas() {
 
   // Vendas com peças sem custo (valor_custo === 0 ou undefined)
   const vendasSemCusto = ordens.filter(o =>
+    o.status !== "Orçamento" &&
     (o.pecas || []).some(p => !p.valor_custo || Number(p.valor_custo) === 0)
   ).sort((a, b) => parseInt(b.numero || 0) - parseInt(a.numero || 0));
 
