@@ -91,17 +91,16 @@ export async function restaurarEstoque(pecas, vendaId = null, estoqueList = null
       let qtdRestaurada = 0;
       
       if (removerUmaOnly) {
-        // Remove apenas UMA saída por cada peça (para exclusão individual)
+        // Remove apenas UMA saída por peça (apaga completamente do histórico)
         for (const peca of pecasItem) {
-          const qtdPeca = Number(peca.quantidade || 0);
           let removeuUma = false;
           historico = historico.filter(m => {
-            if (removeuUma) return true;
+            if (removeuUma) return true; // Já removeu, mantém resto
             const isSaidaVenda = m.tipo === "saída" && m.ordem_venda_id === vendaId;
             if (isSaidaVenda) {
               removeuUma = true;
               qtdRestaurada += Number(m.quantidade || 0);
-              return false; // Remove este
+              return false; // Remove completamente este registro
             }
             return true;
           });
