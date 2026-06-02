@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { Pencil, Printer, Trash2, AlertTriangle } from "lucide-react";
 import { gerarHTMLImpressao } from "./vendaImpressao";
-import { reduzirEstoque, restaurarEstoque, excluirLancamentosVenda } from "./estoqueUtils";
+import { reduzirEstoque, restaurarEstoque, excluirLancamentosVenda, limparHistoricoVenda } from "./estoqueUtils";
 
 function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
   return (
@@ -363,7 +363,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
   const confirmarExcluir = async () => {
     try {
       await excluirLancamentosVenda(os.id);
-      await restaurarEstoque(os.pecas, os.id);
+      await limparHistoricoVenda(os.id);
       await base44.entities.Vendas.delete(os.id);
     } catch (err) {
       console.error("Erro ao excluir venda:", err);

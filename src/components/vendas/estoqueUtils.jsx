@@ -136,3 +136,24 @@ export async function excluirLancamentosVenda(vendaId) {
   const vinculados = financeiros.filter(f => f.ordem_venda_id === vendaId || f.ordem_servico_id === vendaId);
   for (const f of vinculados) await base44.entities.Financeiro.delete(f.id);
 }
+
+export async function limparHistoricoVenda(vendaId) {
+  const estoque = await base44.entities.Estoque.list("-created_date", 1000);
+  const updates = [];
+  
+  for (const item of estoque) {
+    const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
+    const temSaidaVenda = historicoAtual.some(m => m.tipo === "saída" && m.ordem_venda_id === vendaId);
+    
+    if (temSaidaVenda) {
+      const saidasVenda = historicoAtual.filter(m => m.tipo === "saída" && m.ordem_venda_id === vendaId);
+      const qtdRestaurada = saidasVenda.reduce((s, m) => s + Number(m.quantidade || 0), 0);
+      const historicoSemVenda = historicoAtual.filter(m => !(m.tipo === "saída" && m.ordem_venda_id === vendaId));
+      const novaQtd = Number(item.quantidade || 0) + qtdRestaurada;
+      
+      updates.push(base44.entities.Estoque.update(item.id, { quantidade: novaQtd, historico: historicoSemVenda }));
+    }
+  }
+  
+  await Promise.all(updates);
+}
