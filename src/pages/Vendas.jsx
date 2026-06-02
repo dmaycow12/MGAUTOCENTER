@@ -598,6 +598,7 @@ export default function Vendas() {
                   {colunasVisiveis.placa && filtroTipo.includes("patio") && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">Placa</th>}
                   {colunasVisiveis.km && filtroTipo.includes("patio") && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">KM</th>}
                   <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Status</th>
+                  <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Custo</th>
                   {colunasVisiveis.valor && <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Valor</th>}
                   {colunasVisiveis.nfe && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">NFe/NFCe</th>}
                   {colunasVisiveis.nfse && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">NFSe</th>}
