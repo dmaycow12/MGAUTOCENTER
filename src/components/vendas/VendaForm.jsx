@@ -441,6 +441,27 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       return updated;
     });
 
+    // Se é uma venda já salva e houve mudança de quantidade, sincronizar estoque
+    if (os?.id && field === "quantidade" && pecaAntiga.estoque_id) {
+      const qtdAnterior = Number(pecaAntiga.quantidade || 0);
+      const qtdNova = Number(valFinal) || 0;
+      if (qtdAnterior !== qtdNova && estoque.length > 0) {
+        try {
+          if (qtdNova < qtdAnterior) {
+            // Reduzido: restaura a diferença
+            const diff = { ...pecaAntiga, quantidade: qtdAnterior - qtdNova };
+            await restaurarEstoque([diff], os.id, estoque);
+          } else if (qtdNova > qtdAnterior) {
+            // Aumentado: reduz a diferença adicional
+            const diff = { ...pecaAntiga, quantidade: qtdNova - qtdAnterior };
+            await reduzirEstoque([diff], { id: os.id, numero: os.numero }, estoque);
+          }
+        } catch (e) {
+          console.warn("Erro ao sincronizar quantidade no estoque:", e);
+        }
+      }
+    }
+
     if ((field === "codigo" || field === "descricao") && val.length > 0) {
       setProdutoSugestoes({ idx: i, lista: estoque.filter(e =>
         e.codigo?.toLowerCase().includes(val.toLowerCase()) || e.descricao?.toLowerCase().includes(val.toLowerCase())
@@ -470,10 +491,17 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const removePeca = async (i) => {
     const peca = form.pecas[i];
+    // Se é uma venda já salva e a peça tem estoque, precisa restaurar o histórico
+    if (os?.id && peca.estoque_id && Number(peca.quantidade) > 0) {
+      try {
+        await restaurarEstoque([peca], os.id, estoque);
+      } catch (e) {
+        console.warn("Erro ao restaurar estoque na exclusão:", e);
+      }
+    }
     const novos = form.pecas.filter((_, idx) => idx !== i);
     const calc = recalcular(form.servicos, novos, form.desconto);
     setForm(f => ({ ...f, pecas: novos, ...calc }));
-
   };
 
   const onDragEnd = (result, tipo) => {
