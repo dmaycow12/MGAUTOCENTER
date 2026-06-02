@@ -251,6 +251,8 @@ Deno.serve(async (req) => {
         console.log(`[NFSe] Próximo DPS = Próximo NFS-e: ${proximoRps} (era: ${ultimoDpsConfig})`);
       }
 
+      console.log('[NFSe-CONFIG] CNPJ_EMITENTE:', CNPJ_EMITENTE, '| IM:', INSCRICAO_MUNICIPAL, '| COD_MUN:', COD_MUNICIPIO);
+
       const valorServico = Number(valor_total) || 1.0;
       const valorIss = parseFloat((valorServico * 0.025).toFixed(2));
       const discriminacao = (items && items.length > 0)
