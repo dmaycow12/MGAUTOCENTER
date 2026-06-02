@@ -560,6 +560,15 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
           {fmtValor((os.pecas || []).reduce((acc, p) => acc + Number(p.valor_custo || 0) * Number(p.quantidade || 1), 0) + (os.servicos || []).reduce((acc, s) => acc + Number(s.valor_custo || 0) * Number(s.quantidade ?? 1), 0))}
         </td>
         {colunas.valor && <td className="px-4 py-3 text-right font-bold whitespace-nowrap" style={{color:'#00ff00'}}>{fmtValor(os.valor_total)}</td>}
+        <td className="px-4 py-3 text-right font-bold whitespace-nowrap">
+          {(() => {
+            const custo = (os.pecas || []).reduce((acc, p) => acc + Number(p.valor_custo || 0) * Number(p.quantidade || 1), 0) + (os.servicos || []).reduce((acc, s) => acc + Number(s.valor_custo || 0) * Number(s.quantidade ?? 1), 0);
+            const lucro = os.valor_total - custo;
+            const margem = os.valor_total > 0 ? (lucro / os.valor_total) * 100 : 0;
+            const cor = lucro >= 0 ? '#4ade80' : '#ff6b6b';
+            return <div style={{color: cor}}>{fmtValor(lucro)}<br /><span style={{fontSize:'11px',color:'#9ca3af'}}>{margem.toFixed(1)}%</span></div>;
+          })()}
+        </td>
 
         {colunas?.nfe && <td className="px-4 py-3">{(() => {
           const nfe = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
