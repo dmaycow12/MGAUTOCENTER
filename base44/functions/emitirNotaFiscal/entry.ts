@@ -208,9 +208,14 @@ Deno.serve(async (req) => {
     if (tipo === 'NFSe') {
       endpoint = `/nfsen?ref=${ref}`;
 
-      // Reutiliza o número do rascunho SE for um número válido (não um ref/timestamp)
+      // Reutiliza o número do rascunho SE for um número válido (1-5 dígitos, sem timestamp)
       const numeroRascunho = notaExistente?.numero;
-      const numeroValido = numeroRascunho && /^\d{1,6}$/.test(String(numeroRascunho).trim());
+      const numeroValido = numeroRascunho && /^\d{1,5}$/.test(String(numeroRascunho).trim()) && parseInt(numeroRascunho, 10) < 99999;
+      if (!numeroValido && numeroRascunho && nota_id) {
+        // Limpa número inválido do rascunho para forçar recálculo
+        await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { numero: null });
+        if (notaExistente) notaExistente = { ...notaExistente, numero: null };
+      }
       if (numeroValido) {
         proximoRps = parseInt(notaExistente.numero, 10);
         proximoNfseNumero = proximoRps;
