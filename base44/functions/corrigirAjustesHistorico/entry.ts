@@ -16,13 +16,17 @@ Deno.serve(async (req) => {
     let modificado = false;
 
     const novoHist = hist.map(h => {
-      if ((h.observacao || '').toLowerCase().includes('regulariza')) {
-        modificado = true;
-        return {
-          ...h,
-          observacao: 'Ajuste',
-          valor_unitario: 0,
-        };
+      const obs = (h.observacao || '').toLowerCase();
+      if (obs.includes('regulariza') || obs === 'ajuste') {
+        const needsFix = obs.includes('regulariza') || (h.valor_unitario && h.valor_unitario !== 0);
+        if (needsFix) {
+          modificado = true;
+          return {
+            ...h,
+            observacao: 'Ajuste',
+            valor_unitario: 0,
+          };
+        }
       }
       return h;
     });
@@ -30,6 +34,7 @@ Deno.serve(async (req) => {
     if (modificado) {
       await base44.asServiceRole.entities.Estoque.update(item.id, { historico: novoHist });
       atualizados++;
+      await new Promise(r => setTimeout(r, 150));
     }
   }
 
