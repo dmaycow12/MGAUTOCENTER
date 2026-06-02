@@ -409,9 +409,9 @@ export default function Vendas() {
 
         {/* Cards de totais - linha 1 */}
         <div className="grid grid-cols-4 gap-2">
-          <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
+          <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0a2e1b", border:"1px solid #1e5f3a"}}>
             <span className="text-xs font-semibold text-gray-400 tracking-wide">VENDAS</span>
-            <span className="text-sm font-bold text-blue-400">{ordensComFiltrosBase.length}</span>
+            <span className="text-sm font-bold text-green-400">{ordensComFiltrosBase.length}</span>
           </div>
           {[
             { label: "PÁTIO", value: totalPatio },
@@ -426,9 +426,9 @@ export default function Vendas() {
         </div>
         {/* Cards de totais - linha 2 */}
         <div className="grid grid-cols-4 gap-2">
-          <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
+          <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0a2e1b", border:"1px solid #1e5f3a"}}>
             <span className="text-xs font-semibold text-gray-400 tracking-wide">CUSTO</span>
-            <span className="text-sm font-bold" style={{color:"#cc0000"}}>{fmtTotal(totalCusto)}</span>
+            <span className="text-sm font-bold text-green-400">{fmtTotal(totalCusto)}</span>
           </div>
           <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
             <span className="text-xs font-semibold text-gray-400 tracking-wide">LUCRO PEÇAS</span>
