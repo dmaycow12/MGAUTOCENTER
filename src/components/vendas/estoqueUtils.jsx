@@ -114,22 +114,43 @@ export async function excluirLancamentosVenda(vendaId) {
 }
 
 export async function limparHistoricoVenda(vendaId) {
-  const estoque = await base44.entities.Estoque.list("-created_date", 1000);
-  const updates = [];
-  
-  for (const item of estoque) {
-    const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
-    const temSaidaVenda = historicoAtual.some(m => m.tipo === "saída" && m.ordem_venda_id === vendaId);
-    
-    if (temSaidaVenda) {
-      const saidasVenda = historicoAtual.filter(m => m.tipo === "saída" && m.ordem_venda_id === vendaId);
-      const qtdRestaurada = saidasVenda.reduce((s, m) => s + Number(m.quantidade || 0), 0);
-      const historicoSemVenda = historicoAtual.filter(m => !(m.tipo === "saída" && m.ordem_venda_id === vendaId));
-      const novaQtd = Number(item.quantidade || 0) + qtdRestaurada;
-      
-      updates.push(base44.entities.Estoque.update(item.id, { quantidade: novaQtd, historico: historicoSemVenda }));
-    }
-  }
-  
-  await Promise.all(updates);
+   const estoque = await base44.entities.Estoque.list("-created_date", 1000);
+   const updates = [];
+
+   for (const item of estoque) {
+     const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
+     const temSaidaVenda = historicoAtual.some(m => m.tipo === "saída" && m.ordem_venda_id === vendaId);
+
+     if (temSaidaVenda) {
+       const saidasVenda = historicoAtual.filter(m => m.tipo === "saída" && m.ordem_venda_id === vendaId);
+       const qtdRestaurada = saidasVenda.reduce((s, m) => s + Number(m.quantidade || 0), 0);
+       const historicoSemVenda = historicoAtual.filter(m => !(m.tipo === "saída" && m.ordem_venda_id === vendaId));
+       const novaQtd = Number(item.quantidade || 0) + qtdRestaurada;
+
+       updates.push(base44.entities.Estoque.update(item.id, { quantidade: novaQtd, historico: historicoSemVenda }));
+     }
+   }
+
+   await Promise.all(updates);
+}
+
+export async function restaurarEstoqueCompletoPeca(peca, vendaId, estoqueList = null) {
+   // Restaura e DELETA completamente a movimentação de uma peça específica
+   if (!peca || !vendaId) return;
+   const lista = estoqueList || await base44.entities.Estoque.list("-created_date", 1000);
+   const item = encontrarItemEstoque(lista, peca);
+   if (!item) return;
+
+   const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
+   // Remove TODAS as movimentações (saída) desta peça nesta venda
+   const saidasVenda = historicoAtual.filter(m => 
+     m.tipo === "saída" && m.ordem_venda_id === vendaId
+   );
+   const qtdNaHistoria = saidasVenda.reduce((s, m) => s + Number(m.quantidade || 0), 0);
+
+   if (qtdNaHistoria > 0) {
+     const historico = historicoAtual.filter(m => !(m.tipo === "saída" && m.ordem_venda_id === vendaId));
+     const novaQtd = Number(item.quantidade || 0) + qtdNaHistoria;
+     await base44.entities.Estoque.update(item.id, { quantidade: novaQtd, historico });
+   }
 }

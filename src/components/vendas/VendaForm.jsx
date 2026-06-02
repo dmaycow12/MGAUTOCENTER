@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { X, Plus, Trash2, AlertTriangle, Camera, Image, GripVertical } from "lucide-react";
 import SearchableSelect from "@/components/notas/SearchableSelect";
-import { reduzirEstoque, restaurarEstoque } from "./estoqueUtils";
+import { reduzirEstoque, restaurarEstoque, restaurarEstoqueCompletoPeca } from "./estoqueUtils";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 const defaultForm = () => ({
@@ -490,19 +490,19 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const removePeca = async (i) => {
-    const peca = form.pecas[i];
-    // Se é uma venda já salva e a peça tem estoque, limpa completamente do histórico
-    if (os?.id && peca.estoque_id && Number(peca.quantidade) > 0) {
-      try {
-        await restaurarEstoque([peca], os.id, estoque);
-      } catch (e) {
-        console.warn("Erro ao restaurar estoque na exclusão:", e);
-      }
-    }
-    const novos = form.pecas.filter((_, idx) => idx !== i);
-    const calc = recalcular(form.servicos, novos, form.desconto);
-    setForm(f => ({ ...f, pecas: novos, ...calc }));
-  };
+     const peca = form.pecas[i];
+     // Se é uma venda já salva e a peça tem estoque, deleta completamente a movimentação
+     if (os?.id && peca.estoque_id && Number(peca.quantidade) > 0) {
+       try {
+         await restaurarEstoqueCompletoPeca(peca, os.id, estoque);
+       } catch (e) {
+         console.warn("Erro ao restaurar estoque na exclusão:", e);
+       }
+     }
+     const novos = form.pecas.filter((_, idx) => idx !== i);
+     const calc = recalcular(form.servicos, novos, form.desconto);
+     setForm(f => ({ ...f, pecas: novos, ...calc }));
+   };
 
   const onDragEnd = (result, tipo) => {
     if (!result.destination) return;
