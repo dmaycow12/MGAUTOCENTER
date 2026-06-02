@@ -99,25 +99,33 @@ export default function MovimentacoesEstoque({ items, onReload }) {
     }
 
     for (const [itemId, idxSet] of Object.entries(porItem)) {
-      const item = items.find(i => i.id === itemId);
-      if (!item) continue;
+       const item = items.find(i => i.id === itemId);
+       if (!item) continue;
 
-      // Calcula quanto de quantidade será removida pelos ajustes excluídos
-      let qtdRemovida = 0;
-      (item.historico || []).forEach((mov, idx) => {
-        if (idxSet.has(idx)) {
-          qtdRemovida += Number(mov.quantidade || 0);
-        }
-      });
+       // Calcula impacto na quantidade (entrada soma, saída subtrai)
+       let qtdImpacto = 0;
+       (item.historico || []).forEach((mov, idx) => {
+         if (idxSet.has(idx)) {
+           const tipo = normalizarTipo(mov.tipo);
+           const qtd = Number(mov.quantidade || 0);
+           // Se é entrada/ajuste positivo: subtrair
+           // Se é saída: somar (porque ao deletar saída, volta pro estoque)
+           if (tipo === "saida") {
+             qtdImpacto += qtd;
+           } else {
+             qtdImpacto -= qtd;
+           }
+         }
+       });
 
-      const novoHistorico = (item.historico || []).filter((_, idx) => !idxSet.has(idx));
-      const novaQtd = Number(item.quantidade || 0) - qtdRemovida;
+       const novoHistorico = (item.historico || []).filter((_, idx) => !idxSet.has(idx));
+       const novaQtd = Number(item.quantidade || 0) + qtdImpacto;
 
-      await base44.entities.Estoque.update(itemId, {
-        historico: novoHistorico,
-        quantidade: novaQtd,
-      });
-    }
+       await base44.entities.Estoque.update(itemId, {
+         historico: novoHistorico,
+         quantidade: novaQtd,
+       });
+     }
 
     setSelecionados([]);
     setDeletando(false);
