@@ -208,8 +208,10 @@ Deno.serve(async (req) => {
     if (tipo === 'NFSe') {
       endpoint = `/nfsen?ref=${ref}`;
 
-      // Reutiliza o número do rascunho se já tiver um reservado
-      if (notaExistente?.numero) {
+      // Reutiliza o número do rascunho SE for um número válido (não um ref/timestamp)
+      const numeroRascunho = notaExistente?.numero;
+      const numeroValido = numeroRascunho && /^\d{1,6}$/.test(String(numeroRascunho).trim());
+      if (numeroValido) {
         proximoRps = parseInt(notaExistente.numero, 10);
         proximoNfseNumero = proximoRps;
       } else {
