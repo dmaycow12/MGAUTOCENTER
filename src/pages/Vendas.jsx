@@ -551,7 +551,7 @@ export default function Vendas() {
                     { key: 'km', label: 'KM' },
                     { key: 'custo', label: 'Custo' },
                     { key: 'valor', label: 'Valor' },
-                    { key: 'lucro', label: 'Lucro' },
+                    { key: 'lucro', label: 'Lucro B.' },
                     { key: 'nfe', label: 'NFe/NFCe' },
                     { key: 'nfse', label: 'NFSe' },
                   ].map(({ key, label }) => (
@@ -602,7 +602,7 @@ export default function Vendas() {
                   <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Status</th>
                   {colunasVisiveis.custo && <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Custo</th>}
                   {colunasVisiveis.valor && <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Valor</th>}
-                  {colunasVisiveis.lucro && <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Lucro</th>}
+                  {colunasVisiveis.lucro && <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Lucro B.</th>}
                   {colunasVisiveis.nfe && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">NFe/NFCe</th>}
                   {colunasVisiveis.nfse && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">NFSe</th>}
                   <th className="px-4 py-2.5 w-32"></th>
