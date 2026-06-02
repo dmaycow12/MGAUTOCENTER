@@ -1511,8 +1511,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         </div>
       </div>
     )}
-
-
     </>
   );
 }
