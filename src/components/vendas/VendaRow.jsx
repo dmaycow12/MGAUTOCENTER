@@ -153,7 +153,7 @@ function fmtValor(v) {
 }
 
 function fmtValorInteiro(v) {
-  return Math.round(Number(v || 0)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return Math.round(Number(v || 0)).toLocaleString("pt-BR");
 }
 
 function PagamentoSelect({ os, onRefresh }) {
