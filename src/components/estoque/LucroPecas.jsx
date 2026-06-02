@@ -64,22 +64,25 @@ export default function LucroPecas({ items }) {
 
       const qtdVendida = saidas.reduce((s, h) => s + Number(h.quantidade || 0), 0);
       const receita = saidas.reduce((s, h) => s + Number(h.valor_unitario || 0) * Number(h.quantidade || 0), 0);
-      const custo = Number(item.valor_custo || 0) * qtdVendida;
-      const lucro = receita - custo;
-      const margem = receita > 0 ? (lucro / receita) * 100 : 0;
+      const custoUnitario = Number(item.valor_custo || 0);
+      const estoqueAlocado = Number(item.estoque_minimo || 0);
+      const valorAlocado = estoqueAlocado * custoUnitario;
+      const custoVendido = custoUnitario * qtdVendida;
+      const lucro = receita - custoVendido;
+      const margem = valorAlocado > 0 ? (lucro / valorAlocado) * 100 : 0;
 
-      resultado.push({ item, qtdVendida, receita, custo, lucro, margem });
+      resultado.push({ item, qtdVendida, receita, valorAlocado, lucro, margem });
     }
     return resultado.sort((a, b) => b.lucro - a.lucro);
   }, [items, periodoRange]);
 
   const totais = useMemo(() => ({
     receita: margemTotal.reduce((s, d) => s + d.receita, 0),
-    custo: margemTotal.reduce((s, d) => s + d.custo, 0),
+    valorAlocado: margemTotal.reduce((s, d) => s + d.valorAlocado, 0),
     lucro: margemTotal.reduce((s, d) => s + d.lucro, 0),
   }), [margemTotal]);
 
-  const margemTotalPct = totais.receita > 0 ? (totais.lucro / totais.receita) * 100 : 0;
+  const margemTotalPct = totais.valorAlocado > 0 ? (totais.lucro / totais.valorAlocado) * 100 : 0;
 
   return (
     <div className="space-y-4">
@@ -172,8 +175,8 @@ export default function LucroPecas({ items }) {
           <p className="text-green-400 font-bold">R$ {fmt(totais.receita)}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-          <p className="text-gray-500 text-xs mb-1">Custo Total</p>
-          <p className="text-red-400 font-bold">R$ {fmt(totais.custo)}</p>
+          <p className="text-gray-500 text-xs mb-1">Valor Alocado Total</p>
+          <p className="text-red-400 font-bold">R$ {fmt(totais.valorAlocado)}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
           <p className="text-gray-500 text-xs mb-1">Lucro Bruto</p>
@@ -200,13 +203,13 @@ export default function LucroPecas({ items }) {
                   <th className="px-4 py-3">Produto</th>
                   <th className="px-4 py-3 text-center">Qtd Vendida</th>
                   <th className="px-4 py-3 text-right">Receita</th>
-                  <th className="px-4 py-3 text-right">Custo</th>
+                  <th className="px-4 py-3 text-right">Valor Alocado</th>
                   <th className="px-4 py-3 text-right">Lucro</th>
                   <th className="px-4 py-3 text-right">Margem</th>
                 </tr>
               </thead>
               <tbody>
-                {margemTotal.map(({ item, qtdVendida, receita, custo, lucro, margem }, idx) => (
+                {margemTotal.map(({ item, qtdVendida, receita, valorAlocado, lucro, margem }, idx) => (
                   <tr key={item.id} className={`border-b border-gray-800 transition-all hover:bg-gray-800/40 ${idx % 2 === 0 ? "" : "bg-gray-900/30"}`}>
                     <td className="px-4 py-3 text-gray-600 text-xs">{idx + 1}</td>
                     <td className="px-4 py-3">
@@ -215,7 +218,7 @@ export default function LucroPecas({ items }) {
                     </td>
                     <td className="px-4 py-3 text-center text-white font-semibold">{qtdVendida}</td>
                     <td className="px-4 py-3 text-right text-green-400 font-medium">R$ {fmt(receita)}</td>
-                    <td className="px-4 py-3 text-right text-red-400">R$ {fmt(custo)}</td>
+                    <td className="px-4 py-3 text-right text-red-400">R$ {fmt(valorAlocado)}</td>
                     <td className="px-4 py-3 text-right font-bold" style={{color: lucro >= 0 ? "#00ff00" : "#ef4444"}}>
                       <span className="flex items-center justify-end gap-1">
                         {lucro >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
