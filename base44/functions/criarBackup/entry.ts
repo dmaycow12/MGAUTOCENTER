@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 // Entidades atuais do app
 const ENTIDADES = ["Cadastro", "Estoque", "NotaFiscal", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
@@ -7,8 +7,8 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    const authed = await base44.auth.isAuthenticated();
-    if (!authed) return Response.json({ error: 'Autenticação necessária' }, { status: 401 });
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Autenticação necessária' }, { status: 401 });
 
     const backup = {};
 

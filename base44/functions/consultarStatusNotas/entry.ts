@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
 const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
@@ -17,12 +17,19 @@ const salvarPdfPermanente = async (base44, pdfUrl, nota_id) => {
     const resp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER } });
     if (!resp.ok) return null;
     const blob = await resp.blob();
+    
+    // Valida se é PDF válido (%PDF header)
     const buffer = await blob.arrayBuffer();
     const header = new Uint8Array(buffer, 0, 4);
-    const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
-    if (!isPdfValid) return null;
+    const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46; // %PDF
+    if (!isPdfValid) {
+      console.warn('[PDF INVALIDO]', nota_id, '- não começa com %PDF');
+      return null;
+    }
+    
     const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
     const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+    console.log('[PDF PERMANENTE]', nota_id, '->', file_url);
     return file_url;
   } catch (e) {
     console.error('[PDF ERRO]', e.message);
@@ -33,19 +40,19 @@ const salvarPdfPermanente = async (base44, pdfUrl, nota_id) => {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const authed = await base44.auth.isAuthenticated();
-    if (!authed) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
     const body = await req.json().catch(() => ({}));
 
+    // Modo: consulta específica (nota_id + ref) OU varredura geral (Processando + Aguardando)
     let notasParaConsultar = [];
 
     if (body.nota_id && body.ref) {
-      const lista = await base44.asServiceRole.entities.NotaFiscal.filter({ id: body.nota_id });
-      if (lista[0]) notasParaConsultar = [lista[0]];
-    } else if (body.nota_id) {
+      // Consulta específica de uma nota
       const lista = await base44.asServiceRole.entities.NotaFiscal.filter({ id: body.nota_id });
       if (lista[0]) notasParaConsultar = [lista[0]];
     } else {
+      // Varredura: busca todas em Processando ou Aguardando Sefin Nacional
       const [processando, aguardando] = await Promise.all([
         base44.asServiceRole.entities.NotaFiscal.filter({ status: 'Processando' }),
         base44.asServiceRole.entities.NotaFiscal.filter({ status: 'Aguardando Sefin Nacional' }),
@@ -67,6 +74,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      // Endpoint de consulta por tipo
       const ep = tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfe';
       const consultaResp = await fetch(`${FOCUSNFE_BASE}/${ep}/${ref}?completo=1`, {
         headers: { 'Authorization': AUTH_HEADER },
@@ -81,9 +89,9 @@ Deno.serve(async (req) => {
       const statusFocus = result.status || '';
       console.log('[STATUS]', ref, '->', statusFocus);
 
-      let statusInterno = nota.status;
+      let statusInterno = nota.status; // mantém se não definitivo
       if (statusFocus === 'autorizado') statusInterno = 'Emitida';
-      else if (['erro_autorizacao', 'rejeitado', 'denegado'].includes(statusFocus)) statusInterno = 'Erro';
+      else if (['erro_autorizacao', 'rejeitado', 'denegado', 'cancelado'].includes(statusFocus)) statusInterno = 'Erro';
       else if (statusFocus === 'cancelado') statusInterno = 'Cancelada';
 
       if (statusInterno !== nota.status) {
@@ -93,6 +101,7 @@ Deno.serve(async (req) => {
           const rawPdf = result.url_danfse || result.caminho_pdf_nfsen || result.caminho_pdf_nfse || result.caminho_danfe || '';
           const pdfUrlFocus = normalizarUrl(rawPdf);
           if (pdfUrlFocus) {
+            // Tenta salvar permanentemente
             const pdfSalvo = await salvarPdfPermanente(base44, pdfUrlFocus, nota.id);
             pdfUrlFinal = pdfSalvo || pdfUrlFocus;
           }

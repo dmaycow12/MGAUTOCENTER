@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
 const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
@@ -43,8 +43,8 @@ const converterHtmlParaPdf = async (htmlContent) => {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const authed = await base44.auth.isAuthenticated();
-    if (!authed) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
     const db = base44.asServiceRole;
     const body = await req.json();
     const { nota_id } = body;
@@ -57,6 +57,17 @@ Deno.serve(async (req) => {
 
     if (nota.tipo !== 'NFCe') {
       return Response.json({ sucesso: false, erro: 'Este endpoint é apenas para NFCe.' });
+    }
+
+    // Se já tem PDF salvo permanente e válido (não HTML, não o arquivo genérico nota_nova.pdf), retorna direto
+    const pdfJaSalvo = nota.pdf_url &&
+      !nota.pdf_url.endsWith('.html') &&
+      !nota.pdf_url.includes('/notas_fiscais_consumidor/') &&
+      !nota.pdf_url.includes('nota_nova.pdf') &&
+      !nota.pdf_url.includes('focusnfe') &&
+      !nota.pdf_url.includes('amazonaws');
+    if (pdfJaSalvo) {
+      return Response.json({ sucesso: true, pdf_url: nota.pdf_url });
     }
 
     // Determina a URL do HTML da DANFE

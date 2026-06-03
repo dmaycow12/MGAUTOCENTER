@@ -32,26 +32,40 @@ export default function BackupManager() {
         totalRegistros += dados.length;
       }
 
-      // ── NotaFiscal: processa em lotes paralelos ──
+      // ── NotaFiscal: uma pasta por nota com JSON + XML real ──
       const notas = backup["NotaFiscal"] || [];
+      setProgresso(`Exportando ${notas.length} notas fiscais com XMLs...`);
       const pastaNotas = zip.folder("NotaFiscal");
-      const indice = [];
-      const LOTE = 20;
 
-      const processarNota = async (nota) => {
+      // índice de todas as notas (sem campos de URL interna)
+      const indice = [];
+
+      for (let i = 0; i < notas.length; i++) {
+        const nota = notas[i];
         const nome = `${nota.tipo || "NF"}-${nota.numero || nota.id}`;
+
+        // Clonar nota removendo campos de URL interna do banco (serão substituídos pelos arquivos físicos)
         const notaExport = { ...nota };
+        // Manter xml_content inline se já existir (texto XML diretamente no campo)
+        // mas apagar xml_url (é link do banco, não tem valor fora dele)
         delete notaExport.xml_url;
         delete notaExport.pdf_url;
 
-        // 1) XML: inline primeiro, depois fetch
+        // 1) Tentar obter o XML real
         let xmlContent = null;
+
+        // Prioridade A: xml_original inline
         if (nota.xml_original?.trim().startsWith("<")) {
           xmlContent = nota.xml_original;
-        } else if (nota.xml_content?.trim().startsWith("<")) {
+        }
+        // Prioridade B: xml_content inline (se for XML, não JSON de itens)
+        else if (nota.xml_content?.trim().startsWith("<")) {
           xmlContent = nota.xml_content;
-        } else if (nota.xml_url?.startsWith("http")) {
+        }
+        // Prioridade C: baixar de xml_url (arquivo salvo no banco)
+        else if (nota.xml_url?.startsWith("http")) {
           try {
+            setProgresso(`Baixando XML ${i + 1}/${notas.length}: ${nome}`);
             const r = await fetch(nota.xml_url);
             if (r.ok) {
               const txt = await r.text();
@@ -60,10 +74,11 @@ export default function BackupManager() {
           } catch (_) {}
         }
 
-        // 2) PDF: fetch paralelo junto com XML
+        // 2) Tentar baixar o PDF físico
         let pdfBlob = null;
         if (nota.pdf_url?.startsWith("http")) {
           try {
+            setProgresso(`Baixando PDF ${i + 1}/${notas.length}: ${nome}`);
             const r = await fetch(nota.pdf_url);
             if (r.ok) {
               const ct = r.headers.get("content-type") || "";
@@ -74,38 +89,45 @@ export default function BackupManager() {
           } catch (_) {}
         }
 
+        // Salvar JSON da nota
         pastaNotas.file(`${nome}.json`, JSON.stringify(notaExport, null, 2));
+
+        // Salvar XML como arquivo separado se tiver
         if (xmlContent) {
           pastaNotas.file(`${nome}.xml`, xmlContent);
           notaExport._xml_arquivo = `${nome}.xml`;
         }
+
+        // Salvar PDF como arquivo físico
         if (pdfBlob) {
           pastaNotas.file(`${nome}.pdf`, pdfBlob);
           notaExport._pdf_arquivo = `${nome}.pdf`;
         }
 
-        return {
-          id: nota.id, tipo: nota.tipo, numero: nota.numero, status: nota.status,
-          cliente_nome: nota.cliente_nome, valor_total: nota.valor_total,
-          data_emissao: nota.data_emissao, chave_acesso: nota.chave_acesso,
-          tem_xml: !!xmlContent, tem_pdf: !!pdfBlob, arquivo: `${nome}.json`
-        };
-      };
+        indice.push({
+          id: nota.id,
+          tipo: nota.tipo,
+          numero: nota.numero,
+          status: nota.status,
+          cliente_nome: nota.cliente_nome,
+          valor_total: nota.valor_total,
+          data_emissao: nota.data_emissao,
+          chave_acesso: nota.chave_acesso,
+          tem_xml: !!xmlContent,
+          tem_pdf: !!pdfBlob,
+          arquivo: `${nome}.json`
+        });
 
-      // Processar em lotes paralelos de 20 notas simultâneas
-      for (let i = 0; i < notas.length; i += LOTE) {
-        const lote = notas.slice(i, i + LOTE);
-        setProgresso(`Processando notas ${i + 1}–${Math.min(i + LOTE, notas.length)} de ${notas.length}...`);
-        const resultados = await Promise.all(lote.map(processarNota));
-        indice.push(...resultados);
-        totalRegistros += lote.length;
+        totalRegistros++;
       }
 
+      // Salvar índice das notas
       pastaNotas.file("_indice.json", JSON.stringify(indice, null, 2));
 
+      // Manifesto geral
       zip.file("backup_info.json", JSON.stringify({
         data_backup: new Date().toISOString(),
-        versao: "2.1",
+        versao: "2.0",
         entidades: Object.keys(backup),
         total_registros: totalRegistros,
         total_notas: notas.length,
@@ -127,7 +149,7 @@ export default function BackupManager() {
       const comPdf = indice.filter((n) => n.tem_pdf).length;
       setMsgBaixar({
         tipo: "sucesso",
-        texto: `Backup gerado! ${totalRegistros} registros | ${notas.length} notas | ${comXml} XMLs | ${comPdf} PDFs salvos.`
+        texto: `Backup gerado! ${totalRegistros} registros | ${notas.length} notas | ${comXml} XMLs físicos | ${comPdf} PDFs físicos salvos.`
       });
     } catch (e) {
       setMsgBaixar({ tipo: "erro", texto: e.message });
@@ -158,6 +180,7 @@ export default function BackupManager() {
       const zip = await JSZip.loadAsync(file);
       const backup = {};
 
+      // Ler entidades normais (pasta/Entidade.json)
       const OUTRAS = ["Cadastro", "Estoque", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
       for (const entidade of OUTRAS) {
         const entry = zip.file(`${entidade}/${entidade}.json`);
@@ -168,28 +191,32 @@ export default function BackupManager() {
         }
       }
 
+      // Ler notas fiscais — cada arquivo JSON individual na pasta NotaFiscal
       const notasBackup = [];
-      const xmlMap = {};
+      const xmlMap = {}; // nome_arquivo -> conteudo xml
 
       zip.forEach((caminho, entry) => {
         if (caminho.startsWith("NotaFiscal/") && !entry.dir) {
           const fileName = caminho.replace("NotaFiscal/", "");
           if (fileName.endsWith(".xml")) {
+            // Guardar XMLs para associar depois
             xmlMap[fileName] = entry;
           }
         }
       });
 
+      // Ler JSONs das notas
       const notaEntries = [];
       zip.forEach((caminho, entry) => {
         if (caminho.startsWith("NotaFiscal/") && !entry.dir && caminho.endsWith(".json") && !caminho.includes("_indice")) {
           notaEntries.push(entry.async("string").then((s) => {
-            try { notasBackup.push(JSON.parse(s)); } catch (_) {}
+            try {notasBackup.push(JSON.parse(s));} catch (_) {}
           }));
         }
       });
       await Promise.all(notaEntries);
 
+      // Para cada nota, reintegrar o XML inline se tiver arquivo correspondente
       for (const nota of notasBackup) {
         const xmlArquivo = nota._xml_arquivo;
         if (xmlArquivo && xmlMap[xmlArquivo]) {
@@ -210,9 +237,9 @@ export default function BackupManager() {
       const data = res.data;
       if (!data.sucesso) throw new Error(data.error || "Erro ao restaurar.");
 
-      const resumo = Object.entries(data.resultados || {})
-        .map(([ent, r]) => `${ent}: ${r.importados}`)
-        .join(" | ");
+      const resumo = Object.entries(data.resultados || {}).
+      map(([ent, r]) => `${ent}: ${r.importados}`).
+      join(" | ");
       setMsgRestaurar({ tipo: "sucesso", texto: `${data.msg} — ${resumo}` });
     } catch (e) {
       setMsgRestaurar({ tipo: "erro", texto: e.message });
@@ -225,6 +252,9 @@ export default function BackupManager() {
     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6">
       <div>
         <h2 className="text-white font-bold text-lg">Backup de Dados</h2>
+        
+
+        
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -234,27 +264,34 @@ export default function BackupManager() {
             <Download className="w-5 h-5 text-green-400" />
             <h3 className="text-white font-semibold">Baixar Backup Completo</h3>
           </div>
-          {baixando && progresso && (
-            <p className="text-yellow-400 text-xs flex items-center gap-2">
+          <ul className="text-gray-400 text-xs space-y-1 list-disc list-inside">
+            
+            
+            
+            
+          </ul>
+          {baixando && progresso &&
+          <p className="text-yellow-400 text-xs flex items-center gap-2">
               <Loader2 className="w-3 h-3 animate-spin" /> {progresso}
             </p>
-          )}
+          }
           <button
             onClick={baixarBackup}
             disabled={baixando}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold disabled:opacity-50 transition-all"
             style={{ background: "#00ff00", color: "#000" }}
-            onMouseEnter={(e) => { if (!baixando) e.currentTarget.style.background = "#00dd00"; }}
+            onMouseEnter={(e) => {if (!baixando) e.currentTarget.style.background = "#00dd00";}}
             onMouseLeave={(e) => e.currentTarget.style.background = "#00ff00"}>
+            
             {baixando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             {baixando ? "Gerando backup..." : "Baixar Backup ZIP"}
           </button>
-          {msgBaixar && (
-            <div className={`flex items-start gap-2 p-3 rounded-lg text-xs ${msgBaixar.tipo === "sucesso" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+          {msgBaixar &&
+          <div className={`flex items-start gap-2 p-3 rounded-lg text-xs ${msgBaixar.tipo === "sucesso" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
               {msgBaixar.tipo === "sucesso" ? <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
               <span>{msgBaixar.texto}</span>
             </div>
-          )}
+          }
         </div>
 
         {/* RESTAURAR */}
@@ -263,29 +300,33 @@ export default function BackupManager() {
             <Upload className="w-5 h-5 text-blue-400" />
             <h3 className="text-white font-semibold">Restaurar Backup</h3>
           </div>
-          {restaurando && progresso && (
-            <p className="text-yellow-400 text-xs flex items-center gap-2">
+          
+
+          
+          {restaurando && progresso &&
+          <p className="text-yellow-400 text-xs flex items-center gap-2">
               <Loader2 className="w-3 h-3 animate-spin" /> {progresso}
             </p>
-          )}
+          }
           <button
             onClick={selecionarArquivo}
             disabled={restaurando}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold disabled:opacity-50 transition-all"
             style={{ background: "#062C9B", color: "#fff" }}
-            onMouseEnter={(e) => { if (!restaurando) e.currentTarget.style.background = "#041a5e"; }}
+            onMouseEnter={(e) => {if (!restaurando) e.currentTarget.style.background = "#041a5e";}}
             onMouseLeave={(e) => e.currentTarget.style.background = "#062C9B"}>
+            
             {restaurando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             {restaurando ? "Restaurando..." : "Selecionar Arquivo ZIP"}
           </button>
-          {msgRestaurar && (
-            <div className={`flex items-start gap-2 p-3 rounded-lg text-xs ${msgRestaurar.tipo === "sucesso" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+          {msgRestaurar &&
+          <div className={`flex items-start gap-2 p-3 rounded-lg text-xs ${msgRestaurar.tipo === "sucesso" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
               {msgRestaurar.tipo === "sucesso" ? <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
               <span>{msgRestaurar.texto}</span>
             </div>
-          )}
+          }
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
