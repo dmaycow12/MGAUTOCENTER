@@ -1,25 +1,24 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-// Entidades atuais do app
 const ENTIDADES = ["Cadastro", "Estoque", "NotaFiscal", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ error: 'Autenticação necessária' }, { status: 401 });
+    // Busca todas as entidades em paralelo usando service role
+    const resultados = await Promise.all(
+      ENTIDADES.map(async (entidade) => {
+        try {
+          const dados = await base44.asServiceRole.entities[entidade].list('-created_date', 10000);
+          return [entidade, dados];
+        } catch (_) {
+          return [entidade, []];
+        }
+      })
+    );
 
-    const backup = {};
-
-    for (const entidade of ENTIDADES) {
-      try {
-        const dados = await base44.asServiceRole.entities[entidade].list('-created_date', 10000);
-        backup[entidade] = dados;
-      } catch (err) {
-        backup[entidade] = [];
-      }
-    }
+    const backup = Object.fromEntries(resultados);
 
     return Response.json({ sucesso: true, backup, entidades: ENTIDADES });
   } catch (error) {
