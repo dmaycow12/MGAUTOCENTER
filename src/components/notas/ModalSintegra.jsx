@@ -106,8 +106,15 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
 
       const zip = new JSZip();
 
-      // Arquivo SINTEGRA
-      zip.file(`SINTEGRA-${nomeBase}.txt`, new Blob([conteudo], { type: "text/plain;charset=utf-8" }));
+      // Arquivo SINTEGRA — encoding Windows-1252 (ANSI) exigido pelo Validador SINTEGRA
+      // Converte para Latin-1: cada char vira 1 byte, acentos removidos pelo gerador
+      const encoder = new TextEncoder(); // UTF-8 bytes
+      const latin1Bytes = new Uint8Array(conteudo.length);
+      for (let i = 0; i < conteudo.length; i++) {
+        const code = conteudo.charCodeAt(i);
+        latin1Bytes[i] = code <= 0xFF ? code : 0x3F; // chars fora de Latin-1 viram '?'
+      }
+      zip.file(`SINTEGRA-${nomeBase}.txt`, latin1Bytes, { binary: true });
 
       // XMLs e PDFs organizados em pastas
       const pastas = {
