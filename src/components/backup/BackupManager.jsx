@@ -183,6 +183,27 @@ export default function BackupManager() {
 
       if (Object.keys(backup).length === 0) throw new Error("Nenhuma entidade encontrada no ZIP.");
 
+      // Campos únicos de negócio por entidade (não dependem do ID interno)
+      const CHAVES_UNICAS = {
+        Cadastro:    (r) => r.cpf_cnpj || r.email || r.nome,
+        Estoque:     (r) => r.codigo || r.descricao,
+        Financeiro:  (r) => `${r.descricao}|${r.valor}|${r.data_vencimento}`,
+        Configuracao:(r) => r.chave,
+        Servico:     (r) => r.codigo || r.descricao,
+        Ativo:       (r) => r.numero_serie || r.nome,
+        Vendas:      (r) => r.numero,
+        NotaFiscal:  (r) => r.chave_acesso || r.numero,
+      };
+
+      const CAMPOS_INTERNOS = new Set(["id","created_date","updated_date","created_by","created_by_id","entity_name","app_id","is_sample","is_deleted","deleted_date","environment","_xml_arquivo","_pdf_arquivo","data"]);
+      const limparItem = (item) => {
+        const d = {};
+        for (const [k, v] of Object.entries(item)) {
+          if (!CAMPOS_INTERNOS.has(k)) d[k] = v;
+        }
+        return d;
+      };
+
       const todasEntidades = [...ENTIDADES, "NotaFiscal"];
       let totalImportados = 0;
       let totalPulados = 0;
@@ -194,37 +215,36 @@ export default function BackupManager() {
 
         setProgressoRestauro(prev => ({ ...prev, etapa: `Verificando ${entidade}...`, entidade, atual: 0, total: dados.length }));
 
-        // Buscar TODOS os IDs já existentes no banco (paginado) para evitar duplicatas
-        let idsExistentes = new Set();
+        // Buscar TODOS os registros existentes e montar set de chaves únicas de negócio
+        const chaveFn = CHAVES_UNICAS[entidade] || ((r) => r.id);
+        let chavesExistentes = new Set();
         try {
           let pagina = 0;
           const PAGINA_SIZE = 500;
           while (true) {
             const existentes = await base44.entities[entidade].list(null, PAGINA_SIZE, pagina * PAGINA_SIZE);
-            existentes.forEach(r => idsExistentes.add(r.id));
+            existentes.forEach(r => {
+              const chave = chaveFn(r);
+              if (chave) chavesExistentes.add(String(chave).trim().toLowerCase());
+            });
             if (existentes.length < PAGINA_SIZE) break;
             pagina++;
           }
         } catch (_) {}
 
-        const novos = dados.filter(item => !idsExistentes.has(item.id));
+        const novos = dados.filter(item => {
+          const chave = chaveFn(item);
+          if (!chave) return true; // sem chave, tenta importar
+          return !chavesExistentes.has(String(chave).trim().toLowerCase());
+        });
         const pulados = dados.length - novos.length;
         totalPulados += pulados;
 
         let importados = 0;
-        const CAMPOS_INTERNOS = new Set(["id","created_date","updated_date","created_by","created_by_id","entity_name","app_id","is_sample","is_deleted","deleted_date","environment","_xml_arquivo","_pdf_arquivo","data"]);
+        let concluidos = 0;
+        const PARALELO = 5; // 5 simultâneos para velocidade
 
-        const limparItem = (item) => {
-          const d = {};
-          for (const [k, v] of Object.entries(item)) {
-            if (!CAMPOS_INTERNOS.has(k)) d[k] = v;
-          }
-          return d;
-        };
-
-        // Processa um por vez com retry ilimitado até conseguir
-        for (let i = 0; i < novos.length; i++) {
-          const item = novos[i];
+        const importarItem = async (item) => {
           const dadosLimpos = limparItem(item);
           let tentativas = 0;
           while (true) {
@@ -235,21 +255,23 @@ export default function BackupManager() {
               break;
             } catch (_) {
               tentativas++;
-              // Delay progressivo: 1s, 2s, 3s... máx 10s
-              const delay = Math.min(tentativas * 1000, 10000);
-              await new Promise(r => setTimeout(r, delay));
+              await new Promise(r => setTimeout(r, Math.min(tentativas * 1000, 8000)));
             }
           }
-
+          concluidos++;
           setProgressoRestauro({
             etapa: `Importando ${entidade}`,
             entidade,
-            atual: i + 1,
+            atual: concluidos,
             total: novos.length,
             importados: totalImportados,
             pulados: totalPulados,
-            erros: 0,
           });
+        };
+
+        // Processar em lotes paralelos de PARALELO itens
+        for (let i = 0; i < novos.length; i += PARALELO) {
+          await Promise.all(novos.slice(i, i + PARALELO).map(importarItem));
         }
 
         resumoPorEntidade[entidade] = { importados, pulados };
