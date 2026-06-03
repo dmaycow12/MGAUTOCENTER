@@ -4,7 +4,7 @@ import { Download, Upload, CheckCircle, AlertCircle, Loader2 } from "lucide-reac
 import JSZip from "jszip";
 
 const ENTIDADES = ["Cadastro", "Estoque", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
-const LOTE_CRIAR = 5;
+const LOTE_CRIAR = 3;
 
 export default function BackupManager() {
   const [baixando, setBaixando] = useState(false);
@@ -219,14 +219,31 @@ export default function BackupManager() {
           const lote = novos.slice(i, i + LOTE_CRIAR);
           await Promise.all(lote.map(async (item) => {
             try {
-              const { id, created_date, updated_date, created_by, created_by_id, entity_name, app_id, is_sample, is_deleted, deleted_date, environment, _xml_arquivo, _pdf_arquivo, ...resto } = item;
-              const dadosLimpos = item.data ? item.data : resto;
+              // Remove campos internos da plataforma, mantém apenas dados do negócio
+              const CAMPOS_INTERNOS = new Set(["id","created_date","updated_date","created_by","created_by_id","entity_name","app_id","is_sample","is_deleted","deleted_date","environment","_xml_arquivo","_pdf_arquivo","data"]);
+              const dadosLimpos = {};
+              for (const [k, v] of Object.entries(item)) {
+                if (!CAMPOS_INTERNOS.has(k)) dadosLimpos[k] = v;
+              }
               await base44.entities[entidade].create(dadosLimpos);
               importados++;
               totalImportados++;
-            } catch (_) {
-              erros++;
-              totalErros++;
+            } catch (err) {
+              // Retry uma vez após 1s
+              try {
+                await new Promise(r => setTimeout(r, 1000));
+                const CAMPOS_INTERNOS = new Set(["id","created_date","updated_date","created_by","created_by_id","entity_name","app_id","is_sample","is_deleted","deleted_date","environment","_xml_arquivo","_pdf_arquivo","data"]);
+                const dadosLimpos = {};
+                for (const [k, v] of Object.entries(item)) {
+                  if (!CAMPOS_INTERNOS.has(k)) dadosLimpos[k] = v;
+                }
+                await base44.entities[entidade].create(dadosLimpos);
+                importados++;
+                totalImportados++;
+              } catch (_) {
+                erros++;
+                totalErros++;
+              }
             }
           }));
 
