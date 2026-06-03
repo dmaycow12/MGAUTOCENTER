@@ -195,11 +195,17 @@ export default function BackupManager() {
 
         setProgressoRestauro(prev => ({ ...prev, etapa: `Verificando ${entidade}...`, entidade, atual: 0, total: dados.length }));
 
-        // Buscar IDs já existentes no banco para evitar duplicatas
+        // Buscar TODOS os IDs já existentes no banco (paginado) para evitar duplicatas
         let idsExistentes = new Set();
         try {
-          const existentes = await base44.entities[entidade].list();
-          idsExistentes = new Set(existentes.map(r => r.id));
+          let pagina = 0;
+          const PAGINA_SIZE = 500;
+          while (true) {
+            const existentes = await base44.entities[entidade].list(null, PAGINA_SIZE, pagina * PAGINA_SIZE);
+            existentes.forEach(r => idsExistentes.add(r.id));
+            if (existentes.length < PAGINA_SIZE) break;
+            pagina++;
+          }
         } catch (_) {}
 
         const novos = dados.filter(item => !idsExistentes.has(item.id));
