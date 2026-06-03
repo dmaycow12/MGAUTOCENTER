@@ -3,12 +3,16 @@ import { base44 } from "@/api/base44Client";
 import { Download, Upload, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import JSZip from "jszip";
 
+const ENTIDADES = ["Cadastro", "Estoque", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
+const LOTE_CRIAR = 5;
+
 export default function BackupManager() {
   const [baixando, setBaixando] = useState(false);
   const [restaurando, setRestaurando] = useState(false);
   const [progresso, setProgresso] = useState("");
   const [msgBaixar, setMsgBaixar] = useState(null);
   const [msgRestaurar, setMsgRestaurar] = useState(null);
+  const [progressoRestauro, setProgressoRestauro] = useState(null);
 
   // ===== BAIXAR BACKUP =====
   const baixarBackup = async () => {
@@ -23,30 +27,24 @@ export default function BackupManager() {
       const zip = new JSZip();
       let totalRegistros = 0;
 
-      // ── Entidades normais (um JSON por entidade) ──
-      const OUTRAS = ["Cadastro", "Estoque", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
-      for (const entidade of OUTRAS) {
+      for (const entidade of ENTIDADES) {
         const dados = backup[entidade];
         if (!Array.isArray(dados)) continue;
         zip.folder(entidade).file(`${entidade}.json`, JSON.stringify(dados, null, 2));
         totalRegistros += dados.length;
       }
 
-      // ── NotaFiscal: uma pasta por nota com JSON + XML real ──
       const notas = backup["NotaFiscal"] || [];
       setProgresso(`Baixando XMLs e PDFs em paralelo (${notas.length} notas)...`);
       const pastaNotas = zip.folder("NotaFiscal");
-
       const indice = [];
 
-      // Baixa XML e PDF de uma nota em paralelo
       const processarNota = async (nota) => {
         const nome = `${nota.tipo || "NF"}-${nota.numero || nota.id}`;
         const notaExport = { ...nota };
         delete notaExport.xml_url;
         delete notaExport.pdf_url;
 
-        // XML
         let xmlContent = null;
         if (nota.xml_original?.trim().startsWith("<")) {
           xmlContent = nota.xml_original;
@@ -59,7 +57,6 @@ export default function BackupManager() {
           } catch (_) {}
         }
 
-        // PDF
         let pdfBlob = null;
         if (nota.pdf_url?.startsWith("http")) {
           try {
@@ -74,17 +71,15 @@ export default function BackupManager() {
         return { nota, notaExport, nome, xmlContent, pdfBlob };
       };
 
-      // Executa em lotes de 20 paralelos
       const LOTE = 20;
       const resultados = [];
       for (let i = 0; i < notas.length; i += LOTE) {
         const lote = notas.slice(i, i + LOTE);
         setProgresso(`Processando notas ${i + 1}–${Math.min(i + LOTE, notas.length)} de ${notas.length}...`);
-        const res = await Promise.all(lote.map(processarNota));
-        resultados.push(...res);
+        const r = await Promise.all(lote.map(processarNota));
+        resultados.push(...r);
       }
 
-      // Adiciona ao ZIP
       for (const { notaExport, nome, xmlContent, pdfBlob } of resultados) {
         pastaNotas.file(`${nome}.json`, JSON.stringify(notaExport, null, 2));
         if (xmlContent) { pastaNotas.file(`${nome}.xml`, xmlContent); notaExport._xml_arquivo = `${nome}.xml`; }
@@ -99,10 +94,7 @@ export default function BackupManager() {
         totalRegistros++;
       }
 
-      // Salvar índice das notas
       pastaNotas.file("_indice.json", JSON.stringify(indice, null, 2));
-
-      // Manifesto geral
       zip.file("backup_info.json", JSON.stringify({
         data_backup: new Date().toISOString(),
         versao: "2.0",
@@ -127,7 +119,7 @@ export default function BackupManager() {
       const comPdf = indice.filter((n) => n.tem_pdf).length;
       setMsgBaixar({
         tipo: "sucesso",
-        texto: `Backup gerado! ${totalRegistros} registros | ${notas.length} notas | ${comXml} XMLs físicos | ${comPdf} PDFs físicos salvos.`
+        texto: `Backup gerado! ${totalRegistros} registros | ${notas.length} notas | ${comXml} XMLs | ${comPdf} PDFs salvos.`
       });
     } catch (e) {
       setMsgBaixar({ tipo: "erro", texto: e.message });
@@ -144,7 +136,7 @@ export default function BackupManager() {
     input.onchange = async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      if (!confirm("ATENÇÃO: Restaurar o backup vai ADICIONAR os dados ao banco atual. Confirmar?")) return;
+      if (!confirm("ATENÇÃO: O backup será importado sem duplicar registros já existentes. Confirmar?")) return;
       await restaurarBackup(file);
     };
     input.click();
@@ -153,87 +145,117 @@ export default function BackupManager() {
   const restaurarBackup = async (file) => {
     setRestaurando(true);
     setMsgRestaurar(null);
-    setProgresso("Lendo arquivo ZIP...");
+    setProgressoRestauro({ etapa: "Lendo ZIP...", atual: 0, total: 0, entidade: "", importados: 0, pulados: 0, erros: 0 });
+
     try {
       const zip = await JSZip.loadAsync(file);
       const backup = {};
 
-      // Ler entidades normais (pasta/Entidade.json)
-      const OUTRAS = ["Cadastro", "Estoque", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
-      for (const entidade of OUTRAS) {
+      for (const entidade of ENTIDADES) {
         const entry = zip.file(`${entidade}/${entidade}.json`);
         if (entry) {
-          try {
-            backup[entidade] = JSON.parse(await entry.async("string"));
-          } catch (_) {}
+          try { backup[entidade] = JSON.parse(await entry.async("string")); } catch (_) {}
         }
       }
 
-      // Ler notas fiscais — cada arquivo JSON individual na pasta NotaFiscal
       const notasBackup = [];
-      const xmlMap = {}; // nome_arquivo -> conteudo xml
-
+      const xmlMap = {};
       zip.forEach((caminho, entry) => {
-        if (caminho.startsWith("NotaFiscal/") && !entry.dir) {
-          const fileName = caminho.replace("NotaFiscal/", "");
-          if (fileName.endsWith(".xml")) {
-            // Guardar XMLs para associar depois
-            xmlMap[fileName] = entry;
-          }
+        if (caminho.startsWith("NotaFiscal/") && !entry.dir && caminho.replace("NotaFiscal/", "").endsWith(".xml")) {
+          xmlMap[caminho.replace("NotaFiscal/", "")] = entry;
         }
       });
-
-      // Ler JSONs das notas
       const notaEntries = [];
       zip.forEach((caminho, entry) => {
         if (caminho.startsWith("NotaFiscal/") && !entry.dir && caminho.endsWith(".json") && !caminho.includes("_indice")) {
-          notaEntries.push(entry.async("string").then((s) => {
-            try {notasBackup.push(JSON.parse(s));} catch (_) {}
-          }));
+          notaEntries.push(entry.async("string").then((s) => { try { notasBackup.push(JSON.parse(s)); } catch (_) {} }));
         }
       });
       await Promise.all(notaEntries);
-
-      // Para cada nota, reintegrar o XML inline se tiver arquivo correspondente
       for (const nota of notasBackup) {
-        const xmlArquivo = nota._xml_arquivo;
-        if (xmlArquivo && xmlMap[xmlArquivo]) {
-          const xmlTexto = await xmlMap[xmlArquivo].async("string");
-          if (xmlTexto.trim().startsWith("<")) {
-            nota.xml_original = xmlTexto;
-          }
+        if (nota._xml_arquivo && xmlMap[nota._xml_arquivo]) {
+          const xmlTexto = await xmlMap[nota._xml_arquivo].async("string");
+          if (xmlTexto.trim().startsWith("<")) nota.xml_original = xmlTexto;
         }
         delete nota._xml_arquivo;
       }
-
       if (notasBackup.length > 0) backup["NotaFiscal"] = notasBackup;
 
       if (Object.keys(backup).length === 0) throw new Error("Nenhuma entidade encontrada no ZIP.");
 
-      setProgresso(`Importando ${Object.values(backup).flat().length} registros...`);
-      const res = await base44.functions.invoke("restaurarBackup", { backup });
-      const data = res.data;
-      if (!data.sucesso) throw new Error(data.error || "Erro ao restaurar.");
+      const todasEntidades = [...ENTIDADES, "NotaFiscal"];
+      let totalImportados = 0;
+      let totalPulados = 0;
+      let totalErros = 0;
+      const resumoPorEntidade = {};
 
-      const resumo = Object.entries(data.resultados || {}).
-      map(([ent, r]) => `${ent}: ${r.importados}`).
-      join(" | ");
-      setMsgRestaurar({ tipo: "sucesso", texto: `${data.msg} — ${resumo}` });
+      for (const entidade of todasEntidades) {
+        const dados = backup[entidade];
+        if (!Array.isArray(dados) || dados.length === 0) continue;
+
+        setProgressoRestauro(prev => ({ ...prev, etapa: `Verificando ${entidade}...`, entidade, atual: 0, total: dados.length }));
+
+        // Buscar IDs já existentes no banco para evitar duplicatas
+        let idsExistentes = new Set();
+        try {
+          const existentes = await base44.entities[entidade].list();
+          idsExistentes = new Set(existentes.map(r => r.id));
+        } catch (_) {}
+
+        const novos = dados.filter(item => !idsExistentes.has(item.id));
+        const pulados = dados.length - novos.length;
+        totalPulados += pulados;
+
+        let importados = 0;
+        let erros = 0;
+
+        for (let i = 0; i < novos.length; i += LOTE_CRIAR) {
+          const lote = novos.slice(i, i + LOTE_CRIAR);
+          await Promise.all(lote.map(async (item) => {
+            try {
+              const { id, created_date, updated_date, created_by, created_by_id, entity_name, app_id, is_sample, is_deleted, deleted_date, environment, _xml_arquivo, _pdf_arquivo, ...resto } = item;
+              const dadosLimpos = item.data ? item.data : resto;
+              await base44.entities[entidade].create(dadosLimpos);
+              importados++;
+              totalImportados++;
+            } catch (_) {
+              erros++;
+              totalErros++;
+            }
+          }));
+
+          setProgressoRestauro({
+            etapa: `Importando ${entidade}`,
+            entidade,
+            atual: Math.min(i + LOTE_CRIAR, novos.length),
+            total: novos.length,
+            importados: totalImportados,
+            pulados: totalPulados,
+            erros: totalErros,
+          });
+        }
+
+        resumoPorEntidade[entidade] = { importados, pulados, erros };
+      }
+
+      const resumoTexto = Object.entries(resumoPorEntidade)
+        .filter(([, r]) => r.importados > 0 || r.pulados > 0)
+        .map(([ent, r]) => `${ent}: ${r.importados} novos, ${r.pulados} já existiam`)
+        .join(" | ");
+
+      setProgressoRestauro(null);
+      setMsgRestaurar({ tipo: "sucesso", texto: `${totalImportados} registros importados, ${totalPulados} pulados (já existiam). ${resumoTexto}` });
+
     } catch (e) {
+      setProgressoRestauro(null);
       setMsgRestaurar({ tipo: "erro", texto: e.message });
     }
-    setProgresso("");
     setRestaurando(false);
   };
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6">
-      <div>
-        <h2 className="text-white font-bold text-lg">Backup de Dados</h2>
-        
-
-        
-      </div>
+      <h2 className="text-white font-bold text-lg">Backup de Dados</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* BAIXAR */}
@@ -242,34 +264,27 @@ export default function BackupManager() {
             <Download className="w-5 h-5 text-green-400" />
             <h3 className="text-white font-semibold">Baixar Backup Completo</h3>
           </div>
-          <ul className="text-gray-400 text-xs space-y-1 list-disc list-inside">
-            
-            
-            
-            
-          </ul>
-          {baixando && progresso &&
-          <p className="text-yellow-400 text-xs flex items-center gap-2">
+          {baixando && progresso && (
+            <p className="text-yellow-400 text-xs flex items-center gap-2">
               <Loader2 className="w-3 h-3 animate-spin" /> {progresso}
             </p>
-          }
+          )}
           <button
             onClick={baixarBackup}
             disabled={baixando}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold disabled:opacity-50 transition-all"
             style={{ background: "#00ff00", color: "#000" }}
-            onMouseEnter={(e) => {if (!baixando) e.currentTarget.style.background = "#00dd00";}}
+            onMouseEnter={(e) => { if (!baixando) e.currentTarget.style.background = "#00dd00"; }}
             onMouseLeave={(e) => e.currentTarget.style.background = "#00ff00"}>
-            
             {baixando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             {baixando ? "Gerando backup..." : "Baixar Backup ZIP"}
           </button>
-          {msgBaixar &&
-          <div className={`flex items-start gap-2 p-3 rounded-lg text-xs ${msgBaixar.tipo === "sucesso" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+          {msgBaixar && (
+            <div className={`flex items-start gap-2 p-3 rounded-lg text-xs ${msgBaixar.tipo === "sucesso" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
               {msgBaixar.tipo === "sucesso" ? <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
               <span>{msgBaixar.texto}</span>
             </div>
-          }
+          )}
         </div>
 
         {/* RESTAURAR */}
@@ -278,33 +293,57 @@ export default function BackupManager() {
             <Upload className="w-5 h-5 text-blue-400" />
             <h3 className="text-white font-semibold">Restaurar Backup</h3>
           </div>
-          
 
-          
-          {restaurando && progresso &&
-          <p className="text-yellow-400 text-xs flex items-center gap-2">
-              <Loader2 className="w-3 h-3 animate-spin" /> {progresso}
-            </p>
-          }
           <button
             onClick={selecionarArquivo}
             disabled={restaurando}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold disabled:opacity-50 transition-all"
             style={{ background: "#062C9B", color: "#fff" }}
-            onMouseEnter={(e) => {if (!restaurando) e.currentTarget.style.background = "#041a5e";}}
+            onMouseEnter={(e) => { if (!restaurando) e.currentTarget.style.background = "#041a5e"; }}
             onMouseLeave={(e) => e.currentTarget.style.background = "#062C9B"}>
-            
             {restaurando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             {restaurando ? "Restaurando..." : "Selecionar Arquivo ZIP"}
           </button>
-          {msgRestaurar &&
-          <div className={`flex items-start gap-2 p-3 rounded-lg text-xs ${msgRestaurar.tipo === "sucesso" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+
+          {/* BARRA DE PROGRESSO EM TEMPO REAL */}
+          {progressoRestauro && (
+            <div className="space-y-2 border border-gray-600 rounded-lg p-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-yellow-400 flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  {progressoRestauro.etapa}
+                </span>
+                {progressoRestauro.total > 0 && (
+                  <span className="text-gray-400">{progressoRestauro.atual}/{progressoRestauro.total}</span>
+                )}
+              </div>
+              {progressoRestauro.total > 0 && (
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div
+                    className="h-2 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${Math.round((progressoRestauro.atual / progressoRestauro.total) * 100)}%`,
+                      background: "#4d7fff"
+                    }}
+                  />
+                </div>
+              )}
+              <div className="flex gap-3 text-xs">
+                <span className="text-green-400">✓ {progressoRestauro.importados} importados</span>
+                <span className="text-gray-400">↷ {progressoRestauro.pulados} já existiam</span>
+                {progressoRestauro.erros > 0 && <span className="text-red-400">✗ {progressoRestauro.erros} erros</span>}
+              </div>
+            </div>
+          )}
+
+          {msgRestaurar && (
+            <div className={`flex items-start gap-2 p-3 rounded-lg text-xs ${msgRestaurar.tipo === "sucesso" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
               {msgRestaurar.tipo === "sucesso" ? <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
               <span>{msgRestaurar.texto}</span>
             </div>
-          }
+          )}
         </div>
       </div>
-    </div>);
-
+    </div>
+  );
 }
