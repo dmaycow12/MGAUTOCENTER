@@ -61,16 +61,32 @@ export default function Estoque() {
   const catDropdownRef = useRef(null);
   const filterRef = useRef(null);
 
-  const salvarChecklist = async () => {
+  const salvarChecklist = async (novoSet = conferidos, cfgId = checklistConfigId) => {
     const agora = new Date().toLocaleString("pt-BR");
-    const valor = JSON.stringify([...conferidos]);
-    if (checklistConfigId) {
-      await base44.entities.Configuracao.update(checklistConfigId, { valor, descricao: agora });
+    const valor = JSON.stringify([...novoSet]);
+    if (cfgId) {
+      await base44.entities.Configuracao.update(cfgId, { valor, descricao: agora });
+      setChecklistSalvoEm(agora);
     } else {
       const novo = await base44.entities.Configuracao.create({ chave: "checklist_estoque_ids", valor, descricao: agora });
       setChecklistConfigId(novo.id);
+      setChecklistSalvoEm(agora);
     }
-    setChecklistSalvoEm(agora);
+  };
+
+  const toggleConferido = (itemId) => {
+    setConferidos(prev => {
+      const s = new Set(prev);
+      s.has(itemId) ? s.delete(itemId) : s.add(itemId);
+      salvarChecklist(s, checklistConfigId);
+      return s;
+    });
+  };
+
+  const marcarTodos = () => {
+    const s = new Set(filtrados.map(i => i.id));
+    setConferidos(s);
+    salvarChecklist(s, checklistConfigId);
   };
 
   const limparChecklist = async () => {
@@ -555,8 +571,7 @@ export default function Estoque() {
                 Check List — {conferidos.size} / {filtrados.length} conferidos
               </span>
               <div className="flex gap-2">
-                <button onClick={() => setConferidos(new Set(filtrados.map(i => i.id)))} className="text-xs text-green-400 border border-green-500/30 px-3 py-1 rounded-lg hover:bg-green-500/10 transition-all">Marcar Todos</button>
-                <button onClick={salvarChecklist} className="text-xs text-white border border-orange-500/50 px-3 py-1 rounded-lg hover:bg-orange-500/20 transition-all" style={{background:"#f97316", color:"#000"}}>💾 Salvar</button>
+                <button onClick={marcarTodos} className="text-xs text-green-400 border border-green-500/30 px-3 py-1 rounded-lg hover:bg-green-500/10 transition-all">Marcar Todos</button>
                 <button onClick={limparChecklist} className="text-xs text-gray-400 border border-gray-700 px-3 py-1 rounded-lg hover:text-white transition-all">Limpar</button>
               </div>
             </div>
@@ -639,7 +654,7 @@ export default function Estoque() {
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
                 <div className="flex items-center gap-2 min-w-0">
                   {checklistMode
-                    ? <div onClick={e => { e.stopPropagation(); setConferidos(prev => { const s = new Set(prev); s.has(item.id) ? s.delete(item.id) : s.add(item.id); return s; }); }} className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 cursor-pointer ${isConf ? "border-green-500 bg-green-500" : "border-gray-600 hover:border-green-400"}`}>{isConf && <span className="text-black text-xs font-bold">✓</span>}</div>
+                    ? <div onClick={e => { e.stopPropagation(); toggleConferido(item.id); }} className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 cursor-pointer ${isConf ? "border-green-500 bg-green-500" : "border-gray-600 hover:border-green-400"}`}>{isConf && <span className="text-black text-xs font-bold">✓</span>}</div>
                     : <input type="checkbox" checked={selecionados.includes(item.id)} onChange={() => toggleSelecionado(item.id)} className="accent-red-500 cursor-pointer w-4 h-4 flex-shrink-0" />}
                   {item.codigo && <span className="text-orange-400 font-mono text-xs font-bold flex-shrink-0">#{item.codigo}</span>}
                   {item.quantidade < item.estoque_minimo && (
@@ -719,7 +734,7 @@ export default function Estoque() {
                     className={`border-b border-gray-800 transition-all hover:bg-gray-800/50 ${isConferido ? "bg-green-500/10 opacity-60" : selecionados.includes(item.id) ? "bg-red-500/5" : item.quantidade < item.estoque_minimo ? "bg-red-500/5" : ""}`}>
                     <td className="px-4 py-3">
                       {checklistMode
-                        ? <div onClick={() => setConferidos(prev => { const s = new Set(prev); s.has(item.id) ? s.delete(item.id) : s.add(item.id); return s; })} className={`w-5 h-5 rounded-full border-2 flex items-center justify-center cursor-pointer ${isConferido ? "border-green-500 bg-green-500" : "border-gray-600 hover:border-green-400"}`}>{isConferido && <span className="text-black text-xs font-bold">✓</span>}</div>
+                        ? <div onClick={() => toggleConferido(item.id)} className={`w-5 h-5 rounded-full border-2 flex items-center justify-center cursor-pointer ${isConferido ? "border-green-500 bg-green-500" : "border-gray-600 hover:border-green-400"}`}>{isConferido && <span className="text-black text-xs font-bold">✓</span>}</div>
                         : <input type="checkbox" checked={selecionados.includes(item.id)} onChange={() => toggleSelecionado(item.id)} className="accent-red-500 cursor-pointer w-4 h-4" />}
                     </td>
                     {colunas.codigo && <td className="px-4 py-3 text-gray-400 font-mono text-xs"><CellEdit item={item} field="codigo" className="text-gray-400 font-mono text-xs" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
@@ -732,7 +747,7 @@ export default function Estoque() {
                     {colunas.marca && <td className="px-4 py-3 text-gray-400"><CellEdit item={item} field="marca" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
                     <td className="px-4 py-3 text-center">
                       <span className={`font-bold ${item.quantidade < item.estoque_minimo ? "text-red-400" : "text-white"}`}>
-                        <CellEdit item={item} field="quantidade" className={item.quantidade < item.estoque_minimo ? "text-red-400 font-bold" : "text-white font-bold"} editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} checklistMode={checklistMode} onMarcarConferido={() => setConferidos(prev => { const s = new Set(prev); s.add(item.id); return s; })} />
+                        <CellEdit item={item} field="quantidade" className={item.quantidade < item.estoque_minimo ? "text-red-400 font-bold" : "text-white font-bold"} editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} checklistMode={checklistMode} onMarcarConferido={() => toggleConferido(item.id)} />
                       </span>
                     </td>
                     {colunas.estoque_minimo && <td className="px-4 py-3 text-center text-gray-500"><CellEdit item={item} field="estoque_minimo" className="text-gray-500" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
