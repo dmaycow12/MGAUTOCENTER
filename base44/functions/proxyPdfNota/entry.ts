@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
 const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
@@ -13,8 +13,8 @@ const normalizarUrl = (url) => {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
+    const authed = await base44.auth.isAuthenticated();
+    if (!authed) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
     const db = base44.asServiceRole;
     const body = await req.json();
     const { nota_id } = body;

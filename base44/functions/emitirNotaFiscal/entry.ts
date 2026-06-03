@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const PAYMENT_MAP = {
   'Dinheiro': '01', 'Cheque': '02', 'Cartão de Crédito': '03',
