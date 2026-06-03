@@ -179,16 +179,18 @@ export function reg54(nota, item, numItem, empresa) {
 
 // Registro 75 - Cadastro de produtos
 // Layout SINTEGRA MG (Convênio ICMS 76/03):
-// tipo(2)+dtIni(8)+dtFim(8)+codProd(14)+desc(53)+NCM(8)+unid(6)+aliqIPI(5)+aliqICMS(4)+reducBC(5)+baseST(13) = 126
+// tipo(2)+dtIni(8)+dtFim(8)+codProd(14)+NCM(8)+desc(53)+unid(6)+aliqIPI(5)+aliqICMS(4)+reducBC(5)+baseST(13) = 126
 export function reg75(produto, periodoInicio, periodoFim) {
   const ncm = (produto.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
+  // Descrição: remove acentos, caracteres especiais e garante mínimo de 1 char
+  const desc = removeAcentos(produto.descricao || "PRODUTO").replace(/[^A-Z0-9 \-\/\.]/gi, " ").trim() || "PRODUTO";
   return (
     "75" +
     rData(periodoInicio) +            //  8 data inicial
     rData(periodoFim) +               //  8 data final
     r(produto.codigo || "000", 14) +  // 14 código left-align
-    r(produto.descricao, 53) +        // 53 descrição (vem ANTES do NCM)
-    r(ncm, 8) +                       //  8 NCM (vem DEPOIS da descrição)
+    r(ncm, 8) +                       //  8 NCM
+    r(desc, 53) +                     // 53 descrição
     r(produto.unidade || "UN", 6) +   //  6 unidade
     rZ(0, 5) +                        //  5 alíquota IPI
     r("0000", 4) +                    //  4 alíquota ICMS
@@ -315,17 +317,18 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
   // Prioridade 1: estoque cadastrado
   estoque.forEach(p => {
     const cod = (p.codigo || "").trim();
-    const desc = (p.descricao || "").trim();
+    const desc = removeAcentos(p.descricao || "").replace(/[^A-Z0-9 \-\/\.]/gi, " ").trim();
     if (!cod || !desc || desc.length < 2) return;
     if (!codigosNosItens.has(cod)) return;
-    if (!produtosUnicos.has(cod)) produtosUnicos.set(cod, p);
+    if (!produtosUnicos.has(cod)) produtosUnicos.set(cod, { ...p, descricao: desc });
   });
   // Prioridade 2: item da própria NF (fallback para produtos não cadastrados)
   for (const [cod, item] of itensPorCodigo.entries()) {
     if (produtosUnicos.has(cod)) continue; // já tem no estoque
+    const descNF = removeAcentos(item.descricao || "").replace(/[^A-Z0-9 \-\/\.]/gi, " ").trim() || "PRODUTO";
     produtosUnicos.set(cod, {
       codigo: cod,
-      descricao: item.descricao || "PRODUTO",
+      descricao: descNF,
       ncm: item.ncm || "87089990",
       unidade: item.unidade || "UN",
       valor_venda: item.valor_unitario || 0,
