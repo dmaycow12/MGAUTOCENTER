@@ -186,7 +186,6 @@ export default function BackupManager() {
       const todasEntidades = [...ENTIDADES, "NotaFiscal"];
       let totalImportados = 0;
       let totalPulados = 0;
-      let totalErros = 0;
       const resumoPorEntidade = {};
 
       for (const entidade of todasEntidades) {
@@ -213,52 +212,47 @@ export default function BackupManager() {
         totalPulados += pulados;
 
         let importados = 0;
-        let erros = 0;
+        const CAMPOS_INTERNOS = new Set(["id","created_date","updated_date","created_by","created_by_id","entity_name","app_id","is_sample","is_deleted","deleted_date","environment","_xml_arquivo","_pdf_arquivo","data"]);
 
-        for (let i = 0; i < novos.length; i += LOTE_CRIAR) {
-          const lote = novos.slice(i, i + LOTE_CRIAR);
-          await Promise.all(lote.map(async (item) => {
+        const limparItem = (item) => {
+          const d = {};
+          for (const [k, v] of Object.entries(item)) {
+            if (!CAMPOS_INTERNOS.has(k)) d[k] = v;
+          }
+          return d;
+        };
+
+        // Processa um por vez com retry ilimitado até conseguir
+        for (let i = 0; i < novos.length; i++) {
+          const item = novos[i];
+          const dadosLimpos = limparItem(item);
+          let tentativas = 0;
+          while (true) {
             try {
-              // Remove campos internos da plataforma, mantém apenas dados do negócio
-              const CAMPOS_INTERNOS = new Set(["id","created_date","updated_date","created_by","created_by_id","entity_name","app_id","is_sample","is_deleted","deleted_date","environment","_xml_arquivo","_pdf_arquivo","data"]);
-              const dadosLimpos = {};
-              for (const [k, v] of Object.entries(item)) {
-                if (!CAMPOS_INTERNOS.has(k)) dadosLimpos[k] = v;
-              }
               await base44.entities[entidade].create(dadosLimpos);
               importados++;
               totalImportados++;
-            } catch (err) {
-              // Retry uma vez após 1s
-              try {
-                await new Promise(r => setTimeout(r, 1000));
-                const CAMPOS_INTERNOS = new Set(["id","created_date","updated_date","created_by","created_by_id","entity_name","app_id","is_sample","is_deleted","deleted_date","environment","_xml_arquivo","_pdf_arquivo","data"]);
-                const dadosLimpos = {};
-                for (const [k, v] of Object.entries(item)) {
-                  if (!CAMPOS_INTERNOS.has(k)) dadosLimpos[k] = v;
-                }
-                await base44.entities[entidade].create(dadosLimpos);
-                importados++;
-                totalImportados++;
-              } catch (_) {
-                erros++;
-                totalErros++;
-              }
+              break;
+            } catch (_) {
+              tentativas++;
+              // Delay progressivo: 1s, 2s, 3s... máx 10s
+              const delay = Math.min(tentativas * 1000, 10000);
+              await new Promise(r => setTimeout(r, delay));
             }
-          }));
+          }
 
           setProgressoRestauro({
             etapa: `Importando ${entidade}`,
             entidade,
-            atual: Math.min(i + LOTE_CRIAR, novos.length),
+            atual: i + 1,
             total: novos.length,
             importados: totalImportados,
             pulados: totalPulados,
-            erros: totalErros,
+            erros: 0,
           });
         }
 
-        resumoPorEntidade[entidade] = { importados, pulados, erros };
+        resumoPorEntidade[entidade] = { importados, pulados };
       }
 
       const resumoTexto = Object.entries(resumoPorEntidade)
@@ -268,6 +262,7 @@ export default function BackupManager() {
 
       setProgressoRestauro(null);
       setMsgRestaurar({ tipo: "sucesso", texto: `${totalImportados} registros importados, ${totalPulados} pulados (já existiam). ${resumoTexto}` });
+
 
     } catch (e) {
       setProgressoRestauro(null);
@@ -354,7 +349,6 @@ export default function BackupManager() {
               <div className="flex gap-3 text-xs">
                 <span className="text-green-400">✓ {progressoRestauro.importados} importados</span>
                 <span className="text-gray-400">↷ {progressoRestauro.pulados} já existiam</span>
-                {progressoRestauro.erros > 0 && <span className="text-red-400">✗ {progressoRestauro.erros} erros</span>}
               </div>
             </div>
           )}
