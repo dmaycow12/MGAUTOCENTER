@@ -34,90 +34,68 @@ export default function BackupManager() {
 
       // ── NotaFiscal: uma pasta por nota com JSON + XML real ──
       const notas = backup["NotaFiscal"] || [];
-      setProgresso(`Exportando ${notas.length} notas fiscais com XMLs...`);
+      setProgresso(`Baixando XMLs e PDFs em paralelo (${notas.length} notas)...`);
       const pastaNotas = zip.folder("NotaFiscal");
 
-      // índice de todas as notas (sem campos de URL interna)
       const indice = [];
 
-      for (let i = 0; i < notas.length; i++) {
-        const nota = notas[i];
+      // Baixa XML e PDF de uma nota em paralelo
+      const processarNota = async (nota) => {
         const nome = `${nota.tipo || "NF"}-${nota.numero || nota.id}`;
-
-        // Clonar nota removendo campos de URL interna do banco (serão substituídos pelos arquivos físicos)
         const notaExport = { ...nota };
-        // Manter xml_content inline se já existir (texto XML diretamente no campo)
-        // mas apagar xml_url (é link do banco, não tem valor fora dele)
         delete notaExport.xml_url;
         delete notaExport.pdf_url;
 
-        // 1) Tentar obter o XML real
+        // XML
         let xmlContent = null;
-
-        // Prioridade A: xml_original inline
         if (nota.xml_original?.trim().startsWith("<")) {
           xmlContent = nota.xml_original;
-        }
-        // Prioridade B: xml_content inline (se for XML, não JSON de itens)
-        else if (nota.xml_content?.trim().startsWith("<")) {
+        } else if (nota.xml_content?.trim().startsWith("<")) {
           xmlContent = nota.xml_content;
-        }
-        // Prioridade C: baixar de xml_url (arquivo salvo no banco)
-        else if (nota.xml_url?.startsWith("http")) {
+        } else if (nota.xml_url?.startsWith("http")) {
           try {
-            setProgresso(`Baixando XML ${i + 1}/${notas.length}: ${nome}`);
             const r = await fetch(nota.xml_url);
-            if (r.ok) {
-              const txt = await r.text();
-              if (txt.trim().startsWith("<")) xmlContent = txt;
-            }
+            if (r.ok) { const txt = await r.text(); if (txt.trim().startsWith("<")) xmlContent = txt; }
           } catch (_) {}
         }
 
-        // 2) Tentar baixar o PDF físico
+        // PDF
         let pdfBlob = null;
         if (nota.pdf_url?.startsWith("http")) {
           try {
-            setProgresso(`Baixando PDF ${i + 1}/${notas.length}: ${nome}`);
             const r = await fetch(nota.pdf_url);
             if (r.ok) {
               const ct = r.headers.get("content-type") || "";
-              if (ct.includes("pdf") || ct.includes("octet")) {
-                pdfBlob = await r.arrayBuffer();
-              }
+              if (ct.includes("pdf") || ct.includes("octet")) pdfBlob = await r.arrayBuffer();
             }
           } catch (_) {}
         }
 
-        // Salvar JSON da nota
+        return { nota, notaExport, nome, xmlContent, pdfBlob };
+      };
+
+      // Executa em lotes de 20 paralelos
+      const LOTE = 20;
+      const resultados = [];
+      for (let i = 0; i < notas.length; i += LOTE) {
+        const lote = notas.slice(i, i + LOTE);
+        setProgresso(`Processando notas ${i + 1}–${Math.min(i + LOTE, notas.length)} de ${notas.length}...`);
+        const res = await Promise.all(lote.map(processarNota));
+        resultados.push(...res);
+      }
+
+      // Adiciona ao ZIP
+      for (const { notaExport, nome, xmlContent, pdfBlob } of resultados) {
         pastaNotas.file(`${nome}.json`, JSON.stringify(notaExport, null, 2));
-
-        // Salvar XML como arquivo separado se tiver
-        if (xmlContent) {
-          pastaNotas.file(`${nome}.xml`, xmlContent);
-          notaExport._xml_arquivo = `${nome}.xml`;
-        }
-
-        // Salvar PDF como arquivo físico
-        if (pdfBlob) {
-          pastaNotas.file(`${nome}.pdf`, pdfBlob);
-          notaExport._pdf_arquivo = `${nome}.pdf`;
-        }
-
+        if (xmlContent) { pastaNotas.file(`${nome}.xml`, xmlContent); notaExport._xml_arquivo = `${nome}.xml`; }
+        if (pdfBlob) { pastaNotas.file(`${nome}.pdf`, pdfBlob); notaExport._pdf_arquivo = `${nome}.pdf`; }
         indice.push({
-          id: nota.id,
-          tipo: nota.tipo,
-          numero: nota.numero,
-          status: nota.status,
-          cliente_nome: nota.cliente_nome,
-          valor_total: nota.valor_total,
-          data_emissao: nota.data_emissao,
-          chave_acesso: nota.chave_acesso,
-          tem_xml: !!xmlContent,
-          tem_pdf: !!pdfBlob,
+          id: notaExport.id, tipo: notaExport.tipo, numero: notaExport.numero,
+          status: notaExport.status, cliente_nome: notaExport.cliente_nome,
+          valor_total: notaExport.valor_total, data_emissao: notaExport.data_emissao,
+          chave_acesso: notaExport.chave_acesso, tem_xml: !!xmlContent, tem_pdf: !!pdfBlob,
           arquivo: `${nome}.json`
         });
-
         totalRegistros++;
       }
 
