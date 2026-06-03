@@ -869,25 +869,13 @@ export default function NotasFiscais() {
   };
 
   const abrirPdfNota = async (nota) => {
-    // Se já tem PDF salvo no banco (válido, não HTML nem placeholder) — abre em nova aba instantaneamente
-    const pdfSalvoValido = nota.pdf_url &&
-      !nota.pdf_url.includes('/notas_fiscais_consumidor/') &&
-      !nota.pdf_url.includes('nota_nova.pdf') &&
-      !nota.pdf_url.includes('focusnfe') &&
-      !nota.pdf_url.includes('amazonaws');
-
-    if (pdfSalvoValido) {
-      window.open(nota.pdf_url, '_blank');
-      return;
-    }
-
-    // NFCe sem PDF salvo — usa danfeNfce para buscar/gerar
+    // NFCe — usa danfeNfce para buscar/gerar
     if (nota.tipo === 'NFCe') {
       await abrirDanfeNfce(nota);
       return;
     }
 
-    // Sem PDF salvo — tenta buscar via proxy e abre em nova aba
+    // NFe / NFSe — sempre usa proxyPdfNota (que devolve URL pública permanente)
     feedback('sucesso', 'Buscando PDF...');
     try {
       const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
@@ -899,6 +887,12 @@ export default function NotasFiscais() {
         return;
       }
       if (data?.processando) { feedback('erro', data.mensagem || 'SEFAZ ainda processando.'); return; }
+      // Fallback: se proxyPdfNota falhar mas temos URL salva, tenta abrir direto
+      if (nota.pdf_url) {
+        window.open(nota.pdf_url, '_blank');
+        setMsgFeedback(null);
+        return;
+      }
       let erroMsg = data?.erro || 'PDF não disponível.';
       if (data?.detalhes) erroMsg += `\n\nDetalhes: ${data.detalhes}`;
       feedback('erro', erroMsg);
