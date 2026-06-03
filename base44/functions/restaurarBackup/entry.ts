@@ -1,51 +1,109 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const ENTIDADES_VALIDAS = ["Cadastro", "Estoque", "NotaFiscal", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
+
+const CAMPOS_INTERNOS = new Set(["id","created_date","updated_date","created_by","created_by_id","entity_name","app_id","is_sample","is_deleted","deleted_date","environment","_xml_arquivo","_pdf_arquivo","data"]);
+
+// Chave única de negócio por entidade para evitar duplicatas
+const CHAVE_UNICA = {
+  Cadastro:    (r) => r.cpf_cnpj || r.email || r.nome,
+  Estoque:     (r) => r.codigo || r.descricao,
+  Financeiro:  (r) => `${r.descricao}|${r.valor}|${r.data_vencimento}`,
+  Configuracao:(r) => r.chave,
+  Servico:     (r) => r.codigo || r.descricao,
+  Ativo:       (r) => r.numero_serie || r.nome,
+  Vendas:      (r) => r.numero,
+  NotaFiscal:  (r) => r.chave_acesso || r.numero,
+};
+
+function limpar(item) {
+  const d = {};
+  for (const [k, v] of Object.entries(item)) {
+    if (!CAMPOS_INTERNOS.has(k)) d[k] = v;
+  }
+  return d;
+}
+
+async function buscarChavesExistentes(entities, entidade, chaveFn) {
+  const chaves = new Set();
+  let skip = 0;
+  const limit = 500;
+  while (true) {
+    const registros = await entities[entidade].list(null, limit, skip);
+    for (const r of registros) {
+      const ch = chaveFn(r);
+      if (ch) chaves.add(String(ch).trim().toLowerCase());
+    }
+    if (registros.length < limit) break;
+    skip += limit;
+  }
+  return chaves;
+}
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
-    if (!user || user.role !== 'admin') {
-      return Response.json({ error: 'Apenas admins podem restaurar backup' }, { status: 403 });
+    if (!user) {
+      return Response.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
     const body = await req.json();
-    const backup = body.backup; // { Cadastro: [...], Estoque: [...], ... }
+    const backup = body.backup;
 
     if (!backup || typeof backup !== 'object') {
       return Response.json({ error: 'Backup inválido' }, { status: 400 });
     }
 
+    const entities = base44.asServiceRole.entities;
     const resultados = {};
-    let totalRestaurado = 0;
+    let totalImportados = 0;
+    let totalPulados = 0;
 
-    for (const entidade of Object.keys(backup)) {
-      if (!ENTIDADES_VALIDAS.includes(entidade)) continue;
+    for (const entidade of ENTIDADES_VALIDAS) {
       const dados = backup[entidade];
-      if (!Array.isArray(dados)) continue;
+      if (!Array.isArray(dados) || dados.length === 0) continue;
 
-      let ok = 0;
-      let erros = 0;
-      for (const item of dados) {
-        try {
-          const { id, created_date, updated_date, created_by, created_by_id, entity_name, app_id, is_sample, is_deleted, deleted_date, environment, ...resto } = item;
-          // Se tem campo 'data', usar os dados de dentro
-          const dadosReais = item.data ? item.data : resto;
-          await base44.asServiceRole.entities[entidade].create(dadosReais);
-          ok++;
-          totalRestaurado++;
-        } catch (err) {
-          erros++;
+      const chaveFn = CHAVE_UNICA[entidade] || ((r) => r.id);
+
+      // Buscar chaves existentes para deduplicar
+      const chavesExistentes = await buscarChavesExistentes(entities, entidade, chaveFn);
+
+      // Filtrar apenas os novos
+      const novos = dados.filter(item => {
+        const ch = chaveFn(item);
+        if (!ch) return true;
+        return !chavesExistentes.has(String(ch).trim().toLowerCase());
+      });
+
+      const pulados = dados.length - novos.length;
+      totalPulados += pulados;
+
+      // Importar todos em paralelo com retry
+      const importarItem = async (item) => {
+        const dadosLimpos = limpar(item);
+        let tentativas = 0;
+        while (true) {
+          try {
+            await entities[entidade].create(dadosLimpos);
+            return true;
+          } catch (_) {
+            tentativas++;
+            if (tentativas >= 3) await new Promise(r => setTimeout(r, Math.min((tentativas - 2) * 300, 3000)));
+          }
         }
-      }
-      resultados[entidade] = { importados: ok, erros };
+      };
+
+      await Promise.all(novos.map(importarItem));
+      totalImportados += novos.length;
+      resultados[entidade] = { importados: novos.length, pulados };
     }
 
     return Response.json({
       sucesso: true,
-      msg: `${totalRestaurado} registros restaurados com sucesso.`,
+      totalImportados,
+      totalPulados,
       resultados,
     });
   } catch (error) {
