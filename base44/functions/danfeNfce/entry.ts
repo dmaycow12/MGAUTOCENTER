@@ -59,17 +59,6 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: 'Este endpoint é apenas para NFCe.' });
     }
 
-    // Se já tem PDF salvo permanente e válido (não HTML, não o arquivo genérico nota_nova.pdf), retorna direto
-    const pdfJaSalvo = nota.pdf_url &&
-      !nota.pdf_url.endsWith('.html') &&
-      !nota.pdf_url.includes('/notas_fiscais_consumidor/') &&
-      !nota.pdf_url.includes('nota_nova.pdf') &&
-      !nota.pdf_url.includes('focusnfe') &&
-      !nota.pdf_url.includes('amazonaws');
-    if (pdfJaSalvo) {
-      return Response.json({ sucesso: true, pdf_url: nota.pdf_url });
-    }
-
     // Determina a URL do HTML da DANFE
     let htmlUrl = '';
     let chave = nota.chave_acesso || '';
