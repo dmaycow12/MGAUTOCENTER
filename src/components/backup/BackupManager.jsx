@@ -242,7 +242,6 @@ export default function BackupManager() {
 
         let importados = 0;
         let concluidos = 0;
-        const PARALELO = 5; // 5 simultâneos para velocidade
 
         const importarItem = async (item) => {
           const dadosLimpos = limparItem(item);
@@ -255,7 +254,8 @@ export default function BackupManager() {
               break;
             } catch (_) {
               tentativas++;
-              await new Promise(r => setTimeout(r, Math.min(tentativas * 1000, 8000)));
+              // Delay só a partir da 3ª tentativa para não frear logo
+              if (tentativas >= 3) await new Promise(r => setTimeout(r, Math.min((tentativas - 2) * 500, 5000)));
             }
           }
           concluidos++;
@@ -269,10 +269,8 @@ export default function BackupManager() {
           });
         };
 
-        // Processar em lotes paralelos de PARALELO itens
-        for (let i = 0; i < novos.length; i += PARALELO) {
-          await Promise.all(novos.slice(i, i + PARALELO).map(importarItem));
-        }
+        // Todos em paralelo de uma vez
+        await Promise.all(novos.map(importarItem));
 
         resumoPorEntidade[entidade] = { importados, pulados };
       }
