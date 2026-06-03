@@ -934,7 +934,7 @@ function CellEdit({ item, field, className = "", editandoCell, onIniciar, onSalv
             if (proximoItem) setTimeout(() => onIniciar(proximoItem, field), 50);
           }
         }}
-        className={`bg-gray-700 border border-green-500 text-white rounded px-2 py-0.5 text-sm focus:outline-none w-full ${className}`}
+        className={`bg-gray-700 border border-green-500 text-white rounded px-3 py-2 text-base focus:outline-none w-full ${className}`}
         style={{textTransform: CAMPOS_NUMERICOS.includes(field) ? "none" : "uppercase"}}
       />
     );
