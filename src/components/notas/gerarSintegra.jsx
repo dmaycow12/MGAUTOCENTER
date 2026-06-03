@@ -1,8 +1,14 @@
 // Gerador de SINTEGRA - Layout padrão MG
 // Registros: 10, 11, 50, 54, 75, 90
 
+function removeAcentos(str) {
+  return String(str ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x20-\x7E]/g, " "); // remove qualquer char fora do ASCII imprimível
+}
 function r(str, n, dir = "L", pad = " ") {
-  const s = String(str ?? "");
+  const s = removeAcentos(str);
   if (dir === "L") return s.padEnd(n, pad).substring(0, n);
   return s.padStart(n, pad).slice(-n);
 }
