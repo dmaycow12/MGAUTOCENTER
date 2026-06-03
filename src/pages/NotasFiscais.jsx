@@ -156,6 +156,8 @@ export default function NotasFiscais() {
   const [emitindo, setEmitindo] = useState(false);
   const [transmitindo, setTransmitindo] = useState(null);
   const [aguardandoEmissao, setAguardandoEmissao] = useState(false);
+  const [pollingNotaId, setPollingNotaId] = useState(null);
+  const pollingIntervalRef = useRef(null);
   const currentEditIdRef = useRef(null);
   const [msgFeedback, setMsgFeedback] = useState(null);
   const [temSpedy, setTemSpedy] = useState(false);
@@ -546,6 +548,35 @@ export default function NotasFiscais() {
     setTimeout(() => setMsgFeedback(null), 6000);
   };
 
+  // Inicia polling automático para nota em processamento
+  const iniciarPolling = (notaId, ref) => {
+    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+    setPollingNotaId(notaId);
+    pollingIntervalRef.current = setInterval(async () => {
+      try {
+        const res = await base44.functions.invoke('consultarStatusNotas', { nota_id: notaId, ref });
+        const status = res.data?.status;
+        if (status && status !== 'Processando' && status !== 'Aguardando Sefin Nacional') {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+          setPollingNotaId(null);
+          setAguardandoEmissao(false);
+          if (status === 'Emitida') {
+            feedback('sucesso', 'Nota fiscal autorizada com sucesso!');
+          } else {
+            feedback('erro', `Nota com status: ${status}`);
+          }
+          load();
+        }
+      } catch (_) {}
+    }, 5000);
+  };
+
+  // Limpa polling ao desmontar
+  React.useEffect(() => {
+    return () => { if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current); };
+  }, []);
+
   const validarForm = (f) => {
     const erros = {};
     if (!f.cliente_nome?.trim()) erros.cliente_nome = "Nome do cliente é obrigatório";
@@ -677,19 +708,34 @@ export default function NotasFiscais() {
       };
       const response = await base44.functions.invoke("emitirNotaFiscal", payload);
 
-      if (response.data?.sucesso) {
+      const statusRetorno = response.data?.status;
+      if (response.data?.sucesso && statusRetorno === 'Processando') {
+        // Nota enviada mas ainda processando — polling automático
+        const notaIdParaPolling = rascunhoNota?.id || currentEditIdRef.current;
+        feedback('sucesso', 'Nota enviada! Aguardando autorização da SEFAZ...');
+        currentEditIdRef.current = null;
+        setForm(defaultForm());
+        load();
+        if (notaIdParaPolling) {
+          const notaAtualizada = await base44.entities.NotaFiscal.filter({ id: notaIdParaPolling });
+          iniciarPolling(notaIdParaPolling, notaAtualizada[0]?.spedy_id || response.data?.ref);
+        }
+      } else if (response.data?.sucesso) {
         feedback('sucesso', `Nota ${f.tipo} transmitida com sucesso! ${response.data.mensagem || ''}`);
         currentEditIdRef.current = null;
         setForm(defaultForm());
+        setAguardandoEmissao(false);
+        load();
       } else {
         feedback("erro", response.data?.erro || "Erro ao emitir.");
+        load();
       }
-      load();
     } catch (e) {
       feedback("erro", "Erro: " + e.message);
+      load();
     }
     setEmitindo(false);
-    setAguardandoEmissao(false);
+    if (!pollingNotaId) setAguardandoEmissao(false);
     setTransmitindo(null);
   };
 
@@ -1677,14 +1723,15 @@ export default function NotasFiscais() {
 
 
 
-      {/* Overlay aguardando emissão */}
-      {aguardandoEmissao && (
+      {/* Overlay aguardando emissão / polling */}
+      {(aguardandoEmissao || pollingNotaId) && (
         <div className="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center gap-6">
           <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
           <div className="text-center">
-            <p className="text-white text-xl font-bold">Transmitindo nota fiscal...</p>
-            <p className="text-gray-400 text-sm mt-2">Aguardando autorização da SEFAZ</p>
+            <p className="text-white text-xl font-bold">{pollingNotaId ? 'Aguardando SEFAZ...' : 'Transmitindo nota fiscal...'}</p>
+            <p className="text-gray-400 text-sm mt-2">{pollingNotaId ? 'Consultando a cada 5s' : 'Aguardando autorização da SEFAZ'}</p>
           </div>
+          {pollingNotaId && <button onClick={() => { clearInterval(pollingIntervalRef.current); pollingIntervalRef.current = null; setPollingNotaId(null); setAguardandoEmissao(false); load(); }} className="text-sm text-gray-400 hover:text-white border border-gray-700 px-4 py-2 rounded-lg transition-all">Fechar e consultar manualmente</button>}
         </div>
       )}
 

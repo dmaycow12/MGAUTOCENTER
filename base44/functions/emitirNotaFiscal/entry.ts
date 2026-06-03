@@ -517,8 +517,9 @@ Deno.serve(async (req) => {
     let resultFinal = result;
 
     const epConsultaFinal = tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfe';
-    // NFCe e NFe costumam ser síncronas — verifica primeiro sem esperar
-    for (let i = 0; i < 8; i++) {
+    // NFSe pode demorar mais — até 25 tentativas (~2 minutos)
+    const maxTentativas = tipo === 'NFSe' ? 25 : 10;
+    for (let i = 0; i < maxTentativas; i++) {
       const st = resultFinal.status || '';
       if (st === 'autorizado') {
         statusNota = 'Emitida';
@@ -532,9 +533,15 @@ Deno.serve(async (req) => {
         statusNota = mensagemSefaz.includes('E0160') ? 'Erro de Sincronia Governamental' : 'Erro';
         break;
       }
-      if (i < 7) {
-        // Intervalo progressivo: 1s, 1s, 1.5s, 1.5s, 2s, 2s, 2s
-        const intervalo = i < 2 ? 1000 : i < 4 ? 1500 : 2000;
+      if (i < maxTentativas - 1) {
+        // NFSe: intervalo progressivo mais longo (3s, 3s, 4s, 4s, 5s, 5s... até 8s)
+        // NFe/NFCe: intervalo curto (1s, 1s, 1.5s, 1.5s, 2s...)
+        let intervalo;
+        if (tipo === 'NFSe') {
+          intervalo = i < 4 ? 3000 : i < 8 ? 4000 : i < 14 ? 5000 : 8000;
+        } else {
+          intervalo = i < 2 ? 1000 : i < 4 ? 1500 : 2000;
+        }
         await new Promise(r => setTimeout(r, intervalo));
         const consultaResp = await fetch(`${FOCUSNFE_BASE}/${epConsultaFinal}/${ref}?completo=1`, {
           headers: { 'Authorization': AUTH_HEADER },
