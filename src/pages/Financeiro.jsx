@@ -20,7 +20,6 @@ function SortHeader({ label, col, sortCol, sortDir, onClick, className = "" }) {
 const PAGAMENTO_OPTIONS = ["A Combinar", "Boleto", "Cartão", "Dinheiro", "PIX"];
 const STATUS_BG_LIST = { "Pendente": "#cc0000", "Pago": "#16a34a", "Atrasado": "#dc2626" };
 import FinanceiroCard from "@/components/financeiro/FinanceiroCard";
-import FinanceiroRow from "@/components/financeiro/FinanceiroRow";
 import FluxoMes from "@/components/dashboard/FluxoMes";
 
 const defaultForm = () => ({
@@ -476,9 +475,19 @@ export default function Financeiro() {
               ))}
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+              {/* Cabeçalho com ordenação */}
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-700 bg-gray-800/50">
+                <span className="text-xs font-semibold text-gray-400 w-16 flex-shrink-0">Tipo</span>
+                <span className="text-xs font-semibold text-gray-400 flex-1">Descrição</span>
+                <span className="text-xs font-semibold text-gray-400 w-24 flex-shrink-0">Data</span>
+                <div className="w-[148px] flex-shrink-0" />
+                <div className="w-36 flex-shrink-0" />
+                <span className="text-xs font-semibold text-gray-400 w-28 flex-shrink-0 text-right">Valor</span>
+                <div className="w-16 flex-shrink-0" />
+              </div>
               {sortedFiltrados.map(item => (
-                <FinanceiroRow key={item.id} item={item}
+                <ListRow key={item.id} item={item}
                   onEdit={() => { setForm({...defaultForm(),...item}); setEditando(item); setShowForm(true); }}
                   onDelete={() => excluir(item.id)}
                   onAlterarStatus={alterarStatus}
@@ -609,6 +618,146 @@ function KpiCard({ icon: Icon, label, value, color }) {
       <p className={`text-xl font-bold ${colors[color].split(" ")[0]}`}>
         R$ {Number(value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
       </p>
+    </div>
+  );
+}
+
+function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }) {
+  const [pagamentoOpen, setPagamentoOpen] = useState(false);
+  const pagamentoRef = useRef(null);
+  const pagamentoBtnRef = useRef(null);
+  const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0 });
+
+  const calcPos = () => {
+    if (!pagamentoBtnRef.current) return;
+    const rect = pagamentoBtnRef.current.getBoundingClientRect();
+    const itemHeight = PAGAMENTO_OPTIONS.length * 36;
+    const openUp = window.innerHeight - rect.bottom < itemHeight + 8;
+    setDropPos({
+      top: openUp ? rect.top - itemHeight - 4 : rect.bottom + 4,
+      left: rect.right - 144,
+      width: 144,
+    });
+  };
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (pagamentoRef.current && !pagamentoRef.current.contains(e.target) &&
+          pagamentoBtnRef.current && !pagamentoBtnRef.current.contains(e.target)) {
+        setPagamentoOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  useEffect(() => {
+    if (!pagamentoOpen) return;
+    const onScroll = () => calcPos();
+    window.addEventListener("scroll", onScroll, true);
+    return () => window.removeEventListener("scroll", onScroll, true);
+  }, [pagamentoOpen]);
+
+  const abrirDropdown = () => {
+    if (item.status === "Pago") return;
+    calcPos();
+    setPagamentoOpen(v => !v);
+  };
+
+  const fmt = v => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+
+  return (
+    <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
+      {/* Tipo badge */}
+      <span className={`text-xs px-2 py-1 rounded-full font-medium flex-shrink-0 w-16 text-center ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo}</span>
+
+      {/* Descrição */}
+      <div className="flex-1 min-w-0">
+        <p className="text-white font-semibold text-sm truncate">{item.descricao}</p>
+        {item.categoria && item.categoria !== "Ordem de Venda" && (
+          <p className="text-gray-500 text-xs truncate">{item.categoria}</p>
+        )}
+      </div>
+
+      {/* Data */}
+      <span className="text-gray-400 text-xs flex-shrink-0 w-24">{item.data_vencimento ? item.data_vencimento.split("-").reverse().join("/") : "—"}</span>
+
+      {/* Status — botões sempre visíveis */}
+      <div className="flex gap-1 flex-shrink-0">
+        {STATUS_OPTIONS.map(s => {
+          const bloqueado = s === "Pago" && (!item.forma_pagamento || item.forma_pagamento === "A Combinar");
+          const isActive = item.status === s || (s === "Pendente" && item.status === "Atrasado");
+          return (
+            <button key={s}
+              onClick={() => {
+                if (bloqueado) {
+                  toast.error("Defina a forma de pagamento antes de marcar como Pago.");
+                  return;
+                }
+                onAlterarStatus(item, s);
+              }}
+              className="px-2 py-1 rounded-lg text-xs font-bold transition-all"
+              style={{
+                background: isActive ? STATUS_BG_LIST[s] : "#374151",
+                color: "#fff",
+                opacity: isActive ? 1 : bloqueado ? 0.25 : 0.45,
+                cursor: bloqueado ? "not-allowed" : "pointer",
+              }}
+              title={bloqueado ? "Selecione a forma de pagamento primeiro" : undefined}
+            >
+              {s}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Pagamento — dropdown via portal */}
+      <div className="relative flex-shrink-0">
+        <button
+          ref={pagamentoBtnRef}
+          onClick={abrirDropdown}
+          className="w-36 text-xs px-2 py-1.5 rounded-lg font-medium text-center truncate transition-all"
+          style={{
+            background: "#374151",
+            color: item.status === "Pago" ? "#9ca3af" : "#fff",
+            cursor: item.status === "Pago" ? "not-allowed" : "pointer",
+            opacity: item.status === "Pago" ? 0.6 : 1,
+          }}
+          title={item.status === "Pago" ? "Não é possível alterar a forma de pagamento de um lançamento já pago" : "Clique para alterar"}
+        >
+          {item.forma_pagamento || "—"}
+        </button>
+        {pagamentoOpen && createPortal(
+           <div
+             ref={pagamentoRef}
+             style={{ position: "fixed", top: dropPos.top, left: dropPos.left, width: dropPos.width, zIndex: 999999 }}
+            className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden"
+          >
+            {PAGAMENTO_OPTIONS.map(op => (
+              <button key={op} onClick={() => {
+                if (item.status === "Pago") return;
+                onAlterarPagamento(item, op);
+                setPagamentoOpen(false);
+              }}
+                className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700 hover:text-white transition-all"
+                style={{ background: item.forma_pagamento === op ? "#062C9B" : "transparent", color: item.forma_pagamento === op ? "#fff" : undefined }}
+              >
+                {op}
+              </button>
+            ))}
+          </div>,
+          document.body
+        )}
+      </div>
+
+      {/* Valor */}
+      <span className={`font-bold text-sm flex-shrink-0 w-28 text-right ${item.tipo==="Receita"?"text-green-400":"text-red-400"}`}>R$ {fmt(item.valor)}</span>
+
+      {/* Ações */}
+      <div className="flex gap-1 flex-shrink-0">
+        <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all"><Edit className="w-3.5 h-3.5"/></button>
+        <button onClick={onDelete} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
+      </div>
     </div>
   );
 }
