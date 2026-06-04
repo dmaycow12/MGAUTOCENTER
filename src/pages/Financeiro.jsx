@@ -638,8 +638,8 @@ function KpiCard({ icon: Icon, label, value, color }) {
   );
 }
 
-const ETIQUETA_OPTIONS = ["Receita", "Despesa", "Ativo"];
-const ETIQUETA_COLORS = { "Receita": "#16a34a", "Despesa": "#cc0000", "Ativo": "#062C9B" };
+const ETIQUETA_OPTIONS = ["Receita", "Despesa", "Ativo", "Retirada"];
+const ETIQUETA_COLORS = { "Receita": "#16a34a", "Despesa": "#cc0000", "Ativo": "#062C9B", "Retirada": "#7c3aed" };
 
 function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, onAlterarEtiqueta }) {
   const [pagamentoOpen, setPagamentoOpen] = useState(false);
@@ -801,7 +801,7 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
             style={{ position: "fixed", top: etiquetaPos.top, left: etiquetaPos.left, width: etiquetaPos.width, zIndex: 999999 }}
             className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden"
           >
-            {["Despesa", "Ativo"].map(op => (
+            {["Despesa", "Ativo", "Retirada"].map(op => (
               <button key={op} onClick={() => {
                 onAlterarEtiqueta(item, op);
                 setEtiquetaOpen(false);
