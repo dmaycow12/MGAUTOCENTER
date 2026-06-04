@@ -637,7 +637,7 @@ function KpiCard({ icon: Icon, label, value, color }) {
 }
 
 const ETIQUETA_OPTIONS = ["Receita", "Despesa", "Ativo"];
-const ETIQUETA_COLORS = { "Receita": "#16a34a", "Despesa": "#cc0000", "Ativo": "#b45309" };
+const ETIQUETA_COLORS = { "Receita": "#16a34a", "Despesa": "#cc0000", "Ativo": "#062C9B" };
 
 function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, onAlterarEtiqueta }) {
   const [pagamentoOpen, setPagamentoOpen] = useState(false);
