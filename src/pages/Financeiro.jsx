@@ -667,9 +667,10 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
   const fmt = v => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 
   return (
-    <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
+    <div className="flex items-center px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
       {/* Tipo badge */}
       <span className={`text-xs px-2 py-1 rounded-full font-medium flex-shrink-0 w-16 text-center ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo}</span>
+      <div className="w-px h-6 bg-gray-700 mx-2" />
 
       {/* Descrição */}
       <div className="flex-1 min-w-0">
@@ -678,9 +679,11 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
           <p className="text-gray-500 text-xs truncate">{item.categoria}</p>
         )}
       </div>
+      <div className="w-px h-6 bg-gray-700 mx-2" />
 
       {/* Data */}
       <span className="text-gray-400 text-xs flex-shrink-0 w-24">{item.data_vencimento ? item.data_vencimento.split("-").reverse().join("/") : "—"}</span>
+      <div className="w-px h-6 bg-gray-700 mx-2" />
 
       {/* Status — botões sempre visíveis */}
       <div className="flex gap-1 flex-shrink-0">
@@ -710,6 +713,7 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
           );
         })}
       </div>
+      <div className="w-px h-6 bg-gray-700 mx-2" />
 
       {/* Pagamento — dropdown via portal */}
       <div className="relative flex-shrink-0">
@@ -749,9 +753,11 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
           document.body
         )}
       </div>
+      <div className="w-px h-6 bg-gray-700 mx-2" />
 
       {/* Valor */}
       <span className={`font-bold text-sm flex-shrink-0 w-28 text-right ${item.tipo==="Receita"?"text-green-400":"text-red-400"}`}>R$ {fmt(item.valor)}</span>
+      <div className="w-px h-6 bg-gray-700 mx-2" />
 
       {/* Ações */}
       <div className="flex gap-1 flex-shrink-0">
