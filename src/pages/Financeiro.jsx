@@ -826,12 +826,16 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
           className="rounded-lg text-xs font-bold text-center transition-all"
           style={{
             width: 60,
-            padding: "4px 0",
+            padding: "4px 2px",
             background: "#374151",
             color: item.status === "Pago" ? "#9ca3af" : "#fff",
             cursor: item.status === "Pago" ? "not-allowed" : "pointer",
             opacity: item.status === "Pago" ? 0.6 : 1,
             flexShrink: 0,
+            fontSize: 9,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
           title={item.status === "Pago" ? "Não é possível alterar a forma de pagamento de um lançamento já pago" : "Clique para alterar"}
         >
