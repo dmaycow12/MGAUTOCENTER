@@ -42,6 +42,15 @@
       ],
       "default": "Pendente"
     },
+    "etiqueta": {
+      "type": "string",
+      "title": "Etiqueta",
+      "enum": [
+        "Receita",
+        "Despesa",
+        "Ativo"
+      ]
+    },
     "forma_pagamento": {
       "type": "string",
       "title": "Forma de Pagamento",

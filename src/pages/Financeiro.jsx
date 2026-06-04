@@ -205,6 +205,11 @@ export default function Financeiro() {
     load();
   };
 
+  const alterarEtiqueta = async (item, novaEtiqueta) => {
+    await base44.entities.Financeiro.update(item.id, { etiqueta: novaEtiqueta });
+    load();
+  };
+
   const alterarPagamento = async (item, novaForma) => {
     const update = { forma_pagamento: novaForma };
     if (["Dinheiro", "PIX"].includes(novaForma)) {
@@ -486,6 +491,8 @@ export default function Financeiro() {
                 <div className="w-px h-6 bg-gray-700 mx-2" />
                 <span className="text-xs font-semibold text-gray-400 w-32 flex-shrink-0 text-center">Status</span>
                 <div className="w-px h-6 bg-gray-700 mx-2" />
+                <span className="text-xs font-semibold text-gray-400 w-24 flex-shrink-0 text-center">Etiqueta</span>
+                <div className="w-px h-6 bg-gray-700 mx-2" />
                 <span className="text-xs font-semibold text-gray-400 w-32 flex-shrink-0 text-center">Forma Pagamento</span>
                 <div className="w-px h-6 bg-gray-700 mx-2" />
                 <span className="text-xs font-semibold text-gray-400 w-28 flex-shrink-0 text-center">Valor</span>
@@ -498,6 +505,7 @@ export default function Financeiro() {
                   onDelete={() => excluir(item.id)}
                   onAlterarStatus={alterarStatus}
                   onAlterarPagamento={alterarPagamento}
+                  onAlterarEtiqueta={alterarEtiqueta}
                 />
               ))}
             </div>
@@ -628,11 +636,18 @@ function KpiCard({ icon: Icon, label, value, color }) {
   );
 }
 
-function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }) {
+const ETIQUETA_OPTIONS = ["Receita", "Despesa", "Ativo"];
+const ETIQUETA_COLORS = { "Receita": "#16a34a", "Despesa": "#cc0000", "Ativo": "#b45309" };
+
+function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, onAlterarEtiqueta }) {
   const [pagamentoOpen, setPagamentoOpen] = useState(false);
+  const [etiquetaOpen, setEtiquetaOpen] = useState(false);
   const pagamentoRef = useRef(null);
   const pagamentoBtnRef = useRef(null);
+  const etiquetaRef = useRef(null);
+  const etiquetaBtnRef = useRef(null);
   const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0 });
+  const [etiquetaPos, setEtiquetaPos] = useState({ top: 0, left: 0, width: 0 });
 
   const calcPos = () => {
     if (!pagamentoBtnRef.current) return;
@@ -646,11 +661,27 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
     });
   };
 
+  const calcEtiquetaPos = () => {
+    if (!etiquetaBtnRef.current) return;
+    const rect = etiquetaBtnRef.current.getBoundingClientRect();
+    const itemHeight = ETIQUETA_OPTIONS.length * 36;
+    const openUp = window.innerHeight - rect.bottom < itemHeight + 8;
+    setEtiquetaPos({
+      top: openUp ? rect.top - itemHeight - 4 : rect.bottom + 4,
+      left: rect.right - 144,
+      width: 144,
+    });
+  };
+
   useEffect(() => {
     const handler = (e) => {
       if (pagamentoRef.current && !pagamentoRef.current.contains(e.target) &&
           pagamentoBtnRef.current && !pagamentoBtnRef.current.contains(e.target)) {
         setPagamentoOpen(false);
+      }
+      if (etiquetaRef.current && !etiquetaRef.current.contains(e.target) &&
+          etiquetaBtnRef.current && !etiquetaBtnRef.current.contains(e.target)) {
+        setEtiquetaOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -664,11 +695,29 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
     return () => window.removeEventListener("scroll", onScroll, true);
   }, [pagamentoOpen]);
 
+  useEffect(() => {
+    if (!etiquetaOpen) return;
+    const onScroll = () => calcEtiquetaPos();
+    window.addEventListener("scroll", onScroll, true);
+    return () => window.removeEventListener("scroll", onScroll, true);
+  }, [etiquetaOpen]);
+
   const abrirDropdown = () => {
     if (item.status === "Pago") return;
     calcPos();
     setPagamentoOpen(v => !v);
   };
+
+  const abrirEtiqueta = () => {
+    // Receita não pode mudar etiqueta
+    if (item.tipo === "Receita") return;
+    calcEtiquetaPos();
+    setEtiquetaOpen(v => !v);
+  };
+
+  // Etiqueta padrão baseada no tipo
+  const etiquetaAtual = item.etiqueta || (item.tipo === "Receita" ? "Receita" : "Despesa");
+  const etiquetaColor = ETIQUETA_COLORS[etiquetaAtual] || "#374151";
 
   const fmt = v => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 
@@ -722,6 +771,48 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
             </button>
           );
         })}
+      </div>
+      <div className="w-px h-6 bg-gray-700 mx-2" />
+
+      {/* Etiqueta — dropdown via portal */}
+      <div className="relative flex-shrink-0 w-24 flex justify-center">
+        <button
+          ref={etiquetaBtnRef}
+          onClick={abrirEtiqueta}
+          className="rounded-lg text-xs font-bold text-center transition-all"
+          style={{
+            width: 60,
+            padding: "4px 0",
+            background: etiquetaColor,
+            color: "#fff",
+            cursor: item.tipo === "Receita" ? "default" : "pointer",
+            opacity: item.tipo === "Receita" ? 0.8 : 1,
+            flexShrink: 0,
+          }}
+          title={item.tipo === "Receita" ? "Receitas sempre têm etiqueta Receita" : "Clique para alterar"}
+        >
+          {etiquetaAtual}
+        </button>
+        {etiquetaOpen && createPortal(
+          <div
+            ref={etiquetaRef}
+            style={{ position: "fixed", top: etiquetaPos.top, left: etiquetaPos.left, width: etiquetaPos.width, zIndex: 999999 }}
+            className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden"
+          >
+            {["Despesa", "Ativo"].map(op => (
+              <button key={op} onClick={() => {
+                onAlterarEtiqueta(item, op);
+                setEtiquetaOpen(false);
+              }}
+                className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700 hover:text-white transition-all"
+                style={{ background: etiquetaAtual === op ? "#062C9B" : "transparent", color: etiquetaAtual === op ? "#fff" : undefined }}
+              >
+                {op}
+              </button>
+            ))}
+          </div>,
+          document.body
+        )}
       </div>
       <div className="w-px h-6 bg-gray-700 mx-2" />
 
