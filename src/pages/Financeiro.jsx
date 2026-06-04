@@ -255,7 +255,7 @@ export default function Financeiro() {
 
   const filtrados = itemsNoPeriodo.filter(i => {
     const matchSearch = !search || i.descricao?.toLowerCase().includes(search.toLowerCase()) || i.categoria?.toLowerCase().includes(search.toLowerCase());
-    const matchTipo = filtroTipo === "Todos" || i.tipo === filtroTipo;
+    const matchTipo = filtroTipo === "Todos" || i.tipo === filtroTipo || (filtroTipo === "Saída" && (i.tipo === "Saída" || i.tipo === "Despesa"));
     const matchStatus = filtroStatus === "Todos" || i.status === filtroStatus;
     return matchSearch && matchTipo && matchStatus;
   });
@@ -305,8 +305,8 @@ export default function Financeiro() {
               <button onClick={() => { setForm({ ...defaultForm(), tipo: "Receita" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all" style={{background: "#00ff00", color: "#fff"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
                 <Plus className="w-4 h-4" /> Receita
               </button>
-              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Despesa" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all" style={{background: "#cc0000", color: "#fff"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
-                <Plus className="w-4 h-4" /> Despesa
+              <button onClick={() => { setForm({ ...defaultForm(), tipo: "Saída" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all" style={{background: "#cc0000", color: "#fff"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
+                <Plus className="w-4 h-4" /> Saída
               </button>
             </div>
 
@@ -437,10 +437,10 @@ export default function Financeiro() {
 
         {/* Linha 3: filtro tipo — Receita / Despesa / Todos */}
             <div className="flex gap-2">
-              {["Todos","Receita","Despesa"].map(t => (
-                <button key={t} onClick={() => { setFiltroTipo(t); localStorage.setItem("fin_filtroTipo", t); }} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroTipo === t ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{t === "Todos" ? "Tudo" : t}</button>
-              ))}
-            </div>
+               {["Todos","Receita","Saída"].map(t => (
+                 <button key={t} onClick={() => { setFiltroTipo(t); localStorage.setItem("fin_filtroTipo", t); }} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroTipo === t ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{t === "Todos" ? "Tudo" : t}</button>
+               ))}
+             </div>
 
             {/* Linha 4: filtro status — Pendente / Atrasado / Pago / Todos */}
             <div className="flex gap-2">
@@ -524,10 +524,10 @@ export default function Financeiro() {
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <F label="Tipo">
-                  <div className={`input-dark flex items-center ${form.tipo === "Receita" ? "text-green-400" : "text-red-400"}`}>
-                    {form.tipo}
-                  </div>
-                </F>
+                    <div className={`input-dark flex items-center ${form.tipo === "Receita" ? "text-green-400" : form.tipo === "Saída" || form.tipo === "Despesa" ? "text-red-400" : ""}`}>
+                      {form.tipo === "Despesa" ? "Saída" : form.tipo}
+                    </div>
+                  </F>
                 <F label="Status">
                   <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} className="input-dark">
                     {["Pendente","Pago","Atrasado","Cancelado"].map(s => <option key={s}>{s}</option>)}
@@ -726,7 +726,7 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
   return (
     <div className="flex items-center px-2 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
       {/* Tipo badge */}
-      <span className={`text-xs px-1 py-1 rounded-full font-medium flex-shrink-0 w-14 text-center ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo}</span>
+      <span className={`text-xs px-1 py-1 rounded-full font-medium flex-shrink-0 w-14 text-center ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo === "Despesa" ? "Saída" : item.tipo}</span>
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Descrição */}
@@ -866,7 +866,7 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Valor */}
-      <span className={`font-bold text-xs flex-shrink-0 w-20 text-center ${item.tipo==="Receita"?"text-green-400":"text-red-400"}`}>R$ {fmt(item.valor)}</span>
+      <span className={`font-bold text-xs flex-shrink-0 w-20 text-center ${item.tipo==="Receita"?"text-green-400":item.tipo==="Saída"||item.tipo==="Despesa"?"text-red-400":""}`}>R$ {fmt(item.valor)}</span>
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Ações */}
