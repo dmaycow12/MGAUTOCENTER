@@ -475,40 +475,25 @@ export default function Financeiro() {
               ))}
             </div>
           ) : (
-            <div className="space-y-6">
-              {["Receita", "Despesa"].map(tipo => {
-                const itemsTipo = sortedFiltrados.filter(i => i.tipo === tipo);
-                if (itemsTipo.length === 0) return null;
-                return (
-                  <div key={tipo} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-                    {/* Título centralizado */}
-                    <div className="px-4 py-3 bg-gray-800/30 flex items-center justify-center border-b border-gray-700">
-                      <h3 className={`text-sm font-bold ${tipo === "Receita" ? "text-green-400" : "text-red-400"}`}>{tipo}</h3>
-                    </div>
-                    
-                    {/* Cabeçalho com ordenação */}
-                    <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-700 bg-gray-800/50">
-                      <span className="text-xs font-semibold text-gray-400 w-16 flex-shrink-0">Tipo</span>
-                      <span className="text-xs font-semibold text-gray-400 flex-1">Descrição</span>
-                      <span className="text-xs font-semibold text-gray-400 w-24 flex-shrink-0">Data</span>
-                      <div className="w-[148px] flex-shrink-0" />
-                      <div className="w-36 flex-shrink-0" />
-                      <span className="text-xs font-semibold text-gray-400 w-28 flex-shrink-0 text-right">Valor</span>
-                      <div className="w-16 flex-shrink-0" />
-                    </div>
-                    
-                    {/* Linhas da tabela */}
-                    {itemsTipo.map(item => (
-                      <ListRow key={item.id} item={item}
-                        onEdit={() => { setForm({...defaultForm(),...item}); setEditando(item); setShowForm(true); }}
-                        onDelete={() => excluir(item.id)}
-                        onAlterarStatus={alterarStatus}
-                        onAlterarPagamento={alterarPagamento}
-                      />
-                    ))}
-                  </div>
-                );
-              })}
+            <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+              {/* Cabeçalho com ordenação */}
+              <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-700 bg-gray-800/50">
+                <span className="text-xs font-semibold text-gray-400 w-16 flex-shrink-0">Tipo</span>
+                <span className="text-xs font-semibold text-gray-400 flex-1">Descrição</span>
+                <span className="text-xs font-semibold text-gray-400 w-24 flex-shrink-0">Data</span>
+                <div className="w-[148px] flex-shrink-0" />
+                <div className="w-36 flex-shrink-0" />
+                <span className="text-xs font-semibold text-gray-400 w-28 flex-shrink-0 text-right">Valor</span>
+                <div className="w-16 flex-shrink-0" />
+              </div>
+              {sortedFiltrados.map(item => (
+                <ListRow key={item.id} item={item}
+                  onEdit={() => { setForm({...defaultForm(),...item}); setEditando(item); setShowForm(true); }}
+                  onDelete={() => excluir(item.id)}
+                  onAlterarStatus={alterarStatus}
+                  onAlterarPagamento={alterarPagamento}
+                />
+              ))}
             </div>
           )}
 
