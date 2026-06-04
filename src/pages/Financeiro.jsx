@@ -484,7 +484,7 @@ export default function Financeiro() {
                 <div className="w-px h-6 bg-gray-700 mx-2" />
                 <span className="text-xs font-semibold text-gray-400 w-24 flex-shrink-0 text-center">Data</span>
                 <div className="w-px h-6 bg-gray-700 mx-2" />
-                <span className="text-xs font-semibold text-gray-400 w-20 flex-shrink-0 text-center">Status</span>
+                <span className="text-xs font-semibold text-gray-400 w-32 flex-shrink-0 text-center">Status</span>
                 <div className="w-px h-6 bg-gray-700 mx-2" />
                 <span className="text-xs font-semibold text-gray-400 w-32 flex-shrink-0 text-center">Forma Pagamento</span>
                 <div className="w-px h-6 bg-gray-700 mx-2" />
@@ -692,7 +692,7 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
       <div className="w-px h-6 bg-gray-700 mx-2" />
 
       {/* Status — botões sempre visíveis */}
-      <div className="flex gap-1 flex-shrink-0 w-20 justify-center">
+      <div className="flex gap-1 flex-shrink-0 w-32 justify-center">
         {STATUS_OPTIONS.map(s => {
           const bloqueado = s === "Pago" && (!item.forma_pagamento || item.forma_pagamento === "A Combinar");
           const isActive = item.status === s || (s === "Pendente" && item.status === "Atrasado");
