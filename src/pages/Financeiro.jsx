@@ -481,24 +481,24 @@ export default function Financeiro() {
             </div>
           ) : (
             <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-x-auto">
-              <div style={{minWidth: 800}}>
+              <div style={{minWidth: 700}}>
               {/* Cabeçalho com ordenação */}
-              <div className="flex items-center px-4 py-2 border-b border-gray-700 bg-gray-800/50">
-                <span className="text-xs font-semibold text-gray-400 w-16 flex-shrink-0 text-center">Tipo</span>
-                <div className="w-px h-6 bg-gray-700 mx-2" />
+              <div className="flex items-center px-2 py-2 border-b border-gray-700 bg-gray-800/50">
+                <span className="text-xs font-semibold text-gray-400 w-14 flex-shrink-0 text-center">Tipo</span>
+                <div className="w-px h-6 bg-gray-700 mx-1" />
                 <span className="text-xs font-semibold text-gray-400 flex-1 text-center">Descrição</span>
-                <div className="w-px h-6 bg-gray-700 mx-2" />
-                <span className="text-xs font-semibold text-gray-400 w-24 flex-shrink-0 text-center">Data</span>
-                <div className="w-px h-6 bg-gray-700 mx-2" />
-                <span className="text-xs font-semibold text-gray-400 w-32 flex-shrink-0 text-center">Status</span>
-                <div className="w-px h-6 bg-gray-700 mx-2" />
-                <span className="text-xs font-semibold text-gray-400 w-24 flex-shrink-0 text-center">Etiqueta</span>
-                <div className="w-px h-6 bg-gray-700 mx-2" />
-                <span className="text-xs font-semibold text-gray-400 w-32 flex-shrink-0 text-center">Forma Pagamento</span>
-                <div className="w-px h-6 bg-gray-700 mx-2" />
-                <span className="text-xs font-semibold text-gray-400 w-28 flex-shrink-0 text-center">Valor</span>
-                <div className="w-px h-6 bg-gray-700 mx-2" />
-                <span className="text-xs font-semibold text-gray-400 w-16 flex-shrink-0 text-center">Ações</span>
+                <div className="w-px h-6 bg-gray-700 mx-1" />
+                <span className="text-xs font-semibold text-gray-400 w-16 flex-shrink-0 text-center">Data</span>
+                <div className="w-px h-6 bg-gray-700 mx-1" />
+                <span className="text-xs font-semibold text-gray-400 w-28 flex-shrink-0 text-center">Status</span>
+                <div className="w-px h-6 bg-gray-700 mx-1" />
+                <span className="text-xs font-semibold text-gray-400 w-16 flex-shrink-0 text-center">Etiqueta</span>
+                <div className="w-px h-6 bg-gray-700 mx-1" />
+                <span className="text-xs font-semibold text-gray-400 w-20 flex-shrink-0 text-center">Pagamento</span>
+                <div className="w-px h-6 bg-gray-700 mx-1" />
+                <span className="text-xs font-semibold text-gray-400 w-20 flex-shrink-0 text-center">Valor</span>
+                <div className="w-px h-6 bg-gray-700 mx-1" />
+                <span className="text-xs font-semibold text-gray-400 w-14 flex-shrink-0 text-center">Ações</span>
               </div>
               {sortedFiltrados.map(item => (
                 <ListRow key={item.id} item={item}
@@ -724,26 +724,26 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
   const fmt = v => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 
   return (
-    <div className="flex items-center px-4 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
+    <div className="flex items-center px-2 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
       {/* Tipo badge */}
-      <span className={`text-xs px-2 py-1 rounded-full font-medium flex-shrink-0 w-16 text-center ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo}</span>
-      <div className="w-px h-6 bg-gray-700 mx-2" />
+      <span className={`text-xs px-1 py-1 rounded-full font-medium flex-shrink-0 w-14 text-center ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo}</span>
+      <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Descrição */}
       <div className="flex-1 min-w-0 text-center">
-        <p className="text-white font-semibold text-sm truncate">{item.descricao}</p>
+        <p className="text-white font-semibold text-xs truncate">{item.descricao}</p>
         {item.categoria && item.categoria !== "Ordem de Venda" && (
           <p className="text-gray-500 text-xs truncate">{item.categoria}</p>
         )}
       </div>
-      <div className="w-px h-6 bg-gray-700 mx-2" />
+      <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Data */}
-      <span className="text-gray-400 text-xs flex-shrink-0 w-24 text-center">{item.data_vencimento ? item.data_vencimento.split("-").reverse().join("/") : "—"}</span>
-      <div className="w-px h-6 bg-gray-700 mx-2" />
+      <span className="text-gray-400 text-xs flex-shrink-0 w-16 text-center">{item.data_vencimento ? item.data_vencimento.split("-").reverse().join("/") : "—"}</span>
+      <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Status — botões sempre visíveis */}
-      <div className="flex gap-1 flex-shrink-0 w-32 justify-center">
+      <div className="flex gap-1 flex-shrink-0 w-28 justify-center">
         {STATUS_OPTIONS.map(s => {
           const bloqueado = s === "Pago" && (!item.forma_pagamento || item.forma_pagamento === "A Combinar");
           const isActive = item.status === s || (s === "Pendente" && item.status === "Atrasado");
@@ -774,10 +774,10 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
           );
         })}
       </div>
-      <div className="w-px h-6 bg-gray-700 mx-2" />
+      <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Etiqueta — dropdown via portal */}
-      <div className="relative flex-shrink-0 w-24 flex justify-center">
+      <div className="relative flex-shrink-0 w-16 flex justify-center">
         <button
           ref={etiquetaBtnRef}
           onClick={abrirEtiqueta}
@@ -816,10 +816,10 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
           document.body
         )}
       </div>
-      <div className="w-px h-6 bg-gray-700 mx-2" />
+      <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Pagamento — dropdown via portal */}
-      <div className="relative flex-shrink-0 w-32 flex justify-center">
+      <div className="relative flex-shrink-0 w-20 flex justify-center">
         <button
           ref={pagamentoBtnRef}
           onClick={abrirDropdown}
@@ -859,14 +859,14 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
           document.body
         )}
       </div>
-      <div className="w-px h-6 bg-gray-700 mx-2" />
+      <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Valor */}
-      <span className={`font-bold text-sm flex-shrink-0 w-28 text-center ${item.tipo==="Receita"?"text-green-400":"text-red-400"}`}>R$ {fmt(item.valor)}</span>
-      <div className="w-px h-6 bg-gray-700 mx-2" />
+      <span className={`font-bold text-xs flex-shrink-0 w-20 text-center ${item.tipo==="Receita"?"text-green-400":"text-red-400"}`}>R$ {fmt(item.valor)}</span>
+      <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Ações */}
-      <div className="flex gap-1 flex-shrink-0 w-16 justify-center">
+      <div className="flex gap-1 flex-shrink-0 w-14 justify-center">
         <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all"><Edit className="w-3.5 h-3.5"/></button>
         <button onClick={onDelete} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
       </div>
