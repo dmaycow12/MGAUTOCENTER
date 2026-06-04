@@ -1,10 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import JSZip from 'npm:jszip@3.10.1';
 
 const ENTIDADES_VALIDAS = ["Cadastro", "Estoque", "NotaFiscal", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
 
 const CAMPOS_INTERNOS = new Set(["id","created_date","updated_date","created_by","created_by_id","entity_name","app_id","is_sample","is_deleted","deleted_date","environment","_xml_arquivo","_pdf_arquivo","data"]);
 
-// Chave única de negócio por entidade para evitar duplicatas
 const CHAVE_UNICA = {
   Cadastro:    (r) => r.cpf_cnpj || r.email || r.nome,
   Estoque:     (r) => r.codigo || r.descricao,
@@ -44,18 +44,62 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-
-    if (!user) {
-      return Response.json({ error: 'Não autenticado' }, { status: 401 });
-    }
+    if (!user) return Response.json({ error: 'Não autenticado' }, { status: 401 });
 
     const body = await req.json();
-    const backup = body.backup;
+    const zip_url = body.zip_url;
+    if (!zip_url) return Response.json({ error: 'zip_url é obrigatório' }, { status: 400 });
 
-    if (!backup || typeof backup !== 'object') {
-      return Response.json({ error: 'Backup inválido' }, { status: 400 });
+    // 1. Baixar o ZIP da URL
+    const zipRes = await fetch(zip_url);
+    if (!zipRes.ok) throw new Error(`Falha ao baixar ZIP: ${zipRes.status}`);
+    const zipBuffer = await zipRes.arrayBuffer();
+
+    // 2. Descompactar
+    const zip = new JSZip();
+    await zip.loadAsync(zipBuffer);
+
+    const backup = {};
+
+    // Entidades simples
+    for (const entidade of ENTIDADES_VALIDAS) {
+      if (entidade === "NotaFiscal") continue;
+      const entry = zip.file(`${entidade}/${entidade}.json`);
+      if (entry) {
+        try { backup[entidade] = JSON.parse(await entry.async("string")); } catch (_) {}
+      }
     }
 
+    // NotaFiscal: parsear JSONs individuais + injetar XML
+    const notasBackup = [];
+    const xmlMap = {};
+    zip.forEach((caminho, entry) => {
+      if (caminho.startsWith("NotaFiscal/") && !entry.dir && caminho.endsWith(".xml")) {
+        xmlMap[caminho.replace("NotaFiscal/", "")] = entry;
+      }
+    });
+    const notaPromises = [];
+    zip.forEach((caminho, entry) => {
+      if (caminho.startsWith("NotaFiscal/") && !entry.dir && caminho.endsWith(".json") && !caminho.includes("_indice")) {
+        notaPromises.push(
+          entry.async("string").then(async (s) => {
+            try {
+              const nota = JSON.parse(s);
+              if (nota._xml_arquivo && xmlMap[nota._xml_arquivo]) {
+                const xmlTexto = await xmlMap[nota._xml_arquivo].async("string");
+                if (xmlTexto.trim().startsWith("<")) nota.xml_original = xmlTexto;
+              }
+              delete nota._xml_arquivo;
+              notasBackup.push(nota);
+            } catch (_) {}
+          })
+        );
+      }
+    });
+    await Promise.all(notaPromises);
+    if (notasBackup.length > 0) backup["NotaFiscal"] = notasBackup;
+
+    // 3. Importar entidade por entidade
     const entities = base44.asServiceRole.entities;
     const resultados = {};
     let totalImportados = 0;
@@ -66,11 +110,8 @@ Deno.serve(async (req) => {
       if (!Array.isArray(dados) || dados.length === 0) continue;
 
       const chaveFn = CHAVE_UNICA[entidade] || ((r) => r.id);
-
-      // Buscar chaves existentes para deduplicar
       const chavesExistentes = await buscarChavesExistentes(entities, entidade, chaveFn);
 
-      // Filtrar apenas os novos
       const novos = dados.filter(item => {
         const ch = chaveFn(item);
         if (!ch) return true;
@@ -80,32 +121,27 @@ Deno.serve(async (req) => {
       const pulados = dados.length - novos.length;
       totalPulados += pulados;
 
-      // Importar todos em paralelo com retry
-      const importarItem = async (item) => {
+      // Importar em paralelo com retry
+      await Promise.all(novos.map(async (item) => {
         const dadosLimpos = limpar(item);
         let tentativas = 0;
         while (true) {
           try {
             await entities[entidade].create(dadosLimpos);
-            return true;
+            break;
           } catch (_) {
             tentativas++;
             if (tentativas >= 3) await new Promise(r => setTimeout(r, Math.min((tentativas - 2) * 300, 3000)));
           }
         }
-      };
+      }));
 
-      await Promise.all(novos.map(importarItem));
       totalImportados += novos.length;
       resultados[entidade] = { importados: novos.length, pulados };
     }
 
-    return Response.json({
-      sucesso: true,
-      totalImportados,
-      totalPulados,
-      resultados,
-    });
+    return Response.json({ sucesso: true, totalImportados, totalPulados, resultados });
+
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

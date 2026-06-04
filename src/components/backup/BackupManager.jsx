@@ -145,47 +145,16 @@ export default function BackupManager() {
   const restaurarBackup = async (file) => {
     setRestaurando(true);
     setMsgRestaurar(null);
-    setProgressoRestauro({ etapa: "Lendo ZIP...", atual: 0, total: 0, entidade: "", importados: 0, pulados: 0, erros: 0 });
+    setProgressoRestauro({ etapa: "Fazendo upload do arquivo...", atual: 0, total: 0, importados: 0, pulados: 0 });
 
     try {
-      const zip = await JSZip.loadAsync(file);
-      const backup = {};
+      // 1. Upload do ZIP diretamente — sem parsear, sem base64
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
-      for (const entidade of ENTIDADES) {
-        const entry = zip.file(`${entidade}/${entidade}.json`);
-        if (entry) {
-          try { backup[entidade] = JSON.parse(await entry.async("string")); } catch (_) {}
-        }
-      }
+      setProgressoRestauro({ etapa: "Processando no servidor...", atual: 0, total: 0, importados: 0, pulados: 0 });
 
-      const notasBackup = [];
-      const xmlMap = {};
-      zip.forEach((caminho, entry) => {
-        if (caminho.startsWith("NotaFiscal/") && !entry.dir && caminho.replace("NotaFiscal/", "").endsWith(".xml")) {
-          xmlMap[caminho.replace("NotaFiscal/", "")] = entry;
-        }
-      });
-      const notaEntries = [];
-      zip.forEach((caminho, entry) => {
-        if (caminho.startsWith("NotaFiscal/") && !entry.dir && caminho.endsWith(".json") && !caminho.includes("_indice")) {
-          notaEntries.push(entry.async("string").then((s) => { try { notasBackup.push(JSON.parse(s)); } catch (_) {} }));
-        }
-      });
-      await Promise.all(notaEntries);
-      for (const nota of notasBackup) {
-        if (nota._xml_arquivo && xmlMap[nota._xml_arquivo]) {
-          const xmlTexto = await xmlMap[nota._xml_arquivo].async("string");
-          if (xmlTexto.trim().startsWith("<")) nota.xml_original = xmlTexto;
-        }
-        delete nota._xml_arquivo;
-      }
-      if (notasBackup.length > 0) backup["NotaFiscal"] = notasBackup;
-
-      if (Object.keys(backup).length === 0) throw new Error("Nenhuma entidade encontrada no ZIP.");
-
-      setProgressoRestauro({ etapa: "Enviando para o servidor...", atual: 0, total: 0, importados: 0, pulados: 0 });
-
-      const res = await base44.functions.invoke("restaurarBackup", { backup });
+      // 2. Backend baixa a URL, descompacta e importa tudo
+      const res = await base44.functions.invoke("restaurarBackup", { zip_url: file_url });
       const { totalImportados, totalPulados, resultados } = res.data;
 
       const resumoTexto = Object.entries(resultados || {})
@@ -195,7 +164,6 @@ export default function BackupManager() {
 
       setProgressoRestauro(null);
       setMsgRestaurar({ tipo: "sucesso", texto: `${totalImportados} registros importados, ${totalPulados} pulados (já existiam). ${resumoTexto}` });
-
 
     } catch (e) {
       setProgressoRestauro(null);
