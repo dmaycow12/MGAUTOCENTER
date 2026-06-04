@@ -121,20 +121,22 @@ Deno.serve(async (req) => {
       const pulados = dados.length - novos.length;
       totalPulados += pulados;
 
-      // Importar em paralelo com retry
-      await Promise.all(novos.map(async (item) => {
-        const dadosLimpos = limpar(item);
+      // Importar em lotes com bulkCreate
+      const LOTE = 100;
+      const dadosLimpos = novos.map(limpar);
+      for (let i = 0; i < dadosLimpos.length; i += LOTE) {
+        const lote = dadosLimpos.slice(i, i + LOTE);
         let tentativas = 0;
         while (true) {
           try {
-            await entities[entidade].create(dadosLimpos);
+            await entities[entidade].bulkCreate(lote);
             break;
           } catch (_) {
             tentativas++;
             if (tentativas >= 3) await new Promise(r => setTimeout(r, Math.min((tentativas - 2) * 300, 3000)));
           }
         }
-      }));
+      }
 
       totalImportados += novos.length;
       resultados[entidade] = { importados: novos.length, pulados };
