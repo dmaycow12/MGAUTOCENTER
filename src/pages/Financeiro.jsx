@@ -705,12 +705,16 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
                 }
                 onAlterarStatus(item, s);
               }}
-              className="px-2 py-1 rounded-lg text-xs font-bold transition-all"
+              className="rounded-lg text-xs font-bold transition-all"
               style={{
+                width: 60,
+                padding: "4px 0",
+                textAlign: "center",
                 background: isActive ? STATUS_BG_LIST[s] : "#374151",
                 color: "#fff",
                 opacity: isActive ? 1 : bloqueado ? 0.25 : 0.45,
                 cursor: bloqueado ? "not-allowed" : "pointer",
+                flexShrink: 0,
               }}
               title={bloqueado ? "Selecione a forma de pagamento primeiro" : undefined}
             >
@@ -726,12 +730,15 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }
         <button
           ref={pagamentoBtnRef}
           onClick={abrirDropdown}
-          className="text-xs px-2 py-1.5 rounded-lg font-medium text-center truncate transition-all"
+          className="rounded-lg text-xs font-bold text-center transition-all"
           style={{
+            width: 60,
+            padding: "4px 0",
             background: "#374151",
             color: item.status === "Pago" ? "#9ca3af" : "#fff",
             cursor: item.status === "Pago" ? "not-allowed" : "pointer",
             opacity: item.status === "Pago" ? 0.6 : 1,
+            flexShrink: 0,
           }}
           title={item.status === "Pago" ? "Não é possível alterar a forma de pagamento de um lançamento já pago" : "Clique para alterar"}
         >
