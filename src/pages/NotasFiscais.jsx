@@ -316,7 +316,8 @@ export default function NotasFiscais() {
 
   const filtradas = notas.filter(n => {
     if (filtroTipo.length === 0 || filtroModeloNF.length === 0) return false;
-    const isEntrada = n.status === "Importada" || n.status === "Lançada";
+    const isDevolucaoNota = n.observacoes === "DEVOLUÇÃO";
+    const isEntrada = !isDevolucaoNota && (n.status === "Importada" || n.status === "Lançada");
     const matchTipo = filtroTipo.length === 0 || (filtroTipo.includes("Saída") && !isEntrada) || (filtroTipo.includes("Entrada") && isEntrada);
     const matchModelo = filtroModeloNF.length === 0 || filtroModeloNF.includes(n.tipo);
     if (!matchTipo || !matchModelo) return false;
@@ -974,7 +975,7 @@ export default function NotasFiscais() {
         return null;
       };
 
-      const isEntrada = (n) => n.status === "Importada" || n.status === "Lançada";
+      const isEntrada = (n) => n.observacoes !== "DEVOLUÇÃO" && (n.status === "Importada" || n.status === "Lançada");
 
       // Estrutura de pastas
       const pastas = {

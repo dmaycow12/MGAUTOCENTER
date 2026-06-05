@@ -318,6 +318,8 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
     { id: "financeiro", label: "Financeiro", icon: DollarSign },
   ];
 
+  const isDevolucao = !!dados?.natOp?.toLowerCase().includes("devol");
+
   const finalizarImportacao = async () => {
     setSalvando(true);
     setErro("");
@@ -358,6 +360,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
           numero: dados.numero || "",
           serie: dados.serie || "",
           forma_pagamento: financeiro.forma_pagamento || "",
+          ...(isDevolucao ? { observacoes: "DEVOLUÇÃO" } : {}),
         });
       } else {
         await base44.entities.NotaFiscal.create({
@@ -366,7 +369,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
           xml_content: JSON.stringify(itensParaSalvar),
           ...(xmlUrl ? { xml_url: xmlUrl } : {}),
           data_emissao: dados.dataEmissao,
-          observacoes: `CNPJ Fornecedor: ${dados.cnpjEmit}`,
+          observacoes: isDevolucao ? "DEVOLUÇÃO" : `CNPJ Fornecedor: ${dados.cnpjEmit}`,
         });
       }
 
@@ -472,12 +475,15 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
 
       salvarMapa(mapaAtualizado);
 
+      const tipoFinanceiro = isDevolucao ? "Receita" : "Despesa";
+      const categoriaFinanceiro = isDevolucao ? "Devolução de Compra" : "Compra de Peças / Materiais";
+
       const isBoleto = financeiro.forma_pagamento === "Boleto" && boletos.length > 1;
       if (isBoleto) {
         for (const bol of boletos) {
           await base44.entities.Financeiro.create({
-            tipo: "Despesa", categoria: "Compra de Peças / Materiais",
-            descricao: `NF ${dados.numero} — ${nomeFornecedor || dados.emitente}${bol.nDup ? ` (Bol. ${bol.nDup})` : ""}`,
+            tipo: tipoFinanceiro, categoria: categoriaFinanceiro,
+            descricao: `NF ${dados.numero} — ${nomeFornecedor || dados.emitente}${bol.nDup ? ` (Bol. ${bol.nDup})` : ""}${isDevolucao ? " (Devolução)" : ""}`,
             valor: bol.vDup, forma_pagamento: "Boleto",
             data_vencimento: bol.dVenc || financeiro.data_vencimento,
             data_pagamento: "", status: "Pendente", observacoes: financeiro.observacoes,
@@ -485,8 +491,8 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
         }
       } else {
         await base44.entities.Financeiro.create({
-          tipo: "Despesa", categoria: "Compra de Peças / Materiais",
-          descricao: `NF ${dados.numero} — ${nomeFornecedor || dados.emitente}`,
+          tipo: tipoFinanceiro, categoria: categoriaFinanceiro,
+          descricao: `NF ${dados.numero} — ${nomeFornecedor || dados.emitente}${isDevolucao ? " (Devolução)" : ""}`,
           valor: dados.valor, forma_pagamento: financeiro.forma_pagamento,
           data_vencimento: financeiro.data_vencimento,
           data_pagamento: financeiro.status === "Pago" ? (financeiro.data_pagamento || new Date().toISOString().split("T")[0]) : "",
@@ -806,7 +812,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                 <p className="text-white font-medium mb-2">Resumo da operação:</p>
                 <div className="flex items-center gap-2 text-gray-400"><FileText className="w-4 h-4 text-blue-400" /> NF será marcada como <span className="text-white font-medium">Lançada</span></div>
                 <div className="flex items-center gap-2 text-gray-400"><Package className="w-4 h-4 text-green-400" />{itens.filter(i => i.dar_entrada_estoque).length} iten(s) entram no estoque</div>
-                <div className="flex items-center gap-2 text-gray-400"><DollarSign className="w-4 h-4" style={{ color: GREEN }} /> Lançamento de <span className="text-red-400 font-medium">Despesa</span> no financeiro — {financeiro.status}</div>
+                <div className="flex items-center gap-2 text-gray-400"><DollarSign className="w-4 h-4" style={{ color: GREEN }} /> Lançamento de <span className={isDevolucao ? "text-green-400 font-medium" : "text-red-400 font-medium"}>{isDevolucao ? "Receita (Devolução)" : "Despesa"}</span> no financeiro — {financeiro.status}</div>
               </div>
 
               {erro && (
