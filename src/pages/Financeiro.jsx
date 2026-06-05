@@ -481,7 +481,7 @@ export default function Financeiro() {
             </div>
           ) : (
             <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-x-auto">
-              <div style={{minWidth: 700}}>
+              <div style={{minWidth: 1100}}>
               {/* Cabeçalho com ordenação */}
                <div className="flex items-center px-2 py-2 border-b border-gray-700 bg-gray-800/50">
                  <span className="text-xs font-semibold text-gray-400 w-14 flex-shrink-0 text-center">Tipo</span>
