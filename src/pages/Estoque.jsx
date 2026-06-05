@@ -368,20 +368,44 @@ export default function Estoque() {
     setShowReajuste(false);
 
     try {
-      const response = await base44.functions.invoke('reajustarEstoqueStream', {
-        reajusteTipo,
-        reajusteValor: Number(reajusteValor),
-        reajusteGrupo,
-      });
+      const PAGE = 30;
+      let skip = 0;
+      let totalGeral = 0;
+      let sucessoTotal = 0;
+      let falhasTotal = 0;
+      let hasMore = true;
 
-      const { sucesso, falhas } = response.data;
-      const mensagemErro = falhas > 0 ? `${falhas} produto(s) falharam.` : null;
+      while (hasMore) {
+        const response = await base44.functions.invoke('reajustarEstoqueStream', {
+          reajusteTipo,
+          reajusteValor: Number(reajusteValor),
+          reajusteGrupo,
+          skip,
+          limit: PAGE,
+        });
 
+        const { sucesso, falhas, total, hasMore: more, processados } = response.data;
+        totalGeral = total;
+        sucessoTotal += sucesso;
+        falhasTotal += falhas;
+        skip = processados;
+        hasMore = more;
+
+        setProgressoReajuste(prev => ({
+          ...prev,
+          progresso: processados,
+          sucessos: sucessoTotal,
+          status: 'processando',
+          total: totalGeral,
+        }));
+      }
+
+      const mensagemErro = falhasTotal > 0 ? `${falhasTotal} produto(s) falharam.` : null;
       setProgressoReajuste(prev => ({
         ...prev,
-        progresso: sucesso + falhas,
-        sucessos: sucesso,
-        status: falhas > 0 ? 'aviso' : 'sucesso',
+        progresso: totalGeral,
+        sucessos: sucessoTotal,
+        status: falhasTotal > 0 ? 'aviso' : 'sucesso',
         erro: mensagemErro,
       }));
 
@@ -929,7 +953,7 @@ export default function Estoque() {
       <ProgressoReajuste
         isOpen={progressoReajuste.isOpen}
         onClose={() => setProgressoReajuste(prev => ({ ...prev, isOpen: false }))}
-        total={items.length > 0 ? (reajusteGrupo === "Todos" ? items.length : items.filter(i => i.categoria === reajusteGrupo).length) : 0}
+        total={progressoReajuste.total || (reajusteGrupo === "Todos" ? items.length : items.filter(i => i.categoria === reajusteGrupo).length)}
         progresso={progressoReajuste.progresso}
         status={progressoReajuste.status}
         erro={progressoReajuste.erro}
