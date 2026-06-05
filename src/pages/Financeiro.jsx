@@ -734,10 +734,10 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Descrição */}
-      <div className="text-center overflow-hidden" style={{width: 180, minWidth: 180, flexShrink: 0}}>
-        <p className="text-white font-semibold text-xs whitespace-nowrap overflow-hidden" style={{textOverflow: "clip"}}>{item.descricao}</p>
+      <div className="flex-1 text-center" style={{minWidth: 120}}>
+        <p className="text-white font-semibold text-xs">{item.descricao}</p>
         {item.categoria && item.categoria !== "Ordem de Venda" && (
-          <p className="text-gray-500 text-xs whitespace-nowrap overflow-hidden" style={{textOverflow: "clip"}}>{item.categoria}</p>
+          <p className="text-gray-500 text-xs">{item.categoria}</p>
         )}
       </div>
       <div className="w-px h-6 bg-gray-700 mx-1" />
