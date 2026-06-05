@@ -790,40 +790,6 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
       </div>
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
-      {/* Status — botões sempre visíveis */}
-      <div className="flex gap-1 flex-shrink-0 w-44 justify-center">
-        {STATUS_OPTIONS.map(s => {
-          const bloqueado = s === "Pago" && (!item.forma_pagamento || item.forma_pagamento === "A Combinar");
-          const isActive = item.status === s || (s === "Pendente" && item.status === "Atrasado");
-          return (
-            <button key={s}
-              onClick={() => {
-                if (bloqueado) {
-                  toast.error("Defina a forma de pagamento antes de marcar como Pago.");
-                  return;
-                }
-                onAlterarStatus(item, s);
-              }}
-              className="rounded-lg text-xs font-bold transition-all"
-              style={{
-                width: 60,
-                padding: "4px 0",
-                textAlign: "center",
-                background: isActive ? STATUS_BG_LIST[s] : "#374151",
-                color: "#fff",
-                opacity: isActive ? 1 : bloqueado ? 0.25 : 0.45,
-                cursor: bloqueado ? "not-allowed" : "pointer",
-                flexShrink: 0,
-              }}
-              title={bloqueado ? "Selecione a forma de pagamento primeiro" : undefined}
-            >
-              {s}
-            </button>
-          );
-        })}
-      </div>
-      <div className="w-px h-6 bg-gray-700 mx-1" />
-
       {/* Pagamento — dropdown via portal */}
       <div className="relative flex-shrink-0 w-28 flex justify-center">
         <button
@@ -868,6 +834,40 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
           </div>,
           document.body
         )}
+      </div>
+      <div className="w-px h-6 bg-gray-700 mx-1" />
+
+      {/* Status — botões sempre visíveis */}
+      <div className="flex gap-1 flex-shrink-0 w-44 justify-center">
+        {STATUS_OPTIONS.map(s => {
+          const bloqueado = s === "Pago" && (!item.forma_pagamento || item.forma_pagamento === "A Combinar");
+          const isActive = item.status === s || (s === "Pendente" && item.status === "Atrasado");
+          return (
+            <button key={s}
+              onClick={() => {
+                if (bloqueado) {
+                  toast.error("Defina a forma de pagamento antes de marcar como Pago.");
+                  return;
+                }
+                onAlterarStatus(item, s);
+              }}
+              className="rounded-lg text-xs font-bold transition-all"
+              style={{
+                width: 60,
+                padding: "4px 0",
+                textAlign: "center",
+                background: isActive ? STATUS_BG_LIST[s] : "#374151",
+                color: "#fff",
+                opacity: isActive ? 1 : bloqueado ? 0.25 : 0.45,
+                cursor: bloqueado ? "not-allowed" : "pointer",
+                flexShrink: 0,
+              }}
+              title={bloqueado ? "Selecione a forma de pagamento primeiro" : undefined}
+            >
+              {s}
+            </button>
+          );
+        })}
       </div>
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
