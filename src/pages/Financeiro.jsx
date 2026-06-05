@@ -483,23 +483,23 @@ export default function Financeiro() {
             <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-x-auto">
               <div style={{minWidth: 700}}>
               {/* Cabeçalho com ordenação */}
-              <div className="flex items-center px-2 py-2 border-b border-gray-700 bg-gray-800/50">
-                <span className="text-xs font-semibold text-gray-400 w-14 flex-shrink-0 text-center">Tipo</span>
-                <div className="w-px h-6 bg-gray-700 mx-1" />
-                <span className="text-xs font-semibold text-gray-400 flex-1 text-center">Descrição</span>
-                <div className="w-px h-6 bg-gray-700 mx-1" />
-                <span className="text-xs font-semibold text-gray-400 w-16 flex-shrink-0 text-center">Data</span>
-                <div className="w-px h-6 bg-gray-700 mx-1" />
-                <span className="text-xs font-semibold text-gray-400 w-28 flex-shrink-0 text-center">Status</span>
-                <div className="w-px h-6 bg-gray-700 mx-1" />
-                <span className="text-xs font-semibold text-gray-400 w-16 flex-shrink-0 text-center">Etiqueta</span>
-                <div className="w-px h-6 bg-gray-700 mx-1" />
-                <span className="text-xs font-semibold text-gray-400 w-20 flex-shrink-0 text-center">Pagamento</span>
-                <div className="w-px h-6 bg-gray-700 mx-1" />
-                <span className="text-xs font-semibold text-gray-400 w-20 flex-shrink-0 text-center">Valor</span>
-                <div className="w-px h-6 bg-gray-700 mx-1" />
-                <span className="text-xs font-semibold text-gray-400 w-14 flex-shrink-0 text-center">Ações</span>
-              </div>
+               <div className="flex items-center px-2 py-2 border-b border-gray-700 bg-gray-800/50">
+                 <span className="text-xs font-semibold text-gray-400 w-14 flex-shrink-0 text-center">Tipo</span>
+                 <div className="w-px h-6 bg-gray-700 mx-1" />
+                 <span className="text-xs font-semibold text-gray-400 w-16 flex-shrink-0 text-center">Data</span>
+                 <div className="w-px h-6 bg-gray-700 mx-1" />
+                 <span className="text-xs font-semibold text-gray-400 flex-1 text-center">Descrição</span>
+                 <div className="w-px h-6 bg-gray-700 mx-1" />
+                 <span className="text-xs font-semibold text-gray-400 w-20 flex-shrink-0 text-center">Valor</span>
+                 <div className="w-px h-6 bg-gray-700 mx-1" />
+                 <span className="text-xs font-semibold text-gray-400 w-20 flex-shrink-0 text-center">Etiqueta</span>
+                 <div className="w-px h-6 bg-gray-700 mx-1" />
+                 <span className="text-xs font-semibold text-gray-400 w-28 flex-shrink-0 text-center">Pagamento</span>
+                 <div className="w-px h-6 bg-gray-700 mx-1" />
+                 <span className="text-xs font-semibold text-gray-400 w-44 flex-shrink-0 text-center">Status</span>
+                 <div className="w-px h-6 bg-gray-700 mx-1" />
+                 <span className="text-xs font-semibold text-gray-400 w-14 flex-shrink-0 text-center">Ações</span>
+               </div>
               {sortedFiltrados.map(item => (
                 <ListRow key={item.id} item={item}
                   onEdit={() => { setForm({...defaultForm(),...item}); setEditando(item); setShowForm(true); }}
