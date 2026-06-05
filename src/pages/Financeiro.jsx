@@ -729,6 +729,10 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
       <span className={`text-xs px-1 py-1 rounded-full font-medium flex-shrink-0 w-14 text-center ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo === "Despesa" ? "Saída" : item.tipo}</span>
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
+      {/* Data */}
+      <span className="text-gray-400 text-xs flex-shrink-0 w-16 text-center">{item.data_vencimento ? item.data_vencimento.split("-").reverse().join("/") : "—"}</span>
+      <div className="w-px h-6 bg-gray-700 mx-1" />
+
       {/* Descrição */}
       <div className="flex-1 min-w-0 text-center">
         <p className="text-white font-semibold text-xs truncate">{item.descricao}</p>
@@ -738,52 +742,20 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
       </div>
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
-      {/* Data */}
-      <span className="text-gray-400 text-xs flex-shrink-0 w-16 text-center">{item.data_vencimento ? item.data_vencimento.split("-").reverse().join("/") : "—"}</span>
+      {/* Valor */}
+      <span className={`font-bold text-xs flex-shrink-0 w-20 text-center ${item.tipo==="Receita"?"text-green-400":item.tipo==="Saída"||item.tipo==="Despesa"?"text-red-400":""}`}>R$ {fmt(item.valor)}</span>
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
-      {/* Status — botões sempre visíveis */}
-      <div className="flex gap-1 flex-shrink-0 w-28 justify-center">
-        {STATUS_OPTIONS.map(s => {
-          const bloqueado = s === "Pago" && (!item.forma_pagamento || item.forma_pagamento === "A Combinar");
-          const isActive = item.status === s || (s === "Pendente" && item.status === "Atrasado");
-          return (
-            <button key={s}
-              onClick={() => {
-                if (bloqueado) {
-                  toast.error("Defina a forma de pagamento antes de marcar como Pago.");
-                  return;
-                }
-                onAlterarStatus(item, s);
-              }}
-              className="rounded-lg text-xs font-bold transition-all"
-              style={{
-                width: 60,
-                padding: "4px 0",
-                textAlign: "center",
-                background: isActive ? STATUS_BG_LIST[s] : "#374151",
-                color: "#fff",
-                opacity: isActive ? 1 : bloqueado ? 0.25 : 0.45,
-                cursor: bloqueado ? "not-allowed" : "pointer",
-                flexShrink: 0,
-              }}
-              title={bloqueado ? "Selecione a forma de pagamento primeiro" : undefined}
-            >
-              {s}
-            </button>
-          );
-        })}
-      </div>
-      <div className="w-px h-6 bg-gray-700 mx-1" />
+
 
       {/* Etiqueta — dropdown via portal */}
-      <div className="relative flex-shrink-0 w-16 flex justify-center">
+      <div className="relative flex-shrink-0 w-20 flex justify-center">
         <button
           ref={etiquetaBtnRef}
           onClick={abrirEtiqueta}
           className="rounded-lg text-xs font-bold text-center transition-all"
           style={{
-            width: 60,
+            width: 70,
             padding: "4px 0",
             background: etiquetaColor,
             color: "#fff",
@@ -818,14 +790,48 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
       </div>
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
+      {/* Status — botões sempre visíveis */}
+      <div className="flex gap-1 flex-shrink-0 w-44 justify-center">
+        {STATUS_OPTIONS.map(s => {
+          const bloqueado = s === "Pago" && (!item.forma_pagamento || item.forma_pagamento === "A Combinar");
+          const isActive = item.status === s || (s === "Pendente" && item.status === "Atrasado");
+          return (
+            <button key={s}
+              onClick={() => {
+                if (bloqueado) {
+                  toast.error("Defina a forma de pagamento antes de marcar como Pago.");
+                  return;
+                }
+                onAlterarStatus(item, s);
+              }}
+              className="rounded-lg text-xs font-bold transition-all"
+              style={{
+                width: 60,
+                padding: "4px 0",
+                textAlign: "center",
+                background: isActive ? STATUS_BG_LIST[s] : "#374151",
+                color: "#fff",
+                opacity: isActive ? 1 : bloqueado ? 0.25 : 0.45,
+                cursor: bloqueado ? "not-allowed" : "pointer",
+                flexShrink: 0,
+              }}
+              title={bloqueado ? "Selecione a forma de pagamento primeiro" : undefined}
+            >
+              {s}
+            </button>
+          );
+        })}
+      </div>
+      <div className="w-px h-6 bg-gray-700 mx-1" />
+
       {/* Pagamento — dropdown via portal */}
-      <div className="relative flex-shrink-0 w-20 flex justify-center">
+      <div className="relative flex-shrink-0 w-28 flex justify-center">
         <button
           ref={pagamentoBtnRef}
           onClick={abrirDropdown}
           className="rounded-lg text-xs font-bold text-center transition-all"
           style={{
-            width: 60,
+            width: 90,
             padding: "4px 2px",
             background: "#374151",
             color: item.status === "Pago" ? "#9ca3af" : "#fff",
@@ -863,10 +869,6 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
           document.body
         )}
       </div>
-      <div className="w-px h-6 bg-gray-700 mx-1" />
-
-      {/* Valor */}
-      <span className={`font-bold text-xs flex-shrink-0 w-20 text-center ${item.tipo==="Receita"?"text-green-400":item.tipo==="Saída"||item.tipo==="Despesa"?"text-red-400":""}`}>R$ {fmt(item.valor)}</span>
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Ações */}
