@@ -488,7 +488,7 @@ export default function Financeiro() {
                  <div className="w-px h-6 bg-gray-700 mx-1" />
                  <span className="text-xs font-semibold text-gray-400 w-16 flex-shrink-0 text-center">Data</span>
                  <div className="w-px h-6 bg-gray-700 mx-1" />
-                 <span className="text-xs font-semibold text-gray-400 text-center" style={{minWidth: 120}}>Descrição</span>
+                 <span className="flex-1 text-xs font-semibold text-gray-400 text-center">Descrição</span>
                  <div className="w-px h-6 bg-gray-700 mx-1" />
                  <span className="text-xs font-semibold text-gray-400 w-20 flex-shrink-0 text-center">Valor</span>
                  <div className="w-px h-6 bg-gray-700 mx-1" />
@@ -734,8 +734,8 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Descrição */}
-      <div className="flex-shrink-0 text-center" style={{width: "max-content", maxWidth: 400}}>
-        <p className="text-white font-semibold text-xs whitespace-nowrap">{item.descricao}</p>
+      <div className="flex-1 text-center min-w-0">
+        <p className="text-white font-semibold text-xs whitespace-nowrap overflow-hidden text-ellipsis">{item.descricao}</p>
       </div>
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
