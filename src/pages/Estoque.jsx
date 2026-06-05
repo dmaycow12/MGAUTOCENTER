@@ -360,60 +360,38 @@ export default function Estoque() {
 
   const aplicarReajuste = async () => {
     if (!reajusteValor || Number(reajusteValor) <= 0) return alert("Informe um valor válido.");
-    const alvo = reajusteGrupo === "Todos" ? items : items.filter(i => i.categoria === reajusteGrupo);
-    if (!confirm(`Reajustar preço de venda de ${alvo.length} produto(s)?`)) return;
+    const qtd = reajusteGrupo === "Todos" ? items.length : items.filter(i => i.categoria === reajusteGrupo).length;
+    if (!confirm(`Reajustar preço de venda de ${qtd} produto(s)?`)) return;
     
     setAplicando(true);
     setProgressoReajuste({ isOpen: true, progresso: 0, status: 'processando', sucessos: 0, erro: null });
     setShowReajuste(false);
-    
+
     try {
-      let sucessosTotal = 0;
-      let falhasTotal = 0;
-      const batchSize = 50;
-      
-      // Processa em lotes pequenos para atualizar barra em tempo real
-      for (let i = 0; i < alvo.length; i += batchSize) {
-        const batch = alvo.slice(i, i + batchSize);
-        
-        const response = await base44.functions.invoke('reajustarEstoqueStream', {
-          items: batch,
-          reajusteTipo,
-          reajusteValor: Number(reajusteValor)
-        });
-        
-        sucessosTotal += response.data.sucesso;
-        falhasTotal += response.data.falhas;
-        
-        // Atualiza progresso em tempo real
-        setProgressoReajuste(prev => ({
-          ...prev,
-          progresso: sucessosTotal + falhasTotal,
-          sucessos: sucessosTotal,
-          status: 'processando'
-        }));
-        
-        // Pequena pausa entre lotes
-        await new Promise(r => setTimeout(r, 100));
-      }
-      
-      const mensagemErro = falhasTotal > 0 
-        ? `${falhasTotal} produto(s) falharam. Verifique a conexão e tente novamente.`
-        : null;
-      
+      const response = await base44.functions.invoke('reajustarEstoqueStream', {
+        reajusteTipo,
+        reajusteValor: Number(reajusteValor),
+        reajusteGrupo,
+      });
+
+      const { sucesso, falhas } = response.data;
+      const mensagemErro = falhas > 0 ? `${falhas} produto(s) falharam.` : null;
+
       setProgressoReajuste(prev => ({
         ...prev,
-        status: falhasTotal > 0 ? 'aviso' : 'sucesso',
-        erro: mensagemErro
+        progresso: sucesso + falhas,
+        sucessos: sucesso,
+        status: falhas > 0 ? 'aviso' : 'sucesso',
+        erro: mensagemErro,
       }));
-      
+
       await new Promise(r => setTimeout(r, 2000));
       load();
     } catch (err) {
       setProgressoReajuste(prev => ({
         ...prev,
         status: 'erro',
-        erro: String(err.message || 'Erro ao processar reajuste')
+        erro: String(err.message || 'Erro ao processar reajuste'),
       }));
     } finally {
       setAplicando(false);

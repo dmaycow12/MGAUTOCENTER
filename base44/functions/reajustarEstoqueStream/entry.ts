@@ -1,92 +1,55 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const arredondarVendaParaCinco = (valor) => {
-  const num = Number(valor);
-  return Math.ceil(num / 5) * 5;
-};
-
+const arredondarVendaParaCinco = (valor) => Math.ceil(Number(valor) / 5) * 5;
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { items, reajusteTipo, reajusteValor } = await req.json();
-    
-    if (!items || items.length === 0) {
-      return Response.json({ error: 'Nenhum item' }, { status: 400 });
-    }
-
+    const { reajusteTipo, reajusteValor, reajusteGrupo } = await req.json();
     const ajuste = Number(reajusteValor);
-    const total = items.length;
-    
-    // Prepara lista de atualizações
-    const pendentes = items.map(item => ({
+
+    // Busca todos os itens do estoque no servidor
+    const todos = await base44.asServiceRole.entities.Estoque.list('-created_date', 9999);
+    const alvo = reajusteGrupo && reajusteGrupo !== 'Todos'
+      ? todos.filter(i => i.categoria === reajusteGrupo)
+      : todos;
+
+    if (alvo.length === 0) return Response.json({ sucesso: 0, falhas: 0, total: 0 });
+
+    // Calcula novos preços
+    const atualizacoes = alvo.map(item => ({
       id: item.id,
-      descricao: item.descricao,
-      preco: arredondarVendaParaCinco(
-        reajusteTipo === "percentual"
+      valor_venda: arredondarVendaParaCinco(
+        reajusteTipo === 'percentual'
           ? Number(item.valor_custo || 0) * (1 + ajuste / 100)
           : Number(item.valor_venda || 0) + ajuste
       )
     }));
 
-    let sucessos = 0;
-    let tentativa = 0;
-    const maxTentativas = 50;
-    let delayBase = 100;
+    // Processa em lotes de 20 com delay entre lotes para evitar rate limit
+    const BATCH = 20;
+    let sucesso = 0;
+    let falhas = 0;
 
-    // Loop até 100% de sucesso ou max tentativas
-    while (pendentes.length > 0 && tentativa < maxTentativas) {
-      tentativa++;
-      const delay = Math.min(delayBase * tentativa, 5000);
-      
-      const paraProcessar = [...pendentes];
-      
-      for (const upd of paraProcessar) {
+    for (let i = 0; i < atualizacoes.length; i += BATCH) {
+      const lote = atualizacoes.slice(i, i + BATCH);
+      await Promise.all(lote.map(async upd => {
         try {
-          await base44.entities.Estoque.update(upd.id, { valor_venda: upd.preco });
-          sucessos++;
-          // Remove da lista de pendentes
-          const idx = pendentes.findIndex(p => p.id === upd.id);
-          if (idx > -1) pendentes.splice(idx, 1);
-        } catch (err) {
-          // Mantém na lista para retry
-          console.log(`Retry ${tentativa}: ${upd.id} - ${err?.message}`);
+          await base44.asServiceRole.entities.Estoque.update(upd.id, { valor_venda: upd.valor_venda });
+          sucesso++;
+        } catch {
+          falhas++;
         }
-      }
-
-      if (pendentes.length > 0) {
-        await sleep(delay);
-      }
+      }));
+      if (i + BATCH < atualizacoes.length) await sleep(300);
     }
 
-    // Retorna resultado
-    if (pendentes.length === 0) {
-      return Response.json({
-        sucesso: total,
-        falhas: 0,
-        total: total,
-        status: 'completo'
-      });
-    } else {
-      return Response.json({
-        sucesso: sucessos,
-        falhas: pendentes.length,
-        total: total,
-        status: 'falha_maxima_tentativa',
-        itensNaoAtualizados: pendentes.slice(0, 10)
-      }, { status: 500 });
-    }
+    return Response.json({ sucesso, falhas, total: atualizacoes.length });
   } catch (error) {
-    return Response.json({ 
-      error: error?.message || 'Erro',
-      tipo: 'erro_servidor'
-    }, { status: 500 });
+    return Response.json({ error: error?.message || 'Erro' }, { status: 500 });
   }
 });
