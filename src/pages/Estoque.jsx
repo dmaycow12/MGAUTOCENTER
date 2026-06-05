@@ -269,6 +269,50 @@ export default function Estoque() {
     a.href = url; a.download = "estoque.csv"; a.click();
     URL.revokeObjectURL(url);
   };
+  const exportarEstoqueBaixo = () => {
+    const baixo = items.filter(i => i.quantidade < i.estoque_minimo);
+    if (baixo.length === 0) return alert("Nenhum produto com estoque baixo.");
+    const rows = [["Codigo", "Descricao", "Quantidade Faltante"]];
+    for (const i of baixo) {
+      const falta = (Number(i.estoque_minimo || 0)) - (Number(i.quantidade || 0));
+      rows.push([i.codigo || "", i.descricao || "", falta]);
+    }
+    // Montar xlsx manualmente (formato OOXML mínimo)
+    const escapeXml = v => String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const cellRef = (r, c) => `${String.fromCharCode(64 + c)}${r}`;
+    const cells = rows.map((row, ri) =>
+      row.map((val, ci) => {
+        const ref = cellRef(ri + 1, ci + 1);
+        const isNum = typeof val === "number";
+        return isNum
+          ? `<c r="${ref}" t="n"><v>${val}</v></c>`
+          : `<c r="${ref}" t="inlineStr"><is><t>${escapeXml(val)}</t></is></c>`;
+      }).join("")
+    ).map((cells, ri) => `<row r="${ri + 1}">${cells}</row>`).join("");
+
+    const sheetXml = `<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${cells}</sheetData></worksheet>`;
+    const wbXml = `<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Reposicao" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+    const relsXml = `<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`;
+    const contentTypesXml = `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`;
+
+    // Usar biblioteca xlsx se disponível, senão usar CSV como fallback
+    import("xlsx").then(XLSX => {
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws["!cols"] = [{wch:15},{wch:50},{wch:20}];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Reposicao");
+      XLSX.writeFile(wb, "reposicao_estoque.xlsx");
+    }).catch(() => {
+      // fallback CSV
+      const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(";")).join("\n");
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "reposicao_estoque.csv"; a.click();
+      URL.revokeObjectURL(url);
+    });
+  };
+
   const grupos = ["Todos"];
 
   const abrirRegularizar = () => {
@@ -559,6 +603,16 @@ export default function Estoque() {
             onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
           >
             <Package className="w-4 h-4" /> Regularizar Saldo
+          </button>
+          <button
+            onClick={exportarEstoqueBaixo}
+            title="Baixar lista de produtos com estoque abaixo do mínimo"
+            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
+            style={{background: "#00ff00", color: "#000"}}
+            onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
+            onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
+          >
+            <AlertTriangle className="w-4 h-4" /> Reposição
           </button>
         </div>
 
