@@ -735,10 +735,7 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
 
       {/* Descrição */}
       <div className="flex-1 text-center" style={{minWidth: 120}}>
-        <p className="text-white font-semibold text-xs">{item.descricao}</p>
-        {item.categoria && item.categoria !== "Ordem de Venda" && (
-          <p className="text-gray-500 text-xs">{item.categoria}</p>
-        )}
+        <p className="text-white font-semibold text-xs whitespace-nowrap">{item.descricao}</p>
       </div>
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
