@@ -1438,8 +1438,8 @@ export default function NotasFiscais() {
             <div className="px-5 pt-4 flex-shrink-0 grid grid-cols-3 gap-4">
               <F label="Tipo de Nota Fiscal">
                 {(() => {
-                  const isConsumidor = !form.cliente_cpf_cnpj?.trim() || form.cliente_nome?.toUpperCase() === "CONSUMIDOR";
-                  if (isConsumidor) {
+                  const isConsumidorExplicito = form.cliente_nome?.toUpperCase() === "CONSUMIDOR";
+                  if (isConsumidorExplicito) {
                     return (
                       <div className="input-dark text-gray-300 cursor-not-allowed opacity-80">NFCe — Consumidor</div>
                     );
@@ -1449,7 +1449,6 @@ export default function NotasFiscais() {
                         const novoTipo = e.target.value;
                         let numero = proximoNumero(notas, novoTipo);
                         let serie = proximaSerie(notas, novoTipo);
-                        // Preserva os items ao mudar tipo — não limpa
                         setForm(f => ({ ...f, tipo: novoTipo, numero, serie }));
                     }} className="input-dark">
                       <option value="NFSe">NFSe — Serviço</option>
