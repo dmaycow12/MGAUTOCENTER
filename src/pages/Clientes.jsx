@@ -16,7 +16,7 @@ export default function Clientes() {
     const saved = localStorage.getItem("clientes_colunas");
     return saved ? JSON.parse(saved) : {
       tipo: true, nome: true, nome_fantasia: false, cpf_cnpj: true, telefone: true,
-      rg_ie: false, email: false, cep: false, endereco: false, numero: false, bairro: false, cidade: false, estado: false
+      rg_ie: false, cep: false, endereco: false, numero: false, bairro: false, cidade: false, estado: false
     };
   });
   const [form, setForm] = useState(defaultForm());
@@ -232,10 +232,8 @@ export default function Clientes() {
     { key: "telefone", label: "CONTATO" },
     { key: "nome_fantasia", label: "NOME SOCIAL / NOME FANTASIA" },
     { key: "rg_ie", label: "INSCRIÇÃO ESTADUAL" },
-    { key: "email", label: "E-MAIL" },
     { key: "cep", label: "CEP" },
     { key: "endereco", label: "ENDEREÇO" },
-    { key: "numero", label: "NÚMERO" },
     { key: "bairro", label: "BAIRRO" },
     { key: "cidade", label: "CIDADE" },
     { key: "estado", label: "ESTADO" }
@@ -329,10 +327,8 @@ export default function Clientes() {
                   {colunas.cpf_cnpj && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CPF/CNPJ</th>}
                   {colunas.telefone && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CONTATO</th>}
                   {colunas.rg_ie && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">INSCRIÇÃO ESTADUAL</th>}
-                  {colunas.email && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">E-MAIL</th>}
                   {colunas.cep && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CEP</th>}
                   {colunas.endereco && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">ENDEREÇO</th>}
-                  {colunas.numero && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">NÚMERO</th>}
                   {colunas.bairro && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">BAIRRO</th>}
                   {colunas.cidade && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CIDADE</th>}
                   {colunas.estado && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">ESTADO</th>}
@@ -402,10 +398,8 @@ export default function Clientes() {
                       {colunas.cpf_cnpj && renderCell("cpf_cnpj")}
                       {colunas.telefone && renderCell("telefone")}
                       {colunas.rg_ie && renderCell("rg_ie")}
-                      {colunas.email && renderCell("email", "truncate")}
                       {colunas.cep && renderCell("cep")}
                       {colunas.endereco && renderCell("endereco")}
-                      {colunas.numero && renderCell("numero")}
                       {colunas.bairro && renderCell("bairro")}
                       {colunas.cidade && renderCell("cidade")}
                       {colunas.estado && renderCell("estado")}
