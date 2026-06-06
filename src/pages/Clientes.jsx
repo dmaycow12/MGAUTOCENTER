@@ -110,7 +110,7 @@ export default function Clientes() {
   };
 
   function defaultForm() {
-    return { nome: "", nome_fantasia: "", categoria: "Cliente", tipo: "Pessoa Física", cpf_cnpj: "", rg_ie: "", telefone: "", email: "", cep: "", endereco: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", observacoes: "" };
+    return { nome: "", nome_fantasia: "", categoria: "Cliente", tipo: "Pessoa Física", cpf_cnpj: "", rg_ie: "", inscricao_municipal: "", telefone: "", email: "", cep: "", endereco: "", numero: "", complemento: "", bairro: "", cidade: "", estado: "", observacoes: "" };
   }
 
   useEffect(() => {
@@ -232,6 +232,7 @@ export default function Clientes() {
     { key: "telefone", label: "CONTATO" },
     { key: "nome_fantasia", label: "NOME SOCIAL/FANTASIA" },
     { key: "rg_ie", label: "INSCRIÇÃO ESTADUAL" },
+    { key: "inscricao_municipal", label: "INSCRIÇÃO MUNICIPAL (IM)" },
     { key: "cep", label: "CEP" },
     { key: "endereco", label: "ENDEREÇO" },
     { key: "bairro", label: "BAIRRO" },
@@ -327,6 +328,7 @@ export default function Clientes() {
                   {colunas.cpf_cnpj && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CPF/CNPJ</th>}
                   {colunas.telefone && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CONTATO</th>}
                   {colunas.rg_ie && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">INSCRIÇÃO ESTADUAL</th>}
+                  {colunas.inscricao_municipal && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">INSCRIÇÃO MUNICIPAL (IM)</th>}
                   {colunas.cep && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CEP</th>}
                   {colunas.endereco && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">ENDEREÇO</th>}
                   {colunas.bairro && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">BAIRRO</th>}
@@ -398,6 +400,7 @@ export default function Clientes() {
                       {colunas.cpf_cnpj && renderCell("cpf_cnpj")}
                       {colunas.telefone && renderCell("telefone")}
                       {colunas.rg_ie && renderCell("rg_ie")}
+                      {colunas.inscricao_municipal && renderCell("inscricao_municipal")}
                       {colunas.cep && renderCell("cep")}
                       {colunas.endereco && renderCell("endereco")}
                       {colunas.bairro && renderCell("bairro")}
@@ -470,6 +473,16 @@ export default function Clientes() {
                     className="input-dark"
                     autoComplete="off"
                     name="ie_cliente"
+                    inputMode="numeric"
+                  />
+                </FormGroup>
+                <FormGroup label="Inscrição Municipal (IM)">
+                  <input
+                    value={form.inscricao_municipal || ''}
+                    onChange={e => setForm({ ...form, inscricao_municipal: e.target.value.replace(/\D/g, '') })}
+                    className="input-dark"
+                    autoComplete="off"
+                    name="im_cliente"
                     inputMode="numeric"
                   />
                 </FormGroup>
