@@ -1493,8 +1493,8 @@ export default function NotasFiscais() {
                  <div className="space-y-4">
                    <F label="Nome / Razão Social *">
                      <SearchableSelect
-                       placeholder="Digite o nome ou CPF/CNPJ..."
-                       options={clientesFiltrados.map(c => ({ value: c.id, label: c.nome, sublabel: c.cpf_cnpj || '' }))}
+                       placeholder="Digite o nome, fantasia ou CPF/CNPJ..."
+                       options={clientesFiltrados.map(c => ({ value: c.id, label: c.nome, sublabel: [c.nome_fantasia, c.cpf_cnpj].filter(Boolean).join(' • ') }))}
                        onSelect={opt => selecionarCliente(opt.value)}
                        initialValue={form.cliente_nome || ''}
                      />
