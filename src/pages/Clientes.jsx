@@ -460,7 +460,7 @@ export default function Clientes() {
                 <FormGroup label="Nome / Razão Social *">
                    <input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} className="input-dark" autoComplete="off" name="nome_cliente_razao" />
                  </FormGroup>
-                 <FormGroup label="Nome Social / Nome Fantasia">
+                 <FormGroup label="Nome Social/Fantasia">
                    <input value={form.nome_fantasia} onChange={e => setForm({ ...form, nome_fantasia: e.target.value })} className="input-dark" autoComplete="off" name="nome_fantasia_cliente" />
                  </FormGroup>
                 <FormGroup label="Inscrição Estadual">
@@ -473,7 +473,7 @@ export default function Clientes() {
                     inputMode="numeric"
                   />
                 </FormGroup>
-                <FormGroup label="Telefone Contato">
+                <FormGroup label="Contato">
                   <input
                     value={form.telefone}
                     onChange={e => {
@@ -503,9 +503,6 @@ export default function Clientes() {
                 <FormGroup label="Endereço">
                   <input value={form.endereco} onChange={e => setForm({ ...form, endereco: e.target.value })} className="input-dark" autoComplete="off" name="end_cliente" />
                 </FormGroup>
-                <FormGroup label="Número">
-                  <input value={form.numero} onChange={e => setForm({ ...form, numero: e.target.value })} className="input-dark" autoComplete="off" name="num_cliente" />
-                </FormGroup>
                 <FormGroup label="Bairro">
                   <input value={form.bairro} onChange={e => setForm({ ...form, bairro: e.target.value })} className="input-dark" autoComplete="off" name="bairro_cliente" />
                 </FormGroup>
@@ -520,10 +517,7 @@ export default function Clientes() {
                 <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} className="input-dark" rows={2} autoComplete="off" />
               </FormGroup>
             </div>
-            <div className="flex justify-between gap-3 p-5 border-t border-gray-800">
-              <button onClick={() => { if (editando && !isConsumidor(editando)) excluir(editando); }} className={`px-4 py-2 text-sm rounded-lg font-medium transition-all ${editando ? "text-white hover:opacity-90" : "text-gray-500 cursor-not-allowed opacity-50"}`} style={{background: editando ? "#cc0000" : "#666"}}>
-                Excluir
-              </button>
+            <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
               <div className="flex gap-3">
                 <button onClick={() => { setShowForm(false); setEditando(null); }} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-all">
                   Cancelar
