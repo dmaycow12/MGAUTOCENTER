@@ -368,6 +368,7 @@ export default function NotasFiscais() {
       ...f,
       cliente_id: c.id,
       cliente_nome: c.nome || "",
+      cliente_nome_fantasia: c.nome_fantasia || "",
       cliente_cpf_cnpj: c.cpf_cnpj || "",
       cliente_ie: c.rg_ie || "",
       cliente_email: c.email || "",
@@ -1497,6 +1498,10 @@ export default function NotasFiscais() {
                        onSelect={opt => selecionarCliente(opt.value)}
                        initialValue={form.cliente_nome || ''}
                      />
+                   </F>
+
+                   <F label="Nome Social / Fantasia">
+                     <NoACInput value={form.cliente_nome_fantasia || ''} onChange={e => setForm(f => ({ ...f, cliente_nome_fantasia: e.target.value }))} placeholder="Nome fantasia ou social (opcional)" />
                    </F>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
