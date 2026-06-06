@@ -233,8 +233,10 @@ export default function NotasFiscais() {
         const dadosCliente = c ? {
           cliente_id: c.id,
           cliente_nome: c.nome || cliente_nome_param,
+          cliente_nome_fantasia: c.nome_fantasia || venda?.cliente_nome_fantasia || "",
           cliente_cpf_cnpj: c.cpf_cnpj || venda?.cliente_cpf_cnpj || "",
           cliente_ie: c.rg_ie || "",
+          cliente_im: c.inscricao_municipal || "",
           cliente_email: c.email || venda?.cliente_email || "",
           cliente_telefone: c.telefone || venda?.cliente_telefone || "",
           cliente_endereco: [c.endereco, c.numero].filter(Boolean).join(', ') || venda?.cliente_endereco || "",
@@ -1518,7 +1520,7 @@ export default function NotasFiscais() {
                      <F label="Inscrição Municipal (IM)">
                        <NoACInput value={form.cliente_im || ''} onChange={e => setForm(f => ({ ...f, cliente_im: e.target.value }))} placeholder="" />
                      </F>
-                     <F label="Telefone">
+                     <F label="Telefone Contato">
                        <NoACInput value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} placeholder="" />
                      </F>
                      <F label="Endereço" className="col-span-1">
