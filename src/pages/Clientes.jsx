@@ -503,9 +503,6 @@ export default function Clientes() {
                     maxLength={15}
                   />
                 </FormGroup>
-                <FormGroup label="E-mail">
-                  <input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="input-dark" autoComplete="off" name="email_cliente" />
-                </FormGroup>
                 <FormGroup label="CEP">
                   <input value={form.cep} onChange={e => setForm({ ...form, cep: e.target.value })} className="input-dark" autoComplete="off" name="cep_cliente" />
                 </FormGroup>
@@ -514,9 +511,6 @@ export default function Clientes() {
                 </FormGroup>
                 <FormGroup label="Número">
                   <input value={form.numero} onChange={e => setForm({ ...form, numero: e.target.value })} className="input-dark" autoComplete="off" name="num_cliente" />
-                </FormGroup>
-                <FormGroup label="Complemento">
-                  <input value={form.complemento} onChange={e => setForm({ ...form, complemento: e.target.value })} className="input-dark" autoComplete="off" name="comp_cliente" />
                 </FormGroup>
                 <FormGroup label="Bairro">
                   <input value={form.bairro} onChange={e => setForm({ ...form, bairro: e.target.value })} className="input-dark" autoComplete="off" name="bairro_cliente" />

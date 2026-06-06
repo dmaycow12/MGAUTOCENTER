@@ -1515,15 +1515,9 @@ export default function NotasFiscais() {
                      <F label="Telefone">
                        <NoACInput value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} placeholder="(00) 00000-0000" />
                      </F>
-                     <F label="E-mail">
-                       <NoACInput value={form.cliente_email} onChange={e => setForm(f => ({ ...f, cliente_email: e.target.value }))} placeholder="email@cliente.com" />
-                     </F>
                      <F label="Endereço" className="col-span-1">
                        <NoACInput value={form.cliente_endereco} onChange={e => { setForm(f => ({ ...f, cliente_endereco: e.target.value })); setErrosForm(e2 => ({...e2, cliente_endereco: undefined})); }} placeholder="Rua, Avenida..." className={`input-dark ${errosForm.cliente_endereco ? 'border-red-500' : ''}`} />
                        {errosForm.cliente_endereco && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_endereco}</p>}
-                     </F>
-                     <F label="Complemento">
-                       <NoACInput value={form.cliente_numero} onChange={e => setForm(f => ({ ...f, cliente_numero: e.target.value }))} placeholder="Apto, número, complemento..." />
                      </F>
                      <F label="Bairro">
                        <NoACInput value={form.cliente_bairro} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} placeholder="" />
