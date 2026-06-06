@@ -230,7 +230,7 @@ export default function Clientes() {
     { key: "tipo", label: "TIPO" },
     { key: "cpf_cnpj", label: "CPF/CNPJ" },
     { key: "telefone", label: "CONTATO" },
-    { key: "nome_fantasia", label: "NOME SOCIAL / NOME FANTASIA" },
+    { key: "nome_fantasia", label: "NOME SOCIAL/FANTASIA" },
     { key: "rg_ie", label: "INSCRIÇÃO ESTADUAL" },
     { key: "cep", label: "CEP" },
     { key: "endereco", label: "ENDEREÇO" },

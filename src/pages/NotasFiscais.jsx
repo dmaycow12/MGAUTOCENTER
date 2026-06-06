@@ -36,6 +36,7 @@ function defaultForm() {
     data_emissao: new Date().toISOString().split("T")[0],
     forma_pagamento: "A Combinar",
     observacoes: "",
+    dados_adicionais: "",
     cliente_id: "",
     cliente_nome: "",
     cliente_cpf_cnpj: "",
@@ -1501,22 +1502,22 @@ export default function NotasFiscais() {
                    </F>
 
                    <F label="Nome Social / Fantasia">
-                     <NoACInput value={form.cliente_nome_fantasia || ''} onChange={e => setForm(f => ({ ...f, cliente_nome_fantasia: e.target.value }))} placeholder="Nome fantasia ou social (opcional)" />
+                     <NoACInput value={form.cliente_nome_fantasia || ''} onChange={e => setForm(f => ({ ...f, cliente_nome_fantasia: e.target.value }))} placeholder="" />
                    </F>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                      <F label="CPF / CNPJ">
-                       <NoACInput value={form.cliente_cpf_cnpj} onChange={e => { setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cpf_cnpj: undefined})); }} placeholder="000.000.000-00" className={`input-dark ${errosForm.cliente_cpf_cnpj ? 'border-red-500' : ''}`} />
+                       <NoACInput value={form.cliente_cpf_cnpj} onChange={e => { setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cpf_cnpj: undefined})); }} placeholder="" className={`input-dark ${errosForm.cliente_cpf_cnpj ? 'border-red-500' : ''}`} />
                        {errosForm.cliente_cpf_cnpj && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cpf_cnpj}</p>}
                      </F>
                      <F label="Inscrição Estadual (IE)">
-                       <NoACInput value={form.cliente_ie || ''} onChange={e => setForm(f => ({ ...f, cliente_ie: e.target.value }))} placeholder="Deixe em branco se não contribuinte" />
+                       <NoACInput value={form.cliente_ie || ''} onChange={e => setForm(f => ({ ...f, cliente_ie: e.target.value }))} placeholder="" />
                      </F>
                      <F label="Telefone">
-                       <NoACInput value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} placeholder="(00) 00000-0000" />
+                       <NoACInput value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} placeholder="" />
                      </F>
                      <F label="Endereço" className="col-span-1">
-                       <NoACInput value={form.cliente_endereco} onChange={e => { setForm(f => ({ ...f, cliente_endereco: e.target.value })); setErrosForm(e2 => ({...e2, cliente_endereco: undefined})); }} placeholder="Rua, Avenida..." className={`input-dark ${errosForm.cliente_endereco ? 'border-red-500' : ''}`} />
+                       <NoACInput value={form.cliente_endereco} onChange={e => { setForm(f => ({ ...f, cliente_endereco: e.target.value })); setErrosForm(e2 => ({...e2, cliente_endereco: undefined})); }} placeholder="" className={`input-dark ${errosForm.cliente_endereco ? 'border-red-500' : ''}`} />
                        {errosForm.cliente_endereco && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_endereco}</p>}
                      </F>
                      <F label="Bairro">
@@ -1526,18 +1527,17 @@ export default function NotasFiscais() {
                       <NoACInput value={form.cliente_cidade} onChange={e => { 
                         const novaCidade = e.target.value;
                         setForm(f => {
-                          // Busca código de município com os valores mais atuais
                           if (novaCidade && f.cliente_estado) {
                             preencherCodigoMunicipio(novaCidade, f.cliente_estado);
                           }
                           return { ...f, cliente_cidade: novaCidade };
                         }); 
                         setErrosForm(e2 => ({...e2, cliente_cidade: undefined}));
-                      }} placeholder="Nome da cidade" className={`input-dark ${errosForm.cliente_cidade ? 'border-red-500' : ''}`} />
+                      }} placeholder="" className={`input-dark ${errosForm.cliente_cidade ? 'border-red-500' : ''}`} />
                       {errosForm.cliente_cidade && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cidade}</p>}
                      </F>
                      <F label="CEP">
-                       <NoACInput value={form.cliente_cep} onChange={e => { setForm(f => ({ ...f, cliente_cep: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cep: undefined})); }} placeholder="00000-000" className={`input-dark ${errosForm.cliente_cep ? 'border-red-500' : ''}`} />
+                       <NoACInput value={form.cliente_cep} onChange={e => { setForm(f => ({ ...f, cliente_cep: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cep: undefined})); }} placeholder="" className={`input-dark ${errosForm.cliente_cep ? 'border-red-500' : ''}`} />
                        {errosForm.cliente_cep && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cep}</p>}
                      </F>
                      <F label="Estado (UF)">
@@ -1548,15 +1548,14 @@ export default function NotasFiscais() {
                          if (form.cliente_cidade && novoEstado) {
                            preencherCodigoMunicipio(form.cliente_cidade, novoEstado);
                          }
-                       }} placeholder="MG" maxLength={2} className={`input-dark ${errosForm.cliente_estado ? 'border-red-500' : ''}`} />
+                       }} placeholder="" maxLength={2} className={`input-dark ${errosForm.cliente_estado ? 'border-red-500' : ''}`} />
                        {errosForm.cliente_estado && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_estado}</p>}
                      </F>
-                     {form.tipo === 'NFSe' && (
-                      <F label="Código de Município (NFSe)">
-                        <NoACInput value={form.codigo_municipio_tomador || ""} onChange={e => setForm(f => ({ ...f, codigo_municipio_tomador: e.target.value }))} placeholder="Preenchido automaticamente" />
-                      </F>
-                     )}
-                   </div>
+                     </div>
+                     <F label="Dados Adicionais">
+                       <textarea value={form.dados_adicionais || ''} onChange={e => setForm(f => ({ ...f, dados_adicionais: e.target.value }))}
+                         className="input-dark" rows={3} placeholder="" autoComplete="off" />
+                     </F>
                   <div className="flex justify-end">
                     <button onClick={() => setAbaForm("itens")} className="text-black px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#00ff00"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
                       Próximo: Itens →
