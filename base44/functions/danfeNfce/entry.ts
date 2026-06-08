@@ -82,21 +82,27 @@ Deno.serve(async (req) => {
     const baseUrl = isHomologada ? FOCUSNFE_BASE_HOM : FOCUSNFE_BASE_PROD;
     const authHeader = isHomologada ? AUTH_HEADER_HOM : AUTH_HEADER;
 
+    console.log(`[danfeNfce] nota_id=${nota_id}, status=${nota.status}, isHomologada=${isHomologada}, baseUrl=${baseUrl}, spedy_id=${nota.spedy_id}`);
+
     if (nota.pdf_url && (nota.pdf_url.endsWith('.html') || nota.pdf_url.includes('/notas_fiscais_consumidor/'))) {
       htmlUrl = nota.pdf_url;
     } else if (nota.spedy_id) {
-      const consultaResp = await fetch(`${baseUrl}/nfce/${nota.spedy_id}?completo=1`, {
-        headers: { 'Authorization': authHeader },
-      });
-      
-      if (!consultaResp.ok) {
-        return Response.json({ sucesso: false, erro: `Erro ao consultar NFCe: ${consultaResp.status}` });
-      }
-      const dadosNFCe = await consultaResp.json();
-      chave = (dadosNFCe.chave_nfe || nota.chave_acesso || '').replace(/\D/g, '');
-      // Verifica se há PDF direto (caminho_pdf_nfce) ou HTML (caminho_danfe)
-      const caminhoPdf = dadosNFCe.caminho_pdf_nfce || '';
-      const caminhoHtml = dadosNFCe.caminho_danfe || '';
+       const consultaUrl = `${baseUrl}/nfce/${nota.spedy_id}?completo=1`;
+       console.log(`[danfeNfce] Consultando: ${consultaUrl}`);
+       const consultaResp = await fetch(consultaUrl, {
+         headers: { 'Authorization': authHeader },
+       });
+
+       if (!consultaResp.ok) {
+         console.log(`[danfeNfce] Falha na consulta: status=${consultaResp.status}`);
+         return Response.json({ sucesso: false, erro: `Erro ao consultar NFCe: ${consultaResp.status}` });
+       }
+       const dadosNFCe = await consultaResp.json();
+       chave = (dadosNFCe.chave_nfe || nota.chave_acesso || '').replace(/\D/g, '');
+       // Verifica se há PDF direto (caminho_pdf_nfce) ou HTML (caminho_danfe)
+       const caminhoPdf = dadosNFCe.caminho_pdf_nfce || '';
+       const caminhoHtml = dadosNFCe.caminho_danfe || '';
+       console.log(`[danfeNfce] Dados da NFCe: caminhoPdf=${caminhoPdf}, caminhoHtml=${caminhoHtml}`);
       if (caminhoPdf) {
         // Baixa e salva como PDF permanente
         const pdfUrl = normalizarUrl(caminhoPdf, isHomologada);
@@ -125,9 +131,11 @@ Deno.serve(async (req) => {
     }
 
     // Busca o HTML autenticado da Focus NFe
+    console.log(`[danfeNfce] Buscando HTML: ${htmlUrl}`);
     const htmlResp = await fetch(htmlUrl, { headers: { 'Authorization': authHeader } });
-    
+
     if (!htmlResp.ok) {
+      console.log(`[danfeNfce] Erro ao buscar HTML: status=${htmlResp.status}, url=${htmlUrl}`);
       return Response.json({ sucesso: false, erro: `Erro ao buscar DANFE: ${htmlResp.status}` });
     }
     const htmlContent = await htmlResp.text();
