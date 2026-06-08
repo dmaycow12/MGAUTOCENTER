@@ -1,8 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
-const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
-const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
-const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
+const FOCUSNFE_BASE_PROD = 'https://api.focusnfe.com.br/v2';
+const FOCUSNFE_BASE_HOM = 'https://homologacao.focusnfe.com.br/v2';
 
 const normalizarUrl = (url) => {
   if (!url) return '';
@@ -24,20 +23,35 @@ Deno.serve(async (req) => {
     const { nota_id } = await req.json();
     if (!nota_id) return Response.json({ erro: 'nota_id obrigatório' }, { status: 400 });
 
-    const notas = await base44.asServiceRole.entities.NotaFiscal.filter({ id: nota_id }, '-created_date', 1);
-    const nota = notas[0];
+    const [notasArr, todasConfigs] = await Promise.all([
+      base44.asServiceRole.entities.NotaFiscal.filter({ id: nota_id }, '-created_date', 1),
+      base44.asServiceRole.entities.Configuracao.list('-created_date', 200),
+    ]);
+    const nota = notasArr[0];
     if (!nota) return Response.json({ erro: 'Nota não encontrada' }, { status: 404 });
 
     if (nota.pdf_url) return Response.json({ sucesso: true, pdf_url: nota.pdf_url });
+
+    // Carrega chaves de configuração
+    const getConf = (chave, padrao = '') => todasConfigs.find(c => c.chave === chave)?.valor || padrao;
+    const apiKeyProd = getConf('focusnfe_api_key', '');
+    const apiKeyHom = getConf('focusnfe_api_key_homologacao', '');
+    const AUTH_HEADER_PROD = 'Basic ' + btoa(apiKeyProd + ':');
+    const AUTH_HEADER_HOM = 'Basic ' + btoa(apiKeyHom + ':');
 
     const ref = nota.spedy_id;
     if (!ref) {
       return Response.json({ processando: false, erro: 'Referência da nota não encontrada. Esta nota pode ter sido criada antes da atualização do sistema.' });
     }
 
+    // Determina ambiente com base no status
+    const isHomologada = nota.status === 'Homologada' || nota.status === 'Pré-visualização';
+    const baseUrl = isHomologada ? FOCUSNFE_BASE_HOM : FOCUSNFE_BASE_PROD;
+    const authHeader = isHomologada ? AUTH_HEADER_HOM : AUTH_HEADER_PROD;
+
     const ep = endpointPorTipo(nota.tipo || 'NFe');
-    const resp = await fetch(`${FOCUSNFE_BASE}/${ep}/${ref}?completo=1`, {
-      headers: { 'Authorization': AUTH_HEADER },
+    const resp = await fetch(`${baseUrl}/${ep}/${ref}?completo=1`, {
+      headers: { 'Authorization': authHeader },
     });
 
     if (resp.status === 404) return Response.json({ erro: 'Nota não encontrada na Focus NFe.' });
@@ -53,7 +67,7 @@ Deno.serve(async (req) => {
         const pdfUrl = normalizarUrl(rawPdf);
         try {
           const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
-          const pdfResp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER } });
+          const pdfResp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': authHeader } });
           if (pdfResp.ok) {
             const blob = await pdfResp.blob();
             const buffer = await blob.arrayBuffer();

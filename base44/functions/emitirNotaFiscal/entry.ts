@@ -6,9 +6,8 @@ const PAYMENT_MAP = {
   'Transferência': '03', 'A Prazo': '99',
 };
 
-const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
-const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
-const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
+const FOCUSNFE_BASE_PROD = 'https://api.focusnfe.com.br/v2';
+const FOCUSNFE_BASE_HOM = 'https://homologacao.focusnfe.com.br/v2';
 
 // Valores padrão — serão sobrescritos pelas configs do banco
 const CNPJ_EMITENTE_PADRAO = '';
@@ -26,7 +25,8 @@ const salvarXmlPermanente = async (base44, xmlUrl, ref, numero) => {
   if (!xmlUrl) return null;
   try {
     const isS3 = xmlUrl.includes('amazonaws.com') || xmlUrl.includes('s3.');
-    const resp = await fetch(xmlUrl, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER } });
+    // XML de produção — sempre usa chave de produção para fetch
+    const resp = await fetch(xmlUrl, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER_PROD } });
     if (!resp.ok) return null;
     const text = await resp.text();
     if (!text || !text.includes('<')) return null;
@@ -46,7 +46,8 @@ const salvarPdfPermanente = async (base44, pdfUrl, nota_id) => {
   try {
     // URLs do S3 (amazonaws.com) são públicas — sem auth header
     const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
-    const resp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER } });
+    // PDF de produção — sempre usa chave de produção para fetch
+    const resp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER_PROD } });
     if (!resp.ok) return null;
     const blob = await resp.blob();
     const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
@@ -118,6 +119,12 @@ Deno.serve(async (req) => {
     // ============================================================
     const todasConfigs = await base44.asServiceRole.entities.Configuracao.list('-created_date', 200);
     const getConf = (chave, padrao = '') => todasConfigs.find(c => c.chave === chave)?.valor || padrao;
+
+    // Chaves API por ambiente
+    const apiKeyProd = getConf('focusnfe_api_key', '');
+    const apiKeyHom = getConf('focusnfe_api_key_homologacao', '');
+    const AUTH_HEADER_PROD = 'Basic ' + btoa(apiKeyProd + ':');
+    const AUTH_HEADER_HOM = 'Basic ' + btoa(apiKeyHom + ':');
 
     const CNPJ_EMITENTE = getConf('cnpj', CNPJ_EMITENTE_PADRAO).replace(/\D/g, '');
     const INSCRICAO_MUNICIPAL = getConf('inscricao_municipal', INSCRICAO_MUNICIPAL_PADRAO);
@@ -203,6 +210,13 @@ Deno.serve(async (req) => {
     // MONTA PAYLOAD E GERA REF ÚNICO
     // ============================================================
     const ref = `${(tipo || 'nfe').toLowerCase()}-${Date.now()}`;
+
+    // Determina qual ambiente/chave usar
+    // Se é preview (rascunho em homologação), sempre homologação
+    // Se é produção (Emitida), sempre produção
+    const isHomologacao = notaExistente?.status === 'Homologada' || notaExistente?.status === 'Pré-visualização';
+    const baseUrlCompleta = isHomologacao ? FOCUSNFE_BASE_HOM : FOCUSNFE_BASE_PROD;
+    const authHeaderAtivo = isHomologacao ? AUTH_HEADER_HOM : AUTH_HEADER_PROD;
 
     let endpoint = '';
     let payload = null;
@@ -482,12 +496,12 @@ Deno.serve(async (req) => {
     // ============================================================
     // ENVIA PARA A FOCUS NFE
     // ============================================================
-    const urlCompleta = `${FOCUSNFE_BASE}${endpoint}`;
+    const urlCompleta = `${baseUrlCompleta}${endpoint}`;
     console.log('[FOCUS URL]', urlCompleta);
     console.log('[FOCUS PAYLOAD]', JSON.stringify(payload).substring(0, 1000));
     const resp = await fetch(urlCompleta, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': AUTH_HEADER },
+      headers: { 'Content-Type': 'application/json', 'Authorization': authHeaderAtivo },
       body: JSON.stringify(payload),
     });
     const respStatusCode = resp.status;
@@ -548,8 +562,8 @@ Deno.serve(async (req) => {
           intervalo = i < 2 ? 1000 : i < 4 ? 1500 : 2000;
         }
         await new Promise(r => setTimeout(r, intervalo));
-        const consultaResp = await fetch(`${FOCUSNFE_BASE}/${epConsultaFinal}/${ref}?completo=1`, {
-          headers: { 'Authorization': AUTH_HEADER },
+        const consultaResp = await fetch(`${baseUrlCompleta}/${epConsultaFinal}/${ref}?completo=1`, {
+          headers: { 'Authorization': authHeaderAtivo },
         });
         if (consultaResp.ok) {
           resultFinal = await consultaResp.json();
