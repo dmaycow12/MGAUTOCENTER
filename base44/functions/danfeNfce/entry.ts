@@ -131,8 +131,9 @@ Deno.serve(async (req) => {
     }
 
     // Busca o HTML autenticado da Focus NFe
-    console.log(`[danfeNfce] Buscando HTML: ${htmlUrl}`);
-    const htmlResp = await fetch(htmlUrl, { headers: { 'Authorization': authHeader } });
+    const htmlUrlCompleta = normalizarUrl(htmlUrl, isHomologada);
+    console.log(`[danfeNfce] Buscando HTML: ${htmlUrlCompleta}`);
+    const htmlResp = await fetch(htmlUrlCompleta, { headers: { 'Authorization': authHeader } });
 
     if (!htmlResp.ok) {
       console.log(`[danfeNfce] Erro ao buscar HTML: status=${htmlResp.status}, url=${htmlUrl}`);
