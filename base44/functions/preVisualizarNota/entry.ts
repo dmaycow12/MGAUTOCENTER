@@ -131,7 +131,6 @@ Deno.serve(async (req) => {
         numero_dps: String(numeroPreview), // número único por timestamp para evitar duplicidade
         codigo_municipio_emissora: COD_MUNICIPIO,
         cnpj_prestador: CNPJ_EMITENTE,
-        inscricao_municipal_prestador: INSCRICAO_MUNICIPAL,
         codigo_opcao_simples_nacional: OPCAO_SIMPLES,
         regime_tributario_simples_nacional: REGIME_TRIBUTARIO,
         regime_especial_tributacao: REGIME_ESPECIAL,
