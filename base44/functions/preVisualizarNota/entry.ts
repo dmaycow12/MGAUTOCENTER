@@ -8,12 +8,11 @@ const normalizarUrl = (url) => {
   return `https://api.focusnfe.com.br${url}`;
 };
 
-const salvarPdfPermanente = async (base44, pdfUrl, label) => {
+const salvarPdfPermanente = async (base44, pdfUrl, label, apiKey) => {
   if (!pdfUrl) return null;
   try {
     const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
-    const apiKey = Deno.env.get('FOCUSNFE_API_KEY') || '';
-    const authHeader = 'Basic ' + btoa(apiKey + ':');
+    const authHeader = 'Basic ' + btoa((apiKey || Deno.env.get('FOCUSNFE_API_KEY') || '') + ':');
     const resp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': authHeader } });
     if (!resp.ok) return null;
     const blob = await resp.blob();
@@ -48,10 +47,10 @@ Deno.serve(async (req) => {
 
     const getConf = (chave, padrao = '') => todasConfigs.find(c => c.chave === chave)?.valor || padrao;
 
-    // Chave de homologação
-    const apiKeyHom = getConf('focusnfe_api_key_homologacao', '');
+    // Chave de homologação (fallback para produção se não configurada)
+    const apiKeyHom = getConf('focusnfe_api_key_homologacao', '') || getConf('focusnfe_token', '') || Deno.env.get('FOCUSNFE_API_KEY') || '';
     if (!apiKeyHom) {
-      return Response.json({ sucesso: false, erro: 'Token de Homologação não configurado. Acesse Configurações e preencha o Token de Homologação.' });
+      return Response.json({ sucesso: false, erro: 'Token FocusNFe não configurado. Acesse Configurações.' });
     }
 
     const AUTH_HOM = 'Basic ' + btoa(apiKeyHom + ':');
@@ -292,7 +291,7 @@ Deno.serve(async (req) => {
     const rawPdf = resultFinal.url_danfse || resultFinal.caminho_pdf_nfsen || resultFinal.caminho_pdf_nfse || resultFinal.caminho_danfe || '';
     const pdfUrlHom = rawPdf.startsWith('http') ? rawPdf : `https://api.focusnfe.com.br${rawPdf}`;
 
-    const pdfUrlSalvo = await salvarPdfPermanente(base44, pdfUrlHom, nota_id);
+    const pdfUrlSalvo = await salvarPdfPermanente(base44, pdfUrlHom, nota_id, apiKeyHom);
 
     // Atualiza nota com PDF de preview e status Pré-visualização
     await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
