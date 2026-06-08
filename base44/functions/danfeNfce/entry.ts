@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
       if (caminhoPdf) {
         // Baixa e salva como PDF permanente
         const pdfUrl = normalizarUrl(caminhoPdf, isHomologada);
-        const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': authHeader } });
+        const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER } });
         
         if (pdfResp.ok) {
           const blob = await pdfResp.blob();
@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
 
     // Busca o HTML autenticado da Focus NFe
     console.log(`[danfeNfce] Buscando HTML: ${htmlUrl}`);
-    const htmlResp = await fetch(htmlUrl, { headers: { 'Authorization': authHeader } });
+    const htmlResp = await fetch(htmlUrl, { headers: { 'Authorization': AUTH_HEADER } });
 
     if (!htmlResp.ok) {
       console.log(`[danfeNfce] Erro ao buscar HTML: status=${htmlResp.status}, url=${htmlUrl}`);
