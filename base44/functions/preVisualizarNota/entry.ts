@@ -69,7 +69,10 @@ Deno.serve(async (req) => {
     const SERIE_NFSE = getConf('nfse_serie_dps', '900');
 
     const tipo = nota.tipo;
-    const ref = `preview-${nota_id}-${Date.now()}`;
+    const tsPreview = Date.now();
+    const ref = `preview-${nota_id}-${tsPreview}`;
+    // Número único para preview: últimos 9 dígitos do timestamp (evita duplicidade na homologação)
+    const numeroPreview = parseInt(String(tsPreview).slice(-9), 10);
 
     const pad = (n) => String(n).padStart(2, '0');
     const agora = new Date();
@@ -125,7 +128,7 @@ Deno.serve(async (req) => {
         data_emissao: dataEmissaoISO,
         data_competencia: hojeStr,
         serie_dps: SERIE_NFSE,
-        numero_dps: String(9999), // número fictício para preview
+        numero_dps: String(numeroPreview), // número único por timestamp para evitar duplicidade
         codigo_municipio_emissora: COD_MUNICIPIO,
         cnpj_prestador: CNPJ_EMITENTE,
         inscricao_municipal_prestador: INSCRICAO_MUNICIPAL,
@@ -165,8 +168,8 @@ Deno.serve(async (req) => {
         modalidade_frete: '9',
         local_destino: '1',
         presenca_comprador: '1',
-        numero: 9999,
-        serie: SERIE_NFCE,
+        numero: numeroPreview,
+        serie: '999',
         ...(cpfCnpjLimpo.length === 11 ? { cpf_destinatario: cpfCnpjLimpo } : {}),
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
@@ -216,8 +219,8 @@ Deno.serve(async (req) => {
         presenca_comprador: '1',
         local_destino: '1',
         nome_destinatario: (nota.cliente_nome || 'Consumidor Final').substring(0, 60),
-        numero: 9999,
-        serie: SERIE_NFE,
+        numero: numeroPreview,
+        serie: '999',
         ...(cpfCnpjLimpo.length === 11 ? { cpf_destinatario: cpfCnpjLimpo } : {}),
         ...(cpfCnpjLimpo.length === 14 ? { cnpj_destinatario: cpfCnpjLimpo } : {}),
         logradouro_destinatario: nota.cliente_endereco || 'Rua Rui Barbosa',
