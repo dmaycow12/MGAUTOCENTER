@@ -1558,11 +1558,7 @@ export default function NotasFiscais() {
                        {errosForm.cliente_estado && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_estado}</p>}
                      </F>
                      </div>
-                     <F label="Dados Adicionais">
-                       <textarea value={form.dados_adicionais || ''} onChange={e => setForm(f => ({ ...f, dados_adicionais: e.target.value }))}
-                         className="input-dark" rows={3} placeholder="" autoComplete="off" />
-                     </F>
-                  <div className="flex justify-end">
+                     <div className="flex justify-end">
                     <button onClick={() => setAbaForm("itens")} className="text-black px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#00ff00"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
                       Próximo: Itens →
                     </button>
@@ -1659,10 +1655,6 @@ export default function NotasFiscais() {
                       R$ {Number(form.valor_total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </span>
                   </div>
-                  <F label="Discriminação / Observações">
-                    <textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))}
-                      className="input-dark" rows={3} placeholder="Informações adicionais..." autoComplete="off" />
-                  </F>
                   <div className="flex justify-between">
                     <button onClick={() => setAbaForm("cliente")} className="text-gray-400 hover:text-white text-sm px-4 py-2 border border-gray-700 rounded-lg transition-all">← Voltar</button>
                     <button onClick={() => setAbaForm("pagamento")} className="text-black px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#00ff00"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>Próximo: Pagamento →</button>
@@ -1680,6 +1672,11 @@ export default function NotasFiscais() {
                       </select>
                     </F>
                   </div>
+
+                  <F label="Dados Adicionais">
+                    <textarea value={form.dados_adicionais || ''} onChange={e => setForm(f => ({ ...f, dados_adicionais: e.target.value }))}
+                      className="input-dark" rows={3} placeholder="" autoComplete="off" />
+                  </F>
 
                   <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 space-y-3">
                     <h3 className="text-white font-medium text-sm">Resumo da Nota</h3>
