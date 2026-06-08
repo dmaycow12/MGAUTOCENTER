@@ -81,9 +81,12 @@ Deno.serve(async (req) => {
       tipo, cliente_nome, cliente_cpf_cnpj, cliente_ie, cliente_email,
       cliente_numero, cliente_endereco, cliente_bairro, cliente_cep,
       cliente_cidade, cliente_estado, items, valor_total,
-      forma_pagamento, observacoes, nota_id, cliente_id,
+      forma_pagamento, observacoes, dados_adicionais, nota_id, cliente_id,
       data_emissao, serie_manual, ordem_venda_id, codigo_municipio_tomador,
     } = body;
+
+    // Combina observacoes + dados_adicionais para informacoes_adicionais_contribuinte
+    const infoAdicional = [observacoes, dados_adicionais].filter(Boolean).join(' | ');
 
     const pad = (n) => String(n).padStart(2, '0');
     const agora = new Date();
@@ -264,7 +267,7 @@ Deno.serve(async (req) => {
       const valorIss = parseFloat((valorServico * 0.025).toFixed(2));
       const discriminacao = (items && items.length > 0)
         ? items.map(it => `${it.descricao} - Qtd: ${it.quantidade} - Valor: R$ ${Number(it.valor_total).toFixed(2)}`).join('; ')
-        : (observacoes || 'Serviços prestados');
+        : (infoAdicional || 'Serviços prestados');
 
       let codigoMunicipioTomador = codigo_municipio_tomador;
       if (!codigoMunicipioTomador && cliente_cidade && cliente_estado) {
@@ -367,7 +370,7 @@ Deno.serve(async (req) => {
           forma_pagamento: PAYMENT_MAP[forma_pagamento] || '17',
           valor_pagamento: Number(valor_total) || 1.0,
         }],
-        ...(observacoes ? { informacoes_adicionais_contribuinte: observacoes.substring(0, 500) } : {}),
+        ...(infoAdicional ? { informacoes_adicionais_contribuinte: infoAdicional.substring(0, 500) } : {}),
       };
     } else {
       // NFe
@@ -454,7 +457,7 @@ Deno.serve(async (req) => {
           forma_pagamento: PAYMENT_MAP[forma_pagamento] || '17',
           valor_pagamento: Number(valor_total) || 1.0,
         }],
-        ...(observacoes ? { informacoes_adicionais_contribuinte: observacoes.substring(0, 500) } : {}),
+        ...(infoAdicional ? { informacoes_adicionais_contribuinte: infoAdicional.substring(0, 500) } : {}),
       };
     }
 
