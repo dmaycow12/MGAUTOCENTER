@@ -16,7 +16,7 @@ import JSZip from "jszip";
 const STATUS_COLOR = {
   Rascunho: "bg-gray-500/10 text-gray-400",
   "Homologada": "bg-yellow-500/10 text-yellow-400",
-  "Erro de Homologação": "bg-red-500/10 text-red-400",
+  "Pré-visualização": "bg-yellow-500/10 text-yellow-400",
   Emitida: "bg-green-500/10 text-green-400",
   Lançada: "bg-green-500/10 text-green-400",
   Cancelada: "bg-red-500/10 text-red-400",
@@ -750,8 +750,7 @@ export default function NotasFiscais() {
         feedback('sucesso', 'Homologada! Clique em "Autorizar" na lista para emitir.');
         load();
       } else {
-        // Marca a nota com status de erro de homologação
-        await base44.entities.NotaFiscal.update(nota.id, { status: 'Erro de Homologação' });
+        await base44.entities.NotaFiscal.update(nota.id, { status: 'Erro' });
         feedback('erro', res.data?.erro || 'Erro na homologação.');
         load();
       }
