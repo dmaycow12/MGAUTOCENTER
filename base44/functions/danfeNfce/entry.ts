@@ -1,13 +1,17 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
+const FOCUSNFE_BASE_PROD = 'https://api.focusnfe.com.br/v2';
+const FOCUSNFE_BASE_HOM = 'https://homologacao.focusnfe.com.br/v2';
 const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
+const API_KEY_HOM = Deno.env.get('FOCUSNFE_API_KEY_HOM') || API_KEY;
 const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
+const AUTH_HEADER_HOM = 'Basic ' + btoa(API_KEY_HOM + ':');
 
-const normalizarUrl = (url) => {
+const normalizarUrl = (url, useHom = false) => {
   if (!url) return '';
   if (url.startsWith('http')) return url;
-  return `https://api.focusnfe.com.br${url}`;
+  const baseHost = useHom ? 'homologacao.focusnfe.com.br' : 'api.focusnfe.com.br';
+  return `https://${baseHost}${url}`;
 };
 
 // Tenta converter HTML em PDF usando múltiplos serviços
@@ -73,12 +77,16 @@ Deno.serve(async (req) => {
     // Determina a URL do HTML da DANFE
     let htmlUrl = '';
     let chave = nota.chave_acesso || '';
+    // Se status é Homologada, usa homologação; senão produção
+    const isHomologada = nota.status === 'Homologada' || nota.status === 'Pré-visualização';
+    const baseUrl = isHomologada ? FOCUSNFE_BASE_HOM : FOCUSNFE_BASE_PROD;
+    const authHeader = isHomologada ? AUTH_HEADER_HOM : AUTH_HEADER;
 
     if (nota.pdf_url && (nota.pdf_url.endsWith('.html') || nota.pdf_url.includes('/notas_fiscais_consumidor/'))) {
       htmlUrl = nota.pdf_url;
     } else if (nota.spedy_id) {
-      const consultaResp = await fetch(`${FOCUSNFE_BASE}/nfce/${nota.spedy_id}?completo=1`, {
-        headers: { 'Authorization': AUTH_HEADER },
+      const consultaResp = await fetch(`${baseUrl}/nfce/${nota.spedy_id}?completo=1`, {
+        headers: { 'Authorization': authHeader },
       });
       if (!consultaResp.ok) {
         return Response.json({ sucesso: false, erro: `Erro ao consultar NFCe: ${consultaResp.status}` });
@@ -90,8 +98,8 @@ Deno.serve(async (req) => {
       const caminhoHtml = dadosNFCe.caminho_danfe || '';
       if (caminhoPdf) {
         // Tenta baixar e salvar como PDF permanente
-        const pdfUrl = normalizarUrl(caminhoPdf);
-        const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER } });
+        const pdfUrl = normalizarUrl(caminhoPdf, isHomologada);
+        const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': authHeader } });
         if (pdfResp.ok) {
           const blob = await pdfResp.blob();
           const buffer = await blob.arrayBuffer();
@@ -107,7 +115,7 @@ Deno.serve(async (req) => {
           }
         }
       }
-      htmlUrl = caminhoHtml ? normalizarUrl(caminhoHtml) : '';
+      htmlUrl = caminhoHtml ? normalizarUrl(caminhoHtml, isHomologada) : '';
     }
 
     if (!htmlUrl) {
@@ -115,7 +123,7 @@ Deno.serve(async (req) => {
     }
 
     // Busca o HTML autenticado da Focus NFe
-    const htmlResp = await fetch(htmlUrl, { headers: { 'Authorization': AUTH_HEADER } });
+    const htmlResp = await fetch(htmlUrl, { headers: { 'Authorization': authHeader } });
     if (!htmlResp.ok) {
       return Response.json({ sucesso: false, erro: `Erro ao buscar DANFE: ${htmlResp.status}` });
     }
@@ -159,7 +167,9 @@ Deno.serve(async (req) => {
       : htmlContent + PRINT_BUTTON_HTML;
 
     if (chave && !nota.chave_acesso) {
-      await db.entities.NotaFiscal.update(nota_id, { chave_acesso: chave, pdf_url: htmlUrl });
+      const updateData = { chave_acesso: chave };
+      if (htmlUrl) updateData.pdf_url = htmlUrl;
+      await db.entities.NotaFiscal.update(nota_id, updateData);
     }
 
     return Response.json({ sucesso: true, html: htmlFinal });
