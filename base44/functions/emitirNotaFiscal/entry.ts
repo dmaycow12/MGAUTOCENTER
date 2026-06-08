@@ -429,11 +429,9 @@ Deno.serve(async (req) => {
         ...(codigoMunicipioDestinatario ? { codigo_municipio_destinatario: codigoMunicipioDestinatario } : {}),
         uf_destinatario: cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
-        indicador_inscricao_estadual_destinatario: cpfCnpjLimpo.length === 14
-          ? ((cliente_ie && cliente_ie.trim()) ? '1' : '9')
-          : '9',
-        ...(cpfCnpjLimpo.length === 14 && cliente_ie && cliente_ie.trim() ? { inscricao_estadual_destinatario: cliente_ie.replace(/\D/g, '') } : {}),
-        consumidor_final: cpfCnpjLimpo.length === 11 || !(cliente_ie && cliente_ie.trim()) ? '1' : '0',
+        indicador_inscricao_estadual_destinatario: (cliente_ie && cliente_ie.trim()) ? '1' : '9',
+        ...(cliente_ie && cliente_ie.trim() ? { inscricao_estadual_destinatario: cliente_ie.replace(/\D/g, '') } : {}),
+        consumidor_final: (cliente_ie && cliente_ie.trim()) ? '0' : '1',
         modalidade_frete: '9',
         ...(serie_manual ? { serie: serie_manual } : { serie: '1' }),
         items: prodItems.map((it, idx) => ({
