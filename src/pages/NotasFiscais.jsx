@@ -89,6 +89,7 @@ export default function NotasFiscais() {
   const [importandoBackup, setImportandoBackup] = useState(false);
   const [resultadoImportBackup, setResultadoImportBackup] = useState(null);
   const [nfseParaImportar, setNfseParaImportar] = useState(null);
+  const [autorizandoMassa, setAutorizandoMassa] = useState(false);
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
   const [atualizandoStatus, setAtualizandoStatus] = useState(null);
@@ -1133,8 +1134,33 @@ export default function NotasFiscais() {
         <button onClick={() => setShowSintegra(true)} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
           <BarChart2 className="w-4 h-4" /> Sintegra
         </button>
-        <button onClick={() => { setShowImportBackup(true); setResultadoImportBackup(null); setNfseParaImportar(null); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#062C9B", color:"#fff"}} onMouseEnter={e => e.currentTarget.style.background="#041a4d"} onMouseLeave={e => e.currentTarget.style.background="#062C9B"}>
-          <Upload className="w-4 h-4" /> Backup
+        <button
+          onClick={async () => {
+            const preVisualizadas = notas.filter(n => n.status === 'Pré-visualização');
+            if (preVisualizadas.length === 0) { feedback('erro', 'Nenhuma nota em Pré-visualização para autorizar.'); return; }
+            if (!confirm(`Autorizar ${preVisualizadas.length} nota(s) em Pré-visualização?`)) return;
+            setAutorizandoMassa(true);
+            let ok = 0; let erros = 0;
+            for (const nota of preVisualizadas) {
+              try {
+                const items = (() => { try { const p = JSON.parse(nota.xml_content); if (Array.isArray(p) && p.length > 0 && p[0].descricao) return p; } catch {} return [{ descricao: nota.observacoes || 'Produto/Serviço', quantidade: 1, valor_unitario: nota.valor_total, valor_total: nota.valor_total }]; })();
+                const res = await base44.functions.invoke('emitirNotaFiscal', { ...nota, nota_id: nota.id, items });
+                if (res.data?.sucesso) ok++; else erros++;
+              } catch { erros++; }
+              await new Promise(r => setTimeout(r, 800));
+            }
+            setAutorizandoMassa(false);
+            feedback('sucesso', `Autorização concluída: ${ok} emitida(s), ${erros} erro(s).`);
+            load();
+          }}
+          disabled={autorizandoMassa}
+          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+          style={{background:"#00ff00", color:"#000"}}
+          onMouseEnter={e => { if (!autorizandoMassa) e.currentTarget.style.background="#00dd00"; }}
+          onMouseLeave={e => e.currentTarget.style.background="#00ff00"}
+        >
+          {autorizandoMassa ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+          {autorizandoMassa ? 'Autorizando...' : 'Autorizar'}
         </button>
         <button onClick={() => exportarZip()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
           {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />} {gerandoZip ? 'Exportando...' : 'Exportar'}
@@ -1735,140 +1761,7 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      {/* Modal Importar NFSe do Backup */}
-      {showImportBackup && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md">
-            <div className="flex items-center justify-between p-5 border-b border-gray-800">
-              <div>
-                <h2 className="text-white font-semibold">Importar NFSe do Backup</h2>
-                <p className="text-gray-500 text-xs mt-0.5">Selecione o arquivo .zip ou .json do backup completo</p>
-              </div>
-              <button onClick={() => setShowImportBackup(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
-            </div>
-            <div className="p-5 space-y-4">
-              {!nfseParaImportar ? (
-                <label className="flex flex-col items-center justify-center gap-3 w-full border-2 border-dashed border-gray-700 hover:border-blue-500 rounded-xl p-8 cursor-pointer transition-all group">
-                   <Upload className="w-8 h-8 text-gray-500 group-hover:text-blue-400 transition-all" />
-                   <div className="text-center">
-                     <p className="text-gray-300 text-sm font-medium">Clique para selecionar</p>
-                     <p className="text-gray-500 text-xs mt-1">Arquivo .zip, .json ou .xml (NFSe)</p>
-                   </div>
-                   <input type="file" accept=".zip,.json,.xml" multiple className="hidden" onChange={async (e) => {
-                     const files = Array.from(e.target.files || []);
-                     if (files.length === 0) return;
-                     try {
-                       // Múltiplos XML ou XML único
-                       const xmlFiles = files.filter(f => f.name.toLowerCase().endsWith('.xml'));
-                       if (xmlFiles.length > 0) {
-                         const registros = [];
-                         for (const file of xmlFiles) {
-                           const text = await file.text();
-                           // Extrai chave_acesso do nome do arquivo (44 dígitos) ou do XML
-                           const match44 = file.name.match(/(\d{44})/);
-                           const chaveAcesso = match44 ? match44[1] : null;
-                           const nNFSeMatch = text.match(/<nNFSe>(\d+)<\/nNFSe>/);
-                           const numero = nNFSeMatch ? nNFSeMatch[1] : null;
-                           if (chaveAcesso || numero) {
-                             registros.push({ chave_acesso: chaveAcesso, numero, xml_original: text, tipo: 'NFSe' });
-                           }
-                         }
-                         if (registros.length === 0) { alert('Nenhum XML de NFSe válido encontrado.'); return; }
-                         setNfseParaImportar({ _xmlMode: true, registros });
-                         return;
-                       }
-                       // ZIP ou JSON (lógica original)
-                       const file = files[0];
-                       let jsonData;
-                       if (file.name.endsWith('.zip')) {
-                         const JSZipLib = (await import('jszip')).default;
-                         const zip = await JSZipLib.loadAsync(file);
-                         const jsonFile = Object.values(zip.files).find(f => f.name.endsWith('.json') && !f.dir);
-                         if (!jsonFile) { alert('Nenhum arquivo JSON encontrado no ZIP.'); return; }
-                         const text = await jsonFile.async('text');
-                         jsonData = JSON.parse(text);
-                       } else {
-                         const text = await file.text();
-                         jsonData = JSON.parse(text);
-                       }
-                       const notasArray = jsonData?.backup?.NotaFiscal || jsonData?.NotaFiscal || [];
-                       const nfse = notasArray.filter(n => n.tipo === 'NFSe');
-                       if (nfse.length === 0) { alert('Nenhuma NFSe encontrada no backup.'); return; }
-                       setNfseParaImportar(nfse);
-                     } catch (err) {
-                       alert('Erro ao ler arquivo: ' + err.message);
-                     }
-                   }} />
-                 </label>
-              ) : (
-                 <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 space-y-2">
-                   {nfseParaImportar?._xmlMode
-                     ? <p className="text-blue-300 font-semibold text-sm">{nfseParaImportar.registros.length} arquivo(s) XML selecionado(s)</p>
-                     : <p className="text-blue-300 font-semibold text-sm">{nfseParaImportar.length} NFSe encontradas no backup</p>
-                   }
-                   <p className="text-gray-400 text-xs">
-                     {nfseParaImportar?._xmlMode ? 'Os XMLs serão salvos nos registros correspondentes.' : 'As que já existirem no banco serão ignoradas automaticamente.'}
-                   </p>
-                 </div>
-              )}
-              {resultadoImportBackup && (
-                <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm ${
-                  resultadoImportBackup.sucesso
-                    ? 'bg-green-500/10 border-green-500/20 text-green-400'
-                    : 'bg-red-500/10 border-red-500/20 text-red-400'
-                }`}>
-                  {resultadoImportBackup.sucesso ? <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
-                  <span>{resultadoImportBackup.mensagem || resultadoImportBackup.erro}</span>
-                </div>
-              )}
-            </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
-              <button onClick={() => { setShowImportBackup(false); setNfseParaImportar(null); setResultadoImportBackup(null); }} className="px-4 py-2 text-sm text-white rounded-lg font-medium bg-gray-700 hover:bg-gray-600 transition-all">Fechar</button>
-              {nfseParaImportar && !resultadoImportBackup?.sucesso && (
-                <button
-                  onClick={async () => {
-                    setImportandoBackup(true);
-                    try {
-                      if (nfseParaImportar?._xmlMode) {
-                        // Modo XML: atualizar xml_original nos registros existentes
-                        const todasNotas = await base44.entities.NotaFiscal.list('-created_date', 500);
-                        const porChave = {}; const porNumero = {};
-                        for (const n of todasNotas) {
-                          if (n.chave_acesso) porChave[n.chave_acesso] = n;
-                          if (n.tipo === 'NFSe' && n.numero) porNumero[n.numero] = n;
-                        }
-                        let atualizados = 0; let semMatch = 0;
-                        for (const reg of nfseParaImportar.registros) {
-                          const nota = (reg.chave_acesso && porChave[reg.chave_acesso]) || (reg.numero && porNumero[reg.numero]);
-                          if (nota) { await base44.entities.NotaFiscal.update(nota.id, { xml_original: reg.xml_original }); atualizados++; }
-                          else semMatch++;
-                        }
-                        setResultadoImportBackup({ sucesso: true, mensagem: `${atualizados} XML(s) salvos. ${semMatch} sem correspondência.` });
-                        load();
-                      } else {
-                        const res = await base44.functions.invoke('importarNfseDeBackup', { registros: nfseParaImportar });
-                        setResultadoImportBackup(res.data);
-                        if (res.data?.sucesso) load();
-                      }
-                    } catch (e) {
-                      setResultadoImportBackup({ sucesso: false, erro: e.message });
-                    }
-                    setImportandoBackup(false);
-                  }}
-                  disabled={importandoBackup}
-                  className="px-6 py-2 text-sm text-white rounded-lg font-medium disabled:opacity-50 flex items-center gap-2"
-                  style={{background: '#062C9B'}}
-                  onMouseEnter={e => !importandoBackup && (e.currentTarget.style.background = '#041a4d')}
-                  onMouseLeave={e => e.currentTarget.style.background = '#062C9B'}
-                >
-                  {importandoBackup && <RefreshCw className="w-4 h-4 animate-spin" />}
-                  {importandoBackup ? 'Importando...' : `Importar ${nfseParaImportar.length} NFSe`}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {showSintegra && (
         <ModalSintegra
