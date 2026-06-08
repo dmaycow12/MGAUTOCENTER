@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
     }
 
     const PAYMENT_MAP = { 'Dinheiro': '01', 'Cheque': '02', 'Cartão de Crédito': '03', 'Cartão de Débito': '04', 'PIX': '17', 'Boleto': '15', 'Transferência': '03', 'A Prazo': '99', 'A Combinar': '99', 'Cartão': '03' };
-    const infoAdicional = nota.observacoes || '';
+    const infoAdicional = [nota.observacoes, nota.dados_adicionais].filter(Boolean).join(' | ');
 
     let endpoint = '';
     let payload = {};

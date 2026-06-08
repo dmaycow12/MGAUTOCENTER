@@ -810,6 +810,7 @@ export default function NotasFiscais() {
       valor_total: nota.valor_total || 0,
       observacoes: nota.observacoes || '',
       forma_pagamento: nota.forma_pagamento || 'A Combinar',
+      dados_adicionais: nota.dados_adicionais || '',
       items: itensSalvos,
       _editId: nota.id,
     });
