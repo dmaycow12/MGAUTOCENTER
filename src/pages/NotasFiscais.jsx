@@ -8,12 +8,14 @@ import {
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
 import ModalXML from "@/components/notas/ModalXML";
+import ModalPreVisualizacao from "@/components/notas/ModalPreVisualizacao";
 import SearchableSelect from "@/components/notas/SearchableSelect";
 
 import JSZip from "jszip";
 
 const STATUS_COLOR = {
   Rascunho: "bg-gray-500/10 text-gray-400",
+  "Pré-visualização": "bg-yellow-500/10 text-yellow-400",
   Emitida: "bg-green-500/10 text-green-400",
   Lançada: "bg-green-500/10 text-green-400",
   Cancelada: "bg-red-500/10 text-red-400",
@@ -90,7 +92,6 @@ export default function NotasFiscais() {
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
   const [atualizandoStatus, setAtualizandoStatus] = useState(null);
-  const [gerandoSintegra, setGerandoSintegra] = useState(false);
 
   const [notaIdParaEntrada, setNotaIdParaEntrada] = useState(null);
   const hoje = new Date();
@@ -157,6 +158,8 @@ export default function NotasFiscais() {
   const [form, setForm] = useState(defaultForm());
   const [emitindo, setEmitindo] = useState(false);
   const [transmitindo, setTransmitindo] = useState(null);
+  const [preVisualizando, setPreVisualizando] = useState(null);
+  const [modalPreview, setModalPreview] = useState(null);
   const [aguardandoEmissao, setAguardandoEmissao] = useState(false);
   const [pollingNotaId, setPollingNotaId] = useState(null);
   const pollingIntervalRef = useRef(null);
@@ -166,7 +169,6 @@ export default function NotasFiscais() {
   const [abaForm, setAbaForm] = useState("cliente");
   const [errosForm, setErrosForm] = useState({});
   const [configsNF, setConfigsNF] = useState([]);
-  const [debugModal, setDebugModal] = useState(null);
   const [avisoExclusao, setAvisoExclusao] = useState(null); // nota que tentou excluir mas não pode
   const [xmlModal, setXmlModal] = useState(null); // nota para visualizar XML
 
@@ -747,6 +749,32 @@ export default function NotasFiscais() {
     setTransmitindo(null);
   };
 
+  const iniciarPreVisualizacao = async (nota) => {
+    setPreVisualizando(nota.id);
+    feedback('sucesso', 'Enviando para homologação — gerando DANFE de pré-visualização...');
+    try {
+      const res = await base44.functions.invoke('preVisualizarNota', { nota_id: nota.id });
+      if (res.data?.sucesso) {
+        setMsgFeedback(null);
+        const notaAtual = await base44.entities.NotaFiscal.filter({ id: nota.id }).then(r => r[0] || nota);
+        setModalPreview({ nota_id: nota.id, pdf_url: res.data.pdf_url, tipo: nota.tipo, nota: notaAtual });
+        load();
+      } else {
+        feedback('erro', res.data?.erro || 'Erro ao gerar pré-visualização.');
+      }
+    } catch (e) {
+      feedback('erro', 'Erro: ' + e.message);
+    }
+    setPreVisualizando(null);
+  };
+
+  const autorizarEmitir = async (nota_id) => {
+    setModalPreview(null);
+    const notaAtual = notas.find(n => n.id === nota_id);
+    if (!notaAtual) return;
+    emitirNota(notaAtual);
+  };
+
   const editarNota = (nota) => {
     if (nota.status === 'Emitida') {
       feedback('erro', 'Notas com status Emitida não podem ser editadas.');
@@ -1174,44 +1202,16 @@ export default function NotasFiscais() {
                   <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${STATUS_COLOR[nota.status]||"bg-gray-500/10 text-gray-400"}`}>{nota.status}</span>
                 </div>
                 <div className="flex gap-1">
-                  {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Cancelada' && (
-                    <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>
-                  )}
-                  {(nota.xml_original || nota.chave_acesso || nota.spedy_id) && (
-                   <button title="Ver XML" onClick={() => setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content })}
-                     className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
-                     style={{ color: (nota.xml_original?.trim().startsWith("<") || nota.xml_url?.startsWith("http") || (nota.xml_content?.trim().startsWith("<"))) ? "#00ff00" : "#ff2222" }}>
-                     <Code className="w-3.5 h-3.5"/>
-                   </button>
-                  )}
-                  <button
-                    title="Abrir PDF"
-                    onClick={() => abrirPdfNota(nota)}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
-                    style={{ color: nota.pdf_url ? "#00ff00" : "#ef4444" }}
-                  ><FileText className="w-3.5 h-3.5"/></button>
-                  {nota.pdf_url && (
-                    <button
-                      title="Baixar PDF"
-                      onClick={() => baixarPdfNota(nota)}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg transition-all text-gray-400 hover:text-blue-400"
-                    ><Download className="w-3.5 h-3.5"/></button>
-                  )}
-                  {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && (
-                    <button title="Cancelar" onClick={() => cancelarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg transition-all"><Ban className="w-3.5 h-3.5"/></button>
-                  )}
-                  {nota.status === 'Lançada' && (
-                    <button title="Cancelar Lançamento" onClick={() => cancelarLancamento(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg transition-all"><Ban className="w-3.5 h-3.5"/></button>
-                  )}
-                  {nota.status === 'Importada' && (
-                    <button title="Marcar como Cancelada" onClick={async () => {
-                      if (!confirm('Marcar esta nota como Cancelada?')) return;
-                      await base44.entities.NotaFiscal.update(nota.id, { status: 'Cancelada' });
-                      load();
-                    }} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Ban className="w-3.5 h-3.5"/></button>
-                  )}
-
-                  <button onClick={() => excluir(nota.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
+                  {nota.status === 'Rascunho' && temSpedy && <button title="Pré-visualizar" onClick={() => iniciarPreVisualizacao(nota)} disabled={!!preVisualizando} className="w-7 h-7 flex items-center justify-center text-yellow-400 hover:text-yellow-300 rounded-lg transition-all disabled:opacity-50">{preVisualizando === nota.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin"/> : <FileText className="w-3.5 h-3.5"/>}</button>}
+                  {nota.status === "Pré-visualização" && temSpedy && <button title="Autorizar" onClick={() => emitirNota(nota)} disabled={!!transmitindo} className="w-7 h-7 flex items-center justify-center text-green-400 hover:text-green-300 rounded-lg disabled:opacity-50">{transmitindo === nota.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin"/> : <CheckCircle className="w-3.5 h-3.5"/>}</button>}
+                  {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Cancelada' && nota.status !== 'Rascunho' && nota.status !== "Pré-visualização" && <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>}
+                  {(nota.xml_original || nota.chave_acesso || nota.spedy_id) && <button title="Ver XML" onClick={() => setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content })} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ color: (nota.xml_original?.trim().startsWith("<") || nota.xml_url?.startsWith("http")) ? "#00ff00" : "#ff2222" }}><Code className="w-3.5 h-3.5"/></button>}
+                  <button title="Abrir PDF" onClick={() => abrirPdfNota(nota)} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ color: nota.pdf_url ? "#00ff00" : "#ef4444" }}><FileText className="w-3.5 h-3.5"/></button>
+                  {nota.pdf_url && <button title="Baixar PDF" onClick={() => baixarPdfNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-400 rounded-lg"><Download className="w-3.5 h-3.5"/></button>}
+                  {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && <button title="Cancelar" onClick={() => cancelarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg"><Ban className="w-3.5 h-3.5"/></button>}
+                  {nota.status === 'Lançada' && <button title="Cancelar Lançamento" onClick={() => cancelarLancamento(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg"><Ban className="w-3.5 h-3.5"/></button>}
+                  {nota.status === 'Importada' && <button title="Cancelar" onClick={async () => { if (!confirm('Marcar como Cancelada?')) return; await base44.entities.NotaFiscal.update(nota.id, { status: 'Cancelada' }); load(); }} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg"><Ban className="w-3.5 h-3.5"/></button>}
+                  <button onClick={() => excluir(nota.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg"><Trash2 className="w-3.5 h-3.5"/></button>
                 </div>
               </div>
               <p className="text-white font-semibold text-sm">{nota.cliente_nome || "—"}</p>
@@ -1253,11 +1253,20 @@ export default function NotasFiscais() {
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">
                         {nota.status === "Rascunho" && temSpedy && (
-                          <button title="Transmitir" onClick={() => { if (transmitindo) return; emitirNota(nota); }} disabled={transmitindo !== null}
-                            className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 rounded-lg transition-all disabled:opacity-50">
-                            {transmitindo === nota.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
-                            {transmitindo === nota.id ? "..." : "Transmitir"}
+                          <button title="Pré-visualizar DANFE" onClick={() => { if (preVisualizando) return; iniciarPreVisualizacao(nota); }} disabled={preVisualizando !== null}
+                            className="flex items-center gap-1 px-2 py-1 text-xs bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 rounded-lg transition-all disabled:opacity-50">
+                            {preVisualizando === nota.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
+                            {preVisualizando === nota.id ? "..." : "Pré-visualizar"}
                           </button>
+                        )}
+                        {nota.status === "Pré-visualização" && temSpedy && (
+                          <>
+                            <button title="Ver DANFE" onClick={() => nota.pdf_url && window.open(nota.pdf_url, '_blank')} className="flex items-center gap-1 px-2 py-1 text-xs bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 rounded-lg transition-all">Ver DANFE</button>
+                            <button title="Autorizar e Emitir" onClick={() => { if (transmitindo) return; emitirNota(nota); }} disabled={transmitindo !== null} className="flex items-center gap-1 px-2 py-1 text-xs bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded-lg transition-all disabled:opacity-50">
+                              {transmitindo === nota.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
+                              {transmitindo === nota.id ? "..." : "Autorizar"}
+                            </button>
+                          </>
                         )}
                         {(nota.xml_original || nota.chave_acesso || nota.spedy_id) && (
                           <button title="Ver XML" onClick={() => setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content })}
@@ -1697,23 +1706,28 @@ export default function NotasFiscais() {
                     </div>
                   </div>
 
-                  <div className="flex gap-3 justify-between">
-                    <button onClick={() => setAbaForm("itens")} className="text-gray-400 hover:text-white text-sm px-4 py-2 border border-gray-700 rounded-lg transition-all">← Voltar</button>
-                    <div className="flex gap-3">
-                      <button onClick={salvarRascunho} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Salvar Rascunho</button>
-                      <button
-                        onClick={() => temSpedy ? emitirNota() : salvarRascunho()}
-                        disabled={emitindo}
-                        className="px-6 py-2 text-sm text-black rounded-lg font-medium transition-all disabled:opacity-50 flex items-center gap-2"
-                        style={{background: "#00ff00"}}
-                        onMouseEnter={e => !emitindo && (e.currentTarget.style.background = "#00dd00")}
-                        onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
-                      >
-                        {emitindo && <RefreshCw className="w-4 h-4 animate-spin" />}
-                        {emitindo ? "Emitindo..." : temSpedy ? "Transmitir Nota" : "Salvar Nota"}
-                      </button>
-                    </div>
-                  </div>
+                  <BotoesPagamento
+                    onVoltar={() => setAbaForm("itens")}
+                    salvarRascunho={salvarRascunho}
+                    emitindo={emitindo}
+                    temSpedy={temSpedy}
+                    onPreVisualizar={async () => {
+                      if (!temSpedy) { salvarRascunho(); return; }
+                      const erros = validarForm(form);
+                      if (Object.keys(erros).length > 0) { setErrosForm(erros); if (erros.cliente_nome || erros.cliente_cpf_cnpj || erros.cliente_endereco) setAbaForm("cliente"); else setAbaForm("itens"); return; }
+                      setErrosForm({});
+                      setEmitindo(true);
+                      const editId = currentEditIdRef.current || form._editId;
+                      let notaId = editId;
+                      const { _editId, ...dadosForm } = form;
+                      if (!editId) { const novo = await base44.entities.NotaFiscal.create({ ...dadosForm, status: 'Rascunho', xml_content: JSON.stringify(form.items || []) }); notaId = novo.id; currentEditIdRef.current = notaId; }
+                      else { await base44.entities.NotaFiscal.update(editId, { ...dadosForm, status: 'Rascunho', xml_content: JSON.stringify(form.items || []) }); }
+                      setEmitindo(false); setShowForm(false); currentEditIdRef.current = null; setForm(defaultForm());
+                      await load();
+                      const notaSalva = await base44.entities.NotaFiscal.filter({ id: notaId }).then(r => r[0]);
+                      if (notaSalva) iniciarPreVisualizacao(notaSalva);
+                    }}
+                  />
                 </div>
               )}
             </div>
@@ -1911,43 +1925,16 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      {debugModal && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-auto">
-            <div className="flex items-center justify-between p-5 border-b border-gray-800 sticky top-0 bg-gray-900">
-              <h2 className="text-white font-semibold">Debug da Nota</h2>
-              <button onClick={() => setDebugModal(null)} className="text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="bg-gray-800 rounded-lg p-4">
-                <h3 className="text-white font-semibold mb-3">Campos Principais:</h3>
-                <pre className="text-xs text-gray-300 overflow-x-auto font-mono">{JSON.stringify({
-                  id: debugModal.nota.id,
-                  tipo: debugModal.nota.tipo,
-                  numero: debugModal.nota.numero,
-                  serie: debugModal.nota.serie,
-                  status: debugModal.nota.status,
-                  spedy_id: debugModal.nota.spedy_id,
-                  reference_id: debugModal.nota.reference_id,
-                  chave_acesso: debugModal.nota.chave_acesso,
-                  pdf_url: debugModal.nota.pdf_url,
-                }, null, 2)}</pre>
-              </div>
-              <div className="bg-gray-800 rounded-lg p-4">
-                <h3 className="text-white font-semibold mb-3">Todos os Dados (JSON completo):</h3>
-                <details className="cursor-pointer">
-                  <summary className="text-yellow-400 hover:text-yellow-300 text-sm">Expandir para ver tudo...</summary>
-                  <pre className="text-xs text-gray-300 overflow-x-auto font-mono mt-2 bg-gray-900 p-3 rounded">{JSON.stringify(debugModal.nota.todos_campos, null, 2)}</pre>
-                </details>
-              </div>
-              <div className="text-center">
-                <button onClick={() => setDebugModal(null)} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{background: '#00ff00', color: '#000'}}>
-                  Fechar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* debugModal removido — usar painel de desenvolvedor */}
+
+      {modalPreview && (
+        <ModalPreVisualizacao
+          pdfUrl={modalPreview.pdf_url}
+          tipo={modalPreview.tipo}
+          nota={modalPreview.nota}
+          onAutorizar={autorizarEmitir}
+          onFechar={() => { setModalPreview(null); load(); }}
+        />
       )}
 
       {showEntrada && xmlParaEntrada && (
@@ -1987,6 +1974,21 @@ function F({ label, children, className = "" }) {
     <div className={className}>
       <label className="block text-xs text-gray-400 mb-1">{label}</label>
       {children}
+    </div>
+  );
+}
+
+function BotoesPagamento({ onVoltar, salvarRascunho, emitindo, temSpedy, onPreVisualizar }) {
+  return (
+    <div className="flex gap-3 justify-between">
+      <button onClick={onVoltar} className="text-gray-400 hover:text-white text-sm px-4 py-2 border border-gray-700 rounded-lg transition-all">← Voltar</button>
+      <div className="flex gap-3">
+        <button onClick={salvarRascunho} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Salvar Rascunho</button>
+        <button onClick={onPreVisualizar} disabled={emitindo} className="px-6 py-2 text-sm text-black rounded-lg font-medium transition-all disabled:opacity-50 flex items-center gap-2" style={{background:"#00ff00"}} onMouseEnter={e => !emitindo && (e.currentTarget.style.background="#00dd00")} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+          {emitindo && <RefreshCw className="w-4 h-4 animate-spin" />}
+          {emitindo ? "Salvando..." : temSpedy ? "Pré-visualizar DANFE" : "Salvar Nota"}
+        </button>
+      </div>
     </div>
   );
 }
