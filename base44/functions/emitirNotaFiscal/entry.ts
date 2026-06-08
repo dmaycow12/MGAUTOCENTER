@@ -317,6 +317,7 @@ Deno.serve(async (req) => {
         percentual_total_tributos_estaduais: '0.00',
         percentual_total_tributos_municipais: '2.50',
         indicador_total_tributacao: null,
+        ...(infoAdicional ? { observacoes: infoAdicional.substring(0, 2000) } : {}),
       };
     } else if (tipo === 'NFCe') {
       endpoint = `/nfce?ref=${ref}`;
