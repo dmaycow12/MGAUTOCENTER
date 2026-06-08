@@ -3,27 +3,61 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 const FOCUSNFE_BASE_PROD = 'https://api.focusnfe.com.br/v2';
 const FOCUSNFE_BASE_HOM = 'https://homologacao.focusnfe.com.br/v2';
 
-const normalizarUrl = (url) => {
+const normalizarUrl = (url, useHom = false) => {
   if (!url) return '';
   if (url.startsWith('http')) return url;
-  return `https://api.focusnfe.com.br${url}`;
+  const baseHost = useHom ? 'homologacao.focusnfe.com.br' : 'api.focusnfe.com.br';
+  return `https://${baseHost}${url}`;
 };
 
-const salvarPdfPermanente = async (base44, pdfUrl, label, apiKey) => {
+const converterHtmlParaPdf = async (htmlContent) => {
+  try {
+    const formData = new FormData();
+    const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+    formData.append('files', htmlBlob, 'index.html');
+
+    const resp = await fetch('https://demo.gotenberg.dev/forms/chromium/convert/html', {
+      method: 'POST',
+      body: formData,
+    });
+    if (resp.ok) {
+      const ct = resp.headers.get('content-type') || '';
+      if (ct.includes('pdf') || ct.includes('octet')) {
+        const blob = await resp.blob();
+        if (blob.size > 1000) {
+          console.log('[PREVIEW] PDF gerado via gotenberg, tamanho:', blob.size);
+          return blob;
+        }
+      }
+    }
+    console.log('[PREVIEW] gotenberg falhou:', resp.status);
+  } catch (e) {
+    console.log('[PREVIEW] gotenberg erro:', e.message);
+  }
+  return null;
+};
+
+const salvarPdfPermanente = async (base44, pdfUrl, label, authHeader) => {
   if (!pdfUrl) return null;
   try {
-    const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
-    const authHeader = 'Basic ' + btoa((apiKey || Deno.env.get('FOCUSNFE_API_KEY') || '') + ':');
-    const resp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': authHeader } });
-    if (!resp.ok) return null;
+    const resp = await fetch(pdfUrl, { headers: { 'Authorization': authHeader } });
+    if (!resp.ok) {
+      console.log('[PREVIEW] PDF fetch falhou:', resp.status);
+      return null;
+    }
     const blob = await resp.blob();
-    const file = new File([blob], `preview_${label}.pdf`, { type: 'application/pdf' });
-    const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
-    return file_url;
+    const buffer = await blob.arrayBuffer();
+    const header = new Uint8Array(buffer, 0, 4);
+    const isPdf = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+    if (isPdf) {
+      const file = new File([blob], `preview_${label}.pdf`, { type: 'application/pdf' });
+      const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+      return file_url;
+    }
   } catch (e) {
     console.error('[PREVIEW PDF ERRO]', e.message);
-    return null;
   }
+  return null;
 };
 
 Deno.serve(async (req) => {
@@ -291,11 +325,38 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: `Timeout: nota ainda em ${resultFinal.status || 'processamento'}. Tente novamente.` });
     }
 
-    // Obtém PDF da homologação
-    const rawPdf = resultFinal.url_danfse || resultFinal.caminho_pdf_nfsen || resultFinal.caminho_pdf_nfse || resultFinal.caminho_danfe || resultFinal.caminho_pdf_nfce || '';
-    const pdfUrlHom = rawPdf.startsWith('http') ? rawPdf : `${FOCUSNFE_BASE}${rawPdf}`;
+    // Obtém HTML/PDF da homologação
+    const caminhoHtml = resultFinal.caminho_danfe || resultFinal.url_danfse || resultFinal.caminho_pdf_nfse || resultFinal.caminho_pdf_nfsen || resultFinal.caminho_pdf_nfce || '';
+    const htmlUrl = normalizarUrl(caminhoHtml, true); // true = usar homologação
+    console.log('[PREVIEW] caminhoHtml:', caminhoHtml, ', htmlUrl:', htmlUrl);
 
-    const pdfUrlSalvo = await salvarPdfPermanente(base44, pdfUrlHom, nota_id, apiKeyHom);
+    // Tenta buscar como PDF primeiro
+    let pdfUrlSalvo = null;
+    const pdfResp = await fetch(htmlUrl, { headers: { 'Authorization': AUTH_HOM } });
+    if (pdfResp.ok) {
+      const blob = await pdfResp.blob();
+      const ct = pdfResp.headers.get('content-type') || '';
+      if (ct.includes('pdf')) {
+        const pdfFile = new File([blob], `preview_${nota_id}.pdf`, { type: 'application/pdf' });
+        const upload = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+        pdfUrlSalvo = upload.file_url;
+        console.log('[PREVIEW] PDF salvo diretamente:', pdfUrlSalvo);
+      } else if (ct.includes('html') || caminhoHtml.endsWith('.html')) {
+        // É HTML, converte para PDF
+        const htmlContent = await pdfResp.text();
+        const pdfBlob = await converterHtmlParaPdf(htmlContent);
+        if (pdfBlob) {
+          const pdfFile = new File([pdfBlob], `preview_${nota_id}.pdf`, { type: 'application/pdf' });
+          const upload = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+          pdfUrlSalvo = upload.file_url;
+          console.log('[PREVIEW] PDF convertido de HTML:', pdfUrlSalvo);
+        }
+      }
+    }
+    if (!pdfUrlSalvo) {
+      console.log('[PREVIEW] Fallback: retornando URL da homologação');
+      pdfUrlSalvo = htmlUrl;
+    }
 
     // Atualiza nota com PDF de homologação e status Homologada
     await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
