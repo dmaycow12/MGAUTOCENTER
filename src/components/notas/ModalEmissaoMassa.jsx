@@ -73,15 +73,6 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
     setEmitindo(true);
     const res = [];
 
-    // Busca as notas mais recentes antes de começar para ter numeração atualizada
-    let notasAtualizadas = [];
-    try {
-      const resp = await base44.entities.NotaFiscal.list("-created_date", 500);
-      notasAtualizadas = resp || [];
-    } catch (_) {
-      notasAtualizadas = notas || [];
-    }
-
     for (const vendaId of selecionadas) {
       const venda = vendas.find(v => v.id === vendaId);
       if (!venda) continue;
@@ -94,8 +85,12 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
         const itensFinal = items.length > 0 ? items : [{ descricao: tipoNF === 'NFSe' ? 'Serviços' : 'Produtos', quantidade: 1, valor_unitario: valorTotal, valor_total: valorTotal }];
 
         const clienteCadastro = clientes.find(c => c.id === venda.cliente_id) || null;
-        const payload = {
+
+        // Passo 1: Criar rascunho
+        const rascunho = await base44.entities.NotaFiscal.create({
           tipo: tipoNF,
+          status: 'Rascunho',
+          cliente_id: venda.cliente_id || '',
           cliente_nome: venda.cliente_nome || '',
           cliente_cpf_cnpj: venda.cliente_cpf_cnpj || clienteCadastro?.cpf_cnpj || '',
           cliente_ie: clienteCadastro?.rg_ie || '',
@@ -109,40 +104,30 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
           cliente_estado: venda.cliente_estado || clienteCadastro?.estado || '',
           ordem_venda_id: vendaId,
           valor_total: valorTotal,
-          items: itensFinal,
+          xml_content: JSON.stringify(itensFinal),
           data_emissao: new Date().toISOString().split('T')[0],
-          serie: '1',
-          forcar_recalculo_numero: true,
-        };
+        });
 
-        const resp = await base44.functions.invoke('emitirNotaFiscal', payload);
-        const sucesso = resp.data?.sucesso;
+        // Passo 2: Enviar para homologação (pré-visualização)
+        const prevRes = await base44.functions.invoke('preVisualizarNota', { nota_id: rascunho.id });
+        const sucesso = prevRes.data?.sucesso;
 
-        // Após cada emissão bem-sucedida, recarrega as notas para garantir numeração atualizada
-        if (sucesso) {
-          try {
-            const atualizadas = await base44.entities.NotaFiscal.list("-created_date", 500);
-            notasAtualizadas = atualizadas || notasAtualizadas;
-          } catch (_) {}
-          // Aguarda um breve intervalo para evitar colisão de numeração no backend
-          await new Promise(r => setTimeout(r, 800));
-        }
+        await new Promise(r => setTimeout(r, 500));
 
-        res.push({ venda, sucesso, mensagem: resp.data?.mensagem || resp.data?.erro || '' });
+        res.push({ venda, sucesso, mensagem: sucesso ? 'Enviado para homologação — aguardando autorização' : (prevRes.data?.erro || 'Erro na homologação') });
       } catch (e) {
         res.push({ venda, sucesso: false, mensagem: e.message });
       }
     }
+
     setResultados(res);
     setEmitindo(false);
     setConcluido(true);
 
-    // Recarrega notas atualizadas para repassar ao fechar
     try {
       const notasFrescas = await base44.entities.NotaFiscal.list("-created_date", 1000);
-      notasAtualizadas = notasFrescas || notasAtualizadas;
+      setNotasFinais(notasFrescas);
     } catch (_) {}
-    setNotasFinais(notasAtualizadas);
   };
 
   return (
@@ -206,7 +191,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
                   onMouseEnter={e => !emitindo && (e.currentTarget.style.background='#00dd00')}
                   onMouseLeave={e => e.currentTarget.style.background='#00ff00'}>
                   {emitindo && <RefreshCw className="w-4 h-4 animate-spin" />}
-                  {emitindo ? 'Emitindo...' : `Emitir ${selecionadas.length} ${tipoNF}`}
+                  {emitindo ? 'Enviando para homologação...' : `Homologar ${selecionadas.length} ${tipoNF}`}
                 </button>
               </div>
             </div>
