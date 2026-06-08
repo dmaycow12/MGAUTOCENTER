@@ -40,9 +40,11 @@ Deno.serve(async (req) => {
     const AUTH_HEADER_HOM = 'Basic ' + btoa(apiKeyHom + ':');
 
     const ref = nota.spedy_id;
-    if (!ref) {
-      return Response.json({ processando: false, erro: 'Referência da nota não encontrada. Esta nota pode ter sido criada antes da atualização do sistema.' });
-    }
+     console.log(`[CONSULTA NOTA] ID: ${nota_id}, Tipo: ${nota.tipo}, Status: ${nota.status}, spedy_id: ${ref}, pdf_url: ${nota.pdf_url}`);
+
+     if (!ref) {
+       return Response.json({ processando: false, erro: 'Referência da nota não encontrada. Esta nota pode ter sido criada antes da atualização do sistema.', status_nota: nota.status });
+     }
 
     // Tenta encontrar a nota em ambos os ambientes (pode estar em hom mesmo com status Homologada)
     const ep = endpointPorTipo(nota.tipo || 'NFe');
