@@ -56,22 +56,28 @@ Deno.serve(async (req) => {
       ? [[FOCUSNFE_BASE_HOM, AUTH_HEADER_HOM], [FOCUSNFE_BASE_PROD, AUTH_HEADER_PROD]]
       : [[FOCUSNFE_BASE_PROD, AUTH_HEADER_PROD], [FOCUSNFE_BASE_HOM, AUTH_HEADER_HOM]];
 
+    console.log(`[CONSULTA] spedy_id=${ref}, ep=${ep}, ambientes=${ambientes.length}`);
+
     for (const [baseUrl, authHeader] of ambientes) {
-      console.log(`[CONSULTA] Tentando em ${baseUrl} com ref ${ref}`);
-      resp = await fetch(`${baseUrl}/${ep}/${ref}?completo=1`, {
+      const fullUrl = `${baseUrl}/${ep}/${ref}?completo=1`;
+      console.log(`[CONSULTA] Tentando: ${fullUrl}`);
+      resp = await fetch(fullUrl, {
         headers: { 'Authorization': authHeader },
       });
+
+      console.log(`[CONSULTA] Status: ${resp.status} em ${baseUrl}`);
 
       if (resp.ok) {
         data = await resp.json();
         console.log(`[CONSULTA] Sucesso em ${baseUrl}`, data.status);
         break;
-      } else if (resp.status !== 404) {
-        console.log(`[CONSULTA] Erro em ${baseUrl}:`, resp.status);
+      } else {
+        const errText = await resp.text().catch(() => '');
+        console.log(`[CONSULTA] Erro em ${baseUrl}: ${resp.status} - ${errText.substring(0, 200)}`);
       }
     }
 
-    if (!data) return Response.json({ erro: 'Nota não encontrada em nenhum ambiente. Verifique o spedy_id na nota.' });
+    if (!data) return Response.json({ erro: 'Nota não encontrada em nenhum ambiente. Verifique o spedy_id na nota.', spedy_id: ref, nota_tipo: nota.tipo, nota_status: nota.status });
 
     const status = data.status || '';
 
