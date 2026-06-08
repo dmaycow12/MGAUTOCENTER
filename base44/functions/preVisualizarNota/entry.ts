@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
+const FOCUSNFE_BASE_PROD = 'https://api.focusnfe.com.br/v2';
+const FOCUSNFE_BASE_HOM = 'https://homologacao.focusnfe.com.br/v2';
 
 const normalizarUrl = (url) => {
   if (!url) return '';
@@ -47,12 +48,13 @@ Deno.serve(async (req) => {
 
     const getConf = (chave, padrao = '') => todasConfigs.find(c => c.chave === chave)?.valor || padrao;
 
-    // Chave de homologação (fallback para produção se não configurada)
-    const apiKeyHom = getConf('focusnfe_api_key_homologacao', '') || getConf('focusnfe_token', '') || Deno.env.get('FOCUSNFE_API_KEY') || '';
+    // Token de homologação (URL separada da produção)
+    const apiKeyHom = getConf('focusnfe_api_key_homologacao', '');
     if (!apiKeyHom) {
-      return Response.json({ sucesso: false, erro: 'Token FocusNFe não configurado. Acesse Configurações.' });
+      return Response.json({ sucesso: false, erro: 'Token de homologação FocusNFe não configurado. Acesse Configurações e preencha "Token API Homologação".' });
     }
 
+    const FOCUSNFE_BASE = FOCUSNFE_BASE_HOM; // preview sempre em homologação
     const AUTH_HOM = 'Basic ' + btoa(apiKeyHom + ':');
 
     const CNPJ_EMITENTE = getConf('cnpj', '').replace(/\D/g, '');

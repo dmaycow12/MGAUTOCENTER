@@ -275,22 +275,11 @@ export default function NotasFiscais() {
   }, []);
 
   const proximoNumero = (notasList, tipo) => {
-    if (tipo === 'NFCe') {
-      const cfgUltimo = configsNF.find(c => c.chave === 'nfce_ultimo_numero');
-      const ultimoSalvo = parseInt(cfgUltimo?.valor || '0', 10);
-      const nums = notasList.filter(n => n.tipo === 'NFCe').map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
-      const ultimoNota = nums.length > 0 ? Math.max(...nums) : 0;
-      return String(Math.max(ultimoSalvo, ultimoNota) + 1);
-    }
-    const chaveConfig = tipo === 'NFe' ? 'nfe_ultimo_numero' : tipo === 'NFSe' ? 'nfse_ultimo_rps' : null;
-    const cfgUltimo = chaveConfig ? configsNF.find(c => c.chave === chaveConfig) : null;
-    // Para NFSe, se não houver config, assume 29 (último RPS registrado no painel Focus NFe)
-    const defaultBase = tipo === 'NFSe' ? 29 : 0;
-    const ultimoSalvo = parseInt(cfgUltimo?.valor || String(defaultBase), 10);
-    const filtradas = notasList.filter(n => n.tipo === tipo);
-    const nums = filtradas.map(n => parseInt(n.numero, 10)).filter(n => !isNaN(n));
-    const ultimoNota = nums.length > 0 ? Math.max(...nums) : 0;
-    return String(Math.max(ultimoSalvo, ultimoNota) + 1);
+    // Usa SOMENTE o contador local salvo na Configuracao — ignora números de outras séries
+    const chaveConfig = tipo === 'NFCe' ? 'nfce_ultimo_numero' : tipo === 'NFe' ? 'nfe_ultimo_numero' : 'nfse_ultimo_dps';
+    const cfgUltimo = configsNF.find(c => c.chave === chaveConfig);
+    const ultimoSalvo = parseInt(cfgUltimo?.valor || '0', 10);
+    return String(ultimoSalvo + 1);
   };
 
   const proximaSerie = (notasList, tipo) => {
