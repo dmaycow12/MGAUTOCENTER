@@ -1,13 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
-const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
-const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
+const FOCUSNFE_BASE_PROD = 'https://api.focusnfe.com.br/v2';
+const FOCUSNFE_BASE_HOM = 'https://homologacao.focusnfe.com.br/v2';
 
-const normalizarUrl = (url) => {
+const normalizarUrl = (url, isHom = false) => {
   if (!url) return '';
   if (url.startsWith('http')) return url;
-  return `https://api.focusnfe.com.br${url}`;
+  const host = isHom ? 'homologacao.focusnfe.com.br' : 'api.focusnfe.com.br';
+  return `https://${host}${url}`;
 };
 
 Deno.serve(async (req) => {
@@ -21,9 +21,19 @@ Deno.serve(async (req) => {
 
     if (!nota_id) return Response.json({ sucesso: false, erro: 'nota_id obrigatório' });
 
-    const lista = await db.entities.NotaFiscal.filter({ id: nota_id });
-    const nota = lista[0];
+    const [notaLista, todasConfigs] = await Promise.all([
+      db.entities.NotaFiscal.filter({ id: nota_id }),
+      db.entities.Configuracao.list('-created_date', 200),
+    ]);
+    const nota = notaLista[0];
     if (!nota) return Response.json({ sucesso: false, erro: 'Nota não encontrada' });
+
+    // Carrega chaves de configuração
+    const getConf = (chave, padrao = '') => todasConfigs.find(c => c.chave === chave)?.valor || padrao;
+    const apiKeyProd = getConf('focusnfe_api_key', '');
+    const apiKeyHom = getConf('focusnfe_api_key_homologacao', '');
+    const AUTH_HEADER_PROD = 'Basic ' + btoa(apiKeyProd + ':');
+    const AUTH_HEADER_HOM = 'Basic ' + btoa(apiKeyHom + ':');
 
     // Se já tem PDF salvo, retorna a URL diretamente
     if (nota.pdf_url) {
@@ -151,23 +161,33 @@ Deno.serve(async (req) => {
     }
 
     if (nota.spedy_id && !(nota.status === 'Importada' || nota.status === 'Lançada')) {
-      // Notas emitidas: buscar pelo spedy_id (referência interna)
+      // Notas emitidas: tenta ambos os ambientes
       const ep = nota.tipo === 'NFSe' ? 'nfsen' : nota.tipo === 'NFCe' ? 'nfce' : 'nfe';
-      const consultaResp = await fetch(`${FOCUSNFE_BASE}/${ep}/${nota.spedy_id}?completo=1`, {
-        headers: { 'Authorization': AUTH_HEADER },
-      });
-      if (consultaResp.ok) {
-        result = await consultaResp.json();
+      const isPreview = nota.spedy_id?.startsWith('preview-');
+      const ambientes = isPreview 
+        ? [[FOCUSNFE_BASE_HOM, AUTH_HEADER_HOM], [FOCUSNFE_BASE_PROD, AUTH_HEADER_PROD]]
+        : [[FOCUSNFE_BASE_PROD, AUTH_HEADER_PROD], [FOCUSNFE_BASE_HOM, AUTH_HEADER_HOM]];
+      
+      for (const [baseUrl, authHeader] of ambientes) {
+        const consultaResp = await fetch(`${baseUrl}/${ep}/${nota.spedy_id}?completo=1`, {
+          headers: { 'Authorization': authHeader },
+        });
+        if (consultaResp.ok) {
+          result = await consultaResp.json();
+          break;
+        }
       }
     } else if (nota.chave_acesso) {
-      // Notas de entrada NFe: buscar pelo endpoint de notas recebidas
+      // Notas de entrada NFe: buscar pelo endpoint de notas recebidas (tenta ambos)
       const chave = nota.chave_acesso.replace(/\D/g, '');
       const endpoints = [
-        `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
-        `${FOCUSNFE_BASE}/nfe/${chave}?completo=1`,
+        [FOCUSNFE_BASE_PROD, AUTH_HEADER_PROD, `${FOCUSNFE_BASE_PROD}/nfes_recebidas/${chave}`],
+        [FOCUSNFE_BASE_PROD, AUTH_HEADER_PROD, `${FOCUSNFE_BASE_PROD}/nfe/${chave}?completo=1`],
+        [FOCUSNFE_BASE_HOM, AUTH_HEADER_HOM, `${FOCUSNFE_BASE_HOM}/nfes_recebidas/${chave}`],
+        [FOCUSNFE_BASE_HOM, AUTH_HEADER_HOM, `${FOCUSNFE_BASE_HOM}/nfe/${chave}?completo=1`],
       ];
-      for (const ep of endpoints) {
-        const r = await fetch(ep, { headers: { 'Authorization': AUTH_HEADER } });
+      for (const [baseUrl, authHeader, ep] of endpoints) {
+        const r = await fetch(ep, { headers: { 'Authorization': authHeader } });
         if (r.ok) { result = await r.json().catch(() => null); if (result) break; }
       }
     }
@@ -180,14 +200,19 @@ Deno.serve(async (req) => {
     const rawPdf = result.url_danfse || result.caminho_pdf_nfsen || result.caminho_pdf_nfse
       || result.caminho_danfe || result.url_danfe || result.caminho_pdf
       || result.caminho_xml_nota_fiscal_pdf || result.url_pdf || result.arquivo_pdf || '';
-    const pdfUrlFocus = normalizarUrl(rawPdf);
-    console.log('[DEBUG] rawPdf:', rawPdf, 'pdfUrlFocus:', pdfUrlFocus);
+
+    // Detecta ambiente pela resposta (se veio de hom ou prod)
+    const isHom = result.ambiente === 'homologacao' || nota.status === 'Homologada' || nota.status === 'Pré-visualização';
+    const pdfUrlFocus = normalizarUrl(rawPdf, isHom);
+    console.log('[DEBUG] rawPdf:', rawPdf, 'pdfUrlFocus:', pdfUrlFocus, 'isHom:', isHom);
 
     // Se não tem URL de PDF direto mas tem chave, tenta gerar DANFE via endpoint específico
     if (!pdfUrlFocus && nota.chave_acesso) {
       const chave = nota.chave_acesso.replace(/\D/g, '');
-      const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {
-        headers: { 'Authorization': AUTH_HEADER },
+      const baseUrl = isHom ? FOCUSNFE_BASE_HOM : FOCUSNFE_BASE_PROD;
+      const authHeader = isHom ? AUTH_HEADER_HOM : AUTH_HEADER_PROD;
+      const danfeResp = await fetch(`${baseUrl}/nfes_recebidas/${chave}.pdf`, {
+        headers: { 'Authorization': authHeader },
       });
       if (danfeResp.ok) {
         const ct = danfeResp.headers.get('content-type') || '';
@@ -211,8 +236,10 @@ Deno.serve(async (req) => {
       if (nota.chave_acesso) {
         console.log('[DEBUG] Sem URL de PDF na resposta. Tentando gerar DANFE via chave_acesso...');
         const chave = nota.chave_acesso.replace(/\D/g, '');
-        const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {
-          headers: { 'Authorization': AUTH_HEADER },
+        const baseUrl = isHom ? FOCUSNFE_BASE_HOM : FOCUSNFE_BASE_PROD;
+        const authHeader = isHom ? AUTH_HEADER_HOM : AUTH_HEADER_PROD;
+        const danfeResp = await fetch(`${baseUrl}/nfes_recebidas/${chave}.pdf`, {
+          headers: { 'Authorization': authHeader },
         });
         if (danfeResp.ok && danfeResp.headers.get('content-type')?.includes('pdf')) {
            const blob = await danfeResp.blob();
@@ -225,8 +252,9 @@ Deno.serve(async (req) => {
     }
 
     const isS3 = pdfUrlFocus.includes('amazonaws.com') || pdfUrlFocus.includes('s3.');
-    console.log('[DEBUG] Tentando buscar PDF em:', pdfUrlFocus, '| isS3:', isS3);
-    const pdfResp = await fetch(pdfUrlFocus, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER } });
+    const authHeader = isHom ? AUTH_HEADER_HOM : AUTH_HEADER_PROD;
+    console.log('[DEBUG] Tentando buscar PDF em:', pdfUrlFocus, '| isS3:', isS3, '| authHeader:', isHom ? 'HOM' : 'PROD');
+    const pdfResp = await fetch(pdfUrlFocus, isS3 ? {} : { headers: { 'Authorization': authHeader } });
     
     if (!pdfResp.ok) {
       // Tenta novamente sem auth header se for erro de permissão
@@ -249,9 +277,11 @@ Deno.serve(async (req) => {
       if (nota.chave_acesso && pdfResp.status !== 200) {
         console.log('[DEBUG] URL retornou erro, tentando gerar DANFE via chave_acesso...');
         const chave = nota.chave_acesso.replace(/\D/g, '');
+        const baseUrl = isHom ? FOCUSNFE_BASE_HOM : FOCUSNFE_BASE_PROD;
+        const authHeaderDanfe = isHom ? AUTH_HEADER_HOM : AUTH_HEADER_PROD;
         try {
-          const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {
-            headers: { 'Authorization': AUTH_HEADER },
+          const danfeResp = await fetch(`${baseUrl}/nfes_recebidas/${chave}.pdf`, {
+            headers: { 'Authorization': authHeaderDanfe },
           });
           if (danfeResp.ok && danfeResp.headers.get('content-type')?.includes('pdf')) {
             const blob = await danfeResp.blob();
