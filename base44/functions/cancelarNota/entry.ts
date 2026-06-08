@@ -54,8 +54,15 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: 'Resposta inválida da Focus NFe', debug: text }, { status: 400 });
     }
 
-    // Verificar resultado - NFCe é síncrono
-    if (result.status === 'cancelado') {
+    // NFe é assíncrono — pode retornar status intermediário antes de "cancelado"
+    const statusCancelado = ['cancelado'];
+    const statusProcessando = [
+      'cancelamento_aguardando_autorizacao',
+      'cancelamento_em_homologacao',
+      'cancelamento_em_processamento',
+    ];
+
+    if (statusCancelado.includes(result.status)) {
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
         status: 'Cancelada',
         status_sefaz: result.status_sefaz || 'cancelado',
@@ -65,6 +72,20 @@ Deno.serve(async (req) => {
         sucesso: true,
         mensagem: 'Nota cancelada com sucesso',
         numero_protocolo: result.numero_protocolo,
+        mensagem_sefaz: result.mensagem_sefaz,
+      });
+    }
+
+    if (statusProcessando.includes(result.status)) {
+      await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
+        status: 'Processando',
+        status_sefaz: result.status,
+        mensagem_sefaz: result.mensagem_sefaz || 'Cancelamento enviado, aguardando autorização SEFAZ',
+      });
+      return Response.json({
+        sucesso: true,
+        mensagem: 'Cancelamento enviado — aguardando autorização da SEFAZ',
+        status: result.status,
         mensagem_sefaz: result.mensagem_sefaz,
       });
     }
