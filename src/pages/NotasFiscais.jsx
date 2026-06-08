@@ -293,9 +293,10 @@ export default function NotasFiscais() {
 
   const proximaSerie = (notasList, tipo) => {
     if (tipo === 'NFSe') return '900'; // Série padrão para NFSe Nacional
-    const filtradas = notasList.filter(n => n.tipo === tipo && n.serie);
-    const series = filtradas.map(n => parseInt(n.serie, 10)).filter(n => !isNaN(n));
-    return series.length > 0 ? String(Math.max(...series)) : "1";
+    // Usa a configuração salva; se não houver, usa "1" como padrão
+    const chaveConfig = tipo === 'NFe' ? 'nfe_serie' : 'nfce_serie';
+    const cfgSerie = configsNF.find(c => c.chave === chaveConfig);
+    return cfgSerie?.valor || '1';
   };
 
   const load = async () => {
