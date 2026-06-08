@@ -235,6 +235,7 @@ export default function Clientes() {
     { key: "inscricao_municipal", label: "INSCRIÇÃO MUNICIPAL (IM)" },
     { key: "cep", label: "CEP" },
     { key: "endereco", label: "ENDEREÇO" },
+    { key: "numero", label: "NÚMERO" },
     { key: "bairro", label: "BAIRRO" },
     { key: "cidade", label: "CIDADE" },
     { key: "estado", label: "ESTADO" }
@@ -331,6 +332,7 @@ export default function Clientes() {
                   {colunas.inscricao_municipal && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">INSCRIÇÃO MUNICIPAL (IM)</th>}
                   {colunas.cep && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CEP</th>}
                   {colunas.endereco && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">ENDEREÇO</th>}
+                  {colunas.numero && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">NÚMERO</th>}
                   {colunas.bairro && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">BAIRRO</th>}
                   {colunas.cidade && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">CIDADE</th>}
                   {colunas.estado && <th className="px-4 py-1.5 text-left text-xs font-bold text-gray-300 whitespace-nowrap">ESTADO</th>}
@@ -403,6 +405,7 @@ export default function Clientes() {
                       {colunas.inscricao_municipal && renderCell("inscricao_municipal")}
                       {colunas.cep && renderCell("cep")}
                       {colunas.endereco && renderCell("endereco")}
+                      {colunas.numero && renderCell("numero")}
                       {colunas.bairro && renderCell("bairro")}
                       {colunas.cidade && renderCell("cidade")}
                       {colunas.estado && renderCell("estado")}
@@ -514,7 +517,10 @@ export default function Clientes() {
                   <input value={form.cep} onChange={e => setForm({ ...form, cep: e.target.value })} className="input-dark" autoComplete="off" name="cep_cliente" />
                 </FormGroup>
                 <FormGroup label="Endereço">
-                  <input value={form.endereco} onChange={e => setForm({ ...form, endereco: e.target.value })} className="input-dark" autoComplete="off" name="end_cliente" />
+                 <input value={form.endereco} onChange={e => setForm({ ...form, endereco: e.target.value })} className="input-dark" autoComplete="off" name="end_cliente" />
+                </FormGroup>
+                <FormGroup label="Número">
+                 <input value={form.numero || ''} onChange={e => setForm({ ...form, numero: e.target.value })} className="input-dark" autoComplete="off" name="num_cliente" />
                 </FormGroup>
                 <FormGroup label="Bairro">
                   <input value={form.bairro} onChange={e => setForm({ ...form, bairro: e.target.value })} className="input-dark" autoComplete="off" name="bairro_cliente" />
