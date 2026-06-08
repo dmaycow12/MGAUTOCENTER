@@ -2,10 +2,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const FOCUSNFE_BASE_PROD = 'https://api.focusnfe.com.br/v2';
 const FOCUSNFE_BASE_HOM = 'https://homologacao.focusnfe.com.br/v2';
-const API_KEY_PROD = Deno.env.get('FOCUSNFE_API_KEY') || '';
-const API_KEY_HOM = Deno.env.get('FOCUSNFE_API_KEY_HOM') || '';
-const AUTH_HEADER_PROD = 'Basic ' + btoa(API_KEY_PROD + ':');
-const AUTH_HEADER_HOM = 'Basic ' + btoa(API_KEY_HOM + ':');
 
 const normalizarUrl = (url, useHom = false) => {
   if (!url) return '';
@@ -55,9 +51,19 @@ Deno.serve(async (req) => {
 
     if (!nota_id) return Response.json({ sucesso: false, erro: 'nota_id obrigatório' });
 
-    const lista = await db.entities.NotaFiscal.filter({ id: nota_id });
-    const nota = lista[0];
+    const [notaLista, todasConfigs] = await Promise.all([
+      db.entities.NotaFiscal.filter({ id: nota_id }),
+      db.entities.Configuracao.list('-created_date', 200),
+    ]);
+    const nota = notaLista[0];
     if (!nota) return Response.json({ sucesso: false, erro: 'Nota não encontrada' });
+
+    // Carrega chaves de configuração
+    const getConf = (chave, padrao = '') => todasConfigs.find(c => c.chave === chave)?.valor || padrao;
+    const apiKeyProd = getConf('focusnfe_api_key', '');
+    const apiKeyHom = getConf('focusnfe_api_key_homologacao', '');
+    const AUTH_HEADER_PROD = 'Basic ' + btoa(apiKeyProd + ':');
+    const AUTH_HEADER_HOM = 'Basic ' + btoa(apiKeyHom + ':');
 
     if (nota.tipo !== 'NFCe') {
       return Response.json({ sucesso: false, erro: 'Este endpoint é apenas para NFCe.' });
@@ -77,37 +83,54 @@ Deno.serve(async (req) => {
     // Determina a URL do HTML da DANFE
     let htmlUrl = '';
     let chave = nota.chave_acesso || '';
-    // Se status é Homologada, usa homologação; senão produção
-    const isHomologada = nota.status === 'Homologada' || nota.status === 'Pré-visualização';
-    const baseUrl = isHomologada ? FOCUSNFE_BASE_HOM : FOCUSNFE_BASE_PROD;
-    const authHeader = isHomologada ? AUTH_HEADER_HOM : AUTH_HEADER_PROD;
 
-    console.log(`[danfeNfce] nota_id=${nota_id}, status=${nota.status}, isHomologada=${isHomologada}, baseUrl=${baseUrl}, spedy_id=${nota.spedy_id}`);
+    // Tenta ambos os ambientes: primeiro homologação se for preview, depois produção
+    const isPreview = nota.spedy_id?.startsWith('preview-');
+    const ambientes = isPreview 
+      ? [[FOCUSNFE_BASE_HOM, AUTH_HEADER_HOM], [FOCUSNFE_BASE_PROD, AUTH_HEADER_PROD]]
+      : [[FOCUSNFE_BASE_PROD, AUTH_HEADER_PROD], [FOCUSNFE_BASE_HOM, AUTH_HEADER_HOM]];
+
+    console.log(`[danfeNfce] nota_id=${nota_id}, status=${nota.status}, spedy_id=${nota.spedy_id}, isPreview=${isPreview}`);
 
     if (nota.pdf_url && (nota.pdf_url.endsWith('.html') || nota.pdf_url.includes('/notas_fiscais_consumidor/'))) {
       htmlUrl = nota.pdf_url;
     } else if (nota.spedy_id) {
-       const consultaUrl = `${baseUrl}/nfce/${nota.spedy_id}?completo=1`;
-       console.log(`[danfeNfce] Consultando: ${consultaUrl}`);
-       const consultaResp = await fetch(consultaUrl, {
-         headers: { 'Authorization': authHeader },
-       });
+      let dadosNFCe = null;
+      let baseUrlUsada = null;
+      let authHeaderUsada = null;
 
-       if (!consultaResp.ok) {
-         console.log(`[danfeNfce] Falha na consulta: status=${consultaResp.status}`);
-         return Response.json({ sucesso: false, erro: `Erro ao consultar NFCe: ${consultaResp.status}` });
-       }
-       const dadosNFCe = await consultaResp.json();
-       chave = (dadosNFCe.chave_nfe || nota.chave_acesso || '').replace(/\D/g, '');
-       // Verifica se há PDF direto (caminho_pdf_nfce) ou HTML (caminho_danfe)
-       const caminhoPdf = dadosNFCe.caminho_pdf_nfce || '';
-       const caminhoHtml = dadosNFCe.caminho_danfe || '';
-       console.log(`[danfeNfce] Dados da NFCe: caminhoPdf=${caminhoPdf}, caminhoHtml=${caminhoHtml}`);
+      // Tenta em ambos os ambientes
+      for (const [baseUrl, authHeader] of ambientes) {
+        const consultaUrl = `${baseUrl}/nfce/${nota.spedy_id}?completo=1`;
+        console.log(`[danfeNfce] Tentando ${baseUrl}/nfce/${nota.spedy_id}`);
+        const consultaResp = await fetch(consultaUrl, {
+          headers: { 'Authorization': authHeader },
+        });
+
+        if (consultaResp.ok) {
+          dadosNFCe = await consultaResp.json();
+          baseUrlUsada = baseUrl;
+          authHeaderUsada = authHeader;
+          console.log(`[danfeNfce] Sucesso em ${baseUrl}`);
+          break;
+        }
+        console.log(`[danfeNfce] Falha em ${baseUrl}: status=${consultaResp.status}`);
+      }
+
+      if (!dadosNFCe) {
+        return Response.json({ sucesso: false, erro: 'NFCe não encontrada em nenhum ambiente' });
+      }
+
+      chave = (dadosNFCe.chave_nfe || nota.chave_acesso || '').replace(/\D/g, '');
+      const caminhoPdf = dadosNFCe.caminho_pdf_nfce || '';
+      const caminhoHtml = dadosNFCe.caminho_danfe || '';
+      console.log(`[danfeNfce] Dados da NFCe: caminhoPdf=${caminhoPdf}, caminhoHtml=${caminhoHtml}`);
+
       if (caminhoPdf) {
-        // Baixa e salva como PDF permanente
-        const pdfUrl = normalizarUrl(caminhoPdf, isHomologada);
-        const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': authHeader } });
-        
+        const isHom = baseUrlUsada.includes('homologacao');
+        const pdfUrl = normalizarUrl(caminhoPdf, isHom);
+        const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': authHeaderUsada } });
+
         if (pdfResp.ok) {
           const blob = await pdfResp.blob();
           const buffer = await blob.arrayBuffer();
@@ -123,7 +146,7 @@ Deno.serve(async (req) => {
           }
         }
       }
-      htmlUrl = caminhoHtml ? normalizarUrl(caminhoHtml, isHomologada) : '';
+      htmlUrl = caminhoHtml ? normalizarUrl(caminhoHtml, baseUrlUsada.includes('homologacao')) : '';
     }
 
     if (!htmlUrl) {
@@ -131,8 +154,12 @@ Deno.serve(async (req) => {
     }
 
     // Busca o HTML autenticado da Focus NFe
+    // Usa a chave correta de acordo com o ambiente detectado
+    const isHom = htmlUrl.includes('homologacao') || isPreview;
+    const authHeaderHtml = isHom ? AUTH_HEADER_HOM : AUTH_HEADER_PROD;
+
     console.log(`[danfeNfce] Buscando HTML: ${htmlUrl}`);
-    const htmlResp = await fetch(htmlUrl, { headers: { 'Authorization': authHeader } });
+    const htmlResp = await fetch(htmlUrl, { headers: { 'Authorization': authHeaderHtml } });
 
     if (!htmlResp.ok) {
       console.log(`[danfeNfce] Erro ao buscar HTML: status=${htmlResp.status}, url=${htmlUrl}`);
