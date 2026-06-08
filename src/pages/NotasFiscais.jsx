@@ -745,8 +745,7 @@ export default function NotasFiscais() {
       const res = await base44.functions.invoke('preVisualizarNota', { nota_id: nota.id });
       if (res.data?.sucesso) {
         setMsgFeedback(null);
-        const notaAtual = await base44.entities.NotaFiscal.filter({ id: nota.id }).then(r => r[0] || nota);
-        setModalPreview({ nota_id: nota.id, pdf_url: res.data.pdf_url, tipo: nota.tipo, nota: notaAtual });
+        feedback('sucesso', 'Pré-visualização gerada! Clique em "Autorizar" na lista para emitir.');
         load();
       } else {
         feedback('erro', res.data?.erro || 'Erro ao gerar pré-visualização.');
@@ -1913,16 +1912,6 @@ export default function NotasFiscais() {
       )}
 
       {/* debugModal removido — usar painel de desenvolvedor */}
-
-      {modalPreview && (
-        <ModalPreVisualizacao
-          pdfUrl={modalPreview.pdf_url}
-          tipo={modalPreview.tipo}
-          nota={modalPreview.nota}
-          onAutorizar={autorizarEmitir}
-          onFechar={() => { setModalPreview(null); load(); }}
-        />
-      )}
 
       {showEntrada && xmlParaEntrada && (
         <ModalEntradaNF
