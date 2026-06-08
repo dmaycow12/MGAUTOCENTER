@@ -44,8 +44,12 @@ Deno.serve(async (req) => {
       return Response.json({ processando: false, erro: 'Referência da nota não encontrada. Esta nota pode ter sido criada antes da atualização do sistema.' });
     }
 
-    // Determina ambiente com base no status
-    const isHomologada = nota.status === 'Homologada' || nota.status === 'Pré-visualização';
+    // Determina ambiente pelo spedy_id:
+    // - Se começa com "preview-", é homologação
+    // - Se tem "nfce-", "nfse-", "nfe-" + timestamp, é produção
+    // Fallback: usa status da nota
+    const isPreview = ref.startsWith('preview-');
+    const isHomologada = isPreview || nota.status === 'Homologada' || nota.status === 'Pré-visualização';
     const baseUrl = isHomologada ? FOCUSNFE_BASE_HOM : FOCUSNFE_BASE_PROD;
     const authHeader = isHomologada ? AUTH_HEADER_HOM : AUTH_HEADER_PROD;
 
