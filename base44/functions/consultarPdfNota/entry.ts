@@ -44,24 +44,35 @@ Deno.serve(async (req) => {
       return Response.json({ processando: false, erro: 'Referência da nota não encontrada. Esta nota pode ter sido criada antes da atualização do sistema.' });
     }
 
-    // Determina ambiente pelo spedy_id:
-    // - Se começa com "preview-", é homologação
-    // - Se tem "nfce-", "nfse-", "nfe-" + timestamp, é produção
-    // Fallback: usa status da nota
-    const isPreview = ref.startsWith('preview-');
-    const isHomologada = isPreview || nota.status === 'Homologada' || nota.status === 'Pré-visualização';
-    const baseUrl = isHomologada ? FOCUSNFE_BASE_HOM : FOCUSNFE_BASE_PROD;
-    const authHeader = isHomologada ? AUTH_HEADER_HOM : AUTH_HEADER_PROD;
-
+    // Tenta encontrar a nota em ambos os ambientes (pode estar em hom mesmo com status Homologada)
     const ep = endpointPorTipo(nota.tipo || 'NFe');
-    const resp = await fetch(`${baseUrl}/${ep}/${ref}?completo=1`, {
-      headers: { 'Authorization': authHeader },
-    });
 
-    if (resp.status === 404) return Response.json({ erro: 'Nota não encontrada na Focus NFe.' });
-    if (!resp.ok) return Response.json({ processando: true, mensagem: 'Não foi possível consultar a nota na Focus NFe.' });
+    let resp = null;
+    let data = null;
 
-    const data = await resp.json();
+    // Tenta homologação primeiro se for preview
+    const isPreview = ref.startsWith('preview-');
+    const ambientes = isPreview 
+      ? [[FOCUSNFE_BASE_HOM, AUTH_HEADER_HOM], [FOCUSNFE_BASE_PROD, AUTH_HEADER_PROD]]
+      : [[FOCUSNFE_BASE_PROD, AUTH_HEADER_PROD], [FOCUSNFE_BASE_HOM, AUTH_HEADER_HOM]];
+
+    for (const [baseUrl, authHeader] of ambientes) {
+      console.log(`[CONSULTA] Tentando em ${baseUrl} com ref ${ref}`);
+      resp = await fetch(`${baseUrl}/${ep}/${ref}?completo=1`, {
+        headers: { 'Authorization': authHeader },
+      });
+
+      if (resp.ok) {
+        data = await resp.json();
+        console.log(`[CONSULTA] Sucesso em ${baseUrl}`, data.status);
+        break;
+      } else if (resp.status !== 404) {
+        console.log(`[CONSULTA] Erro em ${baseUrl}:`, resp.status);
+      }
+    }
+
+    if (!data) return Response.json({ erro: 'Nota não encontrada em nenhum ambiente. Verifique o spedy_id na nota.' });
+
     const status = data.status || '';
 
     if (status === 'autorizado') {
