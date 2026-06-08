@@ -85,9 +85,18 @@ Deno.serve(async (req) => {
     if (nota.pdf_url && (nota.pdf_url.endsWith('.html') || nota.pdf_url.includes('/notas_fiscais_consumidor/'))) {
       htmlUrl = nota.pdf_url;
     } else if (nota.spedy_id) {
-      const consultaResp = await fetch(`${baseUrl}/nfce/${nota.spedy_id}?completo=1`, {
+      // Tenta homologação primeiro, depois produção
+      let consultaResp = await fetch(`${baseUrl}/nfce/${nota.spedy_id}?completo=1`, {
         headers: { 'Authorization': authHeader },
       });
+      
+      // Se falhar e estávamos em homologação, tenta produção
+      if (!consultaResp.ok && isHomologada) {
+        consultaResp = await fetch(`${FOCUSNFE_BASE_PROD}/nfce/${nota.spedy_id}?completo=1`, {
+          headers: { 'Authorization': AUTH_HEADER },
+        });
+      }
+      
       if (!consultaResp.ok) {
         return Response.json({ sucesso: false, erro: `Erro ao consultar NFCe: ${consultaResp.status}` });
       }
@@ -98,8 +107,15 @@ Deno.serve(async (req) => {
       const caminhoHtml = dadosNFCe.caminho_danfe || '';
       if (caminhoPdf) {
         // Tenta baixar e salvar como PDF permanente
-        const pdfUrl = normalizarUrl(caminhoPdf, isHomologada);
-        const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': authHeader } });
+        let pdfUrl = normalizarUrl(caminhoPdf, isHomologada);
+        let pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': authHeader } });
+        
+        // Se falhar com homologação, tenta produção
+        if (!pdfResp.ok && isHomologada) {
+          pdfUrl = normalizarUrl(caminhoPdf, false);
+          pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER } });
+        }
+        
         if (pdfResp.ok) {
           const blob = await pdfResp.blob();
           const buffer = await blob.arrayBuffer();
@@ -123,7 +139,15 @@ Deno.serve(async (req) => {
     }
 
     // Busca o HTML autenticado da Focus NFe
-    const htmlResp = await fetch(htmlUrl, { headers: { 'Authorization': authHeader } });
+    let htmlResp = await fetch(htmlUrl, { headers: { 'Authorization': authHeader } });
+    
+    // Se falhar com homologação, tenta produção
+    if (!htmlResp.ok && isHomologada && htmlUrl) {
+      const htmlUrlProd = htmlUrl.replace('homologacao.focusnfe.com.br', 'api.focusnfe.com.br');
+      htmlResp = await fetch(htmlUrlProd, { headers: { 'Authorization': AUTH_HEADER } });
+      if (htmlResp.ok) htmlUrl = htmlUrlProd;
+    }
+    
     if (!htmlResp.ok) {
       return Response.json({ sucesso: false, erro: `Erro ao buscar DANFE: ${htmlResp.status}` });
     }
