@@ -1553,7 +1553,7 @@ export default function NotasFiscais() {
                        {errosForm.cliente_endereco && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_endereco}</p>}
                      </F>
                      <F label="Número">
-                       <NoACInput value={form.cliente_numero || ''} onChange={e => setForm(f => ({ ...f, cliente_numero: e.target.value }))} placeholder="S/N" />
+                       <NoACInput value={form.cliente_numero || ''} onChange={e => setForm(f => ({ ...f, cliente_numero: e.target.value }))} placeholder="" />
                      </F>
                      <F label="Bairro">
                        <NoACInput value={form.cliente_bairro} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} placeholder="" />
