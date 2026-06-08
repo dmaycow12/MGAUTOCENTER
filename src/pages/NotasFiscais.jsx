@@ -15,7 +15,8 @@ import JSZip from "jszip";
 
 const STATUS_COLOR = {
   Rascunho: "bg-gray-500/10 text-gray-400",
-  "Pré-visualização": "bg-yellow-500/10 text-yellow-400",
+  "Homologada": "bg-yellow-500/10 text-yellow-400",
+  "Erro de Homologação": "bg-red-500/10 text-red-400",
   Emitida: "bg-green-500/10 text-green-400",
   Lançada: "bg-green-500/10 text-green-400",
   Cancelada: "bg-red-500/10 text-red-400",
@@ -746,10 +747,13 @@ export default function NotasFiscais() {
       const res = await base44.functions.invoke('preVisualizarNota', { nota_id: nota.id });
       if (res.data?.sucesso) {
         setMsgFeedback(null);
-        feedback('sucesso', 'Pré-visualização gerada! Clique em "Autorizar" na lista para emitir.');
+        feedback('sucesso', 'Homologada! Clique em "Autorizar" na lista para emitir.');
         load();
       } else {
-        feedback('erro', res.data?.erro || 'Erro ao gerar pré-visualização.');
+        // Marca a nota com status de erro de homologação
+        await base44.entities.NotaFiscal.update(nota.id, { status: 'Erro de Homologação' });
+        feedback('erro', res.data?.erro || 'Erro na homologação.');
+        load();
       }
     } catch (e) {
       feedback('erro', 'Erro: ' + e.message);
@@ -1136,7 +1140,7 @@ export default function NotasFiscais() {
         </button>
         <button
           onClick={async () => {
-            const preVisualizadas = notas.filter(n => n.status === 'Pré-visualização');
+            const preVisualizadas = notas.filter(n => n.status === 'Homologada');
             if (preVisualizadas.length === 0) { feedback('erro', 'Nenhuma nota em Pré-visualização para autorizar.'); return; }
             if (!confirm(`Autorizar ${preVisualizadas.length} nota(s) em Pré-visualização?`)) return;
             setAutorizandoMassa(true);
@@ -1217,9 +1221,9 @@ export default function NotasFiscais() {
                   <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${STATUS_COLOR[nota.status]||"bg-gray-500/10 text-gray-400"}`}>{nota.status}</span>
                 </div>
                 <div className="flex gap-1">
-                  {nota.status === 'Rascunho' && temSpedy && <button title="Pré-visualizar" onClick={() => iniciarPreVisualizacao(nota)} disabled={!!preVisualizando} className="w-7 h-7 flex items-center justify-center text-yellow-400 hover:text-yellow-300 rounded-lg transition-all disabled:opacity-50">{preVisualizando === nota.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin"/> : <FileText className="w-3.5 h-3.5"/>}</button>}
-                  {nota.status === "Pré-visualização" && temSpedy && <button title="Autorizar" onClick={() => emitirNota(nota)} disabled={!!transmitindo} className="w-7 h-7 flex items-center justify-center text-green-400 hover:text-green-300 rounded-lg disabled:opacity-50">{transmitindo === nota.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin"/> : <CheckCircle className="w-3.5 h-3.5"/>}</button>}
-                  {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Cancelada' && nota.status !== 'Rascunho' && nota.status !== "Pré-visualização" && <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>}
+                  {nota.status === 'Rascunho' && temSpedy && <button title="Homologar" onClick={() => iniciarPreVisualizacao(nota)} disabled={!!preVisualizando} className="w-7 h-7 flex items-center justify-center text-yellow-400 hover:text-yellow-300 rounded-lg transition-all disabled:opacity-50">{preVisualizando === nota.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin"/> : <FileText className="w-3.5 h-3.5"/>}</button>}
+                  {nota.status === "Homologada" && temSpedy && <button title="Autorizar" onClick={() => emitirNota(nota)} disabled={!!transmitindo} className="w-7 h-7 flex items-center justify-center text-green-400 hover:text-green-300 rounded-lg disabled:opacity-50">{transmitindo === nota.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin"/> : <CheckCircle className="w-3.5 h-3.5"/>}</button>}
+                  {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Cancelada' && nota.status !== 'Rascunho' && nota.status !== "Homologada" && <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>}
                   {(nota.xml_original || nota.chave_acesso || nota.spedy_id) && <button title="Ver XML" onClick={() => setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content })} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ color: (nota.xml_original?.trim().startsWith("<") || nota.xml_url?.startsWith("http")) ? "#00ff00" : "#ff2222" }}><Code className="w-3.5 h-3.5"/></button>}
                   <button title="Abrir PDF" onClick={() => abrirPdfNota(nota)} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ color: nota.pdf_url ? "#00ff00" : "#ef4444" }}><FileText className="w-3.5 h-3.5"/></button>
                   {nota.pdf_url && <button title="Baixar PDF" onClick={() => baixarPdfNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-400 rounded-lg"><Download className="w-3.5 h-3.5"/></button>}
@@ -1268,20 +1272,17 @@ export default function NotasFiscais() {
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">
                         {nota.status === "Rascunho" && temSpedy && (
-                          <button title="Pré-visualizar DANFE" onClick={() => { if (preVisualizando) return; iniciarPreVisualizacao(nota); }} disabled={preVisualizando !== null}
+                          <button title="Enviar para Homologação" onClick={() => { if (preVisualizando) return; iniciarPreVisualizacao(nota); }} disabled={preVisualizando !== null}
                             className="flex items-center gap-1 px-2 py-1 text-xs bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 rounded-lg transition-all disabled:opacity-50">
                             {preVisualizando === nota.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
-                            {preVisualizando === nota.id ? "..." : "Pré-visualizar"}
+                            {preVisualizando === nota.id ? "..." : "Homologar"}
                           </button>
                         )}
-                        {nota.status === "Pré-visualização" && temSpedy && (
-                          <>
-                            <button title="Ver DANFE" onClick={() => nota.pdf_url && window.open(nota.pdf_url, '_blank')} className="flex items-center gap-1 px-2 py-1 text-xs bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 rounded-lg transition-all">Ver DANFE</button>
-                            <button title="Autorizar e Emitir" onClick={() => { if (transmitindo) return; emitirNota(nota); }} disabled={transmitindo !== null} className="flex items-center gap-1 px-2 py-1 text-xs bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded-lg transition-all disabled:opacity-50">
-                              {transmitindo === nota.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
-                              {transmitindo === nota.id ? "..." : "Autorizar"}
-                            </button>
-                          </>
+                        {nota.status === "Homologada" && temSpedy && (
+                          <button title="Autorizar e Emitir" onClick={() => { if (transmitindo) return; emitirNota(nota); }} disabled={transmitindo !== null} className="flex items-center gap-1 px-2 py-1 text-xs bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded-lg transition-all disabled:opacity-50">
+                            {transmitindo === nota.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
+                            {transmitindo === nota.id ? "..." : "Autorizar"}
+                          </button>
                         )}
                         {(nota.xml_original || nota.chave_acesso || nota.spedy_id) && (
                           <button title="Ver XML" onClick={() => setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content })}
@@ -1342,7 +1343,7 @@ export default function NotasFiscais() {
                             <LogIn className="w-4 h-4" />
                           </button>
                         )}
-                             {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Importada' && nota.status !== 'Lançada' && nota.status !== 'Cancelada' && (
+                             {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Importada' && nota.status !== 'Lançada' && nota.status !== 'Cancelada' && nota.status !== 'Homologada' && (
                           <button title="Editar" onClick={() => editarNota(nota)} className="p-1 text-gray-500 hover:text-yellow-400 transition-all">
                             <Pencil className="w-4 h-4" />
                           </button>

@@ -298,9 +298,9 @@ Deno.serve(async (req) => {
 
     const pdfUrlSalvo = await salvarPdfPermanente(base44, pdfUrlHom, nota_id, apiKeyHom);
 
-    // Atualiza nota com PDF de preview e status Pré-visualização
+    // Atualiza nota com PDF de homologação e status Homologada
     await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
-      status: 'Pré-visualização',
+      status: 'Homologada',
       pdf_url: pdfUrlSalvo || pdfUrlHom,
     });
 
