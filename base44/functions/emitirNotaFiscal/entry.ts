@@ -126,6 +126,9 @@ Deno.serve(async (req) => {
     const REGIME_TRIBUTARIO = parseInt(getConf('regime_tributario', '1'), 10);
     const REGIME_ESPECIAL = parseInt(getConf('regime_especial', '0'), 10);
     const COD_MUNICIPIO = getConf('cod_municipio', '') || getConf('codigo_municipio', '');
+    const SERIE_NFE = getConf('nfe_serie', '1');
+    const SERIE_NFCE = getConf('nfce_serie', '1');
+    const SERIE_NFSE = getConf('nfse_serie_dps', '900');
 
     // ============================================================
     // PROTEÇÃO ANTI-DUPLICATA: Verifica nota existente
@@ -289,7 +292,7 @@ Deno.serve(async (req) => {
       payload = {
         data_emissao: dataEmissaoISO,
         data_competencia: dataBase,
-        serie_dps: '900',
+        serie_dps: SERIE_NFSE,
         numero_dps: String(proximoRps),
         codigo_municipio_emissora: COD_MUNICIPIO,
         cnpj_prestador: CNPJ_EMITENTE,
@@ -350,7 +353,7 @@ Deno.serve(async (req) => {
         numero: proximoNfce,
         ...(cpfCnpjLimpo.length === 11 ? { cpf_destinatario: cpfCnpjLimpo } : {}),
         ...(cpfCnpjLimpo.length === 14 ? { cnpj_destinatario: cpfCnpjLimpo } : {}),
-        ...(serie_manual ? { serie: serie_manual } : { serie: '1' }),
+        serie: SERIE_NFCE,
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
           codigo_produto: it.codigo || `REF${idx + 1}`,
@@ -437,7 +440,7 @@ Deno.serve(async (req) => {
         ...(cliente_ie && cliente_ie.trim() ? { inscricao_estadual_destinatario: cliente_ie.replace(/\D/g, '') } : {}),
         consumidor_final: (cliente_ie && cliente_ie.trim()) ? '0' : '1',
         modalidade_frete: '9',
-        ...(serie_manual ? { serie: serie_manual } : { serie: '1' }),
+        serie: SERIE_NFE,
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
           codigo_produto: it.codigo || `REF${idx + 1}`,
@@ -609,7 +612,7 @@ Deno.serve(async (req) => {
       cliente_estado: cliente_estado || '',
       forma_pagamento: forma_pagamento || '',
       numero: numeroFinal,
-      serie: tipo === 'NFSe' ? '900' : (serie_manual || '1'),
+      serie: tipo === 'NFSe' ? SERIE_NFSE : tipo === 'NFCe' ? SERIE_NFCE : SERIE_NFE,
       status: statusNota,
       spedy_id: ref,
       cliente_id: cliente_id || '',
