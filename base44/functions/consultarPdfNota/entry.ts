@@ -28,9 +28,13 @@ Deno.serve(async (req) => {
       base44.asServiceRole.entities.Configuracao.list('-created_date', 200),
     ]);
     const nota = notasArr[0];
-    if (!nota) return Response.json({ erro: 'Nota não encontrada' }, { status: 404 });
+     if (!nota) return Response.json({ erro: 'Nota não encontrada' }, { status: 404 });
 
-    if (nota.pdf_url) return Response.json({ sucesso: true, pdf_url: nota.pdf_url });
+     // Se já tem PDF armazenado, retorna direto
+     if (nota.pdf_url) {
+       console.log(`[CONSULTA] Retornando PDF pré-armazenado: ${nota.pdf_url}`);
+       return Response.json({ sucesso: true, pdf_url: nota.pdf_url });
+     }
 
     // Carrega chaves de configuração
     const getConf = (chave, padrao = '') => todasConfigs.find(c => c.chave === chave)?.valor || padrao;
