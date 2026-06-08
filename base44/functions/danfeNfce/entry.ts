@@ -85,7 +85,28 @@ Deno.serve(async (req) => {
       }
       const dadosNFCe = await consultaResp.json();
       chave = (dadosNFCe.chave_nfe || nota.chave_acesso || '').replace(/\D/g, '');
+      // Verifica se há PDF direto (caminho_pdf_nfce) ou HTML (caminho_danfe)
+      const caminhoPdf = dadosNFCe.caminho_pdf_nfce || '';
       const caminhoHtml = dadosNFCe.caminho_danfe || '';
+      if (caminhoPdf) {
+        // Tenta baixar e salvar como PDF permanente
+        const pdfUrl = normalizarUrl(caminhoPdf);
+        const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER } });
+        if (pdfResp.ok) {
+          const blob = await pdfResp.blob();
+          const buffer = await blob.arrayBuffer();
+          const header = new Uint8Array(buffer, 0, 4);
+          const isPdf = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+          if (isPdf) {
+            const pdfFile = new File([blob], `nfce-${nota_id}.pdf`, { type: 'application/pdf' });
+            const { file_url } = await db.integrations.Core.UploadFile({ file: pdfFile });
+            const updateData = { pdf_url: file_url };
+            if (chave) updateData.chave_acesso = chave;
+            await db.entities.NotaFiscal.update(nota_id, updateData);
+            return Response.json({ sucesso: true, pdf_url: file_url });
+          }
+        }
+      }
       htmlUrl = caminhoHtml ? normalizarUrl(caminhoHtml) : '';
     }
 

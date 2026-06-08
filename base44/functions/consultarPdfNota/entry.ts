@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
 
     if (status === 'autorizado') {
       let pdfUrlFinal = '';
-      const rawPdf = data.caminho_pdf_nfsen || data.caminho_pdf_nfse || data.caminho_danfe || '';
+      const rawPdf = data.caminho_pdf_nfsen || data.caminho_pdf_nfse || data.caminho_danfe || data.caminho_pdf_nfce || '';
       if (rawPdf) {
         const pdfUrl = normalizarUrl(rawPdf);
         try {
@@ -60,8 +60,8 @@ Deno.serve(async (req) => {
             const header = new Uint8Array(buffer, 0, 4);
             const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
             if (!isPdfValid && nota.tipo === 'NFCe') {
-              // NFCe sem PDF disponível — retornar vazio
-              return;
+              // NFCe — DANFE é HTML, delegar ao danfeNfce
+              return Response.json({ sucesso: false, nfce_html: true, html_url: pdfUrl });
             }
             if (isPdfValid) {
               const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
