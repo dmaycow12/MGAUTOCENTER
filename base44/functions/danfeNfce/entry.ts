@@ -3,9 +3,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 const FOCUSNFE_BASE_PROD = 'https://api.focusnfe.com.br/v2';
 const FOCUSNFE_BASE_HOM = 'https://homologacao.focusnfe.com.br/v2';
 const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
-const API_KEY_HOM = Deno.env.get('FOCUSNFE_API_KEY_HOM') || API_KEY;
 const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
-const AUTH_HEADER_HOM = 'Basic ' + btoa(API_KEY_HOM + ':');
 
 const normalizarUrl = (url, useHom = false) => {
   if (!url) return '';
@@ -80,7 +78,6 @@ Deno.serve(async (req) => {
     // Se status é Homologada, usa homologação; senão produção
     const isHomologada = nota.status === 'Homologada' || nota.status === 'Pré-visualização';
     const baseUrl = isHomologada ? FOCUSNFE_BASE_HOM : FOCUSNFE_BASE_PROD;
-    const authHeader = isHomologada ? AUTH_HEADER_HOM : AUTH_HEADER;
 
     console.log(`[danfeNfce] nota_id=${nota_id}, status=${nota.status}, isHomologada=${isHomologada}, baseUrl=${baseUrl}, spedy_id=${nota.spedy_id}`);
 
@@ -90,7 +87,7 @@ Deno.serve(async (req) => {
        const consultaUrl = `${baseUrl}/nfce/${nota.spedy_id}?completo=1`;
        console.log(`[danfeNfce] Consultando: ${consultaUrl}`);
        const consultaResp = await fetch(consultaUrl, {
-         headers: { 'Authorization': authHeader },
+         headers: { 'Authorization': AUTH_HEADER },
        });
 
        if (!consultaResp.ok) {
