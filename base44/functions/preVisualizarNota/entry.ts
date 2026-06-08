@@ -293,8 +293,8 @@ Deno.serve(async (req) => {
     }
 
     // Obtém PDF da homologação
-    const rawPdf = resultFinal.url_danfse || resultFinal.caminho_pdf_nfsen || resultFinal.caminho_pdf_nfse || resultFinal.caminho_danfe || '';
-    const pdfUrlHom = rawPdf.startsWith('http') ? rawPdf : `https://api.focusnfe.com.br${rawPdf}`;
+    const rawPdf = resultFinal.url_danfse || resultFinal.caminho_pdf_nfsen || resultFinal.caminho_pdf_nfse || resultFinal.caminho_danfe || resultFinal.caminho_pdf_nfce || '';
+    const pdfUrlHom = rawPdf.startsWith('http') ? rawPdf : `${FOCUSNFE_BASE}${rawPdf}`;
 
     const pdfUrlSalvo = await salvarPdfPermanente(base44, pdfUrlHom, nota_id, apiKeyHom);
 
