@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
         local_destino: '1',
         presenca_comprador: '1',
         numero: numeroPreview,
-        serie: '999',
+        serie: SERIE_NFCE,
         ...(cpfCnpjLimpo.length === 11 ? { cpf_destinatario: cpfCnpjLimpo } : {}),
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
@@ -220,7 +220,7 @@ Deno.serve(async (req) => {
         local_destino: '1',
         nome_destinatario: (nota.cliente_nome || 'Consumidor Final').substring(0, 60),
         numero: numeroPreview,
-        serie: '999',
+        serie: SERIE_NFE,
         ...(cpfCnpjLimpo.length === 11 ? { cpf_destinatario: cpfCnpjLimpo } : {}),
         ...(cpfCnpjLimpo.length === 14 ? { cnpj_destinatario: cpfCnpjLimpo } : {}),
         logradouro_destinatario: nota.cliente_endereco || 'Rua Rui Barbosa',
