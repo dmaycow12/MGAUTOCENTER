@@ -12,7 +12,7 @@ const normalizarUrl = (url) => {
 const endpointPorTipo = (tipo) => {
   if (tipo === 'NFSe') return 'nfsen';
   if (tipo === 'NFCe') return 'nfce';
-  return 'nfe';
+  return 'nfes'; // plural para notas emitidas
 };
 
 Deno.serve(async (req) => {
