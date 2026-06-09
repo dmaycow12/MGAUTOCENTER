@@ -1233,27 +1233,21 @@ export default function NotasFiscais() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {(() => {
-          // Calcula notas sem XML e sem PDF
-          const notasSemXml = filtradas.filter(n => !n.xml_original?.trim().startsWith('<') && !n.xml_content?.trim().startsWith('<') && n.xml_url !== 'XML_IN_URL').length;
-          const notasSemPdf = filtradas.filter(n => !n.pdf_url).length;
-          const qtdEmitidas = filtradas.filter(n => n.status === 'Emitida').length;
-          const qtdImportadas = filtradas.filter(n => n.status === 'Importada').length;
-
-          return [
-            { label: 'Notas Emitidas', value: qtdEmitidas, color: '#00ff00' },
-            { label: 'Notas Importadas', value: qtdImportadas, color: '#3b82f6' },
-            { label: 'Sem XML', value: notasSemXml, color: '#ef4444' },
-            { label: 'Sem PDF', value: notasSemPdf, color: '#ff9500' },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1">
-              <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
-              <p className="font-bold text-lg" style={{ color }}>{value}</p>
-            </div>
-          ));
-        })()}
-      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+         {[
+           { label: 'NFe Entrada', value: totalNFeLancada, color: '#3b82f6' },
+           { label: 'NFSe Entrada', value: totalNFSeLancada, color: '#3b82f6' },
+           { label: 'NFe Emitida', value: totalNFeEmitida, color: '#00ff00' },
+           { label: 'NFCe Emitida', value: totalNFCeEmitida, color: '#00ff00' },
+           { label: 'NFSe Emitida', value: totalNFSeEmitida, color: '#00ff00' },
+           { label: 'Total NF Emitidas', value: totalEmitidas, color: '#facc15' },
+         ].map(({ label, value, color }) => (
+           <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1">
+             <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
+             <p className="font-bold text-sm" style={{ color }}>R$ {Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+           </div>
+         ))}
+       </div>
 
       {filtradas.length === 0 ? (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
