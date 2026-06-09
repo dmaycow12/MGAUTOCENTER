@@ -1928,28 +1928,28 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verde APENAS se XML é realmente carregável (começa com < ou é URL válida)
+  // Verde APENAS se XML realmente tem conteúdo válido
   
-  // Se tem xml_url válida (arquivo)
-  if (nota.xml_url && typeof nota.xml_url === 'string') {
-    const url = nota.xml_url.trim();
-    if (url.startsWith('http') && url.length > 100) {
-      return true;
-    }
-  }
-  
-  // Se xml_original começa com < (é XML válido)
+  // Se xml_original começa com < E tem >200 chars
   if (nota.xml_original && typeof nota.xml_original === 'string') {
     const trimmed = nota.xml_original.trim();
-    if (trimmed.startsWith('<') && trimmed.length > 50) {
+    if (trimmed.startsWith('<') && trimmed.length > 200) {
       return true;
     }
   }
   
-  // Se xml_content começa com < (é XML válido)
+  // Se xml_content começa com < E tem >200 chars
   if (nota.xml_content && typeof nota.xml_content === 'string') {
     const trimmed = nota.xml_content.trim();
-    if (trimmed.startsWith('<') && trimmed.length > 50) {
+    if (trimmed.startsWith('<') && trimmed.length > 200) {
+      return true;
+    }
+  }
+  
+  // xml_url só se tiver e os campos inline também tiverem conteúdo (fallback apenas)
+  if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.trim().startsWith('http')) {
+    if ((nota.xml_original?.trim().startsWith('<') && nota.xml_original.length > 200) ||
+        (nota.xml_content?.trim().startsWith('<') && nota.xml_content.length > 200)) {
       return true;
     }
   }
