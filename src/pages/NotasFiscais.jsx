@@ -1928,8 +1928,8 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verde APENAS se tem XML real
-  // Vermelho se vazio, placeholder ou incompleto
+  // Verde APENAS se tem XML real salvo
+  // Vermelho se vazio ou incompleto
   
   // Se tem xml_url com URL válida
   if (nota.xml_url && typeof nota.xml_url === 'string') {
@@ -1939,20 +1939,20 @@ function temXmlReal(nota) {
     }
   }
   
-  // Se xml_original tem conteúdo REAL (não vazio, não placeholder)
+  // Se xml_original tem XML REAL
   if (nota.xml_original && typeof nota.xml_original === 'string') {
     const xml = nota.xml_original.trim();
-    // Rejeita se vazio, placeholder (...), ou muito curto
-    if (xml.length > 100 && xml.startsWith('<') && xml.includes('</') && !xml.includes('...')) {
+    // Precisa começar com <?xml, ter >1000 chars e fechamento real
+    if (xml.startsWith('<?xml') && xml.length > 1000 && xml.includes('</nfeProc>') || xml.includes('</procNFe>')) {
       return true;
     }
   }
   
-  // Se xml_content tem conteúdo REAL
+  // Se xml_content tem XML REAL
   if (nota.xml_content && typeof nota.xml_content === 'string') {
     const xml = nota.xml_content.trim();
-    // Rejeita se vazio, placeholder (...), ou muito curto
-    if (xml.length > 100 && xml.startsWith('<') && xml.includes('</') && !xml.includes('...')) {
+    // Precisa começar com <?xml, ter >1000 chars e fechamento real
+    if (xml.startsWith('<?xml') && xml.length > 1000 && (xml.includes('</nfeProc>') || xml.includes('</procNFe>'))) {
       return true;
     }
   }
