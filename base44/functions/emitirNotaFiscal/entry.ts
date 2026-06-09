@@ -583,7 +583,7 @@ Deno.serve(async (req) => {
         if (pdfSalvo) pdfUrlFinal = pdfSalvo;
       }
       // Salvar XML
-      const caminhoXml = resultFinal.caminho_xml_nota_fiscal || resultFinal.caminho_xml || '';
+      const caminhoXml = resultFinal.caminho_xml_nota_fiscal || resultFinal.caminho_xml_nfce || resultFinal.caminho_xml_nfe || resultFinal.caminho_xml || '';
       if (caminhoXml) {
         const xmlUrl = normalizarUrl(caminhoXml);
         const xmlSalvo = await salvarXmlPermanente(base44, xmlUrl, ref, numeroFinal);
@@ -635,10 +635,11 @@ Deno.serve(async (req) => {
       data_emissao: data_emissao || new Date().toISOString().split('T')[0],
       valor_total: Number(valor_total) || 0,
       pdf_url: pdfUrlFinal,
-      xml_url: xmlUrlFinal || undefined,
+      ...(xmlUrlFinal ? { xml_url: xmlUrlFinal } : {}),
       chave_acesso: chaveAcesso,
       ordem_venda_id: body.ordem_venda_id || '',
       observacoes: observacoes || '',
+      dados_adicionais: body.dados_adicionais || '',
       mensagem_sefaz: mensagemSefaz,
     };
 
