@@ -3,8 +3,9 @@ import { base44 } from "@/api/base44Client";
 import { appParams } from "@/lib/app-params";
 import {
   FileText, Plus, Upload, Search, Trash2, X,
-  CheckCircle, AlertCircle, PlusCircle, MinusCircle, RefreshCw, ChevronLeft, ChevronRight, LayoutGrid, List, BarChart2, Pencil, Ban, LogIn, Code, Download
+  CheckCircle, AlertCircle, PlusCircle, MinusCircle, RefreshCw, LayoutGrid, List, BarChart2, Pencil, Ban, LogIn, Code, Download
 } from "lucide-react";
+import FiltroPerioido from "@/components/notas/FiltroPerioido";
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
 import ModalXML from "@/components/notas/ModalXML";
@@ -1215,6 +1216,12 @@ export default function NotasFiscais() {
            {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />} {gerandoZip ? 'Exportando...' : 'Exportar'}
          </button>
         </div>
+
+      <button onClick={() => setShowForm(true)} className="w-full h-11 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+        + Emitir
+      </button>
+
+      <FiltroPerioido onFiltroChange={setPeriodoRange} />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
          {[
