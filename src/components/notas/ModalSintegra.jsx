@@ -147,6 +147,19 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
       const xlsxData = gerarXlsx(notasPeriodo);
       zip.file(`Relatorio-${nomeBase}.xlsx`, xlsxData);
 
+      // Log de notas sem XML
+      const notasSemXml = [];
+      for (const [pasta, notasPasta] of Object.entries(pastas)) {
+        for (const nota of notasPasta) {
+          const xml = await getXml(nota);
+          if (!xml) notasSemXml.push(`${pasta}: ${nota.tipo}-${nota.numero || nota.id}`);
+        }
+      }
+      if (notasSemXml.length > 0) {
+        zip.file(`AVISO-XMLsSemArmazenar-${nomeBase}.txt`, 
+          `As seguintes notas não têm XML armazenado:\n\n` + notasSemXml.join('\n'));
+      }
+
       const zipBlob = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(zipBlob);
       const a = document.createElement("a");
