@@ -1121,7 +1121,7 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      <button onClick={() => { setForm(f => ({ ...f, numero: '', serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="w-full flex items-center justify-center gap-2 h-11 rounded-lg text-sm font-semibold transition-all mb-2" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+      <button onClick={() => { setForm(f => ({ ...f, numero: '', serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="w-full flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all mb-0.5" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
         <Plus className="w-4 h-4" /> Emitir
       </button>
 
