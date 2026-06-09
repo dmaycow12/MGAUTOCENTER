@@ -1930,16 +1930,11 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  const xml = nota.xml_original || nota.xml_content || '';
-  
-  // XML é válido apenas se:
-  // 1. Começa com <
-  // 2. Tem mais de 500 chars (XML real é bem maior)
-  // 3. NÃO é placeholder dummy
-  if (xml && xml.trim().startsWith('<') && xml.trim().length > 500 && !xml.includes('<nfeProc>...</nfeProc>')) {
+  // Se tem xml_original (field principal), mostra verde
+  // Ignora xml_content que pode ser fallback
+  if (nota.xml_original && nota.xml_original.trim() && !nota.xml_original.includes('<nfeProc>...</nfeProc>')) {
     return true;
   }
-  
   return false;
 }
 
