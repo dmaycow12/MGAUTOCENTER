@@ -1930,14 +1930,9 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // APENAS xml_original ou xml_content com conteúdo real (não placeholder)
+  // Verde APENAS se xml_original começa com < e não é placeholder
   const xmlOriginal = nota.xml_original?.trim();
-  const xmlContent = nota.xml_content?.trim();
-  
-  if (xmlOriginal && xmlOriginal.length > 100 && !xmlOriginal.includes('<nfeProc>...</nfeProc>')) {
-    return true;
-  }
-  if (xmlContent && xmlContent.length > 100 && !xmlContent.includes('<nfeProc>...</nfeProc>')) {
+  if (xmlOriginal && xmlOriginal.startsWith('<') && !xmlOriginal.includes('<nfeProc>...</nfeProc>')) {
     return true;
   }
   return false;
