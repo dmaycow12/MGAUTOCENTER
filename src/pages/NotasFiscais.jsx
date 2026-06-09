@@ -1931,15 +1931,21 @@ function F({ label, children, className = "" }) {
 
 function temXmlReal(nota) {
   const xml = nota.xml_original || nota.xml_content || '';
-  if (!xml || !xml.trim().startsWith('<')) return false;
-  const trimmed = xml.trim();
-  if (trimmed.length < 500) return false;
-  if (trimmed.includes('<nfeProc>...</nfeProc>')) return false;
-  // Verifica se tem tags reais de NFSe/NF (não dummy)
-  if (trimmed.includes('<RPS') || trimmed.includes('<Rps') || trimmed.includes('<infRPS') || 
-      trimmed.includes('<nfeProc') || trimmed.includes('<NFe') || trimmed.includes('<NFCe')) {
+  
+  // Se tem XML e é válido (não placeholder)
+  if (xml && xml.trim().startsWith('<')) {
+    const trimmed = xml.trim();
+    // Se tem mais de 500 chars e não é placeholder
+    if (trimmed.length > 500 && !trimmed.includes('<nfeProc>...</nfeProc>')) {
+      return true;
+    }
+  }
+  
+  // Se não tem XML local, verifica se tem URL válida
+  if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.startsWith('http') && nota.xml_url.length > 50) {
     return true;
   }
+  
   return false;
 }
 
