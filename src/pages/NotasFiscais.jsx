@@ -1928,9 +1928,22 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verde APENAS se tem XML real (arquivo) salvo
+  // Verde APENAS se tem XML real completo com >2000 chars E fechamento real
   
-  // Única aceitação 1: xml_url com arquivo válido
+  // Valida XML: >2000 chars + tem tags de fechamento (</...>) não placeholder
+  const isXmlReal = (xml) => {
+    if (!xml || typeof xml !== 'string') return false;
+    const trimmed = xml.trim();
+    // Rejeita tudo com ... (placeholder)
+    if (trimmed.includes('...')) return false;
+    // Precisa ter >2000 chars (XML real é grande)
+    if (trimmed.length < 2000) return false;
+    // Precisa ter tags de fechamento reais (</tag>)
+    if (!trimmed.includes('</')) return false;
+    return true;
+  };
+  
+  // Verifica xml_url (arquivo)
   if (nota.xml_url && typeof nota.xml_url === 'string') {
     const url = nota.xml_url.trim();
     if (url.startsWith('http') && url.length > 100) {
@@ -1938,26 +1951,11 @@ function temXmlReal(nota) {
     }
   }
   
-  // Rejeita TUDO que tem ... (três pontos = placeholder)
-  const temPlaceholder = (xml) => xml && xml.includes('...');
+  // Verifica xml_original
+  if (isXmlReal(nota.xml_original)) return true;
   
-  if (temPlaceholder(nota.xml_original) || temPlaceholder(nota.xml_content)) {
-    return false;
-  }
-  
-  // Única aceitação 2: XML com tag real (nfe, NFe, proc, nfeProc) E sem <nfeProc>...</nfeProc>
-  const temTagReal = (xml) => {
-    if (!xml) return false;
-    const contém = xml.includes('<nfe') || xml.includes('<NFe') || xml.includes('<nfProc') || xml.includes('<procNFe');
-    return contém && xml.length > 200;
-  };
-  
-  if (temTagReal(nota.xml_original) && !temPlaceholder(nota.xml_original)) {
-    return true;
-  }
-  if (temTagReal(nota.xml_content) && !temPlaceholder(nota.xml_content)) {
-    return true;
-  }
+  // Verifica xml_content
+  if (isXmlReal(nota.xml_content)) return true;
   
   return false;
 }
