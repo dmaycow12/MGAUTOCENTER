@@ -25,8 +25,8 @@ Deno.serve(async (req) => {
             const resp = await fetch(nota.xml_url);
             if (resp.ok) {
               const xmlContent = await resp.text();
-              if (xmlContent && xmlContent.trim().startsWith('<') && xmlContent.length < 50000) {
-                // Só atualiza se XML é pequeno o suficiente
+              if (xmlContent && xmlContent.trim().startsWith('<') && xmlContent.length < 500000) {
+                // Só atualiza se XML é menor que 500KB (limite SEFAZ)
                 await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
                   xml_original: xmlContent,
                   xml_url: null
