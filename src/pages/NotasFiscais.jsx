@@ -675,6 +675,10 @@ export default function NotasFiscais() {
         ordem_venda_id: rascunhoNota.ordem_venda_id,
         valor_total: rascunhoNota.valor_total,
         observacoes: rascunhoNota.observacoes,
+        dados_adicionais: rascunhoNota.dados_adicionais || '',
+        forma_pagamento: rascunhoNota.forma_pagamento || 'A Combinar',
+        parcelas: rascunhoNota.parcelas || 1,
+        parcelas_detalhes: rascunhoNota.parcelas_detalhes || [],
         data_emissao: rascunhoNota.data_emissao,
         items: (() => {
           if (rascunhoNota.xml_content) {

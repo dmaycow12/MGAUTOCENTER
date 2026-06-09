@@ -543,7 +543,19 @@ Deno.serve(async (req) => {
       const st = resultFinal.status || '';
       if (st === 'autorizado') {
         statusNota = 'Emitida';
-        const rawPdf = resultFinal.url_danfse || resultFinal.caminho_pdf_nfsen || resultFinal.caminho_pdf_nfse || resultFinal.caminho_danfe || '';
+        // Se ainda não temos os caminhos (resposta inicial sem completo=1), faz uma consulta extra
+        const temCaminhos = resultFinal.caminho_danfe_nfce || resultFinal.caminho_xml_nfce ||
+          resultFinal.caminho_danfe || resultFinal.caminho_xml_nota_fiscal ||
+          resultFinal.url_danfse || resultFinal.caminho_pdf_nfsen;
+        if (!temCaminhos) {
+          await new Promise(r => setTimeout(r, 1500));
+          const consultaCompleta = await fetch(`${baseUrlCompleta}/${epConsultaFinal}/${ref}?completo=1`, {
+            headers: { 'Authorization': authHeaderAtivo },
+          });
+          if (consultaCompleta.ok) resultFinal = await consultaCompleta.json();
+        }
+        const rawPdf = resultFinal.url_danfse || resultFinal.caminho_pdf_nfsen || resultFinal.caminho_pdf_nfse ||
+          resultFinal.caminho_danfe_nfce || resultFinal.caminho_danfe || '';
         pdfUrl = normalizarUrl(rawPdf);
         chaveAcesso = resultFinal.chave_nfe || resultFinal.chave_nfse || chaveAcesso;
         mensagemSefaz = resultFinal.mensagem_sefaz || resultFinal.mensagem || '';
@@ -583,7 +595,9 @@ Deno.serve(async (req) => {
         if (pdfSalvo) pdfUrlFinal = pdfSalvo;
       }
       // Salvar XML
-      const caminhoXml = resultFinal.caminho_xml_nota_fiscal || resultFinal.caminho_xml_nfce || resultFinal.caminho_xml_nfe || resultFinal.caminho_xml || '';
+      console.log('[XML-DEBUG] resultFinal keys:', Object.keys(resultFinal).join(', '));
+      const caminhoXml = resultFinal.caminho_xml_nfce || resultFinal.caminho_xml_nota_fiscal || resultFinal.caminho_xml_nfe || resultFinal.caminho_xml || '';
+      console.log('[XML-DEBUG] caminhoXml:', caminhoXml);
       if (caminhoXml) {
         const xmlUrl = normalizarUrl(caminhoXml);
         const xmlSalvo = await salvarXmlPermanente(base44, xmlUrl, ref, numeroFinal);
