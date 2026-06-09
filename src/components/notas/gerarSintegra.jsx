@@ -311,6 +311,15 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
         valor_total: nota.valor_total || 0,
       }];
     }
+    // Se itens sem valor, distribuir valor total da nota entre eles
+    if (itens.length > 0 && itens.every(i => !i.valor_total)) {
+      const valorPorItem = (nota.valor_total || 0) / itens.length;
+      itens = itens.map(i => ({
+        ...i,
+        valor_unitario: valorPorItem,
+        valor_total: valorPorItem
+      }));
+    }
     itens.forEach((item, idx) => {
       addLinha("54", reg54(nota, item, idx, empresa));
       const codigo = (item.codigo || "000").trim();
