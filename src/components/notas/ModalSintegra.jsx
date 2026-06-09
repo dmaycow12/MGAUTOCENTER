@@ -37,10 +37,17 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
   };
 
   const getXml = async (nota) => {
-    if (nota.xml_original?.trim().startsWith("<")) return nota.xml_original;
-    if (nota.xml_content?.trim().startsWith("<")) return nota.xml_content;
+    const isValidXml = (xml) => {
+      if (!xml?.trim().startsWith("<")) return false;
+      const len = xml.trim().length;
+      // Rejeita XMLs muito curtos (dummy/vazios como "<nfeProc>...</nfeProc>")
+      return len > 200;
+    };
+
+    if (isValidXml(nota.xml_original)) return nota.xml_original;
+    if (isValidXml(nota.xml_content)) return nota.xml_content;
     if (nota.xml_url) {
-      try { const r = await fetch(nota.xml_url); const t = await r.text(); if (t?.trim().startsWith("<")) return t; } catch (_) {}
+      try { const r = await fetch(nota.xml_url); const t = await r.text(); if (isValidXml(t)) return t; } catch (_) {}
     }
     return null;
   };
