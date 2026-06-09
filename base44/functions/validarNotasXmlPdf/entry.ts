@@ -14,11 +14,11 @@ Deno.serve(async (req) => {
     const emitidas = notas.filter(n => n.status === 'Emitida');
     const importadas = notas.filter(n => n.status === 'Importada' || n.status === 'Lançada');
 
-    // Função auxiliar para validar se tem XML de verdade (xml_original com conteúdo válido)
+    // Função auxiliar para validar se tem XML de verdade (xml_original com conteúdo não-vazio)
     // xml_content é apenas JSON dos items, não é XML real
     // xml_url não é confiável — pode apontar pra URL que não retorna XML válido
     const temXmlReal = (n) => {
-      const temOriginal = n.xml_original && typeof n.xml_original === 'string' && n.xml_original.trim().length > 0 && n.xml_original.trim().startsWith('<');
+      const temOriginal = n.xml_original && typeof n.xml_original === 'string' && n.xml_original.trim().length > 0;
       return temOriginal;
     };
 

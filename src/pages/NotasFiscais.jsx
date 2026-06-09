@@ -1956,12 +1956,11 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlSalvo(nota) {
-  // Verifica se tem xml_original (inline e válido) no BD
-  // xml_url não é confiável — pode apontar pra URL que não retorna XML válido
-  // Verde se tem arquivo XML armazenado inline
+  // Verifica se tem xml_original no BD (aceita qualquer conteúdo não-vazio)
+  // Verde se tem arquivo XML armazenado
   // Vermelho se não tem
   
-  if (nota.xml_original && typeof nota.xml_original === 'string' && nota.xml_original.trim().length > 0 && nota.xml_original.trim().startsWith('<')) {
+  if (nota.xml_original && typeof nota.xml_original === 'string' && nota.xml_original.trim().length > 0) {
     return true;
   }
   return false;
