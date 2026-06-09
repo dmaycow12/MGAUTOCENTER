@@ -66,73 +66,92 @@ Deno.serve(async (req) => {
        }
      }
 
-     // Se não tem caminhoHtml e não tem nota emitida (chave_acesso), não conseguimos recuperar
-     if (!caminhoHtml && !nota.chave_acesso) {
-       return Response.json({ 
-         processando: false, 
-         erro: 'Nota sem caminho de DANFE guardado e sem chave de acesso. Consulte o status da nota em "Configurações" ou tente emitir novamente.',
-         status_nota: nota.status 
-       });
+     if (!ref) {
+       return Response.json({ processando: false, erro: 'Referência da nota não encontrada. Esta nota pode ter sido criada antes da atualização do sistema.', status_nota: nota.status });
      }
 
-     // Se tem chave de acesso (nota autorizada), tenta consultar pelo número + série
-     let data = null;
-     if (nota.numero && nota.serie) {
-       const ep = endpointPorTipo(nota.tipo || 'NFe');
-       const searchRef = `${nota.numero}-${nota.serie}`;
+    // Tenta encontrar a nota em ambos os ambientes (pode estar em hom mesmo com status Homologada)
+    const ep = endpointPorTipo(nota.tipo || 'NFe');
 
-       const baseUrl = FOCUSNFE_BASE_PROD;
-       const authHeader = AUTH_HEADER_PROD;
-       const fullUrl = `${baseUrl}/${ep}/${searchRef}?completo=1`;
+    let resp = null;
+    let data = null;
 
-       console.log(`[CONSULTA CHAVE] Tentando buscar por número-série: ${fullUrl}`);
-       const resp = await fetch(fullUrl, { headers: { 'Authorization': authHeader } });
+    // Tenta homologação primeiro se for preview
+    const isPreview = ref.startsWith('preview-');
+    const ambientes = isPreview 
+      ? [[FOCUSNFE_BASE_HOM, AUTH_HEADER_HOM], [FOCUSNFE_BASE_PROD, AUTH_HEADER_PROD]]
+      : [[FOCUSNFE_BASE_PROD, AUTH_HEADER_PROD], [FOCUSNFE_BASE_HOM, AUTH_HEADER_HOM]];
 
-       if (resp.ok) {
-         data = await resp.json();
-         console.log(`[CONSULTA CHAVE] Sucesso em produção, status:`, data.status);
-       } else {
-         console.log(`[CONSULTA CHAVE] Erro: ${resp.status}`);
-       }
-     }
+    console.log(`[CONSULTA] spedy_id=${ref}, ep=${ep}, ambientes=${ambientes.length}`);
 
-    // Se conseguiu buscar nota por número-série
-    if (data && data.status === 'autorizado') {
+    for (const [baseUrl, authHeader] of ambientes) {
+      const fullUrl = `${baseUrl}/${ep}/${ref}?completo=1`;
+      console.log(`[CONSULTA] Tentando: ${fullUrl}`);
+      resp = await fetch(fullUrl, {
+        headers: { 'Authorization': authHeader },
+      });
+
+      console.log(`[CONSULTA] Status: ${resp.status} em ${baseUrl}`);
+
+      if (resp.ok) {
+        data = await resp.json();
+        console.log(`[CONSULTA] Sucesso em ${baseUrl}`, data.status);
+        break;
+      } else {
+        const errText = await resp.text().catch(() => '');
+        console.log(`[CONSULTA] Erro em ${baseUrl}: ${resp.status} - ${errText.substring(0, 200)}`);
+      }
+    }
+
+    if (!data) return Response.json({ erro: 'Nota não encontrada em nenhum ambiente. Verifique o spedy_id na nota.', spedy_id: ref, nota_tipo: nota.tipo, nota_status: nota.status });
+
+    const status = data.status || '';
+
+    if (status === 'autorizado') {
       let pdfUrlFinal = '';
       const rawPdf = data.caminho_pdf_nfsen || data.caminho_pdf_nfse || data.caminho_danfe || data.caminho_pdf_nfce || '';
       if (rawPdf) {
         const pdfUrl = normalizarUrl(rawPdf);
         try {
-          const pdfResp = await fetch(pdfUrl, { headers: { 'Authorization': AUTH_HEADER_PROD } });
+          const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
+          const pdfResp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': authHeader } });
           if (pdfResp.ok) {
             const blob = await pdfResp.blob();
-            const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
-            const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
-            pdfUrlFinal = file_url;
+            const buffer = await blob.arrayBuffer();
+            const header = new Uint8Array(buffer, 0, 4);
+            const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
+            if (!isPdfValid && nota.tipo === 'NFCe') {
+              // NFCe — DANFE é HTML, delegar ao danfeNfce
+              return Response.json({ sucesso: false, nfce_html: true, html_url: pdfUrl });
+            }
+            if (isPdfValid) {
+              const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+              const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+              pdfUrlFinal = file_url;
+            }
           }
         } catch (e) {
           console.error('[PDF] Erro ao validar:', e.message);
         }
       }
-
+      
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
         pdf_url: pdfUrlFinal,
         status: 'Emitida',
         chave_acesso: data.chave_nfe || nota.chave_acesso || '',
+        ...(data.numero ? { numero: String(data.numero) } : {}),
+        ...(data.serie ? { serie: String(data.serie) } : {}),
       });
       return Response.json({ sucesso: true, pdf_url: pdfUrlFinal });
     }
 
-    // Se não conseguiu buscar por número-série, ao menos tenta retornar o xml_url que já tem guardado
-    if (caminhoHtml) {
-      console.log(`[CONSULTA] Retornando xml_url guardado: ${caminhoHtml}`);
-      return Response.json({ sucesso: true, pdf_url: caminhoHtml, aviso: 'Retornando URL de homologação guardada' });
+    if (status === 'erro_autorizacao' || status === 'rejeitado') {
+      const motivo = data.erros ? data.erros.map(e => e.mensagem).join('; ') : (data.mensagem || status);
+      await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { status: 'Erro', mensagem_sefaz: motivo });
+      return Response.json({ erro: `Nota rejeitada: ${motivo}` });
     }
 
-    return Response.json({ 
-      erro: 'Não foi possível recuperar a DANFE. Consulte o status da nota em Configurações.',
-      status_nota: nota.status 
-    });
+    return Response.json({ processando: true, mensagem: 'A SEFAZ ainda está processando a nota, tente em alguns segundos.' });
 
   } catch (error) {
     return Response.json({ erro: error.message }, { status: 500 });
