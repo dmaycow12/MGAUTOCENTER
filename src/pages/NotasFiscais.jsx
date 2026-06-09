@@ -1928,21 +1928,31 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verde se XML não está vazio, Vermelho se vazio
+  // Verde APENAS se tem XML válido (com fechamento real)
+  // Vermelho se vazio ou incompleto
   
-  // Se tem xml_url com URL válida
-  if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.trim().length > 0) {
-    return true;
+  // Se tem xml_url com URL válida (arquivo salvo)
+  if (nota.xml_url && typeof nota.xml_url === 'string') {
+    const url = nota.xml_url.trim();
+    if (url.startsWith('http') && url.length > 50) {
+      return true;
+    }
   }
   
-  // Se xml_original tem conteúdo
-  if (nota.xml_original && typeof nota.xml_original === 'string' && nota.xml_original.trim().length > 0) {
-    return true;
+  // Se xml_original tem XML válido (começa com < e tem fechamento)
+  if (nota.xml_original && typeof nota.xml_original === 'string') {
+    const xml = nota.xml_original.trim();
+    if (xml.startsWith('<') && xml.includes('</') && xml.length > 100) {
+      return true;
+    }
   }
   
-  // Se xml_content tem conteúdo
-  if (nota.xml_content && typeof nota.xml_content === 'string' && nota.xml_content.trim().length > 0) {
-    return true;
+  // Se xml_content tem XML válido (começa com < e tem fechamento)
+  if (nota.xml_content && typeof nota.xml_content === 'string') {
+    const xml = nota.xml_content.trim();
+    if (xml.startsWith('<') && xml.includes('</') && xml.length > 100) {
+      return true;
+    }
   }
   
   return false;
