@@ -1745,12 +1745,17 @@ export default function NotasFiscais() {
 
                   {/* Tabela de parcelas editável */}
                   {(form.parcelas_detalhes?.length > 0) && (
-                    <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 space-y-2">
-                      <p className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-3">Parcelas</p>
-                      <div className="space-y-2">
-                        {form.parcelas_detalhes.map((p, i) => (
-                          <div key={i} className="grid grid-cols-4 gap-2 items-center">
-                            <span className="text-gray-400 text-xs text-center">{i + 1}ª</span>
+                    <div className="border border-gray-700 rounded-xl overflow-hidden">
+                      {/* Cabeçalho */}
+                      <div className="grid grid-cols-3 bg-gray-800 border-b border-gray-700">
+                        <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Vencimento</div>
+                        <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Valor (R$)</div>
+                        <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Forma Pgto</div>
+                      </div>
+                      {/* Linhas */}
+                      {form.parcelas_detalhes.map((p, i) => (
+                        <div key={i} className="grid grid-cols-3 border-b border-gray-700 last:border-b-0" style={{background: i % 2 === 0 ? '#111827' : '#0f172a'}}>
+                          <div className="px-3 py-2">
                             <input
                               type="date"
                               value={p.vencimento || ''}
@@ -1759,19 +1764,10 @@ export default function NotasFiscais() {
                                 nova[i] = { ...nova[i], vencimento: e.target.value };
                                 setForm(f => ({ ...f, parcelas_detalhes: nova }));
                               }}
-                              className="input-dark text-xs px-2 py-1"
+                              className="input-dark"
                             />
-                            <select
-                              value={p.forma_pagamento || form.forma_pagamento}
-                              onChange={e => {
-                                const nova = [...form.parcelas_detalhes];
-                                nova[i] = { ...nova[i], forma_pagamento: e.target.value };
-                                setForm(f => ({ ...f, parcelas_detalhes: nova }));
-                              }}
-                              className="input-dark text-xs px-2 py-1"
-                            >
-                              {FORMAS_PAGAMENTO.map(fp => <option key={fp} value={fp}>{fp}</option>)}
-                            </select>
+                          </div>
+                          <div className="px-3 py-2">
                             <input
                               type="text"
                               value={p.valor || ''}
@@ -1780,17 +1776,31 @@ export default function NotasFiscais() {
                                 nova[i] = { ...nova[i], valor: parseFloat(e.target.value.replace(',','.')) || 0 };
                                 setForm(f => ({ ...f, parcelas_detalhes: nova }));
                               }}
-                              className="input-dark text-xs px-2 py-1 text-right"
-                              style={{color:"#00ff00"}}
+                              className="input-dark"
                             />
                           </div>
-                        ))}
-                      </div>
-                      <div className="flex justify-between text-xs pt-1 border-t border-gray-700 mt-2">
-                        <span className="text-gray-500">Total parcelado</span>
-                        <span className="font-bold" style={{color: Math.abs(form.parcelas_detalhes.reduce((s,p)=>s+Number(p.valor||0),0) - form.valor_total) < 0.02 ? "#00ff00" : "#f59e0b"}}>
+                          <div className="px-3 py-2">
+                            <select
+                              value={p.forma_pagamento || form.forma_pagamento}
+                              onChange={e => {
+                                const nova = [...form.parcelas_detalhes];
+                                nova[i] = { ...nova[i], forma_pagamento: e.target.value };
+                                setForm(f => ({ ...f, parcelas_detalhes: nova }));
+                              }}
+                              className="input-dark"
+                            >
+                              {FORMAS_PAGAMENTO.map(fp => <option key={fp} value={fp}>{fp}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                      ))}
+                      {/* Total */}
+                      <div className="grid grid-cols-3 bg-gray-800 border-t border-gray-700">
+                        <div className="px-4 py-2 text-xs text-gray-500 uppercase">Total parcelado</div>
+                        <div className="px-4 py-2 text-sm font-bold" style={{color: Math.abs(form.parcelas_detalhes.reduce((s,p)=>s+Number(p.valor||0),0) - form.valor_total) < 0.02 ? "#00ff00" : "#f59e0b"}}>
                           R$ {form.parcelas_detalhes.reduce((s,p)=>s+Number(p.valor||0),0).toLocaleString('pt-BR',{minimumFractionDigits:2})}
-                        </span>
+                        </div>
+                        <div></div>
                       </div>
                     </div>
                   )}
