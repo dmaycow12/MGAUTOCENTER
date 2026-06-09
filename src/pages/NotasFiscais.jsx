@@ -3,13 +3,14 @@ import { base44 } from "@/api/base44Client";
 import { appParams } from "@/lib/app-params";
 import {
   FileText, Plus, Upload, Search, Trash2, X,
-  CheckCircle, AlertCircle, PlusCircle, MinusCircle, RefreshCw, LayoutGrid, List, BarChart2, Pencil, Ban, LogIn, Code, Download, ChevronLeft, ChevronRight
+  CheckCircle, AlertCircle, PlusCircle, MinusCircle, RefreshCw, LayoutGrid, List, BarChart2, Pencil, Ban, LogIn, Code, Download, ChevronLeft, ChevronRight, ChevronDown
 } from "lucide-react";
-import FiltroPerioido from "@/components/notas/FiltroPerioido";
+
 import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
 import ModalXML from "@/components/notas/ModalXML";
 import ModalPreVisualizacao from "@/components/notas/ModalPreVisualizacao";
+import FiltroPerioodoAvancado from "@/components/notas/FiltroPerioodoAvancado";
 import SearchableSelect from "@/components/notas/SearchableSelect";
 import { gerarDadosAdicionaisDaVenda, gerarInfoParcelas } from "@/components/notas/gerarDadosAdicionais";
 
@@ -1221,7 +1222,7 @@ export default function NotasFiscais() {
         + Emitir
       </button>
 
-      <FiltroPerioido onFiltroChange={(range) => { setCustomRange(range); setUsandoOutroPeriodo(true); }} />
+      <FiltroPerioodoAvancado onFiltroChange={() => {}} />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
          {[
