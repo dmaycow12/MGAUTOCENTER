@@ -1930,9 +1930,16 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verde APENAS se xml_original começa com < e não é placeholder
+  // Verde se xml_original OU xml_content começa com < (XML real)
   const xmlOriginal = nota.xml_original?.trim();
+  const xmlContent = nota.xml_content?.trim();
+  
+  // Verifica xml_original
   if (xmlOriginal && xmlOriginal.startsWith('<') && !xmlOriginal.includes('<nfeProc>...</nfeProc>')) {
+    return true;
+  }
+  // Verifica xml_content (se começar com <, é XML, não JSON de items)
+  if (xmlContent && xmlContent.startsWith('<') && !xmlContent.includes('<nfeProc>...</nfeProc>')) {
     return true;
   }
   return false;
