@@ -621,47 +621,32 @@ export default function NotasFiscais() {
   }, []);
 
   const atualizarDadosAdicionais = (formAtual, formaAtualizada) => {
-    let dadosAdicionais = '';
+    let partes = [];
     const venda = vendas.find(v => v.id === formAtual.ordem_venda_id);
     
-    // Forma de pagamento e parcelas
+    // Forma de pagamento e parcelas (resumido)
     if (formaAtualizada) {
       const qtdParcelas = parseInt(formAtual.parcelas) || 1;
-      dadosAdicionais += `FORMA DE PAGAMENTO: ${formaAtualizada}\n`;
-      
       if (qtdParcelas > 1) {
-        dadosAdicionais += `PARCELAS: ${qtdParcelas}x\n`;
-        const valorParcela = formAtual.valor_total / qtdParcelas;
-        for (let i = 0; i < qtdParcelas; i++) {
-          const vencimento = formAtual[`parcela_${i}_vencimento`] || '';
-          dadosAdicionais += `  Parcela ${i+1}: R$ ${valorParcela.toFixed(2)}${vencimento ? ` - Vencimento: ${vencimento}` : ''}\n`;
-        }
-      } else if (qtdParcelas === 1) {
-        dadosAdicionais += `PARCELAS: à vista\n`;
-        dadosAdicionais += `  Valor: R$ ${formAtual.valor_total.toFixed(2)}\n`;
+        // Apenas prazos, sem listar cada parcela
+        partes.push(`Pagto: ${formaAtualizada} (${qtdParcelas}x)`);
+      } else {
+        partes.push(`Pagto: ${formaAtualizada} (à vista)`);
       }
     }
 
-    // Número da ordem de venda
+    // Ordem de venda + veículo (inline)
     if (formAtual.ordem_venda_id && venda) {
-      dadosAdicionais += `\nORDEM DE VENDA: #${venda.numero || 'S/N'}\n`;
+      let ovInfo = `OV #${venda.numero || 'S/N'}`;
+      if (venda.veiculo_modelo) ovInfo += ` - ${venda.veiculo_modelo}`;
+      if (venda.veiculo_placa) ovInfo += ` - ${venda.veiculo_placa}`;
+      if (venda.quilometragem) ovInfo += ` - ${venda.quilometragem} km`;
+      partes.push(ovInfo);
     }
 
-    // Dados do veículo
-    if (venda?.veiculo_modelo || venda?.veiculo_placa) {
-      dadosAdicionais += `\nVEÍCULO:\n`;
-      if (venda.veiculo_modelo) {
-        dadosAdicionais += `  Modelo: ${venda.veiculo_modelo}\n`;
-      }
-      if (venda.veiculo_placa) {
-        dadosAdicionais += `  Placa: ${venda.veiculo_placa}\n`;
-      }
-      if (venda.quilometragem) {
-        dadosAdicionais += `  KM: ${venda.quilometragem}\n`;
-      }
-    }
-
-    setForm(f => ({ ...f, dados_adicionais: dadosAdicionais.trim() }));
+    // Juntar com pipe para economizar caracteres
+    const dadosAdicionais = partes.join(' | ');
+    setForm(f => ({ ...f, dados_adicionais: dadosAdicionais }));
   };
 
 
