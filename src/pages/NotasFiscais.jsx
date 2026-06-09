@@ -1493,7 +1493,7 @@ export default function NotasFiscais() {
               <button onClick={() => { setShowForm(false); currentEditIdRef.current = null; }}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
             </div>
 
-            <div className="px-5 pt-4 flex-shrink-0 grid grid-cols-3 gap-4">
+            <div className="px-5 pt-4 flex-shrink-0 grid grid-cols-1 gap-4">
               <F label="Tipo de Nota Fiscal">
                 {(() => {
                   const isConsumidorExplicito = form.cliente_nome?.toUpperCase() === "CONSUMIDOR";
@@ -1506,7 +1506,7 @@ export default function NotasFiscais() {
                     <select value={form.tipo} onChange={e => {
                         const novoTipo = e.target.value;
                         let serie = proximaSerie(notas, novoTipo);
-                        setForm(f => ({ ...f, tipo: novoTipo, numero: '', serie }));  // Não atribui número automaticamente
+                        setForm(f => ({ ...f, tipo: novoTipo, numero: '', serie }));
                     }} className="input-dark">
                       <option value="NFSe">NFSe — Serviço</option>
                       <option value="NFe">NFe — Produto</option>
@@ -1514,9 +1514,6 @@ export default function NotasFiscais() {
                     </select>
                   );
                 })()}
-              </F>
-              <F label="Data de Emissão">
-                <input type="date" value={form.data_emissao} onChange={e => setForm(f => ({ ...f, data_emissao: e.target.value }))} className="input-dark" />
               </F>
             </div>
 
@@ -1712,7 +1709,12 @@ export default function NotasFiscais() {
                   </div>
                   <div className="flex justify-between">
                     <button onClick={() => setAbaForm("cliente")} className="text-gray-400 hover:text-white text-sm px-4 py-2 border border-gray-700 rounded-lg transition-all">← Voltar</button>
-                    <button onClick={() => setAbaForm("pagamento")} className="text-black px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#00ff00"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>Próximo: Pagamento →</button>
+                    <button onClick={() => {
+                     const qtd = form.parcelas || 1;
+                     const parcelas = gerarParcelas(qtd, form.forma_pagamento, form.valor_total, form.data_emissao);
+                     setForm(f => ({ ...f, parcelas_detalhes: parcelas }));
+                     setAbaForm("pagamento");
+                    }} className="text-black px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#00ff00"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>Próximo: Pagamento →</button>
                   </div>
                 </div>
               )}
