@@ -1218,7 +1218,7 @@ export default function NotasFiscais() {
          </button>
         </div>
 
-      <button onClick={() => setShowForm(true)} className="w-full h-11 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+      <button onClick={() => setShowForm(true)} className="w-full h-11 rounded-lg text-sm font-semibold transition-all mb-2" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
         + Emitir
       </button>
 

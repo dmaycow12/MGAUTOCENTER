@@ -51,7 +51,7 @@ export default function FiltroPerioodoAvancado({ onFiltroChange }) {
   };
 
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex gap-2 items-center mb-2">
       <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
         <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 hover:bg-white/20 transition-all" style={{borderRight:"1px solid rgba(255,255,255,0.15)"}}>
           <ChevronLeft className="w-3 h-3" />
