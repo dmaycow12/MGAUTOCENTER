@@ -286,7 +286,13 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
         const parsed = JSON.parse(nota.xml_content);
         if (Array.isArray(parsed)) {
           itens = parsed;
-        } else {
+        } else if (parsed && typeof parsed === 'object') {
+          // Procura por itens em propriedades comuns: itens, det, details, products, items
+          itens = parsed.itens || parsed.det || parsed.details || parsed.products || parsed.items || [];
+          if (!Array.isArray(itens)) itens = [];
+        }
+        // Se ainda vazio, tenta parseXmlItens
+        if (itens.length === 0) {
           itens = parseXmlItens(nota.xml_content);
         }
       } catch {
