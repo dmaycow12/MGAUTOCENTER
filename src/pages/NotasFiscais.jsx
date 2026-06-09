@@ -298,21 +298,21 @@ export default function NotasFiscais() {
 
         const dataEmissaoVenda = venda?.data_entrada || new Date().toISOString().split('T')[0];
 
-        // Garante que parcelas_detalhes têm vencimento correto; se não, gera a partir da data da venda
-        let parcelasFinais = dadosCliente.parcelas_detalhes || [];
-        if (parcelasFinais.length === 0 || !parcelasFinais.every(p => p.vencimento)) {
-          const qtdP = dadosCliente.parcelas || 1;
-          const fpP = dadosCliente.forma_pagamento || 'A Combinar';
-          parcelasFinais = Array.from({ length: qtdP }, (_, i) => {
-            const dt = new Date(dataEmissaoVenda + 'T12:00:00');
-            dt.setMonth(dt.getMonth() + i + 1);
-            return {
-              numero: i + 1,
-              forma_pagamento: fpP,
-              vencimento: dt.toISOString().split('T')[0],
-              valor: parseFloat((valor_total / qtdP).toFixed(2)),
-            };
-          });
+        // Sempre gera parcelas usando a data da venda como base e o valor_total da nota
+        const qtdP = dadosCliente.parcelas || 1;
+        const fpP = dadosCliente.forma_pagamento || 'A Combinar';
+        // Verifica se parcelas da venda já têm vencimento definido E são do mesmo dia da data_entrada
+        const parcelasVenda = dadosCliente.parcelas_detalhes || [];
+        let parcelasFinais;
+        if (parcelasVenda.length > 0 && parcelasVenda.every(p => p.vencimento)) {
+          // Usa as datas da venda mas com o valor_total da nota (proporcional)
+          parcelasFinais = parcelasVenda.map((p, i) => ({
+            ...p,
+            valor: parseFloat((valor_total / qtdP).toFixed(2)),
+          }));
+        } else {
+          // Gera parcelas a partir da data da venda
+          parcelasFinais = gerarParcelas(qtdP, fpP, valor_total, dataEmissaoVenda);
         }
 
         setForm({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, parcelas_detalhes: parcelasFinais, valor_total, items, dados_adicionais, data_emissao: dataEmissaoVenda });
