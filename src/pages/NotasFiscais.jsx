@@ -1928,22 +1928,21 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verde APENAS se tem XML salvo localmente (xml_original ou xml_content com < )
+  // Verde se XML não está vazio, Vermelho se vazio
   
-  // xml_original: se começa com < é XML real
-  if (nota.xml_original && typeof nota.xml_original === 'string') {
-    const trimmed = nota.xml_original.trim();
-    if (trimmed.startsWith('<') && trimmed.length > 100) {
-      return true;
-    }
+  // Se tem xml_url com URL válida
+  if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.trim().length > 0) {
+    return true;
   }
   
-  // xml_content: APENAS se começa com < (rejeita JSON de items)
-  if (nota.xml_content && typeof nota.xml_content === 'string') {
-    const trimmed = nota.xml_content.trim();
-    if (trimmed.startsWith('<') && trimmed.length > 100) {
-      return true;
-    }
+  // Se xml_original tem conteúdo
+  if (nota.xml_original && typeof nota.xml_original === 'string' && nota.xml_original.trim().length > 0) {
+    return true;
+  }
+  
+  // Se xml_content tem conteúdo
+  if (nota.xml_content && typeof nota.xml_content === 'string' && nota.xml_content.trim().length > 0) {
+    return true;
   }
   
   return false;
