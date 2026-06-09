@@ -1928,33 +1928,27 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verde APENAS se XML é realmente carregável (começa com < ou é URL válida)
-  // Rejeita JSON (arrays/objects) — xml_content usa JSON para itens, NÃO para XML
+  // Verde APENAS se tem XML fiscal real (não placeholder, não JSON de items)
+  // Prioridade: xml_original > xml_content (começando com <)
   
-  // Se tem xml_url válida (arquivo)
-  if (nota.xml_url && typeof nota.xml_url === 'string') {
-    const url = nota.xml_url.trim();
-    if (url.startsWith('http') && url.length > 100) {
-      return true;
-    }
-  }
-  
-  // Se xml_original começa com < (é XML válido)
+  // xml_original: se começa com < é XML real
   if (nota.xml_original && typeof nota.xml_original === 'string') {
     const trimmed = nota.xml_original.trim();
-    if (trimmed.startsWith('<') && trimmed.length > 50) {
+    if (trimmed.startsWith('<') && trimmed.length > 200) {
       return true;
     }
   }
   
-  // Se xml_content começa com < (é XML válido)
-  // REJEITA se começa com [ ou { (JSON de items)
+  // xml_content: APENAS se começa com < (rejeita JSON de items)
   if (nota.xml_content && typeof nota.xml_content === 'string') {
     const trimmed = nota.xml_content.trim();
-    if (trimmed.startsWith('<') && trimmed.length > 50) {
+    if (trimmed.startsWith('<') && trimmed.length > 200) {
       return true;
     }
   }
+  
+  // xml_url: ignorar (arquivo externo, não sabemos o conteúdo)
+  // Se precisa do XML, o usuário clica em "Ver XML" e o modal carrega
   
   return false;
 }
