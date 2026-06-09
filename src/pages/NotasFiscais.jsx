@@ -865,9 +865,11 @@ export default function NotasFiscais() {
     }
     const fpNota = nota.forma_pagamento || 'A Combinar';
     const qtdParcelas = nota.parcelas || 1;
+    const vendaOriginalEdit = nota.ordem_venda_id ? vendas.find(v => v.id === nota.ordem_venda_id) : null;
+    const dataBaseEdit = vendaOriginalEdit?.data_entrada || nota.data_emissao;
     const parcelasExistentes = nota.parcelas_detalhes?.length > 0
       ? nota.parcelas_detalhes
-      : gerarParcelas(qtdParcelas, fpNota, nota.valor_total || 0, nota.data_emissao);
+      : gerarParcelas(qtdParcelas, fpNota, nota.valor_total || 0, dataBaseEdit);
 
     // Regenera dados adicionais se estiverem incompletos (sem info de parcelas)
     let dadosAdicionais = nota.dados_adicionais || '';
