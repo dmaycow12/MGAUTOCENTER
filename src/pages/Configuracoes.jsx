@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Settings, Save, CheckCircle, ChevronDown, DollarSign, RefreshCw } from "lucide-react";
+import { Settings, Save, CheckCircle, ChevronDown, DollarSign, RefreshCw, Download } from "lucide-react";
 import BackupManager from "../components/backup/BackupManager";
 
 export default function Configuracoes() {
@@ -261,6 +261,7 @@ export default function Configuracoes() {
 
       <Section title="Ferramentas de Dados" icon={DollarSign}>
         <CriarFinanceiroVendasBtn />
+        <DownloadXmlNfseBtn />
       </Section>
 
       <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#22c55e; } .input-dark::placeholder { color:#6b7280; }`}</style>
@@ -408,6 +409,44 @@ function TokenField({ label, value, onChange }) {
           {visible ? '🙈' : '👁️'}
         </button>
       </div>
+    </div>
+  );
+}
+
+function DownloadXmlNfseBtn() {
+  const [loading, setLoading] = useState(false);
+
+  const baixar = async () => {
+    setLoading(true);
+    try {
+      const res = await base44.functions.invoke('downloadXmlNfse63a74', {});
+      const blob = new Blob([res.data], { type: 'application/zip' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'NFSes_63_74.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-3 border-t border-gray-700 pt-4 mt-4">
+      <p className="text-sm text-gray-400">Baixa os XMLs originais das NFSes 63-74 em um arquivo ZIP.</p>
+      <button
+        type="button"
+        onClick={baixar}
+        disabled={loading}
+        className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50 w-fit"
+        style={{background:'#062C9B'}}
+      >
+        <Download className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        {loading ? 'Preparando download...' : 'Baixar XMLs NFSe 63-74 (ZIP)'}
+      </button>
     </div>
   );
 }
