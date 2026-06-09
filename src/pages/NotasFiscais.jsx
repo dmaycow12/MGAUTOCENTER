@@ -26,6 +26,23 @@ const STATUS_COLOR = {
 
 const FORMAS_PAGAMENTO = ["A Combinar", "Boleto", "Cartão de Crédito", "Cartão de Débito", "Cheque", "Dinheiro", "PIX", "Transferência"];
 
+// Normaliza formas de pagamento da venda para os valores aceitos na NF
+function normalizarFormaPagamento(fp) {
+  if (!fp) return "A Combinar";
+  const fpUp = fp.toUpperCase();
+  if (fpUp.includes("CART") && (fpUp.includes("CR") || fpUp === "CARTÃO DE CRÉDITO")) return "Cartão de Crédito";
+  if (fpUp.includes("CART") && fpUp.includes("DÉB")) return "Cartão de Débito";
+  if (fpUp.includes("CART")) return "Cartão de Crédito"; // "Cartão" genérico → Crédito
+  if (fpUp === "PIX") return "PIX";
+  if (fpUp.includes("DINHEIRO") || fpUp === "DINHEIRO") return "Dinheiro";
+  if (fpUp.includes("BOLETO")) return "Boleto";
+  if (fpUp.includes("TRANSF")) return "Transferência";
+  if (fpUp.includes("CHEQUE")) return "Cheque";
+  // Se já for um valor válido, retorna ele mesmo
+  if (FORMAS_PAGAMENTO.includes(fp)) return fp;
+  return "A Combinar";
+}
+
 function defaultItem() {
   return { descricao: "", quantidade: 1, valor_unitario: 0, valor_total: 0 };
 }
@@ -235,7 +252,13 @@ export default function NotasFiscais() {
           || (clienteNomeBusca ? clientesList?.find(cl => cl.nome?.toLowerCase() === clienteNomeBusca.toLowerCase()) : null);
 
         // Determina forma_pagamento: prioriza a primeira parcela da venda, depois o campo geral
-        const formaPagamentoVenda = venda?.parcelas_detalhes?.[0]?.forma_pagamento || venda?.forma_pagamento || "A Combinar";
+        const formaPagamentoRaw = venda?.parcelas_detalhes?.[0]?.forma_pagamento || venda?.forma_pagamento || "A Combinar";
+        const formaPagamentoVenda = normalizarFormaPagamento(formaPagamentoRaw);
+        // Normaliza também as formas de pagamento dentro das parcelas_detalhes
+        const parcelasDetalhesNormalizadas = (venda?.parcelas_detalhes || []).map(p => ({
+          ...p,
+          forma_pagamento: normalizarFormaPagamento(p.forma_pagamento),
+        }));
 
         const dadosCliente = c ? {
           cliente_id: c.id,
@@ -254,7 +277,7 @@ export default function NotasFiscais() {
           cliente_estado: c.estado || venda?.cliente_estado || "",
           forma_pagamento: formaPagamentoVenda,
           parcelas: venda?.parcelas || 1,
-          parcelas_detalhes: venda?.parcelas_detalhes || [],
+          parcelas_detalhes: parcelasDetalhesNormalizadas,
         } : {
           cliente_id: cliente_id_param,
           cliente_nome: cliente_nome_param,
@@ -267,7 +290,7 @@ export default function NotasFiscais() {
           cliente_estado: venda?.cliente_estado || "",
           forma_pagamento: formaPagamentoVenda,
           parcelas: venda?.parcelas || 1,
-          parcelas_detalhes: venda?.parcelas_detalhes || [],
+          parcelas_detalhes: parcelasDetalhesNormalizadas,
         };
 
         const isConsumidor = !dadosCliente.cliente_cpf_cnpj?.trim() || (dadosCliente.cliente_nome || "").toUpperCase() === "CONSUMIDOR";
