@@ -1930,16 +1930,14 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verifica xml_original
-  if (nota.xml_original?.trim() && !nota.xml_original.includes('<nfeProc>...</nfeProc>')) {
+  // APENAS xml_original ou xml_content com conteúdo real (não placeholder)
+  const xmlOriginal = nota.xml_original?.trim();
+  const xmlContent = nota.xml_content?.trim();
+  
+  if (xmlOriginal && xmlOriginal.length > 100 && !xmlOriginal.includes('<nfeProc>...</nfeProc>')) {
     return true;
   }
-  // Verifica xml_content
-  if (nota.xml_content?.trim() && !nota.xml_content.includes('<nfeProc>...</nfeProc>')) {
-    return true;
-  }
-  // Verifica xml_url (se tem URL real)
-  if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.trim().length > 0) {
+  if (xmlContent && xmlContent.length > 100 && !xmlContent.includes('<nfeProc>...</nfeProc>')) {
     return true;
   }
   return false;
