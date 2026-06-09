@@ -11,7 +11,11 @@ export function gerarInfoParcelas(parcelas_detalhes, forma_pagamento_padrao) {
   if (!parcelas_detalhes || parcelas_detalhes.length === 0) return '';
   return parcelas_detalhes
     .map((p, i) => {
-      const data = p.vencimento ? new Date(p.vencimento).toLocaleDateString('pt-BR') : '';
+      // Evita shift de fuso: parseia "YYYY-MM-DD" diretamente sem conversão UTC
+      const data = p.vencimento ? (() => {
+        const [y, m, d] = p.vencimento.split('-');
+        return `${d}/${m}/${y}`;
+      })() : '';
       return `Parc. ${p.numero || i + 1}: ${p.forma_pagamento || forma_pagamento_padrao} - Venc.: ${data}`;
     })
     .join(' | ');

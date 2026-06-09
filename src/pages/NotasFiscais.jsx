@@ -296,7 +296,8 @@ export default function NotasFiscais() {
 
         const dados_adicionais = gerarDadosAdicionaisDaVenda(venda);
 
-        setForm({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, valor_total, items, dados_adicionais });
+        const dataEmissaoVenda = venda?.data_entrada || new Date().toISOString().split('T')[0];
+        setForm({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, valor_total, items, dados_adicionais, data_emissao: dataEmissaoVenda });
         setAbaForm("cliente");
         setShowForm(true);
       })();
