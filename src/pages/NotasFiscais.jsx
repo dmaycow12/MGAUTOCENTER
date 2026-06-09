@@ -277,6 +277,7 @@ export default function NotasFiscais() {
         const partesAdicionais = [];
         if (venda?.numero) partesAdicionais.push(`Venda nº ${venda.numero}`);
         if (venda?.veiculo_placa) partesAdicionais.push(`Placa: ${venda.veiculo_placa}`);
+        if (venda?.veiculo_modelo) partesAdicionais.push(`Veículo: ${venda.veiculo_modelo}`);
         if (venda?.quilometragem) partesAdicionais.push(`KM: ${venda.quilometragem}`);
         const dados_adicionais = partesAdicionais.join(' | ');
 
