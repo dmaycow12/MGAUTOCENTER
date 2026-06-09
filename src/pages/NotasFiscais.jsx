@@ -9,6 +9,7 @@ import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
 import ModalXML from "@/components/notas/ModalXML";
 import ModalPreVisualizacao from "@/components/notas/ModalPreVisualizacao";
+import ModalValidacaoXmlPdf from "@/components/notas/ModalValidacaoXmlPdf";
 import SearchableSelect from "@/components/notas/SearchableSelect";
 import { gerarDadosAdicionaisDaVenda, gerarInfoParcelas } from "@/components/notas/gerarDadosAdicionais";
 
@@ -190,6 +191,8 @@ export default function NotasFiscais() {
   const [configsNF, setConfigsNF] = useState([]);
   const [avisoExclusao, setAvisoExclusao] = useState(null);
   const [xmlModal, setXmlModal] = useState(null);
+  const [validandoXmlPdf, setValidandoXmlPdf] = useState(false);
+  const [resultadoValidacao, setResultadoValidacao] = useState(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1212,9 +1215,30 @@ export default function NotasFiscais() {
           {autorizandoMassa ? 'Autorizando...' : 'Autorizar'}
         </button>
         <button onClick={() => exportarZip()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-          {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />} {gerandoZip ? 'Exportando...' : 'Exportar'}
+           {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />} {gerandoZip ? 'Exportando...' : 'Exportar'}
+         </button>
+        <button 
+          onClick={async () => {
+            setValidandoXmlPdf(true);
+            try {
+              const res = await base44.functions.invoke('validarNotasXmlPdf', {});
+              setResultadoValidacao(res.data);
+              feedback('sucesso', `Validação concluída: ${res.data.notasComXml} com XML, ${res.data.notasSemXml} sem XML`);
+            } catch (e) {
+              feedback('erro', 'Erro ao validar: ' + e.message);
+            }
+            setValidandoXmlPdf(false);
+          }}
+          disabled={validandoXmlPdf}
+          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+          style={{background:"#ff9500", color:"#000"}}
+          onMouseEnter={e => { if (!validandoXmlPdf) e.currentTarget.style.background = "#dd7700"; }}
+          onMouseLeave={e => e.currentTarget.style.background = "#ff9500"}
+        >
+          {validandoXmlPdf ? <RefreshCw className="w-4 h-4 animate-spin" /> : <AlertCircle className="w-4 h-4" />} 
+          {validandoXmlPdf ? 'Validando...' : 'Validar XML/PDF'}
         </button>
-      </div>
+        </div>
 
       <div className="flex gap-0.5">
         <div className="relative flex-1">
@@ -1267,8 +1291,7 @@ export default function NotasFiscais() {
                   {nota.status === 'Rascunho' && temSpedy && <button title="Homologar" onClick={() => iniciarPreVisualizacao(nota)} disabled={!!preVisualizando} className="w-7 h-7 flex items-center justify-center text-yellow-400 hover:text-yellow-300 rounded-lg transition-all disabled:opacity-50">{preVisualizando === nota.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin"/> : <FileText className="w-3.5 h-3.5"/>}</button>}
                   {nota.status === "Homologada" && temSpedy && <button title="Autorizar" onClick={() => emitirNota(nota)} disabled={!!transmitindo} className="w-7 h-7 flex items-center justify-center text-green-400 hover:text-green-300 rounded-lg disabled:opacity-50">{transmitindo === nota.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin"/> : <CheckCircle className="w-3.5 h-3.5"/>}</button>}
                   {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Cancelada' && nota.status !== 'Rascunho' && <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>}
-                  <button title={temXmlReal(nota) ? "Ver XML (Rigoroso)" : "XML inválido"} onClick={() => { if (temXmlReal(nota)) setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content }); }} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ color: temXmlReal(nota) ? "#00ff00" : "#ff0000" }}><Code className="w-3.5 h-3.5"/></button>
-                  <button title={temXmlSalvo(nota) ? "Ver XML (Simples)" : "Sem XML"} onClick={() => { if (temXmlSalvo(nota)) setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content }); }} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ color: temXmlSalvo(nota) ? "#00ff00" : "#ff0000" }}><Code className="w-3.5 h-3.5"/></button>
+                  <button title={temXmlSalvo(nota) ? "Ver XML" : "Sem XML"} onClick={() => { if (temXmlSalvo(nota)) setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content }); }} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ color: temXmlSalvo(nota) ? "#00ff00" : "#ff0000" }}><Code className="w-3.5 h-3.5"/></button>
                   <button title="Abrir PDF" onClick={() => abrirPdfNota(nota)} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ color: nota.pdf_url ? "#00ff00" : "#ef4444" }}><FileText className="w-3.5 h-3.5"/></button>
                   {nota.pdf_url && <button title="Baixar PDF" onClick={() => baixarPdfNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-400 rounded-lg"><Download className="w-3.5 h-3.5"/></button>}
                   {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && <button title="Cancelar" onClick={() => cancelarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg"><Ban className="w-3.5 h-3.5"/></button>}
@@ -1328,12 +1351,7 @@ export default function NotasFiscais() {
                             {transmitindo === nota.id ? "..." : "Autorizar"}
                           </button>
                         )}
-                        <button title={temXmlReal(nota) ? "Ver XML (Rigoroso)" : "XML inválido"} onClick={() => { if (temXmlReal(nota)) setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content }); }}
-                           className="p-1 transition-all"
-                           style={{ color: temXmlReal(nota) ? "#00ff00" : "#ff0000" }}>
-                           <Code className="w-4 h-4" />
-                         </button>
-                        <button title={temXmlSalvo(nota) ? "Ver XML (Simples)" : "Sem XML"} onClick={() => { if (temXmlSalvo(nota)) setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content }); }}
+                        <button title={temXmlSalvo(nota) ? "Ver XML" : "Sem XML"} onClick={() => { if (temXmlSalvo(nota)) setXmlModal({ ...nota, xml_content: nota.xml_original || nota.xml_content }); }}
                            className="p-1 transition-all"
                            style={{ color: temXmlSalvo(nota) ? "#00ff00" : "#ff0000" }}>
                            <Code className="w-4 h-4" />
@@ -1919,6 +1937,10 @@ export default function NotasFiscais() {
         />
       )}
 
+      {resultadoValidacao && (
+        <ModalValidacaoXmlPdf resultado={resultadoValidacao} onClose={() => setResultadoValidacao(null)} />
+      )}
+
       <style>{`.input-dark{width:100%;background:#1f2937;border:1px solid #374151;color:#fff;border-radius:8px;padding:8px 12px;font-size:14px;outline:none}.input-dark:focus{border-color:#f97316}.input-dark::placeholder{color:#6b7280}`}</style>
     </div>
   );
@@ -1931,28 +1953,6 @@ function F({ label, children, className = "" }) {
       {children}
     </div>
   );
-}
-
-function temXmlReal(nota) {
-  // Verde se tem XML salvo (xml_url OU xml_original/xml_content com conteúdo real)
-  // Vermelho se não tem nada
-  
-  if (nota.xml_url && typeof nota.xml_url === 'string') {
-    const url = nota.xml_url.trim();
-    if (url.startsWith('http') && url.length > 50) return true;
-  }
-  
-  if (nota.xml_original && typeof nota.xml_original === 'string') {
-    const xml = nota.xml_original.trim();
-    if (xml.length > 100 && xml.startsWith('<')) return true;
-  }
-  
-  if (nota.xml_content && typeof nota.xml_content === 'string') {
-    const xml = nota.xml_content.trim();
-    if (xml.length > 100 && xml.startsWith('<')) return true;
-  }
-  
-  return false;
 }
 
 function temXmlSalvo(nota) {
