@@ -664,13 +664,13 @@ export default function NotasFiscais() {
         setTransmitindo(null);
         return;
       }
-      // Usa parcelas_detalhes da venda original se houver, caso contrário regenera
-      const qtdParcelas = rascunhoNota.parcelas || 1;
-      const fpParcelas = rascunhoNota.forma_pagamento || 'A Combinar';
+      // Força regenerar parcelas SEMPRE pela venda original, nunca usa as do rascunho
       const vendaOriginal = rascunhoNota.ordem_venda_id ? vendas.find(v => v.id === rascunhoNota.ordem_venda_id) : null;
-      const parcelasRegeneradas = vendaOriginal?.parcelas_detalhes?.length > 0
-        ? vendaOriginal.parcelas_detalhes
-        : gerarParcelas(qtdParcelas, fpParcelas, rascunhoNota.valor_total || 0, vendaOriginal?.data_entrada || rascunhoNota.data_emissao || new Date().toISOString().split('T')[0]);
+      const qtdParcelas = vendaOriginal?.parcelas || rascunhoNota.parcelas || 1;
+      const fpParcelas = vendaOriginal?.forma_pagamento || rascunhoNota.forma_pagamento || 'A Combinar';
+      const valorTotal = vendaOriginal?.valor_total || rascunhoNota.valor_total || 0;
+      const dataEntrada = vendaOriginal?.data_entrada || new Date().toISOString().split('T')[0];
+      const parcelasRegeneradas = gerarParcelas(qtdParcelas, fpParcelas, valorTotal, dataEntrada);
       
       f = {
         ...defaultForm(),
