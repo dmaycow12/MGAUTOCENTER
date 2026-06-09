@@ -1928,7 +1928,7 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verde se tem XML fiscal real salvo localmente OU arquivo externo válido
+  // Verde APENAS se tem XML salvo localmente (xml_original ou xml_content com < )
   
   // xml_original: se começa com < é XML real
   if (nota.xml_original && typeof nota.xml_original === 'string') {
@@ -1942,14 +1942,6 @@ function temXmlReal(nota) {
   if (nota.xml_content && typeof nota.xml_content === 'string') {
     const trimmed = nota.xml_content.trim();
     if (trimmed.startsWith('<') && trimmed.length > 100) {
-      return true;
-    }
-  }
-  
-  // xml_url: se tem URL válida do servidor = arquivo de XML existe
-  if (nota.xml_url && typeof nota.xml_url === 'string') {
-    const url = nota.xml_url.trim();
-    if (url.startsWith('http') && url.includes('focusnfe') && url.length > 50) {
       return true;
     }
   }
