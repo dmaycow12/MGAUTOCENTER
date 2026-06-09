@@ -25,49 +25,6 @@ const STATUS_COLOR = {
 
 const FORMAS_PAGAMENTO = ["A Combinar", "Boleto", "Cartão", "Cheque", "Dinheiro", "PIX"];
 
-const gerarDadosAdicionais = (form, vendas) => {
-  let dadosAdicionais = '';
-  
-  // Forma de pagamento e parcelas
-  if (form.forma_pagamento && form.forma_pagamento !== 'A Combinar') {
-    dadosAdicionais += `FORMA PAGAMENTO: ${form.forma_pagamento}`;
-    
-    // Se tem OV, buscar informações de parcelas
-    if (form.ordem_venda_id) {
-      const venda = vendas.find(v => v.id === form.ordem_venda_id);
-      if (venda && venda.parcelas_detalhes && Array.isArray(venda.parcelas_detalhes) && venda.parcelas_detalhes.length > 0) {
-        dadosAdicionais += '\nPARCELAS:\n';
-        venda.parcelas_detalhes.forEach((p, idx) => {
-          const data = p.vencimento ? new Date(p.vencimento).toLocaleDateString('pt-BR') : '—';
-          const valor = Number(p.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits:2});
-          dadosAdicionais += `  ${idx + 1}/${venda.parcelas_detalhes.length}: R$ ${valor} - ${data}\n`;
-        });
-      }
-    }
-  }
-  
-  // Número da OV
-  if (form.ordem_venda_id) {
-    const venda = vendas.find(v => v.id === form.ordem_venda_id);
-    if (venda && venda.numero) {
-      dadosAdicionais += `\nORDEM VENDA: ${venda.numero}`;
-    }
-  }
-  
-  // Informações do veículo
-  if (form.ordem_venda_id) {
-    const venda = vendas.find(v => v.id === form.ordem_venda_id);
-    if (venda && venda.veiculo_placa) {
-      dadosAdicionais += `\nVEÍCULO:`;
-      if (venda.veiculo_modelo) dadosAdicionais += ` ${venda.veiculo_modelo}`;
-      dadosAdicionais += ` - Placa: ${venda.veiculo_placa}`;
-      if (venda.quilometragem) dadosAdicionais += ` - KM: ${venda.quilometragem}`;
-    }
-  }
-  
-  return dadosAdicionais.trim();
-};
-
 function defaultItem() {
   return { descricao: "", quantidade: 1, valor_unitario: 0, valor_total: 0 };
 }
@@ -81,7 +38,6 @@ function defaultForm() {
     tipo_documento: "1",
     data_emissao: new Date().toISOString().split("T")[0],
     forma_pagamento: "A Combinar",
-    parcelas_detalhes: [],
     observacoes: "",
     dados_adicionais: "",
     cliente_id: "",
@@ -294,7 +250,6 @@ export default function NotasFiscais() {
           cliente_cidade: c.cidade || venda?.cliente_cidade || "",
           cliente_estado: c.estado || venda?.cliente_estado || "",
           forma_pagamento: venda?.parcelas_detalhes?.[0]?.forma_pagamento || venda?.forma_pagamento || "A Combinar",
-          parcelas_detalhes: venda?.parcelas_detalhes || [],
         } : {
           cliente_id: cliente_id_param,
           cliente_nome: cliente_nome_param,
@@ -306,15 +261,13 @@ export default function NotasFiscais() {
           cliente_cidade: venda?.cliente_cidade || "",
           cliente_estado: venda?.cliente_estado || "",
           forma_pagamento: venda?.parcelas_detalhes?.[0]?.forma_pagamento || venda?.forma_pagamento || "A Combinar",
-          parcelas_detalhes: venda?.parcelas_detalhes || [],
         };
 
         // Se cliente é CONSUMIDOR (sem CPF/CNPJ), forçar NFCe
         const isConsumidor = !dadosCliente.cliente_cpf_cnpj?.trim() || (dadosCliente.cliente_nome || "").toUpperCase() === "CONSUMIDOR";
         const tipoFinal = isConsumidor ? "NFCe" : tipo;
 
-        const dadosAdicionaisAuto = gerarDadosAdicionais({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, valor_total, items, forma_pagamento: dadosCliente.forma_pagamento }, vendas);
-        setForm({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, valor_total, items, dados_adicionais: dadosAdicionaisAuto });
+        setForm({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, valor_total, items });
         setAbaForm("cliente");
         setShowForm(true);
       })();
@@ -1738,46 +1691,20 @@ export default function NotasFiscais() {
               )}
 
               {/* ABA PAGAMENTO */}
-               {abaForm === "pagamento" && (
-                 <div className="space-y-4">
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <F label="Forma de Pagamento">
-                       <select value={form.forma_pagamento} onChange={e => {
-                         const novaForma = e.target.value;
-                         const novosDados = gerarDadosAdicionais({ ...form, forma_pagamento: novaForma }, vendas);
-                         setForm(f => ({ ...f, forma_pagamento: novaForma, dados_adicionais: novosDados }));
-                       }} className="input-dark">
-                         {FORMAS_PAGAMENTO.map(fp => <option key={fp} value={fp}>{fp}</option>)}
-                       </select>
-                     </F>
-                   </div>
+              {abaForm === "pagamento" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <F label="Forma de Pagamento">
+                      <select value={form.forma_pagamento} onChange={e => setForm(f => ({ ...f, forma_pagamento: e.target.value }))} className="input-dark">
+                        {FORMAS_PAGAMENTO.map(fp => <option key={fp} value={fp}>{fp}</option>)}
+                      </select>
+                    </F>
+                  </div>
 
-                   {form.ordem_venda_id && (() => {
-                     const venda = vendas.find(v => v.id === form.ordem_venda_id);
-                     return venda?.parcelas_detalhes && venda.parcelas_detalhes.length > 0 ? (
-                       <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 space-y-3">
-                         <h3 className="text-white font-medium text-sm">Parcelas da Venda</h3>
-                         <div className="space-y-2 max-h-48 overflow-y-auto">
-                           {venda.parcelas_detalhes.map((p, idx) => {
-                             const data = p.vencimento ? new Date(p.vencimento).toLocaleDateString('pt-BR') : '—';
-                             const valor = Number(p.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits:2});
-                             return (
-                               <div key={idx} className="flex justify-between items-center text-xs bg-gray-900 rounded p-2">
-                                 <span className="text-gray-400">Parcela {idx + 1}/{venda.parcelas_detalhes.length}</span>
-                                 <span className="text-white font-mono">R$ {valor}</span>
-                                 <span className="text-gray-500">{data}</span>
-                               </div>
-                             );
-                           })}
-                         </div>
-                       </div>
-                     ) : null;
-                   })()}
-
-                   <F label="Dados Adicionais">
-                     <textarea value={form.dados_adicionais || ''} onChange={e => setForm(f => ({ ...f, dados_adicionais: e.target.value }))}
-                       className="input-dark" rows={4} placeholder="Auto-preenchido com forma de pagamento, parcelas, veículo e OV" autoComplete="off" />
-                   </F>
+                  <F label="Dados Adicionais">
+                    <textarea value={form.dados_adicionais || ''} onChange={e => setForm(f => ({ ...f, dados_adicionais: e.target.value }))}
+                      className="input-dark" rows={3} placeholder="" autoComplete="off" />
+                  </F>
 
                   <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 space-y-3">
                     <h3 className="text-white font-medium text-sm">Resumo da Nota</h3>
