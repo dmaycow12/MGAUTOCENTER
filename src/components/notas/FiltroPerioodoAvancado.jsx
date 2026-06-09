@@ -43,7 +43,7 @@ export default function FiltroPerioodoAvancado({ onFiltroChange }) {
     localStorage.setItem("notas_customRange", JSON.stringify(range));
     setUsandoOutroPeriodo(true);
     localStorage.setItem("notas_usandoOutro", "true");
-    onFiltroChange(range);
+    onFiltroChange({ filtroMes, filtroAno, usandoOutroPeriodo: true, customRange: range, periodoRange: range });
   };
 
   const aplicarOutroPeriodo = () => {
