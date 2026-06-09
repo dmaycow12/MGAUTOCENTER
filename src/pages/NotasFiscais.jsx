@@ -1121,17 +1121,9 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      <div className="flex gap-0.5">
-        <button onClick={() => { setForm(f => ({ ...f, numero: '', serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
-          <Plus className="w-4 h-4" /> Emitir
-        </button>
-
-        <div className={`flex-1 flex items-center h-9 rounded-lg text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
-          <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}><ChevronLeft className="w-3 h-3" /></button>
-          <span className="flex-1 text-center truncate">{MESES[filtroMes - 1]} - {filtroAno}</span>
-          <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}><ChevronRight className="w-3 h-3" /></button>
-        </div>
-      </div>
+      <button onClick={() => { setForm(f => ({ ...f, numero: '', serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="w-full flex items-center justify-center gap-2 h-11 rounded-lg text-sm font-semibold transition-all mb-2" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+        <Plus className="w-4 h-4" /> Emitir
+      </button>
 
       <div className="flex gap-0.5">
         <button onClick={() => { const novo = filtroTipo.includes("Saída") ? filtroTipo.filter(x => x !== "Saída") : [...filtroTipo, "Saída"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Saída") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
@@ -1219,10 +1211,6 @@ export default function NotasFiscais() {
            {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />} {gerandoZip ? 'Exportando...' : 'Exportar'}
          </button>
         </div>
-
-      <button onClick={() => setShowForm(true)} className="w-full h-11 rounded-lg text-sm font-semibold transition-all mb-2" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-        + Emitir
-      </button>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
          {[
