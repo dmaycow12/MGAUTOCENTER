@@ -23,7 +23,7 @@ const STATUS_COLOR = {
   Importada: "bg-blue-500/10 text-blue-400",
 };
 
-const FORMAS_PAGAMENTO = ["A Combinar", "Boleto", "Cartão", "Cheque", "Dinheiro", "PIX"];
+const FORMAS_PAGAMENTO = ["A Combinar", "Boleto", "Cartão de Crédito", "Cartão de Débito", "Cheque", "Dinheiro", "PIX", "Transferência"];
 
 function defaultItem() {
   return { descricao: "", quantidade: 1, valor_unitario: 0, valor_total: 0 };
@@ -1700,6 +1700,28 @@ export default function NotasFiscais() {
                       </select>
                     </F>
                   </div>
+
+                  {/* Parcelas da venda vinculada */}
+                  {form.ordem_venda_id && (() => {
+                    const venda = vendas.find(v => v.id === form.ordem_venda_id);
+                    const parcelas = venda?.parcelas_detalhes;
+                    if (!parcelas || parcelas.length === 0) return null;
+                    return (
+                      <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 space-y-2">
+                        <p className="text-gray-400 text-xs font-medium uppercase tracking-wide">Parcelas da Venda</p>
+                        <div className="space-y-1.5">
+                          {parcelas.map((p, i) => (
+                            <div key={i} className="flex items-center justify-between text-sm">
+                              <span className="text-gray-400">{i + 1}ª parcela</span>
+                              <span className="text-gray-300">{p.forma_pagamento || form.forma_pagamento}</span>
+                              <span className="text-gray-400">{p.vencimento || '—'}</span>
+                              <span className="font-semibold" style={{color:"#00ff00"}}>R$ {Number(p.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   <F label="Dados Adicionais">
                     <textarea value={form.dados_adicionais || ''} onChange={e => setForm(f => ({ ...f, dados_adicionais: e.target.value }))}

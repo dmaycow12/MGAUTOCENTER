@@ -303,8 +303,11 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: msgErro });
     }
 
-    const epConsulta = tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfe'; // nfe (singular) para preview
-    const maxTentativas = tipo === 'NFSe' ? 25 : 12;
+     const epConsulta = tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfe';
+    // Limite reduzido para garantir execução < 55s (evita timeout 500):
+    // NFSe: 10 × 4s = 40s | NFe/NFCe: 10 × 2.5s = 25s
+    const maxTentativas = 10;
+    const intervaloMs = tipo === 'NFSe' ? 4000 : 2500;
     let resultFinal = await resp.json();
     console.log('[PREVIEW HOM RESP]', JSON.stringify(resultFinal).substring(0, 300));
 
@@ -315,14 +318,18 @@ Deno.serve(async (req) => {
         const msgErro = resultFinal.erros ? resultFinal.erros.map(e => e.mensagem).join('; ') : (resultFinal.mensagem || st);
         return Response.json({ sucesso: false, erro: `Erro na pré-visualização: ${msgErro}` });
       }
-      const intervalo = tipo === 'NFSe' ? (i < 6 ? 3000 : i < 12 ? 4000 : 6000) : (i < 3 ? 1500 : 2500);
-      await new Promise(r => setTimeout(r, intervalo));
+      await new Promise(r => setTimeout(r, intervaloMs));
       const consultaResp = await fetch(`${FOCUSNFE_BASE}/${epConsulta}/${ref}?completo=1`, { headers: { 'Authorization': AUTH_HOM } });
       if (consultaResp.ok) resultFinal = await consultaResp.json();
     }
 
     if ((resultFinal.status || '') !== 'autorizado') {
-      return Response.json({ sucesso: false, erro: `Timeout: nota ainda em ${resultFinal.status || 'processamento'}. Tente novamente.` });
+      // SEFAZ demorou — retornar sem 500, permitindo nova tentativa
+      return Response.json({ 
+        sucesso: false, 
+        pode_tentar_novamente: true,
+        erro: 'A SEFAZ está demorando para responder. Aguarde 30 segundos e clique em "Homologar" novamente.' 
+      });
     }
 
     // Obtém HTML/PDF da homologação
