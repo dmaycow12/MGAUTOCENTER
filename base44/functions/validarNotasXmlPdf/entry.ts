@@ -14,13 +14,26 @@ Deno.serve(async (req) => {
     const emitidas = notas.filter(n => n.status === 'Emitida');
     const importadas = notas.filter(n => n.status === 'Importada' || n.status === 'Lançada');
 
-    const emitidasSemXml = emitidas.filter(n => !n.xml_url && !n.xml_original && !n.xml_content);
-    const emitidasSemPdf = emitidas.filter(n => !n.pdf_url);
-    const emitidasSemXmlOuPdf = emitidas.filter(n => (!n.xml_url && !n.xml_original && !n.xml_content) || !n.pdf_url);
+    // Função auxiliar para validar se tem XML de verdade
+    const temXmlReal = (n) => {
+      const temUrl = n.xml_url && typeof n.xml_url === 'string' && n.xml_url.trim().length > 0;
+      const temOriginal = n.xml_original && typeof n.xml_original === 'string' && n.xml_original.trim().length > 0;
+      const temContent = n.xml_content && typeof n.xml_content === 'string' && n.xml_content.trim().length > 0;
+      return temUrl || temOriginal || temContent;
+    };
 
-    const importadasSemXml = importadas.filter(n => !n.xml_url && !n.xml_original && !n.xml_content);
-    const importadasSemPdf = importadas.filter(n => !n.pdf_url);
-    const importadasSemXmlOuPdf = importadas.filter(n => (!n.xml_url && !n.xml_original && !n.xml_content) || !n.pdf_url);
+    // Função auxiliar para validar se tem PDF de verdade
+    const temPdfReal = (n) => {
+      return n.pdf_url && typeof n.pdf_url === 'string' && n.pdf_url.trim().length > 0;
+    };
+
+    const emitidasSemXml = emitidas.filter(n => !temXmlReal(n));
+    const emitidasSemPdf = emitidas.filter(n => !temPdfReal(n));
+    const emitidasSemXmlOuPdf = emitidas.filter(n => !temXmlReal(n) || !temPdfReal(n));
+
+    const importadasSemXml = importadas.filter(n => !temXmlReal(n));
+    const importadasSemPdf = importadas.filter(n => !temPdfReal(n));
+    const importadasSemXmlOuPdf = importadas.filter(n => !temXmlReal(n) || !temPdfReal(n));
 
     return Response.json({
       resumo: {
