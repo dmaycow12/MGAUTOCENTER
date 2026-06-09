@@ -1928,33 +1928,22 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verde APENAS se tem XML real salvo
-  // Vermelho se vazio ou incompleto
+  // Verde se tem XML salvo (xml_url OU xml_original/xml_content com conteúdo real)
+  // Vermelho se não tem nada
   
-  // Se tem xml_url com URL válida
   if (nota.xml_url && typeof nota.xml_url === 'string') {
     const url = nota.xml_url.trim();
-    if (url.startsWith('http') && url.length > 50) {
-      return true;
-    }
+    if (url.startsWith('http') && url.length > 50) return true;
   }
   
-  // Se xml_original tem XML REAL
   if (nota.xml_original && typeof nota.xml_original === 'string') {
     const xml = nota.xml_original.trim();
-    // Precisa começar com <?xml, ter >1000 chars e fechamento real
-    if (xml.startsWith('<?xml') && xml.length > 1000 && xml.includes('</nfeProc>') || xml.includes('</procNFe>')) {
-      return true;
-    }
+    if (xml.length > 100 && xml.startsWith('<')) return true;
   }
   
-  // Se xml_content tem XML REAL
   if (nota.xml_content && typeof nota.xml_content === 'string') {
     const xml = nota.xml_content.trim();
-    // Precisa começar com <?xml, ter >1000 chars e fechamento real
-    if (xml.startsWith('<?xml') && xml.length > 1000 && (xml.includes('</nfeProc>') || xml.includes('</procNFe>'))) {
-      return true;
-    }
+    if (xml.length > 100 && xml.startsWith('<')) return true;
   }
   
   return false;
