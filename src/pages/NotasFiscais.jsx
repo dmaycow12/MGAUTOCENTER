@@ -10,7 +10,9 @@ import ModalSintegra from "@/components/notas/ModalSintegra";
 import ModalXML from "@/components/notas/ModalXML";
 import ModalPreVisualizacao from "@/components/notas/ModalPreVisualizacao";
 import SearchableSelect from "@/components/notas/SearchableSelect";
+import FiltroPeriodonotas from "@/components/notas/FiltroPeriodonotas";
 import { gerarDadosAdicionaisDaVenda, gerarInfoParcelas } from "@/components/notas/gerarDadosAdicionais";
+import { useFiltroPeriodo } from "@/hooks/useFiltroPeriodo";
 
 import JSZip from "jszip";
 
@@ -173,6 +175,8 @@ export default function NotasFiscais() {
   const [xmlTexto, setXmlTexto] = useState("");
   const [xmlParaEntrada, setXmlParaEntrada] = useState("");
   const [importando, setImportando] = useState(false);
+  
+  const filtro = useFiltroPeriodo("notas");
   const [clientes, setClientes] = useState([]);
   const [form, setForm] = useState(defaultForm());
   const [emitindo, setEmitindo] = useState(false);
