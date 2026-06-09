@@ -1956,12 +1956,12 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlSalvo(nota) {
-  // Verifica se tem xml_original OU xml_content OU xml_url no BD
+  // Verifica se tem xml_original OU xml_url no BD
+  // xml_content é apenas JSON dos items, não é XML real
   // Verde se tem arquivo XML armazenado
   // Vermelho se não tem
   
   if (nota.xml_original && typeof nota.xml_original === 'string' && nota.xml_original.trim().length > 0) return true;
-  if (nota.xml_content && typeof nota.xml_content === 'string' && nota.xml_content.trim().length > 0 && nota.xml_content.trim().startsWith('<')) return true;
   if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.trim().length > 0) return true;
   return false;
 }
