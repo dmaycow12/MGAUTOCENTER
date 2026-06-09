@@ -50,10 +50,9 @@ Deno.serve(async (req) => {
      // Se tem caminho da DANFE guardado, tenta buscar direto (mais confiável)
      if (caminhoHtml && nota.status === 'Homologada') {
        console.log(`[CONSULTA] Tentando buscar DANFE direto de: ${caminhoHtml}`);
-       const isHom = true; // homologação sempre para previews
-       const htmlUrl = normalizarUrl(caminhoHtml, isHom);
        try {
-         const pdfResp = await fetch(htmlUrl, { headers: { 'Authorization': AUTH_HEADER_HOM } });
+         // O caminho já vem com https://, é direto do S3 da Focus
+         const pdfResp = await fetch(caminhoHtml, { headers: { 'Authorization': AUTH_HEADER_HOM } });
          if (pdfResp.ok) {
            const blob = await pdfResp.blob();
            const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
