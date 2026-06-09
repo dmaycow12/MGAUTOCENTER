@@ -120,7 +120,7 @@ export function reg11(empresa) {
 // Layout: 2+14+14+8+2+2+3+6+4+1+13+13+13+13+13+4+1 = 126 chars
 // SINTEGRA MG aceita apenas modelo 55 (NFe). NFCe (65) deve ser excluída.
 export function reg50(nota, empresa) {
-  const isEntrada = nota.status === "Importada";
+  const isEntrada = nota.status === "Importada" || nota.status === "Lançada";
   const codSit = nota.status === "Cancelada" ? "S" : "N";
   const cfop = isEntrada ? "1102" : "5405";
   const emitente = isEntrada ? "T" : "P";
@@ -150,7 +150,7 @@ export function reg50(nota, empresa) {
 // Registro 54 - Itens das notas
 // Layout: 2+14+2+3+6+4+3+3+14+11+12+12+12+12+12+4 = 126 chars
 export function reg54(nota, item, numItem, empresa) {
-  const cfop = nota.status === "Importada" ? "1102" : "5405";
+  const cfop = (nota.status === "Importada" || nota.status === "Lançada") ? "1102" : "5405";
   const cst = "060";
   const ncm = (item.ncm || "87089990").replace(/\D/g, "").padEnd(8, "0").substring(0, 8);
   const cnpjCampo = limpaCNPJ(nota.cliente_cpf_cnpj || "");
