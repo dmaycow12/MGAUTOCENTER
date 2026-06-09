@@ -47,37 +47,41 @@ Deno.serve(async (req) => {
       },
       detalhes: {
         emitidasSemXml: emitidasSemXml.map(n => ({
-          id: n.id,
-          numero: n.numero,
-          serie: n.serie,
-          tipo: n.tipo,
-          cliente: n.cliente_nome,
-          temPdf: !!n.pdf_url
-        })),
+           id: n.id,
+           numero: n.numero,
+           serie: n.serie,
+           tipo: n.tipo,
+           cliente: n.cliente_nome,
+           temPdf: !!n.pdf_url,
+           temXmlOriginal: !!(n.xml_original && n.xml_original.trim().length > 0)
+         })),
         emitidasSemPdf: emitidasSemPdf.map(n => ({
-          id: n.id,
-          numero: n.numero,
-          serie: n.serie,
-          tipo: n.tipo,
-          cliente: n.cliente_nome,
-          temXml: !!(n.xml_url || n.xml_original || n.xml_content)
-        })),
+           id: n.id,
+           numero: n.numero,
+           serie: n.serie,
+           tipo: n.tipo,
+           cliente: n.cliente_nome,
+           temXml: temXmlReal(n),
+           temXmlOriginal: !!(n.xml_original && n.xml_original.trim().length > 0)
+         })),
         importadasSemXml: importadasSemXml.map(n => ({
-          id: n.id,
-          numero: n.numero,
-          serie: n.serie,
-          tipo: n.tipo,
-          cliente: n.cliente_nome,
-          temPdf: !!n.pdf_url
-        })),
-        importadasSemPdf: importadasSemPdf.map(n => ({
-          id: n.id,
-          numero: n.numero,
-          serie: n.serie,
-          tipo: n.tipo,
-          cliente: n.cliente_nome,
-          temXml: !!(n.xml_url || n.xml_original || n.xml_content)
-        }))
+           id: n.id,
+           numero: n.numero,
+           serie: n.serie,
+           tipo: n.tipo,
+           cliente: n.cliente_nome,
+           temPdf: !!n.pdf_url,
+           temXmlOriginal: !!(n.xml_original && n.xml_original.trim().length > 0)
+         })),
+         importadasSemPdf: importadasSemPdf.map(n => ({
+           id: n.id,
+           numero: n.numero,
+           serie: n.serie,
+           tipo: n.tipo,
+           cliente: n.cliente_nome,
+           temXml: temXmlReal(n),
+           temXmlOriginal: !!(n.xml_original && n.xml_original.trim().length > 0)
+         }))
       }
     });
   } catch (error) {

@@ -64,12 +64,17 @@ export default function ModalValidacaoXmlPdf({ resultado, onClose }) {
                 <h4 className="text-red-400 font-semibold text-sm">Emitidas sem XML ({resultado.detalhes.emitidasSemXml.length})</h4>
                 <div className="bg-gray-800 rounded-lg p-3 max-h-64 overflow-y-auto space-y-1 border border-gray-700">
                   {resultado.detalhes.emitidasSemXml.map(n => (
-                    <div key={n.id} className="text-xs text-gray-300 border-b border-gray-700 pb-1">
-                      <div className="font-semibold text-gray-100">{n.tipo} {n.numero}/{n.serie}</div>
-                      <div className="text-gray-400">{n.cliente}</div>
-                      {n.temPdf && <div className="text-green-400 text-xs">✓ PDF disponível</div>}
-                    </div>
-                  ))}
+                     <div key={n.id} className="text-xs text-gray-300 border-b border-gray-700 pb-1">
+                       <div className="font-semibold text-gray-100">{n.tipo} {n.numero}/{n.serie}</div>
+                       <div className="text-gray-400">{n.cliente}</div>
+                       <div className="text-xs mt-1 flex gap-2">
+                         <span className={n.temXmlOriginal ? "text-green-400" : "text-red-400"}>
+                           {n.temXmlOriginal ? "✓" : "✗"} XML {n.temXmlOriginal ? "salvo" : "faltando"}
+                         </span>
+                         {n.temPdf && <span className="text-green-400">✓ PDF disponível</span>}
+                       </div>
+                     </div>
+                   ))}
                 </div>
               </div>
             )}
@@ -79,12 +84,16 @@ export default function ModalValidacaoXmlPdf({ resultado, onClose }) {
                 <h4 className="text-red-400 font-semibold text-sm">Emitidas sem PDF ({resultado.detalhes.emitidasSemPdf.length})</h4>
                 <div className="bg-gray-800 rounded-lg p-3 max-h-64 overflow-y-auto space-y-1 border border-gray-700">
                   {resultado.detalhes.emitidasSemPdf.map(n => (
-                    <div key={n.id} className="text-xs text-gray-300 border-b border-gray-700 pb-1">
-                      <div className="font-semibold text-gray-100">{n.tipo} {n.numero}/{n.serie}</div>
-                      <div className="text-gray-400">{n.cliente}</div>
-                      {n.temXml && <div className="text-green-400 text-xs">✓ XML disponível</div>}
-                    </div>
-                  ))}
+                     <div key={n.id} className="text-xs text-gray-300 border-b border-gray-700 pb-1">
+                       <div className="font-semibold text-gray-100">{n.tipo} {n.numero}/{n.serie}</div>
+                       <div className="text-gray-400">{n.cliente}</div>
+                       <div className="text-xs mt-1 flex gap-2">
+                         {n.temXml && <span className={n.temXmlOriginal ? "text-green-400" : "text-red-400"}>
+                           {n.temXmlOriginal ? "✓" : "✗"} XML {n.temXmlOriginal ? "salvo" : "faltando"}
+                         </span>}
+                       </div>
+                     </div>
+                   ))}
                 </div>
               </div>
             )}
@@ -94,12 +103,17 @@ export default function ModalValidacaoXmlPdf({ resultado, onClose }) {
                 <h4 className="text-red-400 font-semibold text-sm">Importadas sem XML ({resultado.detalhes.importadasSemXml.length})</h4>
                 <div className="bg-gray-800 rounded-lg p-3 max-h-64 overflow-y-auto space-y-1 border border-gray-700">
                   {resultado.detalhes.importadasSemXml.map(n => (
-                    <div key={n.id} className="text-xs text-gray-300 border-b border-gray-700 pb-1">
-                      <div className="font-semibold text-gray-100">{n.tipo} {n.numero}/{n.serie}</div>
-                      <div className="text-gray-400">{n.cliente}</div>
-                      {n.temPdf && <div className="text-green-400 text-xs">✓ PDF disponível</div>}
-                    </div>
-                  ))}
+                     <div key={n.id} className="text-xs text-gray-300 border-b border-gray-700 pb-1">
+                       <div className="font-semibold text-gray-100">{n.tipo} {n.numero}/{n.serie}</div>
+                       <div className="text-gray-400">{n.cliente}</div>
+                       <div className="text-xs mt-1 flex gap-2">
+                         <span className={n.temXmlOriginal ? "text-green-400" : "text-red-400"}>
+                           {n.temXmlOriginal ? "✓" : "✗"} XML {n.temXmlOriginal ? "salvo" : "faltando"}
+                         </span>
+                         {n.temPdf && <span className="text-green-400">✓ PDF disponível</span>}
+                       </div>
+                     </div>
+                   ))}
                 </div>
               </div>
             )}
@@ -109,12 +123,16 @@ export default function ModalValidacaoXmlPdf({ resultado, onClose }) {
                 <h4 className="text-red-400 font-semibold text-sm">Importadas sem PDF ({resultado.detalhes.importadasSemPdf.length})</h4>
                 <div className="bg-gray-800 rounded-lg p-3 max-h-64 overflow-y-auto space-y-1 border border-gray-700">
                   {resultado.detalhes.importadasSemPdf.map(n => (
-                    <div key={n.id} className="text-xs text-gray-300 border-b border-gray-700 pb-1">
-                      <div className="font-semibold text-gray-100">{n.tipo} {n.numero}/{n.serie}</div>
-                      <div className="text-gray-400">{n.cliente}</div>
-                      {n.temXml && <div className="text-green-400 text-xs">✓ XML disponível</div>}
-                    </div>
-                  ))}
+                     <div key={n.id} className="text-xs text-gray-300 border-b border-gray-700 pb-1">
+                       <div className="font-semibold text-gray-100">{n.tipo} {n.numero}/{n.serie}</div>
+                       <div className="text-gray-400">{n.cliente}</div>
+                       <div className="text-xs mt-1 flex gap-2">
+                         {n.temXml && <span className={n.temXmlOriginal ? "text-green-400" : "text-red-400"}>
+                           {n.temXmlOriginal ? "✓" : "✗"} XML {n.temXmlOriginal ? "salvo" : "faltando"}
+                         </span>}
+                       </div>
+                     </div>
+                   ))}
                 </div>
               </div>
             )}
