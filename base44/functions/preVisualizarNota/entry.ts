@@ -225,7 +225,7 @@ Deno.serve(async (req) => {
       };
     } else {
       // NFe
-      endpoint = `/nfes?ref=${ref}`; // nfes (plural) para notas emitidas
+      endpoint = `/nfe?ref=${ref}`; // nfe (singular) para preview/homologação
       const prodItems = items.length > 0 ? items : [{ descricao: 'Peças', quantidade: 1, valor_unitario: nota.valor_total, valor_total: nota.valor_total, ncm: '87089990', cfop: '5102' }];
 
       let codigoMunicipioDestinatario = null;
@@ -303,7 +303,7 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: msgErro });
     }
 
-    const epConsulta = tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfes'; // nfes (plural) para NFe
+    const epConsulta = tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfe'; // nfe (singular) para preview
     const maxTentativas = tipo === 'NFSe' ? 25 : 12;
     let resultFinal = await resp.json();
     console.log('[PREVIEW HOM RESP]', JSON.stringify(resultFinal).substring(0, 300));
