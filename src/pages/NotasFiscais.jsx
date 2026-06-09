@@ -1929,6 +1929,7 @@ function F({ label, children, className = "" }) {
 
 function temXmlReal(nota) {
   // Verde APENAS se XML é realmente carregável (começa com < ou é URL válida)
+  // Rejeita JSON (arrays/objects) — xml_content usa JSON para itens, NÃO para XML
   
   // Se tem xml_url válida (arquivo)
   if (nota.xml_url && typeof nota.xml_url === 'string') {
@@ -1947,6 +1948,7 @@ function temXmlReal(nota) {
   }
   
   // Se xml_content começa com < (é XML válido)
+  // REJEITA se começa com [ ou { (JSON de items)
   if (nota.xml_content && typeof nota.xml_content === 'string') {
     const trimmed = nota.xml_content.trim();
     if (trimmed.startsWith('<') && trimmed.length > 50) {
