@@ -297,7 +297,25 @@ export default function NotasFiscais() {
         const dados_adicionais = gerarDadosAdicionaisDaVenda(venda);
 
         const dataEmissaoVenda = venda?.data_entrada || new Date().toISOString().split('T')[0];
-        setForm({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, valor_total, items, dados_adicionais, data_emissao: dataEmissaoVenda });
+
+        // Garante que parcelas_detalhes têm vencimento correto; se não, gera a partir da data da venda
+        let parcelasFinais = dadosCliente.parcelas_detalhes || [];
+        if (parcelasFinais.length === 0 || !parcelasFinais.every(p => p.vencimento)) {
+          const qtdP = dadosCliente.parcelas || 1;
+          const fpP = dadosCliente.forma_pagamento || 'A Combinar';
+          parcelasFinais = Array.from({ length: qtdP }, (_, i) => {
+            const dt = new Date(dataEmissaoVenda + 'T12:00:00');
+            dt.setMonth(dt.getMonth() + i + 1);
+            return {
+              numero: i + 1,
+              forma_pagamento: fpP,
+              vencimento: dt.toISOString().split('T')[0],
+              valor: parseFloat((valor_total / qtdP).toFixed(2)),
+            };
+          });
+        }
+
+        setForm({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, parcelas_detalhes: parcelasFinais, valor_total, items, dados_adicionais, data_emissao: dataEmissaoVenda });
         setAbaForm("cliente");
         setShowForm(true);
       })();
@@ -1695,8 +1713,15 @@ export default function NotasFiscais() {
                       <select value={form.forma_pagamento} onChange={e => {
                         const fp = e.target.value;
                         const qtd = form.parcelas || 1;
-                        const parcelas = gerarParcelas(qtd, fp, form.valor_total, form.data_emissao);
-                        setForm(f => ({ ...f, forma_pagamento: fp, parcelas_detalhes: parcelas }));
+                        // Se já há parcelas com vencimento definido, apenas atualiza a forma de pagamento
+                        const temParcelasComData = form.parcelas_detalhes?.length > 0 && form.parcelas_detalhes.every(p => p.vencimento);
+                        if (temParcelasComData) {
+                          const atualizadas = form.parcelas_detalhes.map(p => ({ ...p, forma_pagamento: fp }));
+                          setForm(f => ({ ...f, forma_pagamento: fp, parcelas_detalhes: atualizadas }));
+                        } else {
+                          const parcelas = gerarParcelas(qtd, fp, form.valor_total, form.data_emissao);
+                          setForm(f => ({ ...f, forma_pagamento: fp, parcelas_detalhes: parcelas }));
+                        }
                       }} className="input-dark">
                         {FORMAS_PAGAMENTO.map(fp => <option key={fp} value={fp}>{fp}</option>)}
                       </select>
