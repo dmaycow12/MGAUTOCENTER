@@ -362,11 +362,10 @@ Deno.serve(async (req) => {
       pdfUrlSalvo = htmlUrl;
     }
 
-    // Atualiza nota com PDF de homologação e status Homologada — remove número
+    // Atualiza nota com PDF de homologação e status Homologada
     await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
       status: 'Homologada',
       pdf_url: pdfUrlSalvo || htmlUrl,
-      numero: null,  // Limpa número em homologação, só salva quando Emitida
     });
 
     return Response.json({
