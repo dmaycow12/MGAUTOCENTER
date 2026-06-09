@@ -17,40 +17,26 @@ Deno.serve(async (req) => {
 
     for (const nota of notas) {
       try {
-        // Estratégia: apenas xml_original (sem xml_url)
-        // Se xml_original for inválido (JSON ou erro anterior), tenta resgatar de xml_url
-        const updateData = {};
-        let temAlgo = false;
-
-        // Verifica se xml_original parece ser JSON (não começa com <xml ou <NFSe)
-        const isInvalidXml = nota.xml_original && (
-          nota.xml_original.startsWith('{') || 
-          nota.xml_original.startsWith('[') ||
-          (!nota.xml_original.startsWith('<?') && !nota.xml_original.startsWith('<'))
-        );
-
-        // Se xml_original é inválido E tem xml_url, tenta buscar conteúdo
-        if (isInvalidXml && nota.xml_url) {
+        // Só processa notas sem xml_original E com xml_url (vazio OU inválido)
+        const xmlOriginalVazio = !nota.xml_original || nota.xml_original.trim().length === 0;
+        
+        if (xmlOriginalVazio && nota.xml_url) {
           try {
             const resp = await fetch(nota.xml_url);
             if (resp.ok) {
               const xmlContent = await resp.text();
               if (xmlContent && xmlContent.trim().startsWith('<') && xmlContent.length < 50000) {
-                // Só salva se for XML válido E pequeno o suficiente
-                updateData.xml_original = xmlContent;
-                updateData.xml_url = null;
-                temAlgo = true;
+                // Só atualiza se XML é pequeno o suficiente
+                await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
+                  xml_original: xmlContent,
+                  xml_url: null
+                });
+                atualizadas++;
               }
             }
           } catch (e) {
             // Ignorar erro de fetch
           }
-        }
-
-        // Se achou algo pra atualizar, faz
-        if (temAlgo) {
-          await base44.asServiceRole.entities.NotaFiscal.update(nota.id, updateData);
-          atualizadas++;
         }
       } catch (e) {
         erros.push({ notaId: nota.id, numero: nota.numero, erro: e.message });
