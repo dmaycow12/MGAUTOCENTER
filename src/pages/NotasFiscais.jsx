@@ -1930,28 +1930,28 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verde se: XML real salvo localmente OU tem arquivo XML/URL OU tem chave (pra buscar)
+  // Verde APENAS se tem XML real (completo, não placeholder) OU arquivo XML salvo
   const xmlOriginal = nota.xml_original?.trim();
   const xmlContent = nota.xml_content?.trim();
   
-  // Verifica XML real em xml_original
-  if (xmlOriginal && xmlOriginal.startsWith('<')) {
+  // Rejeita XMLs vazios ou placeholders como <nfeProc>...</nfeProc>
+  const isValidXml = (xml) => {
+    if (!xml) return false;
+    if (xml.includes('...</')) return false; // placeholder
+    if (xml === '<nfeProc></nfeProc>' || xml === '<NFe></NFe>') return false;
+    return true;
+  };
+  
+  // Verde se xml_original tem conteúdo real
+  if (xmlOriginal && xmlOriginal.startsWith('<') && isValidXml(xmlOriginal)) {
     return true;
   }
-  // Verifica XML real em xml_content
-  if (xmlContent && xmlContent.startsWith('<')) {
+  // Verde se xml_content tem conteúdo real (XML, não JSON)
+  if (xmlContent && xmlContent.startsWith('<') && isValidXml(xmlContent)) {
     return true;
   }
-  // Se tem xml_url preenchido (arquivo salvo)
-  if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.trim()) {
-    return true;
-  }
-  // Se tem chave de acesso (pode buscar na SEFAZ)
-  if (nota.chave_acesso && nota.chave_acesso.trim()) {
-    return true;
-  }
-  // Se tem spedy_id (processado)
-  if (nota.spedy_id && nota.spedy_id.trim()) {
+  // Verde apenas se tem arquivo salvo em xml_url
+  if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.trim().startsWith('http')) {
     return true;
   }
   return false;
