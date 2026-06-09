@@ -134,7 +134,7 @@ export default function ModalXML({ nota, onClose, onSalvo }) {
                   onChange={e => { setXmlManual(e.target.value); setErro(""); }}
                   rows={10}
                   className="w-full bg-gray-950 border border-gray-700 text-green-400 font-mono rounded-lg p-3 text-xs focus:outline-none focus:border-green-500 resize-none"
-                  placeholder={'<?xml version="1.0" encoding="UTF-8"?>\n<nfeProc>...</nfeProc>'}
+                  placeholder={''}
                 />
               </div>
 
