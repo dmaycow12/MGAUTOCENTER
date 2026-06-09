@@ -10,6 +10,7 @@ import ModalSintegra from "@/components/notas/ModalSintegra";
 import ModalXML from "@/components/notas/ModalXML";
 import ModalPreVisualizacao from "@/components/notas/ModalPreVisualizacao";
 import SearchableSelect from "@/components/notas/SearchableSelect";
+import { gerarDadosAdicionaisDaVenda } from "@/components/notas/gerarDadosAdicionais";
 
 import JSZip from "jszip";
 
@@ -273,13 +274,7 @@ export default function NotasFiscais() {
         const isConsumidor = !dadosCliente.cliente_cpf_cnpj?.trim() || (dadosCliente.cliente_nome || "").toUpperCase() === "CONSUMIDOR";
         const tipoFinal = isConsumidor ? "NFCe" : tipo;
 
-        // Monta dados adicionais automáticos com info da venda
-        const partesAdicionais = [];
-        if (venda?.numero) partesAdicionais.push(`Venda nº ${venda.numero}`);
-        if (venda?.veiculo_modelo) partesAdicionais.push(`Veículo: ${venda.veiculo_modelo}`);
-        if (venda?.veiculo_placa) partesAdicionais.push(`Placa: ${venda.veiculo_placa}`);
-        if (venda?.quilometragem) partesAdicionais.push(`KM: ${venda.quilometragem}`);
-        const dados_adicionais = partesAdicionais.join(' | ');
+        const dados_adicionais = gerarDadosAdicionaisDaVenda(venda);
 
         setForm({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, valor_total, items, dados_adicionais });
         setAbaForm("cliente");
