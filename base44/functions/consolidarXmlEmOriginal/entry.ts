@@ -17,25 +17,60 @@ Deno.serve(async (req) => {
 
     for (const nota of notas) {
       try {
-        // Só processa notas sem xml_original E com xml_url (vazio OU inválido)
         const xmlOriginalVazio = !nota.xml_original || nota.xml_original.trim().length === 0;
+        const isInvalidXml = nota.xml_original && (
+          nota.xml_original.startsWith('{') || 
+          nota.xml_original.startsWith('[') ||
+          (!nota.xml_original.startsWith('<?') && !nota.xml_original.startsWith('<')) ||
+          nota.xml_original === 'XML_IN_URL'
+        );
         
-        if (xmlOriginalVazio && nota.xml_url) {
+        // Se tem xml_url E (xml_original vazio OU inválido)
+        if (nota.xml_url && (xmlOriginalVazio || isInvalidXml)) {
+          // Tenta buscar XML
+          let xmlContent;
           try {
             const resp = await fetch(nota.xml_url);
             if (resp.ok) {
-              const xmlContent = await resp.text();
-              if (xmlContent && xmlContent.trim().startsWith('<') && xmlContent.length < 500000) {
-                // Só atualiza se XML é menor que 500KB (limite SEFAZ)
+              xmlContent = await resp.text();
+            }
+          } catch (e) {
+            // Continua mesmo se fetch falhar
+          }
+
+          // Se conseguiu buscar XML válido
+          if (xmlContent && xmlContent.trim().startsWith('<')) {
+            // Se for pequeno (< 500KB), salva direto
+            if (xmlContent.length < 500000) {
+              try {
                 await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
                   xml_original: xmlContent,
                   xml_url: null
                 });
                 atualizadas++;
+              } catch (updateErr) {
+                // Se der erro ao salvar, marca como em URL
+                await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
+                  xml_original: 'XML_IN_URL',
+                  xml_url: nota.xml_url
+                });
+                atualizadas++;
               }
+            } else {
+              // Se for grande, marca como em URL (não tenta salvar)
+              await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
+                xml_original: 'XML_IN_URL',
+                xml_url: nota.xml_url
+              });
+              atualizadas++;
             }
-          } catch (e) {
-            // Ignorar erro de fetch
+          } else if (!xmlContent && (isInvalidXml || xmlOriginalVazio)) {
+            // Se não conseguiu buscar mas tem xml_url, marca como "em xml_url"
+            await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
+              xml_original: 'XML_IN_URL',
+              xml_url: nota.xml_url
+            });
+            atualizadas++;
           }
         }
       } catch (e) {
