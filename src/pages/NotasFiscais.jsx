@@ -1956,13 +1956,14 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlSalvo(nota) {
-  // Verifica se tem xml_original OU xml_url no BD
-  // xml_content é apenas JSON dos items, não é XML real
-  // Verde se tem arquivo XML armazenado
+  // Verifica se tem xml_original (inline e válido) no BD
+  // xml_url não é confiável — pode apontar pra URL que não retorna XML válido
+  // Verde se tem arquivo XML armazenado inline
   // Vermelho se não tem
   
-  if (nota.xml_original && typeof nota.xml_original === 'string' && nota.xml_original.trim().length > 0) return true;
-  if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.trim().length > 0) return true;
+  if (nota.xml_original && typeof nota.xml_original === 'string' && nota.xml_original.trim().length > 0 && nota.xml_original.trim().startsWith('<')) {
+    return true;
+  }
   return false;
 }
 
