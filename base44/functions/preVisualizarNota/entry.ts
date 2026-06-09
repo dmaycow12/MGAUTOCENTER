@@ -334,22 +334,26 @@ Deno.serve(async (req) => {
     let pdfUrlSalvo = null;
     const pdfResp = await fetch(htmlUrl, { headers: { 'Authorization': AUTH_HOM } });
     if (pdfResp.ok) {
-      const blob = await pdfResp.blob();
       const ct = pdfResp.headers.get('content-type') || '';
       if (ct.includes('pdf')) {
+        // É PDF — salva direto
+        const blob = await pdfResp.blob();
         const pdfFile = new File([blob], `preview_${nota_id}.pdf`, { type: 'application/pdf' });
         const upload = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
         pdfUrlSalvo = upload.file_url;
         console.log('[PREVIEW] PDF salvo diretamente:', pdfUrlSalvo);
       } else if (ct.includes('html') || caminhoHtml.endsWith('.html')) {
-        // É HTML, converte para PDF
-        const htmlContent = await pdfResp.text();
-        const pdfBlob = await converterHtmlParaPdf(htmlContent);
-        if (pdfBlob) {
-          const pdfFile = new File([pdfBlob], `preview_${nota_id}.pdf`, { type: 'application/pdf' });
-          const upload = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
-          pdfUrlSalvo = upload.file_url;
-          console.log('[PREVIEW] PDF convertido de HTML:', pdfUrlSalvo);
+        // É HTML — busca novamente (nova requisição) e converte
+        const htmlResp = await fetch(htmlUrl, { headers: { 'Authorization': AUTH_HOM } });
+        if (htmlResp.ok) {
+          const htmlContent = await htmlResp.text();
+          const pdfBlob = await converterHtmlParaPdf(htmlContent);
+          if (pdfBlob) {
+            const pdfFile = new File([pdfBlob], `preview_${nota_id}.pdf`, { type: 'application/pdf' });
+            const upload = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+            pdfUrlSalvo = upload.file_url;
+            console.log('[PREVIEW] PDF convertido de HTML:', pdfUrlSalvo);
+          }
         }
       }
     }
@@ -361,12 +365,12 @@ Deno.serve(async (req) => {
     // Atualiza nota com PDF de homologação e status Homologada
     await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
       status: 'Homologada',
-      pdf_url: pdfUrlSalvo || pdfUrlHom,
+      pdf_url: pdfUrlSalvo || htmlUrl,
     });
 
     return Response.json({
       sucesso: true,
-      pdf_url: pdfUrlSalvo || pdfUrlHom,
+      pdf_url: pdfUrlSalvo || htmlUrl,
       mensagem: 'Pré-visualização gerada com sucesso! Revise a DANFE e clique em "Autorizar e Emitir" para transmitir para produção.',
     });
 
