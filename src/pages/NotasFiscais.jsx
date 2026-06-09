@@ -604,8 +604,11 @@ export default function NotasFiscais() {
   }, []);
 
   // Atualiza dados adicionais automaticamente quando parcelas ou forma de pagamento mudam
+  // Usa ref para evitar sobrescrever ao carregar o form inicial
+  const formLoadedRef = React.useRef(false);
   React.useEffect(() => {
-    if (!showForm) return;
+    if (!showForm) { formLoadedRef.current = false; return; }
+    if (!formLoadedRef.current) { formLoadedRef.current = true; return; }
     const parcelasStr = gerarInfoParcelas(form.parcelas_detalhes, form.forma_pagamento);
     setForm(f => {
       const dadosAtuais = f.dados_adicionais || '';

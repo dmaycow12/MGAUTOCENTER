@@ -113,9 +113,9 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
         }));
 
         // Dados adicionais com número da venda, veículo, placa, km e pagamento
-        const dadosAdicionaisVenda = gerarDadosAdicionaisDaVenda(venda);
-        const dadosPagamento = gerarInfoParcelas(parcelasDetalhes, formaPagamento);
-        const dadosAdicionais = [dadosAdicionaisVenda, dadosPagamento].filter(Boolean).join(' | ');
+        // gerarDadosAdicionaisDaVenda já inclui as parcelas internamente
+        const vendaComParcelas = { ...venda, parcelas_detalhes: parcelasDetalhes, forma_pagamento: formaPagamento };
+        const dadosAdicionais = gerarDadosAdicionaisDaVenda(vendaComParcelas);
 
         // Passo 1: Criar rascunho
         const rascunho = await base44.entities.NotaFiscal.create({
