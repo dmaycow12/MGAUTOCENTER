@@ -118,13 +118,10 @@ export default function NotasFiscais() {
   const [notaIdParaEntrada, setNotaIdParaEntrada] = useState(null);
   const hoje = new Date();
   const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-  const [filtroMes, setFiltroMes] = useState(() => { try { const s = localStorage.getItem("nf_filtroMes"); return s ? Number(s) : hoje.getMonth() + 1; } catch { return hoje.getMonth() + 1; } });
-  const [filtroAno, setFiltroAno] = useState(() => { try { const s = localStorage.getItem("nf_filtroAno"); return s ? Number(s) : hoje.getFullYear(); } catch { return hoje.getFullYear(); } });
-  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(false);
-  const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
-  const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
-  const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
-  const [customRange, setCustomRange] = useState(null);
+  const [filtroMes, setFiltroMes] = useState(() => { try { const s = localStorage.getItem("notas_filtroMes"); return s ? Number(s) : hoje.getMonth() + 1; } catch { return hoje.getMonth() + 1; } });
+  const [filtroAno, setFiltroAno] = useState(() => { try { const s = localStorage.getItem("notas_filtroAno"); return s ? Number(s) : hoje.getFullYear(); } catch { return hoje.getFullYear(); } });
+  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(() => localStorage.getItem("notas_usandoOutro") === "true");
+  const [customRange, setCustomRange] = useState(() => { try { const s = localStorage.getItem("notas_customRange"); return s ? JSON.parse(s) : null; } catch { return null; } });
   const periodoDropRef = useRef(null);
 
   const pad = n => String(n).padStart(2, "0");
@@ -140,33 +137,7 @@ export default function NotasFiscais() {
         fim: `${filtroAno}-${pad(filtroMes)}-${pad(ultimoDiaDoMes(filtroAno, filtroMes))}` 
       };
 
-  const navegarMes = (direcao) => {
-    setUsandoOutroPeriodo(false);
-    setCustomRange(null);
-    let novoMes = filtroMes + direcao;
-    let novoAno = filtroAno;
-    if (novoMes > 12) { novoMes = 1; novoAno++; }
-    if (novoMes < 1) { novoMes = 12; novoAno--; }
-    setFiltroMes(novoMes);
-    setFiltroAno(novoAno);
-    localStorage.setItem("nf_filtroMes", novoMes);
-    localStorage.setItem("nf_filtroAno", novoAno);
-  };
 
-  const aplicarOutroPeriodo = () => {
-    if (!outroPeriodoInicio || !outroPeriodoFim) return;
-    setCustomRange({ inicio: outroPeriodoInicio, fim: outroPeriodoFim });
-    setUsandoOutroPeriodo(true);
-    setPeriodoDropOpen(false);
-  };
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (periodoDropRef.current && !periodoDropRef.current.contains(e.target)) setPeriodoDropOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
 
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("notas_viewmode") || "table");
   const [showForm, setShowForm] = useState(false);
