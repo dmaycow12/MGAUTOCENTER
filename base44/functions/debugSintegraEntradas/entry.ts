@@ -6,8 +6,15 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { mes, ano } = await req.json();
-    const dataInicio = new Date(`${ano}-${String(mes).padStart(2, '0')}-01`);
+    let body = {};
+    try {
+      const text = await req.text();
+      if (text) body = JSON.parse(text);
+    } catch {}
+    
+    const mes = body.mes || 5;
+    const ano = body.ano || 2026;
+    const dataInicio = new Date(ano, mes - 1, 1);
     const dataFim = new Date(ano, mes, 0);
 
     // Buscar notas de entrada (Importada ou Lançada) no período
