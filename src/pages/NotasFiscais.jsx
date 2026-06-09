@@ -10,6 +10,7 @@ import ModalSintegra from "@/components/notas/ModalSintegra";
 import ModalXML from "@/components/notas/ModalXML";
 import ModalPreVisualizacao from "@/components/notas/ModalPreVisualizacao";
 import SearchableSelect from "@/components/notas/SearchableSelect";
+import SecaoPagamentoNF from "@/components/notas/SecaoPagamentoNF";
 
 import JSZip from "jszip";
 
@@ -30,34 +31,35 @@ function defaultItem() {
 }
 
 function defaultForm() {
-  return {
-    tipo: "NFSe",
-    numero: "",
-    serie: "1",
-    natureza_operacao: "Venda de mercadoria",
-    tipo_documento: "1",
-    data_emissao: new Date().toISOString().split("T")[0],
-    forma_pagamento: "A Combinar",
-    observacoes: "",
-    dados_adicionais: "",
-    cliente_id: "",
-    cliente_im: "",
-    cliente_nome: "",
-    cliente_cpf_cnpj: "",
-    cliente_ie: "",
-    cliente_email: "",
-    cliente_telefone: "",
-    cliente_endereco: "",
-    cliente_numero: "",
-    cliente_bairro: "",
-    cliente_cep: "",
-    cliente_cidade: "",
-    cliente_estado: "",
-    ordem_venda_id: "",
-    items: [defaultItem()],
-    valor_total: 0,
-  };
-}
+   return {
+     tipo: "NFSe",
+     numero: "",
+     serie: "1",
+     natureza_operacao: "Venda de mercadoria",
+     tipo_documento: "1",
+     data_emissao: new Date().toISOString().split("T")[0],
+     forma_pagamento: "A Combinar",
+     parcelas: 1,
+     observacoes: "",
+     dados_adicionais: "",
+     cliente_id: "",
+     cliente_im: "",
+     cliente_nome: "",
+     cliente_cpf_cnpj: "",
+     cliente_ie: "",
+     cliente_email: "",
+     cliente_telefone: "",
+     cliente_endereco: "",
+     cliente_numero: "",
+     cliente_bairro: "",
+     cliente_cep: "",
+     cliente_cidade: "",
+     cliente_estado: "",
+     ordem_venda_id: "",
+     items: [defaultItem()],
+     valor_total: 0,
+   };
+ }
 
 function NoACInput({ value, onChange, placeholder, maxLength, className = "input-dark", type = "text" }) {
   return (
@@ -267,7 +269,47 @@ export default function NotasFiscais() {
         const isConsumidor = !dadosCliente.cliente_cpf_cnpj?.trim() || (dadosCliente.cliente_nome || "").toUpperCase() === "CONSUMIDOR";
         const tipoFinal = isConsumidor ? "NFCe" : tipo;
 
-        setForm({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, valor_total, items });
+        const formPronto = { ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, valor_total, items };
+        setForm(formPronto);
+        
+        // Preencher dados adicionais com forma de pagamento e parcelas da venda
+        if (venda?.forma_pagamento) {
+          setTimeout(() => {
+            const formaVenda = venda.forma_pagamento;
+            const qtdParcelas = venda.parcelas || 1;
+            let dadosAdicionais = `FORMA DE PAGAMENTO: ${formaVenda}\n`;
+            
+            if (qtdParcelas > 1 && venda.parcelas_detalhes?.length > 0) {
+              dadosAdicionais += `PARCELAS: ${qtdParcelas}x\n`;
+              venda.parcelas_detalhes.forEach((p, idx) => {
+                dadosAdicionais += `  Parcela ${idx+1}: R$ ${p.valor?.toFixed(2) || '0.00'} - Vencimento: ${p.vencimento || 'A combinar'}\n`;
+              });
+            } else if (qtdParcelas === 1) {
+              dadosAdicionais += `PARCELAS: à vista\n`;
+              dadosAdicionais += `  Valor: R$ ${valor_total.toFixed(2)}\n`;
+            }
+
+            if (venda_id) {
+              dadosAdicionais += `\nORDEM DE VENDA: #${venda.numero || 'S/N'}\n`;
+            }
+
+            if (venda.veiculo_modelo || venda.veiculo_placa) {
+              dadosAdicionais += `\nVEÍCULO:\n`;
+              if (venda.veiculo_modelo) {
+                dadosAdicionais += `  Modelo: ${venda.veiculo_modelo}\n`;
+              }
+              if (venda.veiculo_placa) {
+                dadosAdicionais += `  Placa: ${venda.veiculo_placa}\n`;
+              }
+              if (venda.quilometragem) {
+                dadosAdicionais += `  KM: ${venda.quilometragem}\n`;
+              }
+            }
+
+            setForm(f => ({ ...f, dados_adicionais: dadosAdicionais.trim(), forma_pagamento: formaVenda, parcelas: qtdParcelas }));
+          }, 100);
+        }
+        
         setAbaForm("cliente");
         setShowForm(true);
       })();
@@ -577,6 +619,51 @@ export default function NotasFiscais() {
   React.useEffect(() => {
     return () => { if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current); };
   }, []);
+
+  const atualizarDadosAdicionais = (formAtual, formaAtualizada) => {
+    let dadosAdicionais = '';
+    const venda = vendas.find(v => v.id === formAtual.ordem_venda_id);
+    
+    // Forma de pagamento e parcelas
+    if (formaAtualizada) {
+      const qtdParcelas = parseInt(formAtual.parcelas) || 1;
+      dadosAdicionais += `FORMA DE PAGAMENTO: ${formaAtualizada}\n`;
+      
+      if (qtdParcelas > 1) {
+        dadosAdicionais += `PARCELAS: ${qtdParcelas}x\n`;
+        const valorParcela = formAtual.valor_total / qtdParcelas;
+        for (let i = 0; i < qtdParcelas; i++) {
+          const vencimento = formAtual[`parcela_${i}_vencimento`] || '';
+          dadosAdicionais += `  Parcela ${i+1}: R$ ${valorParcela.toFixed(2)}${vencimento ? ` - Vencimento: ${vencimento}` : ''}\n`;
+        }
+      } else if (qtdParcelas === 1) {
+        dadosAdicionais += `PARCELAS: à vista\n`;
+        dadosAdicionais += `  Valor: R$ ${formAtual.valor_total.toFixed(2)}\n`;
+      }
+    }
+
+    // Número da ordem de venda
+    if (formAtual.ordem_venda_id && venda) {
+      dadosAdicionais += `\nORDEM DE VENDA: #${venda.numero || 'S/N'}\n`;
+    }
+
+    // Dados do veículo
+    if (venda?.veiculo_modelo || venda?.veiculo_placa) {
+      dadosAdicionais += `\nVEÍCULO:\n`;
+      if (venda.veiculo_modelo) {
+        dadosAdicionais += `  Modelo: ${venda.veiculo_modelo}\n`;
+      }
+      if (venda.veiculo_placa) {
+        dadosAdicionais += `  Placa: ${venda.veiculo_placa}\n`;
+      }
+      if (venda.quilometragem) {
+        dadosAdicionais += `  KM: ${venda.quilometragem}\n`;
+      }
+    }
+
+    setForm(f => ({ ...f, dados_adicionais: dadosAdicionais.trim() }));
+  };
+
 
   const validarForm = (f) => {
     const erros = {};
@@ -1693,18 +1780,13 @@ export default function NotasFiscais() {
               {/* ABA PAGAMENTO */}
               {abaForm === "pagamento" && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <F label="Forma de Pagamento">
-                      <select value={form.forma_pagamento} onChange={e => setForm(f => ({ ...f, forma_pagamento: e.target.value }))} className="input-dark">
-                        {FORMAS_PAGAMENTO.map(fp => <option key={fp} value={fp}>{fp}</option>)}
-                      </select>
-                    </F>
-                  </div>
-
-                  <F label="Dados Adicionais">
-                    <textarea value={form.dados_adicionais || ''} onChange={e => setForm(f => ({ ...f, dados_adicionais: e.target.value }))}
-                      className="input-dark" rows={3} placeholder="" autoComplete="off" />
-                  </F>
+                  <SecaoPagamentoNF 
+                    form={form} 
+                    setForm={setForm} 
+                    vendas={vendas}
+                    FORMAS_PAGAMENTO={FORMAS_PAGAMENTO}
+                    atualizarDadosAdicionais={atualizarDadosAdicionais}
+                  />
 
                   <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 space-y-3">
                     <h3 className="text-white font-medium text-sm">Resumo da Nota</h3>
