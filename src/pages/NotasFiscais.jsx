@@ -1956,15 +1956,10 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlSalvo(nota) {
-  // Versão simples: só verifica se tem algo salvo no BD
-  // Verde se tem algo (url, original ou content)
-  // Vermelho se não tem nada
-  
-  if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.trim().length > 0) return true;
-  if (nota.xml_original && typeof nota.xml_original === 'string' && nota.xml_original.trim().length > 0) return true;
-  if (nota.xml_content && typeof nota.xml_content === 'string' && nota.xml_content.trim().length > 0) return true;
-  
-  return false;
+  // Verifica APENAS se xml_original está salvo no banco de dados
+  // Verde = tem xml_original salvo
+  // Vermelho = xml_original NÃO está salvo
+  return !!(nota.xml_original && typeof nota.xml_original === 'string' && nota.xml_original.trim().length > 0);
 }
 
 function BotoesPagamento({ onVoltar, salvarRascunho, emitindo, temSpedy, onPreVisualizar }) {
