@@ -120,8 +120,8 @@ Deno.serve(async (req) => {
       }
 
       chave = (dadosNFCe.chave_nfe || nota.chave_acesso || '').replace(/\D/g, '');
-      const caminhoPdf = dadosNFCe.caminho_pdf_nfce || '';
-      const caminhoHtml = dadosNFCe.caminho_danfe || '';
+      const caminhoPdf = dadosNFCe.caminho_danfe_nfce || dadosNFCe.caminho_pdf_nfce || '';
+      const caminhoHtml = dadosNFCe.caminho_danfe_nfce || dadosNFCe.caminho_danfe || '';
       console.log(`[danfeNfce] Dados da NFCe: caminhoPdf=${caminhoPdf}, caminhoHtml=${caminhoHtml}`);
 
       if (caminhoPdf) {
