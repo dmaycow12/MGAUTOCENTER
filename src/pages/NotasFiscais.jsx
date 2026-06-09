@@ -1928,34 +1928,22 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verde APENAS se tem XML real completo com >2000 chars E fechamento real
+  // Verde se XML não está vazio, Vermelho se vazio
   
-  // Valida XML: >2000 chars + tem tags de fechamento (</...>) não placeholder
-  const isXmlReal = (xml) => {
-    if (!xml || typeof xml !== 'string') return false;
-    const trimmed = xml.trim();
-    // Rejeita tudo com ... (placeholder)
-    if (trimmed.includes('...')) return false;
-    // Precisa ter >2000 chars (XML real é grande)
-    if (trimmed.length < 2000) return false;
-    // Precisa ter tags de fechamento reais (</tag>)
-    if (!trimmed.includes('</')) return false;
+  // Se tem xml_url com URL válida
+  if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.trim().length > 0) {
     return true;
-  };
-  
-  // Verifica xml_url (arquivo)
-  if (nota.xml_url && typeof nota.xml_url === 'string') {
-    const url = nota.xml_url.trim();
-    if (url.startsWith('http') && url.length > 100) {
-      return true;
-    }
   }
   
-  // Verifica xml_original
-  if (isXmlReal(nota.xml_original)) return true;
+  // Se xml_original tem conteúdo
+  if (nota.xml_original && typeof nota.xml_original === 'string' && nota.xml_original.trim().length > 0) {
+    return true;
+  }
   
-  // Verifica xml_content
-  if (isXmlReal(nota.xml_content)) return true;
+  // Se xml_content tem conteúdo
+  if (nota.xml_content && typeof nota.xml_content === 'string' && nota.xml_content.trim().length > 0) {
+    return true;
+  }
   
   return false;
 }
