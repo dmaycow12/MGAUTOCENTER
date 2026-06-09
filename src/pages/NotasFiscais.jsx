@@ -843,6 +843,19 @@ export default function NotasFiscais() {
         }
       } catch {}
     }
+    const fpNota = nota.forma_pagamento || 'A Combinar';
+    const qtdParcelas = nota.parcelas || 1;
+    const parcelasExistentes = nota.parcelas_detalhes?.length > 0
+      ? nota.parcelas_detalhes
+      : gerarParcelas(qtdParcelas, fpNota, nota.valor_total || 0, nota.data_emissao);
+
+    // Regenera dados adicionais se estiverem incompletos (sem info de parcelas)
+    let dadosAdicionais = nota.dados_adicionais || '';
+    if (dadosAdicionais && !dadosAdicionais.includes('Parc.') && parcelasExistentes.length > 0) {
+      const parcelasStr = gerarInfoParcelas(parcelasExistentes, fpNota);
+      if (parcelasStr) dadosAdicionais = [dadosAdicionais, parcelasStr].join(' | ');
+    }
+
     setForm({
       ...defaultForm(),
       tipo: nota.tipo || 'NFSe',
@@ -864,10 +877,10 @@ export default function NotasFiscais() {
       ordem_venda_id: nota.ordem_venda_id || '',
       valor_total: nota.valor_total || 0,
       observacoes: nota.observacoes || '',
-      forma_pagamento: nota.forma_pagamento || 'A Combinar',
-      parcelas: nota.parcelas || 1,
-      parcelas_detalhes: nota.parcelas_detalhes || [],
-      dados_adicionais: nota.dados_adicionais || '',
+      forma_pagamento: fpNota,
+      parcelas: qtdParcelas,
+      parcelas_detalhes: parcelasExistentes,
+      dados_adicionais: dadosAdicionais,
       items: itensSalvos,
       _editId: nota.id,
     });
