@@ -112,7 +112,6 @@ export default function NotasFiscais() {
 
   const pad = n => String(n).padStart(2, "0");
   
-  // Calcula o último dia do mês corretamente
   const ultimoDiaDoMes = (ano, mes) => {
     return new Date(ano, mes, 0).getDate();
   };
@@ -174,8 +173,8 @@ export default function NotasFiscais() {
   const [abaForm, setAbaForm] = useState("cliente");
   const [errosForm, setErrosForm] = useState({});
   const [configsNF, setConfigsNF] = useState([]);
-  const [avisoExclusao, setAvisoExclusao] = useState(null); // nota que tentou excluir mas não pode
-  const [xmlModal, setXmlModal] = useState(null); // nota para visualizar XML
+  const [avisoExclusao, setAvisoExclusao] = useState(null);
+  const [xmlModal, setXmlModal] = useState(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -187,7 +186,6 @@ export default function NotasFiscais() {
         const cliente_nome_param = params.get("cliente_nome") || "";
         window.history.replaceState({}, "", window.location.pathname);
 
-        // Carrega dados em paralelo
         const [{ clientes: clientesList, estoque: estoqueData }, vendaData] = await Promise.all([
           load(),
           venda_id ? base44.entities.Vendas.filter({ id: venda_id }, "-created_date", 1) : Promise.resolve([]),
@@ -231,11 +229,13 @@ export default function NotasFiscais() {
           valor_total = items.reduce((sum, it) => sum + it.valor_total, 0);
         }
 
-        // Busca cliente pelo ID — prioriza venda.cliente_id, depois URL param
         const clienteIdFinal = venda?.cliente_id || cliente_id_param;
         const clienteNomeBusca = venda?.cliente_nome || cliente_nome_param || "";
         const c = clientesList?.find(cl => cl.id === clienteIdFinal)
           || (clienteNomeBusca ? clientesList?.find(cl => cl.nome?.toLowerCase() === clienteNomeBusca.toLowerCase()) : null);
+
+        // Determina forma_pagamento: prioriza a primeira parcela da venda, depois o campo geral
+        const formaPagamentoVenda = venda?.parcelas_detalhes?.[0]?.forma_pagamento || venda?.forma_pagamento || "A Combinar";
 
         const dadosCliente = c ? {
           cliente_id: c.id,
@@ -252,7 +252,7 @@ export default function NotasFiscais() {
           cliente_cep: c.cep || "",
           cliente_cidade: c.cidade || venda?.cliente_cidade || "",
           cliente_estado: c.estado || venda?.cliente_estado || "",
-          forma_pagamento: venda?.parcelas_detalhes?.[0]?.forma_pagamento || venda?.forma_pagamento || "A Combinar",
+          forma_pagamento: formaPagamentoVenda,
           parcelas: venda?.parcelas || 1,
           parcelas_detalhes: venda?.parcelas_detalhes || [],
         } : {
@@ -265,12 +265,11 @@ export default function NotasFiscais() {
           cliente_bairro: venda?.cliente_bairro || "",
           cliente_cidade: venda?.cliente_cidade || "",
           cliente_estado: venda?.cliente_estado || "",
-          forma_pagamento: venda?.parcelas_detalhes?.[0]?.forma_pagamento || venda?.forma_pagamento || "A Combinar",
+          forma_pagamento: formaPagamentoVenda,
           parcelas: venda?.parcelas || 1,
           parcelas_detalhes: venda?.parcelas_detalhes || [],
         };
 
-        // Se cliente é CONSUMIDOR (sem CPF/CNPJ), forçar NFCe
         const isConsumidor = !dadosCliente.cliente_cpf_cnpj?.trim() || (dadosCliente.cliente_nome || "").toUpperCase() === "CONSUMIDOR";
         const tipoFinal = isConsumidor ? "NFCe" : tipo;
 
@@ -286,7 +285,6 @@ export default function NotasFiscais() {
   }, []);
 
   const proximoNumero = (notasList, tipo) => {
-    // Usa SOMENTE o contador local salvo na Configuracao — ignora números de outras séries
     const chaveConfig = tipo === 'NFCe' ? 'nfce_ultimo_numero' : tipo === 'NFe' ? 'nfe_ultimo_numero' : 'nfse_ultimo_dps';
     const cfgUltimo = configsNF.find(c => c.chave === chaveConfig);
     const ultimoSalvo = parseInt(cfgUltimo?.valor || '0', 10);
@@ -294,8 +292,7 @@ export default function NotasFiscais() {
   };
 
   const proximaSerie = (notasList, tipo) => {
-    if (tipo === 'NFSe') return '900'; // Série padrão para NFSe Nacional
-    // Usa a configuração salva; se não houver, usa "1" como padrão
+    if (tipo === 'NFSe') return '900';
     const chaveConfig = tipo === 'NFe' ? 'nfe_serie' : 'nfce_serie';
     const cfgSerie = configsNF.find(c => c.chave === chaveConfig);
     return cfgSerie?.valor || '1';
@@ -328,7 +325,6 @@ export default function NotasFiscais() {
     const matchTipo = filtroTipo.length === 0 || (filtroTipo.includes("Saída") && !isEntrada) || (filtroTipo.includes("Entrada") && isEntrada);
     const matchModelo = filtroModeloNF.length === 0 || filtroModeloNF.includes(n.tipo);
     if (!matchTipo || !matchModelo) return false;
-    // Se tem data_emissao, valida contra o período; se não tem, ignora o filtro de período
     if (n.data_emissao && (n.data_emissao < periodoRange.inicio || n.data_emissao > periodoRange.fim)) return false;
     if (search) {
       const s = search.toLowerCase();
@@ -363,9 +359,7 @@ export default function NotasFiscais() {
       if (res.data?.codigo) {
         setForm(f => ({ ...f, codigo_municipio_tomador: res.data.codigo }));
       }
-    } catch (e) {
-      // Silenciar erros de busca
-    }
+    } catch (e) {}
   };
 
   const selecionarCliente = (clienteId) => {
@@ -388,7 +382,6 @@ export default function NotasFiscais() {
       cliente_cidade: c.cidade || "",
       cliente_estado: c.estado || "",
     }));
-    // Buscar código de município após selecionar cliente
     if (c.cidade && c.estado) {
       preencherCodigoMunicipio(c.cidade, c.estado);
     }
@@ -471,34 +464,21 @@ export default function NotasFiscais() {
     if (!confirm(`Cancelar o lançamento da NF ${nota.numero || ""}? Isso voltará o status para "Importada" para que possa ser relançada.`)) return;
     try {
       const obsNF = `NF ${nota.numero}`;
-
-      // Reverter estoque: busca TODOS os itens que têm histórico de entrada desta NF
       const estoqueAtual = await base44.entities.Estoque.list("-created_date", 1000);
       let revertidos = 0;
       for (const prod of estoqueAtual) {
         const historico = Array.isArray(prod.historico) ? prod.historico : [];
         const entradasNF = historico.filter(h => h.tipo === "entrada" && h.observacao === obsNF);
         if (entradasNF.length === 0) continue;
-
-        // Soma total do que entrou por esta NF
         const qtdEntrou = entradasNF.reduce((acc, h) => acc + Number(h.quantidade || 0), 0);
         const novaQtd = Math.max(0, (prod.quantidade || 0) - qtdEntrou);
-        // Remove as entradas desta NF do histórico
         const historicoLimpo = historico.filter(h => !(h.tipo === "entrada" && h.observacao === obsNF));
-
-        await base44.entities.Estoque.update(prod.id, {
-          quantidade: novaQtd,
-          historico: historicoLimpo,
-        });
+        await base44.entities.Estoque.update(prod.id, { quantidade: novaQtd, historico: historicoLimpo });
         revertidos++;
       }
-
-      // Remover lançamentos financeiros vinculados
       const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
       const vinculados = financeiros.filter(f => f.descricao?.includes(obsNF));
       for (const f of vinculados) await base44.entities.Financeiro.delete(f.id);
-
-      // Voltar status para Importada
       await base44.entities.NotaFiscal.update(nota.id, { status: "Importada" });
       feedback("sucesso", `Lançamento cancelado. ${revertidos} produto(s) revertido(s) no estoque. Nota voltou para Importada.`);
       load();
@@ -519,7 +499,6 @@ export default function NotasFiscais() {
       const vinculados = financeiros.filter(f => f.descricao?.includes(`NF ${nota.numero}`));
       for (const f of vinculados) await base44.entities.Financeiro.delete(f.id);
     }
-    // Devolver estoque se nota emitida com produtos
     if (nota?.status === 'Emitida' && (nota?.tipo === 'NFe' || nota?.tipo === 'NFCe') && nota?.xml_content) {
       try {
         const items = JSON.parse(nota.xml_content);
@@ -553,7 +532,6 @@ export default function NotasFiscais() {
     setXmlTexto(""); setShowImport(false); setImportando(false); setShowEntrada(true);
   };
 
-  // Gera parcelas automaticamente com base em quantidade, forma e total
   const gerarParcelas = (qtd, formaPgto, total, dataBase) => {
     const valorParcela = total / (qtd || 1);
     const hoje = dataBase || new Date().toISOString().split('T')[0];
@@ -577,7 +555,6 @@ export default function NotasFiscais() {
     setTimeout(() => setMsgFeedback(null), 6000);
   };
 
-  // Inicia polling automático para nota em processamento
   const iniciarPolling = (notaId, ref) => {
     if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
     setPollingNotaId(notaId);
@@ -601,7 +578,6 @@ export default function NotasFiscais() {
     }, 5000);
   };
 
-  // Limpa polling ao desmontar
   React.useEffect(() => {
     return () => { if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current); };
   }, []);
@@ -611,7 +587,6 @@ export default function NotasFiscais() {
     if (!showForm) return;
     const parcelasStr = gerarInfoParcelas(form.parcelas_detalhes, form.forma_pagamento);
     setForm(f => {
-      // Extrai a parte base (antes das parcelas) dos dados adicionais atuais
       const dadosAtuais = f.dados_adicionais || '';
       const idxParc = dadosAtuais.indexOf('Parc. ');
       const base = idxParc > 0 ? dadosAtuais.substring(0, idxParc).replace(/\s*\|\s*$/, '') : dadosAtuais;
@@ -731,7 +706,6 @@ export default function NotasFiscais() {
     }
 
     try {
-      // Buscar código de município do cliente
       const clienteVinculado = clientes.find(c => c.id === f.cliente_id);
       const codigoMunicipioTomador = f.codigo_municipio_tomador || 
         (clienteVinculado?.codigo_municipio ? clienteVinculado.codigo_municipio : undefined);
@@ -754,7 +728,6 @@ export default function NotasFiscais() {
 
       const statusRetorno = response.data?.status;
       if (response.data?.sucesso && statusRetorno === 'Processando') {
-        // Nota enviada mas ainda processando — polling automático
         const notaIdParaPolling = rascunhoNota?.id || currentEditIdRef.current;
         feedback('sucesso', 'Nota enviada! Aguardando autorização da SEFAZ...');
         currentEditIdRef.current = null;
@@ -801,7 +774,6 @@ export default function NotasFiscais() {
         load();
       }
     } catch (e) {
-      // Tenta extrair mensagem de erro do servidor (response body)
       let msgErro = e.message || 'Erro desconhecido';
       if (e.response?.data?.erro) msgErro = e.response.data.erro;
       else if (e.response?.data?.message) msgErro = e.response.data.message;
@@ -896,16 +868,10 @@ export default function NotasFiscais() {
       const resp = await fetch(url);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const blob = await resp.blob();
-      
-      // Validar que é um PDF válido
       const buffer = await blob.slice(0, 4).arrayBuffer();
       const header = new Uint8Array(buffer);
       const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
-      
-      if (!isPdfValid) {
-        throw new Error('Arquivo não é um PDF válido');
-      }
-      
+      if (!isPdfValid) throw new Error('Arquivo não é um PDF válido');
       const objUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = objUrl;
@@ -930,14 +896,12 @@ export default function NotasFiscais() {
       const res = await base44.functions.invoke('danfeNfce', { nota_id: nota.id });
       const data = res.data;
       if (data?.erro) { feedback('erro', data.erro); return; }
-      // PDF gerado e salvo — abre direto
       if (data?.pdf_url) {
         window.open(data.pdf_url, '_blank');
         setMsgFeedback(null);
         load();
         return;
       }
-      // Fallback: HTML (converte no navegador via print)
       if (data?.html) {
         const blob = new Blob([data.html], { type: 'text/html; charset=utf-8' });
         const blobUrl = URL.createObjectURL(blob);
@@ -952,13 +916,10 @@ export default function NotasFiscais() {
   };
 
   const abrirPdfNota = async (nota) => {
-    // NFCe — usa danfeNfce para buscar/gerar
     if (nota.tipo === 'NFCe') {
       await abrirDanfeNfce(nota);
       return;
     }
-
-    // NFe / NFSe — sempre usa proxyPdfNota (que devolve URL pública permanente)
     feedback('sucesso', 'Buscando PDF...');
     try {
       const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
@@ -970,7 +931,6 @@ export default function NotasFiscais() {
         return;
       }
       if (data?.processando) { feedback('erro', data.mensagem || 'SEFAZ ainda processando.'); return; }
-      // Fallback: se proxyPdfNota falhar mas temos URL salva, tenta abrir direto
       if (nota.pdf_url) {
         window.open(nota.pdf_url, '_blank');
         setMsgFeedback(null);
@@ -985,9 +945,7 @@ export default function NotasFiscais() {
   };
 
   const baixarPdfNota = async (nota) => {
-
     if (nota.tipo === 'NFCe') {
-      // Para NFCe: garante que o PDF foi gerado e baixa direto
       let pdfUrl = nota.pdf_url && !nota.pdf_url.endsWith('.html') ? nota.pdf_url : null;
       if (!pdfUrl) {
         feedback('sucesso', 'Gerando PDF da NFCe...');
@@ -1009,16 +967,12 @@ export default function NotasFiscais() {
         const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
         const data = res.data;
         if (data?.pdf_url) { pdfUrl = data.pdf_url; load(); }
-        else {
-          feedback('erro', data?.erro || 'PDF não disponível.');
-          return;
-        }
+        else { feedback('erro', data?.erro || 'PDF não disponível.'); return; }
       } catch (e) { feedback('erro', e.message); return; }
     }
     await downloadPdf(pdfUrl, nomeArquivoPdf(nota));
     setMsgFeedback(null);
   };
-
 
   const gerarExcelNotas = (notasList) => {
     const cabecalho = ["Tipo","Número","Série","Status","Cliente","CPF/CNPJ","Data Emissão","Valor Total","Chave Acesso","Observações"];
@@ -1036,7 +990,7 @@ export default function NotasFiscais() {
     ]);
     const toCSV = (rows) => rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(";")).join("\n");
     const csvContent = toCSV([cabecalho, ...linhas]);
-    return "\uFEFF" + csvContent; // BOM para Excel reconhecer UTF-8
+    return "\uFEFF" + csvContent;
   };
 
   const exportarZip = async () => {
@@ -1046,8 +1000,6 @@ export default function NotasFiscais() {
     feedback("sucesso", `Preparando ZIP com ${todasNotas.length} nota(s)...`);
     try {
       const zip = new JSZip();
-
-      // Helper para obter XML de uma nota
       const getXml = async (nota) => {
         if (nota.xml_original?.trim().startsWith("<")) return nota.xml_original;
         if (nota.xml_content?.trim().startsWith("<")) return nota.xml_content;
@@ -1056,10 +1008,7 @@ export default function NotasFiscais() {
         }
         return null;
       };
-
       const isEntrada = (n) => n.observacoes !== "DEVOLUÇÃO" && (n.status === "Importada" || n.status === "Lançada");
-
-      // Estrutura de pastas
       const pastas = {
         "Notas de Entrada/NFe":   todasNotas.filter(n => isEntrada(n) && n.tipo === "NFe"),
         "Notas de Entrada/NFSe":  todasNotas.filter(n => isEntrada(n) && n.tipo === "NFSe"),
@@ -1067,7 +1016,6 @@ export default function NotasFiscais() {
         "Notas de Saida/NFSe":    todasNotas.filter(n => !isEntrada(n) && n.tipo === "NFSe"),
         "Notas de Saida/NFCe":    todasNotas.filter(n => !isEntrada(n) && n.tipo === "NFCe"),
       };
-
       for (const [pasta, notasPasta] of Object.entries(pastas)) {
         for (const nota of notasPasta) {
           const base = `${nota.tipo}-${nota.numero || nota.id}`;
@@ -1081,11 +1029,8 @@ export default function NotasFiscais() {
           }
         }
       }
-
-      // Relatório Excel (CSV) com todas as notas
       const csvContent = gerarExcelNotas(todasNotas);
       zip.file(`Relatorio_Notas_${periodoRange.inicio}_${periodoRange.fim}.csv`, csvContent);
-
       const blob = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -1100,7 +1045,6 @@ export default function NotasFiscais() {
     setGerandoZip(false);
   };
 
-
   if (loading) return <Loader />;
 
   return (
@@ -1112,7 +1056,6 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      {/* Linha 1: Emitir Nota + Filtro de Tempo */}
       <div className="flex gap-0.5">
         <button onClick={() => { setForm(f => ({ ...f, numero: '', serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
           <Plus className="w-4 h-4" /> Emitir
@@ -1125,7 +1068,6 @@ export default function NotasFiscais() {
         </div>
       </div>
 
-      {/* Linha 2: Filtros Saída/Entrada/NFe/NFCe/NFSe */}
       <div className="flex gap-0.5">
         <button onClick={() => { const novo = filtroTipo.includes("Saída") ? filtroTipo.filter(x => x !== "Saída") : [...filtroTipo, "Saída"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Saída") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
         <button onClick={() => { const novo = filtroTipo.includes("Entrada") ? filtroTipo.filter(x => x !== "Entrada") : [...filtroTipo, "Entrada"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Entrada") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
@@ -1134,7 +1076,6 @@ export default function NotasFiscais() {
         <button onClick={() => { const novo = filtroModeloNF.includes("NFSe") ? filtroModeloNF.filter(x => x !== "NFSe") : [...filtroModeloNF, "NFSe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
       </div>
 
-      {/* Linha 3: Buscar da SEFAZ + Sintegra + Exportar */}
       <div className="flex gap-0.5">
         <button
           onClick={async () => {
@@ -1142,15 +1083,9 @@ export default function NotasFiscais() {
             try {
               const res = await base44.functions.invoke('consultarNotasRecebidas', {});
               const data = res.data;
-              if (data?.sucesso) {
-                feedback('sucesso', data.mensagem || 'Consulta concluída.');
-                load();
-              } else {
-                feedback('erro', data?.erro || 'Erro ao buscar notas recebidas.');
-              }
-            } catch (e) {
-              feedback('erro', 'Erro: ' + e.message);
-            }
+              if (data?.sucesso) { feedback('sucesso', data.mensagem || 'Consulta concluída.'); load(); }
+              else { feedback('erro', data?.erro || 'Erro ao buscar notas recebidas.'); }
+            } catch (e) { feedback('erro', 'Erro: ' + e.message); }
             setBuscandoSefaz(false);
           }}
           disabled={buscandoSefaz}
@@ -1168,15 +1103,9 @@ export default function NotasFiscais() {
             try {
               const res = await base44.functions.invoke('importarNfseRecebidas', {});
               const data = res.data;
-              if (data?.sucesso) {
-                feedback('sucesso', data.mensagem || 'NFSe importadas com sucesso.');
-                load();
-              } else {
-                feedback('erro', data?.erro || 'Erro ao importar NFSe.');
-              }
-            } catch (e) {
-              feedback('erro', 'Erro: ' + e.message);
-            }
+              if (data?.sucesso) { feedback('sucesso', data.mensagem || 'NFSe importadas com sucesso.'); load(); }
+              else { feedback('erro', data?.erro || 'Erro ao importar NFSe.'); }
+            } catch (e) { feedback('erro', 'Erro: ' + e.message); }
             setBuscandoSefaz(false);
           }}
           disabled={buscandoSefaz}
@@ -1224,7 +1153,6 @@ export default function NotasFiscais() {
         </button>
       </div>
 
-      {/* Busca + Toggle View */}
       <div className="flex gap-0.5">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -1258,7 +1186,6 @@ export default function NotasFiscais() {
         ))}
       </div>
 
-      {/* Tabela/Cards */}
       {filtradas.length === 0 ? (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
           <FileText className="w-12 h-12 text-gray-600 mx-auto mb-3" />
@@ -1346,7 +1273,6 @@ export default function NotasFiscais() {
                         )}
                         {(nota.status === "Importada") && (
                           <button title="Lançar Entrada" onClick={async () => {
-                            // XML válido: xml_original tem prioridade, depois xml_content se for XML
                             const xmlOriginal = nota.xml_original?.trim() || "";
                             const xmlContent = nota.xml_content?.trim() || "";
                             const xmlDisponivel = xmlOriginal.startsWith("<") ? xmlOriginal : (xmlContent.startsWith("<") ? xmlContent : "");
@@ -1359,7 +1285,6 @@ export default function NotasFiscais() {
                               setXmlParaEntrada(xmlDisponivel);
                               setShowEntrada(true);
                             } else if (nota.xml_url) {
-                              // XML salvo como arquivo — buscar e abrir
                               feedback('sucesso', 'Carregando XML...');
                               try {
                                 const r = await fetch(nota.xml_url);
@@ -1368,9 +1293,7 @@ export default function NotasFiscais() {
                                 setNotaIdParaEntrada(nota.id);
                                 setXmlParaEntrada(xmlText);
                                 setShowEntrada(true);
-                              } catch (e) {
-                                feedback('erro', 'Erro ao carregar XML: ' + e.message);
-                              }
+                              } catch (e) { feedback('erro', 'Erro ao carregar XML: ' + e.message); }
                             } else if (nota.chave_acesso) {
                               feedback('sucesso', 'Buscando XML na SEFAZ...');
                               try {
@@ -1386,9 +1309,7 @@ export default function NotasFiscais() {
                                 } else {
                                   feedback('erro', 'XML não disponível na SEFAZ ainda. Use "Importar XML" para carregar o arquivo manualmente, ou aguarde a manifestação ser processada.');
                                 }
-                                } catch (e) {
-                                feedback('erro', 'Erro ao buscar XML: ' + e.message);
-                              }
+                              } catch (e) { feedback('erro', 'Erro ao buscar XML: ' + e.message); }
                             } else {
                               feedback('erro', 'Nota sem chave de acesso. Use "Importar XML" para carregar o arquivo manualmente.');
                             }
@@ -1396,26 +1317,16 @@ export default function NotasFiscais() {
                             <LogIn className="w-4 h-4" />
                           </button>
                         )}
-                             {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Importada' && nota.status !== 'Lançada' && nota.status !== 'Cancelada' && (
+                        {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Importada' && nota.status !== 'Lançada' && nota.status !== 'Cancelada' && (
                           <button title="Editar" onClick={() => editarNota(nota)} className="p-1 text-gray-500 hover:text-yellow-400 transition-all">
                             <Pencil className="w-4 h-4" />
                           </button>
                         )}
-
-                        <button
-                            title="Abrir PDF"
-                            onClick={() => abrirPdfNota(nota)}
-                            className="p-1 transition-all"
-                            style={{ color: nota.pdf_url ? "#00ff00" : "#ef4444" }}
-                          >
-                            <FileText className="w-4 h-4" />
-                          </button>
+                        <button title="Abrir PDF" onClick={() => abrirPdfNota(nota)} className="p-1 transition-all" style={{ color: nota.pdf_url ? "#00ff00" : "#ef4444" }}>
+                          <FileText className="w-4 h-4" />
+                        </button>
                         {nota.pdf_url && (
-                          <button
-                            title="Baixar PDF"
-                            onClick={() => baixarPdfNota(nota)}
-                            className="p-1 text-gray-400 hover:text-blue-400 transition-all"
-                          >
+                          <button title="Baixar PDF" onClick={() => baixarPdfNota(nota)} className="p-1 text-gray-400 hover:text-blue-400 transition-all">
                             <Download className="w-4 h-4" />
                           </button>
                         )}
@@ -1443,21 +1354,19 @@ export default function NotasFiscais() {
                             <Ban className="w-4 h-4" />
                           </button>
                         )}
-
                         <button onClick={() => excluir(nota.id)} className="p-1 text-gray-500 hover:text-red-400 transition-all">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
-                    </tr>
-                    ))}
-                    </tbody>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* Modal Importar XML */}
       {showImport && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
           <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl">
@@ -1507,7 +1416,6 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      {/* Modal Emitir NF */}
       {showForm && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
           <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
@@ -1525,15 +1433,13 @@ export default function NotasFiscais() {
                 {(() => {
                   const isConsumidorExplicito = form.cliente_nome?.toUpperCase() === "CONSUMIDOR";
                   if (isConsumidorExplicito) {
-                    return (
-                      <div className="input-dark text-gray-300 cursor-not-allowed opacity-80">NFCe — Consumidor</div>
-                    );
+                    return <div className="input-dark text-gray-300 cursor-not-allowed opacity-80">NFCe — Consumidor</div>;
                   }
                   return (
                     <select value={form.tipo} onChange={e => {
-                        const novoTipo = e.target.value;
-                        let serie = proximaSerie(notas, novoTipo);
-                        setForm(f => ({ ...f, tipo: novoTipo, numero: '', serie }));
+                      const novoTipo = e.target.value;
+                      let serie = proximaSerie(notas, novoTipo);
+                      setForm(f => ({ ...f, tipo: novoTipo, numero: '', serie }));
                     }} className="input-dark">
                       <option value="NFSe">NFSe — Serviço</option>
                       <option value="NFe">NFe — Produto</option>
@@ -1568,76 +1474,69 @@ export default function NotasFiscais() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-5">
-              {/* ABA CLIENTE */}
-               {abaForm === "cliente" && (
-                 <div className="space-y-4">
-                   <F label="Nome / Razão Social *">
-                     <SearchableSelect
-                       placeholder="Digite o nome, fantasia ou CPF/CNPJ..."
-                       options={clientesFiltrados.map(c => ({ value: c.id, label: c.nome, sublabel: [c.nome_fantasia, c.cpf_cnpj].filter(Boolean).join(' • ') }))}
-                       onSelect={opt => selecionarCliente(opt.value)}
-                       initialValue={form.cliente_nome || ''}
-                     />
-                   </F>
-
-                   <F label="Nome Social / Fantasia">
-                     <NoACInput value={form.cliente_nome_fantasia || ''} onChange={e => setForm(f => ({ ...f, cliente_nome_fantasia: e.target.value }))} placeholder="" />
-                   </F>
-
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <F label="CPF / CNPJ">
-                       <NoACInput value={form.cliente_cpf_cnpj} onChange={e => { setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cpf_cnpj: undefined})); }} placeholder="" className={`input-dark ${errosForm.cliente_cpf_cnpj ? 'border-red-500' : ''}`} />
-                       {errosForm.cliente_cpf_cnpj && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cpf_cnpj}</p>}
-                     </F>
-                     <F label="Inscrição Estadual (IE)">
-                       <NoACInput value={form.cliente_ie || ''} onChange={e => setForm(f => ({ ...f, cliente_ie: e.target.value }))} placeholder="" />
-                     </F>
-                     <F label="Inscrição Municipal (IM)">
-                       <NoACInput value={form.cliente_im || ''} onChange={e => setForm(f => ({ ...f, cliente_im: e.target.value }))} placeholder="" />
-                     </F>
-                     <F label="Telefone Contato">
-                       <NoACInput value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} placeholder="" />
-                     </F>
-                     <F label="Endereço" className="col-span-1">
-                       <NoACInput value={form.cliente_endereco} onChange={e => { setForm(f => ({ ...f, cliente_endereco: e.target.value })); setErrosForm(e2 => ({...e2, cliente_endereco: undefined})); }} placeholder="" className={`input-dark ${errosForm.cliente_endereco ? 'border-red-500' : ''}`} />
-                       {errosForm.cliente_endereco && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_endereco}</p>}
-                     </F>
-                     <F label="Número">
-                       <NoACInput value={form.cliente_numero || ''} onChange={e => setForm(f => ({ ...f, cliente_numero: e.target.value }))} placeholder="" />
-                     </F>
-                     <F label="Bairro">
-                       <NoACInput value={form.cliente_bairro} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} placeholder="" />
-                     </F>
-                     <F label="Cidade">
-                      <NoACInput value={form.cliente_cidade} onChange={e => { 
+              {abaForm === "cliente" && (
+                <div className="space-y-4">
+                  <F label="Nome / Razão Social *">
+                    <SearchableSelect
+                      placeholder="Digite o nome, fantasia ou CPF/CNPJ..."
+                      options={clientesFiltrados.map(c => ({ value: c.id, label: c.nome, sublabel: [c.nome_fantasia, c.cpf_cnpj].filter(Boolean).join(' • ') }))}
+                      onSelect={opt => selecionarCliente(opt.value)}
+                      initialValue={form.cliente_nome || ''}
+                    />
+                  </F>
+                  <F label="Nome Social / Fantasia">
+                    <NoACInput value={form.cliente_nome_fantasia || ''} onChange={e => setForm(f => ({ ...f, cliente_nome_fantasia: e.target.value }))} placeholder="" />
+                  </F>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <F label="CPF / CNPJ">
+                      <NoACInput value={form.cliente_cpf_cnpj} onChange={e => { setForm(f => ({ ...f, cliente_cpf_cnpj: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cpf_cnpj: undefined})); }} placeholder="" className={`input-dark ${errosForm.cliente_cpf_cnpj ? 'border-red-500' : ''}`} />
+                      {errosForm.cliente_cpf_cnpj && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cpf_cnpj}</p>}
+                    </F>
+                    <F label="Inscrição Estadual (IE)">
+                      <NoACInput value={form.cliente_ie || ''} onChange={e => setForm(f => ({ ...f, cliente_ie: e.target.value }))} placeholder="" />
+                    </F>
+                    <F label="Inscrição Municipal (IM)">
+                      <NoACInput value={form.cliente_im || ''} onChange={e => setForm(f => ({ ...f, cliente_im: e.target.value }))} placeholder="" />
+                    </F>
+                    <F label="Telefone Contato">
+                      <NoACInput value={form.cliente_telefone} onChange={e => setForm(f => ({ ...f, cliente_telefone: e.target.value }))} placeholder="" />
+                    </F>
+                    <F label="Endereço" className="col-span-1">
+                      <NoACInput value={form.cliente_endereco} onChange={e => { setForm(f => ({ ...f, cliente_endereco: e.target.value })); setErrosForm(e2 => ({...e2, cliente_endereco: undefined})); }} placeholder="" className={`input-dark ${errosForm.cliente_endereco ? 'border-red-500' : ''}`} />
+                      {errosForm.cliente_endereco && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_endereco}</p>}
+                    </F>
+                    <F label="Número">
+                      <NoACInput value={form.cliente_numero || ''} onChange={e => setForm(f => ({ ...f, cliente_numero: e.target.value }))} placeholder="" />
+                    </F>
+                    <F label="Bairro">
+                      <NoACInput value={form.cliente_bairro} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} placeholder="" />
+                    </F>
+                    <F label="Cidade">
+                      <NoACInput value={form.cliente_cidade} onChange={e => {
                         const novaCidade = e.target.value;
                         setForm(f => {
-                          if (novaCidade && f.cliente_estado) {
-                            preencherCodigoMunicipio(novaCidade, f.cliente_estado);
-                          }
+                          if (novaCidade && f.cliente_estado) preencherCodigoMunicipio(novaCidade, f.cliente_estado);
                           return { ...f, cliente_cidade: novaCidade };
-                        }); 
+                        });
                         setErrosForm(e2 => ({...e2, cliente_cidade: undefined}));
                       }} placeholder="" className={`input-dark ${errosForm.cliente_cidade ? 'border-red-500' : ''}`} />
                       {errosForm.cliente_cidade && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cidade}</p>}
-                     </F>
-                     <F label="CEP">
-                       <NoACInput value={form.cliente_cep} onChange={e => { setForm(f => ({ ...f, cliente_cep: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cep: undefined})); }} placeholder="" className={`input-dark ${errosForm.cliente_cep ? 'border-red-500' : ''}`} />
-                       {errosForm.cliente_cep && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cep}</p>}
-                     </F>
-                     <F label="Estado (UF)">
-                       <NoACInput value={form.cliente_estado} onChange={e => { 
-                         const novoEstado = e.target.value.toUpperCase();
-                         setForm(f => ({ ...f, cliente_estado: novoEstado })); 
-                         setErrosForm(e2 => ({...e2, cliente_estado: undefined}));
-                         if (form.cliente_cidade && novoEstado) {
-                           preencherCodigoMunicipio(form.cliente_cidade, novoEstado);
-                         }
-                       }} placeholder="" maxLength={2} className={`input-dark ${errosForm.cliente_estado ? 'border-red-500' : ''}`} />
-                       {errosForm.cliente_estado && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_estado}</p>}
-                     </F>
-                     </div>
-                     <div className="flex justify-end">
+                    </F>
+                    <F label="CEP">
+                      <NoACInput value={form.cliente_cep} onChange={e => { setForm(f => ({ ...f, cliente_cep: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cep: undefined})); }} placeholder="" className={`input-dark ${errosForm.cliente_cep ? 'border-red-500' : ''}`} />
+                      {errosForm.cliente_cep && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cep}</p>}
+                    </F>
+                    <F label="Estado (UF)">
+                      <NoACInput value={form.cliente_estado} onChange={e => {
+                        const novoEstado = e.target.value.toUpperCase();
+                        setForm(f => ({ ...f, cliente_estado: novoEstado }));
+                        setErrosForm(e2 => ({...e2, cliente_estado: undefined}));
+                        if (form.cliente_cidade && novoEstado) preencherCodigoMunicipio(form.cliente_cidade, novoEstado);
+                      }} placeholder="" maxLength={2} className={`input-dark ${errosForm.cliente_estado ? 'border-red-500' : ''}`} />
+                      {errosForm.cliente_estado && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_estado}</p>}
+                    </F>
+                  </div>
+                  <div className="flex justify-end">
                     <button onClick={() => setAbaForm("itens")} className="text-black px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#00ff00"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
                       Próximo: Itens →
                     </button>
@@ -1645,10 +1544,8 @@ export default function NotasFiscais() {
                 </div>
               )}
 
-              {/* ABA ITENS */}
               {abaForm === "itens" && (
                 <div className="space-y-4">
-
                   <div className="space-y-3">
                     {form.items.map((item, idx) => (
                       <div key={idx} className="bg-gray-800 border border-gray-700 rounded-xl p-4">
@@ -1680,7 +1577,7 @@ export default function NotasFiscais() {
                             />
                           </F>
                         ) : (
-                          <div className={`grid gap-3 ${form.tipo === 'NFSe' ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4'}` }>
+                          <div className={`grid gap-3 ${form.tipo === 'NFSe' ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4'}`}>
                             {form.tipo !== 'NFSe' && (
                               <F label="Código">
                                 <div className="input-dark text-gray-400 text-sm">{item.codigo || '—'}</div>
@@ -1737,16 +1634,18 @@ export default function NotasFiscais() {
                   <div className="flex justify-between">
                     <button onClick={() => setAbaForm("cliente")} className="text-gray-400 hover:text-white text-sm px-4 py-2 border border-gray-700 rounded-lg transition-all">← Voltar</button>
                     <button onClick={() => {
-                     const qtd = form.parcelas || 1;
-                     const parcelas = gerarParcelas(qtd, form.forma_pagamento, form.valor_total, form.data_emissao);
-                     setForm(f => ({ ...f, parcelas_detalhes: parcelas }));
-                     setAbaForm("pagamento");
-                    }} className="text-black px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#00ff00"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>Próximo: Pagamento →</button>
+                      // Só gera parcelas se ainda não existem (preserva as da venda original)
+                      if (!form.parcelas_detalhes || form.parcelas_detalhes.length === 0) {
+                        const qtd = form.parcelas || 1;
+                        const parcelas = gerarParcelas(qtd, form.forma_pagamento, form.valor_total, form.data_emissao);
+                        setForm(f => ({ ...f, parcelas_detalhes: parcelas }));
+                      }
+                      setAbaForm("pagamento");
+                    }} className="text-black px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#00ff00"}} onMouseEnter={e => { e.currentTarget.style.background = "#00dd00"; }} onMouseLeave={e => { e.currentTarget.style.background = "#00ff00"; }}>Próximo: Pagamento →</button>
                   </div>
                 </div>
               )}
 
-              {/* ABA PAGAMENTO */}
               {abaForm === "pagamento" && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -1771,58 +1670,40 @@ export default function NotasFiscais() {
                     </F>
                   </div>
 
-                  {/* Tabela de parcelas editável */}
                   {(form.parcelas_detalhes?.length > 0) && (
                     <div className="border border-gray-700 rounded-xl overflow-hidden">
-                      {/* Cabeçalho */}
                       <div className="grid grid-cols-3 bg-gray-800 border-b border-gray-700">
                         <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Vencimento</div>
                         <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Valor (R$)</div>
                         <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Forma Pgto</div>
                       </div>
-                      {/* Linhas */}
                       {form.parcelas_detalhes.map((p, i) => (
                         <div key={i} className="grid grid-cols-3 border-b border-gray-700 last:border-b-0" style={{background: i % 2 === 0 ? '#111827' : '#0f172a'}}>
                           <div className="px-3 py-2">
-                            <input
-                              type="date"
-                              value={p.vencimento || ''}
-                              onChange={e => {
-                                const nova = [...form.parcelas_detalhes];
-                                nova[i] = { ...nova[i], vencimento: e.target.value };
-                                setForm(f => ({ ...f, parcelas_detalhes: nova }));
-                              }}
-                              className="input-dark"
-                            />
+                            <input type="date" value={p.vencimento || ''} onChange={e => {
+                              const nova = [...form.parcelas_detalhes];
+                              nova[i] = { ...nova[i], vencimento: e.target.value };
+                              setForm(f => ({ ...f, parcelas_detalhes: nova }));
+                            }} className="input-dark" />
                           </div>
                           <div className="px-3 py-2">
-                            <input
-                              type="text"
-                              value={p.valor || ''}
-                              onChange={e => {
-                                const nova = [...form.parcelas_detalhes];
-                                nova[i] = { ...nova[i], valor: parseFloat(e.target.value.replace(',','.')) || 0 };
-                                setForm(f => ({ ...f, parcelas_detalhes: nova }));
-                              }}
-                              className="input-dark"
-                            />
+                            <input type="text" value={p.valor || ''} onChange={e => {
+                              const nova = [...form.parcelas_detalhes];
+                              nova[i] = { ...nova[i], valor: parseFloat(e.target.value.replace(',','.')) || 0 };
+                              setForm(f => ({ ...f, parcelas_detalhes: nova }));
+                            }} className="input-dark" />
                           </div>
                           <div className="px-3 py-2">
-                            <select
-                              value={p.forma_pagamento || form.forma_pagamento}
-                              onChange={e => {
-                                const nova = [...form.parcelas_detalhes];
-                                nova[i] = { ...nova[i], forma_pagamento: e.target.value };
-                                setForm(f => ({ ...f, parcelas_detalhes: nova }));
-                              }}
-                              className="input-dark"
-                            >
+                            <select value={p.forma_pagamento || form.forma_pagamento} onChange={e => {
+                              const nova = [...form.parcelas_detalhes];
+                              nova[i] = { ...nova[i], forma_pagamento: e.target.value };
+                              setForm(f => ({ ...f, parcelas_detalhes: nova }));
+                            }} className="input-dark">
                               {FORMAS_PAGAMENTO.map(fp => <option key={fp} value={fp}>{fp}</option>)}
                             </select>
                           </div>
                         </div>
                       ))}
-                      {/* Total */}
                       <div className="grid grid-cols-3 bg-gray-800 border-t border-gray-700">
                         <div className="px-4 py-2 text-xs text-gray-500 uppercase">Total parcelado</div>
                         <div className="px-4 py-2 text-sm font-bold" style={{color: Math.abs(form.parcelas_detalhes.reduce((s,p)=>s+Number(p.valor||0),0) - form.valor_total) < 0.02 ? "#00ff00" : "#f59e0b"}}>
@@ -1881,9 +1762,6 @@ export default function NotasFiscais() {
         </div>
       )}
 
-
-
-      {/* Overlay aguardando emissão / polling */}
       {(aguardandoEmissao || pollingNotaId) && (
         <div className="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center gap-6">
           <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
@@ -1895,8 +1773,6 @@ export default function NotasFiscais() {
         </div>
       )}
 
-
-
       {showSintegra && (
         <ModalSintegra
           notas={notas}
@@ -1906,7 +1782,6 @@ export default function NotasFiscais() {
         />
       )}
 
-      {/* Modal aviso não pode excluir */}
       {avisoExclusao && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
           <div className="bg-gray-900 border border-red-500/30 rounded-2xl w-full max-w-md p-6 space-y-4">
@@ -1938,8 +1813,6 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      {/* debugModal removido — usar painel de desenvolvedor */}
-
       {showEntrada && xmlParaEntrada && (
         <ModalEntradaNF
           xmlTexto={xmlParaEntrada}
@@ -1955,7 +1828,6 @@ export default function NotasFiscais() {
         />
       )}
 
-      {/* Modal XML */}
       {xmlModal && (
         <ModalXML
           nota={xmlModal}
