@@ -63,9 +63,6 @@ const salvarPdfPermanente = async (base44, pdfUrl, label, authHeader) => {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    let user;
-    try { user = await base44.auth.me(); } catch (_) {}
-    if (!user) return Response.json({ sucesso: false, erro: 'Usuário não autenticado. Faça login novamente.' }, { status: 401 });
 
     const body = await req.json();
     const { nota_id } = body;
