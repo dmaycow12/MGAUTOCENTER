@@ -68,14 +68,29 @@ Deno.serve(async (req) => {
     }
 
     // Se já tem PDF salvo permanente e válido (não HTML, não o arquivo genérico nota_nova.pdf), retorna direto
-    const pdfJaSalvo = nota.pdf_url &&
+    // Verifica se já tem PDF salvo E se ele é realmente um PDF válido (magic bytes %PDF)
+    if (nota.pdf_url &&
       !nota.pdf_url.endsWith('.html') &&
       !nota.pdf_url.includes('/notas_fiscais_consumidor/') &&
       !nota.pdf_url.includes('nota_nova.pdf') &&
       !nota.pdf_url.includes('focusnfe') &&
-      !nota.pdf_url.includes('amazonaws');
-    if (pdfJaSalvo) {
-      return Response.json({ sucesso: true, pdf_url: nota.pdf_url });
+      !nota.pdf_url.includes('amazonaws')) {
+      try {
+        const checkResp = await fetch(nota.pdf_url, { method: 'GET' });
+        if (checkResp.ok) {
+          const checkBuffer = await checkResp.arrayBuffer();
+          const checkHeader = new Uint8Array(checkBuffer, 0, 4);
+          const isPdfValido = checkHeader[0] === 0x25 && checkHeader[1] === 0x50 && checkHeader[2] === 0x44 && checkHeader[3] === 0x46;
+          if (isPdfValido) {
+            return Response.json({ sucesso: true, pdf_url: nota.pdf_url });
+          }
+          // Arquivo salvo não é PDF válido — limpa e re-busca
+          console.log(`[danfeNfce] pdf_url salvo não é PDF válido, re-buscando...`);
+          await db.entities.NotaFiscal.update(nota_id, { pdf_url: '' });
+        }
+      } catch (e) {
+        console.log(`[danfeNfce] Erro ao verificar pdf_url: ${e.message}`);
+      }
     }
 
     // Determina a URL do HTML da DANFE
