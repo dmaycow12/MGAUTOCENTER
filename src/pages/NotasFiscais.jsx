@@ -1801,17 +1801,19 @@ export default function NotasFiscais() {
                     emitindo={emitindo}
                     temSpedy={temSpedy}
                     onPreVisualizar={async () => {
-                      if (!temSpedy) { salvarRascunho(); return; }
-                      const erros = validarForm(form);
-                      if (Object.keys(erros).length > 0) { setErrosForm(erros); if (erros.cliente_nome || erros.cliente_cpf_cnpj || erros.cliente_endereco) setAbaForm("cliente"); else setAbaForm("itens"); return; }
-                      setErrosForm({});
-                      setEmitindo(true);
-                      const editId = currentEditIdRef.current || form._editId;
-                      let notaId = editId;
-                      const { _editId, ...dadosForm } = form;
-                      if (!editId) { const novo = await base44.entities.NotaFiscal.create({ ...dadosForm, status: 'Rascunho', xml_content: JSON.stringify(form.items || []) }); notaId = novo.id; currentEditIdRef.current = notaId; }
-                      else { await base44.entities.NotaFiscal.update(editId, { ...dadosForm, status: 'Rascunho', xml_content: JSON.stringify(form.items || []) }); }
-                      setEmitindo(false); setShowForm(false); currentEditIdRef.current = null; setForm(defaultForm());
+                       if (!temSpedy) { salvarRascunho(); return; }
+                       const erros = validarForm(form);
+                       if (Object.keys(erros).length > 0) { setErrosForm(erros); if (erros.cliente_nome || erros.cliente_cpf_cnpj || erros.cliente_endereco) setAbaForm("cliente"); else setAbaForm("itens"); return; }
+                       setErrosForm({});
+                       setEmitindo(true);
+                       const editId = currentEditIdRef.current || form._editId;
+                       let notaId = editId;
+                       const { _editId, ...dadosForm } = form;
+                       // Garante que data_emissao é sempre a correta (não hoje)
+                       dadosForm.data_emissao = dadosForm.data_emissao || new Date().toISOString().split('T')[0];
+                       if (!editId) { const novo = await base44.entities.NotaFiscal.create({ ...dadosForm, status: 'Rascunho', xml_content: JSON.stringify(form.items || []) }); notaId = novo.id; currentEditIdRef.current = notaId; }
+                       else { await base44.entities.NotaFiscal.update(editId, { ...dadosForm, status: 'Rascunho', xml_content: JSON.stringify(form.items || []) }); }
+                       setEmitindo(false); setShowForm(false); currentEditIdRef.current = null; setForm(defaultForm());
                       await load();
                       const notaSalva = await base44.entities.NotaFiscal.filter({ id: notaId }).then(r => r[0]);
                       if (notaSalva) iniciarPreVisualizacao(notaSalva);
