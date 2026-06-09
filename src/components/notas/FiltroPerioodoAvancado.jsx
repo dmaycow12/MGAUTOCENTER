@@ -26,7 +26,9 @@ export default function FiltroPerioodoAvancado({ onFiltroChange }) {
     localStorage.setItem("notas_usandoOutro", "false");
     setCustomRange(null);
     localStorage.removeItem("notas_customRange");
-    onFiltroChange(periodoRange);
+    const ultimoDia = new Date(a, m, 0).getDate();
+    const pad = (n) => String(n).padStart(2, "0");
+    onFiltroChange({ filtroMes: m, filtroAno: a, usandoOutroPeriodo: false, customRange: null, periodoRange: { inicio: `${a}-${pad(m)}-01`, fim: `${a}-${pad(m)}-${pad(ultimoDia)}` } });
   };
 
   const navegarMes = (dir) => {
