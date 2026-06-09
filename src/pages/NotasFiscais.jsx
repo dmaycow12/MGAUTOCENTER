@@ -1930,19 +1930,17 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verifica xml_original
-  if (nota.xml_original?.trim() && !nota.xml_original.includes('<nfeProc>...</nfeProc>')) {
-    return true;
-  }
-  // Verifica xml_content
-  if (nota.xml_content?.trim() && !nota.xml_content.includes('<nfeProc>...</nfeProc>')) {
-    return true;
-  }
-  // Verifica xml_url (se tem URL real)
-  if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.trim().length > 0) {
-    return true;
-  }
-  return false;
+  // Verde APENAS se tem XML real no conteúdo (original ou content)
+  // Descarta xml_url puro e placeholders
+  
+  const xmlOriginal = nota.xml_original?.trim();
+  const xmlContent = nota.xml_content?.trim();
+  
+  // Verifica se tem conteúdo real (não vazio, não placeholder)
+  const temConteudo = (xmlOriginal && xmlOriginal.length > 100 && !xmlOriginal.includes('<nfeProc>...</nfeProc>')) ||
+                      (xmlContent && xmlContent.length > 100 && !xmlContent.includes('<nfeProc>...</nfeProc>'));
+  
+  return temConteudo;
 }
 
 function BotoesPagamento({ onVoltar, salvarRascunho, emitindo, temSpedy, onPreVisualizar }) {
