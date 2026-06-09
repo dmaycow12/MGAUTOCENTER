@@ -415,6 +415,7 @@ function TokenField({ label, value, onChange }) {
 
 function DownloadXmlNfseBtn() {
   const [loading, setLoading] = useState(false);
+  const [diagnostico, setDiagnostico] = useState(null);
 
   const baixar = async () => {
     setLoading(true);
@@ -434,19 +435,65 @@ function DownloadXmlNfseBtn() {
     }
   };
 
+  const verificar = async () => {
+    setLoading(true);
+    try {
+      const res = await base44.functions.invoke('diagnosticoXmlNfse63a74', {});
+      setDiagnostico(res.data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3 border-t border-gray-700 pt-4 mt-4">
-      <p className="text-sm text-gray-400">Baixa os XMLs originais das NFSes 63-74 em um arquivo ZIP.</p>
-      <button
-        type="button"
-        onClick={baixar}
-        disabled={loading}
-        className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50 w-fit"
-        style={{background:'#062C9B'}}
-      >
-        <Download className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-        {loading ? 'Preparando download...' : 'Baixar XMLs NFSe 63-74 (ZIP)'}
-      </button>
+      <p className="text-sm text-gray-400">Gerencia XMLs originais das NFSes 63-74.</p>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={verificar}
+          disabled={loading}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
+          style={{background:'#0891b2'}}
+        >
+          {loading ? 'Analisando...' : '🔍 Diagnosticar'}
+        </button>
+        <button
+          type="button"
+          onClick={baixar}
+          disabled={loading}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
+          style={{background:'#062C9B'}}
+        >
+          <Download className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Baixar ZIP
+        </button>
+      </div>
+      {diagnostico && (
+        <div className="mt-3 p-3 bg-gray-800 rounded-lg border border-gray-700 space-y-3">
+          <div className="text-sm text-gray-300">
+            <p><strong>Total NFSes (63-74):</strong> {diagnostico.total}</p>
+            <p><strong>Com XML Original:</strong> <span className={diagnostico.comXmlOriginal > 0 ? 'text-green-400' : 'text-red-400'}>{diagnostico.comXmlOriginal}</span></p>
+            <p><strong>Sem XML Original:</strong> <span className={diagnostico.semXmlOriginal > 0 ? 'text-red-400' : 'text-green-400'}>{diagnostico.semXmlOriginal}</span></p>
+          </div>
+          {diagnostico.resumoSemXml.length > 0 && (
+            <div className="text-xs bg-red-900/20 border border-red-700/30 rounded p-2 text-red-300">
+              <p className="font-semibold mb-1">NFSes SEM XML Original:</p>
+              {diagnostico.resumoSemXml.map(d => (
+                <p key={d.numero}>NFSe #{d.numero} - {d.cliente} ({d.status})</p>
+              ))}
+            </div>
+          )}
+          <div className="text-xs text-gray-500 max-h-40 overflow-y-auto">
+            <p className="font-semibold mb-1">Detalhes:</p>
+            {diagnostico.detalhes.map(d => (
+              <div key={d.numero} className={`text-xs mb-1 pb-1 border-b border-gray-700 ${d.temXmlOriginal ? 'text-green-400' : 'text-red-400'}`}>
+                <strong>#{d.numero}</strong> - {d.temXmlOriginal ? `✓ ${d.tamanhoXmlOriginal} bytes` : '✗ VAZIO'}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
