@@ -610,22 +610,7 @@ export default function NotasFiscais() {
     return () => { if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current); };
   }, []);
 
-  // Atualiza dados adicionais automaticamente quando parcelas ou forma de pagamento mudam
-  // Usa ref para evitar sobrescrever ao carregar o form inicial
-  const formLoadedRef = React.useRef(false);
-  React.useEffect(() => {
-    if (!showForm) { formLoadedRef.current = false; return; }
-    if (!formLoadedRef.current) { formLoadedRef.current = true; return; }
-    const parcelasStr = gerarInfoParcelas(form.parcelas_detalhes, form.forma_pagamento);
-    setForm(f => {
-      const dadosAtuais = f.dados_adicionais || '';
-      const idxParc = dadosAtuais.indexOf('Parc. ');
-      const base = idxParc > 0 ? dadosAtuais.substring(0, idxParc).replace(/\s*\|\s*$/, '') : dadosAtuais;
-      const novosDados = [base, parcelasStr].filter(Boolean).join(' | ');
-      if (novosDados === dadosAtuais) return f;
-      return { ...f, dados_adicionais: novosDados };
-    });
-  }, [form.parcelas_detalhes, form.forma_pagamento]);
+
 
   const validarForm = (f) => {
     const erros = {};
