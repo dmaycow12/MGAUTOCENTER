@@ -485,9 +485,11 @@ Deno.serve(async (req) => {
 
     if (nota_id) {
       // Atualiza o rascunho com o ref ANTES de enviar — se a página cair, saberemos que já foi enviado
+      // Se é homologação, não salva número ainda (só salva ao Emitir)
+      const isHom = isHomologacao;
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
         spedy_id: ref,
-        numero: numeroFinal,
+        ...(isHom ? {} : { numero: numeroFinal }),  // Só salva número em produção
         status: 'Processando',
       });
     }
@@ -518,9 +520,9 @@ Deno.serve(async (req) => {
         ? result.erros.map(e => e.mensagem).join('; ')
         : (result.mensagem || JSON.stringify(result));
       
-      // Marca como Rascunho de volta se falhou antes de chegar na SEFAZ
+      // Marca como Rascunho de volta se falhou antes de chegar na SEFAZ — remove número
       if (nota_id) {
-        await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { status: 'Rascunho', mensagem_sefaz: msgErro });
+        await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { status: 'Rascunho', numero: null, mensagem_sefaz: msgErro });
       }
       return Response.json({ sucesso: false, erro: msgErro });
     }
@@ -624,7 +626,7 @@ Deno.serve(async (req) => {
       cliente_cidade: cliente_cidade || '',
       cliente_estado: cliente_estado || '',
       forma_pagamento: forma_pagamento || '',
-      numero: numeroFinal,
+      ...(statusNota === 'Emitida' ? { numero: numeroFinal } : {}),  // Só salva número quando Emitida
       serie: tipo === 'NFSe' ? SERIE_NFSE : tipo === 'NFCe' ? SERIE_NFCE : SERIE_NFE,
       status: statusNota,
       spedy_id: ref,
