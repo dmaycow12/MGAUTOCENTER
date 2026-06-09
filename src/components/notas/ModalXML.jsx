@@ -66,22 +66,10 @@ export default function ModalXML({ nota, onClose, onSalvo }) {
     setSalvando(true);
     setErro("");
     try {
-      // Salvar como arquivo para não estourar limite do campo
-      const xmlFile = new File([xmlManual.trim()], `NF-${nota.numero || nota.id}.xml`, { type: "text/xml" });
-      const uploadResp = await base44.integrations.Core.UploadFile({ file: xmlFile });
-      if (uploadResp?.file_url) {
-        await base44.entities.NotaFiscal.update(nota.id, {
-          xml_url: uploadResp.file_url,
-          xml_original: null,
-        });
-        setXmlCarregado(xmlManual.trim());
-        onSalvo(xmlManual.trim());
-      } else {
-        // Fallback: salvar direto no campo
-        await base44.entities.NotaFiscal.update(nota.id, { xml_original: xmlManual.trim() });
-        setXmlCarregado(xmlManual.trim());
-        onSalvo(xmlManual.trim());
-      }
+      // Salvar sempre em xml_original
+      await base44.entities.NotaFiscal.update(nota.id, { xml_original: xmlManual.trim() });
+      setXmlCarregado(xmlManual.trim());
+      onSalvo(xmlManual.trim());
     } catch (e) {
       setErro("Erro ao salvar: " + e.message);
     }
