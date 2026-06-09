@@ -1932,17 +1932,11 @@ function F({ label, children, className = "" }) {
 function temXmlReal(nota) {
   const xml = nota.xml_original || nota.xml_content || '';
   
-  // Se tem XML e é válido (não placeholder)
-  if (xml && xml.trim().startsWith('<')) {
-    const trimmed = xml.trim();
-    // Se tem mais de 500 chars e não é placeholder
-    if (trimmed.length > 500 && !trimmed.includes('<nfeProc>...</nfeProc>')) {
-      return true;
-    }
-  }
-  
-  // Se não tem XML local, verifica se tem URL válida
-  if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.startsWith('http') && nota.xml_url.length > 50) {
+  // XML é válido apenas se:
+  // 1. Começa com <
+  // 2. Tem mais de 500 chars (XML real é bem maior)
+  // 3. NÃO é placeholder dummy
+  if (xml && xml.trim().startsWith('<') && xml.trim().length > 500 && !xml.includes('<nfeProc>...</nfeProc>')) {
     return true;
   }
   
