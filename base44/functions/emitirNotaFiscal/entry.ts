@@ -21,15 +21,14 @@ const normalizarUrl = (url) => {
 };
 
 // Faz upload do XML para armazenamento permanente no Base44
-const salvarXmlPermanente = async (base44, xmlUrl, ref, numero) => {
+const salvarXmlPermanente = async (base44, xmlUrl, ref, numero, authHeader) => {
   if (!xmlUrl) return null;
   try {
     const isS3 = xmlUrl.includes('amazonaws.com') || xmlUrl.includes('s3.');
-    // XML de produção — sempre usa chave de produção para fetch
-    const resp = await fetch(xmlUrl, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER_PROD } });
-    if (!resp.ok) return null;
+    const resp = await fetch(xmlUrl, isS3 ? {} : { headers: { 'Authorization': authHeader } });
+    if (!resp.ok) { console.error('[XML ERRO] fetch status:', resp.status, xmlUrl); return null; }
     const text = await resp.text();
-    if (!text || !text.includes('<')) return null;
+    if (!text || !text.includes('<')) { console.error('[XML ERRO] conteúdo inválido'); return null; }
     const xmlFile = new File([text], `NF-${numero || ref}.xml`, { type: 'text/xml' });
     const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
     console.log('[XML SALVO]', file_url);
@@ -41,13 +40,11 @@ const salvarXmlPermanente = async (base44, xmlUrl, ref, numero) => {
 };
 
 // Faz upload do PDF para armazenamento permanente no Base44
-const salvarPdfPermanente = async (base44, pdfUrl, nota_id) => {
+const salvarPdfPermanente = async (base44, pdfUrl, nota_id, authHeader) => {
   if (!pdfUrl) return null;
   try {
-    // URLs do S3 (amazonaws.com) são públicas — sem auth header
     const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
-    // PDF de produção — sempre usa chave de produção para fetch
-    const resp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER_PROD } });
+    const resp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': authHeader } });
     if (!resp.ok) return null;
     const blob = await resp.blob();
     const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
@@ -61,12 +58,12 @@ const salvarPdfPermanente = async (base44, pdfUrl, nota_id) => {
 };
 
 // Consulta status na Focus NFe
-const consultarFocusNFe = async (ref, tipo) => {
+const consultarFocusNFe = async (ref, tipo, baseUrl, authHeader) => {
   const epConsulta = tipo === 'NFSe' ? 'nfsen' : tipo === 'NFCe' ? 'nfce' : 'nfe';
-  const url = `${FOCUSNFE_BASE}/${epConsulta}/${ref}?completo=1`;
+  const url = `${baseUrl}/${epConsulta}/${ref}?completo=1`;
   console.log('[CONSULTA FOCUS]', url);
   const resp = await fetch(url, {
-    headers: { 'Authorization': AUTH_HEADER },
+    headers: { 'Authorization': authHeader },
   });
   console.log('[CONSULTA FOCUS STATUS]', resp.status);
   if (!resp.ok) return null;
@@ -153,7 +150,7 @@ Deno.serve(async (req) => {
       console.log('[ANTI-DUPLICATA] Nota tem spedy_id:', notaExistente.spedy_id, '- consultando Focus NFe...');
       let statusExistente = null;
       try {
-        statusExistente = await consultarFocusNFe(notaExistente.spedy_id, tipo);
+        statusExistente = await consultarFocusNFe(notaExistente.spedy_id, tipo, FOCUSNFE_BASE_PROD, AUTH_HEADER_PROD);
         console.log('[ANTI-DUPLICATA] Resposta Focus NFe:', JSON.stringify(statusExistente)?.substring(0, 200));
       } catch (e) {
         console.error('[ANTI-DUPLICATA ERROR]', e.message);
@@ -179,7 +176,7 @@ Deno.serve(async (req) => {
           let pdfUrlFinal = notaExistente.pdf_url || '';
           
           if (!pdfUrlFinal && pdfUrlFocus) {
-            pdfUrlFinal = await salvarPdfPermanente(base44, pdfUrlFocus, nota_id) || pdfUrlFocus;
+            pdfUrlFinal = await salvarPdfPermanente(base44, pdfUrlFocus, nota_id, AUTH_HEADER_PROD) || pdfUrlFocus;
           }
           
           await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
@@ -591,7 +588,7 @@ Deno.serve(async (req) => {
     let xmlUrlFinal = '';
     if (statusNota === 'Emitida') {
       if (pdfUrl) {
-        const pdfSalvo = await salvarPdfPermanente(base44, pdfUrl, nota_id || 'nova');
+        const pdfSalvo = await salvarPdfPermanente(base44, pdfUrl, nota_id || 'nova', authHeaderAtivo);
         if (pdfSalvo) pdfUrlFinal = pdfSalvo;
       }
       // Salvar XML
@@ -600,7 +597,7 @@ Deno.serve(async (req) => {
       console.log('[XML-DEBUG] caminhoXml:', caminhoXml);
       if (caminhoXml) {
         const xmlUrl = normalizarUrl(caminhoXml);
-        const xmlSalvo = await salvarXmlPermanente(base44, xmlUrl, ref, numeroFinal);
+        const xmlSalvo = await salvarXmlPermanente(base44, xmlUrl, ref, numeroFinal, authHeaderAtivo);
         if (xmlSalvo) xmlUrlFinal = xmlSalvo;
       }
     }
