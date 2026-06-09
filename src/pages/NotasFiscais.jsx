@@ -10,7 +10,7 @@ import ModalSintegra from "@/components/notas/ModalSintegra";
 import ModalXML from "@/components/notas/ModalXML";
 import ModalPreVisualizacao from "@/components/notas/ModalPreVisualizacao";
 import SearchableSelect from "@/components/notas/SearchableSelect";
-import { gerarDadosAdicionaisDaVenda } from "@/components/notas/gerarDadosAdicionais";
+import { gerarDadosAdicionaisDaVenda, gerarInfoParcelas } from "@/components/notas/gerarDadosAdicionais";
 
 import JSZip from "jszip";
 
@@ -605,6 +605,21 @@ export default function NotasFiscais() {
   React.useEffect(() => {
     return () => { if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current); };
   }, []);
+
+  // Atualiza dados adicionais automaticamente quando parcelas ou forma de pagamento mudam
+  React.useEffect(() => {
+    if (!showForm) return;
+    const parcelasStr = gerarInfoParcelas(form.parcelas_detalhes, form.forma_pagamento);
+    setForm(f => {
+      // Extrai a parte base (antes das parcelas) dos dados adicionais atuais
+      const dadosAtuais = f.dados_adicionais || '';
+      const idxParc = dadosAtuais.indexOf('Parc. ');
+      const base = idxParc > 0 ? dadosAtuais.substring(0, idxParc).replace(/\s*\|\s*$/, '') : dadosAtuais;
+      const novosDados = [base, parcelasStr].filter(Boolean).join(' | ');
+      if (novosDados === dadosAtuais) return f;
+      return { ...f, dados_adicionais: novosDados };
+    });
+  }, [form.parcelas_detalhes, form.forma_pagamento]);
 
   const validarForm = (f) => {
     const erros = {};
