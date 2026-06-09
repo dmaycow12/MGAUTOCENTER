@@ -1125,6 +1125,8 @@ export default function NotasFiscais() {
         <Plus className="w-4 h-4" /> Emitir
       </button>
 
+      <FiltroPerioodoAvancado onFiltroChange={() => {}} />
+
       <div className="flex gap-0.5">
         <button onClick={() => { const novo = filtroTipo.includes("Saída") ? filtroTipo.filter(x => x !== "Saída") : [...filtroTipo, "Saída"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Saída") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
         <button onClick={() => { const novo = filtroTipo.includes("Entrada") ? filtroTipo.filter(x => x !== "Entrada") : [...filtroTipo, "Entrada"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Entrada") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
@@ -1132,8 +1134,6 @@ export default function NotasFiscais() {
         <button onClick={() => { const novo = filtroModeloNF.includes("NFCe") ? filtroModeloNF.filter(x => x !== "NFCe") : [...filtroModeloNF, "NFCe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFCe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFCe</button>
         <button onClick={() => { const novo = filtroModeloNF.includes("NFSe") ? filtroModeloNF.filter(x => x !== "NFSe") : [...filtroModeloNF, "NFSe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
       </div>
-
-      <FiltroPerioodoAvancado onFiltroChange={() => {}} />
 
       <div className="flex gap-0.5">
         <button
