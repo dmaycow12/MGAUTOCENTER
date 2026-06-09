@@ -1060,7 +1060,7 @@ export default function NotasFiscais() {
 
       {/* Linha 1: Emitir Nota + Filtro de Tempo */}
       <div className="flex gap-0.5">
-        <button onClick={() => { setForm(f => ({ ...f, numero: proximoNumero(notas, f.tipo), serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+        <button onClick={() => { setForm(f => ({ ...f, numero: '', serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
           <Plus className="w-4 h-4" /> Emitir
         </button>
 
@@ -1478,9 +1478,8 @@ export default function NotasFiscais() {
                   return (
                     <select value={form.tipo} onChange={e => {
                         const novoTipo = e.target.value;
-                        let numero = proximoNumero(notas, novoTipo);
                         let serie = proximaSerie(notas, novoTipo);
-                        setForm(f => ({ ...f, tipo: novoTipo, numero, serie }));
+                        setForm(f => ({ ...f, tipo: novoTipo, numero: '', serie }));  // Não atribui número automaticamente
                     }} className="input-dark">
                       <option value="NFSe">NFSe — Serviço</option>
                       <option value="NFe">NFe — Produto</option>
