@@ -1930,9 +1930,16 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Se tem xml_original (field principal), mostra verde
-  // Ignora xml_content que pode ser fallback
-  if (nota.xml_original && nota.xml_original.trim() && !nota.xml_original.includes('<nfeProc>...</nfeProc>')) {
+  // Verifica xml_original
+  if (nota.xml_original?.trim() && !nota.xml_original.includes('<nfeProc>...</nfeProc>')) {
+    return true;
+  }
+  // Verifica xml_content
+  if (nota.xml_content?.trim() && !nota.xml_content.includes('<nfeProc>...</nfeProc>')) {
+    return true;
+  }
+  // Verifica xml_url (se tem URL real)
+  if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.trim().length > 0) {
     return true;
   }
   return false;
