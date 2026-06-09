@@ -1930,25 +1930,33 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verde APENAS se tem XML real salvo (arquivo) - NÃO placeholders
+  // Verde APENAS se tem XML real completo com tags
   
-  // Verde se xml_url tem arquivo válido (começa com http)
+  // NÃO aceita xml_url vazio ou placeholder
   if (nota.xml_url && typeof nota.xml_url === 'string') {
     const url = nota.xml_url.trim();
-    if (url && url.startsWith('http')) {
+    // Só aceita se for URL válida (começa com http) E não é placeholder
+    if (url && url.startsWith('http') && !url.includes('nfeProc>...') && url.length > 50) {
       return true;
     }
   }
   
-  // Verde se xml_original tem XML completo (>1000 chars, validação forte)
-  const xmlOriginal = nota.xml_original?.trim();
-  if (xmlOriginal && xmlOriginal.length > 1000 && xmlOriginal.startsWith('<') && !xmlOriginal.includes('...</')) {
+  // Valida XML real: precisa ter >500 chars E tags de fechamento (</), não placeholder
+  const validarXml = (xml) => {
+    if (!xml) return false;
+    if (xml.length < 500) return false; // Muito curto = placeholder
+    if (!xml.includes('</')) return false; // Sem tags de fechamento = incompleto
+    if (xml.includes('...</')) return false; // Placeholder explícito
+    return true;
+  };
+  
+  // Verifica xml_original
+  if (validarXml(nota.xml_original?.trim())) {
     return true;
   }
   
-  // Verde se xml_content tem XML completo (>1000 chars, validação forte)
-  const xmlContent = nota.xml_content?.trim();
-  if (xmlContent && xmlContent.length > 1000 && xmlContent.startsWith('<') && !xmlContent.includes('...</')) {
+  // Verifica xml_content
+  if (validarXml(nota.xml_content?.trim())) {
     return true;
   }
   
