@@ -1720,7 +1720,7 @@ export default function NotasFiscais() {
               {/* ABA PAGAMENTO */}
               {abaForm === "pagamento" && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <F label="Forma de Pagamento">
                       <select value={form.forma_pagamento} onChange={e => {
                         const fp = e.target.value;
@@ -1740,7 +1740,6 @@ export default function NotasFiscais() {
                         {[1,2,3,4,5,6,7,8,9,10,11,12].map(n => <option key={n} value={n}>{n}x</option>)}
                       </select>
                     </F>
-                    <div></div>
                   </div>
 
                   {/* Tabela de parcelas editável */}
