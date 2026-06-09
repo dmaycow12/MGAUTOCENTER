@@ -1928,10 +1928,10 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verde APENAS se tem XML válido (com fechamento real)
-  // Vermelho se vazio ou incompleto
+  // Verde APENAS se tem XML real
+  // Vermelho se vazio, placeholder ou incompleto
   
-  // Se tem xml_url com URL válida (arquivo salvo)
+  // Se tem xml_url com URL válida
   if (nota.xml_url && typeof nota.xml_url === 'string') {
     const url = nota.xml_url.trim();
     if (url.startsWith('http') && url.length > 50) {
@@ -1939,18 +1939,20 @@ function temXmlReal(nota) {
     }
   }
   
-  // Se xml_original tem XML válido (começa com < e tem fechamento)
+  // Se xml_original tem conteúdo REAL (não vazio, não placeholder)
   if (nota.xml_original && typeof nota.xml_original === 'string') {
     const xml = nota.xml_original.trim();
-    if (xml.startsWith('<') && xml.includes('</') && xml.length > 100) {
+    // Rejeita se vazio, placeholder (...), ou muito curto
+    if (xml.length > 100 && xml.startsWith('<') && xml.includes('</') && !xml.includes('...')) {
       return true;
     }
   }
   
-  // Se xml_content tem XML válido (começa com < e tem fechamento)
+  // Se xml_content tem conteúdo REAL
   if (nota.xml_content && typeof nota.xml_content === 'string') {
     const xml = nota.xml_content.trim();
-    if (xml.startsWith('<') && xml.includes('</') && xml.length > 100) {
+    // Rejeita se vazio, placeholder (...), ou muito curto
+    if (xml.length > 100 && xml.startsWith('<') && xml.includes('</') && !xml.includes('...')) {
       return true;
     }
   }
