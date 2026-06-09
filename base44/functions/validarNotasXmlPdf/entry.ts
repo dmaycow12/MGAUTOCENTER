@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
     const notas = await base44.asServiceRole.entities.NotaFiscal.list();
 
     const emitidas = notas.filter(n => n.status === 'Emitida');
-    const importadas = notas.filter(n => n.status === 'Importada');
+    const importadas = notas.filter(n => n.status === 'Importada' || n.status === 'Lançada');
 
     const emitidasSemXml = emitidas.filter(n => !n.xml_url && !n.xml_original && !n.xml_content);
     const emitidasSemPdf = emitidas.filter(n => !n.pdf_url);
