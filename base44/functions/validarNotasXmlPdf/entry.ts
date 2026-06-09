@@ -14,12 +14,12 @@ Deno.serve(async (req) => {
     const emitidas = notas.filter(n => n.status === 'Emitida');
     const importadas = notas.filter(n => n.status === 'Importada' || n.status === 'Lançada');
 
-    // Função auxiliar para validar se tem XML de verdade (xml_original OU xml_url)
+    // Função auxiliar para validar se tem XML de verdade (xml_original com conteúdo válido)
     // xml_content é apenas JSON dos items, não é XML real
+    // xml_url não é confiável — pode apontar pra URL que não retorna XML válido
     const temXmlReal = (n) => {
-      const temOriginal = n.xml_original && typeof n.xml_original === 'string' && n.xml_original.trim().length > 0;
-      const temUrl = n.xml_url && typeof n.xml_url === 'string' && n.xml_url.trim().length > 0;
-      return temOriginal || temUrl;
+      const temOriginal = n.xml_original && typeof n.xml_original === 'string' && n.xml_original.trim().length > 0 && n.xml_original.trim().startsWith('<');
+      return temOriginal;
     };
 
     // Função auxiliar para validar se tem PDF de verdade
