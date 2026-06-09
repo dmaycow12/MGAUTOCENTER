@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
 
     for (const nota of notas) {
       try {
-        // Estratégia: XMLs pequenos em xml_original, XMLs grandes em xml_url
+        // Estratégia: apenas xml_original (sem xml_url)
         // Se xml_original for inválido (JSON ou erro anterior), tenta resgatar de xml_url
         const updateData = {};
         let temAlgo = false;
@@ -35,13 +35,10 @@ Deno.serve(async (req) => {
             const resp = await fetch(nota.xml_url);
             if (resp.ok) {
               const xmlContent = await resp.text();
-              if (xmlContent && xmlContent.trim().startsWith('<')) {
-                // XML pequeno? salva em xml_original
-                if (xmlContent.length < 50000) {
-                  updateData.xml_original = xmlContent;
-                  updateData.xml_url = null;
-                }
-                // XML grande? mantém em xml_url
+              if (xmlContent && xmlContent.trim().startsWith('<') && xmlContent.length < 50000) {
+                // Só salva se for XML válido E pequeno o suficiente
+                updateData.xml_original = xmlContent;
+                updateData.xml_url = null;
                 temAlgo = true;
               }
             }
