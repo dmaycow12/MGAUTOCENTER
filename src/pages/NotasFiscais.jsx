@@ -9,7 +9,6 @@ import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
 import ModalXML from "@/components/notas/ModalXML";
 import ModalPreVisualizacao from "@/components/notas/ModalPreVisualizacao";
-import ModalValidacaoXmlPdf from "@/components/notas/ModalValidacaoXmlPdf";
 import SearchableSelect from "@/components/notas/SearchableSelect";
 import { gerarDadosAdicionaisDaVenda, gerarInfoParcelas } from "@/components/notas/gerarDadosAdicionais";
 
@@ -191,8 +190,6 @@ export default function NotasFiscais() {
   const [configsNF, setConfigsNF] = useState([]);
   const [avisoExclusao, setAvisoExclusao] = useState(null);
   const [xmlModal, setXmlModal] = useState(null);
-  const [validandoXmlPdf, setValidandoXmlPdf] = useState(false);
-  const [resultadoValidacao, setResultadoValidacao] = useState(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1217,27 +1214,6 @@ export default function NotasFiscais() {
         <button onClick={() => exportarZip()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
            {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />} {gerandoZip ? 'Exportando...' : 'Exportar'}
          </button>
-        <button 
-          onClick={async () => {
-            setValidandoXmlPdf(true);
-            try {
-              const res = await base44.functions.invoke('validarNotasXmlPdf', {});
-              setResultadoValidacao(res.data);
-              feedback('sucesso', `Validação concluída: ${res.data.notasComXml} com XML, ${res.data.notasSemXml} sem XML`);
-            } catch (e) {
-              feedback('erro', 'Erro ao validar: ' + e.message);
-            }
-            setValidandoXmlPdf(false);
-          }}
-          disabled={validandoXmlPdf}
-          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
-          style={{background:"#ff9500", color:"#000"}}
-          onMouseEnter={e => { if (!validandoXmlPdf) e.currentTarget.style.background = "#dd7700"; }}
-          onMouseLeave={e => e.currentTarget.style.background = "#ff9500"}
-        >
-          {validandoXmlPdf ? <RefreshCw className="w-4 h-4 animate-spin" /> : <AlertCircle className="w-4 h-4" />} 
-          {validandoXmlPdf ? 'Validando...' : 'Validar XML/PDF'}
-        </button>
         </div>
 
       <div className="flex gap-0.5">
@@ -1257,20 +1233,26 @@ export default function NotasFiscais() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-        {[
-          { label: 'NFe Entrada', value: totalNFeLancada, color: '#3b82f6' },
-          { label: 'NFSe Entrada', value: totalNFSeLancada, color: '#3b82f6' },
-          { label: 'NFe Emitida', value: totalNFeEmitida, color: '#00ff00' },
-          { label: 'NFCe Emitida', value: totalNFCeEmitida, color: '#00ff00' },
-          { label: 'NFSe Emitida', value: totalNFSeEmitida, color: '#00ff00' },
-          { label: 'Total NF Emitidas', value: totalEmitidas, color: '#facc15' },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1">
-            <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
-            <p className="font-bold text-sm" style={{ color }}>R$ {Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {(() => {
+          // Calcula notas sem XML e sem PDF
+          const notasSemXml = filtradas.filter(n => !n.xml_original?.trim().startsWith('<') && !n.xml_content?.trim().startsWith('<') && n.xml_url !== 'XML_IN_URL').length;
+          const notasSemPdf = filtradas.filter(n => !n.pdf_url).length;
+          const qtdEmitidas = filtradas.filter(n => n.status === 'Emitida').length;
+          const qtdImportadas = filtradas.filter(n => n.status === 'Importada').length;
+
+          return [
+            { label: 'Notas Emitidas', value: qtdEmitidas, color: '#00ff00' },
+            { label: 'Notas Importadas', value: qtdImportadas, color: '#3b82f6' },
+            { label: 'Sem XML', value: notasSemXml, color: '#ef4444' },
+            { label: 'Sem PDF', value: notasSemPdf, color: '#ff9500' },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1">
+              <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
+              <p className="font-bold text-lg" style={{ color }}>{value}</p>
+            </div>
+          ));
+        })()}
       </div>
 
       {filtradas.length === 0 ? (
@@ -1937,9 +1919,7 @@ export default function NotasFiscais() {
         />
       )}
 
-      {resultadoValidacao && (
-        <ModalValidacaoXmlPdf resultado={resultadoValidacao} onClose={() => setResultadoValidacao(null)} />
-      )}
+
 
       <style>{`.input-dark{width:100%;background:#1f2937;border:1px solid #374151;color:#fff;border-radius:8px;padding:8px 12px;font-size:14px;outline:none}.input-dark:focus{border-color:#f97316}.input-dark::placeholder{color:#6b7280}`}</style>
     </div>
