@@ -273,7 +273,14 @@ export default function NotasFiscais() {
         const isConsumidor = !dadosCliente.cliente_cpf_cnpj?.trim() || (dadosCliente.cliente_nome || "").toUpperCase() === "CONSUMIDOR";
         const tipoFinal = isConsumidor ? "NFCe" : tipo;
 
-        setForm({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, valor_total, items });
+        // Monta dados adicionais automáticos com info da venda
+        const partesAdicionais = [];
+        if (venda?.numero) partesAdicionais.push(`Venda nº ${venda.numero}`);
+        if (venda?.veiculo_placa) partesAdicionais.push(`Placa: ${venda.veiculo_placa}`);
+        if (venda?.quilometragem) partesAdicionais.push(`KM: ${venda.quilometragem}`);
+        const dados_adicionais = partesAdicionais.join(' | ');
+
+        setForm({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, valor_total, items, dados_adicionais });
         setAbaForm("cliente");
         setShowForm(true);
       })();
@@ -774,13 +781,22 @@ export default function NotasFiscais() {
         setMsgFeedback(null);
         feedback('sucesso', 'Homologada! Clique em "Autorizar" na lista para emitir.');
         load();
+      } else if (res.data?.pode_tentar_novamente) {
+        feedback('erro', res.data.erro);
+        load();
       } else {
         await base44.entities.NotaFiscal.update(nota.id, { status: 'Erro' });
         feedback('erro', res.data?.erro || 'Erro na homologação.');
         load();
       }
     } catch (e) {
-      feedback('erro', 'Erro: ' + e.message);
+      // Tenta extrair mensagem de erro do servidor (response body)
+      let msgErro = e.message || 'Erro desconhecido';
+      if (e.response?.data?.erro) msgErro = e.response.data.erro;
+      else if (e.response?.data?.message) msgErro = e.response.data.message;
+      else if (typeof e.response?.data === 'string') msgErro = e.response.data;
+      feedback('erro', 'Erro na homologação: ' + msgErro);
+      load();
     }
     setPreVisualizando(null);
   };
