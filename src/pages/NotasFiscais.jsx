@@ -1241,7 +1241,7 @@ export default function NotasFiscais() {
            { label: 'NFCe Emitida', value: totalNFCeEmitida, color: '#00ff00' },
            { label: 'NFSe Emitida', value: totalNFSeEmitida, color: '#00ff00' },
          ].map(({ label, value, color }) => (
-           <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1">
+           <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center">
              <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
              <p className="font-bold text-sm" style={{ color }}>R$ {Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
            </div>
@@ -1262,14 +1262,14 @@ export default function NotasFiscais() {
               { label: 'Sem XML', value: notasSemXml, color: '#ef4444' },
               { label: 'Sem PDF', value: notasSemPdf, color: '#ff9500' },
             ].map(({ label, value, color }) => (
-              <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1">
+              <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center">
                 <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
                 <p className="font-bold text-sm" style={{ color }}>{value}</p>
               </div>
             ));
           })()}
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 lg:w-1/4">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 lg:w-1/4 flex flex-col items-center justify-center text-center">
           <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">Total NF Emitidas</p>
           <p className="font-bold text-sm" style={{ color: '#facc15' }}>R$ {Number(totalEmitidas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
         </div>
