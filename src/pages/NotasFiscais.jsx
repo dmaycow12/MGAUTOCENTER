@@ -1930,16 +1930,28 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlReal(nota) {
-  // Verde se xml_original OU xml_content começa com < (XML real)
+  // Verde se: XML real salvo localmente OU tem arquivo XML/URL OU tem chave (pra buscar)
   const xmlOriginal = nota.xml_original?.trim();
   const xmlContent = nota.xml_content?.trim();
   
-  // Verifica xml_original
-  if (xmlOriginal && xmlOriginal.startsWith('<') && !xmlOriginal.includes('<nfeProc>...</nfeProc>')) {
+  // Verifica XML real em xml_original
+  if (xmlOriginal && xmlOriginal.startsWith('<')) {
     return true;
   }
-  // Verifica xml_content (se começar com <, é XML, não JSON de items)
-  if (xmlContent && xmlContent.startsWith('<') && !xmlContent.includes('<nfeProc>...</nfeProc>')) {
+  // Verifica XML real em xml_content
+  if (xmlContent && xmlContent.startsWith('<')) {
+    return true;
+  }
+  // Se tem xml_url preenchido (arquivo salvo)
+  if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.trim()) {
+    return true;
+  }
+  // Se tem chave de acesso (pode buscar na SEFAZ)
+  if (nota.chave_acesso && nota.chave_acesso.trim()) {
+    return true;
+  }
+  // Se tem spedy_id (processado)
+  if (nota.spedy_id && nota.spedy_id.trim()) {
     return true;
   }
   return false;
