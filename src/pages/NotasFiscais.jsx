@@ -298,22 +298,10 @@ export default function NotasFiscais() {
 
         const dataEmissaoVenda = venda?.data_entrada || new Date().toISOString().split('T')[0];
 
-        // Sempre gera parcelas usando a data da venda como base e o valor_total da nota
+        // Sempre gera parcelas usando a data da venda (data_entrada) como base
         const qtdP = dadosCliente.parcelas || 1;
         const fpP = dadosCliente.forma_pagamento || 'A Combinar';
-        // Verifica se parcelas da venda já têm vencimento definido E são do mesmo dia da data_entrada
-        const parcelasVenda = dadosCliente.parcelas_detalhes || [];
-        let parcelasFinais;
-        if (parcelasVenda.length > 0 && parcelasVenda.every(p => p.vencimento)) {
-          // Usa as datas da venda mas com o valor_total da nota (proporcional)
-          parcelasFinais = parcelasVenda.map((p, i) => ({
-            ...p,
-            valor: parseFloat((valor_total / qtdP).toFixed(2)),
-          }));
-        } else {
-          // Gera parcelas a partir da data da venda
-          parcelasFinais = gerarParcelas(qtdP, fpP, valor_total, dataEmissaoVenda);
-        }
+        const parcelasFinais = gerarParcelas(qtdP, fpP, valor_total, dataEmissaoVenda);
 
         setForm({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, parcelas_detalhes: parcelasFinais, valor_total, items, dados_adicionais, data_emissao: dataEmissaoVenda });
         setAbaForm("cliente");
