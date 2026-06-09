@@ -1698,7 +1698,9 @@ export default function NotasFiscais() {
                       // Só gera parcelas se ainda não existem (preserva as da venda original)
                       if (!form.parcelas_detalhes || form.parcelas_detalhes.length === 0) {
                         const qtd = form.parcelas || 1;
-                        const parcelas = gerarParcelas(qtd, form.forma_pagamento, form.valor_total, form.data_emissao);
+                        const vendaOriginal = form.ordem_venda_id ? vendas.find(v => v.id === form.ordem_venda_id) : null;
+                        const dataBase = vendaOriginal?.data_entrada || form.data_emissao;
+                        const parcelas = gerarParcelas(qtd, form.forma_pagamento, form.valor_total, dataBase);
                         setForm(f => ({ ...f, parcelas_detalhes: parcelas }));
                       }
                       setAbaForm("pagamento");
@@ -1730,7 +1732,9 @@ export default function NotasFiscais() {
                     <F label="Nº de Parcelas">
                       <select value={form.parcelas || 1} onChange={e => {
                         const qtd = Number(e.target.value);
-                        const parcelas = gerarParcelas(qtd, form.forma_pagamento, form.valor_total, form.data_emissao);
+                        const vendaOriginal = form.ordem_venda_id ? vendas.find(v => v.id === form.ordem_venda_id) : null;
+                        const dataBase = vendaOriginal?.data_entrada || form.data_emissao;
+                        const parcelas = gerarParcelas(qtd, form.forma_pagamento, form.valor_total, dataBase);
                         setForm(f => ({ ...f, parcelas: qtd, parcelas_detalhes: parcelas }));
                       }} className="input-dark">
                         {[1,2,3,4,5,6,7,8,9,10,11,12].map(n => <option key={n} value={n}>{n}x</option>)}
