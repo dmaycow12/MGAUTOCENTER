@@ -1740,15 +1740,7 @@ export default function NotasFiscais() {
                         {[1,2,3,4,5,6,7,8,9,10,11,12].map(n => <option key={n} value={n}>{n}x</option>)}
                       </select>
                     </F>
-                    <div className="flex items-end">
-                      <button onClick={() => {
-                        const qtd = form.parcelas || 1;
-                        const parcelas = gerarParcelas(qtd, form.forma_pagamento, form.valor_total, form.data_emissao);
-                        setForm(f => ({ ...f, parcelas_detalhes: parcelas }));
-                      }} className="w-full py-2 text-xs font-medium rounded-lg border border-gray-600 text-gray-300 hover:text-white hover:border-gray-400 transition-all">
-                        ↻ Recalcular
-                      </button>
-                    </div>
+                    <div></div>
                   </div>
 
                   {/* Tabela de parcelas editável */}
@@ -1781,11 +1773,11 @@ export default function NotasFiscais() {
                               {FORMAS_PAGAMENTO.map(fp => <option key={fp} value={fp}>{fp}</option>)}
                             </select>
                             <input
-                              type="number"
+                              type="text"
                               value={p.valor || ''}
                               onChange={e => {
                                 const nova = [...form.parcelas_detalhes];
-                                nova[i] = { ...nova[i], valor: parseFloat(e.target.value) || 0 };
+                                nova[i] = { ...nova[i], valor: parseFloat(e.target.value.replace(',','.')) || 0 };
                                 setForm(f => ({ ...f, parcelas_detalhes: nova }));
                               }}
                               className="input-dark text-xs px-2 py-1 text-right"
