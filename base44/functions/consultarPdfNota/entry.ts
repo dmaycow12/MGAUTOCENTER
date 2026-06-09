@@ -44,27 +44,7 @@ Deno.serve(async (req) => {
     const AUTH_HEADER_HOM = 'Basic ' + btoa(apiKeyHom + ':');
 
     const ref = nota.spedy_id;
-    const caminhoHtml = nota.xml_url;
-     console.log(`[CONSULTA NOTA] ID: ${nota_id}, Tipo: ${nota.tipo}, Status: ${nota.status}, spedy_id: ${ref}, xml_url: ${caminhoHtml}, pdf_url: ${nota.pdf_url}`);
-
-     // Se tem caminho da DANFE guardado, tenta buscar direto (mais confiável)
-     if (caminhoHtml && nota.status === 'Homologada') {
-       console.log(`[CONSULTA] Tentando buscar DANFE direto de: ${caminhoHtml}`);
-       try {
-         // O caminho já vem com https://, é direto do S3 da Focus
-         const pdfResp = await fetch(caminhoHtml, { headers: { 'Authorization': AUTH_HEADER_HOM } });
-         if (pdfResp.ok) {
-           const blob = await pdfResp.blob();
-           const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
-           const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
-           return Response.json({ sucesso: true, pdf_url: file_url });
-         } else {
-           console.log(`[CONSULTA] Erro ao buscar DANFE direto: ${pdfResp.status}`);
-         }
-       } catch (e) {
-         console.log(`[CONSULTA] Exception ao buscar DANFE: ${e.message}`);
-       }
-     }
+     console.log(`[CONSULTA NOTA] ID: ${nota_id}, Tipo: ${nota.tipo}, Status: ${nota.status}, spedy_id: ${ref}, pdf_url: ${nota.pdf_url}`);
 
      if (!ref) {
        return Response.json({ processando: false, erro: 'Referência da nota não encontrada. Esta nota pode ter sido criada antes da atualização do sistema.', status_nota: nota.status });

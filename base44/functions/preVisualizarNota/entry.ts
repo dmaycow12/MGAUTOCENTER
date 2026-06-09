@@ -358,12 +358,10 @@ Deno.serve(async (req) => {
       pdfUrlSalvo = htmlUrl;
     }
 
-    // Atualiza nota com PDF de homologação, status Homologada, e guarda o ref + caminho da DANFE
+    // Atualiza nota com PDF de homologação e status Homologada
     await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
       status: 'Homologada',
-      pdf_url: pdfUrlSalvo,
-      spedy_id: ref,
-      xml_url: caminhoHtml,
+      pdf_url: pdfUrlSalvo || pdfUrlHom,
     });
 
     return Response.json({
