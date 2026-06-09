@@ -24,15 +24,13 @@ const STATUS_COLOR = {
   Importada: "bg-blue-500/10 text-blue-400",
 };
 
-const FORMAS_PAGAMENTO = ["A Combinar", "Boleto", "Cartão de Crédito", "Cartão de Débito", "Cheque", "Dinheiro", "PIX", "Transferência"];
+const FORMAS_PAGAMENTO = ["A Combinar", "Boleto", "Cartão", "Cheque", "Dinheiro", "PIX", "Transferência"];
 
 // Normaliza formas de pagamento da venda para os valores aceitos na NF
 function normalizarFormaPagamento(fp) {
   if (!fp) return "A Combinar";
   const fpUp = fp.toUpperCase();
-  if (fpUp.includes("CART") && (fpUp.includes("CR") || fpUp === "CARTÃO DE CRÉDITO")) return "Cartão de Crédito";
-  if (fpUp.includes("CART") && fpUp.includes("DÉB")) return "Cartão de Débito";
-  if (fpUp.includes("CART")) return "Cartão de Crédito"; // "Cartão" genérico → Crédito
+  if (fpUp.includes("CART")) return "Cartão";
   if (fpUp === "PIX") return "PIX";
   if (fpUp.includes("DINHEIRO") || fpUp === "DINHEIRO") return "Dinheiro";
   if (fpUp.includes("BOLETO")) return "Boleto";
