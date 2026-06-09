@@ -38,6 +38,8 @@ function defaultForm() {
     tipo_documento: "1",
     data_emissao: new Date().toISOString().split("T")[0],
     forma_pagamento: "A Combinar",
+    parcelas: 1,
+    parcelas_detalhes: [],
     observacoes: "",
     dados_adicionais: "",
     cliente_id: "",
@@ -250,6 +252,8 @@ export default function NotasFiscais() {
           cliente_cidade: c.cidade || venda?.cliente_cidade || "",
           cliente_estado: c.estado || venda?.cliente_estado || "",
           forma_pagamento: venda?.parcelas_detalhes?.[0]?.forma_pagamento || venda?.forma_pagamento || "A Combinar",
+          parcelas: venda?.parcelas || 1,
+          parcelas_detalhes: venda?.parcelas_detalhes || [],
         } : {
           cliente_id: cliente_id_param,
           cliente_nome: cliente_nome_param,
@@ -261,6 +265,8 @@ export default function NotasFiscais() {
           cliente_cidade: venda?.cliente_cidade || "",
           cliente_estado: venda?.cliente_estado || "",
           forma_pagamento: venda?.parcelas_detalhes?.[0]?.forma_pagamento || venda?.forma_pagamento || "A Combinar",
+          parcelas: venda?.parcelas || 1,
+          parcelas_detalhes: venda?.parcelas_detalhes || [],
         };
 
         // Se cliente é CONSUMIDOR (sem CPF/CNPJ), forçar NFCe
@@ -544,6 +550,25 @@ export default function NotasFiscais() {
     setXmlTexto(""); setShowImport(false); setImportando(false); setShowEntrada(true);
   };
 
+  // Gera parcelas automaticamente com base em quantidade, forma e total
+  const gerarParcelas = (qtd, formaPgto, total, dataBase) => {
+    const valorParcela = total / (qtd || 1);
+    const hoje = dataBase || new Date().toISOString().split('T')[0];
+    return Array.from({ length: qtd }, (_, i) => {
+      const dt = new Date(hoje + 'T12:00:00');
+      dt.setMonth(dt.getMonth() + i + 1);
+      const ano = dt.getFullYear();
+      const mes = String(dt.getMonth() + 1).padStart(2, '0');
+      const dia = String(dt.getDate()).padStart(2, '0');
+      return {
+        numero: i + 1,
+        forma_pagamento: formaPgto,
+        vencimento: `${ano}-${mes}-${dia}`,
+        valor: parseFloat(valorParcela.toFixed(2)),
+      };
+    });
+  };
+
   const feedback = (tipo, msg) => {
     setMsgFeedback({ tipo, msg });
     setTimeout(() => setMsgFeedback(null), 6000);
@@ -813,6 +838,8 @@ export default function NotasFiscais() {
       valor_total: nota.valor_total || 0,
       observacoes: nota.observacoes || '',
       forma_pagamento: nota.forma_pagamento || 'A Combinar',
+      parcelas: nota.parcelas || 1,
+      parcelas_detalhes: nota.parcelas_detalhes || [],
       dados_adicionais: nota.dados_adicionais || '',
       items: itensSalvos,
       _editId: nota.id,
@@ -1693,35 +1720,88 @@ export default function NotasFiscais() {
               {/* ABA PAGAMENTO */}
               {abaForm === "pagamento" && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <F label="Forma de Pagamento">
-                      <select value={form.forma_pagamento} onChange={e => setForm(f => ({ ...f, forma_pagamento: e.target.value }))} className="input-dark">
+                      <select value={form.forma_pagamento} onChange={e => {
+                        const fp = e.target.value;
+                        const qtd = form.parcelas || 1;
+                        const parcelas = gerarParcelas(qtd, fp, form.valor_total, form.data_emissao);
+                        setForm(f => ({ ...f, forma_pagamento: fp, parcelas_detalhes: parcelas }));
+                      }} className="input-dark">
                         {FORMAS_PAGAMENTO.map(fp => <option key={fp} value={fp}>{fp}</option>)}
                       </select>
                     </F>
+                    <F label="Nº de Parcelas">
+                      <select value={form.parcelas || 1} onChange={e => {
+                        const qtd = Number(e.target.value);
+                        const parcelas = gerarParcelas(qtd, form.forma_pagamento, form.valor_total, form.data_emissao);
+                        setForm(f => ({ ...f, parcelas: qtd, parcelas_detalhes: parcelas }));
+                      }} className="input-dark">
+                        {[1,2,3,4,5,6,7,8,9,10,11,12].map(n => <option key={n} value={n}>{n}x</option>)}
+                      </select>
+                    </F>
+                    <div className="flex items-end">
+                      <button onClick={() => {
+                        const qtd = form.parcelas || 1;
+                        const parcelas = gerarParcelas(qtd, form.forma_pagamento, form.valor_total, form.data_emissao);
+                        setForm(f => ({ ...f, parcelas_detalhes: parcelas }));
+                      }} className="w-full py-2 text-xs font-medium rounded-lg border border-gray-600 text-gray-300 hover:text-white hover:border-gray-400 transition-all">
+                        ↻ Recalcular
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Parcelas da venda vinculada */}
-                  {form.ordem_venda_id && (() => {
-                    const venda = vendas.find(v => v.id === form.ordem_venda_id);
-                    const parcelas = venda?.parcelas_detalhes;
-                    if (!parcelas || parcelas.length === 0) return null;
-                    return (
-                      <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 space-y-2">
-                        <p className="text-gray-400 text-xs font-medium uppercase tracking-wide">Parcelas da Venda</p>
-                        <div className="space-y-1.5">
-                          {parcelas.map((p, i) => (
-                            <div key={i} className="flex items-center justify-between text-sm">
-                              <span className="text-gray-400">{i + 1}ª parcela</span>
-                              <span className="text-gray-300">{p.forma_pagamento || form.forma_pagamento}</span>
-                              <span className="text-gray-400">{p.vencimento || '—'}</span>
-                              <span className="font-semibold" style={{color:"#00ff00"}}>R$ {Number(p.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span>
-                            </div>
-                          ))}
-                        </div>
+                  {/* Tabela de parcelas editável */}
+                  {(form.parcelas_detalhes?.length > 0) && (
+                    <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 space-y-2">
+                      <p className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-3">Parcelas</p>
+                      <div className="space-y-2">
+                        {form.parcelas_detalhes.map((p, i) => (
+                          <div key={i} className="grid grid-cols-4 gap-2 items-center">
+                            <span className="text-gray-400 text-xs text-center">{i + 1}ª</span>
+                            <input
+                              type="date"
+                              value={p.vencimento || ''}
+                              onChange={e => {
+                                const nova = [...form.parcelas_detalhes];
+                                nova[i] = { ...nova[i], vencimento: e.target.value };
+                                setForm(f => ({ ...f, parcelas_detalhes: nova }));
+                              }}
+                              className="input-dark text-xs px-2 py-1"
+                            />
+                            <select
+                              value={p.forma_pagamento || form.forma_pagamento}
+                              onChange={e => {
+                                const nova = [...form.parcelas_detalhes];
+                                nova[i] = { ...nova[i], forma_pagamento: e.target.value };
+                                setForm(f => ({ ...f, parcelas_detalhes: nova }));
+                              }}
+                              className="input-dark text-xs px-2 py-1"
+                            >
+                              {FORMAS_PAGAMENTO.map(fp => <option key={fp} value={fp}>{fp}</option>)}
+                            </select>
+                            <input
+                              type="number"
+                              value={p.valor || ''}
+                              onChange={e => {
+                                const nova = [...form.parcelas_detalhes];
+                                nova[i] = { ...nova[i], valor: parseFloat(e.target.value) || 0 };
+                                setForm(f => ({ ...f, parcelas_detalhes: nova }));
+                              }}
+                              className="input-dark text-xs px-2 py-1 text-right"
+                              style={{color:"#00ff00"}}
+                            />
+                          </div>
+                        ))}
                       </div>
-                    );
-                  })()}
+                      <div className="flex justify-between text-xs pt-1 border-t border-gray-700 mt-2">
+                        <span className="text-gray-500">Total parcelado</span>
+                        <span className="font-bold" style={{color: Math.abs(form.parcelas_detalhes.reduce((s,p)=>s+Number(p.valor||0),0) - form.valor_total) < 0.02 ? "#00ff00" : "#f59e0b"}}>
+                          R$ {form.parcelas_detalhes.reduce((s,p)=>s+Number(p.valor||0),0).toLocaleString('pt-BR',{minimumFractionDigits:2})}
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   <F label="Dados Adicionais">
                     <textarea value={form.dados_adicionais || ''} onChange={e => setForm(f => ({ ...f, dados_adicionais: e.target.value }))}
