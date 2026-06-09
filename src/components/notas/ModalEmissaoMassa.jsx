@@ -1,6 +1,24 @@
 import { useState, useEffect } from 'react';
 import { X, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { gerarDadosAdicionaisDaVenda, gerarInfoParcelas } from '@/components/notas/gerarDadosAdicionais';
+
+const FORMAS_PAGAMENTO_MAP = {
+  'CART': 'Cartão', 'PIX': 'PIX', 'DINHEIRO': 'Dinheiro',
+  'BOLETO': 'Boleto', 'TRANSF': 'Transferência', 'CHEQUE': 'Cheque',
+};
+
+function normalizarFormaPagamento(fp) {
+  if (!fp) return 'A Combinar';
+  const fpUp = fp.toUpperCase();
+  if (fpUp.includes('CART')) return 'Cartão';
+  if (fpUp === 'PIX') return 'PIX';
+  if (fpUp.includes('DINHEIRO')) return 'Dinheiro';
+  if (fpUp.includes('BOLETO')) return 'Boleto';
+  if (fpUp.includes('TRANSF')) return 'Transferência';
+  if (fpUp.includes('CHEQUE')) return 'Cheque';
+  return fp || 'A Combinar';
+}
 
 export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes: clientesProp = [], onClose, onConcluido }) {
   const [selecionadas, setSelecionadas] = useState([]);
@@ -86,6 +104,19 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
 
         const clienteCadastro = clientes.find(c => c.id === venda.cliente_id) || null;
 
+        // Forma de pagamento e parcelas da venda
+        const formaPagamentoRaw = venda?.parcelas_detalhes?.[0]?.forma_pagamento || venda?.forma_pagamento || 'A Combinar';
+        const formaPagamento = normalizarFormaPagamento(formaPagamentoRaw);
+        const parcelasDetalhes = (venda?.parcelas_detalhes || []).map(p => ({
+          ...p,
+          forma_pagamento: normalizarFormaPagamento(p.forma_pagamento),
+        }));
+
+        // Dados adicionais com número da venda, veículo, placa, km e pagamento
+        const dadosAdicionaisVenda = gerarDadosAdicionaisDaVenda(venda);
+        const dadosPagamento = gerarInfoParcelas(parcelasDetalhes, formaPagamento);
+        const dadosAdicionais = [dadosAdicionaisVenda, dadosPagamento].filter(Boolean).join(' | ');
+
         // Passo 1: Criar rascunho
         const rascunho = await base44.entities.NotaFiscal.create({
           tipo: tipoNF,
@@ -106,6 +137,10 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
           valor_total: valorTotal,
           xml_content: JSON.stringify(itensFinal),
           data_emissao: new Date().toISOString().split('T')[0],
+          forma_pagamento: formaPagamento,
+          parcelas: venda?.parcelas || 1,
+          parcelas_detalhes: parcelasDetalhes,
+          dados_adicionais: dadosAdicionais,
         });
 
         // Passo 2: Enviar para homologação (pré-visualização)
