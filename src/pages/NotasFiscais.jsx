@@ -565,7 +565,7 @@ export default function NotasFiscais() {
     const hoje = dataBase || new Date().toISOString().split('T')[0];
     return Array.from({ length: qtd }, (_, i) => {
       const dt = new Date(hoje + 'T12:00:00');
-      dt.setMonth(dt.getMonth() + i + 1);
+      dt.setMonth(dt.getMonth() + i);
       const ano = dt.getFullYear();
       const mes = String(dt.getMonth() + 1).padStart(2, '0');
       const dia = String(dt.getDate()).padStart(2, '0');
