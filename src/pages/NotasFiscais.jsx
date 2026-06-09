@@ -664,6 +664,11 @@ export default function NotasFiscais() {
         setTransmitindo(null);
         return;
       }
+      // Regenera parcelas usando a data_emissao do rascunho como base
+      const qtdParcelas = rascunhoNota.parcelas || 1;
+      const fpParcelas = rascunhoNota.forma_pagamento || 'A Combinar';
+      const parcelasRegeneradas = gerarParcelas(qtdParcelas, fpParcelas, rascunhoNota.valor_total || 0, rascunhoNota.data_emissao);
+      
       f = {
         ...defaultForm(),
         tipo: rascunhoNota.tipo,
@@ -684,8 +689,8 @@ export default function NotasFiscais() {
         observacoes: rascunhoNota.observacoes,
         dados_adicionais: rascunhoNota.dados_adicionais || '',
         forma_pagamento: rascunhoNota.forma_pagamento || 'A Combinar',
-        parcelas: rascunhoNota.parcelas || 1,
-        parcelas_detalhes: rascunhoNota.parcelas_detalhes || [],
+        parcelas: qtdParcelas,
+        parcelas_detalhes: parcelasRegeneradas,
         data_emissao: rascunhoNota.data_emissao,
         items: (() => {
           if (rascunhoNota.xml_content) {
