@@ -1956,11 +1956,12 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlSalvo(nota) {
-  // Verifica APENAS se tem xml_original físico no BD
-  // Verde somente se tem xml_original (arquivo baixado)
-  // Vermelho se não tem xml_original
+  // Verifica se tem xml_original OU xml_content XML válido no BD
+  // Verde se tem arquivo XML armazenado
+  // Vermelho se não tem
   
   if (nota.xml_original && typeof nota.xml_original === 'string' && nota.xml_original.trim().length > 0) return true;
+  if (nota.xml_content && typeof nota.xml_content === 'string' && nota.xml_content.trim().length > 0 && nota.xml_content.trim().startsWith('<')) return true;
   return false;
 }
 

@@ -14,9 +14,11 @@ Deno.serve(async (req) => {
     const emitidas = notas.filter(n => n.status === 'Emitida');
     const importadas = notas.filter(n => n.status === 'Importada' || n.status === 'Lançada');
 
-    // Função auxiliar para validar se tem XML de verdade (APENAS xml_original físico no BD)
+    // Função auxiliar para validar se tem XML de verdade (xml_original OU xml_content salvo no BD)
     const temXmlReal = (n) => {
-      return n.xml_original && typeof n.xml_original === 'string' && n.xml_original.trim().length > 0;
+      const temOriginal = n.xml_original && typeof n.xml_original === 'string' && n.xml_original.trim().length > 0;
+      const temContent = n.xml_content && typeof n.xml_content === 'string' && n.xml_content.trim().length > 0 && n.xml_content.trim().startsWith('<');
+      return temOriginal || temContent;
     };
 
     // Função auxiliar para validar se tem PDF de verdade
