@@ -262,7 +262,9 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
   // Deduplicar por número+série para evitar duplicidade
   const vistas = new Set();
   const notasSintegra = notasPeriodo.filter(n => {
-    if (n.tipo !== "NFe") return false; // excluir NFCe e outros
+    const isEntrada = n.status === "Importada" || n.status === "Lançada";
+    // Para entradas, aceita qualquer tipo; para saídas, apenas NFe
+    if (!isEntrada && n.tipo !== "NFe") return false;
     const chave = `${n.serie || "1"}_${n.numero}`;
     if (vistas.has(chave)) return false;
     vistas.add(chave);
