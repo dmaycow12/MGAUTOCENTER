@@ -305,10 +305,9 @@ export function gerarArquivoSintegra({ notas, estoque, configs, periodoInicio, p
     }
     itens.forEach((item, idx) => {
       addLinha("54", reg54(nota, item, idx, empresa));
-      if (item.codigo) {
-        codigosNosItens.add(item.codigo);
-        if (!itensPorCodigo.has(item.codigo)) itensPorCodigo.set(item.codigo, item);
-      }
+      const codigo = (item.codigo || "000").trim();
+      codigosNosItens.add(codigo);
+      if (!itensPorCodigo.has(codigo)) itensPorCodigo.set(codigo, item);
     });
   }
 
