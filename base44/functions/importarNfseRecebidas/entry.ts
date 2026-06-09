@@ -102,16 +102,14 @@ Deno.serve(async (req) => {
       let arquivosParaSalvar = {};
       try {
         const xmlText = gerarXmlNfse(nf);
-        const xmlFile = new File([xmlText], `NFSe-${chave}.xml`, { type: 'text/xml' });
-        const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
-        if (uploadResp?.file_url) arquivosParaSalvar.xml_url = uploadResp.file_url;
+        arquivosParaSalvar.xml_original = xmlText;
       } catch (_) {}
 
       if (chave && chavesExistentes.has(chave)) {
         const notaExistente = notasExistentes.find(n => n.chave_acesso === chave);
         if (notaExistente) {
           const updates = {};
-          if (!notaExistente.xml_url && arquivosParaSalvar.xml_url) updates.xml_url = arquivosParaSalvar.xml_url;
+          if (!notaExistente.xml_original && arquivosParaSalvar.xml_original) updates.xml_original = arquivosParaSalvar.xml_original;
           if (!notaExistente.pdf_url && arquivosParaSalvar.pdf_url) updates.pdf_url = arquivosParaSalvar.pdf_url;
           if (Object.keys(updates).length > 0) {
             await base44.asServiceRole.entities.NotaFiscal.update(notaExistente.id, updates);
