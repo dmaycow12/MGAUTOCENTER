@@ -1141,6 +1141,8 @@ export default function NotasFiscais() {
         <button onClick={() => { const novo = filtroModeloNF.includes("NFSe") ? filtroModeloNF.filter(x => x !== "NFSe") : [...filtroModeloNF, "NFSe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
       </div>
 
+      <FiltroPerioodoAvancado onFiltroChange={() => {}} />
+
       <div className="flex gap-0.5">
         <button
           onClick={async () => {
@@ -1221,8 +1223,6 @@ export default function NotasFiscais() {
       <button onClick={() => setShowForm(true)} className="w-full h-11 rounded-lg text-sm font-semibold transition-all mb-2" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
         + Emitir
       </button>
-
-      <FiltroPerioodoAvancado onFiltroChange={() => {}} />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
          {[
