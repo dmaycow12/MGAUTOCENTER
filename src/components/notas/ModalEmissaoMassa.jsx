@@ -95,6 +95,13 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
       const venda = vendas.find(v => v.id === vendaId);
       if (!venda) continue;
       try {
+        // Validação: NFSe e NFe não aceitam CONSUMIDOR
+        const isConsumidorVenda = venda.cliente_nome?.toUpperCase() === 'CONSUMIDOR';
+        if ((tipoNF === 'NFSe' || tipoNF === 'NFe') && isConsumidorVenda) {
+          res.push({ venda, sucesso: false, mensagem: `${tipoNF} não pode ser emitida para CONSUMIDOR` });
+          continue;
+        }
+
         const items = tipoNF === 'NFSe'
           ? (venda.servicos || []).map(s => ({ descricao: s.descricao || 'Serviço', quantidade: Number(s.quantidade ?? 1), valor_unitario: Number(s.valor || 0), valor_total: Number(s.valor || 0) * Number(s.quantidade ?? 1) }))
           : (venda.pecas || []).map(p => ({ descricao: p.descricao || 'Peça', quantidade: Number(p.quantidade || 1), valor_unitario: Number(p.valor_unitario || 0), valor_total: Number(p.valor_total || 0), ncm: p.ncm || '87089990', cfop: p.cfop || '5405', unidade: p.unidade || 'UN', codigo: p.codigo || '' }));
