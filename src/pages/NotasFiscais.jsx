@@ -859,6 +859,7 @@ export default function NotasFiscais() {
       data_emissao: nota.data_emissao || new Date().toISOString().split('T')[0],
       cliente_id: nota.cliente_id || '',
       cliente_nome: nota.cliente_nome || '',
+      cliente_nome_fantasia: nota.cliente_nome_fantasia || '',
       cliente_cpf_cnpj: nota.cliente_cpf_cnpj || '',
       cliente_ie: nota.cliente_ie || '',
       cliente_email: nota.cliente_email || '',
