@@ -105,7 +105,7 @@ export default function NotasFiscais() {
   const [search, setSearch] = useState("");
   const [filtroTipo, setFiltroTipo] = useState(() => { try { const s = localStorage.getItem("nf_filtroTipo"); return s ? JSON.parse(s) : ["Saída"]; } catch { return ["Saída"]; } });
   const [filtroModeloNF, setFiltroModeloNF] = useState(() => { try { const s = localStorage.getItem("nf_filtroModelo"); const parsed = s ? JSON.parse(s) : null; return parsed && parsed.length > 0 ? parsed : ["NFe", "NFCe", "NFSe"]; } catch { return ["NFe", "NFCe", "NFSe"]; } });
-  const [gerandoZip, setGerandoZip] = useState(false);
+
   const [showImportBackup, setShowImportBackup] = useState(false);
   const [importandoBackup, setImportandoBackup] = useState(false);
   const [resultadoImportBackup, setResultadoImportBackup] = useState(null);
@@ -1029,57 +1029,7 @@ export default function NotasFiscais() {
     return "\uFEFF" + csvContent;
   };
 
-  const exportarZip = async () => {
-    const todasNotas = filtradas;
-    if (todasNotas.length === 0) return alert("Nenhuma nota no filtro atual.");
-    setGerandoZip(true);
-    feedback("sucesso", `Preparando ZIP com ${todasNotas.length} nota(s)...`);
-    try {
-      const zip = new JSZip();
-      const getXml = async (nota) => {
-        if (nota.xml_original?.trim().startsWith("<")) return nota.xml_original;
-        if (nota.xml_content?.trim().startsWith("<")) return nota.xml_content;
-        if (nota.xml_url) {
-          try { const r = await fetch(nota.xml_url); const t = await r.text(); if (t?.trim().startsWith("<")) return t; } catch (_) {}
-        }
-        return null;
-      };
-      const isEntrada = (n) => n.observacoes !== "DEVOLUÇÃO" && (n.status === "Importada" || n.status === "Lançada");
-      const pastas = {
-        "Notas de Entrada/NFe":   todasNotas.filter(n => isEntrada(n) && n.tipo === "NFe"),
-        "Notas de Entrada/NFSe":  todasNotas.filter(n => isEntrada(n) && n.tipo === "NFSe"),
-        "Notas de Saida/NFe":     todasNotas.filter(n => !isEntrada(n) && n.tipo === "NFe"),
-        "Notas de Saida/NFSe":    todasNotas.filter(n => !isEntrada(n) && n.tipo === "NFSe"),
-        "Notas de Saida/NFCe":    todasNotas.filter(n => !isEntrada(n) && n.tipo === "NFCe"),
-      };
-      for (const [pasta, notasPasta] of Object.entries(pastas)) {
-        for (const nota of notasPasta) {
-          const base = `${nota.tipo}-${nota.numero || nota.id}`;
-          const xml = await getXml(nota);
-          if (xml) zip.file(`${pasta}/${base}.xml`, xml);
-          if (nota.pdf_url) {
-            try {
-              const r = await fetch(nota.pdf_url);
-              if (r.ok) { const b = await r.blob(); zip.file(`${pasta}/${base}.pdf`, b); }
-            } catch (_) {}
-          }
-        }
-      }
-      const csvContent = gerarExcelNotas(todasNotas);
-      zip.file(`Relatorio_Notas_${periodoRange.inicio}_${periodoRange.fim}.csv`, csvContent);
-      const blob = await zip.generateAsync({ type: "blob" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `NF_${periodoRange.inicio}_${periodoRange.fim}.zip`;
-      a.click();
-      URL.revokeObjectURL(url);
-      setMsgFeedback(null);
-    } catch (e) {
-      feedback("erro", "Erro ao gerar ZIP: " + e.message);
-    }
-    setGerandoZip(false);
-  };
+
 
   if (loading) return <Loader />;
 
@@ -1111,15 +1061,21 @@ export default function NotasFiscais() {
         <button onClick={() => { const novo = filtroModeloNF.includes("NFSe") ? filtroModeloNF.filter(x => x !== "NFSe") : [...filtroModeloNF, "NFSe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
       </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-0.5">
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-0.5">
         <button
           onClick={async () => {
             setBuscandoSefaz(true);
             try {
-              const res = await base44.functions.invoke('consultarNotasRecebidas', {});
-              const data = res.data;
-              if (data?.sucesso) { feedback('sucesso', data.mensagem || 'Consulta concluída.'); load(); }
-              else { feedback('erro', data?.erro || 'Erro ao buscar notas recebidas.'); }
+              const res1 = await base44.functions.invoke('consultarNotasRecebidas', {});
+              const res2 = await base44.functions.invoke('importarNfseRecebidas', {});
+              const data1 = res1.data;
+              const data2 = res2.data;
+              if (data1?.sucesso || data2?.sucesso) { 
+                feedback('sucesso', 'NFe e NFSe importadas com sucesso!'); 
+                load(); 
+              } else { 
+                feedback('erro', data1?.erro || data2?.erro || 'Erro ao importar notas.'); 
+              }
             } catch (e) { feedback('erro', 'Erro: ' + e.message); }
             setBuscandoSefaz(false);
           }}
@@ -1131,26 +1087,6 @@ export default function NotasFiscais() {
         >
           {buscandoSefaz ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
           <span>Importar</span>
-        </button>
-        <button
-          onClick={async () => {
-            setBuscandoSefaz(true);
-            try {
-              const res = await base44.functions.invoke('importarNfseRecebidas', {});
-              const data = res.data;
-              if (data?.sucesso) { feedback('sucesso', data.mensagem || 'NFSe importadas com sucesso.'); load(); }
-              else { feedback('erro', data?.erro || 'Erro ao importar NFSe.'); }
-            } catch (e) { feedback('erro', 'Erro: ' + e.message); }
-            setBuscandoSefaz(false);
-          }}
-          disabled={buscandoSefaz}
-          className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50"
-          style={{background:"#00ff00", color:"#000"}}
-          onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00dd00"; }}
-          onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
-        >
-          {buscandoSefaz ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-          <span>NFSe</span>
         </button>
         <button onClick={() => setShowSintegra(true)} className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
           <BarChart2 className="w-4 h-4" />
@@ -1184,10 +1120,7 @@ export default function NotasFiscais() {
           {autorizandoMassa ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
           <span>Autorizar</span>
         </button>
-        <button onClick={() => exportarZip()} disabled={gerandoZip} className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-           {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-           <span>Exportar</span>
-         </button>
+
         </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
