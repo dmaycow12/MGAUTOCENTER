@@ -567,29 +567,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       setParcelasSync(prev => prev.map((p, idx) => idx === i ? { ...p, forma_pagamento: val, vencimento: novoVenc } : p));
       return;
     }
-    if (field !== "valor") {
-      setParcelasSync(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: val } : p));
-      return;
-    }
-    setParcelasSync(prev => {
-      const novoValor = Number(val) || 0;
-      const totalGeral = form.valor_total;
-      // Soma das parcelas pagas (exceto a que está sendo editada)
-      const totalPago = prev.reduce((acc, p, idx) => {
-        if (idx === i) return acc;
-        if ((p.financeiro_status || "Pendente") === "Pago") return acc + Number(p.valor || 0);
-        return acc;
-      }, 0);
-      const resto = parseFloat((totalGeral - novoValor - totalPago).toFixed(2));
-      // Distribuir somente entre as pendentes (exceto a atual)
-      const pendentesOutras = prev.filter((p, idx) => idx !== i && (p.financeiro_status || "Pendente") !== "Pago");
-      const valorOutras = pendentesOutras.length > 0 ? parseFloat((resto / pendentesOutras.length).toFixed(2)) : 0;
-      return prev.map((p, idx) => {
-        if (idx === i) return { ...p, valor: novoValor };
-        if ((p.financeiro_status || "Pendente") === "Pago") return p; // Não altera pagas
-        return { ...p, valor: valorOutras };
-      });
-    });
+    setParcelasSync(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: field === "valor" ? (Number(val) || 0) : val } : p));
   };
 
   const onStatusChange = (novoStatus) => {
