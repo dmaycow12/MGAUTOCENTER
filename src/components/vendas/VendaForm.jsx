@@ -334,7 +334,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const onClienteChange = (clienteId) => {
     const c = clientes.find(c => c.id === clienteId);
-    const end = [c?.endereco, c?.numero].filter(Boolean).join(", ");
     const isConsumidorSelecionado = c?.nome?.toUpperCase() === "CONSUMIDOR";
     setForm(f => ({
       ...f,
@@ -344,7 +343,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       cliente_telefone: isConsumidorSelecionado ? (f.cliente_telefone || "") : (c?.telefone || ""),
       cliente_email: isConsumidorSelecionado ? (f.cliente_email || "") : (c?.email || ""),
       cliente_cpf_cnpj: isConsumidorSelecionado ? (f.cliente_cpf_cnpj || "") : (c?.cpf_cnpj || ""),
-      cliente_endereco: isConsumidorSelecionado ? (f.cliente_endereco || "") : end,
+      cliente_endereco: isConsumidorSelecionado ? (f.cliente_endereco || "") : (c?.endereco || ""),
+      cliente_numero: isConsumidorSelecionado ? (f.cliente_numero || "") : (c?.numero || ""),
       cliente_bairro: isConsumidorSelecionado ? (f.cliente_bairro || "") : (c?.bairro || ""),
       cliente_cidade: isConsumidorSelecionado ? (f.cliente_cidade || "") : (c?.cidade || ""),
       cliente_estado: isConsumidorSelecionado ? (f.cliente_estado || "") : (c?.estado || ""),
