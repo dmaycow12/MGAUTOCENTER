@@ -698,6 +698,12 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     const servicosSemCodigo = form.status !== "Orçamento" ? (form.servicos || []).filter(s => !s.codigo?.trim()) : [];
     if (pecasSemCodigo.length > 0) return alert(`Produto(s) sem código: ${pecasSemCodigo.map(p => p.descricao || 'sem descrição').join(', ')}. Preencha o código antes de salvar.`);
     if (servicosSemCodigo.length > 0) return alert(`Serviço(s) sem código: ${servicosSemCodigo.map(s => s.descricao || 'sem descrição').join(', ')}. Preencha o código antes de salvar.`);
+    const totalParcelas = parcelasRef.current.reduce((acc, p) => acc + (Number(p.valor) || 0), 0);
+    const diff = Math.abs(totalParcelas - form.valor_total);
+    if (diff > 0.05) {
+      return alert(`O total das parcelas (R$ ${totalParcelas.toLocaleString('pt-BR', {minimumFractionDigits:2})}) não confere com o valor da venda (R$ ${Number(form.valor_total).toLocaleString('pt-BR', {minimumFractionDigits:2})}). Corrija os valores antes de salvar.`);
+    }
+
     if (saving) return;
     setSaving(true);
 
