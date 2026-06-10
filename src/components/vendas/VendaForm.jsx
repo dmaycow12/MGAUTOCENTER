@@ -1097,9 +1097,11 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     )}
                   </Droppable>
                 </DragDropContext>
-                <button onClick={addPeca} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium mb-3" style={{background:"#00ff00"}}>
-                  <Plus className="w-4 h-4" /> Adicionar
-                </button>
+                <div className="flex justify-end mb-3">
+                  <button onClick={addPeca} className="flex items-center gap-2 text-black px-4 py-2 rounded-lg text-sm font-semibold" style={{background:"#00ff00"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+                    <Plus className="w-4 h-4" /> Adicionar
+                  </button>
+                </div>
                 </Section>
 
               <Section title="Serviços">
@@ -1233,9 +1235,11 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     )}
                   </Droppable>
                 </DragDropContext>
-                <button onClick={addServico} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
-                  <Plus className="w-4 h-4" /> Adicionar
-                </button>
+                <div className="flex justify-end">
+                  <button onClick={addServico} className="flex items-center gap-2 text-black px-4 py-2 rounded-lg text-sm font-semibold" style={{background:"#00ff00"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+                    <Plus className="w-4 h-4" /> Adicionar
+                  </button>
+                </div>
                 </Section>
 
               <Section title="Pagamento">
