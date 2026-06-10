@@ -1435,7 +1435,7 @@ export default function NotasFiscais() {
                     <select value={form.tipo} onChange={e => {
                       const novoTipo = e.target.value;
                       let serie = proximaSerie(notas, novoTipo);
-                      setForm(f => ({ ...f, tipo: novoTipo, numero: '', serie }));
+                      setForm(f => ({ ...f, tipo: novoTipo, numero: '', serie, items: [defaultItem()] }));
                     }} className="input-dark">
                       <option value="NFSe">NFSe — Serviço</option>
                       <option value="NFe">NFe — Produto</option>
