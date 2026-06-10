@@ -287,7 +287,21 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     });
   }, [os?.id]);
 
+  const prevTotalRef = useRef(form.valor_total);
   const prevQtdRef = useRef(form.parcelas);
+  useEffect(() => {
+    const totalMudou = prevTotalRef.current !== form.valor_total;
+    prevTotalRef.current = form.valor_total;
+    if (totalMudou) {
+      setParcelasSync(prev => {
+        if (prev.length === 0) return prev;
+        const n = prev.length;
+        const valorNova = parseFloat((form.valor_total / n).toFixed(2));
+        return prev.map((p, i) => ({ ...p, valor: valorNova }));
+      });
+    }
+  }, [form.valor_total]);
+
   useEffect(() => {
     const qtdMudou = String(prevQtdRef.current) !== String(form.parcelas);
     prevQtdRef.current = form.parcelas;
