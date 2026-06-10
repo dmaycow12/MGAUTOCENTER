@@ -60,7 +60,9 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
 
   const vendasElegiveis = vendas.filter(venda => {
     if (venda.status !== 'Concluído') return false;
-    const isConsumidor = venda.cliente_nome?.toUpperCase().trim() === 'CONSUMIDOR';
+    const cadastro = clientes.find(c => c.id === venda.cliente_id) || clientes.find(c => c.nome?.toLowerCase().trim() === venda.cliente_nome?.toLowerCase().trim());
+    const cpfCnpj = (venda.cliente_cpf_cnpj || cadastro?.cpf_cnpj || '').replace(/\D/g, '');
+    const isConsumidor = venda.cliente_nome?.toUpperCase().trim() === 'CONSUMIDOR' || cpfCnpj.length === 0;
     const notasVenda = notasCarregadas.filter(n => n.ordem_venda_id === venda.id && n.status !== 'Cancelada' && n.status !== 'Rascunho');
     const temNFe = notasVenda.some(n => n.tipo === 'NFe') || !!(venda.nfe_manual?.trim());
     const temNFCe = notasVenda.some(n => n.tipo === 'NFCe') || !!(venda.nfe_manual?.trim());
@@ -96,7 +98,9 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
       if (!venda) continue;
       try {
         // Validação: NFSe e NFe não aceitam CONSUMIDOR
-        const isConsumidorVenda = venda.cliente_nome?.toUpperCase().trim() === 'CONSUMIDOR';
+        const cadastroVenda = clientes.find(c => c.id === venda.cliente_id) || clientes.find(c => c.nome?.toLowerCase().trim() === venda.cliente_nome?.toLowerCase().trim());
+        const cpfCnpjVenda = (venda.cliente_cpf_cnpj || cadastroVenda?.cpf_cnpj || '').replace(/\D/g, '');
+        const isConsumidorVenda = venda.cliente_nome?.toUpperCase().trim() === 'CONSUMIDOR' || cpfCnpjVenda.length === 0;
         if ((tipoNF === 'NFSe' || tipoNF === 'NFe') && isConsumidorVenda) {
           res.push({ venda, sucesso: false, mensagem: `${tipoNF} não pode ser emitida para CONSUMIDOR` });
           continue;
