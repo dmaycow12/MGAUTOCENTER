@@ -1507,16 +1507,16 @@ export default function NotasFiscais() {
                       <NoACInput value={form.cliente_bairro} onChange={e => setForm(f => ({ ...f, cliente_bairro: e.target.value }))} placeholder="" />
                     </F>
                     <F label="Cidade">
-                      <NoACInput value={form.cliente_cidade} onChange={e => {
-                        const novaCidade = e.target.value;
-                        setForm(f => {
-                          if (novaCidade && f.cliente_estado) preencherCodigoMunicipio(novaCidade, f.cliente_estado);
-                          return { ...f, cliente_cidade: novaCidade };
-                        });
-                        setErrosForm(e2 => ({...e2, cliente_cidade: undefined}));
-                      }} placeholder="" className={`input-dark ${errosForm.cliente_cidade ? 'border-red-500' : ''}`} />
-                      {errosForm.cliente_cidade && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cidade}</p>}
-                    </F>
+                       <NoACInput value={form.cliente_cidade} onChange={e => {
+                         const novaCidade = e.target.value.toUpperCase();
+                         setForm(f => {
+                           if (novaCidade && f.cliente_estado) preencherCodigoMunicipio(novaCidade, f.cliente_estado);
+                           return { ...f, cliente_cidade: novaCidade };
+                         });
+                         setErrosForm(e2 => ({...e2, cliente_cidade: undefined}));
+                       }} placeholder="" className={`input-dark ${errosForm.cliente_cidade ? 'border-red-500' : ''}`} />
+                       {errosForm.cliente_cidade && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cidade}</p>}
+                     </F>
                     <F label="CEP">
                       <NoACInput value={form.cliente_cep} onChange={e => { setForm(f => ({ ...f, cliente_cep: e.target.value })); setErrosForm(e2 => ({...e2, cliente_cep: undefined})); }} placeholder="" className={`input-dark ${errosForm.cliente_cep ? 'border-red-500' : ''}`} />
                       {errosForm.cliente_cep && <p className="text-red-400 text-xs mt-1">{errosForm.cliente_cep}</p>}
