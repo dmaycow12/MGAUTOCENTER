@@ -60,7 +60,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
 
   const vendasElegiveis = vendas.filter(venda => {
     if (venda.status !== 'Concluído') return false;
-    const isConsumidor = venda.cliente_nome?.toUpperCase() === 'CONSUMIDOR';
+    const isConsumidor = venda.cliente_nome?.toUpperCase().trim() === 'CONSUMIDOR';
     const notasVenda = notasCarregadas.filter(n => n.ordem_venda_id === venda.id && n.status !== 'Cancelada' && n.status !== 'Rascunho');
     const temNFe = notasVenda.some(n => n.tipo === 'NFe') || !!(venda.nfe_manual?.trim());
     const temNFCe = notasVenda.some(n => n.tipo === 'NFCe') || !!(venda.nfe_manual?.trim());
@@ -96,7 +96,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
       if (!venda) continue;
       try {
         // Validação: NFSe e NFe não aceitam CONSUMIDOR
-        const isConsumidorVenda = venda.cliente_nome?.toUpperCase() === 'CONSUMIDOR';
+        const isConsumidorVenda = venda.cliente_nome?.toUpperCase().trim() === 'CONSUMIDOR';
         if ((tipoNF === 'NFSe' || tipoNF === 'NFe') && isConsumidorVenda) {
           res.push({ venda, sucesso: false, mensagem: `${tipoNF} não pode ser emitida para CONSUMIDOR` });
           continue;
