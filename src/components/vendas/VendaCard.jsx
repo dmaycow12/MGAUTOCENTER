@@ -276,12 +276,18 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
 
   const style = STATUS_STYLE[os.status] || { badge: "bg-gray-600 text-white", style: { background: "#374151", color: "#fff" } };
 
+  const temPecas = (os.pecas?.length > 0);
+  const temServicos = (os.servicos?.length > 0);
   const menuItems = [
     { label: "Enviar orçamento", icon: WhatsAppIcon, action: enviarOrcamento },
     { label: "Chamar no WhatsApp", icon: WhatsAppIcon, action: chamarWhatsApp },
-    { label: "Emitir NFe (Produtos)", icon: FileText, action: () => emitirNF("NFe") },
-    { label: "Emitir NFSe (Serviços)", icon: FileText, action: () => emitirNF("NFSe") },
-    { label: "Emitir NFCe (Consumidor)", icon: FileText, action: () => emitirNF("NFCe") },
+    ...(temPecas ? [
+      { label: "Emitir NFe (Produtos)", icon: FileText, action: () => emitirNF("NFe") },
+      { label: "Emitir NFCe (Consumidor)", icon: FileText, action: () => emitirNF("NFCe") },
+    ] : []),
+    ...(temServicos ? [
+      { label: "Emitir NFSe (Serviços)", icon: FileText, action: () => emitirNF("NFSe") },
+    ] : []),
   ];
 
   return (

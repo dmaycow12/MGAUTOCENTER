@@ -578,6 +578,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
           const manual = os.nfe_manual;
           if (nfe) return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">{nfe.tipo}{nfe.numero}</span>;
           if (manual) { const n = normalizarNF(manual); return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">{n}</span>; }
+          if (!(os.pecas?.length > 0)) return <span className="text-gray-700 text-xs">—</span>;
           return <button onClick={() => emitirNF('NFe')} className="text-gray-700 hover:text-green-400 text-xs transition-all">+ NF</button>;
         })()}</td>}
         {colunas.nfse && <td className="px-4 py-3">{(() => {
@@ -585,6 +586,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
           const manual = os.nfse_manual;
           if (nfse) return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">NFSe{nfse.numero}</span>;
           if (manual) { const n = normalizarNF(manual); return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">{n}</span>; }
+          if (!(os.servicos?.length > 0)) return <span className="text-gray-700 text-xs">—</span>;
           return <button onClick={() => emitirNF('NFSe')} className="text-gray-700 hover:text-blue-400 text-xs transition-all">+ NFSe</button>;
         })()}</td>}
         <td className="px-4 py-3">
