@@ -286,53 +286,36 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     });
   }, [os?.id]);
 
-  const prevTotalRef = useRef(form.valor_total);
   const prevQtdRef = useRef(form.parcelas);
   useEffect(() => {
-    const totalMudou = prevTotalRef.current !== form.valor_total;
     const qtdMudou = String(prevQtdRef.current) !== String(form.parcelas);
-    prevTotalRef.current = form.valor_total;
     prevQtdRef.current = form.parcelas;
-    if (qtdMudou) {
-      const n = Math.max(1, Number(form.parcelas) || 1);
-      const base = form.data_entrada ? new Date(form.data_entrada + "T00:00:00") : new Date();
-      setParcelasSync(prev => {
-        // Parcelas já pagas devem ser preservadas
-        const pagas = prev.filter(p => (p.financeiro_status || "Pendente") === "Pago");
-        const totalPago = pagas.reduce((acc, p) => acc + Number(p.valor || 0), 0);
-        const totalPendente = parseFloat((form.valor_total - totalPago).toFixed(2));
-        const qtdNovas = n - pagas.length;
-        const valorNova = qtdNovas > 0 ? parseFloat((totalPendente / qtdNovas).toFixed(2)) : 0;
-
-        return Array.from({ length: n }, (_, i) => {
-          // Se existe uma parcela anterior neste índice e está paga, preserva
-          if (prev[i] && (prev[i].financeiro_status || "Pendente") === "Pago") {
-            return { ...prev[i], numero: i + 1 };
-          }
-          const d = new Date(base);
-          d.setMonth(d.getMonth() + i);
-          return {
-            numero: i + 1,
-            valor: valorNova,
-            vencimento: prev[i]?.vencimento || d.toISOString().split("T")[0],
-            forma_pagamento: prev[i]?.forma_pagamento || "A Combinar",
-            financeiro_id: prev[i]?.financeiro_id,
-            financeiro_status: prev[i]?.financeiro_status || "Pendente",
-          };
-        });
+    if (!qtdMudou) return;
+    const n = Math.max(1, Number(form.parcelas) || 1);
+    const base = form.data_entrada ? new Date(form.data_entrada + "T00:00:00") : new Date();
+    setParcelasSync(prev => {
+      const totalPago = prev.reduce((acc, p) => (p.financeiro_status || "Pendente") === "Pago" ? acc + Number(p.valor || 0) : acc, 0);
+      const totalPendente = parseFloat((form.valor_total - totalPago).toFixed(2));
+      const qtdPagasNoRange = prev.filter((p, i) => i < n && (p.financeiro_status || "Pendente") === "Pago").length;
+      const qtdNovas = n - qtdPagasNoRange;
+      const valorNova = qtdNovas > 0 ? parseFloat((totalPendente / qtdNovas).toFixed(2)) : 0;
+      return Array.from({ length: n }, (_, i) => {
+        if (prev[i] && (prev[i].financeiro_status || "Pendente") === "Pago") {
+          return { ...prev[i], numero: i + 1 };
+        }
+        const d = new Date(base);
+        d.setMonth(d.getMonth() + i);
+        return {
+          numero: i + 1,
+          valor: valorNova,
+          vencimento: prev[i]?.vencimento || d.toISOString().split("T")[0],
+          forma_pagamento: prev[i]?.forma_pagamento || "A Combinar",
+          financeiro_id: prev[i]?.financeiro_id,
+          financeiro_status: prev[i]?.financeiro_status || "Pendente",
+        };
       });
-    } else if (totalMudou) {
-      setParcelasSync(prev => {
-        // Só redistribui entre parcelas NÃO pagas
-        const pagas = prev.filter(p => (p.financeiro_status || "Pendente") === "Pago");
-        const totalPago = pagas.reduce((acc, p) => acc + Number(p.valor || 0), 0);
-        const totalPendente = parseFloat((form.valor_total - totalPago).toFixed(2));
-        const pendentes = prev.filter(p => (p.financeiro_status || "Pendente") !== "Pago");
-        const valorNova = pendentes.length > 0 ? parseFloat((totalPendente / pendentes.length).toFixed(2)) : 0;
-        return prev.map(p => (p.financeiro_status || "Pendente") === "Pago" ? p : { ...p, valor: valorNova });
-      });
-    }
-  }, [form.valor_total, form.parcelas]);
+    });
+  }, [form.parcelas]);
 
   const onClienteChange = (clienteId) => {
     const c = clientes.find(c => c.id === clienteId);
