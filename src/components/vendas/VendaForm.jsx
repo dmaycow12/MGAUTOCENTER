@@ -295,24 +295,42 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     prevQtdRef.current = form.parcelas;
     if (qtdMudou) {
       const n = Math.max(1, Number(form.parcelas) || 1);
-      const valorParcela = parseFloat((form.valor_total / n).toFixed(2));
       const base = form.data_entrada ? new Date(form.data_entrada + "T00:00:00") : new Date();
-      setParcelasSync(prev => Array.from({ length: n }, (_, i) => {
-        const d = new Date(base);
-        d.setMonth(d.getMonth() + i);
-        return {
-          numero: i + 1,
-          valor: valorParcela,
-          vencimento: prev[i]?.vencimento || d.toISOString().split("T")[0],
-          forma_pagamento: prev[i]?.forma_pagamento || "A Combinar",
-          financeiro_id: prev[i]?.financeiro_id,
-          financeiro_status: prev[i]?.financeiro_status,
-        };
-      }));
+      setParcelasSync(prev => {
+        // Parcelas já pagas devem ser preservadas
+        const pagas = prev.filter(p => (p.financeiro_status || "Pendente") === "Pago");
+        const totalPago = pagas.reduce((acc, p) => acc + Number(p.valor || 0), 0);
+        const totalPendente = parseFloat((form.valor_total - totalPago).toFixed(2));
+        const qtdNovas = n - pagas.length;
+        const valorNova = qtdNovas > 0 ? parseFloat((totalPendente / qtdNovas).toFixed(2)) : 0;
+
+        return Array.from({ length: n }, (_, i) => {
+          // Se existe uma parcela anterior neste índice e está paga, preserva
+          if (prev[i] && (prev[i].financeiro_status || "Pendente") === "Pago") {
+            return { ...prev[i], numero: i + 1 };
+          }
+          const d = new Date(base);
+          d.setMonth(d.getMonth() + i);
+          return {
+            numero: i + 1,
+            valor: valorNova,
+            vencimento: prev[i]?.vencimento || d.toISOString().split("T")[0],
+            forma_pagamento: prev[i]?.forma_pagamento || "A Combinar",
+            financeiro_id: prev[i]?.financeiro_id,
+            financeiro_status: prev[i]?.financeiro_status || "Pendente",
+          };
+        });
+      });
     } else if (totalMudou) {
-      const n = Math.max(1, Number(form.parcelas) || 1);
-      const valorParcela = parseFloat((form.valor_total / n).toFixed(2));
-      setParcelasSync(prev => prev.map(p => ({ ...p, valor: valorParcela })));
+      setParcelasSync(prev => {
+        // Só redistribui entre parcelas NÃO pagas
+        const pagas = prev.filter(p => (p.financeiro_status || "Pendente") === "Pago");
+        const totalPago = pagas.reduce((acc, p) => acc + Number(p.valor || 0), 0);
+        const totalPendente = parseFloat((form.valor_total - totalPago).toFixed(2));
+        const pendentes = prev.filter(p => (p.financeiro_status || "Pendente") !== "Pago");
+        const valorNova = pendentes.length > 0 ? parseFloat((totalPendente / pendentes.length).toFixed(2)) : 0;
+        return prev.map(p => (p.financeiro_status || "Pendente") === "Pago" ? p : { ...p, valor: valorNova });
+      });
     }
   }, [form.valor_total, form.parcelas]);
 
@@ -573,11 +591,19 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     setParcelasSync(prev => {
       const novoValor = Number(val) || 0;
       const totalGeral = form.valor_total;
-      const resto = parseFloat((totalGeral - novoValor).toFixed(2));
-      const outras = prev.length - 1;
-      const valorOutras = outras > 0 ? parseFloat((resto / outras).toFixed(2)) : 0;
+      // Soma das parcelas pagas (exceto a que está sendo editada)
+      const totalPago = prev.reduce((acc, p, idx) => {
+        if (idx === i) return acc;
+        if ((p.financeiro_status || "Pendente") === "Pago") return acc + Number(p.valor || 0);
+        return acc;
+      }, 0);
+      const resto = parseFloat((totalGeral - novoValor - totalPago).toFixed(2));
+      // Distribuir somente entre as pendentes (exceto a atual)
+      const pendentesOutras = prev.filter((p, idx) => idx !== i && (p.financeiro_status || "Pendente") !== "Pago");
+      const valorOutras = pendentesOutras.length > 0 ? parseFloat((resto / pendentesOutras.length).toFixed(2)) : 0;
       return prev.map((p, idx) => {
         if (idx === i) return { ...p, valor: novoValor };
+        if ((p.financeiro_status || "Pendente") === "Pago") return p; // Não altera pagas
         return { ...p, valor: valorOutras };
       });
     });
