@@ -1136,9 +1136,14 @@ export default function NotasFiscais() {
            <p className="font-bold text-sm" style={{ color }}>{`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</p>
          </div>
        ))}
+       {/* Total NF Emitidas - só mobile, fica ao lado de NFSe Emitida */}
+       <div className="md:hidden bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center">
+         <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">Total NF Emitidas</p>
+         <p className="font-bold text-sm" style={{ color: '#facc15' }}>{`R$ ${Number(totalNFeEmitida + totalNFCeEmitida + totalNFSeEmitida).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</p>
+       </div>
        </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
        {(() => {
           const notasSemXml = filtradas.filter(n => !n.xml_original?.trim().startsWith('<') && !n.xml_content?.trim().startsWith('<') && n.xml_url !== 'XML_IN_URL').length;
           const notasSemPdf = filtradas.filter(n => !n.pdf_url).length;
@@ -1153,7 +1158,7 @@ export default function NotasFiscais() {
             { label: 'Sem PDF', value: notasSemPdf, color: '#ff9500' },
             { label: 'Total NF Emitidas', value: `R$ ${Number(totalEmitidas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, color: '#facc15', isTotal: true },
           ].map(({ label, value, color, isTotal }) => (
-            <div key={label} className={`bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center ${isTotal ? 'md:col-span-1' : ''}`}>
+            <div key={label} className={`bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center ${isTotal ? 'hidden md:flex' : ''}`}>
               <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
               <p className="font-bold text-sm" style={{ color }}>{isTotal ? value : value}</p>
             </div>
