@@ -1620,29 +1620,7 @@ export default function NotasFiscais() {
                               </div>
                               <button onClick={() => removeItem(idx)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-2 mb-0.5"><Trash2 className="w-4 h-4" /></button>
                             </div>
-                            {/* Linha NCM/CFOP/CEST/Unidade — desktop */}
-                            <div className="hidden lg:flex gap-2 items-end pl-0">
-                              <div className="w-16 flex-shrink-0" />
-                              <div className="w-24 flex-shrink-0">
-                                <label className="text-xs text-gray-500 mb-1 block">NCM</label>
-                                <input value={item.ncm || ''} onChange={e => atualizarItem(idx, 'ncm', e.target.value)} placeholder="87089990" className={`input-dark text-sm ${errosForm.items?.[idx]?.ncm ? 'border-red-500' : ''}`} autoComplete="off" />
-                                {errosForm.items?.[idx]?.ncm && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].ncm}</p>}
-                              </div>
-                              <div className="w-20 flex-shrink-0">
-                                <label className="text-xs text-gray-500 mb-1 block">CFOP</label>
-                                <input value={item.cfop || ''} onChange={e => atualizarItem(idx, 'cfop', e.target.value)} placeholder="5405" className={`input-dark text-sm ${errosForm.items?.[idx]?.cfop ? 'border-red-500' : ''}`} autoComplete="off" />
-                                {errosForm.items?.[idx]?.cfop && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].cfop}</p>}
-                              </div>
-                              <div className="w-28 flex-shrink-0">
-                                <label className="text-xs text-gray-500 mb-1 block">CEST (opcional)</label>
-                                <input value={item.cest || ''} onChange={e => atualizarItem(idx, 'cest', e.target.value)} className="input-dark text-sm" autoComplete="off" />
-                              </div>
-                              <div className="w-16 flex-shrink-0">
-                                <label className="text-xs text-gray-500 mb-1 block">Unidade</label>
-                                <input value={item.unidade || ''} onChange={e => atualizarItem(idx, 'unidade', e.target.value)} placeholder="UN" className="input-dark text-sm" autoComplete="off" />
-                              </div>
-                              <button onClick={() => { atualizarItemCompleto(idx, defaultItem()); }} className="text-xs text-gray-500 hover:text-red-400 transition-all mb-2">✕ Trocar</button>
-                            </div>
+
                             {/* Mobile/Tablet */}
                             <div className="lg:hidden space-y-2">
                               <div className="flex items-start justify-between gap-2">
@@ -1666,27 +1644,7 @@ export default function NotasFiscais() {
                                   <div className="input-dark text-sm text-orange-400 font-semibold text-center">{Number(item.valor_total || 0).toFixed(2)}</div>
                                 </div>
                               </div>
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <label className="text-xs text-gray-500 mb-1 block">NCM</label>
-                                  <input value={item.ncm || ''} onChange={e => atualizarItem(idx, 'ncm', e.target.value)} placeholder="87089990" className="input-dark text-sm" autoComplete="off" />
-                                </div>
-                                <div>
-                                  <label className="text-xs text-gray-500 mb-1 block">CFOP</label>
-                                  <input value={item.cfop || ''} onChange={e => atualizarItem(idx, 'cfop', e.target.value)} placeholder="5405" className="input-dark text-sm" autoComplete="off" />
-                                </div>
-                                <div>
-                                  <label className="text-xs text-gray-500 mb-1 block">CEST</label>
-                                  <input value={item.cest || ''} onChange={e => atualizarItem(idx, 'cest', e.target.value)} className="input-dark text-sm" autoComplete="off" />
-                                </div>
-                                <div>
-                                  <label className="text-xs text-gray-500 mb-1 block">Unidade</label>
-                                  <input value={item.unidade || ''} onChange={e => atualizarItem(idx, 'unidade', e.target.value)} placeholder="UN" className="input-dark text-sm" autoComplete="off" />
-                                </div>
-                              </div>
-                              <div className="flex justify-end">
-                                <button onClick={() => { atualizarItemCompleto(idx, defaultItem()); }} className="text-xs text-gray-500 hover:text-red-400 transition-all">✕ Trocar produto</button>
-                              </div>
+
                             </div>
                           </div>
                         )}
