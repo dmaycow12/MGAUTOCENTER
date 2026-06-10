@@ -198,6 +198,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const [pagandoParcela, setPagandoParcela] = useState(null);
   const [showConfirmCustoZero, setShowConfirmCustoZero] = useState(false);
   const [parcelaAPagar, setParcelaAPagar] = useState(null);
+  const [alertaModal, setAlertaModal] = useState(null); // { titulo, mensagem }
   const custoInputRefs = useRef({});
   const [xxCustos, setXXCustos] = useState({});
 
@@ -679,7 +680,11 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     const totalParcelas = parcelasRef.current.reduce((acc, p) => acc + (Number(p.valor) || 0), 0);
     const diff = Math.abs(totalParcelas - form.valor_total);
     if (diff > 0.05) {
-      return alert(`O total das parcelas (R$ ${totalParcelas.toLocaleString('pt-BR', {minimumFractionDigits:2})}) não confere com o valor da venda (R$ ${Number(form.valor_total).toLocaleString('pt-BR', {minimumFractionDigits:2})}). Corrija os valores antes de salvar.`);
+      setAlertaModal({
+        titulo: "Parcelas não conferem",
+        mensagem: `O total das parcelas (R$ ${totalParcelas.toLocaleString('pt-BR', {minimumFractionDigits:2})}) não confere com o valor da venda (R$ ${Number(form.valor_total).toLocaleString('pt-BR', {minimumFractionDigits:2})}).\n\nCorrija os valores antes de salvar.`
+      });
+      return;
     }
 
     if (saving) return;
@@ -1473,6 +1478,30 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
             style={{background:"#f97316"}}>
             Corrigir
           </button>
+        </div>
+      </div>
+    )}
+
+    {alertaModal && (
+      <div className="fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4">
+        <div className="bg-gray-900 border border-red-500/30 rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-2xl">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style={{background:"rgba(239,68,68,0.15)"}}>
+              <span className="text-2xl">⚠️</span>
+            </div>
+            <div>
+              <h3 className="text-white font-bold text-lg">{alertaModal.titulo}</h3>
+              <p className="text-gray-300 text-sm mt-2 whitespace-pre-line">{alertaModal.mensagem}</p>
+            </div>
+          </div>
+          <div className="pt-4 border-t border-gray-700">
+            <button
+              onClick={() => setAlertaModal(null)}
+              className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
+              style={{background:"#062C9B"}}>
+              Entendido
+            </button>
+          </div>
         </div>
       </div>
     )}
