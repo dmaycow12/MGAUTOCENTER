@@ -1043,7 +1043,7 @@ export default function NotasFiscais() {
         </div>
       )}
 
-      <button onClick={() => { setForm(f => ({ ...f, numero: '', serie: proximaSerie(notas, f.tipo) })); setShowForm(true); }} className="w-full flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all mb-0.5" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+      <button onClick={() => { const novo = defaultForm(); setForm({ ...novo, serie: proximaSerie(notas, novo.tipo) }); setAbaForm("cliente"); setErrosForm({}); currentEditIdRef.current = null; setShowForm(true); }} className="w-full flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all mb-0.5" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
         <Plus className="w-4 h-4" /> Emitir
       </button>
 
@@ -1421,7 +1421,7 @@ export default function NotasFiscais() {
                 {!temSpedy && <p className="text-yellow-400 text-xs mt-0.5">⚠️ Focus NFe não configurada — será salvo como rascunho</p>}
                 {temSpedy && <p className="text-green-400 text-xs mt-0.5">✓ Focus NFe configurada — será transmitida automaticamente</p>}
               </div>
-              <button onClick={() => { setShowForm(false); currentEditIdRef.current = null; }}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
+              <button onClick={() => { setShowForm(false); setForm(defaultForm()); setAbaForm("cliente"); setErrosForm({}); currentEditIdRef.current = null; }}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
             </div>
 
             <div className="px-5 pt-4 flex-shrink-0 grid grid-cols-1 gap-4">
