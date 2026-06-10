@@ -1124,13 +1124,13 @@ export default function NotasFiscais() {
             setBuscandoSefaz(false);
           }}
           disabled={buscandoSefaz}
-          className="flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+          className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50"
           style={{background:"#00ff00", color:"#000"}}
           onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00dd00"; }}
           onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
         >
           {buscandoSefaz ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-          <span className="hidden sm:inline">Importar</span>
+          <span>Importar</span>
         </button>
         <button
           onClick={async () => {
@@ -1144,17 +1144,17 @@ export default function NotasFiscais() {
             setBuscandoSefaz(false);
           }}
           disabled={buscandoSefaz}
-          className="flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+          className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50"
           style={{background:"#00ff00", color:"#000"}}
           onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00dd00"; }}
           onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
         >
           {buscandoSefaz ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-          <span className="hidden sm:inline">NFSe</span>
+          <span>NFSe</span>
         </button>
-        <button onClick={() => setShowSintegra(true)} className="flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+        <button onClick={() => setShowSintegra(true)} className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
           <BarChart2 className="w-4 h-4" />
-          <span className="hidden sm:inline">Sintegra</span>
+          <span>Sintegra</span>
         </button>
         <button
           onClick={async () => {
@@ -1176,18 +1176,52 @@ export default function NotasFiscais() {
             load();
           }}
           disabled={autorizandoMassa}
-          className="flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
+          className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50"
           style={{background:"#00ff00", color:"#000"}}
           onMouseEnter={e => { if (!autorizandoMassa) e.currentTarget.style.background="#00dd00"; }}
           onMouseLeave={e => e.currentTarget.style.background="#00ff00"}
         >
           {autorizandoMassa ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-          <span className="hidden sm:inline">Autorizar</span>
+          <span>Autorizar</span>
         </button>
-        <button onClick={() => exportarZip()} disabled={gerandoZip} className="flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+        <button onClick={() => exportarZip()} disabled={gerandoZip} className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
            {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-           <span className="hidden sm:inline">Exportar</span>
+           <span>Exportar</span>
          </button>
+        </div>
+        <div className="flex gap-0.5 sm:hidden">
+          <button
+            onClick={async () => {
+              const preVisualizadas = notas.filter(n => n.status === 'Homologada');
+              if (preVisualizadas.length === 0) { feedback('erro', 'Nenhuma nota em Pré-visualização para autorizar.'); return; }
+              if (!confirm(`Autorizar ${preVisualizadas.length} nota(s) em Pré-visualização?`)) return;
+              setAutorizandoMassa(true);
+              let ok = 0; let erros = 0;
+              for (const nota of preVisualizadas) {
+                try {
+                  const items = (() => { try { const p = JSON.parse(nota.xml_content); if (Array.isArray(p) && p.length > 0 && p[0].descricao) return p; } catch {} return [{ descricao: nota.observacoes || 'Produto/Serviço', quantidade: 1, valor_unitario: nota.valor_total, valor_total: nota.valor_total }]; })();
+                  const res = await base44.functions.invoke('emitirNotaFiscal', { ...nota, nota_id: nota.id, items });
+                  if (res.data?.sucesso) ok++; else erros++;
+                } catch { erros++; }
+                await new Promise(r => setTimeout(r, 800));
+              }
+              setAutorizandoMassa(false);
+              feedback('sucesso', `Autorização concluída: ${ok} emitida(s), ${erros} erro(s).`);
+              load();
+            }}
+            disabled={autorizandoMassa}
+            className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
+            style={{background:"#00ff00", color:"#000"}}
+            onMouseEnter={e => { if (!autorizandoMassa) e.currentTarget.style.background="#00dd00"; }}
+            onMouseLeave={e => e.currentTarget.style.background="#00ff00"}
+          >
+            {autorizandoMassa ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+            <span>Autorizar</span>
+          </button>
+          <button onClick={() => exportarZip()} disabled={gerandoZip} className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg text-xs font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+             {gerandoZip ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+             <span>Exportar</span>
+           </button>
         </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
