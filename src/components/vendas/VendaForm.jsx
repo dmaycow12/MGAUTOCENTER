@@ -1256,7 +1256,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     <label className="block text-xs text-gray-400 mb-1">Valor</label>
                     <div className="flex gap-2">
                       <input type="text" inputMode="decimal" value={descontoInput} onChange={e => handleDescontoChange(e.target.value)} className="input-dark" placeholder="0" autoComplete="off" />
-                      <button type="button" onClick={aplicarDescontoAgora} className="px-3 py-1 rounded bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold whitespace-nowrap">Aplicar</button>
+                      <button type="button" onClick={aplicarDescontoAgora} className="px-3 py-1 rounded text-black text-sm font-semibold whitespace-nowrap transition-all" style={{background:"#00ff00"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>Aplicar</button>
                     </div>
                   </div>
                   <Field label="Nº de Parcelas">
@@ -1281,7 +1281,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                       <label className="block text-xs text-gray-400 mb-1">Valor</label>
                       <input type="text" inputMode="decimal" value={descontoInput} onChange={e => handleDescontoChange(e.target.value)} className="input-dark text-sm" placeholder="0" autoComplete="off" />
                     </div>
-                    <button type="button" onClick={aplicarDescontoAgora} className="px-2 py-2 rounded bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold">Aplicar</button>
+                    <button type="button" onClick={aplicarDescontoAgora} className="px-2 py-2 rounded text-black text-xs font-semibold transition-all" style={{background:"#00ff00"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>Aplicar</button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <Field label="Nº de Parcelas">
@@ -1395,7 +1395,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         })()}
         <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg">Cancelar</button>
-          <button type="button" onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-white rounded-lg font-medium disabled:opacity-50" style={{background:"#00ff00"}}>
+          <button type="button" onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-black rounded-lg font-semibold disabled:opacity-50 transition-all" style={{background:"#00ff00"}} onMouseEnter={e => !saving && (e.currentTarget.style.background="#00dd00")} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
             {saving ? "Salvando..." : "Salvar"}
           </button>
         </div>
