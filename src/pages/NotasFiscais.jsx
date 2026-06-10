@@ -1677,7 +1677,7 @@ export default function NotasFiscais() {
                       </div>
                     ))}
                   </div>
-                  <button onClick={addItem} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{background:"#00ff00"}}>
+                  <button onClick={addItem} className="flex items-center gap-2 text-black px-4 py-2 rounded-lg text-sm font-semibold" style={{background:"#00ff00"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
                     <Plus className="w-4 h-4" /> Adicionar
                   </button>
                   <div className="bg-gray-800 rounded-xl p-4 flex justify-between items-center">
@@ -1698,7 +1698,7 @@ export default function NotasFiscais() {
                         setForm(f => ({ ...f, parcelas_detalhes: parcelas }));
                       }
                       setAbaForm("pagamento");
-                    }} className="text-black px-6 py-2 rounded-lg text-sm font-medium transition-all" style={{background: "#00ff00"}} onMouseEnter={e => { e.currentTarget.style.background = "#00dd00"; }} onMouseLeave={e => { e.currentTarget.style.background = "#00ff00"; }}>Próximo: Pagamento →</button>
+                    }} className="flex items-center gap-2 text-black px-6 py-2 rounded-lg text-sm font-semibold transition-all" style={{background: "#00ff00"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>Próximo: Pagamento →</button>
                   </div>
                 </div>
               )}
@@ -1940,7 +1940,7 @@ function BotoesPagamento({ onVoltar, salvarRascunho, emitindo, temSpedy, onPreVi
       <button onClick={onVoltar} className="text-gray-400 hover:text-white text-sm px-4 py-2 border border-gray-700 rounded-lg transition-all">← Voltar</button>
       <div className="flex gap-3">
         <button onClick={salvarRascunho} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Salvar Rascunho</button>
-        <button onClick={onPreVisualizar} disabled={emitindo} className="px-6 py-2 text-sm text-black rounded-lg font-medium transition-all disabled:opacity-50 flex items-center gap-2" style={{background:"#00ff00"}} onMouseEnter={e => !emitindo && (e.currentTarget.style.background="#00dd00")} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+        <button onClick={onPreVisualizar} disabled={emitindo} className="px-6 py-2 text-sm text-black rounded-lg font-semibold transition-all disabled:opacity-50 flex items-center gap-2" style={{background:"#00ff00"}} onMouseEnter={e => !emitindo && (e.currentTarget.style.background="#00dd00")} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
           {emitindo && <RefreshCw className="w-4 h-4 animate-spin" />}
           {emitindo ? "Salvando..." : temSpedy ? "Pré-visualizar DANFE" : "Salvar Nota"}
         </button>
