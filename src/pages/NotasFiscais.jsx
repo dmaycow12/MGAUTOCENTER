@@ -1061,7 +1061,7 @@ export default function NotasFiscais() {
         <button onClick={() => { const novo = filtroModeloNF.includes("NFSe") ? filtroModeloNF.filter(x => x !== "NFSe") : [...filtroModeloNF, "NFSe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
       </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-4 gap-0.5">
+      <div className="grid grid-cols-3 gap-0.5">
         <button
           onClick={async () => {
             setBuscandoSefaz(true);
@@ -1123,38 +1123,39 @@ export default function NotasFiscais() {
 
         </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
        {[
          { label: 'NFe Entrada', value: totalNFeLancada, color: '#3b82f6' },
          { label: 'NFSe Entrada', value: totalNFSeLancada, color: '#3b82f6' },
          { label: 'NFe Emitida', value: totalNFeEmitida, color: '#00ff00' },
          { label: 'NFCe Emitida', value: totalNFCeEmitida, color: '#00ff00' },
          { label: 'NFSe Emitida', value: totalNFSeEmitida, color: '#00ff00' },
-         { label: 'Total NF Emitidas', value: `R$ ${Number(totalEmitidas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, color: '#facc15', isTotal: true },
-       ].map(({ label, value, color, isTotal }) => (
+       ].map(({ label, value, color }) => (
          <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center">
            <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
-           <p className="font-bold text-sm" style={{ color }}>{isTotal ? value : `R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</p>
+           <p className="font-bold text-sm" style={{ color }}>{`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</p>
          </div>
        ))}
        </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-        {(() => {
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+       {(() => {
           const notasSemXml = filtradas.filter(n => !n.xml_original?.trim().startsWith('<') && !n.xml_content?.trim().startsWith('<') && n.xml_url !== 'XML_IN_URL').length;
           const notasSemPdf = filtradas.filter(n => !n.pdf_url).length;
           const qtdEmitidas = filtradas.filter(n => n.status === 'Emitida').length;
           const qtdImportadas = filtradas.filter(n => n.status === 'Importada').length;
+          const totalEmitidas = totalNFeEmitida + totalNFCeEmitida + totalNFSeEmitida;
 
           return [
             { label: 'Notas Emitidas', value: qtdEmitidas, color: '#00ff00' },
             { label: 'Notas Importadas', value: qtdImportadas, color: '#3b82f6' },
             { label: 'Sem XML', value: notasSemXml, color: '#ef4444' },
             { label: 'Sem PDF', value: notasSemPdf, color: '#ff9500' },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center">
+            { label: 'Total NF Emitidas', value: `R$ ${Number(totalEmitidas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, color: '#facc15', isTotal: true },
+          ].map(({ label, value, color, isTotal }) => (
+            <div key={label} className={`bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center ${isTotal ? 'md:col-span-1' : ''}`}>
               <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
-              <p className="font-bold text-sm" style={{ color }}>{value}</p>
+              <p className="font-bold text-sm" style={{ color }}>{isTotal ? value : value}</p>
             </div>
           ));
         })()}
