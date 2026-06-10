@@ -1545,14 +1545,13 @@ export default function NotasFiscais() {
                   <div className="space-y-3">
                     {form.items.map((item, idx) => (
                       <div key={idx} className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs text-gray-400 font-medium">Item {idx + 1}</span>
-                          {form.items.length > 1 && (
+                        {form.items.length > 1 && (
+                          <div className="flex justify-end mb-2">
                             <button onClick={() => removeItem(idx)} className="text-red-400 hover:text-red-300 transition-all">
                               <MinusCircle className="w-4 h-4" />
                             </button>
-                          )}
-                        </div>
+                          </div>
+                        )}
                         {!item.descricao ? (
                           <F label={form.tipo === 'NFSe' ? 'Selecionar Serviço' : 'Selecionar Produto'}>
                             <SearchableSelect
@@ -1573,23 +1572,23 @@ export default function NotasFiscais() {
                             />
                           </F>
                         ) : (
-                          <div className={`grid gap-3 ${form.tipo === 'NFSe' ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4'}`}>
+                          <div className={`grid gap-3 ${form.tipo === 'NFSe' ? 'grid-cols-12' : 'grid-cols-2 md:grid-cols-4'}`}>
                             {form.tipo !== 'NFSe' && (
                               <F label="Código">
                                 <div className="input-dark text-gray-400 text-sm">{item.codigo || '—'}</div>
                               </F>
                             )}
-                            <F label={form.tipo === 'NFSe' ? 'Serviço' : 'Produto'} className={form.tipo === 'NFSe' ? 'col-span-1 md:col-span-2' : 'col-span-2 md:col-span-3'}>
+                            <F label={form.tipo === 'NFSe' ? 'Descrição' : 'Produto'} className={form.tipo === 'NFSe' ? 'col-span-6' : 'col-span-2 md:col-span-3'}>
                               <NoACInput value={item.descricao} onChange={e => atualizarItem(idx, 'descricao', e.target.value)} placeholder="Descrição" className={`input-dark ${errosForm.items?.[idx]?.descricao ? 'border-red-500' : ''}`} />
                               {errosForm.items?.[idx]?.descricao && <p className="text-red-400 text-xs mt-1">{errosForm.items[idx].descricao}</p>}
                             </F>
-                            <F label="Quantidade">
+                            <F label={form.tipo === 'NFSe' ? 'Qtd' : 'Quantidade'} className={form.tipo === 'NFSe' ? 'col-span-2' : ''}>
                               <NoACInput value={item.quantidade} onChange={e => atualizarItem(idx, 'quantidade', e.target.value)} placeholder="1" />
                             </F>
-                            <F label={form.tipo === 'NFSe' ? 'Valor' : 'Valor Unitário (R$)'}>
+                            <F label={form.tipo === 'NFSe' ? 'Valor' : 'Valor Unitário (R$)'} className={form.tipo === 'NFSe' ? 'col-span-2' : ''}>
                               <NoACInput value={item.valor_unitario} onChange={e => atualizarItem(idx, 'valor_unitario', e.target.value)} placeholder="0" />
                             </F>
-                            <F label={form.tipo === 'NFSe' ? 'Total' : 'Total (R$)'} className={form.tipo === 'NFSe' ? '' : 'col-span-2'}>
+                            <F label={form.tipo === 'NFSe' ? 'Total' : 'Total (R$)'} className={form.tipo === 'NFSe' ? 'col-span-2' : 'col-span-2'}>
                               <NoACInput value={item.valor_total} onChange={e => atualizarItem(idx, 'valor_total', e.target.value)} placeholder="0" />
                             </F>
                             {form.tipo !== 'NFSe' && (
@@ -1610,7 +1609,7 @@ export default function NotasFiscais() {
                                 </F>
                               </>
                             )}
-                            <div className="col-span-2 md:col-span-4 flex justify-end">
+                            <div className={`${form.tipo === 'NFSe' ? 'col-span-12' : 'col-span-2 md:col-span-4'} flex justify-end`}>
                               <button onClick={() => { atualizarItemCompleto(idx, defaultItem()); }} className="text-xs text-gray-500 hover:text-red-400 transition-all">✕ Trocar produto</button>
                             </div>
                           </div>
