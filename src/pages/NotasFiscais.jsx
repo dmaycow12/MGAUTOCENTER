@@ -1138,7 +1138,7 @@ export default function NotasFiscais() {
        ))}
        </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
        {(() => {
           const notasSemXml = filtradas.filter(n => !n.xml_original?.trim().startsWith('<') && !n.xml_content?.trim().startsWith('<') && n.xml_url !== 'XML_IN_URL').length;
           const notasSemPdf = filtradas.filter(n => !n.pdf_url).length;
