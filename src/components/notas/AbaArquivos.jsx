@@ -212,12 +212,7 @@ export default function AbaArquivos({ notas }) {
                         {arq.tipo}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-white font-mono text-sm">{arq.nota_numero || '—'}</span>
-                        <span className="text-gray-400 text-xs">{arq.nota_tipo || 'N/A'}</span>
-                      </div>
-                    </td>
+                    <td className="px-4 py-3 text-white font-mono text-sm">{arq.nota_tipo || '—'}-{arq.nota_numero || '—'}</td>
                     <td className="px-4 py-3 text-gray-300">{arq.cliente || '—'}</td>
                     <td className="px-4 py-3 text-gray-400 hidden sm:table-cell text-xs">{arq.data_emissao || '—'}</td>
                     <td className="px-4 py-3">
