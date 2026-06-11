@@ -118,6 +118,16 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Se não encontrou XML pelos endpoints diretos, tenta invocar buscarXmlNota
+    if (!updates.xml_original && !updates.xml_url) {
+      try {
+        const resultadoXml = await base44.asServiceRole.functions.invoke('buscarXmlNota', { nota_id });
+        if (resultadoXml?.sucesso && resultadoXml?.xml) {
+          updates.xml_original = resultadoXml.xml;
+        }
+      } catch (_) {}
+    }
+
     // Atualiza a nota se encontrou algo
     if (Object.keys(updates).length > 0) {
       await base44.asServiceRole.entities.NotaFiscal.update(nota_id, updates);
