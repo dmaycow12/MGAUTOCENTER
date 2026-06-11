@@ -1012,9 +1012,7 @@ function CellEdit({ item, field, className = "", editandoCell, onIniciar, onSalv
   const val = item[field];
   const display = ["valor_custo", "valor_venda"].includes(field)
     ? `R$ ${Number(val || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
-    : field === "quantidade" && typeof val === "number" && val < (item.estoque_minimo || 0)
-      ? (val === 0 ? "0" : `-${val}`)
-      : (val !== undefined && val !== null && val !== "" ? val : "—");
+    : (val !== undefined && val !== null && val !== "" ? val : "—");
 
   return (
     <span
