@@ -1,17 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const compressString = async (str) => {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(str);
-  const compressedStream = new CompressionStream('gzip');
-  const writer = compressedStream.writable.getWriter();
-  writer.write(data);
-  writer.close();
-  const compressedData = await new Response(compressedStream.readable).arrayBuffer();
-  const uint8 = new Uint8Array(compressedData);
-  return btoa(String.fromCharCode(...uint8));
-};
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -34,10 +22,8 @@ Deno.serve(async (req) => {
           if (resp.ok) {
             const conteudo = await resp.text();
             if (conteudo.trim().startsWith('<')) {
-              // Comprime o XML antes de salvar
-              const xmlComprimido = await compressString(conteudo);
               await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
-                xml_original: xmlComprimido
+                xml_original: conteudo
               });
               baixados++;
             }
