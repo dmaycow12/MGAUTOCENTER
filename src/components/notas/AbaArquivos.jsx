@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { FileText, Download, Eye, AlertCircle, CheckCircle } from 'lucide-react';
+import { FileText, Download, Eye, AlertCircle, CheckCircle, Upload, RefreshCw } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
-export default function AbaArquivos({ notas }) {
-  const [tipoFiltro, setTipoFiltro] = useState('tudo-arquivo');
-  const [statusFiltro, setStatusFiltro] = useState('tudo-status');
+export default function AbaArquivos({ notas, onRefresh }) {
+   const [tipoFiltro, setTipoFiltro] = useState('tudo-arquivo');
+   const [statusFiltro, setStatusFiltro] = useState('tudo-status');
+   const [importando, setImportando] = useState(null);
 
   const arquivos = notas
     .flatMap(nota => {
@@ -142,6 +144,50 @@ export default function AbaArquivos({ notas }) {
     setStatusFiltro(id);
   };
 
+  const handleImportar = async (arquivo) => {
+    setImportando(`${arquivo.nota_id}-${arquivo.tipo}`);
+    try {
+      const nota = notas.find(n => n.id === arquivo.nota_id);
+      if (!nota) return;
+
+      let sucesso = false;
+      let mensagem = '';
+
+      if (arquivo.tipo === 'XML') {
+        // Busca XML na Focus NFe
+        const res = await base44.functions.invoke('buscarXmlNota', { 
+          chave_acesso: nota.chave_acesso, 
+          nota_id: nota.id 
+        });
+        if (res.data?.sucesso && res.data?.xml) {
+          await base44.entities.NotaFiscal.update(nota.id, { xml_original: res.data.xml });
+          sucesso = true;
+          mensagem = 'XML importado com sucesso!';
+        } else if (res.data?.cancelada) {
+          mensagem = 'Nota foi cancelada pelo fornecedor.';
+        } else {
+          mensagem = res.data?.erro || 'XML não disponível na SEFAZ ainda.';
+        }
+      } else if (arquivo.tipo === 'PDF') {
+        // Busca PDF na Focus NFe
+        const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
+        if (res.data?.pdf_url) {
+          await base44.entities.NotaFiscal.update(nota.id, { pdf_url: res.data.pdf_url });
+          sucesso = true;
+          mensagem = 'PDF importado com sucesso!';
+        } else {
+          mensagem = res.data?.erro || 'PDF não disponível.';
+        }
+      }
+
+      if (sucesso && onRefresh) onRefresh();
+      alert(mensagem);
+    } catch (e) {
+      alert('Erro: ' + e.message);
+    }
+    setImportando(null);
+  };
+
   return (
     <div className="space-y-0.5">
       {/* Filtros - Tipo de Arquivo */}
@@ -247,23 +293,36 @@ export default function AbaArquivos({ notas }) {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex gap-1.5 justify-end">
-                        {(arq.conteudo || arq.url) && (
+                        {arq.status === 'ausente' ? (
                           <button
-                            onClick={() => handleVisualize(arq)}
-                            className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all"
-                            title="Visualizar"
+                            onClick={() => handleImportar(arq)}
+                            disabled={importando === `${arq.nota_id}-${arq.tipo}`}
+                            className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all disabled:opacity-50"
+                            title="Importar da Focus NFe"
                           >
-                            <Eye className="w-3 h-3" />
+                            {importando === `${arq.nota_id}-${arq.tipo}` ? (
+                              <RefreshCw className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Upload className="w-3 h-3" />
+                            )}
                           </button>
-                        )}
-                        {(arq.conteudo || arq.url) && (
-                          <button
-                            onClick={() => handleDownload(arq)}
-                            className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all"
-                            title="Baixar"
-                          >
-                            <Download className="w-3 h-3" />
-                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleVisualize(arq)}
+                              className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all"
+                              title="Visualizar"
+                            >
+                              <Eye className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => handleDownload(arq)}
+                              className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all"
+                              title="Baixar"
+                            >
+                              <Download className="w-3 h-3" />
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>

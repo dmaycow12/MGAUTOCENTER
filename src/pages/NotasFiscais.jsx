@@ -1905,7 +1905,7 @@ export default function NotasFiscais() {
       )}
 
       {abaGeral === "arquivos" && (
-        <AbaArquivos notas={notas} />
+        <AbaArquivos notas={notas} onRefresh={load} />
       )}
 
       {xmlModal && (
