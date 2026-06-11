@@ -1206,10 +1206,7 @@ export default function NotasFiscais() {
                   {nota.status === 'Rascunho' && temSpedy && <button title="Homologar" onClick={() => iniciarPreVisualizacao(nota)} disabled={!!preVisualizando} className="w-7 h-7 flex items-center justify-center text-yellow-400 hover:text-yellow-300 rounded-lg transition-all disabled:opacity-50">{preVisualizando === nota.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin"/> : <FileText className="w-3.5 h-3.5"/>}</button>}
                   {nota.status === "Homologada" && temSpedy && <button title="Autorizar" onClick={() => emitirNota(nota)} disabled={!!transmitindo} className="w-7 h-7 flex items-center justify-center text-green-400 hover:text-green-300 rounded-lg disabled:opacity-50">{transmitindo === nota.id ? <RefreshCw className="w-3.5 h-3.5 animate-spin"/> : <CheckCircle className="w-3.5 h-3.5"/>}</button>}
                   {nota.status !== 'Emitida' && nota.status !== 'Processando' && nota.status !== 'Aguardando Sefin Nacional' && nota.status !== 'Cancelada' && nota.status !== 'Rascunho' && <button onClick={() => editarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-yellow-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>}
-                  <button title={temXmlSalvo(nota) ? "Ver/Baixar XML" : "Sem XML"} onClick={() => {
-                     if (!temXmlSalvo(nota)) return;
-                     setXmlModal(nota);
-                   }} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ color: temXmlSalvo(nota) ? "#00ff00" : "#ff0000" }}><Code className="w-3.5 h-3.5"/></button>
+                  <button title={temXmlSalvo(nota) ? "Ver/Baixar XML" : "Sem XML — Clique para buscar"} onClick={() => setXmlModal(nota)} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ color: temXmlSalvo(nota) ? "#00ff00" : "#ff0000" }}><Code className="w-3.5 h-3.5"/></button>
                   <button title="Abrir PDF" onClick={() => abrirPdfNota(nota)} className="w-7 h-7 flex items-center justify-center rounded-lg" style={{ color: nota.pdf_url ? "#00ff00" : "#ef4444" }}><FileText className="w-3.5 h-3.5"/></button>
                   {nota.pdf_url && <button title="Baixar PDF" onClick={() => baixarPdfNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-400 rounded-lg"><Download className="w-3.5 h-3.5"/></button>}
                   {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && <button title="Cancelar" onClick={() => cancelarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg"><Ban className="w-3.5 h-3.5"/></button>}
@@ -1269,10 +1266,7 @@ export default function NotasFiscais() {
                             {transmitindo === nota.id ? "..." : "Autorizar"}
                           </button>
                         )}
-                        <button title={temXmlSalvo(nota) ? "Ver/Baixar XML" : "Sem XML"} onClick={() => {
-                           if (!temXmlSalvo(nota)) return;
-                           setXmlModal(nota);
-                         }}
+                        <button title={temXmlSalvo(nota) ? "Ver/Baixar XML" : "Sem XML — Clique para buscar"} onClick={() => setXmlModal(nota)}
                            className="p-1 transition-all"
                            style={{ color: temXmlSalvo(nota) ? "#00ff00" : "#ff0000" }}>
                            <Code className="w-4 h-4" />
