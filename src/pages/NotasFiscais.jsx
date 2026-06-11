@@ -1152,27 +1152,27 @@ export default function NotasFiscais() {
         {abaAtiva === "notas" && (
         <div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-       {[
-         { label: 'NFe Entrada', value: totalNFeLancada, color: '#3b82f6' },
-         { label: 'NFSe Entrada', value: totalNFSeLancada, color: '#3b82f6' },
-         { label: 'NFe Emitida', value: totalNFeEmitida, color: '#00ff00' },
-         { label: 'NFCe Emitida', value: totalNFCeEmitida, color: '#00ff00' },
-         { label: 'NFSe Emitida', value: totalNFSeEmitida, color: '#00ff00' },
-       ].map(({ label, value, color }) => (
-         <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center">
-           <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
-           <p className="font-bold text-sm" style={{ color }}>{`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</p>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-0.5">
+         {[
+           { label: 'NFe Entrada', value: totalNFeLancada, color: '#3b82f6' },
+           { label: 'NFSe Entrada', value: totalNFSeLancada, color: '#3b82f6' },
+           { label: 'NFe Emitida', value: totalNFeEmitida, color: '#00ff00' },
+           { label: 'NFCe Emitida', value: totalNFCeEmitida, color: '#00ff00' },
+           { label: 'NFSe Emitida', value: totalNFSeEmitida, color: '#00ff00' },
+         ].map(({ label, value, color }) => (
+           <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center">
+             <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
+             <p className="font-bold text-sm" style={{ color }}>{`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</p>
+           </div>
+         ))}
+         {/* Total NF Emitidas - só mobile, fica ao lado de NFSe Emitida */}
+         <div className="md:hidden bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center">
+           <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">Total NF Emitidas</p>
+           <p className="font-bold text-sm" style={{ color: '#facc15' }}>{`R$ ${Number(totalNFeEmitida + totalNFCeEmitida + totalNFSeEmitida).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</p>
          </div>
-       ))}
-       {/* Total NF Emitidas - só mobile, fica ao lado de NFSe Emitida */}
-       <div className="md:hidden bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center">
-         <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">Total NF Emitidas</p>
-         <p className="font-bold text-sm" style={{ color: '#facc15' }}>{`R$ ${Number(totalNFeEmitida + totalNFCeEmitida + totalNFSeEmitida).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</p>
-       </div>
-       </div>
+         </div>
 
-       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+         <div className="grid grid-cols-2 md:grid-cols-5 gap-0.5">
        {(() => {
           const notasSemXml = filtradas.filter(n => !n.xml_original?.trim().startsWith('<') && !n.xml_content?.trim().startsWith('<') && n.xml_url !== 'XML_IN_URL').length;
           const notasSemPdf = filtradas.filter(n => !n.pdf_url).length;
