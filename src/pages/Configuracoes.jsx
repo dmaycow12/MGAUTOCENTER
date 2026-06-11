@@ -182,11 +182,11 @@ export default function Configuracoes() {
 
       <Section title="NF-e — Nota Fiscal de Produto" icon={null}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <F label="Última NF-e">
-            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfe_ultimo_numero} onChange={e => setConfig({ ...config, nfe_ultimo_numero: e.target.value })} className="input-dark" />
-          </F>
           <F label="Série NF-e">
             <input value={config.nfe_serie} onChange={e => setConfig({ ...config, nfe_serie: e.target.value })} className="input-dark" />
+          </F>
+          <F label="Última NF-e">
+            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfe_ultimo_numero} onChange={e => setConfig({ ...config, nfe_ultimo_numero: e.target.value })} className="input-dark" />
           </F>
           <F label="Ambiente">
             <select value={config.nfe_ambiente} onChange={e => setConfig({ ...config, nfe_ambiente: e.target.value })} className="input-dark">
@@ -205,11 +205,11 @@ export default function Configuracoes() {
 
       <Section title="NFC-e — Nota Fiscal do Consumidor" icon={null}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <F label="Última NFC-e">
-            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfce_ultimo_numero} onChange={e => setConfig({ ...config, nfce_ultimo_numero: e.target.value })} className="input-dark" />
-          </F>
           <F label="Série NFC-e">
             <input value={config.nfce_serie} onChange={e => setConfig({ ...config, nfce_serie: e.target.value })} className="input-dark" />
+          </F>
+          <F label="Última NFC-e">
+            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfce_ultimo_numero} onChange={e => setConfig({ ...config, nfce_ultimo_numero: e.target.value })} className="input-dark" />
           </F>
           <F label="Ambiente">
             <select value={config.nfce_ambiente} onChange={e => setConfig({ ...config, nfce_ambiente: e.target.value })} className="input-dark">
