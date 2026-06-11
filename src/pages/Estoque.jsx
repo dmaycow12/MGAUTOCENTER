@@ -319,13 +319,20 @@ export default function Estoque() {
     const normTipo = t => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     const lista = items.map(item => {
       const hist = item.historico || [];
+
+      // Esperado COM ajuste (para decidir se deve exibir — só mostra se ainda desequilibrado)
       const totalEntradas = hist.filter(h => normTipo(h.tipo) === 'entrada').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
-      const totalSaidas = hist.filter(h => normTipo(h.tipo) === 'saida').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
-      const semHistorico = hist.length === 0;
-      const esperado = Math.max(0, totalEntradas - totalSaidas);
-      const diferenca = Number(item.quantidade || 0) - esperado;
-      if (diferenca !== 0 || (semHistorico && item.quantidade > 0)) {
-        return { ...item, _esperado: esperado, _diferenca: diferenca };
+      const totalSaidas  = hist.filter(h => normTipo(h.tipo) === 'saida').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
+      const diferencaComAjuste = Number(item.quantidade || 0) - (totalEntradas - totalSaidas);
+
+      // Esperado SEM ajuste (para calcular o novo ajuste correto)
+      const histSemAjuste = hist.filter(h => (h.observacao || '').toUpperCase() !== 'AJUSTE');
+      const rawEntradas = histSemAjuste.filter(h => normTipo(h.tipo) === 'entrada').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
+      const rawSaidas   = histSemAjuste.filter(h => normTipo(h.tipo) === 'saida').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
+      const novaDiferenca = Number(item.quantidade || 0) - (rawEntradas - rawSaidas);
+
+      if (diferencaComAjuste !== 0) {
+        return { ...item, _esperado: Math.max(0, rawEntradas - rawSaidas), _diferenca: novaDiferenca };
       }
       return null;
     }).filter(Boolean);
@@ -342,15 +349,23 @@ export default function Estoque() {
     setRegularizando(true);
     const agora = new Date().toISOString().split('T')[0];
     for (const item of discrepancias) {
-      const novaEntrada = {
-        tipo: item._diferenca > 0 ? 'saida' : 'entrada',
+      // Remove ajustes anteriores
+      const histSemAjuste = (item.historico || []).filter(h => (h.observacao || '').toUpperCase() !== 'AJUSTE');
+      
+      // Se diferença é 0 após remover ajuste antigo, só apaga o ajuste
+      if (item._diferenca === 0) {
+        await base44.entities.Estoque.update(item.id, { historico: histSemAjuste });
+        continue;
+      }
+
+      const novoAjuste = {
+        tipo: item._diferenca > 0 ? 'entrada' : 'saida',
         data: agora,
         quantidade: Math.abs(item._diferenca),
         valor_unitario: Number(item.valor_custo || 0),
         observacao: 'Ajuste',
       };
-      const historico = [...(item.historico || []).filter(h => h.observacao !== 'Ajuste'), novaEntrada];
-      await base44.entities.Estoque.update(item.id, { historico });
+      await base44.entities.Estoque.update(item.id, { historico: [...histSemAjuste, novoAjuste] });
     }
     setRegularizando(false);
     setShowRegularizar(false);
