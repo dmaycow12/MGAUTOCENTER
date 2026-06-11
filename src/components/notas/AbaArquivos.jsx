@@ -316,39 +316,21 @@ export default function AbaArquivos({ notas, onRefresh }) {
         </div>
       )}
 
-      {/* Filtros - Tipo de Arquivo */}
+      {/* Filtros - Tudo em uma linha */}
       <div className="flex gap-0.5">
         {[
-            { id: 'tudo-arquivo', label: 'Tudo' },
-            { id: 'xml', label: 'XML' },
-            { id: 'pdf', label: 'PDF' },
+            { id: 'tudo-arquivo', label: 'Tudo', onClick: handleTipoChange, active: tipoFiltro },
+            { id: 'xml', label: 'XML', onClick: handleTipoChange, active: tipoFiltro },
+            { id: 'pdf', label: 'PDF', onClick: handleTipoChange, active: tipoFiltro },
+            { id: 'tudo-status', label: 'Tudo', onClick: handleStatusChange, active: statusFiltro },
+            { id: 'salvo', label: 'Salvo', onClick: handleStatusChange, active: statusFiltro },
+            { id: 'ausente', label: 'Ausente', onClick: handleStatusChange, active: statusFiltro },
           ].map(f => (
           <button
             key={f.id}
-            onClick={() => handleTipoChange(f.id)}
+            onClick={() => f.onClick(f.id)}
             className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
-              tipoFiltro === f.id
-                ? 'bg-[#062C9B] text-white'
-                : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Filtros - Status */}
-      <div className="flex gap-0.5">
-        {[
-            { id: 'tudo-status', label: 'Tudo' },
-            { id: 'salvo', label: 'Salvo' },
-            { id: 'ausente', label: 'Ausente' },
-          ].map(f => (
-          <button
-            key={f.id}
-            onClick={() => handleStatusChange(f.id)}
-            className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
-              statusFiltro === f.id
+              f.active === f.id
                 ? 'bg-[#062C9B] text-white'
                 : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
             }`}
