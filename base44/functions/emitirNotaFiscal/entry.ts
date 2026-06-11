@@ -49,10 +49,9 @@ const salvarPdfPermanente = async (base44, pdfUrl, nota_id, authHeader) => {
        return null;
      }
      const arrayBuffer = await resp.arrayBuffer();
-     const uint8Array = new Uint8Array(arrayBuffer);
-     const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file: uint8Array });
-     console.log('[PDF SALVO]', file_url);
-     return file_url;
+     const { file_uri } = await base44.asServiceRole.integrations.Core.UploadPrivateFile({ file: new Uint8Array(arrayBuffer) });
+     console.log('[PDF SALVO]', file_uri);
+     return file_uri;
    } catch (e) {
      console.error('[PDF ERRO]', e.message);
      return null;
