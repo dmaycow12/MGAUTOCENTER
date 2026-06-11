@@ -15,80 +15,86 @@ export default function AbaArquivos({ notas }) {
       const operacao = isEntrada ? 'entrada' : 'saida';
       
       if (nota.xml_original?.trim().startsWith('<')) {
-        items.push({
-          tipo: 'XML',
-          nota_numero: nota.numero,
-          nota_id: nota.id,
-          url: null,
-          conteudo: nota.xml_original,
-          status: 'salvo',
-          data_emissao: nota.data_emissao,
-          cliente: nota.cliente_nome,
-          operacao: operacao,
-        });
+       items.push({
+         tipo: 'XML',
+         nota_numero: nota.numero,
+         nota_tipo: nota.tipo,
+         nota_id: nota.id,
+         url: null,
+         conteudo: nota.xml_original,
+         status: 'salvo',
+         data_emissao: nota.data_emissao,
+         cliente: nota.cliente_nome,
+         operacao: operacao,
+       });
       } else if (nota.xml_url?.endsWith('.xml')) {
-        items.push({
-          tipo: 'XML',
-          nota_numero: nota.numero,
-          nota_id: nota.id,
-          url: nota.xml_url,
-          conteudo: null,
-          status: 'url',
-          data_emissao: nota.data_emissao,
-          cliente: nota.cliente_nome,
-          operacao: operacao,
-        });
+       items.push({
+         tipo: 'XML',
+         nota_numero: nota.numero,
+         nota_tipo: nota.tipo,
+         nota_id: nota.id,
+         url: nota.xml_url,
+         conteudo: null,
+         status: 'url',
+         data_emissao: nota.data_emissao,
+         cliente: nota.cliente_nome,
+         operacao: operacao,
+       });
       } else if (nota.xml_content?.trim().startsWith('<')) {
-        items.push({
-          tipo: 'XML',
-          nota_numero: nota.numero,
-          nota_id: nota.id,
-          url: null,
-          conteudo: nota.xml_content,
-          status: 'salvo',
-          data_emissao: nota.data_emissao,
-          cliente: nota.cliente_nome,
-          operacao: operacao,
-        });
+       items.push({
+         tipo: 'XML',
+         nota_numero: nota.numero,
+         nota_tipo: nota.tipo,
+         nota_id: nota.id,
+         url: null,
+         conteudo: nota.xml_content,
+         status: 'salvo',
+         data_emissao: nota.data_emissao,
+         cliente: nota.cliente_nome,
+         operacao: operacao,
+       });
       } else {
-        items.push({
-          tipo: 'XML',
-          nota_numero: nota.numero,
-          nota_id: nota.id,
-          url: null,
-          conteudo: null,
-          status: 'ausente',
-          data_emissao: nota.data_emissao,
-          cliente: nota.cliente_nome,
-          operacao: operacao,
-        });
+       items.push({
+         tipo: 'XML',
+         nota_numero: nota.numero,
+         nota_tipo: nota.tipo,
+         nota_id: nota.id,
+         url: null,
+         conteudo: null,
+         status: 'ausente',
+         data_emissao: nota.data_emissao,
+         cliente: nota.cliente_nome,
+         operacao: operacao,
+       });
       }
 
       // PDF
       if (nota.pdf_url && !nota.pdf_url.endsWith('.html')) {
-        items.push({
-          tipo: 'PDF',
-          nota_numero: nota.numero,
-          nota_id: nota.id,
-          url: nota.pdf_url,
-          conteudo: null,
-          status: 'url',
-          data_emissao: nota.data_emissao,
-          cliente: nota.cliente_nome,
-          operacao: operacao,
-        });
+       items.push({
+         tipo: 'PDF',
+         nota_numero: nota.numero,
+         nota_tipo: nota.tipo,
+         nota_id: nota.id,
+         url: nota.pdf_url,
+         conteudo: null,
+         status: 'url',
+         data_emissao: nota.data_emissao,
+         cliente: nota.cliente_nome,
+         operacao: operacao,
+       });
       } else {
-        items.push({
-          tipo: 'PDF',
-          nota_numero: nota.numero,
-          nota_id: nota.id,
-          url: null,
-          conteudo: null,
-          status: 'ausente',
-          data_emissao: nota.data_emissao,
-          cliente: nota.cliente_nome,
-          operacao: operacao,
-        });
+       items.push({
+         tipo: 'PDF',
+         nota_numero: nota.numero,
+         nota_tipo: nota.tipo,
+         nota_id: nota.id,
+         url: null,
+         conteudo: null,
+         status: 'ausente',
+         data_emissao: nota.data_emissao,
+         cliente: nota.cliente_nome,
+         operacao: operacao,
+       });
       }
 
       return items;
@@ -206,7 +212,12 @@ export default function AbaArquivos({ notas }) {
                         {arq.tipo}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-white font-mono text-sm">{arq.nota_numero || '—'}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-white font-mono text-sm">{arq.nota_numero || '—'}</span>
+                        <span className="text-gray-400 text-xs">{arq.nota_tipo || 'N/A'}</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-gray-300">{arq.cliente || '—'}</td>
                     <td className="px-4 py-3 text-gray-400 hidden sm:table-cell text-xs">{arq.data_emissao || '—'}</td>
                     <td className="px-4 py-3">
