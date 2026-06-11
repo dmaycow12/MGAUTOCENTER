@@ -1,8 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
-const API_KEY = Deno.env.get('FOCUSNFE_API_KEY') || '';
-const AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
+let API_KEY = '';
+let AUTH_HEADER = '';
 
 const STATUS_CANCELADO = ['cancelado', 'cancelada', 'inutilizado', 'denegado'];
 
@@ -10,11 +10,29 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const user = await base44.auth.me();
   if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
+
+  // Carrega chave API do banco de dados
+  const allConfigs = await base44.asServiceRole.entities.Configuracao.list('-created_date', 200);
+  const getConf = (chave, padrao = '') => allConfigs.find(c => c.chave === chave)?.valor || padrao;
+  API_KEY = getConf('focusnfe_api_key_producao', '');
+  AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
+
   const body = await req.json().catch(() => ({}));
-  const { chave_acesso, nota_id } = body;
+  let { chave_acesso, nota_id } = body;
+
+  // Se não tiver chave_acesso mas tiver nota_id, busca a chave do banco
+  if (!chave_acesso && nota_id) {
+    try {
+      const notas = await base44.asServiceRole.entities.NotaFiscal.filter({ id: nota_id });
+      if (notas.length > 0) {
+        const nota = notas[0];
+        chave_acesso = nota.chave_acesso || nota.spedy_id;
+      }
+    } catch (_) {}
+  }
 
   if (!chave_acesso) {
-    return Response.json({ sucesso: false, erro: 'chave_acesso é obrigatória' });
+    return Response.json({ sucesso: false, erro: 'chave_acesso ou nota_id é obrigatória' });
   }
 
   // Passo 1: manifestação para liberar XML completo na SEFAZ

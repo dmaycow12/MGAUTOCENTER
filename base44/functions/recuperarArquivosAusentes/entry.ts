@@ -36,11 +36,11 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: 'Nota não encontrada' });
     }
 
-    if (!nota.chave_acesso) {
-      return Response.json({ sucesso: false, erro: 'Nota sem chave de acesso' });
+    // Usa chave_acesso ou spedy_id como alternativa
+    const chave = nota.chave_acesso || nota.spedy_id;
+    if (!chave) {
+      return Response.json({ sucesso: false, erro: 'Nota sem chave de acesso ou spedy_id' });
     }
-
-    const chave = nota.chave_acesso;
     const updates = {};
 
     // Tenta recuperar XML
