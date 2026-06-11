@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Plus, Trash2, Package, History, ArrowDown, ArrowUp } from "lucide-react";
 
 const GREEN = "#00ff00";
@@ -31,6 +31,12 @@ function F({ label, children, className = "" }) {
 export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, onClose }) {
   const [aba, setAba] = useState("dados");
   const [novoCodigoInput, setNovoCodigoInput] = useState("");
+  const [quantidadeStr, setQuantidadeStr] = useState(String(form.quantidade ?? 0));
+
+  // Sincroniza quantidadeStr quando form muda (novo item aberto)
+  useEffect(() => {
+    setQuantidadeStr(String(form.quantidade ?? 0));
+  }, [form.id]);
 
   const codigos = form.codigos || [];
   const historico = [...(form.historico || [])].reverse(); // mais recente primeiro
@@ -86,7 +92,23 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                   <input value={form.codigo} onChange={e => setForm({ ...form, codigo: e.target.value.toUpperCase() })} className="input-dark" />
                 </F>
                 <F label="Quantidade">
-                  <input type="text" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: Number(e.target.value.replace(/[^0-9.\-]/g, "").replace(/(?!^)-/g, "")) || 0 })} className="input-dark" />
+                  <input
+                    type="text"
+                    value={quantidadeStr}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^0-9.\-]/g, "").replace(/(?<!^)-/g, "");
+                      setQuantidadeStr(raw);
+                      const num = parseFloat(raw);
+                      if (!isNaN(num)) setForm(f => ({ ...f, quantidade: num }));
+                    }}
+                    onBlur={() => {
+                      const num = parseFloat(quantidadeStr);
+                      const final = isNaN(num) ? 0 : num;
+                      setQuantidadeStr(String(final));
+                      setForm(f => ({ ...f, quantidade: final }));
+                    }}
+                    className="input-dark"
+                  />
                 </F>
                 <F label="Descrição *" className="col-span-2">
                   <input value={form.descricao} onChange={e => setForm({ ...form, descricao: sanitizar(e.target.value) })} className="input-dark" />
