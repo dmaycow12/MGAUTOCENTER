@@ -1040,7 +1040,7 @@ export default function NotasFiscais() {
   if (loading) return <Loader />;
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-4 px-4 md:px-6">
       {msgFeedback && (
         <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm ${msgFeedback.tipo === "sucesso" ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
           {msgFeedback.tipo === "sucesso" ? <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />}
