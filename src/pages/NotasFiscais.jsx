@@ -1970,12 +1970,19 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlSalvo(nota) {
-  const xml = nota.xml_original;
-  if (!xml || typeof xml !== 'string') return false;
-  // Remove BOM e espaços
-  const cleaned = xml.replace(/^\uFEFF/, '').trim();
-  // Verifica se é XML válido (começa com < ou ?)
-  return cleaned.length > 0 && (cleaned.startsWith('<') || cleaned.startsWith('<?'));
+  // Verifica xml_original primeiro
+  let xml = nota.xml_original;
+  if (xml && typeof xml === 'string') {
+    const cleaned = xml.replace(/^\uFEFF/, '').trim();
+    if (cleaned.length > 10 && cleaned.includes('<')) return true;
+  }
+  // Se não, verifica xml_content
+  xml = nota.xml_content;
+  if (xml && typeof xml === 'string') {
+    const cleaned = xml.replace(/^\uFEFF/, '').trim();
+    if (cleaned.length > 10 && cleaned.includes('<')) return true;
+  }
+  return false;
 }
 
 function BotoesPagamento({ onVoltar, salvarRascunho, emitindo, temSpedy, onPreVisualizar }) {
