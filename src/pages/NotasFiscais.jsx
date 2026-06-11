@@ -1071,130 +1071,134 @@ export default function NotasFiscais() {
         </button>
        </div>
 
+       {abaGeral === "notas" && (
+       <div className="space-y-1.5">
        <button onClick={() => { const novo = defaultForm(); setForm({ ...novo, serie: proximaSerie(notas, novo.tipo) }); setAbaForm("cliente"); setErrosForm({}); currentEditIdRef.current = null; setShowForm(true); }} className="w-full flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all mb-0.5" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
          <Plus className="w-4 h-4" /> Emitir
        </button>
 
-      <FiltroPerioodoAvancado onFiltroChange={(dados) => {
-        if (dados.filtroMes !== undefined) setFiltroMes(dados.filtroMes);
-        if (dados.filtroAno !== undefined) setFiltroAno(dados.filtroAno);
-        if (dados.usandoOutroPeriodo !== undefined) setUsandoOutroPeriodo(dados.usandoOutroPeriodo);
-        if (dados.customRange !== undefined) setCustomRange(dados.customRange);
-      }} />
+       <FiltroPerioodoAvancado onFiltroChange={(dados) => {
+         if (dados.filtroMes !== undefined) setFiltroMes(dados.filtroMes);
+         if (dados.filtroAno !== undefined) setFiltroAno(dados.filtroAno);
+         if (dados.usandoOutroPeriodo !== undefined) setUsandoOutroPeriodo(dados.usandoOutroPeriodo);
+         if (dados.customRange !== undefined) setCustomRange(dados.customRange);
+       }} />
 
-      <div className="flex gap-0.5">
-        <button onClick={() => { const novo = filtroTipo.includes("Saída") ? filtroTipo.filter(x => x !== "Saída") : [...filtroTipo, "Saída"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Saída") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
-        <button onClick={() => { const novo = filtroTipo.includes("Entrada") ? filtroTipo.filter(x => x !== "Entrada") : [...filtroTipo, "Entrada"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Entrada") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
-        <button onClick={() => { const novo = filtroModeloNF.includes("NFe") ? filtroModeloNF.filter(x => x !== "NFe") : [...filtroModeloNF, "NFe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFe</button>
-        <button onClick={() => { const novo = filtroModeloNF.includes("NFCe") ? filtroModeloNF.filter(x => x !== "NFCe") : [...filtroModeloNF, "NFCe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFCe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFCe</button>
-        <button onClick={() => { const novo = filtroModeloNF.includes("NFSe") ? filtroModeloNF.filter(x => x !== "NFSe") : [...filtroModeloNF, "NFSe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
-      </div>
+       <div className="flex gap-0.5">
+         <button onClick={() => { const novo = filtroTipo.includes("Saída") ? filtroTipo.filter(x => x !== "Saída") : [...filtroTipo, "Saída"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Saída") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
+         <button onClick={() => { const novo = filtroTipo.includes("Entrada") ? filtroTipo.filter(x => x !== "Entrada") : [...filtroTipo, "Entrada"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Entrada") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
+         <button onClick={() => { const novo = filtroModeloNF.includes("NFe") ? filtroModeloNF.filter(x => x !== "NFe") : [...filtroModeloNF, "NFe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFe</button>
+         <button onClick={() => { const novo = filtroModeloNF.includes("NFCe") ? filtroModeloNF.filter(x => x !== "NFCe") : [...filtroModeloNF, "NFCe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFCe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFCe</button>
+         <button onClick={() => { const novo = filtroModeloNF.includes("NFSe") ? filtroModeloNF.filter(x => x !== "NFSe") : [...filtroModeloNF, "NFSe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
+       </div>
 
-      <div className="grid grid-cols-3 gap-0.5">
-        <button
-          onClick={async () => {
-            setBuscandoSefaz(true);
-            try {
-              const res1 = await base44.functions.invoke('consultarNotasRecebidas', {});
-              const res2 = await base44.functions.invoke('importarNfseRecebidas', {});
-              const data1 = res1.data;
-              const data2 = res2.data;
-              if (data1?.sucesso || data2?.sucesso) { 
-                feedback('sucesso', 'NFe e NFSe importadas com sucesso!'); 
-                load(); 
-              } else { 
-                feedback('erro', data1?.erro || data2?.erro || 'Erro ao importar notas.'); 
-              }
-            } catch (e) { feedback('erro', 'Erro: ' + e.message); }
-            setBuscandoSefaz(false);
-          }}
-          disabled={buscandoSefaz}
-          className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50"
-          style={{background:"#00ff00", color:"#000"}}
-          onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00dd00"; }}
-          onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
-        >
-          {buscandoSefaz ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-          <span>Importar</span>
-        </button>
-        <button onClick={() => setShowSintegra(true)} className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
-          <BarChart2 className="w-4 h-4" />
-          <span>Sintegra</span>
-        </button>
-        <button
-          onClick={async () => {
-            const preVisualizadas = notas.filter(n => n.status === 'Homologada');
-            if (preVisualizadas.length === 0) { feedback('erro', 'Nenhuma nota em Pré-visualização para autorizar.'); return; }
-            await showConfirm(`Autorizar ${preVisualizadas.length} nota(s) homologada(s) em produção?`, 'confirm');
-            setConfirmModal(null);
-            setAutorizandoMassa(true);
-            let ok = 0; let erros = 0;
-            for (const nota of preVisualizadas) {
-              try {
-                const items = (() => { try { const p = JSON.parse(nota.xml_content); if (Array.isArray(p) && p.length > 0 && p[0].descricao) return p; } catch {} return [{ descricao: nota.observacoes || 'Produto/Serviço', quantidade: 1, valor_unitario: nota.valor_total, valor_total: nota.valor_total }]; })();
-                const res = await base44.functions.invoke('emitirNotaFiscal', { ...nota, nota_id: nota.id, items });
-                if (res.data?.sucesso) ok++; else erros++;
-              } catch { erros++; }
-              await new Promise(r => setTimeout(r, 800));
-            }
-            setAutorizandoMassa(false);
-            feedback('sucesso', `Autorização concluída: ${ok} emitida(s), ${erros} erro(s).`);
-            load();
-          }}
-          disabled={autorizandoMassa}
-          className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50"
-          style={{background:"#00ff00", color:"#000"}}
-          onMouseEnter={e => { if (!autorizandoMassa) e.currentTarget.style.background="#00dd00"; }}
-          onMouseLeave={e => e.currentTarget.style.background="#00ff00"}
-        >
-          {autorizandoMassa ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-          <span>Autorizar</span>
-        </button>
+       <div className="grid grid-cols-3 gap-0.5">
+         <button
+           onClick={async () => {
+             setBuscandoSefaz(true);
+             try {
+               const res1 = await base44.functions.invoke('consultarNotasRecebidas', {});
+               const res2 = await base44.functions.invoke('importarNfseRecebidas', {});
+               const data1 = res1.data;
+               const data2 = res2.data;
+               if (data1?.sucesso || data2?.sucesso) { 
+                 feedback('sucesso', 'NFe e NFSe importadas com sucesso!'); 
+                 load(); 
+               } else { 
+                 feedback('erro', data1?.erro || data2?.erro || 'Erro ao importar notas.'); 
+               }
+             } catch (e) { feedback('erro', 'Erro: ' + e.message); }
+             setBuscandoSefaz(false);
+           }}
+           disabled={buscandoSefaz}
+           className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50"
+           style={{background:"#00ff00", color:"#000"}}
+           onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00dd00"; }}
+           onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
+         >
+           {buscandoSefaz ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+           <span>Importar</span>
+         </button>
+         <button onClick={() => setShowSintegra(true)} className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+           <BarChart2 className="w-4 h-4" />
+           <span>Sintegra</span>
+         </button>
+         <button
+           onClick={async () => {
+             const preVisualizadas = notas.filter(n => n.status === 'Homologada');
+             if (preVisualizadas.length === 0) { feedback('erro', 'Nenhuma nota em Pré-visualização para autorizar.'); return; }
+             await showConfirm(`Autorizar ${preVisualizadas.length} nota(s) homologada(s) em produção?`, 'confirm');
+             setConfirmModal(null);
+             setAutorizandoMassa(true);
+             let ok = 0; let erros = 0;
+             for (const nota of preVisualizadas) {
+               try {
+                 const items = (() => { try { const p = JSON.parse(nota.xml_content); if (Array.isArray(p) && p.length > 0 && p[0].descricao) return p; } catch {} return [{ descricao: nota.observacoes || 'Produto/Serviço', quantidade: 1, valor_unitario: nota.valor_total, valor_total: nota.valor_total }]; })();
+                 const res = await base44.functions.invoke('emitirNotaFiscal', { ...nota, nota_id: nota.id, items });
+                 if (res.data?.sucesso) ok++; else erros++;
+               } catch { erros++; }
+               await new Promise(r => setTimeout(r, 800));
+             }
+             setAutorizandoMassa(false);
+             feedback('sucesso', `Autorização concluída: ${ok} emitida(s), ${erros} erro(s).`);
+             load();
+           }}
+           disabled={autorizandoMassa}
+           className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50"
+           style={{background:"#00ff00", color:"#000"}}
+           onMouseEnter={e => { if (!autorizandoMassa) e.currentTarget.style.background="#00dd00"; }}
+           onMouseLeave={e => e.currentTarget.style.background="#00ff00"}
+         >
+           {autorizandoMassa ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+           <span>Autorizar</span>
+         </button>
 
-        </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-       {[
-         { label: 'NFe Entrada', value: totalNFeLancada, color: '#3b82f6' },
-         { label: 'NFSe Entrada', value: totalNFSeLancada, color: '#3b82f6' },
-         { label: 'NFe Emitida', value: totalNFeEmitida, color: '#00ff00' },
-         { label: 'NFCe Emitida', value: totalNFCeEmitida, color: '#00ff00' },
-         { label: 'NFSe Emitida', value: totalNFSeEmitida, color: '#00ff00' },
-       ].map(({ label, value, color }) => (
-         <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center">
-           <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
-           <p className="font-bold text-sm" style={{ color }}>{`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</p>
          </div>
-       ))}
-       {/* Total NF Emitidas - só mobile, fica ao lado de NFSe Emitida */}
-       <div className="md:hidden bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center">
-         <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">Total NF Emitidas</p>
-         <p className="font-bold text-sm" style={{ color: '#facc15' }}>{`R$ ${Number(totalNFeEmitida + totalNFCeEmitida + totalNFSeEmitida).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</p>
-       </div>
-       </div>
 
        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-       {(() => {
-          const notasSemXml = filtradas.filter(n => !n.xml_original?.trim().startsWith('<') && !n.xml_content?.trim().startsWith('<') && n.xml_url !== 'XML_IN_URL').length;
-          const notasSemPdf = filtradas.filter(n => !n.pdf_url).length;
-          const qtdEmitidas = filtradas.filter(n => n.status === 'Emitida').length;
-          const qtdImportadas = filtradas.filter(n => n.status === 'Importada').length;
-          const totalEmitidas = totalNFeEmitida + totalNFCeEmitida + totalNFSeEmitida;
+        {[
+          { label: 'NFe Entrada', value: totalNFeLancada, color: '#3b82f6' },
+          { label: 'NFSe Entrada', value: totalNFSeLancada, color: '#3b82f6' },
+          { label: 'NFe Emitida', value: totalNFeEmitida, color: '#00ff00' },
+          { label: 'NFCe Emitida', value: totalNFCeEmitida, color: '#00ff00' },
+          { label: 'NFSe Emitida', value: totalNFSeEmitida, color: '#00ff00' },
+        ].map(({ label, value, color }) => (
+          <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center">
+            <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
+            <p className="font-bold text-sm" style={{ color }}>{`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</p>
+          </div>
+        ))}
+        {/* Total NF Emitidas - só mobile, fica ao lado de NFSe Emitida */}
+        <div className="md:hidden bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center">
+          <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">Total NF Emitidas</p>
+          <p className="font-bold text-sm" style={{ color: '#facc15' }}>{`R$ ${Number(totalNFeEmitida + totalNFCeEmitida + totalNFSeEmitida).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</p>
+        </div>
+        </div>
 
-          return [
-            { label: 'Notas Emitidas', value: qtdEmitidas, color: '#00ff00' },
-            { label: 'Notas Importadas', value: qtdImportadas, color: '#3b82f6' },
-            { label: 'Sem XML', value: notasSemXml, color: '#ef4444' },
-            { label: 'Sem PDF', value: notasSemPdf, color: '#ff9500' },
-            { label: 'Total NF Emitidas', value: `R$ ${Number(totalEmitidas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, color: '#facc15', isTotal: true },
-          ].map(({ label, value, color, isTotal }) => (
-            <div key={label} className={`bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center ${isTotal ? 'hidden md:flex' : ''}`}>
-              <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
-              <p className="font-bold text-sm" style={{ color }}>{isTotal ? value : value}</p>
-            </div>
-          ));
-        })()}
-      </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+        {(() => {
+           const notasSemXml = filtradas.filter(n => !n.xml_original?.trim().startsWith('<') && !n.xml_content?.trim().startsWith('<') && n.xml_url !== 'XML_IN_URL').length;
+           const notasSemPdf = filtradas.filter(n => !n.pdf_url).length;
+           const qtdEmitidas = filtradas.filter(n => n.status === 'Emitida').length;
+           const qtdImportadas = filtradas.filter(n => n.status === 'Importada').length;
+           const totalEmitidas = totalNFeEmitida + totalNFCeEmitida + totalNFSeEmitida;
+
+           return [
+             { label: 'Notas Emitidas', value: qtdEmitidas, color: '#00ff00' },
+             { label: 'Notas Importadas', value: qtdImportadas, color: '#3b82f6' },
+             { label: 'Sem XML', value: notasSemXml, color: '#ef4444' },
+             { label: 'Sem PDF', value: notasSemPdf, color: '#ff9500' },
+             { label: 'Total NF Emitidas', value: `R$ ${Number(totalEmitidas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, color: '#facc15', isTotal: true },
+           ].map(({ label, value, color, isTotal }) => (
+             <div key={label} className={`bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center ${isTotal ? 'hidden md:flex' : ''}`}>
+               <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
+               <p className="font-bold text-sm" style={{ color }}>{isTotal ? value : value}</p>
+             </div>
+           ));
+         })()}
+       </div>
+       </div>
+       )}
 
       {abaGeral === "notas" && (
       <div className="space-y-1.5">
