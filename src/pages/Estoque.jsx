@@ -986,7 +986,7 @@ function CellEdit({ item, field, className = "", editandoCell, onIniciar, onSalv
         onChange={e => {
           let v = e.target.value;
           if (CAMPOS_NUMERICOS.includes(field)) {
-            v = v.replace(/[^0-9.]/g, "");
+            v = v.replace(/[^0-9.\-]/g, "").replace(/(?!^)-/g, "");
           } else {
             v = v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x00-\x7F]/g, '').toUpperCase();
           }
