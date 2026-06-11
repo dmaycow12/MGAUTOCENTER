@@ -27,8 +27,10 @@ export default function ModalXML({ nota, onClose, onSalvo }) {
       fetch(nota.xml_url)
         .then(r => r.text())
         .then(text => {
-          if (text && text.trim().startsWith("<")) {
-            setXmlCarregado(text);
+          const trimmed = text?.trim() || "";
+          const isXml = trimmed.startsWith("<?xml") || (trimmed.startsWith("<") && !trimmed.toLowerCase().startsWith("<!doctype") && !trimmed.toLowerCase().startsWith("<html"));
+          if (isXml) {
+            setXmlCarregado(trimmed);
           } else {
             setXmlCarregado("");
           }
@@ -82,7 +84,7 @@ export default function ModalXML({ nota, onClose, onSalvo }) {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-800 flex-shrink-0">
           <div>
-            <h2 className="text-white font-semibold">XML da Nota — NF {nota.numero || "—"}</h2>
+            <h2 className="text-white font-semibold">XML da Nota — {nota.tipo || "NF"} {nota.numero || "—"}</h2>
             <p className="text-gray-500 text-xs mt-0.5">{nota.cliente_nome} · {nota.data_emissao}</p>
           </div>
           <div className="flex items-center gap-2">
