@@ -11,7 +11,7 @@ const formatarDataBR = (data) => {
 export default function AbaArquivos({ notas, onRefresh }) {
    const [tipoFiltro, setTipoFiltro] = useState('tudo-arquivo');
    const [statusFiltro, setStatusFiltro] = useState('tudo-status');
-   const [operacaoFiltro, setOperacaoFiltro] = useState('tudo-operacao');
+   const [operacaoAtivo, setOperacaoAtivo] = useState(new Set(['saida', 'entrada', 'nfe', 'nfce', 'nfse']));
    const [importando, setImportando] = useState(null);
    const [aviso, setAviso] = useState(null);
    const [uploadModal, setUploadModal] = useState(null);
@@ -116,12 +116,14 @@ export default function AbaArquivos({ notas, onRefresh }) {
         const statusOk = statusFiltro === 'tudo-status' || 
           (statusFiltro === 'salvo' && (arq.status === 'salvo' || arq.status === 'url')) ||
           (statusFiltro === 'ausente' && arq.status === 'ausente');
-        const operacaoOk = operacaoFiltro === 'tudo-operacao' || 
-          (operacaoFiltro === 'saida' && arq.operacao?.toLowerCase() === 'saida') ||
-          (operacaoFiltro === 'entrada' && arq.operacao?.toLowerCase() === 'entrada') ||
-          (operacaoFiltro === 'nfe' && arq.nota_tipo === 'NFe') ||
-          (operacaoFiltro === 'nfce' && arq.nota_tipo === 'NFCe') ||
-          (operacaoFiltro === 'nfse' && arq.nota_tipo === 'NFSe');
+        
+        const operacaoOk = operacaoAtivo.size === 0 || (
+          (operacaoAtivo.has('saida') && arq.operacao?.toLowerCase() === 'saida' ||
+           operacaoAtivo.has('entrada') && arq.operacao?.toLowerCase() === 'entrada') &&
+          (operacaoAtivo.has('nfe') && arq.nota_tipo === 'NFe' ||
+           operacaoAtivo.has('nfce') && arq.nota_tipo === 'NFCe' ||
+           operacaoAtivo.has('nfse') && arq.nota_tipo === 'NFSe')
+        );
         return tipoOk && statusOk && operacaoOk;
       });
 
@@ -161,7 +163,27 @@ export default function AbaArquivos({ notas, onRefresh }) {
   };
 
   const handleOperacaoChange = (id) => {
-    setOperacaoFiltro(id);
+    if (id === 'tudo-operacao') {
+      setOperacaoAtivo(new Set(['saida', 'entrada', 'nfe', 'nfce', 'nfse']));
+    } else {
+      const novo = new Set(operacaoAtivo);
+      if (novo.has(id)) {
+        novo.delete(id);
+      } else {
+        novo.add(id);
+      }
+
+      // Garante que tem pelo menos 1 de Saída/Entrada e 1 de NFe/NFCe/NFSe
+      const temSaidaEntrada = novo.has('saida') || novo.has('entrada');
+      const temNota = novo.has('nfe') || novo.has('nfce') || novo.has('nfse');
+
+      if (novo.size > 0 && temSaidaEntrada && temNota) {
+        setOperacaoAtivo(novo);
+      } else if (novo.size === 0) {
+        // Se clicou em algo que deixaria vazio, volta ao anterior
+        setOperacaoAtivo(operacaoAtivo);
+      }
+    }
   };
 
   const handleRecuperar = async (arquivo) => {
@@ -354,7 +376,9 @@ export default function AbaArquivos({ notas, onRefresh }) {
             key={f.id}
             onClick={() => handleOperacaoChange(f.id)}
             className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
-              operacaoFiltro === f.id
+              f.id === 'tudo-operacao' && operacaoAtivo.size === 5
+                ? 'bg-[#062C9B] text-white'
+                : f.id !== 'tudo-operacao' && operacaoAtivo.has(f.id)
                 ? 'bg-[#062C9B] text-white'
                 : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
             }`}
