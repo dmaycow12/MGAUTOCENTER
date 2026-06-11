@@ -356,7 +356,7 @@ export default function Dashboard() {
         const valorAtualAtivos = ativos.reduce((acc, a) => acc + Number(a.valor_atual || 0), 0);
         return (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
                 <p className="text-gray-400 text-xs">Total de Itens</p>
                 <p className="text-white font-bold text-lg">{totalItens}</p>
@@ -374,7 +374,7 @@ export default function Dashboard() {
                 <p className="text-green-400 font-bold text-sm">{fmt(valorVenda)}</p>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
                 <p className="text-gray-400 text-xs">Ativos</p>
                 <p className="text-green-400 font-bold text-lg">{totalAtivos}</p>
