@@ -1130,15 +1130,29 @@ export default function NotasFiscais() {
 
         </div>
 
-        <div className="flex gap-2 mb-4">
-          <button onClick={() => setAbaAtiva("notas")} className="px-4 py-2 rounded-lg text-sm font-semibold transition-all" style={abaAtiva==="notas"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Notas Fiscais</button>
-          <button onClick={() => setAbaAtiva("arquivos")} className="px-4 py-2 rounded-lg text-sm font-semibold transition-all" style={abaAtiva==="arquivos"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>XMLs e PDFs</button>
+        <div className="flex gap-0.5 border-b border-gray-800 mb-4">
+        <button
+          onClick={() => setAbaAtiva("notas")}
+          className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-all -mb-px ${
+            abaAtiva === "notas" ? "bg-gray-800 text-white border border-gray-700 border-b-gray-800" : "text-gray-500 hover:text-gray-300"
+          }`}
+        >
+          Notas Fiscais
+        </button>
+        <button
+          onClick={() => setAbaAtiva("arquivos")}
+          className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-all -mb-px ${
+            abaAtiva === "arquivos" ? "bg-gray-800 text-white border border-gray-700 border-b-gray-800" : "text-gray-500 hover:text-gray-300"
+          }`}
+        >
+          XMLs e PDFs
+        </button>
         </div>
 
         {abaAtiva === "notas" && (
         <div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
        {[
          { label: 'NFe Entrada', value: totalNFeLancada, color: '#3b82f6' },
          { label: 'NFSe Entrada', value: totalNFSeLancada, color: '#3b82f6' },
@@ -1158,7 +1172,7 @@ export default function NotasFiscais() {
        </div>
        </div>
 
-       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
        {(() => {
           const notasSemXml = filtradas.filter(n => !n.xml_original?.trim().startsWith('<') && !n.xml_content?.trim().startsWith('<') && n.xml_url !== 'XML_IN_URL').length;
           const notasSemPdf = filtradas.filter(n => !n.pdf_url).length;
