@@ -11,8 +11,6 @@ const formatarDataBR = (data) => {
 export default function AbaArquivos({ notas, onRefresh }) {
    const [tipoFiltro, setTipoFiltro] = useState('tudo-arquivo');
    const [statusFiltro, setStatusFiltro] = useState('tudo-status');
-   const [operacaoFiltro, setOperacaoFiltro] = useState('tudo-operacao');
-   const [notaTipoFiltro, setNotaTipoFiltro] = useState('tudo-tipo');
    const [importando, setImportando] = useState(null);
    const [aviso, setAviso] = useState(null);
    const [uploadModal, setUploadModal] = useState(null);
@@ -113,14 +111,12 @@ export default function AbaArquivos({ notas, onRefresh }) {
       return items;
     })
     .filter(arq => {
-         const tipoOk = tipoFiltro === 'tudo-arquivo' || arq.tipo.toLowerCase() === tipoFiltro;
-         const statusOk = statusFiltro === 'tudo-status' || 
-           (statusFiltro === 'salvo' && (arq.status === 'salvo' || arq.status === 'url')) ||
-           (statusFiltro === 'ausente' && arq.status === 'ausente');
-         const operacaoOk = operacaoFiltro === 'tudo-operacao' || arq.operacao?.toLowerCase() === operacaoFiltro;
-         const notaTipoOk = notaTipoFiltro === 'tudo-tipo' || arq.nota_tipo === notaTipoFiltro;
-         return tipoOk && statusOk && operacaoOk && notaTipoOk;
-       });
+       const tipoOk = tipoFiltro === 'tudo-arquivo' || arq.tipo.toLowerCase() === tipoFiltro;
+       const statusOk = statusFiltro === 'tudo-status' || 
+         (statusFiltro === 'salvo' && (arq.status === 'salvo' || arq.status === 'url')) ||
+         (statusFiltro === 'ausente' && arq.status === 'ausente');
+       return tipoOk && statusOk;
+     });
 
   const handleDownload = (arquivo) => {
     if (arquivo.url) {
@@ -155,14 +151,6 @@ export default function AbaArquivos({ notas, onRefresh }) {
 
   const handleStatusChange = (id) => {
     setStatusFiltro(id);
-  };
-
-  const handleOperacaoChange = (id) => {
-    setOperacaoFiltro(id);
-  };
-
-  const handleNotaTipoChange = (id) => {
-    setNotaTipoFiltro(id);
   };
 
   const handleRecuperar = async (arquivo) => {
@@ -350,49 +338,6 @@ export default function AbaArquivos({ notas, onRefresh }) {
             onClick={() => handleStatusChange(f.id)}
             className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
               statusFiltro === f.id
-                ? 'bg-[#062C9B] text-white'
-                : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Filtros - Operação */}
-      <div className="flex gap-0.5">
-        {[
-            { id: 'tudo-operacao', label: 'Saída / Entrada' },
-            { id: 'saida', label: 'Saída' },
-            { id: 'entrada', label: 'Entrada' },
-          ].map(f => (
-          <button
-            key={f.id}
-            onClick={() => handleOperacaoChange(f.id)}
-            className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
-              operacaoFiltro === f.id
-                ? 'bg-[#062C9B] text-white'
-                : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Filtros - Tipo de Nota */}
-      <div className="flex gap-0.5">
-        {[
-            { id: 'tudo-tipo', label: 'NFe / NFCe / NFSe' },
-            { id: 'NFe', label: 'NFe' },
-            { id: 'NFCe', label: 'NFCe' },
-            { id: 'NFSe', label: 'NFSe' },
-          ].map(f => (
-          <button
-            key={f.id}
-            onClick={() => handleNotaTipoChange(f.id)}
-            className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
-              notaTipoFiltro === f.id
                 ? 'bg-[#062C9B] text-white'
                 : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
             }`}
