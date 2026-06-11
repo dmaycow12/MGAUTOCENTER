@@ -157,29 +157,37 @@ export default function AbaArquivos({ notas, onRefresh }) {
       let mensagem = '';
 
       if (arquivo.tipo === 'XML') {
-        // Busca XML na Focus NFe
-        const res = await base44.functions.invoke('buscarXmlNota', { 
-          chave_acesso: nota.chave_acesso, 
-          nota_id: nota.id 
-        });
-        if (res.data?.sucesso && res.data?.xml) {
-          await base44.entities.NotaFiscal.update(nota.id, { xml_original: res.data.xml });
-          sucesso = true;
-          mensagem = 'XML importado com sucesso!';
-        } else if (res.data?.cancelada) {
-          mensagem = 'Nota foi cancelada pelo fornecedor.';
-        } else {
-          mensagem = res.data?.erro || 'XML não disponível na SEFAZ ainda.';
+        // Tenta buscar XML da Focus NFe
+        try {
+          const res = await base44.functions.invoke('buscarXmlNota', { 
+            chave_acesso: nota.chave_acesso, 
+            nota_id: nota.id 
+          });
+          if (res.data?.sucesso && res.data?.xml) {
+            await base44.entities.NotaFiscal.update(nota.id, { xml_original: res.data.xml });
+            sucesso = true;
+            mensagem = 'XML importado com sucesso!';
+          } else if (res.data?.cancelada) {
+            mensagem = 'Nota foi cancelada pelo fornecedor.';
+          } else {
+            mensagem = res.data?.erro || 'XML não disponível na SEFAZ ainda.';
+          }
+        } catch (e) {
+          mensagem = 'Erro ao buscar XML: ' + e.message;
         }
       } else if (arquivo.tipo === 'PDF') {
         // Busca PDF na Focus NFe
-        const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
-        if (res.data?.pdf_url) {
-          await base44.entities.NotaFiscal.update(nota.id, { pdf_url: res.data.pdf_url });
-          sucesso = true;
-          mensagem = 'PDF importado com sucesso!';
-        } else {
-          mensagem = res.data?.erro || 'PDF não disponível.';
+        try {
+          const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
+          if (res.data?.pdf_url) {
+            await base44.entities.NotaFiscal.update(nota.id, { pdf_url: res.data.pdf_url });
+            sucesso = true;
+            mensagem = 'PDF importado com sucesso!';
+          } else {
+            mensagem = res.data?.erro || 'PDF não disponível.';
+          }
+        } catch (e) {
+          mensagem = 'Erro ao buscar PDF: ' + e.message;
         }
       }
 

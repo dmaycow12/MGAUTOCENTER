@@ -27,12 +27,17 @@ Deno.serve(async (req) => {
    } catch (_) {}
 
    // Passo 2: Retry com backoff para notas recém-emitidas
-   const endpoints = [
-     `${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}.xml`,
-     `${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}/xml`,
-     `${FOCUSNFE_BASE}/download_nfe/${chave_acesso}`,
-     `${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}`,
-   ];
+    const endpoints = [
+      // NFes emitidas
+      `${FOCUSNFE_BASE}/nfes/${chave_acesso}.xml`,
+      `${FOCUSNFE_BASE}/nfes/${chave_acesso}/xml`,
+      `${FOCUSNFE_BASE}/nfes/${chave_acesso}`,
+      // NFes recebidas
+      `${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}.xml`,
+      `${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}/xml`,
+      `${FOCUSNFE_BASE}/download_nfe/${chave_acesso}`,
+      `${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}`,
+    ];
 
    let xml = '';
    const maxTentativas = 4;
