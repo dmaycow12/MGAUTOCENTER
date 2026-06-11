@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Download, Eye, AlertCircle, CheckCircle, Upload, RefreshCw, Plus } from 'lucide-react';
+import { FileText, Download, Eye, AlertCircle, CheckCircle, RefreshCw, Plus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 export default function AbaArquivos({ notas, onRefresh }) {
@@ -404,7 +404,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
                               {importando === `${arq.nota_id}-${arq.tipo}` ? (
                                 <RefreshCw className="w-3 h-3 animate-spin" />
                               ) : (
-                                <Upload className="w-3 h-3" />
+                                <Download className="w-3 h-3" />
                               )}
                             </button>
                             <button
