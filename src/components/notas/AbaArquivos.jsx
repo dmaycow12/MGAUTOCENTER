@@ -35,7 +35,7 @@ export default function AbaArquivos({ notas }) {
          nota_id: nota.id,
          url: nota.xml_url,
          conteudo: null,
-         status: 'url',
+         status: 'ausente',
          data_emissao: nota.data_emissao,
          cliente: nota.cliente_nome,
          operacao: operacao,
@@ -102,7 +102,7 @@ export default function AbaArquivos({ notas }) {
     .filter(arq => {
       const tipoOk = tipoFiltro === 'tudo-arquivo' || arq.tipo.toLowerCase() === tipoFiltro;
       const statusOk = statusFiltro === 'tudo-status' || 
-        (statusFiltro === 'salvo' && arq.status !== 'ausente') ||
+        (statusFiltro === 'salvo' && arq.status === 'salvo') ||
         (statusFiltro === 'ausente' && arq.status === 'ausente');
       return tipoOk && statusOk;
     });
