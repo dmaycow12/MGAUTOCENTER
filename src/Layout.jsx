@@ -68,7 +68,7 @@ export default function Layout({ children, currentPageName }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4 pt-14 md:p-6 md:pt-24" style={{background:"#000"}}>
+        <main className="flex-1 overflow-auto p-4 pt-14 md:p-6 md:pt-16" style={{background:"#000"}}>
           {children}
         </main>
 
