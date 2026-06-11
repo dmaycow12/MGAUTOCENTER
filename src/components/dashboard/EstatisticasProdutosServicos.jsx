@@ -134,8 +134,7 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-         <h2 className="text-white font-semibold text-base">{modoValor === "lucro" ? "Lucro por Produto/Serviço" : "Receita por Produto/Serviço"}</h2>
+      <div className="flex justify-end">
          <span className="text-gray-400 text-xs whitespace-nowrap">
            Total: <span className="text-green-400 font-bold">{fmt(totalAtual)}</span>
          </span>
