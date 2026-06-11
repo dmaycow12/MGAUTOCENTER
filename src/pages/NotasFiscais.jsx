@@ -1103,17 +1103,6 @@ export default function NotasFiscais() {
                const data2 = res2.data;
                if (data1?.sucesso || data2?.sucesso) { 
                  feedback('sucesso', 'NFe e NFSe importadas com sucesso!'); 
-                 // Aguarda 1s e recupera arquivos ausentes
-                 await new Promise(r => setTimeout(r, 1000));
-                 const notasAtualizadas = await base44.entities.NotaFiscal.list('-created_date', 500);
-                 let recuperadas = 0;
-                 for (const nota of notasAtualizadas.filter(n => (n.status === 'Importada' || n.status === 'Lançada') && !nota.xml_original && !nota.xml_url)) {
-                   try {
-                     const res = await base44.functions.invoke('recuperarArquivosAusentes', { nota_id: nota.id });
-                     if (res.data?.sucesso) recuperadas++;
-                   } catch (_) {}
-                 }
-                 if (recuperadas > 0) feedback('sucesso', `Notas importadas! ${recuperadas} XML(s) recuperados.`);
                  load(); 
                } else { 
                  feedback('erro', data1?.erro || data2?.erro || 'Erro ao importar notas.'); 
