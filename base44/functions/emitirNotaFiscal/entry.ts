@@ -39,20 +39,24 @@ const baixarXmlTexto = async (xmlUrl, authHeader) => {
 
 // Faz upload do PDF para armazenamento permanente no Base44
 const salvarPdfPermanente = async (base44, pdfUrl, nota_id, authHeader) => {
-  if (!pdfUrl) return null;
-  try {
-    const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
-    const resp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': authHeader } });
-    if (!resp.ok) return null;
-    const blob = await resp.blob();
-    const file = new File([blob], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
-    const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
-    console.log('[PDF SALVO]', file_url);
-    return file_url;
-  } catch (e) {
-    console.error('[PDF ERRO]', e.message);
-    return null;
-  }
+   if (!pdfUrl) return null;
+   try {
+     console.log('[PDF BAIXANDO]', pdfUrl);
+     const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
+     const resp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': authHeader } });
+     if (!resp.ok) {
+       console.error('[PDF ERRO] Status:', resp.status);
+       return null;
+     }
+     const arrayBuffer = await resp.arrayBuffer();
+     const uint8Array = new Uint8Array(arrayBuffer);
+     const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file: uint8Array });
+     console.log('[PDF SALVO]', file_url);
+     return file_url;
+   } catch (e) {
+     console.error('[PDF ERRO]', e.message);
+     return null;
+   }
 };
 
 // Consulta status na Focus NFe
