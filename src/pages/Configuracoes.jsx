@@ -93,128 +93,133 @@ export default function Configuracoes() {
         </div>
       )}
 
-      <Section title="Dados da Oficina" icon={Settings}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <F label="Nome da Oficina">
-            <input autoComplete="new-password" value={config.nome_oficina} onChange={e => setConfig({ ...config, nome_oficina: e.target.value })} className="input-dark" placeholder="Ex: Auto Mecânica Silva" />
-          </F>
-          <F label="CNPJ">
-            <input autoComplete="new-password" value={config.cnpj} onChange={e => setConfig({ ...config, cnpj: e.target.value })} className="input-dark" placeholder="00.000.000/0001-00" />
-          </F>
-          <F label="Telefone">
-            <input autoComplete="new-password" value={config.telefone} onChange={e => setConfig({ ...config, telefone: e.target.value })} className="input-dark" />
-          </F>
-          <F label="E-mail">
-            <input autoComplete="new-password" value={config.email} onChange={e => setConfig({ ...config, email: e.target.value })} className="input-dark" />
-          </F>
-          <F label="Endereço" className="col-span-1 md:col-span-2">
-            <input autoComplete="new-password" value={config.endereco} onChange={e => setConfig({ ...config, endereco: e.target.value })} className="input-dark" />
-          </F>
-          <F label="CEP">
-            <input autoComplete="new-password" value={config.cep} onChange={e => setConfig({ ...config, cep: e.target.value })} className="input-dark" />
-          </F>
-          <F label="Cidade">
-            <input autoComplete="new-password" value={config.cidade} onChange={e => setConfig({ ...config, cidade: e.target.value })} className="input-dark" />
-          </F>
-          <F label="Estado">
-            <input autoComplete="new-password" value={config.estado} onChange={e => setConfig({ ...config, estado: e.target.value })} className="input-dark" maxLength={2} />
-          </F>
-          <F label="Inscrição Municipal">
-            <input autoComplete="new-password" value={config.inscricao_municipal} onChange={e => setConfig({ ...config, inscricao_municipal: e.target.value })} className="input-dark" />
-          </F>
-          <F label="Inscrição Estadual">
-            <input autoComplete="new-password" value={config.inscricao_estadual} onChange={e => setConfig({ ...config, inscricao_estadual: e.target.value })} className="input-dark" />
-          </F>
-          <RadioAccordion
-            id="opcao_simples"
-            label="Opção Simples Nacional"
-            value={config.opcao_simples_nacional}
-            open={!!openSelect.opcao_simples}
-            onToggle={() => setOpenSelect(s => ({ ...s, opcao_simples: !s.opcao_simples }))}
-            options={[
-              { v: "1", label: "1 — Não optante" },
-              { v: "2", label: "2 — Optante (SIMEI/MEI)" },
-              { v: "3", label: "3 — Optante (Simples Nacional)" },
-            ]}
-            onChange={v => setConfig({ ...config, opcao_simples_nacional: v })}
-          />
-          <RadioAccordion
-            id="regime_tributario"
-            label="Regime Tributário"
-            value={config.regime_tributario}
-            open={!!openSelect.regime_tributario}
-            onToggle={() => setOpenSelect(s => ({ ...s, regime_tributario: !s.regime_tributario }))}
-            options={[
-              { v: "1", label: "1 — Simples Nacional" },
-              { v: "2", label: "2 — Simples Nacional — excesso sublimite" },
-              { v: "3", label: "3 — Regime Normal (Lucro Presumido/Real)" },
-            ]}
-            onChange={v => setConfig({ ...config, regime_tributario: v })}
-          />
-          <RadioAccordion
-            id="regime_especial"
-            label="Regime Especial de Tributação (NFS-e)"
-            value={config.regime_especial}
-            open={!!openSelect.regime_especial}
-            onToggle={() => setOpenSelect(s => ({ ...s, regime_especial: !s.regime_especial }))}
-            options={[
-              { v: "0", label: "0 — Nenhum / Não aplicável" },
-              { v: "1", label: "1 — Microempresa Municipal" },
-              { v: "2", label: "2 — Estimativa" },
-              { v: "3", label: "3 — Sociedade de Profissionais" },
-              { v: "4", label: "4 — Cooperativa" },
-              { v: "5", label: "5 — Microempresário Individual (MEI)" },
-              { v: "6", label: "6 — ME/EPP" },
-            ]}
-            onChange={v => setConfig({ ...config, regime_especial: v })}
-          />
-        </div>
-      </Section>
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6">
 
-      <Section title="Integração Focus NFe — Chaves API" icon={null}>
-        <div className="bg-gray-800 rounded-xl p-4 space-y-4">
+        {/* Dados da Oficina */}
+        <div>
+          <div className="flex items-center gap-2 border-b border-gray-800 pb-3 mb-4">
+            <Settings className="w-5 h-5 text-green-400" />
+            <h2 className="text-white font-semibold">Dados da Oficina</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <F label="Nome da Oficina">
+              <input autoComplete="new-password" value={config.nome_oficina} onChange={e => setConfig({ ...config, nome_oficina: e.target.value })} className="input-dark" placeholder="Ex: Auto Mecânica Silva" />
+            </F>
+            <F label="CNPJ">
+              <input autoComplete="new-password" value={config.cnpj} onChange={e => setConfig({ ...config, cnpj: e.target.value })} className="input-dark" placeholder="00.000.000/0001-00" />
+            </F>
+            <F label="Telefone">
+              <input autoComplete="new-password" value={config.telefone} onChange={e => setConfig({ ...config, telefone: e.target.value })} className="input-dark" />
+            </F>
+            <F label="E-mail">
+              <input autoComplete="new-password" value={config.email} onChange={e => setConfig({ ...config, email: e.target.value })} className="input-dark" />
+            </F>
+            <F label="Endereço" className="col-span-1 md:col-span-2">
+              <input autoComplete="new-password" value={config.endereco} onChange={e => setConfig({ ...config, endereco: e.target.value })} className="input-dark" />
+            </F>
+            <F label="CEP">
+              <input autoComplete="new-password" value={config.cep} onChange={e => setConfig({ ...config, cep: e.target.value })} className="input-dark" />
+            </F>
+            <F label="Cidade">
+              <input autoComplete="new-password" value={config.cidade} onChange={e => setConfig({ ...config, cidade: e.target.value })} className="input-dark" />
+            </F>
+            <F label="Estado">
+              <input autoComplete="new-password" value={config.estado} onChange={e => setConfig({ ...config, estado: e.target.value })} className="input-dark" maxLength={2} />
+            </F>
+            <F label="Inscrição Municipal">
+              <input autoComplete="new-password" value={config.inscricao_municipal} onChange={e => setConfig({ ...config, inscricao_municipal: e.target.value })} className="input-dark" />
+            </F>
+            <F label="Inscrição Estadual">
+              <input autoComplete="new-password" value={config.inscricao_estadual} onChange={e => setConfig({ ...config, inscricao_estadual: e.target.value })} className="input-dark" />
+            </F>
+            <RadioAccordion
+              id="opcao_simples"
+              label="Opção Simples Nacional"
+              value={config.opcao_simples_nacional}
+              open={!!openSelect.opcao_simples}
+              onToggle={() => setOpenSelect(s => ({ ...s, opcao_simples: !s.opcao_simples }))}
+              options={[
+                { v: "1", label: "1 — Não optante" },
+                { v: "2", label: "2 — Optante (SIMEI/MEI)" },
+                { v: "3", label: "3 — Optante (Simples Nacional)" },
+              ]}
+              onChange={v => setConfig({ ...config, opcao_simples_nacional: v })}
+            />
+            <RadioAccordion
+              id="regime_tributario"
+              label="Regime Tributário"
+              value={config.regime_tributario}
+              open={!!openSelect.regime_tributario}
+              onToggle={() => setOpenSelect(s => ({ ...s, regime_tributario: !s.regime_tributario }))}
+              options={[
+                { v: "1", label: "1 — Simples Nacional" },
+                { v: "2", label: "2 — Simples Nacional — excesso sublimite" },
+                { v: "3", label: "3 — Regime Normal (Lucro Presumido/Real)" },
+              ]}
+              onChange={v => setConfig({ ...config, regime_tributario: v })}
+            />
+            <RadioAccordion
+              id="regime_especial"
+              label="Regime Especial de Tributação (NFS-e)"
+              value={config.regime_especial}
+              open={!!openSelect.regime_especial}
+              onToggle={() => setOpenSelect(s => ({ ...s, regime_especial: !s.regime_especial }))}
+              options={[
+                { v: "0", label: "0 — Nenhum / Não aplicável" },
+                { v: "1", label: "1 — Microempresa Municipal" },
+                { v: "2", label: "2 — Estimativa" },
+                { v: "3", label: "3 — Sociedade de Profissionais" },
+                { v: "4", label: "4 — Cooperativa" },
+                { v: "5", label: "5 — Microempresário Individual (MEI)" },
+                { v: "6", label: "6 — ME/EPP" },
+              ]}
+              onChange={v => setConfig({ ...config, regime_especial: v })}
+            />
+          </div>
+        </div>
+
+        <div className="border-t border-gray-800" />
+
+        {/* Integração Focus NFe */}
+        <div>
+          <h2 className="text-white font-semibold border-b border-gray-800 pb-3 mb-4">Integração Focus NFe — Chaves API</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <TokenField label="Token de Homologação" value={config.focusnfe_api_key_homologacao} onChange={val => setConfig({ ...config, focusnfe_api_key_homologacao: val })} />
             <TokenField label="Token de Produção" value={config.focusnfe_api_key_producao} onChange={val => setConfig({ ...config, focusnfe_api_key_producao: val })} />
           </div>
         </div>
-      </Section>
 
-      <Section title="NF-e — Nota Fiscal de Produto" icon={null}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <F label="Série NF-e">
-            <input value={config.nfe_serie} onChange={e => setConfig({ ...config, nfe_serie: e.target.value })} className="input-dark" />
-          </F>
-          <F label="Última NF-e">
-            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfe_ultimo_numero} onChange={e => setConfig({ ...config, nfe_ultimo_numero: e.target.value })} className="input-dark" />
-          </F>
-        </div>
-      </Section>
+        <div className="border-t border-gray-800" />
 
-      <Section title="NFC-e — Nota Fiscal do Consumidor" icon={null}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <F label="Série NFC-e">
-            <input value={config.nfce_serie} onChange={e => setConfig({ ...config, nfce_serie: e.target.value })} className="input-dark" />
-          </F>
-          <F label="Última NFC-e">
-            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfce_ultimo_numero} onChange={e => setConfig({ ...config, nfce_ultimo_numero: e.target.value })} className="input-dark" />
-          </F>
+        {/* NF-e / NFC-e / NFS-e */}
+        <div>
+          <h2 className="text-white font-semibold border-b border-gray-800 pb-3 mb-4">Numeração de Notas Fiscais</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <F label="Série NF-e">
+              <input value={config.nfe_serie} onChange={e => setConfig({ ...config, nfe_serie: e.target.value })} className="input-dark" />
+            </F>
+            <F label="Última NF-e">
+              <input type="text" inputMode="numeric" autoComplete="off" value={config.nfe_ultimo_numero} onChange={e => setConfig({ ...config, nfe_ultimo_numero: e.target.value })} className="input-dark" />
+            </F>
+            <F label="Série NFC-e">
+              <input value={config.nfce_serie} onChange={e => setConfig({ ...config, nfce_serie: e.target.value })} className="input-dark" />
+            </F>
+            <F label="Última NFC-e">
+              <input type="text" inputMode="numeric" autoComplete="off" value={config.nfce_ultimo_numero} onChange={e => setConfig({ ...config, nfce_ultimo_numero: e.target.value })} className="input-dark" />
+            </F>
+            <F label="Série NFS-e (DPS)">
+              <input value={config.nfse_serie_dps} onChange={e => setConfig({ ...config, nfse_serie_dps: e.target.value })} className="input-dark" />
+            </F>
+            <F label="Última NFS-e / Número da Nota">
+              <input type="text" inputMode="numeric" autoComplete="off" value={config.nfse_ultimo_dps} onChange={e => {
+                const v = e.target.value;
+                setConfig({ ...config, nfse_ultimo_dps: v, nfse_ultimo_numero: v });
+              }} className="input-dark" />
+            </F>
+          </div>
         </div>
-      </Section>
 
-      <Section title="NFS-e — Nota Fiscal de Serviço" icon={null}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <F label="Série do DPS">
-            <input value={config.nfse_serie_dps} onChange={e => setConfig({ ...config, nfse_serie_dps: e.target.value })} className="input-dark" />
-          </F>
-          <F label="Última DPS / Número da Nota">
-            <input type="text" inputMode="numeric" autoComplete="off" value={config.nfse_ultimo_dps} onChange={e => {
-              const v = e.target.value;
-              setConfig({ ...config, nfse_ultimo_dps: v, nfse_ultimo_numero: v });
-            }} className="input-dark" />
-          </F>
-        </div>
-      </Section>
+      </div>
 
       <button onClick={salvar} disabled={salvando} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 mx-auto" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
         <Save className="w-5 h-5" />
