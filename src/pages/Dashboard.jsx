@@ -348,7 +348,7 @@ export default function Dashboard() {
           {/* Cards Produtos e Ativos */}
       {(() => {
         const totalItens = estoque.length;
-        const estoqueBaixo = estoque.filter(e => Number(e.quantidade || 0) <= Number(e.estoque_minimo || 0)).length;
+        const estoqueBaixo = estoque.filter(e => Number(e.quantidade || 0) < Number(e.estoque_minimo || 0)).length;
         const valorCusto = estoque.reduce((acc, e) => acc + Number(e.valor_custo || 0) * Number(e.quantidade || 0), 0);
         const valorVenda = estoque.reduce((acc, e) => acc + Number(e.valor_venda || 0) * Number(e.quantidade || 0), 0);
         const totalAtivos = ativos.length;
