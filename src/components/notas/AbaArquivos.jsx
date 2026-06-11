@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Download, Eye, AlertCircle, CheckCircle, Upload, RefreshCw, Plus } from 'lucide-react';
+import { FileText, Download, Eye, AlertCircle, CheckCircle, Upload, RefreshCw, Plus, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 export default function AbaArquivos({ notas, onRefresh }) {
@@ -394,27 +394,28 @@ export default function AbaArquivos({ notas, onRefresh }) {
                             </button>
                           </>
                         ) : (
-                          <>
+                          <div className="flex gap-0.5">
                             <button
                               onClick={() => handleImportar(arq)}
                               disabled={importando === `${arq.nota_id}-${arq.tipo}`}
-                              className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all disabled:opacity-50"
+                              className="flex items-center justify-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg bg-green-500 text-black hover:bg-green-600 transition-all disabled:opacity-50"
                               title="Importar da Focus NFe"
                             >
                               {importando === `${arq.nota_id}-${arq.tipo}` ? (
                                 <RefreshCw className="w-3 h-3 animate-spin" />
                               ) : (
-                                <Upload className="w-3 h-3" />
+                                <Download className="w-3 h-3" />
                               )}
+                              <span>Importar</span>
                             </button>
                             <button
                               onClick={() => setUploadModal(arq)}
-                              className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-all"
+                              className="flex items-center justify-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all"
                               title="Importar Manualmente"
                             >
                               <Plus className="w-3 h-3" />
                             </button>
-                          </>
+                          </div>
                         )}
                       </div>
                     </td>
