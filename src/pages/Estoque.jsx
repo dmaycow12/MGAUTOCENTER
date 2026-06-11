@@ -323,7 +323,7 @@ export default function Estoque() {
       const totalSaidas = hist.filter(h => normTipo(h.tipo) === 'saida').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
       const semHistorico = hist.length === 0;
       const esperado = Math.max(0, totalEntradas - totalSaidas);
-      const diferenca = Number(item.quantidade || 0) - esperado;
+      const diferenca = esperado - Number(item.quantidade || 0);
       if (diferenca !== 0 || (semHistorico && item.quantidade > 0)) {
         return { ...item, _esperado: esperado, _diferenca: diferenca };
       }
