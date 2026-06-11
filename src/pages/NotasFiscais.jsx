@@ -163,7 +163,8 @@ export default function NotasFiscais() {
   const [configsNF, setConfigsNF] = useState([]);
   const [avisoExclusao, setAvisoExclusao] = useState(null);
   const [xmlModal, setXmlModal] = useState(null);
-  const [confirmModal, setConfirmModal] = useState(null); // { msg, onConfirm }
+  const [confirmModal, setConfirmModal] = useState(null); // { msg, onConfirm, type }
+  const showConfirm = (msg, type = 'confirm') => new Promise((resolve) => setConfirmModal({ msg, onConfirm: resolve, type }));
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -495,7 +496,8 @@ export default function NotasFiscais() {
       setAvisoExclusao(nota);
       return;
     }
-    if (!confirm("Excluir esta nota fiscal?")) return;
+    await showConfirm("Excluir esta nota fiscal?", 'delete');
+    setConfirmModal(null);
     if (nota?.numero) {
       const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
       const vinculados = financeiros.filter(f => f.descricao?.includes(`NF ${nota.numero}`));
@@ -1098,7 +1100,7 @@ export default function NotasFiscais() {
           onClick={async () => {
             const preVisualizadas = notas.filter(n => n.status === 'Homologada');
             if (preVisualizadas.length === 0) { feedback('erro', 'Nenhuma nota em Pré-visualização para autorizar.'); return; }
-            await new Promise((resolve) => setConfirmModal({ msg: `Autorizar ${preVisualizadas.length} nota(s) homologada(s) em produção?`, onConfirm: resolve }));
+            await showConfirm(`Autorizar ${preVisualizadas.length} nota(s) homologada(s) em produção?`, 'confirm');
             setConfirmModal(null);
             setAutorizandoMassa(true);
             let ok = 0; let erros = 0;
@@ -1916,17 +1918,22 @@ export default function NotasFiscais() {
       {confirmModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{background:'rgba(0,0,0,0.85)'}}>
           <div className="relative w-full max-w-sm rounded-2xl overflow-hidden border border-gray-700 shadow-2xl" style={{background:'#0d1117'}}>
-            {/* Header verde */}
             <div className="px-6 pt-6 pb-4 flex flex-col items-center gap-3">
-              <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{background:'rgba(0,255,0,0.1)', border:'2px solid #00ff00'}}>
-                <CheckCircle className="w-7 h-7" style={{color:'#00ff00'}} />
-              </div>
-              <h2 className="text-white font-bold text-lg text-center">Confirmar Autorização</h2>
+              {confirmModal.type === 'delete' ? (
+                <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{background:'rgba(239,68,68,0.1)', border:'2px solid #ef4444'}}>
+                  <Trash2 className="w-7 h-7 text-red-400" />
+                </div>
+              ) : (
+                <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{background:'rgba(0,255,0,0.1)', border:'2px solid #00ff00'}}>
+                  <CheckCircle className="w-7 h-7" style={{color:'#00ff00'}} />
+                </div>
+              )}
+              <h2 className="text-white font-bold text-lg text-center">
+                {confirmModal.type === 'delete' ? 'Confirmar Exclusão' : 'Confirmar Autorização'}
+              </h2>
               <p className="text-gray-400 text-sm text-center">{confirmModal.msg}</p>
             </div>
-            {/* Divisor */}
             <div className="h-px mx-6" style={{background:'#1f2937'}} />
-            {/* Botões */}
             <div className="flex gap-3 p-5">
               <button
                 onClick={() => setConfirmModal(null)}
@@ -1937,11 +1944,11 @@ export default function NotasFiscais() {
               <button
                 onClick={() => confirmModal.onConfirm()}
                 className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all"
-                style={{background:'#00ff00', color:'#000'}}
-                onMouseEnter={e => e.currentTarget.style.background='#00dd00'}
-                onMouseLeave={e => e.currentTarget.style.background='#00ff00'}
+                style={{background: confirmModal.type === 'delete' ? '#ef4444' : '#00ff00', color: confirmModal.type === 'delete' ? '#fff' : '#000'}}
+                onMouseEnter={e => e.currentTarget.style.background = confirmModal.type === 'delete' ? '#dc2626' : '#00dd00'}
+                onMouseLeave={e => e.currentTarget.style.background = confirmModal.type === 'delete' ? '#ef4444' : '#00ff00'}
               >
-                Autorizar
+                {confirmModal.type === 'delete' ? 'Excluir' : 'Autorizar'}
               </button>
             </div>
           </div>
