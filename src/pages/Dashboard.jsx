@@ -228,10 +228,10 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-0.5">
       {/* Filtro de mês + gráficos FluxoMes */}
-      <div className="flex flex-col gap-2">
-        <div className="flex gap-2 items-center">
+      <div className="flex flex-col gap-0.5">
+        <div className="flex gap-0.5 items-center">
           <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
             <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 hover:bg-white/20 transition-all" style={{borderRight:"1px solid rgba(255,255,255,0.15)"}}>
               <ChevronLeft className="w-3 h-3" />
@@ -319,7 +319,7 @@ export default function Dashboard() {
               <div className="mb-3 text-center">
                 <h2 className="text-white font-bold text-lg">Saldo do Caixa</h2>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-0.5">
                 <div className="rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
                   <span className="text-xs font-semibold text-gray-400 tracking-wide">Recebido</span>
                   <span className="text-xs font-bold text-green-400">{fmt(totalRecebido)}</span>
@@ -356,25 +356,25 @@ export default function Dashboard() {
         const valorAtualAtivos = ativos.reduce((acc, a) => acc + Number(a.valor_atual || 0), 0);
         return (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                <p className="text-gray-400 text-xs">Total de Itens</p>
-                <p className="text-white font-bold text-lg">{totalItens}</p>
-              </div>
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                <p className="text-gray-400 text-xs">Estoque Baixo</p>
-                <p className="text-white font-bold text-lg">{estoqueBaixo}</p>
-              </div>
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                <p className="text-gray-400 text-xs">Valor Total (Custo)</p>
-                <p className="text-white font-bold text-sm">{fmt(valorCusto)}</p>
-              </div>
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                <p className="text-gray-400 text-xs">Valor Total (Venda)</p>
-                <p className="text-white font-bold text-sm">{fmt(valorVenda)}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-0.5">
+               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                 <p className="text-gray-400 text-xs">Total de Itens</p>
+                 <p className="text-white font-bold text-lg">{totalItens}</p>
+               </div>
+               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                 <p className="text-gray-400 text-xs">Estoque Baixo</p>
+                 <p className="text-white font-bold text-lg">{estoqueBaixo}</p>
+               </div>
+               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                 <p className="text-gray-400 text-xs">Valor Total (Custo)</p>
+                 <p className="text-white font-bold text-sm">{fmt(valorCusto)}</p>
+               </div>
+               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                 <p className="text-gray-400 text-xs">Valor Total (Venda)</p>
+                 <p className="text-white font-bold text-sm">{fmt(valorVenda)}</p>
+               </div>
+             </div>
+             <div className="grid grid-cols-2 sm:grid-cols-4 gap-0.5">
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
                 <p className="text-gray-400 text-xs">Ativos</p>
                 <p className="text-white font-bold text-lg">{totalAtivos}</p>
@@ -402,7 +402,7 @@ export default function Dashboard() {
       {/* Gráfico Receita x Despesa x Lucro */}
        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
          <div className="flex justify-end mb-3">
-           <div className="flex gap-1">
+           <div className="flex gap-0.5">
              {[3, 6, 12].map(m => (
                <button
                  key={m}
