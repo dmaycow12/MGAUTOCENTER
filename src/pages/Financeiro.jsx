@@ -296,12 +296,12 @@ export default function Financeiro() {
   if (loading) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-0.5">
 
-      {/* Header — Botões no topo */}
-      <div className="flex flex-col gap-2">
+       {/* Header — Botões no topo */}
+       <div className="flex flex-col gap-0.5">
         {/* Linha 1: + Receita / + Despesa */}
-        <div className="flex gap-2">
+        <div className="flex gap-0.5">
               <button onClick={() => { setForm({ ...defaultForm(), tipo: "Receita" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all" style={{background: "#00ff00", color: "#fff"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
                 <Plus className="w-4 h-4" /> Receita
               </button>
@@ -311,7 +311,7 @@ export default function Financeiro() {
             </div>
 
         {/* Filtro de Período */}
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-0.5 items-center">
           <div className={`flex-1 flex items-center h-11 rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
             <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
               <ChevronLeft className="w-3 h-3" />
@@ -354,7 +354,7 @@ export default function Financeiro() {
                   <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)}
                     className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500" />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-0.5">
                   <button onClick={() => setPeriodoDropOpen(false)}
                     className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
                     Cancelar
@@ -403,7 +403,7 @@ export default function Financeiro() {
             <div className="rounded-2xl p-4" style={{background: "linear-gradient(135deg, #0a1929 0%, #132642 100%)", border: "1px solid #1e4d7b"}}>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-white font-bold text-lg">Saldo do Caixa</h2>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5">
                   <button onClick={() => navSaldo(-1)} disabled={idxSeguro === 0} className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-white/10 disabled:opacity-30 transition-all" style={{background:"rgba(255,255,255,0.07)"}}>
                     <ChevronLeft className="w-3 h-3 text-white" />
                   </button>
@@ -436,21 +436,21 @@ export default function Financeiro() {
         })()}
 
         {/* Linha 3: filtro tipo — Receita / Despesa / Todos */}
-            <div className="flex gap-2">
-               {["Todos","Receita","Saída"].map(t => (
+            <div className="flex gap-0.5">
+              {["Todos","Receita","Saída"].map(t => (
                  <button key={t} onClick={() => { setFiltroTipo(t); localStorage.setItem("fin_filtroTipo", t); }} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroTipo === t ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{t === "Todos" ? "Tudo" : t}</button>
                ))}
              </div>
 
             {/* Linha 4: filtro status — Pendente / Atrasado / Pago / Todos */}
-            <div className="flex gap-2">
+            <div className="flex gap-0.5">
               {["Todos","Pendente","Atrasado","Pago"].map(s => (
                 <button key={s} onClick={() => { setFiltroStatus(s); localStorage.setItem("fin_filtroStatus", s); }} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroStatus === s ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{s === "Todos" ? "Tudo" : s}</button>
               ))}
             </div>
 
             {/* Linha 5: busca + toggle */}
-            <div className="flex gap-2">
+            <div className="flex gap-0.5">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500" />
@@ -474,7 +474,7 @@ export default function Financeiro() {
               )}
             </div>
           ) : viewMode === "cards" ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0.5">
               {sortedFiltrados.map(item => (
                 <FinanceiroCard key={item.id} item={item} onEdit={(i) => { setForm({ ...defaultForm(), ...i }); setEditando(i); setShowForm(true); }} onDelete={excluir} onAlterarStatus={alterarStatus} onAlterarPagamento={alterarPagamento} />
               ))}
@@ -521,8 +521,8 @@ export default function Financeiro() {
               <h2 className="text-white font-semibold">{editando ? "Editar Lançamento" : `Novo ${form.tipo}`}</h2>
               <button onClick={() => { setShowForm(false); setEditando(null); }}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
             </div>
-            <div className="p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="p-5 space-y-0.5">
+              <div className="grid grid-cols-2 gap-0.5">
                 <F label="Tipo">
                     <div className={`input-dark flex items-center ${form.tipo === "Receita" ? "text-green-400" : form.tipo === "Saída" || form.tipo === "Despesa" ? "text-red-400" : ""}`}>
                       {form.tipo === "Despesa" ? "Saída" : form.tipo}
@@ -559,7 +559,7 @@ export default function Financeiro() {
                 <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} className="input-dark" rows={2} />
               </F>
             </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
+            <div className="flex justify-end gap-0.5 p-5 border-t border-gray-800">
               <button onClick={() => { setShowForm(false); setEditando(null); }} className="px-4 py-2 text-sm text-white rounded-lg transition-all font-medium" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>Cancelar</button>
               <button onClick={salvar} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all" style={{background: "#062C9B"}} onMouseEnter={e => e.currentTarget.style.background = "#041a4d"} onMouseLeave={e => e.currentTarget.style.background = "#062C9B"}>
                 {editando ? "Salvar" : "Lançar"}
@@ -835,7 +835,7 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Status — botões sempre visíveis */}
-      <div className="flex gap-1 flex-shrink-0 w-44 justify-center">
+       <div className="flex gap-0.5 flex-shrink-0 w-44 justify-center">
         {STATUS_OPTIONS.map(s => {
           const bloqueado = s === "Pago" && (!item.forma_pagamento || item.forma_pagamento === "A Combinar");
           const isActive = item.status === s || (s === "Pendente" && item.status === "Atrasado");
@@ -869,7 +869,7 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Ações */}
-      <div className="flex gap-1 flex-shrink-0 w-14 justify-center">
+      <div className="flex gap-0.5 flex-shrink-0 w-14 justify-center">
         <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all"><Edit className="w-3.5 h-3.5"/></button>
         <button onClick={onDelete} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
       </div>
