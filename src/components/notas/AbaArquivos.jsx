@@ -108,7 +108,12 @@ export default function AbaArquivos({ notas }) {
     });
 
   const handleDownload = (arquivo) => {
-    if (arquivo.conteudo) {
+    if (arquivo.url) {
+      const a = document.createElement('a');
+      a.href = arquivo.url;
+      a.download = `NF-${arquivo.nota_numero}.${arquivo.tipo.toLowerCase()}`;
+      a.click();
+    } else if (arquivo.conteudo) {
       const blob = new Blob([arquivo.conteudo], { type: arquivo.tipo === 'XML' ? 'application/xml' : 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -120,10 +125,13 @@ export default function AbaArquivos({ notas }) {
   };
 
   const handleVisualize = (arquivo) => {
-    if (!arquivo.conteudo) return;
-    const blob = new Blob([arquivo.conteudo], { type: arquivo.tipo === 'XML' ? 'application/xml' : 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
+    if (arquivo.url) {
+      window.open(arquivo.url, '_blank');
+    } else if (arquivo.conteudo) {
+      const blob = new Blob([arquivo.conteudo], { type: arquivo.tipo === 'XML' ? 'application/xml' : 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    }
   };
 
   const handleTipoChange = (id) => {
@@ -239,7 +247,7 @@ export default function AbaArquivos({ notas }) {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex gap-1.5 justify-end">
-                        {arq.conteudo && (
+                        {(arq.conteudo || arq.url) && (
                           <button
                             onClick={() => handleVisualize(arq)}
                             className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all"
@@ -248,7 +256,7 @@ export default function AbaArquivos({ notas }) {
                             <Eye className="w-3 h-3" />
                           </button>
                         )}
-                        {arq.conteudo && (
+                        {(arq.conteudo || arq.url) && (
                           <button
                             onClick={() => handleDownload(arq)}
                             className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all"
