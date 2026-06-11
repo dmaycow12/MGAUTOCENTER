@@ -219,12 +219,14 @@ export default function Configuracoes() {
           </div>
         </div>
 
-      </div>
+        <div className="border-t border-gray-800 pt-4 flex justify-center">
+          <button onClick={salvar} disabled={salvando} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
+            <Save className="w-5 h-5" />
+            {salvando ? "Salvando..." : "Salvar Configurações"}
+          </button>
+        </div>
 
-      <button onClick={salvar} disabled={salvando} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 mx-auto" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e=>e.currentTarget.style.background="#00dd00"} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
-        <Save className="w-5 h-5" />
-        {salvando ? "Salvando..." : "Salvar Configurações"}
-      </button>
+      </div>
 
       <BackupManager />
 
