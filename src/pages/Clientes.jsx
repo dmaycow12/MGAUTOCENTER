@@ -246,10 +246,10 @@ export default function Clientes() {
   if (loading) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-0.5">
       {/* Header */}
-      <div className="flex flex-col gap-2">
-        {/* Linha 1: botão novo cadastro */}
+      <div className="flex flex-col gap-0.5">
+         {/* Linha 1: botão novo cadastro */}
         <button
           onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
@@ -260,7 +260,7 @@ export default function Clientes() {
           <Plus className="w-4 h-4" /> Novo Cadastro
         </button>
         {/* Filtros de categoria */}
-        <div className="flex gap-1">
+        <div className="flex gap-0.5">
           {["Todos", ...CATEGORIAS].map(cat => (
             <button key={cat} onClick={() => setFiltroCategoria(cat)}
               className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all"
@@ -270,7 +270,7 @@ export default function Clientes() {
           ))}
         </div>
         {/* Linha 2: busca + filtro */}
-        <div className="flex gap-2">
+        <div className="flex gap-0.5">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
@@ -410,7 +410,7 @@ export default function Clientes() {
                       {colunas.cidade && renderCell("cidade")}
                       {colunas.estado && renderCell("estado")}
                       <td className="px-4 py-1.5 whitespace-nowrap">
-                        <div className="flex gap-1 justify-end">
+                        <div className="flex gap-0.5 justify-end">
                           <button onClick={() => editarCliente(c)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded transition-all" title="Editar">
                             <Edit className="w-3.5 h-3.5" />
                           </button>
@@ -438,8 +438,8 @@ export default function Clientes() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-5 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-5 space-y-0.5">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-0.5">
                 <FormGroup label="Categoria">
                   <select value={form.categoria || "Cliente"} onChange={e => setForm({ ...form, categoria: e.target.value })} className="input-dark" autoComplete="off">
                     {CATEGORIAS.map(c => <option key={c}>{c}</option>)}
@@ -536,8 +536,8 @@ export default function Clientes() {
                 <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} className="input-dark" rows={2} autoComplete="off" />
               </FormGroup>
             </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
-              <div className="flex gap-3">
+            <div className="flex justify-end gap-0.5 p-5 border-t border-gray-800">
+              <div className="flex gap-0.5">
                 <button onClick={() => { setShowForm(false); setEditando(null); }} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-all">
                   Cancelar
                 </button>
