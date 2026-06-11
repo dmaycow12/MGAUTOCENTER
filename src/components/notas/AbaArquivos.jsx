@@ -74,18 +74,33 @@ export default function AbaArquivos({ notas, onRefresh }) {
       }
 
       // PDF
-      items.push({
-       tipo: 'PDF',
-       nota_numero: nota.numero,
-       nota_tipo: nota.tipo,
-       nota_id: nota.id,
-       url: nota.pdf_url,
-       conteudo: null,
-       status: 'ausente',
-       data_emissao: nota.data_emissao,
-       cliente: nota.cliente_nome,
-       operacao: operacao,
-      });
+      if (nota.pdf_url && !nota.pdf_url.endsWith('.html')) {
+       items.push({
+         tipo: 'PDF',
+         nota_numero: nota.numero,
+         nota_tipo: nota.tipo,
+         nota_id: nota.id,
+         url: nota.pdf_url,
+         conteudo: null,
+         status: 'url',
+         data_emissao: nota.data_emissao,
+         cliente: nota.cliente_nome,
+         operacao: operacao,
+       });
+      } else {
+       items.push({
+         tipo: 'PDF',
+         nota_numero: nota.numero,
+         nota_tipo: nota.tipo,
+         nota_id: nota.id,
+         url: null,
+         conteudo: null,
+         status: 'ausente',
+         data_emissao: nota.data_emissao,
+         cliente: nota.cliente_nome,
+         operacao: operacao,
+       });
+      }
 
       return items;
     })
