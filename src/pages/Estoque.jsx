@@ -501,9 +501,9 @@ export default function Estoque() {
   if (loading) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-0.5">
       {/* Tabs */}
-      <div className="flex bg-gray-900 border border-gray-800 rounded-xl p-1 gap-1">
+      <div className="flex bg-gray-900 border border-gray-800 rounded-xl p-1 gap-0.5">
         <button onClick={() => setAbaEstoque("produtos")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={abaEstoque==="produtos"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Produtos</button>
         <button onClick={() => setAbaEstoque("movimentacoes")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={abaEstoque==="movimentacoes"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Movimentações</button>
         <button onClick={() => setAbaEstoque("lucro")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={abaEstoque==="lucro"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Lucro por Peça</button>
@@ -525,7 +525,7 @@ export default function Estoque() {
       </button>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-0.5">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
           <p className="text-white text-sm font-medium mb-2">Produtos</p>
           <p className="text-white text-sm font-medium">{items.length}</p>
@@ -549,9 +549,9 @@ export default function Estoque() {
       </div>
 
       {/* Header */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-0.5">
         {/* Linha 1: busca + filtro + toggle */}
-        <div className="flex gap-2">
+        <div className="flex gap-0.5">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
@@ -589,7 +589,7 @@ export default function Estoque() {
 
 
         {/* Linha 3: ações */}
-        <div className="flex gap-2">
+        <div className="flex gap-0.5">
           <button
             onClick={() => {
               const novo = !checklistMode;
@@ -715,7 +715,7 @@ export default function Estoque() {
           <p className="text-gray-400">Nenhum item encontrado</p>
         </div>
       ) : viewMode === "cards" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0.5">
           {filtrados.map(item => {
             const isConf = conferidos.has(item.id);
             return (
@@ -734,7 +734,7 @@ export default function Estoque() {
                     </span>
                   )}
                 </div>
-                <div className="flex gap-1 flex-shrink-0">
+                <div className="flex gap-0.5 flex-shrink-0">
                   <button onClick={() => editar(item)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Edit className="w-4 h-4"/></button>
                   <button onClick={() => excluir(item.id)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Trash2 className="w-4 h-4"/></button>
                 </div>

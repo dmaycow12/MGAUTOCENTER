@@ -67,7 +67,7 @@ export default function Servicos() {
   if (loading) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-0.5">
       <button
         onClick={abrirNovo}
         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
@@ -78,8 +78,8 @@ export default function Servicos() {
         <Plus className="w-4 h-4" /> Novo Serviço
       </button>
 
-      <div className="flex gap-2">
-        <div className="relative flex-1">
+      <div className="flex gap-0.5">
+         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
@@ -106,7 +106,7 @@ export default function Servicos() {
           </button>
         </div>
       ) : viewMode === "cards" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0.5">
           {filtrados.map(item => (
             <div key={item.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-2 hover:border-gray-700 transition-all">
               <div className="flex items-start justify-between gap-2">
@@ -114,7 +114,7 @@ export default function Servicos() {
                   <p className="text-white font-semibold text-sm">{item.descricao}</p>
                   {item.codigo && <p className="text-orange-400 font-mono text-xs">{item.codigo}</p>}
                 </div>
-                <div className="flex gap-1 flex-shrink-0">
+                <div className="flex gap-0.5 flex-shrink-0">
                   <button onClick={() => abrirEditar(item)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg transition-all"><Pencil className="w-3.5 h-3.5"/></button>
                   <button onClick={() => excluir(item.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
                 </div>
@@ -158,7 +158,7 @@ export default function Servicos() {
 
             {/* Abas (só mostra quando editando) */}
             {editando && (
-              <div className="flex border-b border-gray-800 flex-shrink-0">
+            <div className="flex border-b border-gray-800 flex-shrink-0 gap-0.5">
                 <button
                   onClick={() => setTabAtual("dados")}
                   className="px-6 py-3 text-sm font-medium transition-all"
@@ -185,7 +185,7 @@ export default function Servicos() {
             {/* Conteúdo */}
             <div className="p-5 overflow-y-auto flex-1">
               {tabAtual === "dados" ? (
-                <div className="space-y-4">
+                <div className="space-y-0.5">
                   <style>{`.inp { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .inp:focus { border-color:#f97316; } .inp::placeholder { color:#6b7280; }`}</style>
                   <F label="Código"><input value={form.codigo} onChange={e => setForm(f => ({ ...f, codigo: e.target.value }))} className="inp" placeholder="Ex: SRV001" /></F>
                   <F label="Descrição *"><input value={form.descricao} onChange={e => setForm(f => ({ ...f, descricao: sanitizar(e.target.value) }))} className="inp" placeholder="Nome do serviço" /></F>
@@ -199,7 +199,7 @@ export default function Servicos() {
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end gap-3 p-5 border-t border-gray-800 flex-shrink-0">
+            <div className="flex justify-end gap-0.5 p-5 border-t border-gray-800 flex-shrink-0">
               <button
                 onClick={() => setShowForm(false)}
                 className="px-4 py-2 text-sm text-white rounded-lg transition-all font-medium"
@@ -251,8 +251,8 @@ function HistoricoVendas({ historico }) {
   const totalReceita = historico.reduce((s, h) => s + (Number(h.valor_total) || 0), 0);
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3 mb-4">
+    <div className="space-y-0.5">
+    <div className="grid grid-cols-2 gap-0.5 mb-4">
         <div className="bg-gray-800 rounded-xl p-3 text-center">
           <div className="text-2xl font-bold text-white">{totalVendas}</div>
           <div className="text-xs text-gray-400 mt-1">Total de vendas</div>
@@ -263,7 +263,7 @@ function HistoricoVendas({ historico }) {
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-0.5">
         {historico.slice().reverse().map((h, i) => (
           <div key={i} className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-xs">
             <div className="flex items-center justify-between mb-1">
