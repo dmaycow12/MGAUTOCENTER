@@ -12,6 +12,7 @@ import ModalXML from "@/components/notas/ModalXML";
 import ModalPreVisualizacao from "@/components/notas/ModalPreVisualizacao";
 import FiltroPerioodoAvancado from "@/components/notas/FiltroPerioodoAvancado";
 import SearchableSelect from "@/components/notas/SearchableSelect";
+import AbaArquivos from "@/components/notas/AbaArquivos";
 import { gerarDadosAdicionaisDaVenda, gerarInfoParcelas } from "@/components/notas/gerarDadosAdicionais";
 
 import JSZip from "jszip";
@@ -140,6 +141,7 @@ export default function NotasFiscais() {
 
 
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("notas_viewmode") || "table");
+  const [abaGeral, setAbaGeral] = useState("notas");
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showEntrada, setShowEntrada] = useState(false);
@@ -1171,17 +1173,42 @@ export default function NotasFiscais() {
         })()}
       </div>
 
+      <div className="flex gap-0.5 items-center rounded-xl overflow-hidden bg-gray-900 border border-gray-800 p-1.5">
+        <button
+          onClick={() => setAbaGeral("notas")}
+          className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            abaGeral === "notas"
+              ? "bg-[#062C9B] text-white"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          Notas Fiscais
+        </button>
+        <button
+          onClick={() => setAbaGeral("arquivos")}
+          className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            abaGeral === "arquivos"
+              ? "bg-[#062C9B] text-white"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          Arquivos
+        </button>
+      </div>
+
+      {abaGeral === "notas" && (
+      <div>
       <div className="flex gap-0.5">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <input
-            type="text"
-            placeholder="Buscar nota..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-orange-500"
-          />
-        </div>
+         <div className="relative flex-1">
+           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+           <input
+             type="text"
+             placeholder="Buscar nota..."
+             value={search}
+             onChange={e => setSearch(e.target.value)}
+             className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-orange-500"
+           />
+         </div>
         <div className="flex bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
           <button onClick={() => { setViewMode("table"); localStorage.setItem("notas_viewmode","table"); }} className="px-2 py-1.5 transition-all" style={{background:viewMode==="table"?"#062C9B":"transparent",color:viewMode==="table"?"#fff":"#6b7280"}} title="Lista"><List className="w-5 h-5"/></button>
           <button onClick={() => { setViewMode("cards"); localStorage.setItem("notas_viewmode","cards"); }} className="px-2 py-1.5 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}} title="Cards"><LayoutGrid className="w-5 h-5"/></button>
@@ -1900,6 +1927,12 @@ export default function NotasFiscais() {
             load();
           }}
         />
+      )}
+      </div>
+      )}
+
+      {abaGeral === "arquivos" && (
+        <AbaArquivos notas={notas} />
       )}
 
       {xmlModal && (
