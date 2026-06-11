@@ -1130,9 +1130,9 @@ export default function NotasFiscais() {
 
         </div>
 
-        <div className="flex bg-gray-900 border border-gray-800 rounded-xl p-1 gap-1 mb-4">
-          <button onClick={() => setAbaAtiva("notas")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={abaAtiva==="notas"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Notas Fiscais</button>
-          <button onClick={() => setAbaAtiva("arquivos")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={abaAtiva==="arquivos"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>XMLs e PDFs</button>
+        <div className="flex gap-2 mb-4">
+          <button onClick={() => setAbaAtiva("notas")} className="px-4 py-2 rounded-lg text-sm font-semibold transition-all" style={abaAtiva==="notas"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Notas Fiscais</button>
+          <button onClick={() => setAbaAtiva("arquivos")} className="px-4 py-2 rounded-lg text-sm font-semibold transition-all" style={abaAtiva==="arquivos"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>XMLs e PDFs</button>
         </div>
 
         {abaAtiva === "notas" && (
