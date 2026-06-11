@@ -109,7 +109,7 @@ export default function Ativos() {
   if (loading) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-0.5">
       {/* Botão novo */}
       <button
         onClick={() => { setEditando(null); setShowForm(true); }}
@@ -213,7 +213,7 @@ export default function Ativos() {
       </div>
 
       {/* Busca + Toggle de visualização */}
-      <div className="flex gap-2">
+      <div className="flex gap-0.5">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
@@ -246,7 +246,7 @@ export default function Ativos() {
       </div>
 
       {/* Resumo */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-0.5">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
           <p className="text-gray-400 text-xs">Ativos</p>
           <p className="text-green-400 font-bold text-lg">{filtrados.length}</p>
@@ -267,7 +267,7 @@ export default function Ativos() {
           <p className="text-gray-400">Nenhum ativo cadastrado</p>
         </div>
       ) : viewMode === "cards" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0.5">
           {filtrados.map(ativo => (
             <AtivoCard
               key={ativo.id}
@@ -279,7 +279,7 @@ export default function Ativos() {
           ))}
         </div>
       ) : (
-        <div className="space-y-2">
+       <div className="space-y-0.5">
           {filtrados.map(ativo => (
             <AtivoRow
               key={ativo.id}
@@ -364,8 +364,8 @@ function AtivoCard({ ativo, onEdit, onDelete, onUpdate }) {
           </div>
         )}
       </div>
-      <div className="p-3 space-y-2">
-        <div className="min-w-0">
+      <div className="p-3 space-y-0.5">
+      <div className="min-w-0">
           <p className="text-white font-semibold text-sm truncate">{ativo.nome || "—"}</p>
           <span className="text-gray-500 text-xs bg-gray-800 px-2 py-0.5 rounded">{ativo.categoria || "—"}</span>
         </div>
@@ -379,8 +379,8 @@ function AtivoCard({ ativo, onEdit, onDelete, onUpdate }) {
             <InlineValue value={ativo.valor_atual} color="#4ade80" onSave={v => onUpdate(ativo.id, { valor_atual: v })} />
           </div>
         </div>
-        <div className="flex gap-2 pt-1">
-          <button onClick={onEdit} className="flex-1 py-1.5 text-xs text-gray-400 hover:text-white border border-gray-700 rounded-lg flex items-center justify-center gap-1 transition-all hover:bg-gray-800">
+        <div className="flex gap-0.5 pt-1">
+           <button onClick={onEdit} className="flex-1 py-1.5 text-xs text-gray-400 hover:text-white border border-gray-700 rounded-lg flex items-center justify-center gap-1 transition-all hover:bg-gray-800">
             <Pencil className="w-3 h-3" /> Editar
           </button>
           <button onClick={onDelete} className="py-1.5 px-3 text-xs text-red-400 hover:text-red-300 border border-gray-700 rounded-lg transition-all hover:bg-gray-800">
@@ -413,8 +413,8 @@ function AtivoRow({ ativo, onEdit, onDelete, onUpdate }) {
           <InlineValue value={ativo.valor_atual} color="#4ade80" onSave={v => onUpdate(ativo.id, { valor_atual: v })} />
         </div>
       </div>
-      <div className="flex gap-1 flex-shrink-0">
-        <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
+      <div className="flex gap-0.5 flex-shrink-0">
+         <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
           <Pencil className="w-4 h-4" />
         </button>
         <button onClick={onDelete} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
@@ -448,9 +448,9 @@ function AtivoDetalhe({ ativo, onClose, onEdit }) {
             )}
           </div>
         )}
-        <div className="p-5 space-y-3">
+        <div className="p-5 space-y-0.5">
           <span className="text-gray-500 text-xs">{ativo.categoria}</span>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-0.5">
             {ativo.data_aquisicao && <Info label="Aquisição" value={fmtData(ativo.data_aquisicao)} />}
             {ativo.valor_aquisicao > 0 && <Info label="Valor de Compra" value={fmt(ativo.valor_aquisicao)} />}
             {ativo.valor_atual > 0 && <Info label="Valor Atual" value={fmt(ativo.valor_atual)} />}
@@ -527,7 +527,7 @@ function AtivoForm({ ativo, categorias, onClose, onSave }) {
           <h2 className="text-white font-semibold">{ativo ? "Editar Ativo" : "Novo Ativo"}</h2>
           <button onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
         </div>
-        <div className="p-5 space-y-4">
+        <div className="p-5 space-y-0.5">
           {/* Fotos */}
           <div>
             <label className="block text-xs text-gray-400 mb-2">Fotos</label>
@@ -547,7 +547,7 @@ function AtivoForm({ ativo, categorias, onClose, onSave }) {
                 </div>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-0.5">
               <button type="button" onClick={() => cameraInputRef.current?.click()}
                 className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 hover:text-white rounded-lg text-xs transition-all">
                 <Camera className="w-4 h-4" /> Câmera
@@ -573,7 +573,7 @@ function AtivoForm({ ativo, categorias, onClose, onSave }) {
             </select>
           </F>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-0.5">
             <F label="Data de Aquisição">
               <input type="date" value={form.data_aquisicao} onChange={e => setForm(f => ({ ...f, data_aquisicao: e.target.value }))} className="input-dark" />
             </F>
@@ -589,7 +589,7 @@ function AtivoForm({ ativo, categorias, onClose, onSave }) {
             <textarea value={form.observacoes} onChange={e => setForm(f => ({ ...f, observacoes: e.target.value }))} className="input-dark" rows={3} />
           </F>
         </div>
-        <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
+        <div className="flex justify-end gap-0.5 p-5 border-t border-gray-800">
           <button onClick={onClose} className="px-4 py-2 text-sm text-white rounded-lg transition-all font-medium" style={{background: "#cc0000"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>Cancelar</button>
           <button onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all disabled:opacity-50" style={{background: "#062C9B"}} onMouseEnter={e => !saving && (e.currentTarget.style.background = "#041a4d")} onMouseLeave={e => e.currentTarget.style.background = "#062C9B"}>
             {saving ? "Salvando..." : ativo ? "Salvar" : "Cadastrar Ativo"}
