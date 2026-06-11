@@ -359,7 +359,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
       </div>
 
       {/* Filtros - Operação */}
-      <div className="flex gap-0.5 overflow-x-auto">
+      <div className="flex gap-0.5">
         {[
             { id: 'tudo-operacao', label: 'Tudo' },
             { id: 'saida', label: 'Saída' },
@@ -371,7 +371,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
           <button
             key={f.id}
             onClick={() => handleOperacaoChange(f.id)}
-            className={`flex-1 min-w-max h-9 rounded-lg text-sm font-medium transition-all ${
+            className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
               operacaoFiltro === f.id
                 ? 'bg-[#062C9B] text-white'
                 : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
