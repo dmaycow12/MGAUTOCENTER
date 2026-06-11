@@ -209,9 +209,9 @@ Deno.serve(async (req) => {
     const ref = `${(tipo || 'nfe').toLowerCase()}-${Date.now()}`;
 
     // Determina qual ambiente/chave usar
-    // Se é preview (rascunho em homologação), sempre homologação
-    // Se é produção (Emitida), sempre produção
-    const isHomologacao = notaExistente?.status === 'Homologada' || notaExistente?.status === 'Pré-visualização';
+    // isPreview=true SOMENTE quando chamado pela função preVisualizarNota (body.homologacao === true)
+    // O botão "Autorizar" SEMPRE envia para PRODUÇÃO, independente do status da nota
+    const isHomologacao = body.homologacao === true;
     const baseUrlCompleta = isHomologacao ? FOCUSNFE_BASE_HOM : FOCUSNFE_BASE_PROD;
     const authHeaderAtivo = isHomologacao ? AUTH_HEADER_HOM : AUTH_HEADER_PROD;
 
