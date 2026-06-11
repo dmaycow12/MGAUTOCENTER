@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Download, Eye, AlertCircle, CheckCircle } from 'lucide-react';
+import { FileText, Download, AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function AbaArquivos({ notas }) {
   const [tipoFiltro, setTipoFiltro] = useState('tudo-arquivo');
@@ -124,15 +124,7 @@ export default function AbaArquivos({ notas }) {
     }
   };
 
-  const handleVisualize = (arquivo) => {
-    if (arquivo.url) {
-      window.open(arquivo.url, '_blank');
-    } else if (arquivo.conteudo) {
-      const blob = new Blob([arquivo.conteudo], { type: arquivo.tipo === 'XML' ? 'application/xml' : 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-    }
-  };
+
 
   const handleTipoChange = (id) => {
     setTipoFiltro(id);
@@ -247,15 +239,6 @@ export default function AbaArquivos({ notas }) {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex gap-1.5 justify-end">
-                        {(arq.conteudo || arq.url) && (
-                          <button
-                            onClick={() => handleVisualize(arq)}
-                            className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all"
-                            title="Visualizar"
-                          >
-                            <Eye className="w-3 h-3" />
-                          </button>
-                        )}
                         {(arq.conteudo || arq.url) && (
                           <button
                             onClick={() => handleDownload(arq)}
