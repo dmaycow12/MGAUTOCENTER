@@ -316,46 +316,70 @@ export default function AbaArquivos({ notas, onRefresh }) {
         </div>
       )}
 
-      {/* Filtros - Todos na mesma linha */}
-      <div className="flex gap-0.5 flex-wrap">
+      {/* Filtros - Tipo de Arquivo */}
+      <div className="flex gap-0.5">
         {[
-            { id: 'tudo-arquivo', label: 'Tudo', type: 'tipo' },
-            { id: 'xml', label: 'XML', type: 'tipo' },
-            { id: 'pdf', label: 'PDF', type: 'tipo' },
-            { id: 'tudo-status', label: 'Tudo', type: 'status' },
-            { id: 'salvo', label: 'Salvo', type: 'status' },
-            { id: 'ausente', label: 'Ausente', type: 'status' },
-            { id: 'tudo-operacao', label: 'Tudo', type: 'operacao' },
-            { id: 'saida', label: 'Saída', type: 'operacao' },
-            { id: 'entrada', label: 'Entrada', type: 'operacao' },
-            { id: 'nfe', label: 'NFe', type: 'operacao' },
-            { id: 'nfce', label: 'NFCe', type: 'operacao' },
-            { id: 'nfse', label: 'NFSe', type: 'operacao' },
-          ].map(f => {
-            const isActive = 
-              (f.type === 'tipo' && tipoFiltro === f.id) ||
-              (f.type === 'status' && statusFiltro === f.id) ||
-              (f.type === 'operacao' && operacaoFiltro === f.id);
+            { id: 'tudo-arquivo', label: 'Tudo' },
+            { id: 'xml', label: 'XML' },
+            { id: 'pdf', label: 'PDF' },
+          ].map(f => (
+          <button
+            key={f.id}
+            onClick={() => handleTipoChange(f.id)}
+            className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
+              tipoFiltro === f.id
+                ? 'bg-[#062C9B] text-white'
+                : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
 
-            const handleClick = 
-              f.type === 'tipo' ? () => handleTipoChange(f.id) :
-              f.type === 'status' ? () => handleStatusChange(f.id) :
-              () => handleOperacaoChange(f.id);
+      {/* Filtros - Status */}
+      <div className="flex gap-0.5">
+        {[
+            { id: 'tudo-status', label: 'Tudo' },
+            { id: 'salvo', label: 'Salvo' },
+            { id: 'ausente', label: 'Ausente' },
+          ].map(f => (
+          <button
+            key={f.id}
+            onClick={() => handleStatusChange(f.id)}
+            className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
+              statusFiltro === f.id
+                ? 'bg-[#062C9B] text-white'
+                : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
 
-            return (
-              <button
-                key={f.id}
-                onClick={handleClick}
-                className={`h-9 px-4 rounded-lg text-sm font-medium transition-all ${
-                  isActive
-                    ? 'bg-[#062C9B] text-white'
-                    : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
-                }`}
-              >
-                {f.label}
-              </button>
-            );
-          })}
+      {/* Filtros - Operação */}
+      <div className="flex gap-0.5">
+        {[
+            { id: 'tudo-operacao', label: 'Tudo' },
+            { id: 'saida', label: 'Saída' },
+            { id: 'entrada', label: 'Entrada' },
+            { id: 'nfe', label: 'NFe' },
+            { id: 'nfce', label: 'NFCe' },
+            { id: 'nfse', label: 'NFSe' },
+          ].map(f => (
+          <button
+            key={f.id}
+            onClick={() => handleOperacaoChange(f.id)}
+            className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
+              operacaoFiltro === f.id
+                ? 'bg-[#062C9B] text-white'
+                : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
       {/* Resultado */}
