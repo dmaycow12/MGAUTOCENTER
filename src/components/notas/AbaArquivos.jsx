@@ -77,7 +77,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
          nota_id: nota.id,
          url: nota.xml_url,
          conteudo: null,
-         status: 'ausente',
+         status: 'salvo',
          data_emissao: nota.data_emissao,
          cliente: nota.cliente_nome,
          operacao: operacao,
