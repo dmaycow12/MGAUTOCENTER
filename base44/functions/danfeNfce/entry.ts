@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
 
     // Carrega chaves de configuração
     const getConf = (chave, padrao = '') => todasConfigs.find(c => c.chave === chave)?.valor || padrao;
-    const apiKeyProd = getConf('focusnfe_api_key', '');
+    const apiKeyProd = getConf('focusnfe_api_key_producao', '');
     const apiKeyHom = getConf('focusnfe_api_key_homologacao', '');
     const AUTH_HEADER_PROD = 'Basic ' + btoa(apiKeyProd + ':');
     const AUTH_HEADER_HOM = 'Basic ' + btoa(apiKeyHom + ':');
