@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
   if (!xml) {
     return Response.json({
       sucesso: false,
-      erro: 'XML completo ainda não disponível na SEFAZ. Clique no ícone de upload (↑) na tabela para tentar novamente ou importe manualmente.'
+      erro: 'XML completo ainda não disponível na SEFAZ. Importe o arquivo XML manualmente clicando em "Importar XML".'
     });
   }
 
