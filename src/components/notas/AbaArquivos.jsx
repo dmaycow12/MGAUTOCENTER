@@ -6,6 +6,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
    const [tipoFiltro, setTipoFiltro] = useState('tudo-arquivo');
    const [statusFiltro, setStatusFiltro] = useState('tudo-status');
    const [importando, setImportando] = useState(null);
+   const [aviso, setAviso] = useState(null);
 
   const arquivos = notas
     .flatMap(nota => {
@@ -181,15 +182,37 @@ export default function AbaArquivos({ notas, onRefresh }) {
       }
 
       if (sucesso && onRefresh) onRefresh();
-      alert(mensagem);
-    } catch (e) {
-      alert('Erro: ' + e.message);
-    }
-    setImportando(null);
+      setAviso({ tipo: sucesso ? 'sucesso' : 'erro', mensagem });
+      } catch (e) {
+      setAviso({ tipo: 'erro', mensagem: 'Erro: ' + e.message });
+      }
+      setImportando(null);
   };
 
   return (
     <div className="space-y-0.5">
+      {/* Modal Aviso */}
+      {aviso && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-lg font-semibold text-white mb-3">
+              {aviso.tipo === 'sucesso' ? 'Importação Concluída' : 'Aviso'}
+            </h3>
+            <p className="text-gray-300 text-sm mb-6 leading-relaxed">
+              {aviso.mensagem}
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setAviso(null)}
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-all"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Filtros - Tipo de Arquivo */}
       <div className="flex gap-0.5">
         {[
