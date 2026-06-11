@@ -10,6 +10,10 @@ export default function AbaArquivos({ notas }) {
       const items = [];
       
       // XML
+      const isDevolucaoNota = nota.observacoes === "DEVOLUÇÃO";
+      const isEntrada = !isDevolucaoNota && (nota.status === "Importada" || nota.status === "Lançada");
+      const operacao = isEntrada ? 'entrada' : 'saida';
+      
       if (nota.xml_original?.trim().startsWith('<')) {
         items.push({
           tipo: 'XML',
@@ -20,7 +24,7 @@ export default function AbaArquivos({ notas }) {
           status: 'salvo',
           data_emissao: nota.data_emissao,
           cliente: nota.cliente_nome,
-          operacao: nota.tipo || 'entrada',
+          operacao: operacao,
         });
       } else if (nota.xml_url?.endsWith('.xml')) {
         items.push({
@@ -32,7 +36,7 @@ export default function AbaArquivos({ notas }) {
           status: 'url',
           data_emissao: nota.data_emissao,
           cliente: nota.cliente_nome,
-          operacao: nota.tipo || 'entrada',
+          operacao: operacao,
         });
       } else if (nota.xml_content?.trim().startsWith('<')) {
         items.push({
@@ -44,7 +48,7 @@ export default function AbaArquivos({ notas }) {
           status: 'salvo',
           data_emissao: nota.data_emissao,
           cliente: nota.cliente_nome,
-          operacao: nota.tipo || 'entrada',
+          operacao: operacao,
         });
       } else {
         items.push({
@@ -56,7 +60,7 @@ export default function AbaArquivos({ notas }) {
           status: 'ausente',
           data_emissao: nota.data_emissao,
           cliente: nota.cliente_nome,
-          operacao: nota.tipo || 'entrada',
+          operacao: operacao,
         });
       }
 
@@ -71,7 +75,7 @@ export default function AbaArquivos({ notas }) {
           status: 'url',
           data_emissao: nota.data_emissao,
           cliente: nota.cliente_nome,
-          operacao: nota.tipo || 'entrada',
+          operacao: operacao,
         });
       } else {
         items.push({
@@ -83,7 +87,7 @@ export default function AbaArquivos({ notas }) {
           status: 'ausente',
           data_emissao: nota.data_emissao,
           cliente: nota.cliente_nome,
-          operacao: nota.tipo || 'entrada',
+          operacao: operacao,
         });
       }
 
