@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
               
               if (uploadResp?.file_url) {
                 await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
-                  xml_url: uploadResp.file_url
+                  xml_original_url: uploadResp.file_url
                 });
                 baixados++;
               }
