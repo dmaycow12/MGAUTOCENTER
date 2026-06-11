@@ -1042,15 +1042,38 @@ export default function NotasFiscais() {
   return (
     <div className="space-y-1.5">
       {msgFeedback && (
-        <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm ${msgFeedback.tipo === "sucesso" ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
-          {msgFeedback.tipo === "sucesso" ? <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />}
-          <span className="whitespace-pre-wrap break-words max-h-48 overflow-y-auto flex-1">{msgFeedback.msg}</span>
-        </div>
-      )}
+         <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm ${msgFeedback.tipo === "sucesso" ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
+           {msgFeedback.tipo === "sucesso" ? <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />}
+           <span className="whitespace-pre-wrap break-words max-h-48 overflow-y-auto flex-1">{msgFeedback.msg}</span>
+         </div>
+       )}
 
-      <button onClick={() => { const novo = defaultForm(); setForm({ ...novo, serie: proximaSerie(notas, novo.tipo) }); setAbaForm("cliente"); setErrosForm({}); currentEditIdRef.current = null; setShowForm(true); }} className="w-full flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all mb-0.5" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
-        <Plus className="w-4 h-4" /> Emitir
-      </button>
+       <div className="flex gap-0.5 items-center rounded-xl overflow-hidden bg-gray-900 border border-gray-800 p-1.5">
+        <button
+          onClick={() => setAbaGeral("notas")}
+          className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            abaGeral === "notas"
+              ? "bg-[#062C9B] text-white"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          Notas Fiscais
+        </button>
+        <button
+          onClick={() => setAbaGeral("arquivos")}
+          className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            abaGeral === "arquivos"
+              ? "bg-[#062C9B] text-white"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          Arquivos
+        </button>
+       </div>
+
+       <button onClick={() => { const novo = defaultForm(); setForm({ ...novo, serie: proximaSerie(notas, novo.tipo) }); setAbaForm("cliente"); setErrosForm({}); currentEditIdRef.current = null; setShowForm(true); }} className="w-full flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all mb-0.5" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+         <Plus className="w-4 h-4" /> Emitir
+       </button>
 
       <FiltroPerioodoAvancado onFiltroChange={(dados) => {
         if (dados.filtroMes !== undefined) setFiltroMes(dados.filtroMes);
@@ -1173,31 +1196,8 @@ export default function NotasFiscais() {
         })()}
       </div>
 
-      <div className="flex gap-0.5 items-center rounded-xl overflow-hidden bg-gray-900 border border-gray-800 p-1.5">
-        <button
-          onClick={() => setAbaGeral("notas")}
-          className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-            abaGeral === "notas"
-              ? "bg-[#062C9B] text-white"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          Notas Fiscais
-        </button>
-        <button
-          onClick={() => setAbaGeral("arquivos")}
-          className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-            abaGeral === "arquivos"
-              ? "bg-[#062C9B] text-white"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          Arquivos
-        </button>
-      </div>
-
       {abaGeral === "notas" && (
-      <div>
+      <div className="space-y-1.5">
       <div className="flex gap-0.5">
          <div className="relative flex-1">
            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
