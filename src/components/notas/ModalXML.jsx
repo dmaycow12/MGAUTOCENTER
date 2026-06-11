@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { X, Download, Save, AlertCircle, Loader2 } from "lucide-react";
+import { X, Download, Save, AlertCircle, Loader2, RefreshCw } from "lucide-react";
 
 export default function ModalXML({ nota, onClose, onSalvo }) {
   const [xmlCarregado, setXmlCarregado] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [xmlManual, setXmlManual] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const [buscando, setBuscando] = useState(false);
   const [erro, setErro] = useState("");
 
   // Verifica se já tem XML inline (sem precisar buscar da URL)
@@ -58,6 +59,25 @@ export default function ModalXML({ nota, onClose, onSalvo }) {
     a.download = `NF-${nota.numero || nota.id}.xml`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const buscarXmlFocus = async () => {
+    setBuscando(true);
+    setErro("");
+    try {
+      const res = await base44.functions.invoke('buscarXmlNota', { nota_id: nota.id, chave_acesso: nota.chave_acesso });
+      if (res.data?.sucesso && res.data?.xml) {
+        const xml = res.data.xml;
+        await base44.entities.NotaFiscal.update(nota.id, { xml_original: xml });
+        setXmlCarregado(xml);
+        onSalvo(xml);
+      } else {
+        setErro(res.data?.erro || 'XML não encontrado na Focus NFe.');
+      }
+    } catch (e) {
+      setErro('Erro ao buscar: ' + e.message);
+    }
+    setBuscando(false);
   };
 
   const salvarXmlManual = async () => {
@@ -114,8 +134,20 @@ export default function ModalXML({ nota, onClose, onSalvo }) {
             <>
               <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <span>Esta nota não possui XML completo. Cole o conteúdo do XML abaixo para salvá-lo permanentemente.</span>
+                <span>Esta nota não possui XML salvo. Tente buscar automaticamente ou cole o XML manualmente.</span>
               </div>
+
+              {(nota.spedy_id || nota.chave_acesso) && (
+                <button
+                  onClick={buscarXmlFocus}
+                  disabled={buscando}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg disabled:opacity-50 transition-all w-full justify-center"
+                  style={{ background: "#062C9B", color: "#fff" }}
+                >
+                  {buscando ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                  {buscando ? "Buscando na Focus NFe..." : "Buscar XML na Focus NFe"}
+                </button>
+              )}
 
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Colar XML manualmente</label>

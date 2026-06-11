@@ -1976,10 +1976,7 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlSalvo(nota) {
-  if (nota.xml_original && typeof nota.xml_original === 'string' && nota.xml_original.trim().length > 0) {
-    return true;
-  }
-  if (nota.xml_url && typeof nota.xml_url === 'string' && nota.xml_url.trim().length > 0) {
+  if (nota.xml_original && typeof nota.xml_original === 'string' && nota.xml_original.trim().startsWith('<')) {
     return true;
   }
   return false;
