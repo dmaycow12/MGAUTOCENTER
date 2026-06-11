@@ -86,7 +86,7 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                   <input value={form.codigo} onChange={e => setForm({ ...form, codigo: e.target.value.toUpperCase() })} className="input-dark" />
                 </F>
                 <F label="Quantidade">
-                  <input type="text" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: Number(e.target.value.replace(/[^0-9.]/g, "") || 0) })} className="input-dark" />
+                  <input type="text" value={form.quantidade} onChange={e => setForm({ ...form, quantidade: Number(e.target.value.replace(/[^0-9.\-]/g, "").replace(/(?!^)-/g, "")) || 0 })} className="input-dark" />
                 </F>
                 <F label="Descrição *" className="col-span-2">
                   <input value={form.descricao} onChange={e => setForm({ ...form, descricao: sanitizar(e.target.value) })} className="input-dark" />
