@@ -1970,10 +1970,12 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlSalvo(nota) {
-  if (nota.xml_original && typeof nota.xml_original === 'string' && nota.xml_original.trim().startsWith('<')) {
-    return true;
-  }
-  return false;
+  const xml = nota.xml_original;
+  if (!xml || typeof xml !== 'string') return false;
+  // Remove BOM e espaços
+  const cleaned = xml.replace(/^\uFEFF/, '').trim();
+  // Verifica se é XML válido (começa com < ou ?)
+  return cleaned.length > 0 && (cleaned.startsWith('<') || cleaned.startsWith('<?'));
 }
 
 function BotoesPagamento({ onVoltar, salvarRascunho, emitindo, temSpedy, onPreVisualizar }) {
