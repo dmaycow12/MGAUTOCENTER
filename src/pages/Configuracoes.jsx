@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Settings, Save, CheckCircle, ChevronDown, DollarSign, RefreshCw, Download } from "lucide-react";
+import { Settings, Save, CheckCircle, ChevronDown } from "lucide-react";
 import BackupManager from "../components/backup/BackupManager";
 
 export default function Configuracoes() {
@@ -259,11 +259,6 @@ export default function Configuracoes() {
 
       <BackupManager />
 
-      <Section title="Ferramentas de Dados" icon={DollarSign}>
-        <CriarFinanceiroVendasBtn />
-        <DownloadXmlNfseBtn />
-      </Section>
-
       <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#22c55e; } .input-dark::placeholder { color:#6b7280; }`}</style>
     </form>
   );
@@ -322,82 +317,6 @@ function RadioAccordion({ id, label, value, open, onToggle, options, onChange })
   );
 }
 
-function CriarFinanceiroVendasBtn() {
-  const [loading, setLoading] = useState(false);
-  const [resultado, setResultado] = useState(null);
-  const [progresso, setProgresso] = useState(null);
-  const pollingRef = React.useRef(null);
-
-  const iniciarPolling = () => {
-    pollingRef.current = setInterval(async () => {
-      try {
-        const rows = await base44.entities.Configuracao.filter({ chave: 'financeiro_progress' }, '-updated_date', 1);
-        if (rows.length > 0) {
-          const p = JSON.parse(rows[0].valor || '{}');
-          setProgresso(p);
-          if (p.done) pararPolling();
-        }
-      } catch (_) {}
-    }, 1500);
-  };
-
-  const pararPolling = () => {
-    if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
-  };
-
-  const executar = async () => {
-    if (!confirm('Isso vai criar lançamentos financeiros PENDENTES para todas as vendas que ainda não têm. Continuar?')) return;
-    setLoading(true);
-    setResultado(null);
-    setProgresso(null);
-    iniciarPolling();
-    try {
-      const res = await base44.functions.invoke('criarFinanceiroVendas', {});
-      setResultado(res.data);
-    } finally {
-      pararPolling();
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="text-sm text-gray-400">Cria lançamentos financeiros (Pendente) para todas as vendas que ainda não possuem lançamento nas parcelas.</p>
-      <button
-        type="button"
-        onClick={executar}
-        disabled={loading}
-        className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50 w-fit"
-        style={{background:'#062C9B'}}
-      >
-        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-        {loading ? 'Processando...' : 'Criar Lançamentos Financeiros de Todas as Vendas'}
-      </button>
-      {loading && progresso && (
-        <div className="flex flex-col gap-2">
-          <p className="text-xs text-gray-400">{progresso.msg}</p>
-          {progresso.total > 0 && (
-            <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
-              <div
-                className="h-3 rounded-full transition-all duration-500"
-                style={{ width: `${Math.round((progresso.current / progresso.total) * 100)}%`, background: '#062C9B' }}
-              />
-            </div>
-          )}
-          {progresso.total > 0 && (
-            <p className="text-xs text-gray-500">{progresso.current} / {progresso.total} vendas ({Math.round((progresso.current / progresso.total) * 100)}%)</p>
-          )}
-        </div>
-      )}
-      {resultado && (
-        <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm">
-          ✓ Financeiros criados: <strong>{resultado.financeiros_criados}</strong> — Vendas atualizadas: <strong>{resultado.vendas_atualizadas}</strong> (de {resultado.total_vendas} vendas)
-        </div>
-      )}
-    </div>
-  );
-}
-
 function TokenField({ label, value, onChange }) {
   const [visible, setVisible] = React.useState(false);
   return (
@@ -409,91 +328,6 @@ function TokenField({ label, value, onChange }) {
           {visible ? '🙈' : '👁️'}
         </button>
       </div>
-    </div>
-  );
-}
-
-function DownloadXmlNfseBtn() {
-  const [loading, setLoading] = useState(false);
-  const [diagnostico, setDiagnostico] = useState(null);
-
-  const baixar = async () => {
-    setLoading(true);
-    try {
-      const res = await base44.functions.invoke('downloadXmlNfse63a74', {});
-      const blob = new Blob([res.data], { type: 'application/zip' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'NFSes_63_74.zip';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verificar = async () => {
-    setLoading(true);
-    try {
-      const res = await base44.functions.invoke('diagnosticoXmlNfse63a74', {});
-      setDiagnostico(res.data);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-3 border-t border-gray-700 pt-4 mt-4">
-      <p className="text-sm text-gray-400">Gerencia XMLs originais das NFSes 63-74.</p>
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={verificar}
-          disabled={loading}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
-          style={{background:'#0891b2'}}
-        >
-          {loading ? 'Analisando...' : '🔍 Diagnosticar'}
-        </button>
-        <button
-          type="button"
-          onClick={baixar}
-          disabled={loading}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
-          style={{background:'#062C9B'}}
-        >
-          <Download className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Baixar ZIP
-        </button>
-      </div>
-      {diagnostico && (
-        <div className="mt-3 p-3 bg-gray-800 rounded-lg border border-gray-700 space-y-3">
-          <div className="text-sm text-gray-300">
-            <p><strong>Total NFSes (63-74):</strong> {diagnostico.total}</p>
-            <p><strong>Com XML Original:</strong> <span className={diagnostico.comXmlOriginal > 0 ? 'text-green-400' : 'text-red-400'}>{diagnostico.comXmlOriginal}</span></p>
-            <p><strong>Sem XML Original:</strong> <span className={diagnostico.semXmlOriginal > 0 ? 'text-red-400' : 'text-green-400'}>{diagnostico.semXmlOriginal}</span></p>
-          </div>
-          {diagnostico.resumoSemXml.length > 0 && (
-            <div className="text-xs bg-red-900/20 border border-red-700/30 rounded p-2 text-red-300">
-              <p className="font-semibold mb-1">NFSes SEM XML Original:</p>
-              {diagnostico.resumoSemXml.map(d => (
-                <p key={d.numero}>NFSe #{d.numero} - {d.cliente} ({d.status})</p>
-              ))}
-            </div>
-          )}
-          <div className="text-xs text-gray-500 max-h-40 overflow-y-auto">
-            <p className="font-semibold mb-1">Detalhes:</p>
-            {diagnostico.detalhes.map(d => (
-              <div key={d.numero} className={`text-xs mb-1 pb-1 border-b border-gray-700 ${d.temXmlOriginal ? 'text-green-400' : 'text-red-400'}`}>
-                <strong>#{d.numero}</strong> - {d.temXmlOriginal ? `✓ ${d.tamanhoXmlOriginal} bytes` : '✗ VAZIO'}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
