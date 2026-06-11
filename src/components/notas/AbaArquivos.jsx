@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import { FileText, Download, Eye, AlertCircle, CheckCircle, RefreshCw, Plus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
+const formatarDataBR = (data) => {
+  if (!data) return '—';
+  const [ano, mes, dia] = data.split('-');
+  return `${dia}/${mes}/${ano}`;
+};
+
 export default function AbaArquivos({ notas, onRefresh }) {
    const [tipoFiltro, setTipoFiltro] = useState('tudo-arquivo');
    const [statusFiltro, setStatusFiltro] = useState('tudo-status');
@@ -359,7 +365,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
                     </td>
                     <td className="px-4 py-3 text-white font-mono text-sm">{arq.nota_tipo || '—'}-{arq.nota_numero || '—'}</td>
                     <td className="px-4 py-3 text-gray-300">{arq.cliente || '—'}</td>
-                    <td className="px-4 py-3 text-gray-400 hidden sm:table-cell text-xs">{arq.data_emissao || '—'}</td>
+                    <td className="px-4 py-3 text-gray-400 hidden sm:table-cell text-xs">{formatarDataBR(arq.data_emissao)}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center text-xs px-2 py-1 rounded-full font-medium ${
                         arq.operacao?.toLowerCase() === 'saida' 
