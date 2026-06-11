@@ -400,22 +400,22 @@ export default function Dashboard() {
       <EstatisticasProdutosServicos vendas={ordensPeriodo} servicosCad={servicosCad} estoque={estoque} />
 
       {/* Gráfico Receita x Despesa x Lucro */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-        <div className="relative flex items-center justify-center mb-3">
-          <h2 className="text-white font-semibold text-base text-center">Receita x Despesa x Lucro</h2>
-          <div className="absolute right-0 flex gap-1">
-            {[3, 6, 12].map(m => (
-              <button
-                key={m}
-                onClick={() => { setPeriodoMeses(m); localStorage.setItem("dash_periodoMeses", m); }}
-                className="px-3 py-1 rounded-lg text-xs font-medium transition-all"
-                style={periodoMeses === m ? { background: "#062C9B", color: "#fff" } : { background: "#1f2937", color: "#6b7280", border: "1px solid #374151" }}
-              >
-                {m === 12 ? "1 ano" : `${m}m`}
-              </button>
-            ))}
-          </div>
-        </div>
+       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
+           <h2 className="text-white font-semibold text-base">Receita x Despesa x Lucro</h2>
+           <div className="flex gap-1">
+             {[3, 6, 12].map(m => (
+               <button
+                 key={m}
+                 onClick={() => { setPeriodoMeses(m); localStorage.setItem("dash_periodoMeses", m); }}
+                 className="px-3 py-1 rounded-lg text-xs font-medium transition-all"
+                 style={periodoMeses === m ? { background: "#062C9B", color: "#fff" } : { background: "#1f2937", color: "#6b7280", border: "1px solid #374151" }}
+               >
+                 {m === 12 ? "1 ano" : `${m}m`}
+               </button>
+             ))}
+           </div>
+         </div>
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={fluxoPorMes} barGap={4}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
