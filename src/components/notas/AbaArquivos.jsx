@@ -227,24 +227,24 @@ export default function AbaArquivos({ notas }) {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col gap-1 items-end">
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex gap-1.5 justify-end">
                         {arq.conteudo && (
                           <button
                             onClick={() => handleVisualize(arq)}
-                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all whitespace-nowrap"
+                            className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all"
+                            title="Visualizar"
                           >
                             <Eye className="w-3 h-3" />
-                            Visualizar
                           </button>
                         )}
                         {arq.conteudo && (
                           <button
                             onClick={() => handleDownload(arq)}
-                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all whitespace-nowrap"
+                            className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all"
+                            title="Baixar"
                           >
                             <Download className="w-3 h-3" />
-                            Baixar
                           </button>
                         )}
                       </div>
