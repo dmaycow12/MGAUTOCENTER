@@ -1048,6 +1048,31 @@ export default function NotasFiscais() {
         </div>
       )}
 
+      <div className="flex gap-0.5 items-center rounded-xl overflow-hidden bg-gray-900 border border-gray-800">
+        <button
+          onClick={() => setAbaGeral("notas")}
+          className={`flex-1 px-4 py-2 text-sm font-medium rounded-l-lg transition-all ${
+            abaGeral === "notas"
+              ? "bg-[#062C9B] text-white"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          Notas Fiscais
+        </button>
+        <button
+          onClick={() => setAbaGeral("arquivos")}
+          className={`flex-1 px-4 py-2 text-sm font-medium rounded-r-lg transition-all ${
+            abaGeral === "arquivos"
+              ? "bg-[#062C9B] text-white"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          Arquivos
+        </button>
+      </div>
+
+      {abaGeral === "notas" && (
+      <div>
       <button onClick={() => { const novo = defaultForm(); setForm({ ...novo, serie: proximaSerie(notas, novo.tipo) }); setAbaForm("cliente"); setErrosForm({}); currentEditIdRef.current = null; setShowForm(true); }} className="w-full flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all mb-0.5" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
         <Plus className="w-4 h-4" /> Emitir
       </button>
@@ -1173,31 +1198,6 @@ export default function NotasFiscais() {
         })()}
       </div>
 
-      <div className="flex gap-0.5 items-center rounded-xl overflow-hidden bg-gray-900 border border-gray-800 p-1.5">
-        <button
-          onClick={() => setAbaGeral("notas")}
-          className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-            abaGeral === "notas"
-              ? "bg-[#062C9B] text-white"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          Notas Fiscais
-        </button>
-        <button
-          onClick={() => setAbaGeral("arquivos")}
-          className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-            abaGeral === "arquivos"
-              ? "bg-[#062C9B] text-white"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          Arquivos
-        </button>
-      </div>
-
-      {abaGeral === "notas" && (
-      <div>
       <div className="flex gap-0.5">
          <div className="relative flex-1">
            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
