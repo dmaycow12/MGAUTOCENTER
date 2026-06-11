@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { FileText, Download, Eye, AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function AbaArquivos({ notas }) {
-  const [filtroTipo, setFiltroTipo] = useState('todos');
-  const [filtroStatus, setFiltroStatus] = useState('todos');
+  const [filtro, setFiltro] = useState('todos');
 
   const arquivos = notas
     .flatMap(nota => {
@@ -84,13 +83,10 @@ export default function AbaArquivos({ notas }) {
       return items;
     })
     .filter(arq => {
-      // Filtro por tipo
-      if (filtroTipo !== 'todos' && arq.tipo !== filtroTipo.toUpperCase()) return false;
-      
-      // Filtro por status
-      if (filtroStatus === 'salvos' && arq.status === 'ausente') return false;
-      if (filtroStatus === 'ausentes' && arq.status !== 'ausente') return false;
-      
+      if (filtro === 'xml') return arq.tipo === 'XML';
+      if (filtro === 'pdf') return arq.tipo === 'PDF';
+      if (filtro === 'salvos') return arq.status !== 'ausente';
+      if (filtro === 'ausentes') return arq.status === 'ausente';
       return true;
     });
 
@@ -110,49 +106,27 @@ export default function AbaArquivos({ notas }) {
 
   return (
     <div className="space-y-4">
-      {/* Filtros em duas linhas agrupados */}
-      <div className="flex gap-4 flex-wrap">
-        {/* Grupo 1: Tipo */}
-        <div className="flex gap-2">
-          {[
-            { id: 'todos', label: 'Todos' },
-            { id: 'xml', label: 'XMLs' },
-            { id: 'pdf', label: 'PDFs' },
-          ].map(f => (
-            <button
-              key={f.id}
-              onClick={() => setFiltroTipo(f.id)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                filtroTipo === f.id
-                  ? 'bg-[#062C9B] text-white'
-                  : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Grupo 2: Status */}
-        <div className="flex gap-2">
-          {[
-            { id: 'todos', label: 'Todos' },
-            { id: 'salvos', label: 'Salvos' },
-            { id: 'ausentes', label: 'Ausentes' },
-          ].map(f => (
-            <button
-              key={f.id}
-              onClick={() => setFiltroStatus(f.id)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                filtroStatus === f.id
-                  ? 'bg-[#062C9B] text-white'
-                  : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+      {/* Filtros */}
+      <div className="flex gap-2 flex-wrap">
+        {[
+          { id: 'todos', label: 'Todos' },
+          { id: 'xml', label: 'XMLs' },
+          { id: 'pdf', label: 'PDFs' },
+          { id: 'salvos', label: 'Salvos' },
+          { id: 'ausentes', label: 'Ausentes' },
+        ].map(f => (
+          <button
+            key={f.id}
+            onClick={() => setFiltro(f.id)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              filtro === f.id
+                ? 'bg-[#062C9B] text-white'
+                : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
       {/* Resultado */}
