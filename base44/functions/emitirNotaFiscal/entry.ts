@@ -20,8 +20,8 @@ const normalizarUrl = (url) => {
   return `https://api.focusnfe.com.br${url}`;
 };
 
-// Faz upload do XML para armazenamento permanente no Base44
-const salvarXmlPermanente = async (base44, xmlUrl, ref, numero, authHeader) => {
+// Baixa o XML da Focus NFe e retorna o conteúdo como texto
+const baixarXmlTexto = async (xmlUrl, authHeader) => {
   if (!xmlUrl) return null;
   try {
     const isS3 = xmlUrl.includes('amazonaws.com') || xmlUrl.includes('s3.');
@@ -29,10 +29,8 @@ const salvarXmlPermanente = async (base44, xmlUrl, ref, numero, authHeader) => {
     if (!resp.ok) { console.error('[XML ERRO] fetch status:', resp.status, xmlUrl); return null; }
     const text = await resp.text();
     if (!text || !text.includes('<')) { console.error('[XML ERRO] conteúdo inválido'); return null; }
-    const xmlFile = new File([text], `NF-${numero || ref}.xml`, { type: 'text/xml' });
-    const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
-    console.log('[XML SALVO]', file_url);
-    return file_url;
+    console.log('[XML BAIXADO] tamanho:', text.length);
+    return text;
   } catch (e) {
     console.error('[XML ERRO]', e.message);
     return null;
@@ -586,20 +584,20 @@ Deno.serve(async (req) => {
     // SE EMITIDA: SALVA PDF E XML PERMANENTEMENTE
     // ============================================================
     let pdfUrlFinal = pdfUrl;
-    let xmlUrlFinal = '';
+    let xmlOriginalTexto = '';
     if (statusNota === 'Emitida') {
       if (pdfUrl) {
         const pdfSalvo = await salvarPdfPermanente(base44, pdfUrl, nota_id || 'nova', authHeaderAtivo);
         if (pdfSalvo) pdfUrlFinal = pdfSalvo;
       }
-      // Salvar XML
+      // Salvar XML como texto direto no campo xml_original
       console.log('[XML-DEBUG] resultFinal keys:', Object.keys(resultFinal).join(', '));
       const caminhoXml = resultFinal.caminho_xml_nfce || resultFinal.caminho_xml_nota_fiscal || resultFinal.caminho_xml_nfe || resultFinal.caminho_xml || '';
       console.log('[XML-DEBUG] caminhoXml:', caminhoXml);
       if (caminhoXml) {
         const xmlUrl = normalizarUrl(caminhoXml);
-        const xmlSalvo = await salvarXmlPermanente(base44, xmlUrl, ref, numeroFinal, authHeaderAtivo);
-        if (xmlSalvo) xmlUrlFinal = xmlSalvo;
+        const xmlTexto = await baixarXmlTexto(xmlUrl, authHeaderAtivo);
+        if (xmlTexto) xmlOriginalTexto = xmlTexto;
       }
     }
 
@@ -647,7 +645,7 @@ Deno.serve(async (req) => {
       data_emissao: data_emissao || new Date().toISOString().split('T')[0],
       valor_total: Number(valor_total) || 0,
       pdf_url: pdfUrlFinal,
-      ...(xmlUrlFinal ? { xml_url: xmlUrlFinal } : {}),
+      ...(xmlOriginalTexto ? { xml_original: xmlOriginalTexto } : {}),
       chave_acesso: chaveAcesso,
       ordem_venda_id: body.ordem_venda_id || '',
       observacoes: observacoes || '',
