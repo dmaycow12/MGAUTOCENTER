@@ -318,7 +318,7 @@ export default function Estoque() {
   const abrirRegularizar = () => {
     const normTipo = t => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     const lista = items.map(item => {
-      const hist = item.historico || [];
+      const hist = (item.historico || []).filter(h => h.observacao !== 'Ajuste');
       const totalEntradas = hist.filter(h => normTipo(h.tipo) === 'entrada').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
       const totalSaidas = hist.filter(h => normTipo(h.tipo) === 'saida').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
       const semHistorico = hist.length === 0;
@@ -343,7 +343,7 @@ export default function Estoque() {
     const agora = new Date().toISOString().split('T')[0];
     for (const item of discrepancias) {
       const novaEntrada = {
-        tipo: item._diferenca > 0 ? 'saida' : 'entrada',
+        tipo: item._diferenca > 0 ? 'entrada' : 'saida',
         data: agora,
         quantidade: Math.abs(item._diferenca),
         valor_unitario: Number(item.valor_custo || 0),
