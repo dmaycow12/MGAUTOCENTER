@@ -447,18 +447,9 @@ Deno.serve(async (req) => {
         ...(codigoMunicipioDestinatario ? { codigo_municipio_destinatario: codigoMunicipioDestinatario } : {}),
         uf_destinatario: cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
-        // IE válida = tem dígitos E não é "ISENTO" ou variações
-        ...((() => {
-          const ieRaw = (cliente_ie || '').trim().toUpperCase();
-          const ieDigitos = ieRaw.replace(/\D/g, '');
-          const isIsento = ieRaw === 'ISENTO' || ieRaw === 'ISENTA' || ieRaw === 'NAO CONTRIBUINTE' || ieRaw === '0' || ieRaw === '';
-          const temIeValida = !isIsento && ieDigitos.length >= 2;
-          return {
-            indicador_inscricao_estadual_destinatario: temIeValida ? '1' : '9',
-            ...(temIeValida ? { inscricao_estadual_destinatario: ieDigitos } : {}),
-            consumidor_final: temIeValida ? '0' : '1',
-          };
-        })()),
+        indicador_inscricao_estadual_destinatario: (cliente_ie && cliente_ie.trim()) ? '1' : '9',
+        ...(cliente_ie && cliente_ie.trim() ? { inscricao_estadual_destinatario: cliente_ie.replace(/\D/g, '') } : {}),
+        consumidor_final: (cliente_ie && cliente_ie.trim()) ? '0' : '1',
         modalidade_frete: '9',
         serie: SERIE_NFE,
         items: prodItems.map((it, idx) => ({
