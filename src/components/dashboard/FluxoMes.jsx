@@ -57,7 +57,7 @@ export default function FluxoMes({ financeiro }) {
   const pagPago = items.filter(f => f.tipo === "Despesa" && f.status === "Pago").reduce((a, f) => a + (f.valor || 0), 0);
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3">
+    <div className="flex flex-col sm:flex-row gap-0.5">
       <Card title="Receita" pago={recPago} previsto={recPrevisto} color="#ffffff" bg="" bgColor="#062C9B" />
       <Card title="Despesa" pago={pagPago} previsto={pagPrevisto} color="#ffffff" bg="" bgColor="#cc0000" />
     </div>
