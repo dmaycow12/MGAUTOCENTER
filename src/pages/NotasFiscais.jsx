@@ -1048,7 +1048,7 @@ export default function NotasFiscais() {
          </div>
        )}
 
-       <div className="flex gap-0.5 items-center rounded-xl overflow-hidden bg-gray-900 border border-gray-800 p-1.5">
+       <div className="flex gap-0.5 items-center rounded-xl overflow-hidden bg-gray-900 border border-gray-800 p-1.5 mb-0.5">
         <button
           onClick={() => setAbaGeral("notas")}
           className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
