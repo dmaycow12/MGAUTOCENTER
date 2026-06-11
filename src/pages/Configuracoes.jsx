@@ -181,41 +181,29 @@ export default function Configuracoes() {
       </Section>
 
       <Section title="NF-e — Nota Fiscal de Produto" icon={null}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <F label="Série NF-e">
             <input value={config.nfe_serie} onChange={e => setConfig({ ...config, nfe_serie: e.target.value })} className="input-dark" />
           </F>
           <F label="Última NF-e">
             <input type="text" inputMode="numeric" autoComplete="off" value={config.nfe_ultimo_numero} onChange={e => setConfig({ ...config, nfe_ultimo_numero: e.target.value })} className="input-dark" />
           </F>
-          <F label="Versão da NF-e">
-            <select value={config.nfe_versao} onChange={e => setConfig({ ...config, nfe_versao: e.target.value })} className="input-dark">
-              <option value="4.00">4.00</option>
-              <option value="3.10">3.10</option>
-            </select>
-          </F>
         </div>
       </Section>
 
       <Section title="NFC-e — Nota Fiscal do Consumidor" icon={null}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <F label="Série NFC-e">
             <input value={config.nfce_serie} onChange={e => setConfig({ ...config, nfce_serie: e.target.value })} className="input-dark" />
           </F>
           <F label="Última NFC-e">
             <input type="text" inputMode="numeric" autoComplete="off" value={config.nfce_ultimo_numero} onChange={e => setConfig({ ...config, nfce_ultimo_numero: e.target.value })} className="input-dark" />
           </F>
-          <F label="Versão da NFC-e">
-            <select value={config.nfce_versao} onChange={e => setConfig({ ...config, nfce_versao: e.target.value })} className="input-dark">
-              <option value="4.00">4.00</option>
-              <option value="3.10">3.10</option>
-            </select>
-          </F>
         </div>
       </Section>
 
       <Section title="NFS-e — Nota Fiscal de Serviço" icon={null}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <F label="Série do DPS">
             <input value={config.nfse_serie_dps} onChange={e => setConfig({ ...config, nfse_serie_dps: e.target.value })} className="input-dark" />
           </F>
@@ -224,12 +212,6 @@ export default function Configuracoes() {
               const v = e.target.value;
               setConfig({ ...config, nfse_ultimo_dps: v, nfse_ultimo_numero: v });
             }} className="input-dark" />
-          </F>
-          <F label="Versão da NFS-e">
-            <select value={config.nfse_versao || "1.00"} onChange={e => setConfig({ ...config, nfse_versao: e.target.value })} className="input-dark">
-              <option value="1.00">1.00</option>
-              <option value="1.10">1.10</option>
-            </select>
           </F>
         </div>
       </Section>
