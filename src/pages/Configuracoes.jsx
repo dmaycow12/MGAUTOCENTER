@@ -83,7 +83,7 @@ export default function Configuracoes() {
   if (loading) return null;
 
   return (
-    <form autoComplete="off" onSubmit={e => e.preventDefault()} className="space-y-6 max-w-5xl mx-auto">
+    <form autoComplete="off" onSubmit={e => e.preventDefault()} className="space-y-0.5 max-w-5xl mx-auto">
     {/* Trick to prevent Chrome autocomplete */}
     <input type="text" name="prevent_autofill" style={{display:"none"}} autoComplete="new-password" readOnly />
       {salvo && (
@@ -93,7 +93,7 @@ export default function Configuracoes() {
         </div>
       )}
 
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6">
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-0.5">
 
         {/* Dados da Oficina */}
         <div>
@@ -101,7 +101,7 @@ export default function Configuracoes() {
             <Settings className="w-5 h-5 text-green-400" />
             <h2 className="text-white font-semibold text-center w-full">Dados Fiscais</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-0.5">
             <F label="Nome da Oficina">
               <input autoComplete="new-password" value={config.nome_oficina} onChange={e => setConfig({ ...config, nome_oficina: e.target.value })} className="input-dark" placeholder="Ex: Auto Mecânica Silva" />
             </F>
@@ -183,7 +183,7 @@ export default function Configuracoes() {
         {/* Integração Focus NFe */}
         <div>
           <h2 className="text-white font-semibold border-b border-gray-800 pb-3 mb-4">Integração Focus NFe — Chaves API</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-0.5">
             <TokenField label="Token de Homologação" value={config.focusnfe_api_key_homologacao} onChange={val => setConfig({ ...config, focusnfe_api_key_homologacao: val })} />
             <TokenField label="Token de Produção" value={config.focusnfe_api_key_producao} onChange={val => setConfig({ ...config, focusnfe_api_key_producao: val })} />
           </div>
@@ -194,7 +194,7 @@ export default function Configuracoes() {
         {/* NF-e / NFC-e / NFS-e */}
         <div>
           <h2 className="text-white font-semibold border-b border-gray-800 pb-3 mb-4">Numeração de Notas Fiscais</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-0.5">
             <F label="Série NF-e">
               <input value={config.nfe_serie} onChange={e => setConfig({ ...config, nfe_serie: e.target.value })} className="input-dark" />
             </F>
@@ -237,7 +237,7 @@ export default function Configuracoes() {
 
 function Section({ title, icon: Icon, children }) {
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-0.5">
       <div className="flex items-center gap-2 border-b border-gray-800 pb-3">
         {Icon && <Icon className="w-5 h-5 text-green-400" />}
         <h2 className="text-white font-semibold">{title}</h2>
