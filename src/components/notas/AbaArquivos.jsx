@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { FileText, Download, Eye, AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function AbaArquivos({ notas }) {
-  const [filtro, setFiltro] = useState('todos');
+  const [tipoFiltro, setTipoFiltro] = useState('tudo-arquivo');
+  const [statusFiltro, setStatusFiltro] = useState('tudo-status');
 
   const arquivos = notas
     .flatMap(nota => {
@@ -83,11 +84,11 @@ export default function AbaArquivos({ notas }) {
       return items;
     })
     .filter(arq => {
-      if (filtro === 'xml') return arq.tipo === 'XML';
-      if (filtro === 'pdf') return arq.tipo === 'PDF';
-      if (filtro === 'salvos') return arq.status !== 'ausente';
-      if (filtro === 'ausentes') return arq.status === 'ausente';
-      return true;
+      const tipoOk = tipoFiltro === 'tudo-arquivo' || arq.tipo.toLowerCase() === tipoFiltro;
+      const statusOk = statusFiltro === 'tudo-status' || 
+        (statusFiltro === 'salvo' && arq.status !== 'ausente') ||
+        (statusFiltro === 'ausente' && arq.status === 'ausente');
+      return tipoOk && statusOk;
     });
 
   const handleDownload = (arquivo) => {
@@ -104,22 +105,49 @@ export default function AbaArquivos({ notas }) {
     }
   };
 
+  const handleTipoChange = (id) => {
+    setTipoFiltro(id);
+  };
+
+  const handleStatusChange = (id) => {
+    setStatusFiltro(id);
+  };
+
   return (
     <div className="space-y-0.5">
-      {/* Filtros */}
+      {/* Filtros - Tipo de Arquivo */}
       <div className="flex gap-0.5">
         {[
-            { id: 'todos', label: 'Tudo' },
+            { id: 'tudo-arquivo', label: 'Tudo' },
             { id: 'xml', label: 'XML' },
             { id: 'pdf', label: 'PDF' },
-            { id: 'salvos', label: 'Salvo' },
-            { id: 'ausentes', label: 'Ausente' },
           ].map(f => (
           <button
             key={f.id}
-            onClick={() => setFiltro(f.id)}
+            onClick={() => handleTipoChange(f.id)}
             className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
-              filtro === f.id
+              tipoFiltro === f.id
+                ? 'bg-[#062C9B] text-white'
+                : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Filtros - Status */}
+      <div className="flex gap-0.5">
+        {[
+            { id: 'tudo-status', label: 'Tudo' },
+            { id: 'salvo', label: 'Salvo' },
+            { id: 'ausente', label: 'Ausente' },
+          ].map(f => (
+          <button
+            key={f.id}
+            onClick={() => handleStatusChange(f.id)}
+            className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
+              statusFiltro === f.id
                 ? 'bg-[#062C9B] text-white'
                 : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
             }`}
