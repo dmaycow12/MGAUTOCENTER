@@ -555,8 +555,9 @@ Deno.serve(async (req) => {
           if (consultaCompleta.ok) resultFinal = await consultaCompleta.json();
         }
         const rawPdf = resultFinal.url_danfse || resultFinal.caminho_pdf_nfsen || resultFinal.caminho_pdf_nfse ||
-          resultFinal.caminho_danfe_nfce || resultFinal.caminho_danfe || '';
-        pdfUrl = normalizarUrl(rawPdf);
+              resultFinal.caminho_danfe_nfce || resultFinal.caminho_danfe || '';
+            pdfUrl = normalizarUrl(rawPdf);
+            console.log('[POLLING-PDF] rawPdf encontrado:', !!rawPdf, '| normalizado:', pdfUrl);
         chaveAcesso = resultFinal.chave_nfe || resultFinal.chave_nfse || chaveAcesso;
         mensagemSefaz = resultFinal.mensagem_sefaz || resultFinal.mensagem || '';
         break;
@@ -585,31 +586,40 @@ Deno.serve(async (req) => {
     }
 
     // ============================================================
-    // SE EMITIDA: SALVA PDF E XML PERMANENTEMENTE
-    // ============================================================
-    let pdfUrlFinal = pdfUrl;
-    let xmlOriginalTexto = '';
-    let xmlUrlSalva = '';
-    if (statusNota === 'Emitida') {
-      if (pdfUrl) {
-        const pdfSalvo = await salvarPdfPermanente(base44, pdfUrl, nota_id || 'nova', authHeaderAtivo);
-        if (pdfSalvo) pdfUrlFinal = pdfSalvo;
-      }
-      // Salvar XML como texto direto no campo xml_original
-      console.log('[XML-DEBUG] resultFinal keys:', Object.keys(resultFinal).join(', '));
-      const caminhoXml = resultFinal.caminho_xml_nfce || resultFinal.caminho_xml_nota_fiscal || resultFinal.caminho_xml_nfe || resultFinal.caminho_xml || '';
-      console.log('[XML-DEBUG] caminhoXml:', caminhoXml);
-      if (caminhoXml) {
-        const xmlUrl = normalizarUrl(caminhoXml);
-        const xmlTexto = await baixarXmlTexto(xmlUrl, authHeaderAtivo);
-        if (xmlTexto) {
-          xmlOriginalTexto = xmlTexto;
-        } else {
-          // Se não conseguir baixar o texto, salva a URL
-          xmlUrlSalva = xmlUrl;
-        }
-      }
-    }
+     // SE EMITIDA: SALVA PDF E XML PERMANENTEMENTE
+     // ============================================================
+     let pdfUrlFinal = pdfUrl;
+     let xmlOriginalTexto = '';
+     let xmlUrlSalva = '';
+     if (statusNota === 'Emitida') {
+       if (pdfUrl) {
+         console.log('[PDF-SALVAR] Tentando salvar PDF da URL:', pdfUrl);
+         const pdfSalvo = await salvarPdfPermanente(base44, pdfUrl, nota_id || 'nova', authHeaderAtivo);
+         console.log('[PDF-SALVAR] Resultado do upload:', pdfSalvo ? 'OK' : 'FALHOU');
+         if (pdfSalvo) {
+           pdfUrlFinal = pdfSalvo;
+         } else {
+           console.log('[PDF-FALLBACK] Usando URL original da Focus NFe como fallback');
+           pdfUrlFinal = pdfUrl;
+         }
+       } else {
+         console.log('[PDF-AUSENTE] Nenhuma URL de PDF retornada pela Focus NFe');
+       }
+       // Salvar XML como texto direto no campo xml_original
+       console.log('[XML-DEBUG] resultFinal keys:', Object.keys(resultFinal).join(', '));
+       const caminhoXml = resultFinal.caminho_xml_nfce || resultFinal.caminho_xml_nota_fiscal || resultFinal.caminho_xml_nfe || resultFinal.caminho_xml || '';
+       console.log('[XML-DEBUG] caminhoXml:', caminhoXml);
+       if (caminhoXml) {
+         const xmlUrl = normalizarUrl(caminhoXml);
+         const xmlTexto = await baixarXmlTexto(xmlUrl, authHeaderAtivo);
+         if (xmlTexto) {
+           xmlOriginalTexto = xmlTexto;
+         } else {
+           // Se não conseguir baixar o texto, salva a URL
+           xmlUrlSalva = xmlUrl;
+         }
+       }
+     }
 
     // Baixar estoque se NFe/NFCe e emitida sem OS vinculada
     const vinculadaAOS = !!(body.ordem_venda_id);
