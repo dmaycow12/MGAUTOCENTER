@@ -227,25 +227,27 @@ export default function AbaArquivos({ notas }) {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right space-x-1.5">
-                      {arq.conteudo && (
-                        <button
-                          onClick={() => handleVisualize(arq)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all"
-                        >
-                          <Eye className="w-3 h-3" />
-                          Visualizar
-                        </button>
-                      )}
-                      {arq.conteudo && (
-                        <button
-                          onClick={() => handleDownload(arq)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all"
-                        >
-                          <Download className="w-3 h-3" />
-                          Baixar
-                        </button>
-                      )}
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex flex-col gap-1">
+                        {arq.conteudo && (
+                          <button
+                            onClick={() => handleVisualize(arq)}
+                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all"
+                          >
+                            <Eye className="w-3 h-3" />
+                            Visualizar
+                          </button>
+                        )}
+                        {arq.conteudo && (
+                          <button
+                            onClick={() => handleDownload(arq)}
+                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all"
+                          >
+                            <Download className="w-3 h-3" />
+                            Baixar
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
