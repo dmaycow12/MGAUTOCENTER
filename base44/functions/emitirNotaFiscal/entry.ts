@@ -585,6 +585,7 @@ Deno.serve(async (req) => {
     // ============================================================
     let pdfUrlFinal = pdfUrl;
     let xmlOriginalTexto = '';
+    let xmlUrlSalva = '';
     if (statusNota === 'Emitida') {
       if (pdfUrl) {
         const pdfSalvo = await salvarPdfPermanente(base44, pdfUrl, nota_id || 'nova', authHeaderAtivo);
@@ -597,7 +598,12 @@ Deno.serve(async (req) => {
       if (caminhoXml) {
         const xmlUrl = normalizarUrl(caminhoXml);
         const xmlTexto = await baixarXmlTexto(xmlUrl, authHeaderAtivo);
-        if (xmlTexto) xmlOriginalTexto = xmlTexto;
+        if (xmlTexto) {
+          xmlOriginalTexto = xmlTexto;
+        } else {
+          // Se não conseguir baixar o texto, salva a URL
+          xmlUrlSalva = xmlUrl;
+        }
       }
     }
 
@@ -646,6 +652,7 @@ Deno.serve(async (req) => {
       valor_total: Number(valor_total) || 0,
       pdf_url: pdfUrlFinal,
       ...(xmlOriginalTexto ? { xml_original: xmlOriginalTexto } : {}),
+      ...(xmlUrlSalva ? { xml_url: xmlUrlSalva } : {}),
       chave_acesso: chaveAcesso,
       ordem_venda_id: body.ordem_venda_id || '',
       observacoes: observacoes || '',
