@@ -293,20 +293,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex gap-1.5 justify-end">
-                        {arq.status === 'ausente' ? (
-                          <button
-                            onClick={() => handleImportar(arq)}
-                            disabled={importando === `${arq.nota_id}-${arq.tipo}`}
-                            className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all disabled:opacity-50"
-                            title="Importar da Focus NFe"
-                          >
-                            {importando === `${arq.nota_id}-${arq.tipo}` ? (
-                              <RefreshCw className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <Upload className="w-3 h-3" />
-                            )}
-                          </button>
-                        ) : (
+                        {arq.status === 'salvo' ? (
                           <>
                             <button
                               onClick={() => handleVisualize(arq)}
@@ -323,6 +310,19 @@ export default function AbaArquivos({ notas, onRefresh }) {
                               <Download className="w-3 h-3" />
                             </button>
                           </>
+                        ) : (
+                          <button
+                            onClick={() => handleImportar(arq)}
+                            disabled={importando === `${arq.nota_id}-${arq.tipo}`}
+                            className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all disabled:opacity-50"
+                            title="Importar da Focus NFe"
+                          >
+                            {importando === `${arq.nota_id}-${arq.tipo}` ? (
+                              <RefreshCw className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Upload className="w-3 h-3" />
+                            )}
+                          </button>
                         )}
                       </div>
                     </td>
