@@ -16,14 +16,23 @@ Deno.serve(async (req) => {
     let erros = [];
 
     for (const nota of notas) {
-      if (nota.xml_url && (!nota.xml_original || !nota.xml_original.trim().startsWith('<'))) {
+      if (nota.xml_url && (!nota.xml_original_url || nota.xml_original_url.trim() === '')) {
         try {
-          const resp = await fetch(nota.xml_url);
+          let xmlUrl = nota.xml_url;
+          
+          // Se a URL for relativa, construir absoluta
+          if (xmlUrl.startsWith('/')) {
+            xmlUrl = 'https://focusnfe.com.br' + xmlUrl;
+          }
+          
+          const resp = await fetch(xmlUrl);
           if (resp.ok) {
             const conteudo = await resp.text();
             if (conteudo.trim().startsWith('<')) {
+              // Salvar a URL original do XML como xml_original_url
+              // (já que a URL é acessível, não precisa fazer novo upload)
               await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
-                xml_original: conteudo
+                xml_original_url: xmlUrl
               });
               baixados++;
             }
