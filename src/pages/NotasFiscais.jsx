@@ -1179,9 +1179,9 @@ export default function NotasFiscais() {
              <p className="font-bold text-sm" style={{ color }}>{isTotal ? value : value}</p>
            </div>
          ))}
-        </div>
+          </div>
 
-      <div className="flex gap-0.5">
+         <div className="flex gap-0.5 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
