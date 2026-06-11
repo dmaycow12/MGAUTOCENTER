@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Download, Eye, AlertCircle, CheckCircle, Upload, RefreshCw } from 'lucide-react';
+import { FileText, Download, Eye, AlertCircle, CheckCircle, Upload, RefreshCw, Plus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 export default function AbaArquivos({ notas, onRefresh }) {
@@ -7,6 +7,8 @@ export default function AbaArquivos({ notas, onRefresh }) {
    const [statusFiltro, setStatusFiltro] = useState('tudo-status');
    const [importando, setImportando] = useState(null);
    const [aviso, setAviso] = useState(null);
+   const [uploadModal, setUploadModal] = useState(null);
+   const [uploadando, setUploadando] = useState(false);
 
   const arquivos = notas
     .flatMap(nota => {
@@ -183,10 +185,34 @@ export default function AbaArquivos({ notas, onRefresh }) {
 
       if (sucesso && onRefresh) onRefresh();
       setAviso({ tipo: sucesso ? 'sucesso' : 'erro', mensagem });
-      } catch (e) {
+    } catch (e) {
       setAviso({ tipo: 'erro', mensagem: 'Erro: ' + e.message });
+    }
+    setImportando(null);
+  };
+
+  const handleUploadManual = async (arquivo, file) => {
+    setUploadando(true);
+    try {
+      const nota = notas.find(n => n.id === arquivo.nota_id);
+      if (!nota || !file) return;
+
+      const uploadResp = await base44.integrations.Core.UploadFile({ file });
+      if (!uploadResp?.file_url) throw new Error('Erro ao fazer upload');
+
+      if (arquivo.tipo === 'XML') {
+        await base44.entities.NotaFiscal.update(nota.id, { xml_url: uploadResp.file_url });
+      } else if (arquivo.tipo === 'PDF') {
+        await base44.entities.NotaFiscal.update(nota.id, { pdf_url: uploadResp.file_url });
       }
-      setImportando(null);
+
+      setAviso({ tipo: 'sucesso', mensagem: `${arquivo.tipo} importado manualmente com sucesso!` });
+      if (onRefresh) onRefresh();
+      setUploadModal(null);
+    } catch (e) {
+      setAviso({ tipo: 'erro', mensagem: 'Erro: ' + e.message });
+    }
+    setUploadando(false);
   };
 
   return (
@@ -207,6 +233,40 @@ export default function AbaArquivos({ notas, onRefresh }) {
                 className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-all"
               >
                 OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Upload Manual */}
+      {uploadModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-lg font-semibold text-white mb-3">
+              Importar {uploadModal.tipo} Manualmente
+            </h3>
+            <p className="text-gray-400 text-sm mb-4">
+              {uploadModal.nota_tipo}-{uploadModal.nota_numero}
+            </p>
+            <input
+              type="file"
+              accept={uploadModal.tipo === 'XML' ? '.xml' : '.pdf'}
+              onChange={(e) => {
+                if (e.target.files?.[0]) {
+                  handleUploadManual(uploadModal, e.target.files[0]);
+                }
+              }}
+              disabled={uploadando}
+              className="w-full"
+            />
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setUploadModal(null)}
+                disabled={uploadando}
+                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg transition-all disabled:opacity-50"
+              >
+                Cancelar
               </button>
             </div>
           </div>
@@ -334,18 +394,27 @@ export default function AbaArquivos({ notas, onRefresh }) {
                             </button>
                           </>
                         ) : (
-                          <button
-                            onClick={() => handleImportar(arq)}
-                            disabled={importando === `${arq.nota_id}-${arq.tipo}`}
-                            className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all disabled:opacity-50"
-                            title="Importar da Focus NFe"
-                          >
-                            {importando === `${arq.nota_id}-${arq.tipo}` ? (
-                              <RefreshCw className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <Upload className="w-3 h-3" />
-                            )}
-                          </button>
+                          <>
+                            <button
+                              onClick={() => handleImportar(arq)}
+                              disabled={importando === `${arq.nota_id}-${arq.tipo}`}
+                              className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all disabled:opacity-50"
+                              title="Importar da Focus NFe"
+                            >
+                              {importando === `${arq.nota_id}-${arq.tipo}` ? (
+                                <RefreshCw className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <Upload className="w-3 h-3" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => setUploadModal(arq)}
+                              className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-all"
+                              title="Importar Manualmente"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>
