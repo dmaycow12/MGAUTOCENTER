@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 
 const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
-export default function FiltroPerioodoAvancado({ onFiltroChange, space = "mb-4" }) {
+export default function FiltroPerioodoAvancado({ onFiltroChange }) {
   const hoje = new Date();
   const [filtroMes, setFiltroMes] = useState(() => Number(localStorage.getItem("notas_filtroMes")) || hoje.getMonth() + 1);
   const [filtroAno, setFiltroAno] = useState(() => Number(localStorage.getItem("notas_filtroAno")) || hoje.getFullYear());
@@ -53,7 +53,7 @@ export default function FiltroPerioodoAvancado({ onFiltroChange, space = "mb-4" 
   };
 
   return (
-    <div className={`flex gap-2 items-center ${space}`}>
+    <div className="flex gap-2 items-center mb-0.5">
       <div className={`flex-1 flex items-center h-9 rounded-lg text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
         <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 hover:bg-white/20 transition-all" style={{borderRight:"1px solid rgba(255,255,255,0.15)"}}>
           <ChevronLeft className="w-3 h-3" />
