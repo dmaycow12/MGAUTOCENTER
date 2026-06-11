@@ -319,9 +319,11 @@ export default function Estoque() {
     const normTipo = t => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     const lista = items.map(item => {
       const hist = item.historico || [];
-      const totalEntradas = hist.filter(h => normTipo(h.tipo) === 'entrada').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
-      const totalSaidas = hist.filter(h => normTipo(h.tipo) === 'saida').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
-      const semHistorico = hist.length === 0;
+      // Exclui entradas de Ajuste do cálculo — elas serão removidas e recriadas
+      const histSemAjuste = hist.filter(h => h.observacao !== 'Ajuste');
+      const totalEntradas = histSemAjuste.filter(h => normTipo(h.tipo) === 'entrada').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
+      const totalSaidas = histSemAjuste.filter(h => normTipo(h.tipo) === 'saida').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
+      const semHistorico = histSemAjuste.length === 0;
       const esperado = Math.max(0, totalEntradas - totalSaidas);
       const diferenca = Number(item.quantidade || 0) - esperado;
       if (diferenca !== 0 || (semHistorico && item.quantidade > 0)) {
