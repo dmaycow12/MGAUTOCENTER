@@ -163,6 +163,7 @@ export default function NotasFiscais() {
   const [configsNF, setConfigsNF] = useState([]);
   const [avisoExclusao, setAvisoExclusao] = useState(null);
   const [xmlModal, setXmlModal] = useState(null);
+  const [confirmModal, setConfirmModal] = useState(null); // { msg, onConfirm }
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1097,7 +1098,8 @@ export default function NotasFiscais() {
           onClick={async () => {
             const preVisualizadas = notas.filter(n => n.status === 'Homologada');
             if (preVisualizadas.length === 0) { feedback('erro', 'Nenhuma nota em Pré-visualização para autorizar.'); return; }
-            if (!confirm(`Autorizar ${preVisualizadas.length} nota(s) em Pré-visualização?`)) return;
+            await new Promise((resolve) => setConfirmModal({ msg: `Autorizar ${preVisualizadas.length} nota(s) homologada(s) em produção?`, onConfirm: resolve }));
+            setConfirmModal(null);
             setAutorizandoMassa(true);
             let ok = 0; let erros = 0;
             for (const nota of preVisualizadas) {
@@ -1910,6 +1912,41 @@ export default function NotasFiscais() {
       )}
 
 
+
+      {confirmModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{background:'rgba(0,0,0,0.85)'}}>
+          <div className="relative w-full max-w-sm rounded-2xl overflow-hidden border border-gray-700 shadow-2xl" style={{background:'#0d1117'}}>
+            {/* Header verde */}
+            <div className="px-6 pt-6 pb-4 flex flex-col items-center gap-3">
+              <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{background:'rgba(0,255,0,0.1)', border:'2px solid #00ff00'}}>
+                <CheckCircle className="w-7 h-7" style={{color:'#00ff00'}} />
+              </div>
+              <h2 className="text-white font-bold text-lg text-center">Confirmar Autorização</h2>
+              <p className="text-gray-400 text-sm text-center">{confirmModal.msg}</p>
+            </div>
+            {/* Divisor */}
+            <div className="h-px mx-6" style={{background:'#1f2937'}} />
+            {/* Botões */}
+            <div className="flex gap-3 p-5">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-300 border border-gray-700 hover:bg-gray-800 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => confirmModal.onConfirm()}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all"
+                style={{background:'#00ff00', color:'#000'}}
+                onMouseEnter={e => e.currentTarget.style.background='#00dd00'}
+                onMouseLeave={e => e.currentTarget.style.background='#00ff00'}
+              >
+                Autorizar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`.input-dark{width:100%;background:#1f2937;border:1px solid #374151;color:#fff;border-radius:8px;padding:8px 12px;font-size:14px;outline:none}.input-dark:focus{border-color:#f97316}.input-dark::placeholder{color:#6b7280}`}</style>
     </div>
