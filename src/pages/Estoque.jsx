@@ -802,15 +802,7 @@ export default function Estoque() {
                     </td>
                     {colunas.marca && <td className="px-4 py-3 text-gray-400"><CellEdit item={item} field="marca" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
                     <td className="px-4 py-3 text-center">
-                      <span className={`font-bold ${item.quantidade < item.estoque_minimo ? "text-red-400" : "text-white"}`}>
-                        {item.quantidade < item.estoque_minimo
-                          ? <span className="text-red-400 font-bold cursor-pointer" onClick={() => iniciarEdicaoCell(item, "quantidade")} title="Clique para editar">{item.quantidade - item.estoque_minimo}</span>
-                          : <CellEdit item={item} field="quantidade" className="text-white font-bold" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} checklistMode={checklistMode} onMarcarConferido={() => toggleConferido(item.id)} />
-                        }
-                        {editandoCell?.id === item.id && editandoCell?.field === "quantidade" && item.quantidade < item.estoque_minimo && (
-                          <CellEdit item={item} field="quantidade" className="text-red-400 font-bold" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} checklistMode={checklistMode} onMarcarConferido={() => toggleConferido(item.id)} />
-                        )}
-                      </span>
+                      <CellEdit item={item} field="quantidade" className={`font-bold ${item.quantidade < item.estoque_minimo ? "text-red-400" : "text-white"}`} editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} checklistMode={checklistMode} onMarcarConferido={() => toggleConferido(item.id)} />
                     </td>
                     {colunas.estoque_minimo && <td className="px-4 py-3 text-center text-gray-500"><CellEdit item={item} field="estoque_minimo" className="text-gray-500" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
                     {colunas.valor_custo && <td className="px-4 py-3 text-right text-gray-400"><CellEdit item={item} field="valor_custo" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
