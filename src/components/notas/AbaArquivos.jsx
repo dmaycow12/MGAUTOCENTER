@@ -9,10 +9,9 @@ const formatarDataBR = (data) => {
 };
 
 export default function AbaArquivos({ notas, onRefresh }) {
-   const [tipoAtivo, setTipoAtivo] = useState(new Set(['xml', 'pdf']));
-   const [statusAtivo, setStatusAtivo] = useState(new Set(['salvo', 'ausente']));
-   const [operacaoAtivo, setOperacaoAtivo] = useState(new Set(['saida', 'entrada']));
-   const [notaAtivo, setNotaAtivo] = useState(new Set(['nfe', 'nfce', 'nfse']));
+   const [tipoFiltro, setTipoFiltro] = useState('tudo-arquivo');
+   const [statusFiltro, setStatusFiltro] = useState('tudo-status');
+   const [operacaoAtivo, setOperacaoAtivo] = useState(new Set(['saida', 'entrada', 'nfe', 'nfce', 'nfse']));
    const [importando, setImportando] = useState(null);
    const [aviso, setAviso] = useState(null);
    const [uploadModal, setUploadModal] = useState(null);
@@ -113,18 +112,19 @@ export default function AbaArquivos({ notas, onRefresh }) {
       return items;
     })
     .filter(arq => {
-        const tipoOk = tipoAtivo.has(arq.tipo.toLowerCase());
+        const tipoOk = tipoFiltro === 'tudo-arquivo' || arq.tipo.toLowerCase() === tipoFiltro;
+        const statusOk = statusFiltro === 'tudo-status' || 
+          (statusFiltro === 'salvo' && (arq.status === 'salvo' || arq.status === 'url')) ||
+          (statusFiltro === 'ausente' && arq.status === 'ausente');
         
-        const statusOk = (statusAtivo.has('salvo') && (arq.status === 'salvo' || arq.status === 'url')) ||
-                         (statusAtivo.has('ausente') && arq.status === 'ausente');
-        
-        const operacaoOk = operacaoAtivo.has(arq.operacao?.toLowerCase());
-        
-        const notaOk = (notaAtivo.has('nfe') && arq.nota_tipo === 'NFe') ||
-                       (notaAtivo.has('nfce') && arq.nota_tipo === 'NFCe') ||
-                       (notaAtivo.has('nfse') && arq.nota_tipo === 'NFSe');
-        
-        return tipoOk && statusOk && operacaoOk && notaOk;
+        const operacaoOk = operacaoAtivo.size === 0 || (
+          (operacaoAtivo.has('saida') && arq.operacao?.toLowerCase() === 'saida' ||
+           operacaoAtivo.has('entrada') && arq.operacao?.toLowerCase() === 'entrada') &&
+          (operacaoAtivo.has('nfe') && arq.nota_tipo === 'NFe' ||
+           operacaoAtivo.has('nfce') && arq.nota_tipo === 'NFCe' ||
+           operacaoAtivo.has('nfse') && arq.nota_tipo === 'NFSe')
+        );
+        return tipoOk && statusOk && operacaoOk;
       });
 
   const handleDownload = (arquivo) => {
@@ -155,23 +155,11 @@ export default function AbaArquivos({ notas, onRefresh }) {
   };
 
   const handleTipoChange = (id) => {
-    const novo = new Set(tipoAtivo);
-    if (novo.has(id)) {
-      novo.delete(id);
-    } else {
-      novo.add(id);
-    }
-    if (novo.size > 0) setTipoAtivo(novo);
+    setTipoFiltro(id);
   };
 
   const handleStatusChange = (id) => {
-    const novo = new Set(statusAtivo);
-    if (novo.has(id)) {
-      novo.delete(id);
-    } else {
-      novo.add(id);
-    }
-    if (novo.size > 0) setStatusAtivo(novo);
+    setStatusFiltro(id);
   };
 
   const handleOperacaoChange = (id) => {
@@ -181,17 +169,17 @@ export default function AbaArquivos({ notas, onRefresh }) {
     } else {
       novo.add(id);
     }
-    if (novo.size > 0) setOperacaoAtivo(novo);
-  };
 
-  const handleNotaChange = (id) => {
-    const novo = new Set(notaAtivo);
-    if (novo.has(id)) {
-      novo.delete(id);
-    } else {
-      novo.add(id);
+    // Garante que tem pelo menos 1 de Saída/Entrada e 1 de NFe/NFCe/NFSe
+    const temSaidaEntrada = novo.has('saida') || novo.has('entrada');
+    const temNota = novo.has('nfe') || novo.has('nfce') || novo.has('nfse');
+
+    if (novo.size > 0 && temSaidaEntrada && temNota) {
+      setOperacaoAtivo(novo);
+    } else if (novo.size === 0) {
+      // Se clicou em algo que deixaria vazio, volta ao anterior
+      setOperacaoAtivo(operacaoAtivo);
     }
-    if (novo.size > 0) setNotaAtivo(novo);
   };
 
   const handleRecuperar = async (arquivo) => {
@@ -346,37 +334,19 @@ export default function AbaArquivos({ notas, onRefresh }) {
         </div>
       )}
 
-      {/* Filtros - Tipo de Arquivo */}
+      {/* Filtros - Tudo em uma linha */}
       <div className="flex gap-0.5">
         {[
-            { id: 'xml', label: 'XML', onClick: handleTipoChange, state: tipoAtivo },
-            { id: 'pdf', label: 'PDF', onClick: handleTipoChange, state: tipoAtivo },
+            { id: 'xml', label: 'XML', onClick: handleTipoChange, active: tipoFiltro },
+            { id: 'pdf', label: 'PDF', onClick: handleTipoChange, active: tipoFiltro },
+            { id: 'salvo', label: 'Salvo', onClick: handleStatusChange, active: statusFiltro },
+            { id: 'ausente', label: 'Ausente', onClick: handleStatusChange, active: statusFiltro },
           ].map(f => (
           <button
             key={f.id}
             onClick={() => f.onClick(f.id)}
             className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
-              f.state.has(f.id)
-                ? 'bg-[#062C9B] text-white'
-                : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Filtros - Status */}
-      <div className="flex gap-0.5">
-        {[
-            { id: 'salvo', label: 'Salvo', onClick: handleStatusChange, state: statusAtivo },
-            { id: 'ausente', label: 'Ausente', onClick: handleStatusChange, state: statusAtivo },
-          ].map(f => (
-          <button
-            key={f.id}
-            onClick={() => f.onClick(f.id)}
-            className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
-              f.state.has(f.id)
+              f.active === f.id
                 ? 'bg-[#062C9B] text-white'
                 : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
             }`}
@@ -389,35 +359,17 @@ export default function AbaArquivos({ notas, onRefresh }) {
       {/* Filtros - Operação */}
       <div className="flex gap-0.5">
         {[
-            { id: 'saida', label: 'Saída', onClick: handleOperacaoChange, state: operacaoAtivo },
-            { id: 'entrada', label: 'Entrada', onClick: handleOperacaoChange, state: operacaoAtivo },
+            { id: 'saida', label: 'Saída' },
+            { id: 'entrada', label: 'Entrada' },
+            { id: 'nfe', label: 'NFe' },
+            { id: 'nfce', label: 'NFCe' },
+            { id: 'nfse', label: 'NFSe' },
           ].map(f => (
           <button
             key={f.id}
-            onClick={() => f.onClick(f.id)}
+            onClick={() => handleOperacaoChange(f.id)}
             className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
-              f.state.has(f.id)
-                ? 'bg-[#062C9B] text-white'
-                : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Filtros - Tipo de Nota */}
-      <div className="flex gap-0.5">
-        {[
-            { id: 'nfe', label: 'NFe', onClick: handleNotaChange, state: notaAtivo },
-            { id: 'nfce', label: 'NFCe', onClick: handleNotaChange, state: notaAtivo },
-            { id: 'nfse', label: 'NFSe', onClick: handleNotaChange, state: notaAtivo },
-          ].map(f => (
-          <button
-            key={f.id}
-            onClick={() => f.onClick(f.id)}
-            className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
-              f.state.has(f.id)
+              operacaoAtivo.has(f.id)
                 ? 'bg-[#062C9B] text-white'
                 : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
             }`}
