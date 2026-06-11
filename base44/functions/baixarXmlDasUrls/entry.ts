@@ -20,12 +20,18 @@ Deno.serve(async (req) => {
         try {
           const resp = await fetch(nota.xml_url);
           if (resp.ok) {
-            const conteudo = await resp.text();
+            const blob = await resp.blob();
+            const conteudo = await blob.text();
             if (conteudo.trim().startsWith('<')) {
-              await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
-                xml_original: conteudo
-              });
-              baixados++;
+              const file = new File([blob], `XML-${nota.numero}.xml`, { type: 'application/xml' });
+              const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+              
+              if (uploadResp?.file_url) {
+                await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
+                  xml_url: uploadResp.file_url
+                });
+                baixados++;
+              }
             }
           }
         } catch (e) {
