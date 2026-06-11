@@ -105,7 +105,7 @@ export default function AbaArquivos({ notas }) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-0.5">
       {/* Filtros */}
       <div className="flex gap-0.5">
         {[
