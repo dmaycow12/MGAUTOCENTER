@@ -1082,7 +1082,7 @@ export default function NotasFiscais() {
          if (dados.filtroAno !== undefined) setFiltroAno(dados.filtroAno);
          if (dados.usandoOutroPeriodo !== undefined) setUsandoOutroPeriodo(dados.usandoOutroPeriodo);
          if (dados.customRange !== undefined) setCustomRange(dados.customRange);
-       }} />
+       }} space="mb-0.5" />
 
        <div className="flex gap-0.5">
          <button onClick={() => { const novo = filtroTipo.includes("Saída") ? filtroTipo.filter(x => x !== "Saída") : [...filtroTipo, "Saída"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Saída") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
