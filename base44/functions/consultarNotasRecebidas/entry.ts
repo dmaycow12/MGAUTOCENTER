@@ -151,6 +151,19 @@ Deno.serve(async (req) => {
           }
         } catch (_) {}
       }
+      
+      // Se não conseguiu fazer download, tenta usar a URL direto da API se disponível
+      if (!pdfParaSalvar.pdf_url && nf.caminho_pdf_danfe) {
+        try {
+          const pdfResp = await fetch(nf.caminho_pdf_danfe, { headers: { 'Authorization': AUTH_HEADER } });
+          if (pdfResp.ok) {
+            const blob = await pdfResp.blob();
+            const pdfFile = new File([blob], `NF-${numeroNF || chave}.pdf`, { type: 'application/pdf' });
+            const uploadPdf = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+            if (uploadPdf?.file_url) pdfParaSalvar = { pdf_url: uploadPdf.file_url };
+          }
+        } catch (_) {}
+      }
 
       await base44.asServiceRole.entities.NotaFiscal.create({
         tipo: 'NFe',
