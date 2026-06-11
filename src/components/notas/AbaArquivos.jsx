@@ -376,7 +376,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex gap-1.5 justify-end">
-                        {arq.status === 'salvo' ? (
+                        {arq.status === 'salvo' || arq.status === 'url' ? (
                           <>
                             <button
                               onClick={() => handleVisualize(arq)}
