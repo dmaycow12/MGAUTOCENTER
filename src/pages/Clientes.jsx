@@ -100,7 +100,7 @@ export default function Clientes() {
         numero: est?.numero || f.numero,
         complemento: est?.complemento || f.complemento,
         bairro: est?.bairro || f.bairro,
-        cidade: est?.cidade?.nome || f.cidade,
+        cidade: (est?.cidade?.nome || f.cidade || '').toUpperCase() || f.cidade,
         estado: est?.estado?.sigla || f.estado,
       }));
     } catch (e) {
