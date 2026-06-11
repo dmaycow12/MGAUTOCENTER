@@ -1,5 +1,17 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+const compressString = async (str) => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  const compressedStream = new CompressionStream('gzip');
+  const writer = compressedStream.writable.getWriter();
+  writer.write(data);
+  writer.close();
+  const compressedData = await new Response(compressedStream.readable).arrayBuffer();
+  const uint8 = new Uint8Array(compressedData);
+  return btoa(String.fromCharCode(...uint8));
+};
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -20,18 +32,14 @@ Deno.serve(async (req) => {
         try {
           const resp = await fetch(nota.xml_url);
           if (resp.ok) {
-            const blob = await resp.blob();
-            const conteudo = await blob.text();
+            const conteudo = await resp.text();
             if (conteudo.trim().startsWith('<')) {
-              const file = new File([blob], `XML-${nota.numero}.xml`, { type: 'application/xml' });
-              const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file });
-              
-              if (uploadResp?.file_url) {
-                await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
-                  xml_original_url: uploadResp.file_url
-                });
-                baixados++;
-              }
+              // Comprime o XML antes de salvar
+              const xmlComprimido = await compressString(conteudo);
+              await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
+                xml_original: xmlComprimido
+              });
+              baixados++;
             }
           }
         } catch (e) {
