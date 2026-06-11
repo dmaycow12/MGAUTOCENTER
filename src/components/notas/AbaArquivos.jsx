@@ -109,12 +109,12 @@ export default function AbaArquivos({ notas }) {
       {/* Filtros */}
       <div className="flex gap-0.5">
         {[
-          { id: 'todos', label: 'Todos' },
-          { id: 'xml', label: 'XMLs' },
-          { id: 'pdf', label: 'PDFs' },
-          { id: 'salvos', label: 'Salvos' },
-          { id: 'ausentes', label: 'Ausentes' },
-        ].map(f => (
+            { id: 'todos', label: 'Tudo' },
+            { id: 'xml', label: 'XML' },
+            { id: 'pdf', label: 'PDF' },
+            { id: 'salvos', label: 'Salvo' },
+            { id: 'ausentes', label: 'Ausente' },
+          ].map(f => (
           <button
             key={f.id}
             onClick={() => setFiltro(f.id)}
