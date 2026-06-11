@@ -261,9 +261,9 @@ Deno.serve(async (req) => {
         ...(codigoMunicipioDestinatario ? { codigo_municipio_destinatario: codigoMunicipioDestinatario } : {}),
         uf_destinatario: nota.cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
-        indicador_inscricao_estadual_destinatario: (nota.cliente_ie && nota.cliente_ie.trim()) ? '1' : '9',
-        ...(nota.cliente_ie && nota.cliente_ie.trim() ? { inscricao_estadual_destinatario: nota.cliente_ie.replace(/\D/g, '') } : {}),
-        consumidor_final: (nota.cliente_ie && nota.cliente_ie.trim()) ? '0' : '1',
+        // Em homologação, não enviar IE do destinatário para evitar rejeição 233 (IE não cadastrada na SEFAZ de teste)
+        indicador_inscricao_estadual_destinatario: '9',
+        consumidor_final: '1',
         modalidade_frete: '9',
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
