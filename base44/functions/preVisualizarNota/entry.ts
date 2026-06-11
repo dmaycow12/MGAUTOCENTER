@@ -261,9 +261,17 @@ Deno.serve(async (req) => {
         ...(codigoMunicipioDestinatario ? { codigo_municipio_destinatario: codigoMunicipioDestinatario } : {}),
         uf_destinatario: nota.cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
-        indicador_inscricao_estadual_destinatario: (nota.cliente_ie && nota.cliente_ie.trim()) ? '1' : '9',
-        ...(nota.cliente_ie && nota.cliente_ie.trim() ? { inscricao_estadual_destinatario: nota.cliente_ie.replace(/\D/g, '') } : {}),
-        consumidor_final: (nota.cliente_ie && nota.cliente_ie.trim()) ? '0' : '1',
+        ...((() => {
+          const ieRaw = (nota.cliente_ie || '').trim().toUpperCase();
+          const ieDigitos = ieRaw.replace(/\D/g, '');
+          const isIsento = ieRaw === 'ISENTO' || ieRaw === 'ISENTA' || ieRaw === 'NAO CONTRIBUINTE' || ieRaw === '0' || ieRaw === '';
+          const temIeValida = !isIsento && ieDigitos.length >= 2;
+          return {
+            indicador_inscricao_estadual_destinatario: temIeValida ? '1' : '9',
+            ...(temIeValida ? { inscricao_estadual_destinatario: ieDigitos } : {}),
+            consumidor_final: temIeValida ? '0' : '1',
+          };
+        })()),
         modalidade_frete: '9',
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
