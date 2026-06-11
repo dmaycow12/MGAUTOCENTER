@@ -847,7 +847,7 @@ export default function Estoque() {
                       <tr key={item.id} className="border-b border-gray-800 hover:bg-gray-800/40">
                         <td className="py-2 px-3 text-white font-medium">{item.descricao}</td>
                         <td className="py-2 px-3 text-center font-bold" style={{color: item.quantidade < (item.estoque_minimo || 0) ? '#f87171' : '#fff'}}>
-                          {item.quantidade}
+                          {item.quantidade < (item.estoque_minimo || 0) && item.quantidade !== 0 ? `-${item.quantidade}` : item.quantidade}
                         </td>
                         <td className="py-2 px-3 text-center text-gray-400">{item._esperado}</td>
                         <td className="py-2 px-3 text-center font-bold">
@@ -1014,7 +1014,9 @@ function CellEdit({ item, field, className = "", editandoCell, onIniciar, onSalv
   const val = item[field];
   const display = ["valor_custo", "valor_venda"].includes(field)
     ? `R$ ${Number(val || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
-    : (val !== undefined && val !== null && val !== "" ? val : "—");
+    : field === "quantidade" && typeof val === "number" && val < (item.estoque_minimo || 0)
+      ? (val === 0 ? "0" : `-${val}`)
+      : (val !== undefined && val !== null && val !== "" ? val : "—");
 
   return (
     <span
