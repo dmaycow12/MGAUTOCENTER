@@ -1072,27 +1072,27 @@ export default function NotasFiscais() {
        </div>
 
        {abaGeral === "notas" && (
-       <div className="space-y-1.5">
-       <button onClick={() => { const novo = defaultForm(); setForm({ ...novo, serie: proximaSerie(notas, novo.tipo) }); setAbaForm("cliente"); setErrosForm({}); currentEditIdRef.current = null; setShowForm(true); }} className="w-full flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all mb-0.5" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
-         <Plus className="w-4 h-4" /> Emitir
-       </button>
+       <div className="space-y-0.5">
+       <button onClick={() => { const novo = defaultForm(); setForm({ ...novo, serie: proximaSerie(notas, novo.tipo) }); setAbaForm("cliente"); setErrosForm({}); currentEditIdRef.current = null; setShowForm(true); }} className="w-full flex items-center justify-center gap-2 h-9 rounded-lg text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
+          <Plus className="w-4 h-4" /> Emitir
+        </button>
 
-       <FiltroPerioodoAvancado onFiltroChange={(dados) => {
-         if (dados.filtroMes !== undefined) setFiltroMes(dados.filtroMes);
-         if (dados.filtroAno !== undefined) setFiltroAno(dados.filtroAno);
-         if (dados.usandoOutroPeriodo !== undefined) setUsandoOutroPeriodo(dados.usandoOutroPeriodo);
-         if (dados.customRange !== undefined) setCustomRange(dados.customRange);
-       }} />
+        <FiltroPerioodoAvancado onFiltroChange={(dados) => {
+          if (dados.filtroMes !== undefined) setFiltroMes(dados.filtroMes);
+          if (dados.filtroAno !== undefined) setFiltroAno(dados.filtroAno);
+          if (dados.usandoOutroPeriodo !== undefined) setUsandoOutroPeriodo(dados.usandoOutroPeriodo);
+          if (dados.customRange !== undefined) setCustomRange(dados.customRange);
+        }} />
 
-       <div className="flex gap-0.5">
-         <button onClick={() => { const novo = filtroTipo.includes("Saída") ? filtroTipo.filter(x => x !== "Saída") : [...filtroTipo, "Saída"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Saída") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
-         <button onClick={() => { const novo = filtroTipo.includes("Entrada") ? filtroTipo.filter(x => x !== "Entrada") : [...filtroTipo, "Entrada"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Entrada") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
-         <button onClick={() => { const novo = filtroModeloNF.includes("NFe") ? filtroModeloNF.filter(x => x !== "NFe") : [...filtroModeloNF, "NFe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFe</button>
-         <button onClick={() => { const novo = filtroModeloNF.includes("NFCe") ? filtroModeloNF.filter(x => x !== "NFCe") : [...filtroModeloNF, "NFCe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFCe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFCe</button>
-         <button onClick={() => { const novo = filtroModeloNF.includes("NFSe") ? filtroModeloNF.filter(x => x !== "NFSe") : [...filtroModeloNF, "NFSe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
-       </div>
+        <div className="flex gap-0.5">
+          <button onClick={() => { const novo = filtroTipo.includes("Saída") ? filtroTipo.filter(x => x !== "Saída") : [...filtroTipo, "Saída"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Saída") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Saída</button>
+          <button onClick={() => { const novo = filtroTipo.includes("Entrada") ? filtroTipo.filter(x => x !== "Entrada") : [...filtroTipo, "Entrada"]; setFiltroTipo(novo); localStorage.setItem("nf_filtroTipo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroTipo.includes("Entrada") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>Entrada</button>
+          <button onClick={() => { const novo = filtroModeloNF.includes("NFe") ? filtroModeloNF.filter(x => x !== "NFe") : [...filtroModeloNF, "NFe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFe</button>
+          <button onClick={() => { const novo = filtroModeloNF.includes("NFCe") ? filtroModeloNF.filter(x => x !== "NFCe") : [...filtroModeloNF, "NFCe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFCe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFCe</button>
+          <button onClick={() => { const novo = filtroModeloNF.includes("NFSe") ? filtroModeloNF.filter(x => x !== "NFSe") : [...filtroModeloNF, "NFSe"]; setFiltroModeloNF(novo); localStorage.setItem("nf_filtroModelo", JSON.stringify(novo)); }} className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${filtroModeloNF.includes("NFSe") ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>NFSe</button>
+        </div>
 
-       <div className="grid grid-cols-3 gap-0.5">
+        <div className="grid grid-cols-3 gap-0.5">
          <button
            onClick={async () => {
              setBuscandoSefaz(true);
@@ -1174,7 +1174,7 @@ export default function NotasFiscais() {
        )}
 
       {abaGeral === "notas" && (
-      <div className="space-y-1.5">
+      <div className="space-y-0.5">
       <div className="flex gap-0.5">
          <div className="relative flex-1">
            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
