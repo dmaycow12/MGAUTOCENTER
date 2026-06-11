@@ -705,7 +705,7 @@ export default function Estoque() {
             const isConf = conferidos.has(item.id);
             return (
             <div key={item.id}
-              className={`bg-gray-900 border rounded-2xl overflow-hidden transition-all ${isConf ? "border-green-500/60 opacity-60" : item.quantidade < item.estoque_minimo ? "border-red-500/40" : "border-gray-800"}`}>
+              className={`bg-gray-900 border rounded-2xl overflow-hidden transition-all ${isConf ? "border-green-500/60 opacity-60" : "border-gray-800"}`}>
               {/* Cabeçalho do card */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
                 <div className="flex items-center gap-2 min-w-0">
@@ -787,7 +787,7 @@ export default function Estoque() {
                   const isConferido = conferidos.has(item.id);
                   return (
                   <tr key={item.id}
-                    className={`border-b border-gray-800 transition-all hover:bg-gray-800/50 ${isConferido ? "bg-green-500/10 opacity-60" : selecionados.includes(item.id) ? "bg-red-500/5" : item.quantidade < item.estoque_minimo ? "bg-red-500/5" : ""}`}>
+                    className={`border-b border-gray-800 transition-all hover:bg-gray-800/50 ${isConferido ? "bg-green-500/10 opacity-60" : selecionados.includes(item.id) ? "bg-red-500/5" : ""}`}>
                     <td className="px-4 py-3">
                       {checklistMode
                         ? <div onClick={() => toggleConferido(item.id)} className={`w-5 h-5 rounded-full border-2 flex items-center justify-center cursor-pointer ${isConferido ? "border-green-500 bg-green-500" : "border-gray-600 hover:border-green-400"}`}>{isConferido && <span className="text-black text-xs font-bold">✓</span>}</div>
