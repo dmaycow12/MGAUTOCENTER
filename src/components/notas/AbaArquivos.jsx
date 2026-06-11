@@ -163,26 +163,22 @@ export default function AbaArquivos({ notas, onRefresh }) {
   };
 
   const handleOperacaoChange = (id) => {
-    if (id === 'tudo-operacao') {
-      setOperacaoAtivo(new Set(['saida', 'entrada', 'nfe', 'nfce', 'nfse']));
+    const novo = new Set(operacaoAtivo);
+    if (novo.has(id)) {
+      novo.delete(id);
     } else {
-      const novo = new Set(operacaoAtivo);
-      if (novo.has(id)) {
-        novo.delete(id);
-      } else {
-        novo.add(id);
-      }
+      novo.add(id);
+    }
 
-      // Garante que tem pelo menos 1 de Saída/Entrada e 1 de NFe/NFCe/NFSe
-      const temSaidaEntrada = novo.has('saida') || novo.has('entrada');
-      const temNota = novo.has('nfe') || novo.has('nfce') || novo.has('nfse');
+    // Garante que tem pelo menos 1 de Saída/Entrada e 1 de NFe/NFCe/NFSe
+    const temSaidaEntrada = novo.has('saida') || novo.has('entrada');
+    const temNota = novo.has('nfe') || novo.has('nfce') || novo.has('nfse');
 
-      if (novo.size > 0 && temSaidaEntrada && temNota) {
-        setOperacaoAtivo(novo);
-      } else if (novo.size === 0) {
-        // Se clicou em algo que deixaria vazio, volta ao anterior
-        setOperacaoAtivo(operacaoAtivo);
-      }
+    if (novo.size > 0 && temSaidaEntrada && temNota) {
+      setOperacaoAtivo(novo);
+    } else if (novo.size === 0) {
+      // Se clicou em algo que deixaria vazio, volta ao anterior
+      setOperacaoAtivo(operacaoAtivo);
     }
   };
 
@@ -341,10 +337,8 @@ export default function AbaArquivos({ notas, onRefresh }) {
       {/* Filtros - Tudo em uma linha */}
       <div className="flex gap-0.5">
         {[
-            { id: 'tudo-arquivo', label: 'Tudo', onClick: handleTipoChange, active: tipoFiltro },
             { id: 'xml', label: 'XML', onClick: handleTipoChange, active: tipoFiltro },
             { id: 'pdf', label: 'PDF', onClick: handleTipoChange, active: tipoFiltro },
-            { id: 'tudo-status', label: 'Tudo', onClick: handleStatusChange, active: statusFiltro },
             { id: 'salvo', label: 'Salvo', onClick: handleStatusChange, active: statusFiltro },
             { id: 'ausente', label: 'Ausente', onClick: handleStatusChange, active: statusFiltro },
           ].map(f => (
@@ -365,7 +359,6 @@ export default function AbaArquivos({ notas, onRefresh }) {
       {/* Filtros - Operação */}
       <div className="flex gap-0.5">
         {[
-            { id: 'tudo-operacao', label: 'Tudo' },
             { id: 'saida', label: 'Saída' },
             { id: 'entrada', label: 'Entrada' },
             { id: 'nfe', label: 'NFe' },
@@ -376,9 +369,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
             key={f.id}
             onClick={() => handleOperacaoChange(f.id)}
             className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
-              f.id === 'tudo-operacao' && operacaoAtivo.size === 5
-                ? 'bg-[#062C9B] text-white'
-                : f.id !== 'tudo-operacao' && operacaoAtivo.has(f.id)
+              operacaoAtivo.has(f.id)
                 ? 'bg-[#062C9B] text-white'
                 : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
             }`}
