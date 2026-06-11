@@ -1131,22 +1131,22 @@ export default function NotasFiscais() {
         </div>
 
         <div className="flex gap-0.5 border-b border-gray-800 mb-4">
-        <button
-          onClick={() => setAbaAtiva("notas")}
-          className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-all -mb-px ${
-            abaAtiva === "notas" ? "bg-gray-800 text-white border border-gray-700 border-b-gray-800" : "text-gray-500 hover:text-gray-300"
-          }`}
-        >
-          Notas Fiscais
-        </button>
-        <button
-          onClick={() => setAbaAtiva("arquivos")}
-          className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-all -mb-px ${
-            abaAtiva === "arquivos" ? "bg-gray-800 text-white border border-gray-700 border-b-gray-800" : "text-gray-500 hover:text-gray-300"
-          }`}
-        >
-          XMLs e PDFs
-        </button>
+          <button
+            onClick={() => setAbaAtiva("notas")}
+            className={`px-6 py-3 text-base font-semibold rounded-t-lg transition-all -mb-px ${
+              abaAtiva === "notas" ? "bg-gray-800 text-white border border-gray-700 border-b-gray-800" : "text-gray-500 hover:text-gray-300"
+            }`}
+          >
+            Notas Fiscais
+          </button>
+          <button
+            onClick={() => setAbaAtiva("arquivos")}
+            className={`px-6 py-3 text-base font-semibold rounded-t-lg transition-all -mb-px ${
+              abaAtiva === "arquivos" ? "bg-gray-800 text-white border border-gray-700 border-b-gray-800" : "text-gray-500 hover:text-gray-300"
+            }`}
+          >
+            XMLs e PDFs
+          </button>
         </div>
 
         {abaAtiva === "notas" && (
