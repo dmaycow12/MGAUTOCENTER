@@ -105,12 +105,12 @@ export default function AbaArquivos({ notas, onRefresh }) {
       return items;
     })
     .filter(arq => {
-      const tipoOk = tipoFiltro === 'tudo-arquivo' || arq.tipo.toLowerCase() === tipoFiltro;
-      const statusOk = statusFiltro === 'tudo-status' || 
-        (statusFiltro === 'salvo' && arq.status === 'salvo') ||
-        (statusFiltro === 'ausente' && arq.status === 'ausente');
-      return tipoOk && statusOk;
-    });
+       const tipoOk = tipoFiltro === 'tudo-arquivo' || arq.tipo.toLowerCase() === tipoFiltro;
+       const statusOk = statusFiltro === 'tudo-status' || 
+         (statusFiltro === 'salvo' && (arq.status === 'salvo' || arq.status === 'url')) ||
+         (statusFiltro === 'ausente' && arq.status === 'ausente');
+       return tipoOk && statusOk;
+     });
 
   const handleDownload = (arquivo) => {
     if (arquivo.url) {
