@@ -111,14 +111,14 @@ export default function AbaArquivos({ notas }) {
     if (arquivo.url) {
       const a = document.createElement('a');
       a.href = arquivo.url;
-      a.download = `NF-${arquivo.nota_numero}.${arquivo.tipo.toLowerCase()}`;
+      a.download = `${arquivo.nota_tipo}-${arquivo.nota_numero}.${arquivo.tipo.toLowerCase()}`;
       a.click();
     } else if (arquivo.conteudo) {
       const blob = new Blob([arquivo.conteudo], { type: arquivo.tipo === 'XML' ? 'application/xml' : 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `NF-${arquivo.nota_numero}.${arquivo.tipo.toLowerCase()}`;
+      a.download = `${arquivo.nota_tipo}-${arquivo.nota_numero}.${arquivo.tipo.toLowerCase()}`;
       a.click();
       URL.revokeObjectURL(url);
     }
