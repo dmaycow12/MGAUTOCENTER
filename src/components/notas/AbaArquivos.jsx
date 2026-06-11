@@ -153,6 +153,24 @@ export default function AbaArquivos({ notas, onRefresh }) {
     setStatusFiltro(id);
   };
 
+  const handleRecuperar = async (arquivo) => {
+    setImportando(`${arquivo.nota_id}-${arquivo.tipo}`);
+    try {
+      const res = await base44.functions.invoke('recuperarArquivosAusentes', { 
+        nota_id: arquivo.nota_id
+      });
+      if (res.data?.sucesso) {
+        setAviso({ tipo: 'sucesso', mensagem: res.data.mensagem });
+        if (onRefresh) onRefresh();
+      } else {
+        setAviso({ tipo: 'erro', mensagem: res.data?.erro || 'Não foi possível recuperar os arquivos.' });
+      }
+    } catch (e) {
+      setAviso({ tipo: 'erro', mensagem: 'Erro: ' + e.message });
+    }
+    setImportando(null);
+  };
+
   const handleImportar = async (arquivo) => {
     setImportando(`${arquivo.nota_id}-${arquivo.tipo}`);
     try {
@@ -408,28 +426,28 @@ export default function AbaArquivos({ notas, onRefresh }) {
                             </button>
                           </>
                         ) : (
-                          <>
-                            <button
-                              onClick={() => handleImportar(arq)}
-                              disabled={importando === `${arq.nota_id}-${arq.tipo}`}
-                              className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all disabled:opacity-50"
-                              title="Importar da Focus NFe"
-                            >
-                              {importando === `${arq.nota_id}-${arq.tipo}` ? (
-                                <RefreshCw className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <Download className="w-3 h-3" />
-                              )}
-                            </button>
-                            <button
-                              onClick={() => setUploadModal(arq)}
-                              className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-all"
-                              title="Importar Manualmente"
-                            >
-                              <Plus className="w-3 h-3" />
-                            </button>
-                          </>
-                        )}
+                           <>
+                             <button
+                               onClick={() => handleRecuperar(arq)}
+                               disabled={importando === `${arq.nota_id}-${arq.tipo}`}
+                               className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 transition-all disabled:opacity-50"
+                               title="Recuperar da SEFAZ"
+                             >
+                               {importando === `${arq.nota_id}-${arq.tipo}` ? (
+                                 <RefreshCw className="w-3 h-3 animate-spin" />
+                               ) : (
+                                 <Download className="w-3 h-3" />
+                               )}
+                             </button>
+                             <button
+                               onClick={() => setUploadModal(arq)}
+                               className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-all"
+                               title="Importar Manualmente"
+                             >
+                               <Plus className="w-3 h-3" />
+                             </button>
+                           </>
+                         )}
                       </div>
                     </td>
                   </tr>
