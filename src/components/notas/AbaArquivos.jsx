@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, Download, Eye, AlertCircle, CheckCircle, RefreshCw, Plus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -9,14 +9,43 @@ const formatarDataBR = (data) => {
 };
 
 export default function AbaArquivos({ notas, onRefresh }) {
-   const [tipoAtivo, setTipoAtivo] = useState(new Set(['xml', 'pdf']));
-   const [statusAtivo, setStatusAtivo] = useState(new Set(['salvo', 'ausente']));
-   const [operacaoAtivo, setOperacaoAtivo] = useState(new Set(['saida', 'entrada']));
-   const [notaAtivo, setNotaAtivo] = useState(new Set(['nfe', 'nfce', 'nfse']));
+   const [tipoAtivo, setTipoAtivo] = useState(() => {
+      const saved = localStorage.getItem('filtroAbaArquivos_tipo');
+      return saved ? new Set(JSON.parse(saved)) : new Set(['xml', 'pdf']);
+   });
+   const [statusAtivo, setStatusAtivo] = useState(() => {
+      const saved = localStorage.getItem('filtroAbaArquivos_status');
+      return saved ? new Set(JSON.parse(saved)) : new Set(['salvo', 'ausente']);
+   });
+   const [operacaoAtivo, setOperacaoAtivo] = useState(() => {
+      const saved = localStorage.getItem('filtroAbaArquivos_operacao');
+      return saved ? new Set(JSON.parse(saved)) : new Set(['saida', 'entrada']);
+   });
+   const [notaAtivo, setNotaAtivo] = useState(() => {
+      const saved = localStorage.getItem('filtroAbaArquivos_nota');
+      return saved ? new Set(JSON.parse(saved)) : new Set(['nfe', 'nfce', 'nfse']);
+   });
    const [importando, setImportando] = useState(null);
    const [aviso, setAviso] = useState(null);
    const [uploadModal, setUploadModal] = useState(null);
    const [uploadando, setUploadando] = useState(false);
+
+   // Persistir filtros no localStorage
+   useEffect(() => {
+      localStorage.setItem('filtroAbaArquivos_tipo', JSON.stringify([...tipoAtivo]));
+   }, [tipoAtivo]);
+
+   useEffect(() => {
+      localStorage.setItem('filtroAbaArquivos_status', JSON.stringify([...statusAtivo]));
+   }, [statusAtivo]);
+
+   useEffect(() => {
+      localStorage.setItem('filtroAbaArquivos_operacao', JSON.stringify([...operacaoAtivo]));
+   }, [operacaoAtivo]);
+
+   useEffect(() => {
+      localStorage.setItem('filtroAbaArquivos_nota', JSON.stringify([...notaAtivo]));
+   }, [notaAtivo]);
 
   const arquivos = notas
     .flatMap(nota => {
