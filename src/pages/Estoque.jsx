@@ -343,7 +343,7 @@ export default function Estoque() {
     const agora = new Date().toISOString().split('T')[0];
     for (const item of discrepancias) {
       const novaEntrada = {
-        tipo: item._diferenca > 0 ? 'saida' : 'entrada',
+        tipo: item._diferenca > 0 ? 'entrada' : 'saida',
         data: agora,
         quantidade: Math.abs(item._diferenca),
         valor_unitario: Number(item.valor_custo || 0),
