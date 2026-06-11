@@ -1152,7 +1152,69 @@ export default function NotasFiscais() {
         {abaAtiva === "notas" && (
         <div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
+        <div className="grid grid-cols-3 gap-2 mb-0">
+         <button
+           onClick={async () => {
+             setBuscandoSefaz(true);
+             try {
+               const res1 = await base44.functions.invoke('consultarNotasRecebidas', {});
+               const res2 = await base44.functions.invoke('importarNfseRecebidas', {});
+               const data1 = res1.data;
+               const data2 = res2.data;
+               if (data1?.sucesso || data2?.sucesso) { 
+                 feedback('sucesso', 'NFe e NFSe importadas com sucesso!'); 
+                 load(); 
+               } else { 
+                 feedback('erro', data1?.erro || data2?.erro || 'Erro ao importar notas.'); 
+               }
+             } catch (e) { feedback('erro', 'Erro: ' + e.message); }
+             setBuscandoSefaz(false);
+           }}
+           disabled={buscandoSefaz}
+           className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50"
+           style={{background:"#00ff00", color:"#000"}}
+           onMouseEnter={e => { if (!buscandoSefaz) e.currentTarget.style.background = "#00dd00"; }}
+           onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
+         >
+           {buscandoSefaz ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+           <span>Importar</span>
+         </button>
+         <button onClick={() => setShowSintegra(true)} className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all" style={{background:"#00ff00", color:"#000"}} onMouseEnter={e => e.currentTarget.style.background="#00dd00"} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
+           <BarChart2 className="w-4 h-4" />
+           <span>Sintegra</span>
+         </button>
+         <button
+           onClick={async () => {
+             const preVisualizadas = notas.filter(n => n.status === 'Homologada');
+             if (preVisualizadas.length === 0) { feedback('erro', 'Nenhuma nota em Pré-visualização para autorizar.'); return; }
+             await showConfirm(`Autorizar ${preVisualizadas.length} nota(s) homologada(s) em produção?`, 'confirm');
+             setConfirmModal(null);
+             setAutorizandoMassa(true);
+             let ok = 0; let erros = 0;
+             for (const nota of preVisualizadas) {
+               try {
+                 const items = (() => { try { const p = JSON.parse(nota.xml_content); if (Array.isArray(p) && p.length > 0 && p[0].descricao) return p; } catch {} return [{ descricao: nota.observacoes || 'Produto/Serviço', quantidade: 1, valor_unitario: nota.valor_total, valor_total: nota.valor_total }]; })();
+                 const res = await base44.functions.invoke('emitirNotaFiscal', { ...nota, nota_id: nota.id, items });
+                 if (res.data?.sucesso) ok++; else erros++;
+               } catch { erros++; }
+               await new Promise(r => setTimeout(r, 800));
+             }
+             setAutorizandoMassa(false);
+             feedback('sucesso', `Autorização concluída: ${ok} emitida(s), ${erros} erro(s).`);
+             load();
+           }}
+           disabled={autorizandoMassa}
+           className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50"
+           style={{background:"#00ff00", color:"#000"}}
+           onMouseEnter={e => { if (!autorizandoMassa) e.currentTarget.style.background="#00dd00"; }}
+           onMouseLeave={e => e.currentTarget.style.background="#00ff00"}
+         >
+           {autorizandoMassa ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+           <span>Autorizar</span>
+         </button>
+       </div>
+
+       <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
          {[
            { label: 'NFe Entrada', value: totalNFeLancada, color: '#3b82f6' },
            { label: 'NFSe Entrada', value: totalNFSeLancada, color: '#3b82f6' },
