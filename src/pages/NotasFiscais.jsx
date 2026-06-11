@@ -1152,7 +1152,7 @@ export default function NotasFiscais() {
         {abaAtiva === "notas" && (
         <div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
          {[
            { label: 'NFe Entrada', value: totalNFeLancada, color: '#3b82f6' },
            { label: 'NFSe Entrada', value: totalNFSeLancada, color: '#3b82f6' },
@@ -1172,7 +1172,7 @@ export default function NotasFiscais() {
          </div>
          </div>
 
-         <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-6">
+         <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
        {(() => {
           const notasSemXml = filtradas.filter(n => !n.xml_original?.trim().startsWith('<') && !n.xml_content?.trim().startsWith('<') && n.xml_url !== 'XML_IN_URL').length;
           const notasSemPdf = filtradas.filter(n => !n.pdf_url).length;
