@@ -1970,18 +1970,10 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlSalvo(nota) {
-  // Verifica xml_original primeiro
-  let xml = nota.xml_original;
-  if (xml && typeof xml === 'string') {
-    const cleaned = xml.replace(/^\uFEFF/, '').trim();
-    if (cleaned.length > 10 && cleaned.includes('<')) return true;
-  }
-  // Se não, verifica xml_content
-  xml = nota.xml_content;
-  if (xml && typeof xml === 'string') {
-    const cleaned = xml.replace(/^\uFEFF/, '').trim();
-    if (cleaned.length > 10 && cleaned.includes('<')) return true;
-  }
+  // Verifica xml_original
+  if (nota.xml_original && nota.xml_original.length > 5) return true;
+  // Verifica xml_content
+  if (nota.xml_content && nota.xml_content.length > 5) return true;
   return false;
 }
 
