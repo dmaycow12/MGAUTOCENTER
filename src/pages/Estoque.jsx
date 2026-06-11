@@ -349,7 +349,7 @@ export default function Estoque() {
         valor_unitario: Number(item.valor_custo || 0),
         observacao: 'Ajuste',
       };
-      const historico = [...(item.historico || []), novaEntrada];
+      const historico = [...(item.historico || []).filter(h => h.observacao !== 'Ajuste'), novaEntrada];
       await base44.entities.Estoque.update(item.id, { historico });
     }
     setRegularizando(false);
