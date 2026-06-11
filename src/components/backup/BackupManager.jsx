@@ -174,12 +174,12 @@ export default function BackupManager() {
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6">
-      <h2 className="text-white font-bold text-lg">Backup de Dados</h2>
+      <h2 className="text-white font-bold text-lg text-center">Backup de Dados</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* BAIXAR */}
         <div className="bg-gray-800 border border-gray-700 rounded-xl p-5 space-y-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2">
             <Download className="w-5 h-5 text-green-400" />
             <h3 className="text-white font-semibold">Baixar Backup Completo</h3>
           </div>
@@ -208,7 +208,7 @@ export default function BackupManager() {
 
         {/* RESTAURAR */}
         <div className="bg-gray-800 border border-gray-700 rounded-xl p-5 space-y-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2">
             <Upload className="w-5 h-5 text-blue-400" />
             <h3 className="text-white font-semibold">Restaurar Backup</h3>
           </div>
