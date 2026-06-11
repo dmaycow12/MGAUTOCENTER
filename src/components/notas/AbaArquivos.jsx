@@ -107,7 +107,7 @@ export default function AbaArquivos({ notas }) {
   return (
     <div className="space-y-4">
       {/* Filtros */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-0.5">
         {[
           { id: 'todos', label: 'Todos' },
           { id: 'xml', label: 'XMLs' },
@@ -118,7 +118,7 @@ export default function AbaArquivos({ notas }) {
           <button
             key={f.id}
             onClick={() => setFiltro(f.id)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+            className={`flex-1 h-9 rounded-lg text-sm font-medium transition-all ${
               filtro === f.id
                 ? 'bg-[#062C9B] text-white'
                 : 'bg-gray-800 border border-gray-700 text-gray-400 hover:text-white'
