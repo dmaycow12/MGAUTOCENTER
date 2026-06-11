@@ -1040,7 +1040,7 @@ export default function NotasFiscais() {
   if (loading) return <Loader />;
 
   return (
-    <div className="space-y-4 px-4 md:px-6">
+    <div className="space-y-1.5">
       {msgFeedback && (
         <div className={`flex items-start gap-3 p-4 rounded-xl border text-sm ${msgFeedback.tipo === "sucesso" ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
           {msgFeedback.tipo === "sucesso" ? <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" /> : <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />}
@@ -1138,7 +1138,7 @@ export default function NotasFiscais() {
         {abaAtiva === "notas" && (
         <div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
        {[
          { label: 'NFe Entrada', value: totalNFeLancada, color: '#3b82f6' },
          { label: 'NFSe Entrada', value: totalNFSeLancada, color: '#3b82f6' },
@@ -1158,7 +1158,7 @@ export default function NotasFiscais() {
        </div>
        </div>
 
-       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
        {(() => {
           const notasSemXml = filtradas.filter(n => !n.xml_original?.trim().startsWith('<') && !n.xml_content?.trim().startsWith('<') && n.xml_url !== 'XML_IN_URL').length;
           const notasSemPdf = filtradas.filter(n => !n.pdf_url).length;
