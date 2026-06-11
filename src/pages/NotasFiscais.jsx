@@ -1155,7 +1155,7 @@ export default function NotasFiscais() {
 
          </div>
 
-       <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+       <div className="grid grid-cols-2 md:grid-cols-6 gap-0.5">
         {[
           { label: 'NFe Entrada', value: totalNFeLancada, color: '#3b82f6' },
           { label: 'NFSe Entrada', value: totalNFSeLancada, color: '#3b82f6' },
