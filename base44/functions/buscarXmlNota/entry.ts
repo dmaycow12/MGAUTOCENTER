@@ -18,67 +18,74 @@ Deno.serve(async (req) => {
   }
 
   // Passo 1: manifestação para liberar XML completo na SEFAZ
-  try {
-    await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}/manifestacoes`, {
-      method: 'POST',
-      headers: { 'Authorization': AUTH_HEADER, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tipo: 'ciencia_operacao' }),
-    });
-  } catch (_) {}
+   try {
+     await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}/manifestacoes`, {
+       method: 'POST',
+       headers: { 'Authorization': AUTH_HEADER, 'Content-Type': 'application/json' },
+       body: JSON.stringify({ tipo: 'ciencia_operacao' }),
+     });
+   } catch (_) {}
 
-  await new Promise(r => setTimeout(r, 1500));
+   // Passo 2: Retry com backoff para notas recém-emitidas
+   const endpoints = [
+     `${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}.xml`,
+     `${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}/xml`,
+     `${FOCUSNFE_BASE}/download_nfe/${chave_acesso}`,
+     `${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}`,
+   ];
 
-  // Passo 2: tentar endpoints em ordem até achar XML com <det> ou detectar cancelamento
-  const endpoints = [
-    `${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}.xml`,
-    `${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}/xml`,
-    `${FOCUSNFE_BASE}/download_nfe/${chave_acesso}`,
-    `${FOCUSNFE_BASE}/nfes_recebidas/${chave_acesso}`,
-  ];
+   let xml = '';
+   const maxTentativas = 4;
+   const delays = [2000, 3000, 4000, 5000]; // Progressivo: 2s, 3s, 4s, 5s
 
-  let xml = '';
-  for (const url of endpoints) {
-    try {
-      const resp = await fetch(url, { headers: { 'Authorization': AUTH_HEADER } });
-      if (!resp.ok) continue;
-      const ct = resp.headers.get('content-type') || '';
-      let candidate = '';
-      if (ct.includes('xml')) {
-        candidate = await resp.text();
-        // Detectar cancelamento no XML
-        if (candidate && (candidate.includes('<evCanc') || candidate.includes('110111') || candidate.includes('Cancelamento'))) {
-          if (nota_id) {
-            await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { status: 'Cancelada' });
-          }
-          return Response.json({ sucesso: false, cancelada: true, erro: 'Nota cancelada pelo fornecedor. Status atualizado para Cancelada.' });
-        }
-      } else {
-        const data = await resp.json().catch(() => ({}));
+   for (let tentativa = 0; tentativa < maxTentativas && !xml; tentativa++) {
+     if (tentativa > 0) {
+       await new Promise(r => setTimeout(r, delays[tentativa - 1]));
+     }
 
-        // Detectar cancelamento no JSON da Focus NFe
-        const situacao = (data.situacao || data.status || data.status_sefaz || '').toLowerCase();
-        if (STATUS_CANCELADO.some(s => situacao.includes(s))) {
-          if (nota_id) {
-            await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { status: 'Cancelada' });
-          }
-          return Response.json({ sucesso: false, cancelada: true, erro: 'Nota cancelada pelo fornecedor. Status atualizado para Cancelada.' });
-        }
+     for (const url of endpoints) {
+       try {
+         const resp = await fetch(url, { headers: { 'Authorization': AUTH_HEADER } });
+         if (!resp.ok) continue;
+         const ct = resp.headers.get('content-type') || '';
+         let candidate = '';
+         if (ct.includes('xml')) {
+           candidate = await resp.text();
+           // Detectar cancelamento no XML
+           if (candidate && (candidate.includes('<evCanc') || candidate.includes('110111') || candidate.includes('Cancelamento'))) {
+             if (nota_id) {
+               await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { status: 'Cancelada' });
+             }
+             return Response.json({ sucesso: false, cancelada: true, erro: 'Nota cancelada pelo fornecedor. Status atualizado para Cancelada.' });
+           }
+         } else {
+           const data = await resp.json().catch(() => ({}));
 
-        candidate = data.xml || data.xml_nota || data.xml_nfe || '';
-        if (!candidate && data.caminho_xml_nota_fiscal) {
-          const r2 = await fetch(data.caminho_xml_nota_fiscal, { headers: { 'Authorization': AUTH_HEADER } });
-          if (r2.ok) candidate = await r2.text();
-        }
-      }
-      // Aceita apenas XML completo com dados de itens (não apenas resumo resNFe)
-      if (candidate && candidate.length > 500 && (
-        candidate.includes('infNFe') || candidate.includes('nfeProc') || candidate.includes('<det') || candidate.includes(':det')
-      )) {
-        xml = candidate;
-        break;
-      }
-    } catch (_) {}
-  }
+           // Detectar cancelamento no JSON da Focus NFe
+           const situacao = (data.situacao || data.status || data.status_sefaz || '').toLowerCase();
+           if (STATUS_CANCELADO.some(s => situacao.includes(s))) {
+             if (nota_id) {
+               await base44.asServiceRole.entities.NotaFiscal.update(nota_id, { status: 'Cancelada' });
+             }
+             return Response.json({ sucesso: false, cancelada: true, erro: 'Nota cancelada pelo fornecedor. Status atualizado para Cancelada.' });
+           }
+
+           candidate = data.xml || data.xml_nota || data.xml_nfe || '';
+           if (!candidate && data.caminho_xml_nota_fiscal) {
+             const r2 = await fetch(data.caminho_xml_nota_fiscal, { headers: { 'Authorization': AUTH_HEADER } });
+             if (r2.ok) candidate = await r2.text();
+           }
+         }
+         // Aceita apenas XML completo com dados de itens (não apenas resumo resNFe)
+         if (candidate && candidate.length > 500 && (
+           candidate.includes('infNFe') || candidate.includes('nfeProc') || candidate.includes('<det') || candidate.includes(':det')
+         )) {
+           xml = candidate;
+           break;
+         }
+       } catch (_) {}
+     }
+   }
 
   if (!xml) {
     return Response.json({
