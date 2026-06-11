@@ -379,10 +379,14 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                                     : (mov.ordem_venda_numero ? `#${mov.ordem_venda_numero}` : "—")}
                                 </td>
                                 <td className="px-3 py-2 text-gray-500 italic max-w-[120px] truncate">
-                                  {mov.observacao || "—"}
-                                </td>
-
-                              </tr>
+                                   {mov.observacao || "—"}
+                                 </td>
+                                 <td className="px-3 py-2 text-right">
+                                   <button onClick={() => excluirHistorico(i)} className="text-gray-600 hover:text-red-400 transition-all">
+                                     <Trash2 className="w-3.5 h-3.5" />
+                                   </button>
+                                 </td>
+                                </tr>
                             );
                           })}
                         </tbody>
