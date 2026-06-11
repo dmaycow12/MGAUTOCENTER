@@ -12,6 +12,7 @@ import ModalXML from "@/components/notas/ModalXML";
 import ModalPreVisualizacao from "@/components/notas/ModalPreVisualizacao";
 import FiltroPerioodoAvancado from "@/components/notas/FiltroPerioodoAvancado";
 import SearchableSelect from "@/components/notas/SearchableSelect";
+import ListagemXmlPdf from "@/components/notas/ListagemXmlPdf";
 import { gerarDadosAdicionaisDaVenda, gerarInfoParcelas } from "@/components/notas/gerarDadosAdicionais";
 
 import JSZip from "jszip";
@@ -114,6 +115,7 @@ export default function NotasFiscais() {
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
   const [atualizandoStatus, setAtualizandoStatus] = useState(null);
+  const [abaAtiva, setAbaAtiva] = useState("notas");
 
   const [notaIdParaEntrada, setNotaIdParaEntrada] = useState(null);
   const hoje = new Date();
@@ -1128,7 +1130,29 @@ export default function NotasFiscais() {
 
         </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+        <div className="flex gap-0.5 border-b border-gray-800 mb-4">
+        <button
+          onClick={() => setAbaAtiva("notas")}
+          className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-all -mb-px ${
+            abaAtiva === "notas" ? "bg-gray-800 text-white border border-gray-700 border-b-gray-800" : "text-gray-500 hover:text-gray-300"
+          }`}
+        >
+          Notas Fiscais
+        </button>
+        <button
+          onClick={() => setAbaAtiva("arquivos")}
+          className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-all -mb-px ${
+            abaAtiva === "arquivos" ? "bg-gray-800 text-white border border-gray-700 border-b-gray-800" : "text-gray-500 hover:text-gray-300"
+          }`}
+        >
+          XMLs e PDFs
+        </button>
+        </div>
+
+        {abaAtiva === "notas" && (
+        <div>
+
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
        {[
          { label: 'NFe Entrada', value: totalNFeLancada, color: '#3b82f6' },
          { label: 'NFSe Entrada', value: totalNFSeLancada, color: '#3b82f6' },
@@ -1364,10 +1388,16 @@ export default function NotasFiscais() {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+          </div>
+          )}
+          </div>
+          )}
 
-      {showImport && (
+          {abaAtiva === "arquivos" && (
+          <ListagemXmlPdf notas={notas} />
+          )}
+
+          {showImport && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
           <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl">
             <div className="flex items-center justify-between p-5 border-b border-gray-800">
