@@ -1970,10 +1970,10 @@ function F({ label, children, className = "" }) {
 }
 
 function temXmlSalvo(nota) {
-  // Verifica xml_original
-  if (nota.xml_original && nota.xml_original.length > 5) return true;
-  // Verifica xml_content
-  if (nota.xml_content && nota.xml_content.length > 5) return true;
+  // Verifica xml_original (XML real salvo)
+  if (nota.xml_original && nota.xml_original.length > 10 && nota.xml_original.includes('<')) return true;
+  // Verifica se tem URL válida do XML (não HTML)
+  if (nota.xml_url && nota.xml_url.endsWith('.xml') && !nota.xml_url.includes('.html')) return true;
   return false;
 }
 
