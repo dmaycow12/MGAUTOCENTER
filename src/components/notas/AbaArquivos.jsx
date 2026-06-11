@@ -107,7 +107,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
     .filter(arq => {
       const tipoOk = tipoFiltro === 'tudo-arquivo' || arq.tipo.toLowerCase() === tipoFiltro;
       const statusOk = statusFiltro === 'tudo-status' || 
-        (statusFiltro === 'salvo' && arq.status === 'salvo') ||
+        (statusFiltro === 'salvo' && (arq.status === 'salvo' || arq.status === 'url')) ||
         (statusFiltro === 'ausente' && arq.status === 'ausente');
       return tipoOk && statusOk;
     });
