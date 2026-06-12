@@ -112,32 +112,81 @@ Deno.serve(async (req) => {
     if (!nota.pdf_url) {
       console.log('[RECUPERAR] Buscando PDF para:', chave);
 
-      const endpointsPdf = [
-        `${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`,
-        `${FOCUSNFE_BASE}/nfes/${chave}.pdf`,
-      ];
+      let pdfEncontrado = false;
 
-      if (nota.tipo === 'NFSe') {
-        endpointsPdf.unshift(`${FOCUSNFE_BASE}/nfses_recebidas/${chave}.pdf`);
-      }
-
-      for (const url of endpointsPdf) {
+      // Estratégia 1: Notas emitidas (NFe/NFCe/NFSe) - buscar via endpoint de consulta
+      const statusesEmitida = ['Emitida', 'Homologada', 'Pré-visualização', 'Processando', 'Aguardando Sefin Nacional'];
+      if (!pdfEncontrado && nota.spedy_id && statusesEmitida.includes(nota.status)) {
+        const ep = nota.tipo === 'NFSe' ? 'nfsen' : nota.tipo === 'NFCe' ? 'nfce' : 'nfe';
+        console.log('[RECUPERAR] Nota emitida, consultando:', `${FOCUSNFE_BASE}/${ep}/${nota.spedy_id}?completo=1`);
+        
         try {
-          const resp = await fetch(url, { headers: { 'Authorization': AUTH_HEADER } });
-          if (resp.ok) {
-            const ct = resp.headers.get('content-type') || '';
-            if (ct.includes('pdf') || ct.includes('octet')) {
-              const blob = await resp.blob();
-              const pdfFile = new File([blob], `NF-${nota.numero || chave}.pdf`, { type: 'application/pdf' });
-              const uploadPdf = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
-              if (uploadPdf?.file_url) {
-                updates.pdf_url = uploadPdf.file_url;
-                console.log('[RECUPERAR] PDF salvo via UploadFile');
+          const consultaResp = await fetch(`${FOCUSNFE_BASE}/${ep}/${nota.spedy_id}?completo=1`, {
+            headers: { 'Authorization': AUTH_HEADER },
+          });
+          if (consultaResp.ok) {
+            const result = await consultaResp.json();
+            const rawPdf = result.caminho_danfe || result.caminho_danfse || result.caminho_pdf_nfsen 
+              || result.caminho_xml_nota_fiscal_pdf || result.url_danfe || result.url_pdf || '';
+            
+            if (rawPdf) {
+              const pdfUrlFocus = rawPdf.startsWith('http') ? rawPdf : `https://api.focusnfe.com.br${rawPdf}`;
+              const isS3 = pdfUrlFocus.includes('amazonaws.com') || pdfUrlFocus.includes('s3.');
+              
+              console.log('[RECUPERAR] URL PDF:', pdfUrlFocus);
+              const pdfResp = await fetch(pdfUrlFocus, isS3 ? {} : { headers: { 'Authorization': AUTH_HEADER } });
+              
+              if (pdfResp.ok) {
+                const blob = await pdfResp.blob();
+                const buf = await blob.arrayBuffer();
+                const h = new Uint8Array(buf, 0, 4);
+                if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
+                  const pdfFile = new File([blob], `NF-${nota.numero || chave}.pdf`, { type: 'application/pdf' });
+                  const uploadPdf = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+                  if (uploadPdf?.file_url) {
+                    updates.pdf_url = uploadPdf.file_url;
+                    pdfEncontrado = true;
+                    console.log('[RECUPERAR] PDF de nota emitida salvo com sucesso');
+                  }
+                }
               }
             }
-            break;
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error('[RECUPERAR] Erro ao buscar PDF de nota emitida:', e.message);
+        }
+      }
+
+      // Estratégia 2: Notas recebidas/importadas - endpoints diretos
+      if (!pdfEncontrado) {
+        const endpointsPdf = [
+          `${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`,
+          `${FOCUSNFE_BASE}/nfes/${chave}.pdf`,
+        ];
+
+        if (nota.tipo === 'NFSe') {
+          endpointsPdf.unshift(`${FOCUSNFE_BASE}/nfses_recebidas/${chave}.pdf`);
+        }
+
+        for (const url of endpointsPdf) {
+          try {
+            const resp = await fetch(url, { headers: { 'Authorization': AUTH_HEADER } });
+            if (resp.ok) {
+              const ct = resp.headers.get('content-type') || '';
+              if (ct.includes('pdf') || ct.includes('octet')) {
+                const blob = await resp.blob();
+                const pdfFile = new File([blob], `NF-${nota.numero || chave}.pdf`, { type: 'application/pdf' });
+                const uploadPdf = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+                if (uploadPdf?.file_url) {
+                  updates.pdf_url = uploadPdf.file_url;
+                  pdfEncontrado = true;
+                  console.log('[RECUPERAR] PDF salvo via endpoint direto');
+                }
+              }
+              break;
+            }
+          } catch (e) {}
+        }
       }
     }
 
