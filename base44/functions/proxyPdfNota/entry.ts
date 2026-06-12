@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
 
     if (nota.spedy_id && !(nota.status === 'Importada' || nota.status === 'Lançada')) {
       // Notas emitidas: tenta ambos os ambientes
-      const ep = nota.tipo === 'NFSe' ? 'nfsen' : nota.tipo === 'NFCe' ? 'nfce' : 'nfes';
+      const ep = nota.tipo === 'NFSe' ? 'nfsen' : nota.tipo === 'NFCe' ? 'nfce' : 'nfe';
       const isPreview = nota.spedy_id?.startsWith('preview-');
       const ambientes = isPreview 
         ? [[FOCUSNFE_BASE_HOM, AUTH_HEADER_HOM], [FOCUSNFE_BASE_PROD, AUTH_HEADER_PROD]]
