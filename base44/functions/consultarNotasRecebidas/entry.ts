@@ -17,7 +17,7 @@ async function buscarNFesRecebidas(cnpjEmitente) {
     todas = todas.concat(lote);
     const maxVersao = Math.max(...lote.map(n => n.versao || 0));
     if (maxVersao <= versaoCursor) break;
-    versaoCursor = maxVersao;
+    versaoCursor = maxVersao + 1;
     if (lote.length < 50) break;
   }
   return todas;
@@ -40,7 +40,7 @@ async function buscarNFSesRecebidas(cnpjEmitente) {
     if (!maxVersionHeader) break;
     const maxVersao = parseInt(maxVersionHeader, 10);
     if (isNaN(maxVersao) || maxVersao <= versaoCursor) break;
-    versaoCursor = maxVersao;
+    versaoCursor = maxVersao + 1;
     if (lote.length < 100) break;
   }
   return todas;
