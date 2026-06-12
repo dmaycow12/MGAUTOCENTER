@@ -615,6 +615,10 @@ Deno.serve(async (req) => {
          console.log('[PDF-SALVAR] Resultado do upload:', pdfSalvo ? 'OK' : 'FALHOU');
          if (pdfSalvo) {
             pdfUrlFinal = pdfSalvo;
+          } else if (tipo === 'NFCe' && pdfUrl) {
+            // NFCe: DANFE é HTML, não PDF. Salva URL para o proxyPdfNota converter depois.
+            console.log('[PDF-NFCe] Salvando URL HTML do DANFE NFCe como pdf_url');
+            pdfUrlFinal = pdfUrl;
           } else {
             // NUNCA salvar URL da Focus NFe como pdf_url — elas expiram!
             // Deixa pdf_url vazio para que o usuário possa recuperar depois
