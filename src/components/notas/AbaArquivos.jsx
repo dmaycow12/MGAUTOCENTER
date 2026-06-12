@@ -85,6 +85,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
           operacao: operacao,
         });
        } else if (nota.xml_url?.endsWith('.xml')) {
+       const isLocalXml = nota.xml_url.includes('base44.app');
        items.push({
          tipo: 'XML',
          nota_numero: nota.numero,
@@ -93,6 +94,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
          url: nota.xml_url,
          conteudo: null,
          status: 'ausente',
+         urlOriginal: !isLocalXml ? nota.xml_url : '',
          data_emissao: nota.data_emissao,
          cliente: nota.cliente_nome,
          operacao: operacao,
@@ -136,7 +138,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
          url: nota.pdf_url,
          conteudo: null,
          status: isLocal ? 'salvo' : 'url',
-         urlOriginal: nota.pdf_original_url || '',
+         urlOriginal: nota.pdf_original_url || (!isLocal ? nota.pdf_url : ''),
          data_emissao: nota.data_emissao,
          cliente: nota.cliente_nome,
          operacao: operacao,
