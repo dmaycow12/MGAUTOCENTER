@@ -450,7 +450,8 @@ export default function NotasFiscais() {
   };
 
   const cancelarNota = async (nota) => {
-    if (!confirm(`Cancelar a nota ${nota.tipo} nº ${nota.numero || ''}? Esta ação não pode ser desfeita.`)) return;
+    await showConfirm(`Cancelar a nota ${nota.tipo} nº ${nota.numero || ''}? Esta ação não pode ser desfeita.`, 'delete');
+    setConfirmModal(null);
     try {
       feedback('sucesso', 'Solicitando cancelamento...');
       const res = await base44.functions.invoke('cancelarNota', { nota_id: nota.id, ref: nota.spedy_id, tipo: nota.tipo });
@@ -466,7 +467,8 @@ export default function NotasFiscais() {
   };
 
   const cancelarLancamento = async (nota) => {
-    if (!confirm(`Cancelar o lançamento da NF ${nota.numero || ""}? Isso voltará o status para "Importada" para que possa ser relançada.`)) return;
+    await showConfirm(`Cancelar o lançamento da NF ${nota.numero || ""}? Isso voltará o status para "Importada" para que possa ser relançada.`, 'delete');
+    setConfirmModal(null);
     try {
       const obsNF = `NF ${nota.numero}`;
       const estoqueAtual = await base44.entities.Estoque.list("-created_date", 1000);
@@ -1215,7 +1217,7 @@ export default function NotasFiscais() {
                   {nota.pdf_url && <button title="Baixar PDF" onClick={() => baixarPdfNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-blue-400 rounded-lg"><Download className="w-3.5 h-3.5"/></button>}
                   {(nota.status === 'Emitida' || nota.status === 'Processando' || nota.status === 'Aguardando Sefin Nacional') && <button title="Cancelar" onClick={() => cancelarNota(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg"><Ban className="w-3.5 h-3.5"/></button>}
                   {nota.status === 'Lançada' && <button title="Cancelar Lançamento" onClick={() => cancelarLancamento(nota)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-orange-400 rounded-lg"><Ban className="w-3.5 h-3.5"/></button>}
-                  {nota.status === 'Importada' && <button title="Cancelar" onClick={async () => { if (!confirm('Marcar como Cancelada?')) return; await base44.entities.NotaFiscal.update(nota.id, { status: 'Cancelada' }); load(); }} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg"><Ban className="w-3.5 h-3.5"/></button>}
+                  {nota.status === 'Importada' && <button title="Cancelar" onClick={async () => { await showConfirm('Marcar como Cancelada?', 'delete'); setConfirmModal(null); await base44.entities.NotaFiscal.update(nota.id, { status: 'Cancelada' }); load(); }} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg"><Ban className="w-3.5 h-3.5"/></button>}
                   <button onClick={() => excluir(nota.id)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg"><Trash2 className="w-3.5 h-3.5"/></button>
                 </div>
               </div>
@@ -1347,7 +1349,8 @@ export default function NotasFiscais() {
                         )}
                         {nota.status === 'Importada' && (
                           <button title="Marcar como Cancelada" onClick={async () => {
-                            if (!confirm('Marcar esta nota como Cancelada?')) return;
+                            await showConfirm('Marcar esta nota como Cancelada?', 'delete');
+                            setConfirmModal(null);
                             await base44.entities.NotaFiscal.update(nota.id, { status: 'Cancelada' });
                             load();
                           }} className="p-1 text-gray-500 hover:text-red-400 transition-all">
