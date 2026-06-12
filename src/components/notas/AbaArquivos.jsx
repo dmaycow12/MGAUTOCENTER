@@ -132,6 +132,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
       // PDF
       if (nota.pdf_url && !nota.pdf_url.endsWith('.html')) {
        const isLocal = nota.pdf_url.includes('base44.app');
+       const pdfOriginalUrl = nota.pdf_original_url || (!isLocal ? nota.pdf_url : '');
        items.push({
          tipo: 'PDF',
          nota_numero: nota.numero,
@@ -140,7 +141,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
          url: nota.pdf_url,
          conteudo: null,
          status: isLocal ? 'salvo' : 'url',
-         urlOriginal: nota.pdf_original_url || (!isLocal ? nota.pdf_url : ''),
+         urlOriginal: pdfOriginalUrl,
          data_emissao: nota.data_emissao,
          cliente: nota.cliente_nome,
          operacao: operacao,
@@ -568,15 +569,20 @@ export default function AbaArquivos({ notas, onRefresh }) {
                             >
                               <Download className="w-3 h-3" />
                             </button>
-                            {arq.urlOriginal && (
-                              <button
-                                onClick={() => window.open(arq.urlOriginal, '_blank')}
-                                className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all"
-                                title="URL Original Focus NFe"
-                              >
-                                <Link2 className="w-3 h-3" />
-                              </button>
-                            )}
+                            {arq.urlOriginal && (() => {
+                              const urlFocus = arq.urlOriginal.startsWith('/') 
+                                ? `https://focusnfe.s3.sa-east-1.amazonaws.com${arq.urlOriginal}`
+                                : arq.urlOriginal;
+                              return (
+                                <button
+                                  onClick={() => window.open(urlFocus, '_blank')}
+                                  className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all"
+                                  title="URL Original Focus NFe"
+                                >
+                                  <Link2 className="w-3 h-3" />
+                                </button>
+                              );
+                            })()}
                           </>
                         ) : (
                            <>
