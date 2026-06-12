@@ -85,6 +85,8 @@ Deno.serve(async (req) => {
             headers: { 'Authorization': AUTH_HEADER, 'Content-Type': 'application/json' },
             body: JSON.stringify({ tipo: 'ciencia_operacao' }),
           });
+          // Aguarda SEFAZ processar a manifestação antes de buscar XML
+          await new Promise(r => setTimeout(r, 3000));
         } catch (_) {}
       }
 
@@ -130,7 +132,9 @@ Deno.serve(async (req) => {
         try {
           const xmlFile = new File([xmlOriginal], `NF-${numeroNF || chave}.xml`, { type: 'text/xml' });
           const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
-          if (uploadResp?.file_url) xmlParaSalvar = { xml_url: uploadResp.file_url };
+          if (uploadResp?.file_url) {
+            xmlParaSalvar = { xml_url: uploadResp.file_url, xml_original_url: uploadResp.file_url };
+          }
         } catch (_) {}
       }
 
@@ -237,13 +241,15 @@ Deno.serve(async (req) => {
       if (chave) chavesExistentes.add(chave);
     }
 
-    // ===== ATUALIZAR XML/PDF FALTANTES EM NOTAS JÁ IMPORTADAS =====
+    // ===== ATUALIZAR XML/PDF FALTANTES EM NOTAS (INCLUI RECÉM-IMPORTADAS) =====
     let atualizadas = 0;
-    const notasFaltantes = notasExistentes.filter(n =>
+    // Re-busca TODAS as notas (incluindo as que acabaram de ser importadas)
+    const todasNotas = await base44.asServiceRole.entities.NotaFiscal.list('-created_date', 3000);
+    const notasFaltantes = todasNotas.filter(n =>
       n.tipo === 'NFe' &&
       n.chave_acesso &&
       (n.status === 'Importada' || n.status === 'Lançada') &&
-      (!n.xml_url && !n.xml_original?.trim().startsWith('<'))
+      !n.xml_url
     );
 
     for (const nota of notasFaltantes) {
@@ -282,7 +288,10 @@ Deno.serve(async (req) => {
         try {
           const xmlFile = new File([xmlOriginal], `NF-${nota.numero || chave}.xml`, { type: 'text/xml' });
           const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
-          if (uploadResp?.file_url) updates.xml_url = uploadResp.file_url;
+          if (uploadResp?.file_url) {
+            updates.xml_url = uploadResp.file_url;
+            updates.xml_original_url = uploadResp.file_url;
+          }
         } catch (_) {}
       }
 
