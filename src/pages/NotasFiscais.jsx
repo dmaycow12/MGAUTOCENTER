@@ -684,7 +684,7 @@ export default function NotasFiscais() {
         forma_pagamento: rascunhoNota.forma_pagamento || 'A Combinar',
         parcelas: qtdParcelas,
         parcelas_detalhes: parcelasRegeneradas,
-        data_emissao: rascunhoNota.data_emissao,
+        data_emissao: new Date().toISOString().split('T')[0],
         items: (() => {
           if (rascunhoNota.xml_content) {
             try {
@@ -746,7 +746,7 @@ export default function NotasFiscais() {
       const payload = {
         ...f,
         nota_id: rascunhoNota?.id || currentEditIdRef.current || null,
-        data_emissao: f.data_emissao || new Date().toISOString().split('T')[0],
+        data_emissao: new Date().toISOString().split('T')[0],
         serie_manual: f.serie || '1',
         items: f.items.map(it => ({
           ...it,
@@ -793,6 +793,8 @@ export default function NotasFiscais() {
     setPreVisualizando(nota.id);
     feedback('sucesso', 'Enviando para homologação — gerando DANFE de pré-visualização...');
     try {
+      // Atualiza data_emissao para hoje antes de homologar
+      await base44.entities.NotaFiscal.update(nota.id, { data_emissao: new Date().toISOString().split('T')[0] });
       const res = await base44.functions.invoke('preVisualizarNota', { nota_id: nota.id });
       if (res.data?.sucesso) {
         setMsgFeedback(null);
