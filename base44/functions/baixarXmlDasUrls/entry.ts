@@ -27,12 +27,16 @@ Deno.serve(async (req) => {
           
           const resp = await fetch(xmlUrl);
           if (resp.ok) {
-            const conteudo = await resp.text();
-            if (conteudo.trim().startsWith('<')) {
-              // Salvar a URL original do XML como xml_original_url
-              // (já que a URL é acessível, não precisa fazer novo upload)
+            const xmlBuffer = await resp.arrayBuffer();
+            const xmlString = new TextDecoder().decode(xmlBuffer);
+            
+            if (xmlString.trim().startsWith('<')) {
+              // Upload do XML como arquivo para o storage (mesmo padrão dos PDFs)
+              const xmlFile = new File([xmlBuffer], `xml_nota_${nota.id}.xml`, { type: 'application/xml' });
+              const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
+              
               await base44.asServiceRole.entities.NotaFiscal.update(nota.id, {
-                xml_original_url: xmlUrl
+                xml_original_url: file_url
               });
               baixados++;
             }
@@ -40,6 +44,9 @@ Deno.serve(async (req) => {
         } catch (e) {
           erros.push({ nota: nota.numero, erro: e.message });
         }
+        
+        // Pequena pausa para evitar rate limit
+        await new Promise(r => setTimeout(r, 100));
       }
     }
 
