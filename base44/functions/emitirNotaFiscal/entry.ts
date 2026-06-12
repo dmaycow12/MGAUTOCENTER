@@ -20,6 +20,33 @@ const normalizarUrl = (url) => {
   return `https://api.focusnfe.com.br${url}`;
 };
 
+// Converte HTML em PDF usando gotenberg (mesmo do preVisualizarNota)
+const converterHtmlParaPdf = async (htmlContent) => {
+  try {
+    const formData = new FormData();
+    const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+    formData.append('files', htmlBlob, 'index.html');
+    const resp = await fetch('https://demo.gotenberg.dev/forms/chromium/convert/html', {
+      method: 'POST',
+      body: formData,
+    });
+    if (resp.ok) {
+      const ct = resp.headers.get('content-type') || '';
+      if (ct.includes('pdf') || ct.includes('octet')) {
+        const blob = await resp.blob();
+        if (blob.size > 1000) {
+          console.log('[EMISSAO] PDF gerado via gotenberg, tamanho:', blob.size);
+          return blob;
+        }
+      }
+    }
+    console.log('[EMISSAO] gotenberg falhou:', resp.status);
+  } catch (e) {
+    console.log('[EMISSAO] gotenberg erro:', e.message);
+  }
+  return null;
+};
+
 // Baixa o XML da Focus NFe e retorna o conteúdo como texto
 const baixarXmlTexto = async (xmlUrl, authHeader) => {
   if (!xmlUrl) return null;
@@ -617,19 +644,70 @@ Deno.serve(async (req) => {
      let xmlUrlSalva = '';
      if (statusNota === 'Emitida') {
        if (pdfUrl) {
-         console.log('[PDF-SALVAR] Tentando salvar PDF da URL:', pdfUrl);
-         const pdfSalvo = await salvarPdfPermanente(base44, pdfUrl, nota_id || 'nova', authHeaderAtivo);
-         console.log('[PDF-SALVAR] Resultado do upload:', pdfSalvo ? 'OK' : 'FALHOU');
-         if (pdfSalvo) {
-            pdfUrlFinal = pdfSalvo;
-          } else {
-            // NUNCA salvar URL da Focus NFe como pdf_url — elas expiram!
-            // Deixa pdf_url vazio para que o usuário possa recuperar depois
-            console.log('[PDF-FALHA] Upload falhou — pdf_url ficará vazio. Use "Recuperar Arquivos" para tentar novamente.');
-            pdfUrlFinal = '';
-          }
+           console.log('[PDF-SALVAR] Baixando PDF/HTML da Focus:', pdfUrl);
+           // Tenta baixar com retry (mesmo que preVisualizarNota — verifica content-type, não magic bytes)
+           let pdfUrlFinalLocal = '';
+           for (let t = 0; t < 4; t++) {
+             if (t > 0) { console.log('[PDF-SALVAR] Retry', t + 1); await new Promise(r => setTimeout(r, 3000)); }
+             try {
+               const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
+               let pdfResp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': authHeaderAtivo } });
+               if (!pdfResp.ok && pdfResp.status === 403 && !isS3) {
+                 pdfResp = await fetch(pdfUrl, {});
+               }
+               if (!pdfResp.ok) { console.error('[PDF-SALVAR] Erro HTTP:', pdfResp.status); continue; }
+
+               const ct = pdfResp.headers.get('content-type') || '';
+               console.log('[PDF-SALVAR] Content-Type:', ct);
+
+               if (ct.includes('pdf') || ct.includes('octet')) {
+                 // É PDF real — salva direto
+                 const blob = await pdfResp.blob();
+                 const pdfFile = new File([blob], `nota-${nota_id || 'nova'}.pdf`, { type: 'application/pdf' });
+                 const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+                 pdfUrlFinalLocal = uploadResp?.file_url || '';
+                 console.log('[PDF-SALVAR] PDF salvo:', pdfUrlFinalLocal);
+                 break;
+               } else if (ct.includes('html') || pdfUrl.endsWith('.html') || pdfUrl.includes('danfe_nfce')) {
+                 // É HTML (NFCe) — baixa conteúdo e converte pra PDF via gotenberg
+                 console.log('[PDF-SALVAR] HTML detectado, convertendo via gotenberg...');
+                 const htmlResp = await fetch(pdfUrl, { headers: { 'Authorization': authHeaderAtivo } });
+                 if (htmlResp.ok) {
+                   const htmlContent = await htmlResp.text();
+                   const pdfBlob = await converterHtmlParaPdf(htmlContent);
+                   if (pdfBlob) {
+                     const pdfFile = new File([pdfBlob], `nota-${nota_id || 'nova'}.pdf`, { type: 'application/pdf' });
+                     const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+                     pdfUrlFinalLocal = uploadResp?.file_url || '';
+                     console.log('[PDF-SALVAR] PDF convertido salvo:', pdfUrlFinalLocal);
+                     break;
+                   }
+                   console.log('[PDF-SALVAR] gotenberg retornou null, tentando próximo retry');
+                 }
+               } else {
+                 // Tenta verificar magic bytes como fallback
+                 const blob = await pdfResp.blob();
+                 const buf = await blob.arrayBuffer();
+                 const h = new Uint8Array(buf, 0, 4);
+                 if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
+                   const pdfFile = new File([blob], `nota-${nota_id || 'nova'}.pdf`, { type: 'application/pdf' });
+                   const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+                   pdfUrlFinalLocal = uploadResp?.file_url || '';
+                   console.log('[PDF-SALVAR] PDF (magic bytes) salvo:', pdfUrlFinalLocal);
+                   break;
+                 }
+                 console.error('[PDF-SALVAR] Content-Type desconhecido e não é PDF:', ct);
+               }
+             } catch (e) {
+               console.error('[PDF-SALVAR] Erro:', e.message);
+             }
+           }
+           pdfUrlFinal = pdfUrlFinalLocal;
+           if (!pdfUrlFinalLocal) {
+             console.log('[PDF-FALHA] Nenhuma tentativa salvou o PDF — botão ficará vermelho');
+           }
        } else {
-         console.log('[PDF-AUSENTE] Nenhuma URL de PDF retornada pela Focus NFe');
+          console.log('[PDF-AUSENTE] Nenhuma URL de PDF retornada pela Focus NFe');
        }
        // Salvar XML como texto direto no campo xml_original
        console.log('[XML-DEBUG] resultFinal keys:', Object.keys(resultFinal).join(', '));
