@@ -464,7 +464,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
       <div className="relative">
         <input
           type="text"
-          placeholder="BUSCAR POR Nº, CLIENTE OU TIPO..."
+          placeholder="Buscar nota..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           className="w-full h-9 bg-gray-800 border border-gray-700 rounded-lg px-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all"
