@@ -51,7 +51,12 @@ const salvarPdfPermanente = async (base44, pdfUrl, nota_id, authHeader) => {
        }
        console.log('[PDF BAIXANDO]', pdfUrl);
        const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
-       const resp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': authHeader } });
+       let resp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': authHeader } });
+       // Se 403 com auth, tenta sem auth (Focus NFe S3 às vezes rejeita o header)
+       if (!resp.ok && resp.status === 403 && !isS3) {
+         console.log('[PDF RETRY] 403 com auth, tentando sem auth...');
+         resp = await fetch(pdfUrl, {});
+       }
        if (!resp.ok) {
          console.error('[PDF ERRO] Status:', resp.status, 'tentativa:', tentativa + 1);
          continue;
@@ -572,7 +577,9 @@ Deno.serve(async (req) => {
           if (consultaCompleta.ok) resultFinal = await consultaCompleta.json();
         }
         const rawPdf = resultFinal.url_danfse || resultFinal.caminho_pdf_nfsen || resultFinal.caminho_pdf_nfse ||
-              resultFinal.caminho_danfe_nfce || resultFinal.caminho_danfe || '';
+              resultFinal.caminho_pdf_nfce || resultFinal.caminho_danfe_nfce ||
+              resultFinal.caminho_danfe || resultFinal.url_danfe || resultFinal.caminho_pdf ||
+              resultFinal.caminho_xml_nota_fiscal_pdf || resultFinal.url_pdf || resultFinal.arquivo_pdf || '';
             pdfUrl = normalizarUrl(rawPdf);
             console.log('[POLLING-PDF] rawPdf encontrado:', !!rawPdf, '| normalizado:', pdfUrl);
         chaveAcesso = resultFinal.chave_nfe || resultFinal.chave_nfse || chaveAcesso;
@@ -615,10 +622,6 @@ Deno.serve(async (req) => {
          console.log('[PDF-SALVAR] Resultado do upload:', pdfSalvo ? 'OK' : 'FALHOU');
          if (pdfSalvo) {
             pdfUrlFinal = pdfSalvo;
-          } else if (tipo === 'NFCe' && pdfUrl) {
-            // NFCe: DANFE é HTML, não PDF. Salva URL para o proxyPdfNota converter depois.
-            console.log('[PDF-NFCe] Salvando URL HTML do DANFE NFCe como pdf_url');
-            pdfUrlFinal = pdfUrl;
           } else {
             // NUNCA salvar URL da Focus NFe como pdf_url — elas expiram!
             // Deixa pdf_url vazio para que o usuário possa recuperar depois
