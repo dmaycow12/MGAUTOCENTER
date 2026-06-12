@@ -116,7 +116,7 @@
     },
     "xml_original_url": {
       "type": "string",
-      "title": "URL do XML Original (Focus NFe)"
+      "title": "URL do XML Original"
     },
     "xml_url": {
       "type": "string",
@@ -125,10 +125,6 @@
     "pdf_url": {
       "type": "string",
       "title": "URL do PDF"
-    },
-    "pdf_original_url": {
-      "type": "string",
-      "title": "URL Original do PDF (Focus NFe)"
     },
     "spedy_id": {
       "type": "string",

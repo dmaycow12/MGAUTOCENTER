@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, Eye, AlertCircle, CheckCircle, RefreshCw, Plus, Link2 } from 'lucide-react';
+import { FileText, Download, Eye, AlertCircle, CheckCircle, RefreshCw, Plus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const formatarDataBR = (data) => {
@@ -66,7 +66,6 @@ export default function AbaArquivos({ notas, onRefresh }) {
           url: null,
           conteudo: nota.xml_original,
           status: 'salvo',
-          urlOriginal: nota.xml_original_url || '',
           data_emissao: nota.data_emissao,
           cliente: nota.cliente_nome,
           operacao: operacao,
@@ -80,13 +79,11 @@ export default function AbaArquivos({ notas, onRefresh }) {
           url: nota.xml_original_url,
           conteudo: null,
           status: 'salvo',
-          urlOriginal: nota.xml_original_url,
           data_emissao: nota.data_emissao,
           cliente: nota.cliente_nome,
           operacao: operacao,
         });
        } else if (nota.xml_url?.endsWith('.xml')) {
-       const isLocalXml = nota.xml_url.includes('base44.app');
        items.push({
          tipo: 'XML',
          nota_numero: nota.numero,
@@ -95,7 +92,6 @@ export default function AbaArquivos({ notas, onRefresh }) {
          url: nota.xml_url,
          conteudo: null,
          status: 'ausente',
-         urlOriginal: !isLocalXml ? nota.xml_url : '',
          data_emissao: nota.data_emissao,
          cliente: nota.cliente_nome,
          operacao: operacao,
@@ -109,7 +105,6 @@ export default function AbaArquivos({ notas, onRefresh }) {
          url: null,
          conteudo: nota.xml_content,
          status: 'salvo',
-         urlOriginal: nota.xml_original_url || '',
          data_emissao: nota.data_emissao,
          cliente: nota.cliente_nome,
          operacao: operacao,
@@ -131,8 +126,6 @@ export default function AbaArquivos({ notas, onRefresh }) {
 
       // PDF
       if (nota.pdf_url && !nota.pdf_url.endsWith('.html')) {
-       const isLocal = nota.pdf_url.includes('base44.app');
-       const pdfOriginalUrl = nota.pdf_original_url || (!isLocal ? nota.pdf_url : '');
        items.push({
          tipo: 'PDF',
          nota_numero: nota.numero,
@@ -140,8 +133,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
          nota_id: nota.id,
          url: nota.pdf_url,
          conteudo: null,
-         status: isLocal ? 'salvo' : 'url',
-         urlOriginal: pdfOriginalUrl,
+         status: 'url',
          data_emissao: nota.data_emissao,
          cliente: nota.cliente_nome,
          operacao: operacao,
@@ -165,8 +157,8 @@ export default function AbaArquivos({ notas, onRefresh }) {
     })
     .filter(arq => {
         const tipoOk = tipoAtivo.has(arq.tipo.toLowerCase());
-        const statusOk = (statusAtivo.has('salvo') && arq.status === 'salvo') ||
-                         (statusAtivo.has('ausente') && (arq.status === 'ausente' || arq.status === 'url'));
+        const statusOk = (statusAtivo.has('salvo') && (arq.status === 'salvo' || arq.status === 'url')) ||
+                         (statusAtivo.has('ausente') && arq.status === 'ausente');
         const operacaoOk = operacaoAtivo.has(arq.operacao?.toLowerCase());
         const notaOk = (notaAtivo.has('nfe') && arq.nota_tipo === 'NFe') ||
                        (notaAtivo.has('nfce') && arq.nota_tipo === 'NFCe') ||
@@ -539,11 +531,6 @@ export default function AbaArquivos({ notas, onRefresh }) {
                           <AlertCircle className="w-3 h-3" />
                           Ausente
                         </span>
-                      ) : arq.status === 'url' ? (
-                        <span className="inline-flex items-center gap-1 text-xs text-yellow-400">
-                          <AlertCircle className="w-3 h-3" />
-                          Externo
-                        </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-xs text-green-400">
                           <CheckCircle className="w-3 h-3" />
@@ -569,20 +556,6 @@ export default function AbaArquivos({ notas, onRefresh }) {
                             >
                               <Download className="w-3 h-3" />
                             </button>
-                            {arq.urlOriginal && (() => {
-                              const urlFocus = arq.urlOriginal.startsWith('/') 
-                                ? `https://focusnfe.s3.sa-east-1.amazonaws.com${arq.urlOriginal}`
-                                : arq.urlOriginal;
-                              return (
-                                <button
-                                  onClick={() => window.open(urlFocus, '_blank')}
-                                  className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all"
-                                  title="URL Original Focus NFe"
-                                >
-                                  <Link2 className="w-3 h-3" />
-                                </button>
-                              );
-                            })()}
                           </>
                         ) : (
                            <>

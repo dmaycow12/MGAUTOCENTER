@@ -183,8 +183,6 @@ Deno.serve(async (req) => {
           await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
             status: 'Emitida',
             pdf_url: pdfUrlFinal,
-      pdf_original_url: pdfUrl || '',
-            pdf_original_url: pdfUrlFocus || '',
             chave_acesso: statusExistente.chave_nfe || statusExistente.chave_nfse || notaExistente.chave_acesso || '',
             mensagem_sefaz: statusExistente.mensagem_sefaz || 'Autorizado',
           });
@@ -589,7 +587,7 @@ Deno.serve(async (req) => {
     // ============================================================
      // SE EMITIDA: SALVA PDF E XML PERMANENTEMENTE
      // ============================================================
-     let pdfUrlFinal = '';
+     let pdfUrlFinal = pdfUrl;
      let xmlOriginalTexto = '';
      let xmlUrlSalva = '';
      if (statusNota === 'Emitida') {
@@ -600,7 +598,8 @@ Deno.serve(async (req) => {
          if (pdfSalvo) {
            pdfUrlFinal = pdfSalvo;
          } else {
-           console.log('[PDF-FALHA] Upload falhou — PDF NAO salvo. Use "Recuperar Arquivos" para tentar novamente.');
+           console.log('[PDF-FALLBACK] Usando URL original da Focus NFe como fallback');
+           pdfUrlFinal = pdfUrl;
          }
        } else {
          console.log('[PDF-AUSENTE] Nenhuma URL de PDF retornada pela Focus NFe');
@@ -665,7 +664,6 @@ Deno.serve(async (req) => {
       data_emissao: data_emissao || new Date().toISOString().split('T')[0],
       valor_total: Number(valor_total) || 0,
       pdf_url: pdfUrlFinal,
-      pdf_original_url: pdfUrl || '',
       ...(xmlOriginalTexto ? { xml_original: xmlOriginalTexto } : {}),
       ...(xmlUrlSalva ? { xml_url: xmlUrlSalva } : {}),
       chave_acesso: chaveAcesso,
