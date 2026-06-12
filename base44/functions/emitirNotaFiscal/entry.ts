@@ -587,7 +587,7 @@ Deno.serve(async (req) => {
     // ============================================================
      // SE EMITIDA: SALVA PDF E XML PERMANENTEMENTE
      // ============================================================
-     let pdfUrlFinal = pdfUrl;
+     let pdfUrlFinal = '';
      let xmlOriginalTexto = '';
      let xmlUrlSalva = '';
      if (statusNota === 'Emitida') {
@@ -598,8 +598,7 @@ Deno.serve(async (req) => {
          if (pdfSalvo) {
            pdfUrlFinal = pdfSalvo;
          } else {
-           console.log('[PDF-FALLBACK] Usando URL original da Focus NFe como fallback');
-           pdfUrlFinal = pdfUrl;
+           console.log('[PDF-FALHA] Upload falhou — PDF NAO salvo. Use "Recuperar Arquivos" para tentar novamente.');
          }
        } else {
          console.log('[PDF-AUSENTE] Nenhuma URL de PDF retornada pela Focus NFe');

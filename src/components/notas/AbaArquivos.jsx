@@ -126,6 +126,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
 
       // PDF
       if (nota.pdf_url && !nota.pdf_url.endsWith('.html')) {
+       const isLocal = nota.pdf_url.includes('base44.app');
        items.push({
          tipo: 'PDF',
          nota_numero: nota.numero,
@@ -133,7 +134,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
          nota_id: nota.id,
          url: nota.pdf_url,
          conteudo: null,
-         status: 'url',
+         status: isLocal ? 'salvo' : 'url',
          data_emissao: nota.data_emissao,
          cliente: nota.cliente_nome,
          operacao: operacao,
@@ -157,8 +158,8 @@ export default function AbaArquivos({ notas, onRefresh }) {
     })
     .filter(arq => {
         const tipoOk = tipoAtivo.has(arq.tipo.toLowerCase());
-        const statusOk = (statusAtivo.has('salvo') && (arq.status === 'salvo' || arq.status === 'url')) ||
-                         (statusAtivo.has('ausente') && arq.status === 'ausente');
+        const statusOk = (statusAtivo.has('salvo') && arq.status === 'salvo') ||
+                         (statusAtivo.has('ausente') && (arq.status === 'ausente' || arq.status === 'url'));
         const operacaoOk = operacaoAtivo.has(arq.operacao?.toLowerCase());
         const notaOk = (notaAtivo.has('nfe') && arq.nota_tipo === 'NFe') ||
                        (notaAtivo.has('nfce') && arq.nota_tipo === 'NFCe') ||
@@ -530,6 +531,11 @@ export default function AbaArquivos({ notas, onRefresh }) {
                         <span className="inline-flex items-center gap-1 text-xs text-red-400">
                           <AlertCircle className="w-3 h-3" />
                           Ausente
+                        </span>
+                      ) : arq.status === 'url' ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-yellow-400">
+                          <AlertCircle className="w-3 h-3" />
+                          Externo
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-xs text-green-400">
