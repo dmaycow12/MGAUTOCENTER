@@ -57,19 +57,32 @@ export default function AbaArquivos({ notas, onRefresh }) {
       const operacao = isEntrada ? 'entrada' : 'saida';
       
       if (nota.xml_original?.trim().startsWith('<')) {
-       items.push({
-         tipo: 'XML',
-         nota_numero: nota.numero,
-         nota_tipo: nota.tipo,
-         nota_id: nota.id,
-         url: null,
-         conteudo: nota.xml_original,
-         status: 'salvo',
-         data_emissao: nota.data_emissao,
-         cliente: nota.cliente_nome,
-         operacao: operacao,
-       });
-      } else if (nota.xml_url) {
+        items.push({
+          tipo: 'XML',
+          nota_numero: nota.numero,
+          nota_tipo: nota.tipo,
+          nota_id: nota.id,
+          url: null,
+          conteudo: nota.xml_original,
+          status: 'salvo',
+          data_emissao: nota.data_emissao,
+          cliente: nota.cliente_nome,
+          operacao: operacao,
+        });
+       } else if (nota.xml_original_url) {
+        items.push({
+          tipo: 'XML',
+          nota_numero: nota.numero,
+          nota_tipo: nota.tipo,
+          nota_id: nota.id,
+          url: nota.xml_original_url,
+          conteudo: null,
+          status: 'salvo',
+          data_emissao: nota.data_emissao,
+          cliente: nota.cliente_nome,
+          operacao: operacao,
+        });
+       } else if (nota.xml_url?.endsWith('.xml')) {
        items.push({
          tipo: 'XML',
          nota_numero: nota.numero,
@@ -77,7 +90,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
          nota_id: nota.id,
          url: nota.xml_url,
          conteudo: null,
-         status: 'salvo',
+         status: 'ausente',
          data_emissao: nota.data_emissao,
          cliente: nota.cliente_nome,
          operacao: operacao,
@@ -255,23 +268,38 @@ export default function AbaArquivos({ notas, onRefresh }) {
       let mensagem = '';
 
       if (arquivo.tipo === 'XML') {
-        // Tenta buscar XML da Focus NFe
-        try {
-          const res = await base44.functions.invoke('buscarXmlNota', { 
-            chave_acesso: nota.chave_acesso, 
-            nota_id: nota.id 
-          });
-          if (res.data?.sucesso && res.data?.xml) {
-            await base44.entities.NotaFiscal.update(nota.id, { xml_original: res.data.xml });
-            sucesso = true;
-            mensagem = 'XML importado com sucesso!';
-          } else if (res.data?.cancelada) {
-            mensagem = 'Nota foi cancelada pelo fornecedor.';
-          } else {
-            mensagem = res.data?.erro || 'XML não disponível na SEFAZ ainda.';
+        // Se já tem xml_url, baixa o conteúdo
+        if (nota.xml_url) {
+          try {
+            const res = await base44.functions.invoke('baixarXmlConteudo', { nota_id: nota.id });
+            if (res.data?.sucesso) {
+              sucesso = true;
+              mensagem = res.data.mensagem || 'XML importado com sucesso!';
+            } else {
+              mensagem = res.data?.erro || 'Erro ao baixar XML.';
+            }
+          } catch (e) {
+            mensagem = 'Erro ao baixar XML: ' + e.message;
           }
-        } catch (e) {
-          mensagem = 'Erro ao buscar XML: ' + e.message;
+        } else {
+          // Tenta buscar XML da Focus NFe
+          try {
+            const res = await base44.functions.invoke('buscarXmlNota', { 
+              chave_acesso: nota.chave_acesso, 
+              nota_id: nota.id 
+            });
+            if (res.data?.sucesso && res.data?.xml) {
+              await base44.entities.NotaFiscal.update(nota.id, { xml_original: res.data.xml });
+              sucesso = true;
+              mensagem = 'XML importado com sucesso!';
+            } else if (res.data?.cancelada) {
+              mensagem = 'Nota foi cancelada pelo fornecedor.';
+            } else {
+              mensagem = res.data?.erro || 'XML não disponível na SEFAZ ainda.';
+            }
+          } catch (e) {
+            mensagem = 'Erro ao buscar XML: ' + e.message;
+          }
         }
       } else if (arquivo.tipo === 'PDF') {
         // Busca PDF na Focus NFe
