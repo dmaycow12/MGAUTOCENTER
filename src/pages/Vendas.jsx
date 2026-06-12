@@ -215,6 +215,7 @@ export default function Vendas() {
        const matchSearch = !search ||
          o.numero?.toLowerCase().includes(s) ||
          o.cliente_nome?.toLowerCase().includes(s) ||
+         o.cliente_nome_fantasia?.toLowerCase().includes(s) ||
          o.veiculo_placa?.toLowerCase().includes(s) ||
          o.veiculo_modelo?.toLowerCase().includes(s);
        const matchStatus = filtroStatus.length > 0 && filtroStatus.includes(o.status);
@@ -222,7 +223,7 @@ export default function Vendas() {
        const temVeiculo = !!(o.veiculo_id || o.veiculo_placa || o.veiculo_modelo);
        const matchTipo = filtroTipo.length > 0 && ((filtroTipo.includes("patio") && temVeiculo) || (filtroTipo.includes("balcao") && !temVeiculo));
        return matchSearch && matchStatus && matchPeriodo && matchTipo;
-     })
+       })
      .sort((a, b) => {
        // Prioriza ordenação por número se definida, senão por data
        const numA = parseInt(a.numero || 0);
@@ -251,6 +252,7 @@ export default function Vendas() {
     const matchSearch = !search ||
       o.numero?.toLowerCase().includes(s) ||
       o.cliente_nome?.toLowerCase().includes(s) ||
+      o.cliente_nome_fantasia?.toLowerCase().includes(s) ||
       o.veiculo_placa?.toLowerCase().includes(s) ||
       o.veiculo_modelo?.toLowerCase().includes(s);
     const matchStatus = filtroStatus.length > 0 && filtroStatus.includes(o.status);
