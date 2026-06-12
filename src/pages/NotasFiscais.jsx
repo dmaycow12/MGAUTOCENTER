@@ -178,7 +178,7 @@ export default function NotasFiscais() {
         const cliente_nome_param = params.get("cliente_nome") || "";
         window.history.replaceState({}, "", window.location.pathname);
 
-        const [{ clientes: clientesList, estoque: estoqueData }, vendaData] = await Promise.all([
+        const [{ clientes: clientesList, estoque: estoqueData, servicos: servicosList }, vendaData] = await Promise.all([
           load(),
           venda_id ? base44.entities.Vendas.filter({ id: venda_id }, "-created_date", 1) : Promise.resolve([]),
         ]);
@@ -191,12 +191,17 @@ export default function NotasFiscais() {
           if (tipo === "NFSe") {
             const servs = venda.servicos || [];
             if (servs.length > 0) {
-              items = servs.map(s => ({
-                descricao: s.descricao || "",
-                quantidade: Number(s.quantidade ?? 1),
-                valor_unitario: Number(s.valor || 0),
-                valor_total: Number(s.valor || 0) * Number(s.quantidade ?? 1),
-              }));
+              items = servs.map(s => {
+                const srvMatch = (servicosList || []).find(sv => (sv.descricao || '').toLowerCase().trim() === (s.descricao || '').toLowerCase().trim());
+                return {
+                  descricao: s.descricao || "",
+                  codigo: srvMatch?.codigo || "",
+                  servico_id: srvMatch?.id || "",
+                  quantidade: Number(s.quantidade ?? 1),
+                  valor_unitario: Number(s.valor || 0),
+                  valor_total: Number(s.valor || 0) * Number(s.quantidade ?? 1),
+                };
+              });
             }
           } else {
             const pecas = venda.pecas || [];
@@ -320,7 +325,7 @@ export default function NotasFiscais() {
     setConfigsNF(configs);
     setTemSpedy(true);
     setLoading(false);
-    return { clientes: c, estoque: est };
+    return { clientes: c, estoque: est, servicos: srv };
   };
 
   const filtradas = notas.filter(n => {

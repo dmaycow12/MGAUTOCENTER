@@ -46,6 +46,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
   const [clientes, setClientes] = useState(clientesProp);
   const [notasCarregadas, setNotasCarregadas] = useState(notas);
   const [notasFinais, setNotasFinais] = useState(null);
+  const [servicos, setServicos] = useState([]);
 
   useEffect(() => {
     base44.entities.Cadastro.list('-created_date', 5000).then(res => {
@@ -53,6 +54,9 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
     }).catch(() => {});
     base44.entities.NotaFiscal.list('-created_date', 2000).then(res => {
       if (res && res.length > 0) setNotasCarregadas(res);
+    }).catch(() => {});
+    base44.entities.Servico.list('-created_date', 5000).then(res => {
+      if (res && res.length > 0) setServicos(res);
     }).catch(() => {});
   }, []);
 
@@ -103,7 +107,10 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
           }
 
           const items = tipoNF === 'NFSe'
-            ? (venda.servicos || []).map(s => ({ descricao: s.descricao || 'Serviço', quantidade: Number(s.quantidade ?? 1), valor_unitario: Number(s.valor || 0), valor_total: Number(s.valor || 0) * Number(s.quantidade ?? 1) }))
+            ? (venda.servicos || []).map(s => {
+                const srvMatch = servicos.find(sv => sv.descricao?.toLowerCase().trim() === (s.descricao || '').toLowerCase().trim());
+                return { descricao: s.descricao || 'Serviço', codigo: srvMatch?.codigo || '', servico_id: srvMatch?.id || '', quantidade: Number(s.quantidade ?? 1), valor_unitario: Number(s.valor || 0), valor_total: Number(s.valor || 0) * Number(s.quantidade ?? 1) };
+              })
             : (venda.pecas || []).map(p => ({ descricao: p.descricao || 'Peça', quantidade: Number(p.quantidade || 1), valor_unitario: Number(p.valor_unitario || 0), valor_total: Number(p.valor_total || 0), ncm: p.ncm || '87089990', cfop: p.cfop || '5405', unidade: p.unidade || 'UN', codigo: p.codigo || '' }));
 
           const valorTotal = items.reduce((s, it) => s + it.valor_total, 0) || venda.valor_total || 0;
