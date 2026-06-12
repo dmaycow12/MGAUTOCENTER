@@ -69,7 +69,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
          cliente: nota.cliente_nome,
          operacao: operacao,
        });
-      } else if (nota.xml_url?.endsWith('.xml')) {
+      } else if (nota.xml_url) {
        items.push({
          tipo: 'XML',
          nota_numero: nota.numero,
@@ -77,7 +77,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
          nota_id: nota.id,
          url: nota.xml_url,
          conteudo: null,
-         status: 'ausente',
+         status: 'salvo',
          data_emissao: nota.data_emissao,
          cliente: nota.cliente_nome,
          operacao: operacao,
