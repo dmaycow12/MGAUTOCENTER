@@ -278,14 +278,14 @@ export default function NotasFiscais() {
 
         const dados_adicionais = gerarDadosAdicionaisDaVenda(venda);
 
-        const dataEmissaoVenda = venda?.data_entrada || new Date().toISOString().split('T')[0];
+        const hojeStr = new Date().toISOString().split('T')[0];
 
-        // Sempre gera parcelas usando a data da venda (data_entrada) como base
+        // Sempre gera parcelas usando a data de hoje como base
         const qtdP = dadosCliente.parcelas || 1;
         const fpP = dadosCliente.forma_pagamento || 'A Combinar';
-        const parcelasFinais = gerarParcelas(qtdP, fpP, valor_total, dataEmissaoVenda);
+        const parcelasFinais = gerarParcelas(qtdP, fpP, valor_total, hojeStr);
 
-        setForm({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, parcelas_detalhes: parcelasFinais, valor_total, items, dados_adicionais, data_emissao: dataEmissaoVenda });
+        setForm({ ...defaultForm(), tipo: tipoFinal, ordem_venda_id: venda_id, ...dadosCliente, parcelas_detalhes: parcelasFinais, valor_total, items, dados_adicionais, data_emissao: hojeStr });
         setAbaForm("cliente");
         setShowForm(true);
       })();
