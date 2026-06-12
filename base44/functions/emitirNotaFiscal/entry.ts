@@ -48,10 +48,18 @@ const salvarPdfPermanente = async (base44, pdfUrl, nota_id, authHeader) => {
        console.error('[PDF ERRO] Status:', resp.status);
        return null;
      }
-     const arrayBuffer = await resp.arrayBuffer();
-     const { file_uri } = await base44.asServiceRole.integrations.Core.UploadPrivateFile({ file: new Uint8Array(arrayBuffer) });
-     console.log('[PDF SALVO]', file_uri);
-     return file_uri;
+     const blob = await resp.blob();
+     const buf = await blob.arrayBuffer();
+     const h = new Uint8Array(buf, 0, 4);
+     if (h[0] !== 0x25 || h[1] !== 0x50 || h[2] !== 0x44 || h[3] !== 0x46) {
+       console.error('[PDF ERRO] Arquivo não é um PDF válido (pode ser HTML/DANFE de NFCe)');
+       return null;
+     }
+     const pdfFile = new File([blob], `nota-${nota_id || 'nova'}.pdf`, { type: 'application/pdf' });
+     const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+     const fileUrl = uploadResp?.file_url || '';
+     console.log('[PDF SALVO]', fileUrl);
+     return fileUrl;
    } catch (e) {
      console.error('[PDF ERRO]', e.message);
      return null;
@@ -597,13 +605,17 @@ Deno.serve(async (req) => {
          const pdfSalvo = await salvarPdfPermanente(base44, pdfUrl, nota_id || 'nova', authHeaderAtivo);
          console.log('[PDF-SALVAR] Resultado do upload:', pdfSalvo ? 'OK' : 'FALHOU');
          if (pdfSalvo) {
-           pdfUrlFinal = pdfSalvo;
-         } else {
-           // NUNCA salvar URL da Focus NFe como pdf_url — elas expiram!
-           // Deixa pdf_url vazio para que o usuário possa recuperar depois
-           console.log('[PDF-FALHA] Upload falhou — pdf_url ficará vazio. Use "Recuperar Arquivos" para tentar novamente.');
-           pdfUrlFinal = '';
-         }
+            pdfUrlFinal = pdfSalvo;
+          } else if (tipo === 'NFCe' && pdfUrl) {
+            // NFCe: DANFE é HTML, não PDF. Salva URL para o proxyPdfNota converter depois.
+            console.log('[PDF-NFCe] Salvando URL HTML do DANFE NFCe como pdf_url');
+            pdfUrlFinal = pdfUrl;
+          } else {
+            // NUNCA salvar URL da Focus NFe como pdf_url — elas expiram!
+            // Deixa pdf_url vazio para que o usuário possa recuperar depois
+            console.log('[PDF-FALHA] Upload falhou — pdf_url ficará vazio. Use "Recuperar Arquivos" para tentar novamente.');
+            pdfUrlFinal = '';
+          }
        } else {
          console.log('[PDF-AUSENTE] Nenhuma URL de PDF retornada pela Focus NFe');
        }
