@@ -126,8 +126,9 @@ Deno.serve(async (req) => {
           });
           if (consultaResp.ok) {
             const result = await consultaResp.json();
-            const rawPdf = result.caminho_danfe || result.caminho_danfse || result.caminho_pdf_nfsen 
-              || result.caminho_xml_nota_fiscal_pdf || result.url_danfe || result.url_pdf || '';
+            const rawPdf = result.url_danfse || result.caminho_danfse || result.caminho_pdf_nfsen 
+              || result.caminho_danfe || result.url_danfe || result.url_pdf
+              || result.caminho_xml_nota_fiscal_pdf || '';
             
             if (rawPdf) {
               const pdfUrlFocus = rawPdf.startsWith('http') ? rawPdf : `https://api.focusnfe.com.br${rawPdf}`;
