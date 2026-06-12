@@ -40,30 +40,39 @@ const baixarXmlTexto = async (xmlUrl, authHeader) => {
 // Faz upload do PDF para armazenamento permanente no Base44
 const salvarPdfPermanente = async (base44, pdfUrl, nota_id, authHeader) => {
    if (!pdfUrl) return null;
-   try {
-     console.log('[PDF BAIXANDO]', pdfUrl);
-     const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
-     const resp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': authHeader } });
-     if (!resp.ok) {
-       console.error('[PDF ERRO] Status:', resp.status);
-       return null;
+   const MAX_RETRIES = 4;
+   const RETRY_DELAY = 3000;
+   
+   for (let tentativa = 0; tentativa < MAX_RETRIES; tentativa++) {
+     try {
+       if (tentativa > 0) {
+         console.log('[PDF-RETRY] Tentativa', tentativa + 1, 'de', MAX_RETRIES, '- aguardando', RETRY_DELAY/1000, 's...');
+         await new Promise(r => setTimeout(r, RETRY_DELAY));
+       }
+       console.log('[PDF BAIXANDO]', pdfUrl);
+       const isS3 = pdfUrl.includes('amazonaws.com') || pdfUrl.includes('s3.');
+       const resp = await fetch(pdfUrl, isS3 ? {} : { headers: { 'Authorization': authHeader } });
+       if (!resp.ok) {
+         console.error('[PDF ERRO] Status:', resp.status, 'tentativa:', tentativa + 1);
+         continue;
+       }
+       const blob = await resp.blob();
+       const buf = await blob.arrayBuffer();
+       const h = new Uint8Array(buf, 0, 4);
+       if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
+         const pdfFile = new File([blob], `nota-${nota_id || 'nova'}.pdf`, { type: 'application/pdf' });
+         const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+         const fileUrl = uploadResp?.file_url || '';
+         console.log('[PDF SALVO] tentativa', tentativa + 1, '|', fileUrl);
+         return fileUrl;
+       }
+       console.error('[PDF ERRO] Não é PDF válido (HTML/NFCe?), tentativa:', tentativa + 1);
+     } catch (e) {
+       console.error('[PDF ERRO]', e.message, 'tentativa:', tentativa + 1);
      }
-     const blob = await resp.blob();
-     const buf = await blob.arrayBuffer();
-     const h = new Uint8Array(buf, 0, 4);
-     if (h[0] !== 0x25 || h[1] !== 0x50 || h[2] !== 0x44 || h[3] !== 0x46) {
-       console.error('[PDF ERRO] Arquivo não é um PDF válido (pode ser HTML/DANFE de NFCe)');
-       return null;
-     }
-     const pdfFile = new File([blob], `nota-${nota_id || 'nova'}.pdf`, { type: 'application/pdf' });
-     const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
-     const fileUrl = uploadResp?.file_url || '';
-     console.log('[PDF SALVO]', fileUrl);
-     return fileUrl;
-   } catch (e) {
-     console.error('[PDF ERRO]', e.message);
-     return null;
    }
+   console.error('[PDF ESGOTADO] Todas as', MAX_RETRIES, 'tentativas falharam');
+   return null;
 };
 
 // Consulta status na Focus NFe
