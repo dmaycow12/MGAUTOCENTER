@@ -29,6 +29,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
    const [aviso, setAviso] = useState(null);
    const [uploadModal, setUploadModal] = useState(null);
    const [uploadando, setUploadando] = useState(false);
+   const [busca, setBusca] = useState('');
 
    // Persistir filtros no localStorage
    useEffect(() => {
@@ -164,6 +165,13 @@ export default function AbaArquivos({ notas, onRefresh }) {
                        (notaAtivo.has('nfse') && arq.nota_tipo === 'NFSe');
         return tipoOk && statusOk && operacaoOk && notaOk;
       });
+
+  const arquivosFiltrados = !busca ? arquivos : arquivos.filter(arq => {
+    const termo = busca.toLowerCase();
+    return (arq.nota_numero || '').toLowerCase().includes(termo) ||
+           (arq.cliente || '').toLowerCase().includes(termo) ||
+           (arq.nota_tipo || '').toLowerCase().includes(termo);
+  });
 
   const handleDownload = (arquivo) => {
     if (arquivo.url) {
@@ -452,8 +460,27 @@ export default function AbaArquivos({ notas, onRefresh }) {
         ))}
       </div>
 
+      {/* Campo de Busca */}
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="BUSCAR POR Nº, CLIENTE OU TIPO..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="w-full h-9 bg-gray-800 border border-gray-700 rounded-lg px-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all"
+        />
+        {busca && (
+          <button
+            onClick={() => setBusca('')}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white text-xs px-2 py-0.5"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+
       {/* Resultado */}
-      {arquivos.length === 0 ? (
+      {arquivosFiltrados.length === 0 ? (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
           <FileText className="w-10 h-10 text-gray-600 mx-auto mb-2" />
           <p className="text-gray-400 text-sm">Nenhum arquivo encontrado</p>
@@ -474,7 +501,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
                 </tr>
               </thead>
               <tbody>
-                {arquivos.map((arq, idx) => (
+                {arquivosFiltrados.map((arq, idx) => (
                   <tr key={idx} className="border-b border-gray-800 hover:bg-gray-800/30 transition-all">
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${
