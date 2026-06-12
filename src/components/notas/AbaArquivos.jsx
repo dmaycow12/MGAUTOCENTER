@@ -268,8 +268,8 @@ export default function AbaArquivos({ notas, onRefresh }) {
       let mensagem = '';
 
       if (arquivo.tipo === 'XML') {
-        // Se já tem xml_url, baixa o conteúdo
-        if (nota.xml_url) {
+        // Se já tem xml_url ou xml_original_url, baixa o conteúdo
+        if (nota.xml_url || nota.xml_original_url) {
           try {
             const res = await base44.functions.invoke('baixarXmlConteudo', { nota_id: nota.id });
             if (res.data?.sucesso) {
