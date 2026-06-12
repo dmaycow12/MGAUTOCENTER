@@ -177,7 +177,8 @@ Deno.serve(async (req) => {
           let pdfUrlFinal = notaExistente.pdf_url || '';
           
           if (!pdfUrlFinal && pdfUrlFocus) {
-            pdfUrlFinal = await salvarPdfPermanente(base44, pdfUrlFocus, nota_id, AUTH_HEADER_PROD) || pdfUrlFocus;
+            const salvo = await salvarPdfPermanente(base44, pdfUrlFocus, nota_id, AUTH_HEADER_PROD);
+            pdfUrlFinal = salvo || ''; // NUNCA usar URL da Focus como fallback — elas expiram
           }
           
           await base44.asServiceRole.entities.NotaFiscal.update(nota_id, {
@@ -598,8 +599,10 @@ Deno.serve(async (req) => {
          if (pdfSalvo) {
            pdfUrlFinal = pdfSalvo;
          } else {
-           console.log('[PDF-FALLBACK] Usando URL original da Focus NFe como fallback');
-           pdfUrlFinal = pdfUrl;
+           // NUNCA salvar URL da Focus NFe como pdf_url — elas expiram!
+           // Deixa pdf_url vazio para que o usuário possa recuperar depois
+           console.log('[PDF-FALHA] Upload falhou — pdf_url ficará vazio. Use "Recuperar Arquivos" para tentar novamente.');
+           pdfUrlFinal = '';
          }
        } else {
          console.log('[PDF-AUSENTE] Nenhuma URL de PDF retornada pela Focus NFe');

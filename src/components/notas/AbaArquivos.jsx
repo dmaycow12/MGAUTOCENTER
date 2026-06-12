@@ -15,7 +15,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
    });
    const [statusAtivo, setStatusAtivo] = useState(() => {
       const saved = localStorage.getItem('filtroAbaArquivos_status');
-      return saved ? new Set(JSON.parse(saved)) : new Set(['salvo', 'ausente']);
+      return saved ? new Set(JSON.parse(saved)) : new Set(['salvo', 'externo', 'ausente']);
    });
    const [operacaoAtivo, setOperacaoAtivo] = useState(() => {
       const saved = localStorage.getItem('filtroAbaArquivos_operacao');
@@ -126,6 +126,11 @@ export default function AbaArquivos({ notas, onRefresh }) {
 
       // PDF
       if (nota.pdf_url && !nota.pdf_url.endsWith('.html')) {
+       // Detecta se é URL externa (Focus NFe/Amazon S3) ou local (Base44)
+       const isUrlExterna = nota.pdf_url.includes('focusnfe') || 
+                            nota.pdf_url.includes('amazonaws.com') ||
+                            nota.pdf_url.includes('s3.');
+       const statusPdf = isUrlExterna ? 'externo' : 'salvo';
        items.push({
          tipo: 'PDF',
          nota_numero: nota.numero,
@@ -133,7 +138,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
          nota_id: nota.id,
          url: nota.pdf_url,
          conteudo: null,
-         status: 'url',
+         status: statusPdf,
          data_emissao: nota.data_emissao,
          cliente: nota.cliente_nome,
          operacao: operacao,
@@ -157,7 +162,8 @@ export default function AbaArquivos({ notas, onRefresh }) {
     })
     .filter(arq => {
         const tipoOk = tipoAtivo.has(arq.tipo.toLowerCase());
-        const statusOk = (statusAtivo.has('salvo') && (arq.status === 'salvo' || arq.status === 'url')) ||
+        const statusOk = (statusAtivo.has('salvo') && arq.status === 'salvo') ||
+                         (statusAtivo.has('externo') && arq.status === 'externo') ||
                          (statusAtivo.has('ausente') && arq.status === 'ausente');
         const operacaoOk = operacaoAtivo.has(arq.operacao?.toLowerCase());
         const notaOk = (notaAtivo.has('nfe') && arq.nota_tipo === 'NFe') ||
@@ -333,6 +339,32 @@ export default function AbaArquivos({ notas, onRefresh }) {
     setImportando(null);
   };
 
+  const handleCorrigirUrlExterna = async (arquivo) => {
+    setImportando(`${arquivo.nota_id}-${arquivo.tipo}`);
+    try {
+      // Baixa o PDF da URL externa
+      const resp = await fetch(arquivo.url);
+      if (!resp.ok) {
+        setAviso({ tipo: 'erro', mensagem: `URL externa expirada ou inacessível (status ${resp.status}). O arquivo não está mais disponível na Focus NFe.` });
+        setImportando(null);
+        return;
+      }
+      const arrayBuffer = await resp.arrayBuffer();
+      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+      const file = new File([blob], `${arquivo.nota_tipo}_${arquivo.nota_numero}.pdf`, { type: 'application/pdf' });
+      
+      const uploadResp = await base44.integrations.Core.UploadFile({ file });
+      if (!uploadResp?.file_url) throw new Error('Falha no upload');
+      
+      await base44.entities.NotaFiscal.update(arquivo.nota_id, { pdf_url: uploadResp.file_url });
+      setAviso({ tipo: 'sucesso', mensagem: 'PDF transferido com sucesso para o armazenamento local!' });
+      if (onRefresh) onRefresh();
+    } catch (e) {
+      setAviso({ tipo: 'erro', mensagem: 'Erro ao corrigir URL: ' + e.message });
+    }
+    setImportando(null);
+  };
+
   const handleUploadManual = async (arquivo, file) => {
     setUploadando(true);
     try {
@@ -421,6 +453,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
             { id: 'xml', label: 'XML', onClick: handleTipoChange, active: tipoAtivo },
             { id: 'pdf', label: 'PDF', onClick: handleTipoChange, active: tipoAtivo },
             { id: 'salvo', label: 'Salvo', onClick: handleStatusChange, active: statusAtivo },
+            { id: 'externo', label: 'Externo', onClick: handleStatusChange, active: statusAtivo },
             { id: 'ausente', label: 'Ausente', onClick: handleStatusChange, active: statusAtivo },
           ].map(f => (
           <button
@@ -531,6 +564,11 @@ export default function AbaArquivos({ notas, onRefresh }) {
                           <AlertCircle className="w-3 h-3" />
                           Ausente
                         </span>
+                      ) : arq.status === 'externo' ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-orange-400">
+                          <AlertCircle className="w-3 h-3" />
+                          Externo
+                        </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-xs text-green-400">
                           <CheckCircle className="w-3 h-3" />
@@ -540,7 +578,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex gap-1.5 justify-end">
-                        {arq.status === 'salvo' || arq.status === 'url' ? (
+                        {arq.status === 'salvo' ? (
                           <>
                             <button
                               onClick={() => handleVisualize(arq)}
@@ -555,6 +593,28 @@ export default function AbaArquivos({ notas, onRefresh }) {
                               title="Baixar"
                             >
                               <Download className="w-3 h-3" />
+                            </button>
+                          </>
+                        ) : arq.status === 'externo' ? (
+                          <>
+                            <button
+                              onClick={() => handleCorrigirUrlExterna(arq)}
+                              disabled={importando === `${arq.nota_id}-${arq.tipo}`}
+                              className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 transition-all disabled:opacity-50"
+                              title="Corrigir — baixar e salvar no banco"
+                            >
+                              {importando === `${arq.nota_id}-${arq.tipo}` ? (
+                                <RefreshCw className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <Download className="w-3 h-3" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleRecuperar(arq)}
+                              className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 transition-all"
+                              title="Recuperar da SEFAZ"
+                            >
+                              <RefreshCw className="w-3 h-3" />
                             </button>
                           </>
                         ) : (
