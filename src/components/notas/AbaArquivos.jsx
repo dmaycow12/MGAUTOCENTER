@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, Eye, AlertCircle, CheckCircle, RefreshCw, Plus } from 'lucide-react';
+import { FileText, Download, Eye, AlertCircle, CheckCircle, RefreshCw, Plus, Link2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const formatarDataBR = (data) => {
@@ -79,6 +79,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
           url: nota.xml_original_url,
           conteudo: null,
           status: 'salvo',
+          urlOriginal: nota.xml_original_url,
           data_emissao: nota.data_emissao,
           cliente: nota.cliente_nome,
           operacao: operacao,
@@ -135,6 +136,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
          url: nota.pdf_url,
          conteudo: null,
          status: isLocal ? 'salvo' : 'url',
+         urlOriginal: nota.pdf_original_url || '',
          data_emissao: nota.data_emissao,
          cliente: nota.cliente_nome,
          operacao: operacao,
@@ -562,6 +564,15 @@ export default function AbaArquivos({ notas, onRefresh }) {
                             >
                               <Download className="w-3 h-3" />
                             </button>
+                            {arq.urlOriginal && (
+                              <button
+                                onClick={() => window.open(arq.urlOriginal, '_blank')}
+                                className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all"
+                                title="URL Original Focus NFe"
+                              >
+                                <Link2 className="w-3 h-3" />
+                              </button>
+                            )}
                           </>
                         ) : (
                            <>
