@@ -448,8 +448,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const parseNum = (val) => Number(String(val).replace(',', '.')) || 0;
 
-  const updatePeca = async (i, field, val) => {
-    const pecaAntiga = form.pecas[i];
+  const updatePeca = (i, field, val) => {
     const valFinal = field === "descricao" ? sanitizar(val) : val;
     const novos = form.pecas.map((p, idx) => {
       if (idx !== i) return p;
@@ -457,27 +456,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       updated.valor_total = Number(updated.quantidade || 0) * Number(updated.valor_unitario || 0);
       return updated;
     });
-
-    // Se é uma venda já salva e houve mudança de quantidade, sincronizar estoque
-    if (os?.id && field === "quantidade" && pecaAntiga.estoque_id) {
-      const qtdAnterior = Number(pecaAntiga.quantidade || 0);
-      const qtdNova = Number(valFinal) || 0;
-      if (qtdAnterior !== qtdNova && estoque.length > 0) {
-        try {
-          if (qtdNova < qtdAnterior) {
-            // Reduzido: restaura a diferença
-            const diff = { ...pecaAntiga, quantidade: qtdAnterior - qtdNova };
-            await restaurarEstoque([diff], os.id, estoque);
-          } else if (qtdNova > qtdAnterior) {
-            // Aumentado: reduz a diferença adicional
-            const diff = { ...pecaAntiga, quantidade: qtdNova - qtdAnterior };
-            await reduzirEstoque([diff], { id: os.id, numero: os.numero }, estoque);
-          }
-        } catch (e) {
-          console.warn("Erro ao sincronizar quantidade no estoque:", e);
-        }
-      }
-    }
 
     if ((field === "codigo" || field === "descricao") && val.length > 0) {
       setProdutoSugestoes({ idx: i, lista: estoque.filter(e =>
@@ -488,6 +466,25 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     }
     const calc = recalcular(form.servicos, novos, form.desconto);
     setForm(f => ({ ...f, pecas: novos, ...calc }));
+  };
+
+  // Sincroniza estoque só ao sair do campo quantidade (onBlur) — evita chamadas a cada tecla
+  const syncQtdEstoque = async (i, qtdNova) => {
+    if (!os?.id) return;
+    const pecaAntiga = os.pecas?.[i];
+    if (!pecaAntiga?.estoque_id) return;
+    const qtdAnterior = Number(pecaAntiga.quantidade || 0);
+    qtdNova = Number(qtdNova) || 0;
+    if (qtdAnterior === qtdNova) return;
+    try {
+      if (qtdNova < qtdAnterior) {
+        await restaurarEstoque([{ ...pecaAntiga, quantidade: qtdAnterior - qtdNova }], os.id);
+      } else {
+        await reduzirEstoque([{ ...pecaAntiga, quantidade: qtdNova - qtdAnterior }], { id: os.id, numero: os.numero });
+      }
+    } catch (e) {
+      console.warn("Erro ao sincronizar quantidade no estoque:", e);
+    }
   };
 
   const selecionarProduto = async (i, item) => {
@@ -989,8 +986,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                        <input value={p.descricao} onChange={e => updatePeca(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
                                      </div>
                                      <div className="w-16 flex-shrink-0">
-                                       <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
-                                       <input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
+                                      <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
+                                      <input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} onBlur={e => syncQtdEstoque(i, e.target.value)} className="input-dark" autoComplete="off" />
                                      </div>
                                      <div className="w-20 flex-shrink-0">
                                        <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
@@ -1039,7 +1036,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                      </div>
                                      <div>
                                        <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
-                                       <input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
+                                       <input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} onBlur={e => syncQtdEstoque(i, e.target.value)} className="input-dark" autoComplete="off" />
                                      </div>
                                      <div>
                                        <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
@@ -1074,7 +1071,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                         <div className="grid grid-cols-3 gap-2">
                                           <div>
                                             <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
-                                            <input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} className="input-dark text-sm" inputMode="numeric" autoComplete="off" />
+                                              <input value={p.quantidade} onChange={e => updatePeca(i, "quantidade", e.target.value)} onBlur={e => syncQtdEstoque(i, e.target.value)} className="input-dark text-sm" inputMode="numeric" autoComplete="off" />
                                           </div>
                                           <div>
                                             <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
