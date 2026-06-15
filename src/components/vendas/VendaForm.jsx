@@ -38,7 +38,6 @@ const defaultForm = () => ({
   parcelas_detalhes: [],
   fotos: [],
   observacoes: "",
-  dados_adicionais: "",
 });
 
 function getFeriadosBrasil(ano) {
@@ -1394,17 +1393,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
             </div>
           );
         })()}
-        <Section title="Dados Adicionais">
-          <textarea
-            value={form.dados_adicionais || ""}
-            onChange={e => setForm(f => ({ ...f, dados_adicionais: e.target.value }))}
-            className="input-dark"
-            rows={3}
-            placeholder="Informações complementares que aparecerão na nota impressa..."
-            autoComplete="off"
-          />
-        </Section>
-
         <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg">Cancelar</button>
           <button type="button" onClick={salvar} disabled={saving} className="px-4 py-2 text-sm text-black rounded-lg font-semibold disabled:opacity-50 transition-all" style={{background:"#00ff00"}} onMouseEnter={e => !saving && (e.currentTarget.style.background="#00dd00")} onMouseLeave={e => e.currentTarget.style.background="#00ff00"}>
