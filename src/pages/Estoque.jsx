@@ -858,6 +858,7 @@ export default function Estoque() {
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-gray-500 border-b border-gray-800">
+                      <th className="text-left py-2 px-3">Código</th>
                       <th className="text-left py-2 px-3">Produto</th>
                       <th className="text-center py-2 px-3">Qtd Atual</th>
                       <th className="text-center py-2 px-3">Esperado</th>
@@ -867,6 +868,7 @@ export default function Estoque() {
                   <tbody>
                     {discrepancias.map(item => (
                       <tr key={item.id} className="border-b border-gray-800 hover:bg-gray-800/40">
+                        <td className="py-2 px-3 text-gray-400 font-mono text-xs">{item.codigo || '—'}</td>
                         <td className="py-2 px-3 text-white font-medium">{item.descricao}</td>
                         <td className="py-2 px-3 text-center font-bold" style={{color: item.quantidade < (item.estoque_minimo || 0) ? '#f87171' : '#fff'}}>
                           {item.quantidade}
