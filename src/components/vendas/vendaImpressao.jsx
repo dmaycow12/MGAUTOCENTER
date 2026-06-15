@@ -189,6 +189,9 @@ export function gerarHTMLImpressao(os) {
     parcelasRows +
     "</tbody></table></div>" +
     obsSection +
+    (os.dados_adicionais ?
+      "<div class='section' style='margin-top:10px'><div class='section-title'>Dados Adicionais</div><div class='info-grid'><div class='info-row'><div class='info-cell' style='min-height:50px'><div class='value' style='font-weight:normal;font-size:9pt;white-space:pre-wrap'>" + os.dados_adicionais + "</div></div></div></div></div>"
+    : "") +
     "<div style='margin-top:40px;display:flex;justify-content:center;'>" +
     "<div style='text-align:center;width:250px'><div style='border-top:1px solid #999;margin-bottom:4px'></div><div style='font-size:10pt;color:#111;font-weight:bold'>Assinatura do cliente</div></div>" +
     "</div></div></body></html>";
