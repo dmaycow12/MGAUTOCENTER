@@ -38,7 +38,6 @@ const defaultForm = () => ({
   parcelas_detalhes: [],
   fotos: [],
   observacoes: "",
-  dados_adicionais: "",
 });
 
 function getFeriadosBrasil(ano) {
@@ -1368,19 +1367,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 )}
               </Section>
               </React.Fragment>
-        </div>
-
-        {/* Dados Adicionais */}
-        <div className="mx-5 mb-4">
-          <label className="block text-xs text-gray-400 mb-1">Dados Adicionais</label>
-          <textarea
-            value={form.dados_adicionais || ""}
-            onChange={e => setForm(f => ({ ...f, dados_adicionais: e.target.value }))}
-            className="input-dark"
-            rows={3}
-            placeholder="Informações adicionais para a nota..."
-            autoComplete="off"
-          />
         </div>
 
         {/* Lucro Bruto */}
