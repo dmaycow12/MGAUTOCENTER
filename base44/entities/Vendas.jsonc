@@ -211,6 +211,10 @@
       "type": "string",
       "title": "Observa\u00e7\u00f5es"
     },
+    "dados_adicionais": {
+      "type": "string",
+      "title": "Dados Adicionais"
+    },
     "defeito_relatado": {
       "type": "string",
       "title": "Defeito Relatado"
