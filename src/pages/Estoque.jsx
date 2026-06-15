@@ -53,6 +53,7 @@ export default function Estoque() {
   const [showRegularizar, setShowRegularizar] = useState(false);
   const [discrepancias, setDiscrepancias] = useState([]);
   const [regularizando, setRegularizando] = useState(false);
+  const [selecionadosReg, setSelecionadosReg] = useState([]);
   const [colunas, setColunas] = useState(() => {
     const saved = localStorage.getItem("estoque_colunas");
     return saved ? JSON.parse(saved) : { codigo: true, marca: true, estoque_minimo: true, valor_custo: true, valor_venda: true };
@@ -348,14 +349,17 @@ export default function Estoque() {
       return;
     }
     setDiscrepancias(lista);
+    setSelecionadosReg(lista.map(i => i.id));
     setShowRegularizar(true);
   };
 
   const confirmarRegularizar = async () => {
-    if (!confirm(`Criar entradas de ajuste para ${discrepancias.length} produto(s)?`)) return;
+    const paraRegularizar = discrepancias.filter(i => selecionadosReg.includes(i.id));
+    if (paraRegularizar.length === 0) return alert("Selecione ao menos um produto.");
+    if (!confirm(`Criar entradas de ajuste para ${paraRegularizar.length} produto(s)?`)) return;
     setRegularizando(true);
     const agora = new Date().toISOString().split('T')[0];
-    for (const item of discrepancias) {
+    for (const item of paraRegularizar) {
       // Remove ajustes anteriores
       const histSemAjuste = (item.historico || []).filter(h => (h.observacao || '').toUpperCase() !== 'AJUSTE');
       
@@ -376,7 +380,8 @@ export default function Estoque() {
     }
     setRegularizando(false);
     setShowRegularizar(false);
-    alert(`${discrepancias.length} produto(s) regularizados com sucesso.`);
+    setSelecionadosReg([]);
+    alert(`${paraRegularizar.length} produto(s) regularizados com sucesso.`);
     load();
   };
 
@@ -853,11 +858,23 @@ export default function Estoque() {
               <button onClick={() => setShowRegularizar(false)}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
             </div>
             <div className="p-5 overflow-y-auto flex-1 space-y-3">
-              <p className="text-sm text-gray-400">Os produtos abaixo possuem divergência entre a quantidade atual e o histórico de movimentações. Será criada uma entrada ou saída de ajuste para corrigir.</p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-400">Selecione os produtos que deseja regularizar.</p>
+                <div className="flex gap-2">
+                  <button onClick={() => setSelecionadosReg(discrepancias.map(i => i.id))} className="text-xs text-green-400 border border-green-500/30 px-3 py-1 rounded-lg hover:bg-green-500/10 transition-all">Todos</button>
+                  <button onClick={() => setSelecionadosReg([])} className="text-xs text-gray-400 border border-gray-700 px-3 py-1 rounded-lg hover:text-white transition-all">Nenhum</button>
+                </div>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-gray-500 border-b border-gray-800">
+                      <th className="py-2 px-3 w-8">
+                        <input type="checkbox"
+                          checked={selecionadosReg.length === discrepancias.length}
+                          onChange={e => setSelecionadosReg(e.target.checked ? discrepancias.map(i => i.id) : [])}
+                          className="accent-green-500 cursor-pointer w-4 h-4" />
+                      </th>
                       <th className="text-left py-2 px-3">Código</th>
                       <th className="text-left py-2 px-3">Produto</th>
                       <th className="text-center py-2 px-3">Qtd Atual</th>
@@ -866,8 +883,13 @@ export default function Estoque() {
                     </tr>
                   </thead>
                   <tbody>
-                    {discrepancias.map(item => (
-                      <tr key={item.id} className="border-b border-gray-800 hover:bg-gray-800/40">
+                    {discrepancias.map(item => {
+                      const sel = selecionadosReg.includes(item.id);
+                      return (
+                      <tr key={item.id} className={`border-b border-gray-800 hover:bg-gray-800/40 cursor-pointer ${sel ? '' : 'opacity-40'}`} onClick={() => setSelecionadosReg(prev => prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id])}>
+                        <td className="py-2 px-3">
+                          <input type="checkbox" checked={sel} onChange={() => {}} className="accent-green-500 cursor-pointer w-4 h-4" onClick={e => e.stopPropagation()} />
+                        </td>
                         <td className="py-2 px-3 text-gray-400 font-mono text-xs">{item.codigo || '—'}</td>
                         <td className="py-2 px-3 text-white font-medium">{item.descricao}</td>
                         <td className="py-2 px-3 text-center font-bold" style={{color: item.quantidade < (item.estoque_minimo || 0) ? '#f87171' : '#fff'}}>
@@ -880,15 +902,15 @@ export default function Estoque() {
                           </span>
                         </td>
                       </tr>
-                    ))}
+                    )})}
                   </tbody>
                 </table>
               </div>
             </div>
             <div className="flex justify-end gap-3 p-5 border-t border-gray-800">
               <button onClick={() => setShowRegularizar(false)} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">Cancelar</button>
-              <button onClick={confirmarRegularizar} disabled={regularizando} className="px-4 py-2 text-sm font-bold rounded-lg transition-all disabled:opacity-50" style={{background:'#00ff00', color:'#000'}}>
-                {regularizando ? 'Regularizando...' : `Regularizar ${discrepancias.length} Produto(s)`}
+              <button onClick={confirmarRegularizar} disabled={regularizando || selecionadosReg.length === 0} className="px-4 py-2 text-sm font-bold rounded-lg transition-all disabled:opacity-50" style={{background:'#00ff00', color:'#000'}}>
+                {regularizando ? 'Regularizando...' : `Regularizar ${selecionadosReg.length} Produto(s)`}
               </button>
             </div>
           </div>
