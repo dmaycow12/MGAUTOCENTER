@@ -104,7 +104,7 @@ async function aplicarMovimentacaoEstoque(pecas, venda, remover = false) {
       
       updates.push(
         base44.entities.Estoque.update(item.id, {
-          quantidade: Math.max(0, novaQtd),
+          quantidade: novaQtd,
           historico: [...historicoSemVenda, novoMovimento]
         })
       );
