@@ -202,6 +202,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const [alertaModal, setAlertaModal] = useState(null); // { titulo, mensagem }
   const custoInputRefs = useRef({});
   const [xxCustos, setXXCustos] = useState({});
+  const [valorUnitRaw, setValorUnitRaw] = useState({});
 
   useEffect(() => {
     Promise.all([
@@ -994,8 +995,13 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                        <input
                                          type="text"
                                          inputMode="decimal"
-                                         value={p.valor_unitario}
-                                         onChange={e => updatePeca(i, "valor_unitario", e.target.value)}
+                                         value={valorUnitRaw[i] !== undefined ? valorUnitRaw[i] : p.valor_unitario}
+                                         onChange={e => setValorUnitRaw(prev => ({ ...prev, [i]: e.target.value }))}
+                                         onBlur={e => {
+                                           const val = parseNum(e.target.value);
+                                           setValorUnitRaw(prev => { const n = {...prev}; delete n[i]; return n; });
+                                           updatePeca(i, "valor_unitario", val);
+                                         }}
                                          className="input-dark" autoComplete="off" />
                                      </div>
                                      <div className="w-20 flex-shrink-0">
@@ -1040,7 +1046,15 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                      </div>
                                      <div>
                                        <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                                       <input type="text" inputMode="decimal" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark" autoComplete="off" />
+                                       <input type="text" inputMode="decimal"
+                                         value={valorUnitRaw[i] !== undefined ? valorUnitRaw[i] : p.valor_unitario}
+                                         onChange={e => setValorUnitRaw(prev => ({ ...prev, [i]: e.target.value }))}
+                                         onBlur={e => {
+                                           const val = parseNum(e.target.value);
+                                           setValorUnitRaw(prev => { const n = {...prev}; delete n[i]; return n; });
+                                           updatePeca(i, "valor_unitario", val);
+                                         }}
+                                         className="input-dark" autoComplete="off" />
                                      </div>
                                      <div>
                                        <label className="text-xs text-gray-500 mb-1 block">Total</label>
@@ -1075,7 +1089,15 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                           </div>
                                           <div>
                                             <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
-                                            <input type="text" inputMode="decimal" value={p.valor_unitario} onChange={e => updatePeca(i, "valor_unitario", e.target.value)} className="input-dark text-sm" autoComplete="off" />
+                                              <input type="text" inputMode="decimal"
+                                                value={valorUnitRaw[i] !== undefined ? valorUnitRaw[i] : p.valor_unitario}
+                                                onChange={e => setValorUnitRaw(prev => ({ ...prev, [i]: e.target.value }))}
+                                                onBlur={e => {
+                                                  const val = parseNum(e.target.value);
+                                                  setValorUnitRaw(prev => { const n = {...prev}; delete n[i]; return n; });
+                                                  updatePeca(i, "valor_unitario", val);
+                                                }}
+                                                className="input-dark text-sm" autoComplete="off" />
                                           </div>
                                           <div>
                                             <label className="text-xs text-gray-500 mb-1 block">Total</label>
