@@ -30,10 +30,20 @@ function encontrarItemEstoque(estoqueList, peca) {
 // OPERAÇÃO PRINCIPAL:
 // Remove TODAS as saídas de uma venda e restaura o estoque
 // ======================
+// Normaliza tipo de movimentação para comparação (remove acentos, minúsculas)
+function normalizarTipo(tipo) {
+  return String(tipo || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+function isSaidaVenda(m, vendaId) {
+  const tipo = normalizarTipo(m.tipo);
+  return (tipo === 'saida' || tipo === 'saída') && m.ordem_venda_id === vendaId;
+}
+
 async function aplicarMovimentacaoEstoque(pecas, venda, remover = false) {
   if (!pecas || pecas.length === 0) return;
   
-  // Busca dados frescos do banco
+  // Sempre busca dados frescos do banco para evitar estoque stale
   const estoque = await base44.entities.Estoque.list("-created_date", 1000);
   const vendaId = venda?.id;
   
@@ -49,16 +59,12 @@ async function aplicarMovimentacaoEstoque(pecas, venda, remover = false) {
     const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
     
     if (remover) {
-      // REMOVER: limpa os movimentos desta venda e restaura
-      const historicoSemVenda = historicoAtual.filter(m => {
-        const tipo = String(m.tipo || '').toLowerCase();
-        return !(tipo === 'saída' && m.ordem_venda_id === vendaId);
-      });
+      // REMOVER: limpa os movimentos desta venda e restaura quantidade
+      const historicoSemVenda = historicoAtual.filter(m => !isSaidaVenda(m, vendaId));
       
-      const saidasRemovidas = historicoAtual.filter(m => {
-        const tipo = String(m.tipo || '').toLowerCase();
-        return tipo === 'saída' && m.ordem_venda_id === vendaId;
-      }).reduce((sum, m) => sum + Number(m.quantidade || 0), 0);
+      const saidasRemovidas = historicoAtual
+        .filter(m => isSaidaVenda(m, vendaId))
+        .reduce((sum, m) => sum + Number(m.quantidade || 0), 0);
       
       const novaQtd = Number(item.quantidade || 0) + saidasRemovidas;
       
@@ -69,14 +75,17 @@ async function aplicarMovimentacaoEstoque(pecas, venda, remover = false) {
         })
       );
     } else {
-      // ADICIONAR: cria novo movimento de saída
-      const historicoSemVenda = historicoAtual.filter(m => {
-        const tipo = String(m.tipo || '').toLowerCase();
-        return !(tipo === 'saída' && m.ordem_venda_id === vendaId);
-      });
+      // ADICIONAR: remove movs antigos desta venda e cria novo movimento de saída
+      // (evita duplicatas ao reeditar)
+      const historicoSemVenda = historicoAtual.filter(m => !isSaidaVenda(m, vendaId));
+
+      // Restaura quantidade das saídas antigas antes de reduzir novamente
+      const saidasAntigas = historicoAtual
+        .filter(m => isSaidaVenda(m, vendaId))
+        .reduce((sum, m) => sum + Number(m.quantidade || 0), 0);
       
       const novoMovimento = {
-        tipo: "saída",
+        tipo: "saida",
         data: (() => {
           const d = venda?.data_entrada;
           if (!d) return new Date().toLocaleDateString('en-CA');
@@ -90,7 +99,8 @@ async function aplicarMovimentacaoEstoque(pecas, venda, remover = false) {
         observacao: "",
       };
       
-      const novaQtd = Number(item.quantidade || 0) - qtd;
+      // Quantidade atual + restaura antigas - nova saída
+      const novaQtd = Number(item.quantidade || 0) + saidasAntigas - qtd;
       
       updates.push(
         base44.entities.Estoque.update(item.id, {
@@ -128,15 +138,11 @@ export async function limparHistoricoVenda(vendaId) {
   for (const item of estoque) {
     const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
     
-    const historicoSemVenda = historicoAtual.filter(m => {
-      const tipo = String(m.tipo || '').toLowerCase();
-      return !(tipo === 'saída' && m.ordem_venda_id === vendaId);
-    });
+    const historicoSemVenda = historicoAtual.filter(m => !isSaidaVenda(m, vendaId));
     
-    const saidasRemovidas = historicoAtual.filter(m => {
-      const tipo = String(m.tipo || '').toLowerCase();
-      return tipo === 'saída' && m.ordem_venda_id === vendaId;
-    }).reduce((sum, m) => sum + Number(m.quantidade || 0), 0);
+    const saidasRemovidas = historicoAtual
+      .filter(m => isSaidaVenda(m, vendaId))
+      .reduce((sum, m) => sum + Number(m.quantidade || 0), 0);
     
     if (saidasRemovidas > 0) {
       const novaQtd = Number(item.quantidade || 0) + saidasRemovidas;
