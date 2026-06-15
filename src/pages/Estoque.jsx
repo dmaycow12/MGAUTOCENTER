@@ -542,9 +542,13 @@ export default function Estoque() {
           <p className="text-white text-sm font-medium mb-2">Produtos</p>
           <p className="text-white text-sm font-medium">{items.length}</p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-          <p className="text-white text-sm font-medium mb-2">Estoque Baixo</p>
-          <p className="text-white text-sm font-medium">{estoqueBaixo}</p>
+        <div
+          className="bg-gray-900 border rounded-xl p-4 text-center cursor-pointer transition-all hover:border-red-500/60"
+          style={{borderColor: filtro === "Estoque Baixo" ? "#ef4444" : "#1f2937", background: filtro === "Estoque Baixo" ? "rgba(239,68,68,0.08)" : ""}}
+          onClick={() => setFiltro(prev => prev === "Estoque Baixo" ? "Todos" : "Estoque Baixo")}
+        >
+          <p className="text-sm font-medium mb-2" style={{color: filtro === "Estoque Baixo" ? "#f87171" : "#fff"}}>Estoque Baixo</p>
+          <p className="text-sm font-medium" style={{color: filtro === "Estoque Baixo" ? "#f87171" : "#fff"}}>{estoqueBaixo}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
           <p className="text-white text-sm font-medium mb-2">Valor/Custo</p>
