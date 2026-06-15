@@ -476,15 +476,26 @@ export default function NotasFiscais() {
     setConfirmModal(null);
     try {
       const obsNF = `NF ${nota.numero}`;
+      const chaveNF = nota.chave_acesso || "";
       const estoqueAtual = await base44.entities.Estoque.list("-created_date", 1000);
       let revertidos = 0;
       for (const prod of estoqueAtual) {
         const historico = Array.isArray(prod.historico) ? prod.historico : [];
-        const entradasNF = historico.filter(h => h.tipo === "entrada" && h.observacao === obsNF);
+        // Filtra entradas desta NF por chave_nf (preciso) ou por observacao (legado)
+        const entradasNF = historico.filter(h => {
+          if (h.tipo !== "entrada") return false;
+          if (chaveNF && h.chave_nf) return h.chave_nf === chaveNF;
+          return h.observacao === obsNF;
+        });
         if (entradasNF.length === 0) continue;
         const qtdEntrou = entradasNF.reduce((acc, h) => acc + Number(h.quantidade || 0), 0);
-        const novaQtd = Math.max(0, (prod.quantidade || 0) - qtdEntrou);
-        const historicoLimpo = historico.filter(h => !(h.tipo === "entrada" && h.observacao === obsNF));
+        // Permite estoque negativo — reflete a realidade (produto vendido antes de cancelar a entrada)
+        const novaQtd = (prod.quantidade || 0) - qtdEntrou;
+        const historicoLimpo = historico.filter(h => {
+          if (h.tipo !== "entrada") return true;
+          if (chaveNF && h.chave_nf) return h.chave_nf !== chaveNF;
+          return h.observacao !== obsNF;
+        });
         await base44.entities.Estoque.update(prod.id, { quantidade: novaQtd, historico: historicoLimpo });
         revertidos++;
       }
