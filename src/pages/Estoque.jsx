@@ -317,22 +317,29 @@ export default function Estoque() {
 
   const abrirRegularizar = () => {
     const normTipo = t => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    // Calcula saldo de um histórico considerando: entrada/ajuste positivo = soma, saida = subtrai
+    const calcSaldo = (hist) => hist.reduce((s, h) => {
+      const tipo = normTipo(h.tipo);
+      const qtd = Number(h.quantidade) || 0;
+      if (tipo === 'entrada' || tipo === 'ajuste') return s + qtd;
+      if (tipo === 'saida') return s - qtd;
+      return s;
+    }, 0);
+
     const lista = items.map(item => {
       const hist = item.historico || [];
 
-      // Esperado COM ajuste (para decidir se deve exibir — só mostra se ainda desequilibrado)
-      const totalEntradas = hist.filter(h => normTipo(h.tipo) === 'entrada').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
-      const totalSaidas  = hist.filter(h => normTipo(h.tipo) === 'saida').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
-      const diferencaComAjuste = Number(item.quantidade || 0) - (totalEntradas - totalSaidas);
+      // Saldo calculado pelo histórico completo (com todos os ajustes)
+      const saldoHistorico = calcSaldo(hist);
+      const diferencaComAjuste = Number(item.quantidade || 0) - saldoHistorico;
 
-      // Esperado SEM ajuste (para calcular o novo ajuste correto)
+      // Saldo sem os ajustes de observacao='AJUSTE' (para recalcular o ajuste correto)
       const histSemAjuste = hist.filter(h => (h.observacao || '').toUpperCase() !== 'AJUSTE');
-      const rawEntradas = histSemAjuste.filter(h => normTipo(h.tipo) === 'entrada').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
-      const rawSaidas   = histSemAjuste.filter(h => normTipo(h.tipo) === 'saida').reduce((s, h) => s + (Number(h.quantidade) || 0), 0);
-      const novaDiferenca = Number(item.quantidade || 0) - (rawEntradas - rawSaidas);
+      const saldoSemAjuste = calcSaldo(histSemAjuste);
+      const novaDiferenca = Number(item.quantidade || 0) - saldoSemAjuste;
 
       if (diferencaComAjuste !== 0) {
-        return { ...item, _esperado: Math.max(0, rawEntradas - rawSaidas), _diferenca: novaDiferenca };
+        return { ...item, _esperado: Math.max(0, saldoSemAjuste), _diferenca: novaDiferenca };
       }
       return null;
     }).filter(Boolean);
