@@ -318,7 +318,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
       } else if (arquivo.tipo === 'PDF') {
         // Busca PDF na Focus NFe
         try {
-          const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
+          const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id, auth_secret: '8407' });
           if (res.data?.pdf_url) {
             await base44.entities.NotaFiscal.update(nota.id, { pdf_url: res.data.pdf_url });
             sucesso = true;
@@ -343,7 +343,7 @@ export default function AbaArquivos({ notas, onRefresh }) {
     setImportando(`${arquivo.nota_id}-${arquivo.tipo}`);
     try {
       // Usa o backend function para baixar e salvar o PDF (evita CORS)
-      const res = await base44.functions.invoke('proxyPdfNota', { nota_id: arquivo.nota_id, forcar: true });
+      const res = await base44.functions.invoke('proxyPdfNota', { nota_id: arquivo.nota_id, forcar: true, auth_secret: '8407' });
       if (res.data?.pdf_url) {
         setAviso({ tipo: 'sucesso', mensagem: 'PDF transferido com sucesso para o armazenamento local!' });
         if (onRefresh) onRefresh();
