@@ -35,10 +35,32 @@ Deno.serve(async (req) => {
     const AUTH_HEADER_PROD = 'Basic ' + btoa(apiKeyProd + ':');
     const AUTH_HEADER_HOM = 'Basic ' + btoa(apiKeyHom + ':');
 
-    // Se já tem PDF salvo localmente (não URL externa) e não está forçando, retorna direto
-    const isUrlExterna = nota.pdf_url && (nota.pdf_url.includes('focusnfe') || nota.pdf_url.includes('nfse.gov') || nota.pdf_url.includes('prefeitura'));
-    if (nota.pdf_url && !isUrlExterna && !forcar) {
+    // Se já tem PDF salvo localmente e não está forçando, retorna direto
+    const isUrlBase44 = nota.pdf_url && (nota.pdf_url.includes('base44') || nota.pdf_url.includes('amazonaws.com/base44') || nota.pdf_url.startsWith('https://storage'));
+    if (nota.pdf_url && isUrlBase44 && !forcar) {
       return Response.json({ sucesso: true, pdf_url: nota.pdf_url });
+    }
+
+    // Se tem URL externa de PDF salva (focusnfe, prefeitura, etc), tenta baixar e salvar localmente
+    if (nota.pdf_url && nota.pdf_url.startsWith('http') && !isUrlBase44) {
+      console.log('[DEBUG] Tentando baixar PDF da URL externa salva:', nota.pdf_url);
+      try {
+        const extResp = await fetch(nota.pdf_url, { redirect: 'follow' });
+        if (extResp.ok) {
+          const extBlob = await extResp.blob();
+          const extBuf = await extBlob.arrayBuffer();
+          const extH = new Uint8Array(extBuf, 0, 4);
+          const extIsPdf = extH[0] === 0x25 && extH[1] === 0x50 && extH[2] === 0x44 && extH[3] === 0x46;
+          if (extIsPdf) {
+            const { file_url } = await db.integrations.Core.UploadFile({ file: extBlob });
+            await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+            return Response.json({ sucesso: true, pdf_url: file_url });
+          }
+        }
+        console.log('[DEBUG] URL externa não retornou PDF válido, status:', extResp.status);
+      } catch (e) {
+        console.log('[DEBUG] Erro ao buscar URL externa:', e.message);
+      }
     }
 
     // Para NFCe emitida: a Focus NFe retorna HTML (DANFE simplificado), não PDF
