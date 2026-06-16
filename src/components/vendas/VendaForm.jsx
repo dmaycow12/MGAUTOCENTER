@@ -291,15 +291,24 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const prevTotalRef = useRef(form.valor_total);
   const prevQtdRef = useRef(form.parcelas);
+  // Flag para evitar disparar recalculo no carregamento inicial
+  const totalInitRef = useRef(true);
   useEffect(() => {
+    if (totalInitRef.current) { totalInitRef.current = false; prevTotalRef.current = form.valor_total; return; }
     const totalMudou = prevTotalRef.current !== form.valor_total;
     prevTotalRef.current = form.valor_total;
     if (totalMudou) {
       setParcelasSync(prev => {
         if (prev.length === 0) return prev;
-        const n = prev.length;
-        const valorNova = parseFloat((form.valor_total / n).toFixed(2));
-        return prev.map((p, i) => ({ ...p, valor: valorNova }));
+        // Não recalcular valores se todas as parcelas já estão pagas
+        const todasPagas = prev.every(p => (p.financeiro_status || "Pendente") === "Pago");
+        if (todasPagas) return prev;
+        const pagas = prev.filter(p => (p.financeiro_status || "Pendente") === "Pago");
+        const pendentes = prev.filter(p => (p.financeiro_status || "Pendente") !== "Pago");
+        const totalPago = pagas.reduce((acc, p) => acc + Number(p.valor || 0), 0);
+        const totalRestante = parseFloat((form.valor_total - totalPago).toFixed(2));
+        const valorNova = pendentes.length > 0 ? parseFloat((totalRestante / pendentes.length).toFixed(2)) : 0;
+        return prev.map(p => (p.financeiro_status || "Pendente") === "Pago" ? p : { ...p, valor: valorNova });
       });
     }
   }, [form.valor_total]);
