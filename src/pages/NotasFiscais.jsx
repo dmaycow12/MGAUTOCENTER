@@ -1926,7 +1926,6 @@ export default function NotasFiscais() {
       )}
 
       {abaGeral === "arquivos" && (() => {
-        // Notas emitidas/importadas (não canceladas, não rascunho) que têm só URL externa de XML ou PDF
         const notasParaVerificar = notas.filter(n => n.status !== 'Cancelada' && n.status !== 'Rascunho');
         const temXmlLocal = (n) => (n.xml_original && n.xml_original.trim().startsWith('<')) || (n.xml_original_url && n.xml_original_url.startsWith('http'));
         const temPdfLocal = (n) => n.pdf_url && !n.pdf_url.endsWith('.html') && (n.pdf_url.includes('base44') || n.pdf_url.includes('storage') || (!n.pdf_url.includes('focusnfe') && !n.pdf_url.includes('amazonaws') && !n.pdf_url.includes('s3.')));
@@ -1936,28 +1935,11 @@ export default function NotasFiscais() {
         const notasSemPdf = notasParaVerificar.filter(n => !temPdfLocal(n) && !temPdfSomenteUrl(n) && n.tipo !== 'NFCe').length;
         const notasXmlExterno = notasParaVerificar.filter(temXmlSomenteUrl).length;
         const notasPdfExterno = notasParaVerificar.filter(temPdfSomenteUrl).length;
-        const totalProblemas = notasXmlExterno + notasPdfExterno + notasSemXml + notasSemPdf;
+        const alerta = notasXmlExterno > 0 || notasPdfExterno > 0 || notasSemXml > 0 || notasSemPdf > 0 ? {
+          notasXmlExterno, notasPdfExterno, notasSemXml, notasSemPdf
+        } : null;
 
-        return (
-          <>
-            {totalProblemas > 0 && (
-              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-1 flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-yellow-400 font-semibold text-sm mb-1">Arquivos em Risco</p>
-                  <div className="space-y-0.5 text-xs text-yellow-300/80">
-                    {notasXmlExterno > 0 && <p>• {notasXmlExterno} nota(s) com XML somente em URL externa — pode expirar</p>}
-                    {notasPdfExterno > 0 && <p>• {notasPdfExterno} nota(s) com PDF/DANFE somente em URL externa — pode expirar</p>}
-                    {notasSemXml > 0 && <p>• {notasSemXml} nota(s) sem XML salvo</p>}
-                    {notasSemPdf > 0 && <p>• {notasSemPdf} nota(s) sem PDF/DANFE salvo (exceto NFCe)</p>}
-                  </div>
-                  <p className="text-yellow-400/60 text-xs mt-2">Use os botões de ação na aba Arquivos para baixar e salvar permanentemente.</p>
-                </div>
-              </div>
-            )}
-            <AbaArquivos notas={notas} onRefresh={load} />
-          </>
-        );
+        return <AbaArquivos notas={notas} onRefresh={load} alerta={alerta} />;
       })()}
 
       {xmlModal && (

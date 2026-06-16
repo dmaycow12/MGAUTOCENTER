@@ -8,7 +8,7 @@ const formatarDataBR = (data) => {
   return `${dia}/${mes}/${ano}`;
 };
 
-export default function AbaArquivos({ notas, onRefresh }) {
+export default function AbaArquivos({ notas, onRefresh, alerta }) {
    const [tipoAtivo, setTipoAtivo] = useState(() => {
       const saved = localStorage.getItem('filtroAbaArquivos_tipo');
       return saved ? new Set(JSON.parse(saved)) : new Set(['xml', 'pdf']);
@@ -500,6 +500,22 @@ export default function AbaArquivos({ notas, onRefresh }) {
           </button>
         ))}
       </div>
+
+      {/* Alerta de arquivos em risco */}
+      {alerta && (
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 flex items-start gap-3">
+          <AlertCircle className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-yellow-400 font-semibold text-xs mb-1">Arquivos em Risco</p>
+            <div className="space-y-0.5 text-xs text-yellow-300/80">
+              {alerta.notasXmlExterno > 0 && <p>• {alerta.notasXmlExterno} nota(s) com XML somente em URL externa — pode expirar</p>}
+              {alerta.notasPdfExterno > 0 && <p>• {alerta.notasPdfExterno} nota(s) com PDF/DANFE somente em URL externa — pode expirar</p>}
+              {alerta.notasSemXml > 0 && <p>• {alerta.notasSemXml} nota(s) sem XML salvo</p>}
+              {alerta.notasSemPdf > 0 && <p>• {alerta.notasSemPdf} nota(s) sem PDF/DANFE salvo (exceto NFCe)</p>}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Campo de Busca */}
       <div className="relative">
