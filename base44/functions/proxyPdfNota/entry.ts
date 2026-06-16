@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
+// v2
 const FOCUSNFE_BASE_PROD = 'https://api.focusnfe.com.br/v2';
 const FOCUSNFE_BASE_HOM = 'https://homologacao.focusnfe.com.br/v2';
 
@@ -30,7 +31,7 @@ Deno.serve(async (req) => {
 
     // Carrega chaves de configuração
     const getConf = (chave, padrao = '') => todasConfigs.find(c => c.chave === chave)?.valor || padrao;
-    const apiKeyProd = getConf('focusnfe_api_key', '');
+    const apiKeyProd = getConf('focusnfe_api_key_producao', '') || getConf('focusnfe_api_key', '');
     const apiKeyHom = getConf('focusnfe_api_key_homologacao', '');
     const AUTH_HEADER_PROD = 'Basic ' + btoa(apiKeyProd + ':');
     const AUTH_HEADER_HOM = 'Basic ' + btoa(apiKeyHom + ':');
@@ -41,35 +42,35 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: true, pdf_url: nota.pdf_url });
     }
 
-    // Se tem URL externa de PDF salva (focusnfe, prefeitura, etc), tenta baixar e salvar localmente
+    // Se tem URL externa de PDF salva (S3 da Focus NFe, prefeitura, etc), tenta baixar e salvar localmente
     if (nota.pdf_url && nota.pdf_url.startsWith('http') && !isUrlBase44) {
       console.log('[DEBUG] Tentando baixar PDF da URL externa salva:', nota.pdf_url);
-      try {
-        const extResp = await fetch(nota.pdf_url, { redirect: 'follow' });
-        if (extResp.ok) {
-          const extBlob = await extResp.blob();
-          const extBuf = await extBlob.arrayBuffer();
-          const extH = new Uint8Array(extBuf, 0, 4);
-          const extIsPdf = extH[0] === 0x25 && extH[1] === 0x50 && extH[2] === 0x44 && extH[3] === 0x46;
-          if (extIsPdf) {
-            const { file_url } = await db.integrations.Core.UploadFile({ file: extBlob });
-            await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
-            return Response.json({ sucesso: true, pdf_url: file_url });
-          }
+      const extResp = await fetch(nota.pdf_url, { redirect: 'follow' });
+      if (extResp.ok) {
+        const extBlob = await extResp.blob();
+        const extBuf = await extBlob.arrayBuffer();
+        const extH = new Uint8Array(extBuf, 0, 4);
+        const extIsPdf = extH[0] === 0x25 && extH[1] === 0x50 && extH[2] === 0x44 && extH[3] === 0x46;
+        if (extIsPdf) {
+          const { file_url } = await db.integrations.Core.UploadFile({ file: extBlob });
+          await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+          return Response.json({ sucesso: true, pdf_url: file_url });
         }
-        console.log('[DEBUG] URL externa não retornou PDF válido, status:', extResp.status);
-      } catch (e) {
-        console.log('[DEBUG] Erro ao buscar URL externa:', e.message);
+        return Response.json({ sucesso: false, erro: 'A URL salva não retornou um PDF válido. Faça o upload manual.' });
       }
+      return Response.json({ sucesso: false, erro: `URL externa retornou erro ${extResp.status}. O arquivo pode ter expirado. Faça o upload manual.` });
     }
 
     // Para NFCe emitida: a Focus NFe retorna HTML (DANFE simplificado), não PDF
     // Usamos o serviço gratuito screenshotmachine ou urlpdf para converter para PDF
     if (nota.tipo === 'NFCe' && nota.spedy_id) {
       console.log('[DEBUG] NFCe emitida, buscando dados via spedy_id:', nota.spedy_id);
+      const isPreviewNfce = nota.spedy_id?.startsWith('preview-');
+      const nfceBase = isPreviewNfce ? FOCUSNFE_BASE_HOM : FOCUSNFE_BASE_PROD;
+      const nfceAuth = isPreviewNfce ? AUTH_HEADER_HOM : AUTH_HEADER_PROD;
 
-      const consultaResp = await fetch(`${FOCUSNFE_BASE}/nfce/${nota.spedy_id}?completo=1`, {
-        headers: { 'Authorization': AUTH_HEADER },
+      const consultaResp = await fetch(`${nfceBase}/nfce/${nota.spedy_id}?completo=1`, {
+        headers: { 'Authorization': nfceAuth },
       });
       if (!consultaResp.ok) {
         return Response.json({ sucesso: false, erro: `Erro ao consultar NFCe: ${consultaResp.status}` });
@@ -84,7 +85,7 @@ Deno.serve(async (req) => {
       }
 
       // Baixa o conteúdo HTML da Focus NFe
-      const htmlResp = await fetch(htmlUrl, { headers: { 'Authorization': AUTH_HEADER } });
+      const htmlResp = await fetch(htmlUrl, { headers: { 'Authorization': nfceAuth } });
       if (!htmlResp.ok) {
         return Response.json({ sucesso: false, erro: `Erro ao buscar DANFE HTML: ${htmlResp.status}` });
       }
@@ -195,7 +196,7 @@ Deno.serve(async (req) => {
     }
 
     if (nota.spedy_id && !(nota.status === 'Importada' || nota.status === 'Lançada')) {
-      // Notas emitidas: tenta ambos os ambientes
+      // Notas emitidas com spedy_id: tenta ambos os ambientes
       const ep = nota.tipo === 'NFSe' ? 'nfsen' : nota.tipo === 'NFCe' ? 'nfce' : 'nfe';
       const isPreview = nota.spedy_id?.startsWith('preview-');
       const ambientes = isPreview 
@@ -209,6 +210,30 @@ Deno.serve(async (req) => {
         if (consultaResp.ok) {
           result = await consultaResp.json();
           break;
+        }
+      }
+    } else if (nota.chave_acesso && nota.tipo === 'NFSe' && !(nota.status === 'Importada' || nota.status === 'Lançada')) {
+      // NFSe emitida sem spedy_id mas com chave_acesso: busca pelo endpoint /nfsen/{chave}
+      const chave = nota.chave_acesso.replace(/\D/g, '');
+      const ambientes = [
+        [FOCUSNFE_BASE_PROD, AUTH_HEADER_PROD],
+        [FOCUSNFE_BASE_HOM, AUTH_HEADER_HOM],
+      ];
+      for (const [baseUrl, authHeader] of ambientes) {
+        const r = await fetch(`${baseUrl}/nfsen/${chave}?completo=1`, { headers: { 'Authorization': authHeader } });
+        if (r.ok) { result = await r.json().catch(() => null); if (result) break; }
+        // Tenta também buscar direto o PDF
+        const rPdf = await fetch(`${baseUrl}/nfsen/${chave}.pdf`, { headers: { 'Authorization': authHeader } });
+        if (rPdf.ok) {
+          const ct = rPdf.headers.get('content-type') || '';
+          const blob = await rPdf.blob();
+          const buf = await blob.arrayBuffer();
+          const h = new Uint8Array(buf, 0, 4);
+          if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
+            const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
+            await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
+            return Response.json({ sucesso: true, pdf_url: file_url });
+          }
         }
       }
     } else if (nota.chave_acesso) {
