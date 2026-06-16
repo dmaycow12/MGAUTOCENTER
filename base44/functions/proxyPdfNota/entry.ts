@@ -157,9 +157,9 @@ Deno.serve(async (req) => {
 
       // 1) Tentar PDF via Focus NFe usando o id_tag — endpoint oficial: GET /nfsens_recebidas/{chave}.pdf com Accept: application/pdf
       if (idTagNfse) {
-        const pdfResp = await fetch(`${FOCUSNFE_BASE}/nfsens_recebidas/${idTagNfse}.pdf`, {
+        const pdfResp = await fetch(`${FOCUSNFE_BASE_PROD}/nfsens_recebidas/${idTagNfse}.pdf`, {
           headers: {
-            'Authorization': AUTH_HEADER,
+            'Authorization': AUTH_HEADER_PROD,
             'Accept': 'application/pdf',
           },
           redirect: 'follow',
