@@ -116,17 +116,19 @@ Deno.serve(async (req) => {
     if (nota.tipo === 'NFSe' && (nota.status === 'Importada' || nota.status === 'Lançada')) {
       // Extrair id_tag real do XML (começa com NFS...) — o spedy_id/chave_acesso salvo é só o número
       let idTagNfse = '';
-      let xmlText = '';
+      let xmlText = nota.xml_original || '';
       const xmlUrl = nota.xml_url || '';
       if (xmlUrl) {
         try {
           const xr = await fetch(xmlUrl);
-          if (xr.ok) {
-            xmlText = await xr.text();
-            const mTag = xmlText.match(/<id_tag>([^<]+)<\/id_tag>/) || xmlText.match(/<ChaveAcesso>([^<]+)<\/ChaveAcesso>/);
-            if (mTag) idTagNfse = mTag[1].trim();
-          }
+          if (xr.ok) xmlText = await xr.text();
         } catch (_) {}
+      }
+      if (xmlText) {
+        const mIdTag = xmlText.match(/<id_tag>([^<]+)<\/id_tag>/);
+        const mChave = xmlText.match(/<ChaveAcesso>(NFS[^<]+)<\/ChaveAcesso>/);
+        if (mIdTag) idTagNfse = mIdTag[1].trim();
+        else if (mChave) idTagNfse = mChave[1].trim();
       }
       console.log('[NFSe] id_tag extraído do XML:', idTagNfse);
 
@@ -158,7 +160,16 @@ Deno.serve(async (req) => {
         }
       }
       // PDF não disponível via Focus NFe para esta NFSe recebida
-      return Response.json({ sucesso: false, erro: 'DANFSe não disponível na Focus NFe para esta NFS-e recebida. O documento oficial deve ser obtido diretamente no portal do prestador ou no nfse.gov.br.' });
+      const chaveParaPortal = idTagNfse || nota.chave_acesso || '';
+      const urlPortal = chaveParaPortal 
+        ? `https://www.nfse.gov.br/ConsultaNacional/ConsultarNfse?chaveacesso=${chaveParaPortal}`
+        : 'https://www.nfse.gov.br';
+      return Response.json({ 
+        sucesso: false, 
+        nfse_portal: true,
+        url_portal: urlPortal,
+        erro: 'PDF desta NFS-e Nacional não está disponível via Focus NFe. Acesse o portal nfse.gov.br para baixar o PDF e faça o upload manualmente.' 
+      });
     }
 
     if (nota.spedy_id && !(nota.status === 'Importada' || nota.status === 'Lançada')) {

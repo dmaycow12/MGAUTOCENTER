@@ -347,6 +347,13 @@ export default function AbaArquivos({ notas, onRefresh }) {
       if (res.data?.pdf_url) {
         setAviso({ tipo: 'sucesso', mensagem: 'PDF transferido com sucesso para o armazenamento local!' });
         if (onRefresh) onRefresh();
+      } else if (res.data?.nfse_portal) {
+        // NFSe Nacional: PDF só disponível no portal nfse.gov.br
+        setAviso({ 
+          tipo: 'info', 
+          mensagem: res.data.erro,
+          url_portal: res.data.url_portal,
+        });
       } else {
         setAviso({ tipo: 'erro', mensagem: res.data?.erro || 'Não foi possível recuperar o PDF.' });
       }
@@ -387,11 +394,21 @@ export default function AbaArquivos({ notas, onRefresh }) {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl">
             <h3 className="text-lg font-semibold text-white mb-3">
-              {aviso.tipo === 'sucesso' ? 'Importação Concluída' : 'Aviso'}
+              {aviso.tipo === 'sucesso' ? 'Importação Concluída' : aviso.tipo === 'info' ? 'Informação' : 'Aviso'}
             </h3>
-            <p className="text-gray-300 text-sm mb-6 leading-relaxed">
+            <p className="text-gray-300 text-sm mb-4 leading-relaxed">
               {aviso.mensagem}
             </p>
+            {aviso.url_portal && (
+              <a
+                href={aviso.url_portal}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full text-center px-4 py-2.5 bg-green-700 hover:bg-green-600 text-white text-sm font-medium rounded-xl transition-all mb-4"
+              >
+                Abrir Portal nfse.gov.br
+              </a>
+            )}
             <div className="flex justify-end">
               <button
                 onClick={() => setAviso(null)}
