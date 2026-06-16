@@ -342,23 +342,14 @@ export default function AbaArquivos({ notas, onRefresh }) {
   const handleCorrigirUrlExterna = async (arquivo) => {
     setImportando(`${arquivo.nota_id}-${arquivo.tipo}`);
     try {
-      // Baixa o PDF da URL externa
-      const resp = await fetch(arquivo.url);
-      if (!resp.ok) {
-        setAviso({ tipo: 'erro', mensagem: `URL externa expirada ou inacessível (status ${resp.status}). O arquivo não está mais disponível na Focus NFe.` });
-        setImportando(null);
-        return;
+      // Usa o backend function para baixar e salvar o PDF (evita CORS)
+      const res = await base44.functions.invoke('proxyPdfNota', { nota_id: arquivo.nota_id, forcar: true });
+      if (res.data?.pdf_url) {
+        setAviso({ tipo: 'sucesso', mensagem: 'PDF transferido com sucesso para o armazenamento local!' });
+        if (onRefresh) onRefresh();
+      } else {
+        setAviso({ tipo: 'erro', mensagem: res.data?.erro || 'Não foi possível recuperar o PDF.' });
       }
-      const arrayBuffer = await resp.arrayBuffer();
-      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-      const file = new File([blob], `${arquivo.nota_tipo}_${arquivo.nota_numero}.pdf`, { type: 'application/pdf' });
-      
-      const uploadResp = await base44.integrations.Core.UploadFile({ file });
-      if (!uploadResp?.file_url) throw new Error('Falha no upload');
-      
-      await base44.entities.NotaFiscal.update(arquivo.nota_id, { pdf_url: uploadResp.file_url });
-      setAviso({ tipo: 'sucesso', mensagem: 'PDF transferido com sucesso para o armazenamento local!' });
-      if (onRefresh) onRefresh();
     } catch (e) {
       setAviso({ tipo: 'erro', mensagem: 'Erro ao corrigir URL: ' + e.message });
     }

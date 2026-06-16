@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
     const db = base44.asServiceRole;
     const body = await req.json();
-    const { nota_id } = body;
+    const { nota_id, forcar } = body;
 
     if (!nota_id) return Response.json({ sucesso: false, erro: 'nota_id obrigatório' });
 
@@ -35,8 +35,9 @@ Deno.serve(async (req) => {
     const AUTH_HEADER_PROD = 'Basic ' + btoa(apiKeyProd + ':');
     const AUTH_HEADER_HOM = 'Basic ' + btoa(apiKeyHom + ':');
 
-    // Se já tem PDF salvo, retorna a URL diretamente
-    if (nota.pdf_url) {
+    // Se já tem PDF salvo localmente (não URL externa) e não está forçando, retorna direto
+    const isUrlExterna = nota.pdf_url && (nota.pdf_url.includes('focusnfe') || nota.pdf_url.includes('nfse.gov') || nota.pdf_url.includes('prefeitura'));
+    if (nota.pdf_url && !isUrlExterna && !forcar) {
       return Response.json({ sucesso: true, pdf_url: nota.pdf_url });
     }
 
