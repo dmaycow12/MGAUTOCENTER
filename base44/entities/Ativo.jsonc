@@ -9,16 +9,7 @@
     },
     "categoria": {
       "type": "string",
-      "title": "Categoria",
-      "enum": [
-        "Equipamento",
-        "Ferramenta",
-        "Ve\u00edculo",
-        "Im\u00f3vel",
-        "Mobili\u00e1rio",
-        "Eletr\u00f4nico",
-        "Outro"
-      ]
+      "title": "Categoria"
     },
     "marca": {
       "type": "string",
