@@ -46,16 +46,20 @@ Deno.serve(async (req) => {
     if (nota.pdf_url && nota.pdf_url.startsWith('http') && !isUrlBase44) {
       console.log('[DEBUG] Tentando baixar PDF da URL externa salva:', nota.pdf_url);
       const extResp = await fetch(nota.pdf_url, { redirect: 'follow' });
+      console.log('[DEBUG] URL externa status:', extResp.status, extResp.headers.get('content-type'));
       if (extResp.ok) {
-        const extBlob = await extResp.blob();
-        const extBuf = await extBlob.arrayBuffer();
+        const extBuf = await extResp.arrayBuffer();
         const extH = new Uint8Array(extBuf, 0, 4);
         const extIsPdf = extH[0] === 0x25 && extH[1] === 0x50 && extH[2] === 0x44 && extH[3] === 0x46;
+        console.log('[DEBUG] É PDF válido:', extIsPdf, '| tamanho:', extBuf.byteLength);
         if (extIsPdf) {
-          const { file_url } = await db.integrations.Core.UploadFile({ file: extBlob });
+          const pdfFile = new File([extBuf], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+          const { file_url } = await db.integrations.Core.UploadFile({ file: pdfFile });
           await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
           return Response.json({ sucesso: true, pdf_url: file_url });
         }
+        const textErr = new TextDecoder().decode(extBuf);
+        console.log('[DEBUG] Conteúdo não-PDF recebido:', textErr.substring(0, 300));
         return Response.json({ sucesso: false, erro: 'A URL salva não retornou um PDF válido. Faça o upload manual.' });
       }
       return Response.json({ sucesso: false, erro: `URL externa retornou erro ${extResp.status}. O arquivo pode ter expirado. Faça o upload manual.` });
@@ -117,9 +121,10 @@ Deno.serve(async (req) => {
       if (pdfConvertResp.ok) {
         const ct = pdfConvertResp.headers.get('content-type') || '';
         if (ct.includes('pdf') || ct.includes('octet')) {
-          const pdfBlob = await pdfConvertResp.blob();
-          if (pdfBlob.size > 500) {
-            const { file_url } = await db.integrations.Core.UploadFile({ file: pdfBlob });
+          const pdfBuf = await pdfConvertResp.arrayBuffer();
+          if (pdfBuf.byteLength > 500) {
+            const pdfFile = new File([pdfBuf], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+            const { file_url } = await db.integrations.Core.UploadFile({ file: pdfFile });
             await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url, chave_acesso: chave });
             return Response.json({ sucesso: true, pdf_url: file_url });
           }
@@ -170,7 +175,8 @@ Deno.serve(async (req) => {
           const buf = await blob.arrayBuffer();
           const h = new Uint8Array(buf, 0, 4);
           if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
-            const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
+            const pdfFile = new File([buf], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+            const { file_url } = await db.integrations.Core.UploadFile({ file: pdfFile });
             await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
             return Response.json({ sucesso: true, pdf_url: file_url });
           } else {
@@ -230,7 +236,8 @@ Deno.serve(async (req) => {
           const buf = await blob.arrayBuffer();
           const h = new Uint8Array(buf, 0, 4);
           if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
-            const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
+            const pdfFile = new File([buf], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+            const { file_url } = await db.integrations.Core.UploadFile({ file: pdfFile });
             await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
             return Response.json({ sucesso: true, pdf_url: file_url });
           }
@@ -276,8 +283,9 @@ Deno.serve(async (req) => {
       if (danfeResp.ok) {
         const ct = danfeResp.headers.get('content-type') || '';
         if (ct.includes('pdf') || ct.includes('octet')) {
-          const blob = await danfeResp.blob();
-          const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
+          const buf = await danfeResp.arrayBuffer();
+          const pdfFile = new File([buf], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+          const { file_url } = await db.integrations.Core.UploadFile({ file: pdfFile });
           await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
           return Response.json({ sucesso: true, pdf_url: file_url });
         }
@@ -301,8 +309,9 @@ Deno.serve(async (req) => {
           headers: { 'Authorization': authHeader },
         });
         if (danfeResp.ok && danfeResp.headers.get('content-type')?.includes('pdf')) {
-           const blob = await danfeResp.blob();
-           const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
+           const buf = await danfeResp.arrayBuffer();
+           const pdfFile = new File([buf], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+           const { file_url } = await db.integrations.Core.UploadFile({ file: pdfFile });
            await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
            return Response.json({ sucesso: true, pdf_url: file_url });
          }
@@ -326,7 +335,8 @@ Deno.serve(async (req) => {
           const header = new Uint8Array(buffer, 0, 4);
           const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46;
           if (isPdfValid) {
-            const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
+            const pdfFile = new File([buffer], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+            const { file_url } = await db.integrations.Core.UploadFile({ file: pdfFile });
             await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
             return Response.json({ sucesso: true, pdf_url: file_url });
           }
@@ -343,8 +353,9 @@ Deno.serve(async (req) => {
             headers: { 'Authorization': authHeaderDanfe },
           });
           if (danfeResp.ok && danfeResp.headers.get('content-type')?.includes('pdf')) {
-            const blob = await danfeResp.blob();
-            const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
+            const buf = await danfeResp.arrayBuffer();
+            const pdfFile = new File([buf], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+            const { file_url } = await db.integrations.Core.UploadFile({ file: pdfFile });
             await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
             return Response.json({ sucesso: true, pdf_url: file_url });
           }
@@ -353,8 +364,7 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: `Erro ${pdfResp.status} ao buscar PDF. A URL pode estar inválida ou o fornecedor não autorizou acesso.`, url_tentada: pdfUrlFocus });
     }
 
-    const blob = await pdfResp.blob();
-    const buffer = await blob.arrayBuffer();
+    const buffer = await pdfResp.arrayBuffer();
     const header = new Uint8Array(buffer, 0, 4);
     const isPdfValid = header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46; // %PDF
     
@@ -376,7 +386,8 @@ Deno.serve(async (req) => {
       return Response.json({ sucesso: false, erro: erroMsg, detalhes: texto.substring(0, 500) });
     }
     
-    const { file_url } = await db.integrations.Core.UploadFile({ file: blob });
+    const pdfFile = new File([buffer], `nota_${nota_id}.pdf`, { type: 'application/pdf' });
+    const { file_url } = await db.integrations.Core.UploadFile({ file: pdfFile });
 
     const updateData = { pdf_url: file_url };
     if (result.chave_nfe || result.chave_nfse) updateData.chave_acesso = result.chave_nfe || result.chave_nfse;
