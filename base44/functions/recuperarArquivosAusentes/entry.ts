@@ -7,16 +7,25 @@ let AUTH_HEADER = '';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
+    const body = await req.json().catch(() => ({}));
+    const { nota_id, auth_secret } = body;
+
+    // Autenticação: aceita auth_secret (site real/PasswordGate) ou sessão Base44 (preview)
+    const AUTH_SECRET = Deno.env.get('AUTH_SECRET') || '';
+    const reqSecret = req.headers.get('x-auth-secret') || auth_secret || '';
+    if (!AUTH_SECRET || reqSecret !== AUTH_SECRET) {
+      try {
+        const user = await base44.auth.me();
+        if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
+      } catch (_) {
+        return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
+      }
+    }
 
     const allConfigs = await base44.asServiceRole.entities.Configuracao.list('-created_date', 200);
     const getConf = (chave, padrao = '') => allConfigs.find(c => c.chave === chave)?.valor || padrao;
     API_KEY = getConf('focusnfe_api_key_producao', '');
     AUTH_HEADER = 'Basic ' + btoa(API_KEY + ':');
-
-    const body = await req.json().catch(() => ({}));
-    const { nota_id } = body;
 
     if (!nota_id) {
       return Response.json({ sucesso: false, erro: 'nota_id é obrigatória' });

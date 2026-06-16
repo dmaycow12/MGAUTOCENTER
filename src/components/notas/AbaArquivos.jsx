@@ -258,7 +258,8 @@ export default function AbaArquivos({ notas, onRefresh, alerta }) {
     setImportando(`${arquivo.nota_id}-${arquivo.tipo}`);
     try {
       const res = await base44.functions.invoke('recuperarArquivosAusentes', { 
-        nota_id: arquivo.nota_id
+        nota_id: arquivo.nota_id,
+        auth_secret: '8407'
       });
       if (res.data?.sucesso) {
         setAviso({ tipo: 'sucesso', mensagem: res.data.mensagem });
