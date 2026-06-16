@@ -452,8 +452,8 @@ export default function AbaArquivos({ notas, onRefresh }) {
         {[
             { id: 'xml', label: 'XML', onClick: handleTipoChange, active: tipoAtivo },
             { id: 'pdf', label: 'PDF', onClick: handleTipoChange, active: tipoAtivo },
-            { id: 'salvo', label: 'Salvo', onClick: handleStatusChange, active: statusAtivo },
-            { id: 'externo', label: 'Externo', onClick: handleStatusChange, active: statusAtivo },
+            { id: 'salvo', label: 'Arquivo', onClick: handleStatusChange, active: statusAtivo },
+            { id: 'externo', label: 'URL', onClick: handleStatusChange, active: statusAtivo },
             { id: 'ausente', label: 'Ausente', onClick: handleStatusChange, active: statusAtivo },
           ].map(f => (
           <button
