@@ -322,19 +322,19 @@ export default function Dashboard() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-0.5">
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
                   <p className="text-gray-400 text-xs">Recebido</p>
-                  <p className="text-green-400 font-bold text-sm">{fmt(totalRecebido)}</p>
-                </div>
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                  <p className="text-green-400 font-bold text-sm">{Math.round(totalRecebido).toLocaleString("pt-BR")}</p>
+                  </div>
+                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
                   <p className="text-gray-400 text-xs">Pago</p>
-                  <p className="text-red-400 font-bold text-sm">{fmt(totalPago)}</p>
-                </div>
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                  <p className="text-red-400 font-bold text-sm">{Math.round(totalPago).toLocaleString("pt-BR")}</p>
+                  </div>
+                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
                   <p className="text-gray-400 text-xs">Saldo Anterior</p>
-                  <p className="font-bold text-sm" style={{color: saldoAnterior >= 0 ? "#60a5fa" : "#FF4444"}}>{saldoAnterior >= 0 ? fmt(saldoAnterior) : `- ${fmt(Math.abs(saldoAnterior))}`}</p>
-                </div>
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                  <p className="font-bold text-sm" style={{color: saldoAnterior >= 0 ? "#60a5fa" : "#FF4444"}}>{saldoAnterior >= 0 ? Math.round(saldoAnterior).toLocaleString("pt-BR") : `- ${Math.round(Math.abs(saldoAnterior)).toLocaleString("pt-BR")}`}</p>
+                  </div>
+                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
                   <p className="text-gray-400 text-xs">Saldo Real</p>
-                  <p className="font-bold text-sm" style={{color: saldo >= 0 ? "#00C957" : "#FF4444"}}>{saldo >= 0 ? fmt(saldo) : `- ${fmt(Math.abs(saldo))}`}</p>
+                  <p className="font-bold text-sm" style={{color: saldo >= 0 ? "#00C957" : "#FF4444"}}>{saldo >= 0 ? Math.round(saldo).toLocaleString("pt-BR") : `- ${Math.round(Math.abs(saldo)).toLocaleString("pt-BR")}`}</p>
                 </div>
               </div>
             </div>
@@ -354,7 +354,7 @@ export default function Dashboard() {
         const totalAtivos = ativos.length;
         const valorCompraAtivos = ativos.reduce((acc, a) => acc + Number(a.valor_aquisicao || 0) * Number(a.quantidade || 1), 0);
         const valorAtualAtivos = ativos.reduce((acc, a) => acc + Number(a.valor_atual || 0), 0);
-        const fmtInt = v => Math.round(Number(v || 0)).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        const fmtInt = v => Math.round(Number(v || 0)).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
         return (
           <>
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">

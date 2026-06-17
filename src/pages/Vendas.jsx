@@ -283,7 +283,7 @@ export default function Vendas() {
     const custoPecas = (o.pecas || []).reduce((s, p) => s + getCustoPeca(p) * Number(p.quantidade || 1), 0);
     return acc + (o.valor_pecas || 0) - custoPecas;
   }, 0);
-  const fmtTotal = v => Math.round(Number(v || 0)).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const fmtTotal = v => Math.round(Number(v || 0)).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
   // Vendas com peças sem custo (valor_custo === 0 ou undefined)
   const vendasSemCusto = ordens.filter(o =>
