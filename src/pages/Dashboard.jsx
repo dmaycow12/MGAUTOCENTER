@@ -356,42 +356,20 @@ export default function Dashboard() {
         const valorAtualAtivos = ativos.reduce((acc, a) => acc + Number(a.valor_atual || 0), 0);
         return (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-0.5">
+            <div className="grid grid-cols-3 gap-0.5">
                <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                 <p className="text-gray-400 text-xs">Total de Itens</p>
-                 <p className="text-white font-bold text-lg">{totalItens}</p>
-               </div>
-               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                 <p className="text-gray-400 text-xs">Estoque Baixo</p>
-                 <p className="text-white font-bold text-lg">{estoqueBaixo}</p>
-               </div>
-               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                 <p className="text-gray-400 text-xs">Valor Total (Custo)</p>
+                 <p className="text-gray-400 text-xs">Produtos</p>
                  <p className="text-white font-bold text-sm">{fmt(valorCusto)}</p>
                </div>
                <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                 <p className="text-gray-400 text-xs">Valor Total (Venda)</p>
-                 <p className="text-white font-bold text-sm">{fmt(valorVenda)}</p>
+                 <p className="text-gray-400 text-xs">Ativos</p>
+                 <p className="text-white font-bold text-sm">{fmt(valorAtualAtivos)}</p>
+               </div>
+               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                 <p className="text-gray-400 text-xs">Total</p>
+                 <p className="text-white font-bold text-sm">{fmt(valorCusto + valorAtualAtivos)}</p>
                </div>
              </div>
-             <div className="grid grid-cols-2 sm:grid-cols-4 gap-0.5">
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                <p className="text-gray-400 text-xs">Ativos</p>
-                <p className="text-white font-bold text-lg">{totalAtivos}</p>
-              </div>
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                <p className="text-gray-400 text-xs">Valor de Compra</p>
-                <p className="text-white font-bold text-sm">{fmt(valorCompraAtivos)}</p>
-              </div>
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                <p className="text-gray-400 text-xs">Valor Atual</p>
-                <p className="text-white font-bold text-sm">{fmt(valorAtualAtivos)}</p>
-              </div>
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                <p className="text-gray-400 text-xs">Custo Produtos + Ativos</p>
-                <p className="text-white font-bold text-sm">{fmt(valorCusto + valorAtualAtivos)}</p>
-              </div>
-            </div>
           </>
         );
       })()}
