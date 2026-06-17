@@ -320,7 +320,7 @@ export default function Financeiro() {
       {abaAtiva === "comissoes" && <AbaComissoes />}
 
       {abaAtiva === "lancamentos" && (
-       <div className="flex flex-col gap-0.5">
+       <React.Fragment><div className="flex flex-col gap-0.5">
         {/* Linha 1: + Receita / + Despesa */}
         <div className="flex gap-0.5">
               <button onClick={() => { setForm({ ...defaultForm(), tipo: "Receita" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all" style={{background: "#00ff00", color: "#fff"}} onMouseEnter={e => e.currentTarget.style.background = "#00dd00"} onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}>
@@ -590,6 +590,7 @@ export default function Financeiro() {
       )}
 
       <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#f97316; } .input-dark::placeholder { color:#6b7280; }`}</style>
+      </React.Fragment>
       )} {/* fim abaAtiva === lancamentos */}
     </div>
   );
