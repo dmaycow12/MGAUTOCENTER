@@ -123,11 +123,11 @@ export default function AbaComissoes() {
         </div>
         <div className="rounded-xl px-4 py-3 flex flex-col gap-1" style={{ background: "#0a1929", border: "1px solid #1e3a5f" }}>
           <span className="text-gray-500 text-xs font-medium">TOTAL COMISSÕES</span>
-          <span className="text-yellow-400 font-bold text-sm">{fmtV(totalComissoes)}</span>
+          <span className="text-white font-bold text-sm">{fmtV(totalComissoes)}</span>
         </div>
         <div className="rounded-xl px-4 py-3 flex flex-col gap-1" style={{ background: "#0a1929", border: "1px solid #1e3a5f" }}>
           <span className="text-gray-500 text-xs font-medium">TÉCNICOS</span>
-          <span className="text-blue-400 font-bold text-sm">{resultados.length} · {vendasPeriodo.length} vendas</span>
+          <span className="text-white font-bold text-sm">{resultados.length}</span>
         </div>
       </div>
 
@@ -178,10 +178,6 @@ export default function AbaComissoes() {
             {Object.entries(comissaoConfig).map(([nome, pct], i, arr) => (
               <div key={nome} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.03] transition-all"
                 style={{ borderBottom: i < arr.length - 1 ? "1px solid #111827" : "none" }}>
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                  style={{ background: "#062C9B" }}>
-                  {nome.substring(0, 2)}
-                </div>
                 <span className="text-white text-xs font-medium flex-1">{nome}</span>
                 <div className="flex items-center gap-1">
                   <input type="number"
@@ -214,7 +210,7 @@ export default function AbaComissoes() {
             <span className="text-gray-500 text-xs font-bold tracking-widest">TÉCNICO</span>
             <span className="text-gray-500 text-xs font-bold text-center">VENDAS</span>
             <span className="text-gray-500 text-xs font-bold text-right">BASE</span>
-            <span className="text-yellow-600 text-xs font-bold text-right">COMISSÃO</span>
+            <span className="text-gray-500 text-xs font-bold text-right">COMISSÃO</span>
           </div>
 
           {resultados.map((r, idx) => (
@@ -225,43 +221,22 @@ export default function AbaComissoes() {
                 className="w-full grid px-4 py-3 hover:bg-white/[0.04] transition-all items-center"
                 style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr" }}
               >
-                {/* Nome + avatar */}
-                <div className="flex items-center gap-2.5 text-left">
-                  <div className="relative flex-shrink-0">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white"
-                      style={{ background: idx === 0 ? "linear-gradient(135deg,#7c3aed,#062C9B)" : "#132642" }}>
-                      {r.tec.substring(0, 2)}
-                    </div>
-                    {idx === 0 && (
-                      <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center bg-yellow-500"
-                        style={{ fontSize: 7, fontWeight: "bold", color: "#000" }}>★</div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-white text-xs font-bold">{r.tec}</div>
-                    <div className="text-gray-500 text-xs">{r.pct}% comissão</div>
-                  </div>
+                {/* Nome */}
+                <div className="text-left">
+                  <div className="text-white text-xs font-bold">{r.tec}</div>
                 </div>
 
-                {/* Qtd vendas */}
-                <div className="text-center">
-                  <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold text-blue-300"
-                    style={{ background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.2)" }}>
-                    {r.qtdVendas}
-                  </span>
+                {/* Números das vendas */}
+                <div className="text-center text-white text-xs">
+                  {r.detalhes.map((d, i) => d.venda ? <span key={i} className="inline-block mr-1">#{d.venda}</span> : null)}
                 </div>
 
                 {/* Base */}
-                <div className="text-right text-gray-400 text-xs font-medium">{fmtV(r.servicos)}</div>
+                <div className="text-right text-white text-xs font-medium">{fmtV(r.servicos)}</div>
 
                 {/* Comissão */}
                 <div className="text-right">
-                  <span className="text-yellow-400 text-sm font-bold">{fmtV(r.comissao)}</span>
-                  {totalBase > 0 && (
-                    <div className="mt-1 h-1 rounded-full bg-gray-800 overflow-hidden">
-                      <div className="h-full rounded-full bg-yellow-400/60" style={{ width: `${Math.round(r.servicos / totalBase * 100)}%` }} />
-                    </div>
-                  )}
+                  <span className="text-white text-sm font-bold">{fmtV(r.comissao)}</span>
                 </div>
               </button>
 
@@ -275,17 +250,17 @@ export default function AbaComissoes() {
                         <th className="px-4 py-2 text-left text-gray-500 font-semibold">Cliente</th>
                         <th className="px-4 py-2 text-left text-gray-500 font-semibold">Serviço</th>
                         <th className="px-4 py-2 text-right text-gray-500 font-semibold">Valor</th>
-                        <th className="px-4 py-2 text-right text-yellow-600 font-semibold">Comissão</th>
+                        <th className="px-4 py-2 text-right text-gray-500 font-semibold">Comissão</th>
                       </tr>
                     </thead>
                     <tbody>
                       {r.detalhes.map((d, i) => (
                         <tr key={i} className="hover:bg-white/5 transition-all" style={{ borderTop: "1px solid #111827" }}>
-                          <td className="px-4 py-2 text-blue-400 font-bold">#{d.venda}</td>
-                          <td className="px-4 py-2 text-gray-400 truncate max-w-[120px]">{d.cliente || "—"}</td>
+                          <td className="px-4 py-2 text-white font-bold">#{d.venda}</td>
+                          <td className="px-4 py-2 text-gray-300 truncate max-w-[120px]">{d.cliente || "—"}</td>
                           <td className="px-4 py-2 text-gray-300">{d.servico}</td>
-                          <td className="px-4 py-2 text-right text-green-400 font-semibold">{fmtV(d.valor)}</td>
-                          <td className="px-4 py-2 text-right text-yellow-400 font-bold">{fmtV(d.valor * r.pct / 100)}</td>
+                          <td className="px-4 py-2 text-right text-white font-semibold">{fmtV(d.valor)}</td>
+                          <td className="px-4 py-2 text-right text-white font-bold">{fmtV(d.valor * r.pct / 100)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -299,8 +274,8 @@ export default function AbaComissoes() {
           <div className="grid px-4 py-3 items-center" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr", borderTop: "1px solid #1e3a5f", background: "rgba(6,44,155,0.08)" }}>
             <span className="text-gray-400 text-xs font-bold">TOTAL</span>
             <span />
-            <span className="text-right text-gray-300 text-xs font-semibold">{fmtV(totalBase)}</span>
-            <span className="text-right text-yellow-400 text-sm font-bold">{fmtV(totalComissoes)}</span>
+            <span className="text-right text-white text-xs font-semibold">{fmtV(totalBase)}</span>
+            <span className="text-right text-white text-sm font-bold">{fmtV(totalComissoes)}</span>
           </div>
         </div>
       )}
