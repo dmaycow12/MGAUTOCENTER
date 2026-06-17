@@ -351,8 +351,8 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
               <span className="text-gray-500 text-xs flex-shrink-0">{fmtData(os.data_entrada)}</span>
             </div>
             <div className="flex items-center gap-0.5 flex-shrink-0">
-              <button onClick={() => alterarStatus("Aberto")} className={`px-2 py-1 text-xs font-medium rounded-lg transition-all whitespace-nowrap ${os.status === "Aberto" ? "bg-red-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}>Aberto</button>
-              <button onClick={() => alterarStatus("Concluído")} className={`px-2 py-1 text-xs font-medium rounded-lg transition-all whitespace-nowrap ${os.status === "Concluído" ? "bg-green-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}>Concluído</button>
+              <button onClick={() => alterarStatus("Aberto")} className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-all whitespace-nowrap ${os.status === "Aberto" ? "bg-red-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}>Aberto</button>
+              <button onClick={() => alterarStatus("Concluído")} className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-all whitespace-nowrap ${os.status === "Concluído" ? "bg-green-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}>Concluído</button>
               <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Editar"><Pencil className="w-3.5 h-3.5" /></button>
               <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Imprimir"><Printer className="w-3.5 h-3.5" /></button>
               <button onClick={handleExcluir} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all" title="Excluir"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -411,55 +411,38 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
         )}
 
         {/* Grid 2 colunas com campos */}
-        <div className="grid grid-cols-2 divide-y divide-x divide-gray-800" style={{borderTop: "none"}}>
-          {camposVisiveis.cliente && (
-            <div className="px-3 py-2.5">
-              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Cliente</p>
-              <p className="text-white text-sm font-medium truncate">{os.cliente_nome_fantasia || os.cliente_nome || "—"}</p>
-            </div>
-          )}
-          {camposVisiveis.veiculo && (
-            <div className="px-3 py-2.5">
-              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Veículo</p>
-              <p className="text-white text-sm font-medium truncate">{os.veiculo_modelo || "—"}</p>
-            </div>
-          )}
-          {camposVisiveis.placa && (
-            <div className="px-3 py-2.5">
-              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Placa</p>
-              <p className="text-white text-sm font-medium">{os.veiculo_placa?.toUpperCase() || "—"}</p>
-            </div>
-          )}
-          {camposVisiveis.km && (
-            <div className="px-3 py-2.5">
-              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">KM</p>
-              <p className="text-white text-sm font-medium">{os.quilometragem || "—"}</p>
-            </div>
-          )}
-          {camposVisiveis.valor && (
-            <div className="px-3 py-2.5">
-              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Valor</p>
-              <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
-            </div>
-          )}
-          {camposVisiveis.contato && (
-            <div className="px-3 py-2.5">
-              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Contato</p>
-              <p className="text-gray-300 text-sm font-medium truncate">{os.cliente_telefone || "—"}</p>
-            </div>
-          )}
-          {camposVisiveis.nfe && (
-            <div className="px-3 py-2.5">
-              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">NFe/NFCe</p>
-              <p className="text-gray-300 text-sm font-medium truncate">{notasOs.find(n => n.tipo === 'NFe' || n.tipo === 'NFCe')?.numero || "—"}</p>
-            </div>
-          )}
-          {camposVisiveis.nfse && (
-            <div className="px-3 py-2.5">
-              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">NFSe</p>
-              <p className="text-gray-300 text-sm font-medium truncate">{notasOs.find(n => n.tipo === 'NFSe')?.numero || "—"}</p>
-            </div>
-          )}
+        <div className="grid grid-cols-2">
+          {/* Renderiza pares de campos garantindo bordas corretas */}
+          {[
+            camposVisiveis.cliente && { label: "Cliente", content: <p className="text-white text-sm font-medium truncate">{os.cliente_nome_fantasia || os.cliente_nome || "—"}</p> },
+            camposVisiveis.veiculo && { label: "Veículo", content: <p className="text-white text-sm font-medium truncate">{os.veiculo_modelo || "—"}</p> },
+            camposVisiveis.placa && { label: "Placa", content: <p className="text-white text-sm font-medium">{os.veiculo_placa?.toUpperCase() || "—"}</p> },
+            camposVisiveis.km && { label: "KM", content: <p className="text-white text-sm font-medium">{os.quilometragem || "—"}</p> },
+            camposVisiveis.valor && { label: "Valor", content: <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p> },
+            camposVisiveis.contato && { label: "Contato", content: <p className="text-gray-300 text-sm font-medium truncate">{os.cliente_telefone || "—"}</p> },
+            camposVisiveis.nfe && { label: "NFe/NFCe", content: <p className="text-gray-300 text-sm font-medium truncate">{notasOs.find(n => n.tipo === 'NFe' || n.tipo === 'NFCe')?.numero || "—"}</p> },
+            camposVisiveis.nfse && { label: "NFSe", content: <p className="text-gray-300 text-sm font-medium truncate">{notasOs.find(n => n.tipo === 'NFSe')?.numero || "—"}</p> },
+          ].filter(Boolean).map((campo, idx, arr) => {
+            const isLeft = idx % 2 === 0;
+            const isLastRow = idx >= arr.length - 2;
+            const isLastItem = idx === arr.length - 1;
+            // Se é o último item e está na coluna esquerda (número ímpar de campos), ocupa as duas colunas
+            const colSpan = isLastItem && arr.length % 2 !== 0;
+            return (
+              <div
+                key={campo.label}
+                className="px-3 py-2.5"
+                style={{
+                  borderRight: isLeft && !colSpan ? "1px solid #1f2937" : "none",
+                  borderBottom: !isLastRow ? "1px solid #1f2937" : "none",
+                  gridColumn: colSpan ? "1 / -1" : undefined,
+                }}
+              >
+                <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">{campo.label}</p>
+                {campo.content}
+              </div>
+            );
+          })}
         </div>
       </div>
     </>
