@@ -1184,7 +1184,7 @@ export default function NotasFiscais() {
           { label: 'NFSe Emitida', value: totalNFSeEmitida, color: '#00ff00' },
           { label: 'Total NF Emitidas', value: totalNFeEmitida + totalNFCeEmitida + totalNFSeEmitida, color: '#facc15', isTotal: true },
         ].map(({ label, value, color, isTotal }) => (
-          <div key={label} className={`bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center ${isTotal ? 'hidden md:flex' : ''}`}>
+          <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3 space-y-1 flex flex-col items-center justify-center text-center">
             <p className="text-gray-500 text-[10px] font-medium uppercase tracking-wide">{label}</p>
             <p className="font-bold text-sm" style={{ color }}>{isTotal ? `R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : `R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</p>
           </div>

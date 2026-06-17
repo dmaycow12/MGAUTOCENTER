@@ -64,9 +64,13 @@ export default function FiltroPerioodoAvancado({ onFiltroChange }) {
         </button>
       </div>
       <div className="relative flex-1" ref={periodoDropRef}>
-        <button onClick={() => setPeriodoDropOpen(v => !v)} className={`w-full flex items-center justify-center gap-2 px-4 h-9 rounded-lg text-sm font-semibold transition-all ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}>
-          {usandoOutroPeriodo && customRange ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}` : `${pad(1)}/${pad(filtroMes)}/${filtroAno} — ${pad(new Date(filtroAno, filtroMes, 0).getDate())}/${pad(filtroMes)}/${filtroAno}`}
-          <ChevronDown className={`w-4 h-4 transition-transform ${periodoDropOpen ? "rotate-180" : ""}`} />
+        <button onClick={() => setPeriodoDropOpen(v => !v)} className={`w-full h-full min-h-[36px] flex items-center justify-center gap-1 px-2 rounded-lg font-semibold transition-all ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`} style={{fontSize:"clamp(11px,1.5vw,13px)"}}>
+          <span className="text-center leading-tight flex flex-col sm:flex-row sm:items-center sm:gap-1">
+            <span>{usandoOutroPeriodo && customRange ? customRange.inicio.split("-").reverse().join("/") : `${pad(1)}/${pad(filtroMes)}/${filtroAno}`}</span>
+            <span className="hidden sm:inline">—</span>
+            <span>{usandoOutroPeriodo && customRange ? customRange.fim.split("-").reverse().join("/") : `${pad(new Date(filtroAno, filtroMes, 0).getDate())}/${pad(filtroMes)}/${filtroAno}`}</span>
+          </span>
+          <ChevronDown className={`w-3 h-3 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
         </button>
         {periodoDropOpen && (
           <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-72 space-y-3">
