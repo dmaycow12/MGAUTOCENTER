@@ -354,6 +354,7 @@ export default function Dashboard() {
         const totalAtivos = ativos.length;
         const valorCompraAtivos = ativos.reduce((acc, a) => acc + Number(a.valor_aquisicao || 0) * Number(a.quantidade || 1), 0);
         const valorAtualAtivos = ativos.reduce((acc, a) => acc + Number(a.valor_atual || 0), 0);
+        const fmtInt = v => Math.round(Number(v || 0)).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
         return (
           <>
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
@@ -363,15 +364,15 @@ export default function Dashboard() {
               <div className="grid grid-cols-3 gap-0.5">
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
                   <p className="text-gray-400 text-xs">Produtos</p>
-                  <p className="text-white font-bold text-sm">{fmt(valorCusto)}</p>
+                  <p className="text-white font-bold text-sm">{fmtInt(valorCusto)}</p>
                 </div>
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
                   <p className="text-gray-400 text-xs">Móveis</p>
-                  <p className="text-white font-bold text-sm">{fmt(valorAtualAtivos)}</p>
+                  <p className="text-white font-bold text-sm">{fmtInt(valorAtualAtivos)}</p>
                 </div>
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
                   <p className="text-gray-400 text-xs">Total</p>
-                  <p className="text-white font-bold text-sm">{fmt(valorCusto + valorAtualAtivos)}</p>
+                  <p className="text-white font-bold text-sm">{fmtInt(valorCusto + valorAtualAtivos)}</p>
                 </div>
               </div>
             </div>
