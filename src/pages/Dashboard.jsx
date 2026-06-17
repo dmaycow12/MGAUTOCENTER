@@ -315,26 +315,26 @@ export default function Dashboard() {
           const saldoAnterior = financeiro.filter(f => f.status === "Pago" && (f.data_vencimento || "") < periodoRange.inicio).reduce((acc, f) => acc + (f.tipo === "Receita" ? 1 : -1) * Number(f.valor || 0), 0);
           const saldo = saldoAnterior + totalRecebido - totalPago;
           return (
-            <div className="rounded-2xl p-4" style={{background: "linear-gradient(135deg, #0a1929 0%, #132642 100%)", border: "1px solid #1e4d7b"}}>
-              <div className="mb-3 text-center">
-                <h2 className="text-white font-bold text-lg">Saldo do Caixa</h2>
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
+              <div className="mb-2 text-center">
+                <h2 className="text-white font-bold text-base">Saldo do Caixa</h2>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-0.5">
-                <div className="rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
-                  <span className="text-xs font-semibold text-gray-400 tracking-wide">Recebido</span>
-                  <span className="text-xs font-bold text-green-400">{fmt(totalRecebido)}</span>
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                  <p className="text-gray-400 text-xs">Recebido</p>
+                  <p className="text-green-400 font-bold text-sm">{fmt(totalRecebido)}</p>
                 </div>
-                <div className="rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
-                  <span className="text-xs font-semibold text-gray-400 tracking-wide">Pago</span>
-                  <span className="text-xs font-bold text-red-400">{fmt(totalPago)}</span>
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                  <p className="text-gray-400 text-xs">Pago</p>
+                  <p className="text-red-400 font-bold text-sm">{fmt(totalPago)}</p>
                 </div>
-                <div className="rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
-                  <span className="text-xs font-semibold text-gray-400 tracking-wide">Saldo Anterior</span>
-                  <span className="text-xs font-bold" style={{color: saldoAnterior >= 0 ? "#60a5fa" : "#FF4444"}}>{saldoAnterior >= 0 ? fmt(saldoAnterior) : `- ${fmt(Math.abs(saldoAnterior))}`}</span>
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                  <p className="text-gray-400 text-xs">Saldo Anterior</p>
+                  <p className="font-bold text-sm" style={{color: saldoAnterior >= 0 ? "#60a5fa" : "#FF4444"}}>{saldoAnterior >= 0 ? fmt(saldoAnterior) : `- ${fmt(Math.abs(saldoAnterior))}`}</p>
                 </div>
-                <div className="rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1" style={{background: saldo >= 0 ? "#0d1b2a" : "#2a0d0d", border: saldo >= 0 ? "1px solid #1e3a5f" : "1px solid #5f1e1e"}}>
-                  <span className="text-xs font-semibold text-gray-400 tracking-wide">Saldo Real</span>
-                  <span className="text-xs font-bold" style={{color: saldo >= 0 ? "#00C957" : "#FF4444"}}>{saldo >= 0 ? fmt(saldo) : `- ${fmt(Math.abs(saldo))}`}</span>
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                  <p className="text-gray-400 text-xs">Saldo Real</p>
+                  <p className="font-bold text-sm" style={{color: saldo >= 0 ? "#00C957" : "#FF4444"}}>{saldo >= 0 ? fmt(saldo) : `- ${fmt(Math.abs(saldo))}`}</p>
                 </div>
               </div>
             </div>
