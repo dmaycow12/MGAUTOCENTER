@@ -21,6 +21,7 @@ const PAGAMENTO_OPTIONS = ["A Combinar", "Boleto", "Cartão", "Dinheiro", "PIX"]
 const STATUS_BG_LIST = { "Pendente": "#cc0000", "Pago": "#16a34a", "Atrasado": "#dc2626" };
 import FinanceiroCard from "@/components/financeiro/FinanceiroCard";
 import FluxoMes from "@/components/dashboard/FluxoMes";
+import FaturamentoComissoes from "@/components/financeiro/FaturamentoComissoes";
 
 const defaultForm = () => ({
   tipo: "Receita", categoria: "", descricao: "", valor: 0,
@@ -38,6 +39,7 @@ function getPeriodoRange(mes, ano) {
 }
 
 export default function Financeiro() {
+  const [abaAtiva, setAbaAtiva] = useState(() => localStorage.getItem("fin_aba") || "lancamentos");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -298,7 +300,21 @@ export default function Financeiro() {
   return (
     <div className="space-y-0.5">
 
-       {/* Header — Botões no topo */}
+      {/* Abas */}
+      <div className="flex gap-0.5">
+        {[["lancamentos","Lançamentos"],["faturamento","Faturamento e Comissões"]].map(([key, label]) => (
+          <button key={key} onClick={() => { setAbaAtiva(key); localStorage.setItem("fin_aba", key); }}
+            className="flex-1 h-11 rounded-xl text-sm font-semibold transition-all"
+            style={{ background: abaAtiva === key ? "#062C9B" : "#1f2937", color: "#fff", border: abaAtiva === key ? "none" : "1px solid #374151" }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {abaAtiva === "faturamento" ? (
+        <FaturamentoComissoes />
+      ) : (
+       <>{/* Header — Botões no topo */}
        <div className="flex flex-col gap-0.5">
         {/* Linha 1: + Receita / + Despesa */}
         <div className="flex gap-0.5">
@@ -570,6 +586,8 @@ export default function Financeiro() {
       )}
 
       <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#f97316; } .input-dark::placeholder { color:#6b7280; }`}</style>
+      </>
+      )}
     </div>
   );
 }
