@@ -134,11 +134,9 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-4">
-      <div className="flex justify-end">
-         <span className="text-gray-400 text-xs whitespace-nowrap">
-           Total: <span className="text-green-400 font-bold">{fmt(totalAtual)}</span>
-         </span>
-       </div>
+      <div className="text-center">
+        <h2 className="text-white font-bold text-base">Faturamento</h2>
+      </div>
 
       {/* Toggle Receita / Lucro */}
       <div className="flex gap-1 bg-gray-800 p-1 rounded-lg">
@@ -199,6 +197,13 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
           </BarChart>
         </ResponsiveContainer>
       )}
+
+      {/* Total no rodapé */}
+      <div className="flex justify-end pt-1 border-t border-gray-800">
+        <span className="text-gray-400 text-xs whitespace-nowrap">
+          Total: <span className="text-green-400 font-bold">{fmt(totalAtual)}</span>
+        </span>
+      </div>
 
       {/* Diagnóstico: sem código */}
       {aba === "semcodigo" && (
