@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import FiltroPerioodoAvancado from "@/components/notas/FiltroPerioodoAvancado";
 
-const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 const fmtV = v => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+const hoje = new Date();
+const pad = n => String(n).padStart(2, "0");
 function getPeriodoRange(mes, ano) {
-  const pad = n => String(n).padStart(2, "0");
   return { inicio: `${ano}-${pad(mes)}-01`, fim: `${ano}-${pad(mes)}-31` };
 }
 
@@ -14,9 +15,7 @@ export default function AbaComissoes() {
   const [vendas, setVendas] = useState([]);
   const [funcionarios, setFuncionarios] = useState([]);
   const [loading, setLoading] = useState(true);
-  const hoje = new Date();
-  const [mes, setMes] = useState(hoje.getMonth() + 1);
-  const [ano, setAno] = useState(hoje.getFullYear());
+  const [periodoRange, setPeriodoRange] = useState(() => getPeriodoRange(hoje.getMonth() + 1, hoje.getFullYear()));
 
   const [comissaoConfig, setComissaoConfig] = useState(() => {
     try { return JSON.parse(localStorage.getItem("comissao_config")) || {}; } catch { return {}; }
@@ -47,15 +46,6 @@ export default function AbaComissoes() {
     }
   };
 
-  const navMes = (dir) => {
-    let novoMes = mes + dir;
-    let novoAno = ano;
-    if (novoMes > 12) { novoMes = 1; novoAno++; }
-    if (novoMes < 1) { novoMes = 12; novoAno--; }
-    setMes(novoMes);
-    setAno(novoAno);
-  };
-
   const salvarConfig = (cfg) => {
     setComissaoConfig(cfg);
     localStorage.setItem("comissao_config", JSON.stringify(cfg));
@@ -83,11 +73,9 @@ export default function AbaComissoes() {
     setEditPct(prev => { const n = {...prev}; delete n[nome]; return n; });
   };
 
-  const { inicio, fim } = getPeriodoRange(mes, ano);
-
   const vendasPeriodo = vendas.filter(v => {
     const d = (v.data_entrada || v.created_date || "").substring(0, 10);
-    return d >= inicio && d <= fim;
+    return d >= periodoRange.inicio && d <= periodoRange.fim;
   });
 
   // Calcular comissões por técnico — IGNORA serviços sem técnico
@@ -121,17 +109,9 @@ export default function AbaComissoes() {
 
   return (
     <div className="space-y-3 mt-2">
-      {/* Navegação de mês */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 bg-[#062C9B] rounded-xl overflow-hidden h-10">
-          <button onClick={() => navMes(-1)} className="flex items-center justify-center px-2 h-full hover:bg-white/20 transition-all">
-            <ChevronLeft className="w-4 h-4 text-white" />
-          </button>
-          <span className="text-white text-sm font-semibold px-3">{MESES[mes-1]} {ano}</span>
-          <button onClick={() => navMes(1)} className="flex items-center justify-center px-2 h-full hover:bg-white/20 transition-all">
-            <ChevronRight className="w-4 h-4 text-white" />
-          </button>
-        </div>
+      {/* Filtro de período */}
+      <FiltroPerioodoAvancado onFiltroChange={({ periodoRange: pr }) => setPeriodoRange(pr)} />
+      <div className="flex justify-end">
         <div className="text-right">
           <div className="text-xs text-gray-400">Total Comissões</div>
           <div className="text-sm font-bold text-yellow-400">{fmtV(totalComissoes)}</div>

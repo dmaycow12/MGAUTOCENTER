@@ -21,7 +21,6 @@ const PAGAMENTO_OPTIONS = ["A Combinar", "Boleto", "Cartão", "Dinheiro", "PIX"]
 const STATUS_BG_LIST = { "Pendente": "#cc0000", "Pago": "#16a34a", "Atrasado": "#dc2626" };
 import FinanceiroCard from "@/components/financeiro/FinanceiroCard";
 import FluxoMes from "@/components/dashboard/FluxoMes";
-import AbaFaturamento from "@/components/financeiro/AbaFaturamento";
 import AbaComissoes from "@/components/financeiro/AbaComissoes";
 
 const defaultForm = () => ({
@@ -305,7 +304,6 @@ export default function Financeiro() {
       <div className="flex gap-0.5 mb-1">
         {[
           { key: "lancamentos", label: "Lançamentos" },
-          { key: "faturamento", label: "Faturamento" },
           { key: "comissoes", label: "Comissões" },
         ].map(aba => (
           <button key={aba.key} onClick={() => { setAbaAtiva(aba.key); localStorage.setItem("fin_aba", aba.key); }}
@@ -316,7 +314,6 @@ export default function Financeiro() {
         ))}
       </div>
 
-      {abaAtiva === "faturamento" && <AbaFaturamento />}
       {abaAtiva === "comissoes" && <AbaComissoes />}
 
       {abaAtiva === "lancamentos" && (
