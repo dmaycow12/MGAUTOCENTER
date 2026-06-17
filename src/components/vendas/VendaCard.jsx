@@ -343,16 +343,19 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
         {/* Topo: Número + Data | Status buttons | Ações */}
-        <div className="flex items-center justify-between gap-3 px-3 py-3 border-b border-gray-800">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-1.5 px-3 py-2.5 border-b border-gray-800">
+          {/* Número + Data */}
+          <div className="flex items-center gap-2 mr-1">
             <div className="text-white text-base font-bold"><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
-            <span className="text-gray-500 text-sm">{fmtData(os.data_entrada)}</span>
+            <span className="text-gray-500 text-xs">{fmtData(os.data_entrada)}</span>
           </div>
+          {/* Status buttons */}
           <div className="flex gap-1">
-            <button onClick={() => alterarStatus("Aberto")} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${os.status === "Aberto" ? "bg-red-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}>Aberto</button>
-            <button onClick={() => alterarStatus("Concluído")} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${os.status === "Concluído" ? "bg-green-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}>Concluído</button>
+            <button onClick={() => alterarStatus("Aberto")} className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-all whitespace-nowrap ${os.status === "Aberto" ? "bg-red-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}>Aberto</button>
+            <button onClick={() => alterarStatus("Concluído")} className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-all whitespace-nowrap ${os.status === "Concluído" ? "bg-green-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}>Concluído</button>
           </div>
-          <div className="flex gap-1 flex-shrink-0">
+          {/* Ações */}
+          <div className="flex gap-0.5 ml-auto flex-shrink-0">
             <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Editar"><Pencil className="w-3.5 h-3.5" /></button>
             <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Imprimir"><Printer className="w-3.5 h-3.5" /></button>
             <button onClick={handleExcluir} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all" title="Excluir"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -423,40 +426,38 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
               <p className="text-white text-sm font-medium truncate">{os.veiculo_modelo || "—"}</p>
             </div>
           )}
-
           {camposVisiveis.placa && (
-           <div className="px-3 py-2.5 border-r border-b border-gray-800">
-             <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Placa</p>
-             <p className="text-white text-sm font-medium">{os.veiculo_placa?.toUpperCase() || "—"}</p>
-           </div>
+            <div className="px-3 py-2.5 border-r border-b border-gray-800">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Placa</p>
+              <p className="text-white text-sm font-medium">{os.veiculo_placa?.toUpperCase() || "—"}</p>
+            </div>
           )}
           {camposVisiveis.km && (
-           <div className="px-3 py-2.5 border-b border-gray-800">
+            <div className="px-3 py-2.5 border-b border-gray-800">
               <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">KM</p>
               <p className="text-white text-sm font-medium">{os.quilometragem || "—"}</p>
             </div>
           )}
-
           {camposVisiveis.valor && (
-           <div className="px-3 py-2.5 border-r border-b border-gray-800">
-             <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Valor</p>
-             <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
-           </div>
+            <div className="px-3 py-2.5 border-r border-b border-gray-800">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Valor</p>
+              <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
+            </div>
           )}
           {camposVisiveis.contato && (
-           <div className="px-3 py-2.5 border-b border-gray-800">
+            <div className="px-3 py-2.5 border-b border-gray-800">
               <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Contato</p>
               <p className="text-gray-300 text-sm font-medium truncate">{os.cliente_telefone || "—"}</p>
             </div>
           )}
           {camposVisiveis.nfe && (
-           <div className="px-3 py-2.5 border-r border-gray-800">
-             <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">NFe/NFCe</p>
-             <p className="text-gray-300 text-sm font-medium truncate">{notasOs.find(n => n.tipo === 'NFe' || n.tipo === 'NFCe')?.numero || "—"}</p>
-           </div>
+            <div className="px-3 py-2.5 border-r border-b border-gray-800">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">NFe/NFCe</p>
+              <p className="text-gray-300 text-sm font-medium truncate">{notasOs.find(n => n.tipo === 'NFe' || n.tipo === 'NFCe')?.numero || "—"}</p>
+            </div>
           )}
           {camposVisiveis.nfse && (
-           <div className="px-3 py-2.5 border-gray-800">
+            <div className="px-3 py-2.5 border-b border-gray-800">
               <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">NFSe</p>
               <p className="text-gray-300 text-sm font-medium truncate">{notasOs.find(n => n.tipo === 'NFSe')?.numero || "—"}</p>
             </div>
