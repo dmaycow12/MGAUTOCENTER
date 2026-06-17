@@ -288,21 +288,22 @@ export default function Vendas() {
 
   // Cálculo de comissão baseado nas configurações do AbaComissoes
   const totalComissao = (() => {
-    const configsSalvas = localStorage.getItem("comissoes_config");
-    const configs = configsSalvas ? JSON.parse(configsSalvas) : [];
-    if (!configs.length) return null;
-    let total = 0;
-    ordensComFiltrosBase.forEach(o => {
-      (o.servicos || []).forEach(sv => {
-        const tecnico = (sv.tecnico || "").trim().toLowerCase();
-        const config = configs.find(c => (c.tecnico || "").trim().toLowerCase() === tecnico);
-        if (config && config.percentual > 0) {
+    try {
+      const comissaoConfig = JSON.parse(localStorage.getItem("comissao_config")) || {};
+      if (!Object.keys(comissaoConfig).length) return null;
+      let total = 0;
+      ordensComFiltrosBase.forEach(o => {
+        (o.servicos || []).forEach(sv => {
+          const tec = (sv.tecnico || "").trim().toUpperCase();
+          if (!tec) return;
+          const pct = comissaoConfig[tec] ?? comissaoConfig["*"] ?? null;
+          if (pct === null) return;
           const valorServico = Number(sv.valor || 0) * Number(sv.quantidade ?? 1);
-          total += valorServico * (Number(config.percentual) / 100);
-        }
+          total += valorServico * (Number(pct) / 100);
+        });
       });
-    });
-    return total;
+      return total;
+    } catch { return null; }
   })();
 
   // Vendas com peças sem custo (valor_custo === 0 ou undefined)
