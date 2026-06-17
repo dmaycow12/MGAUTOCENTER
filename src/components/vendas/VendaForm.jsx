@@ -189,6 +189,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const [veiculosCliente, setVeiculosCliente] = useState([]);
   const [estoque, setEstoque] = useState([]);
   const [servicosCad, setServicosCad] = useState([]);
+  const [funcionarios, setFuncionarios] = useState([]);
   const [produtoSugestoes, setProdutoSugestoes] = useState({ idx: null, lista: [] });
   const [servicoSugestoes, setServicoSugestoes] = useState({ idx: null, lista: [] });
   const [showAvisoReabrir, setShowAvisoReabrir] = useState(false);
@@ -208,7 +209,9 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     Promise.all([
       base44.entities.Estoque.list("-created_date", 500),
       base44.entities.Servico.list("-created_date", 500),
-    ]).then(([e, s]) => {
+      base44.entities.Cadastro.filter({ categoria: "Funcionário" }, "nome", 200),
+    ]).then(([e, s, funcs]) => {
+      setFuncionarios(funcs);
       setEstoque(e);
       const sortedServicos = s.slice().sort((a, b) => {
         const aMao = a.descricao?.toUpperCase().includes('MAO DE OBRA');
@@ -1165,23 +1168,30 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                   <div className="space-y-2">
                                    {/* Desktop */}
                                    <div className="hidden lg:flex flex-wrap lg:flex-nowrap gap-2 items-end">
-                                     <div {...drag.dragHandleProps} className="flex items-center self-center pb-0.5 cursor-grab text-gray-600 hover:text-gray-400 flex-shrink-0">
-                                       <GripVertical className="w-4 h-4" />
-                                     </div>
-                                     <div className="w-16 flex-shrink-0">
-                                       <label className="text-xs text-gray-500 mb-1 block">Código</label>
-                                       <input value={s.codigo || ''} onChange={e => updateServico(i, "codigo", e.target.value)} className="input-dark text-sm" autoComplete="off" />
-                                     </div>
-                                     <div className="flex-1 min-w-[200px]">
-                                       <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
-                                       <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
-                                     </div>
-                                     <div className="w-16 flex-shrink-0">
-                                       <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
-                                       <input value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
-                                     </div>
-                                     <div className="w-20 flex-shrink-0">
-                                       <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
+                                   <div {...drag.dragHandleProps} className="flex items-center self-center pb-0.5 cursor-grab text-gray-600 hover:text-gray-400 flex-shrink-0">
+                                     <GripVertical className="w-4 h-4" />
+                                   </div>
+                                   <div className="w-16 flex-shrink-0">
+                                     <label className="text-xs text-gray-500 mb-1 block">Código</label>
+                                     <input value={s.codigo || ''} onChange={e => updateServico(i, "codigo", e.target.value)} className="input-dark text-sm" autoComplete="off" />
+                                   </div>
+                                   <div className="flex-1 min-w-[160px]">
+                                     <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
+                                     <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
+                                   </div>
+                                   <div className="w-28 flex-shrink-0">
+                                     <label className="text-xs text-gray-500 mb-1 block">Técnico</label>
+                                     <select value={s.tecnico || ''} onChange={e => { const val = e.target.value; setForm(f => ({ ...f, servicos: f.servicos.map((x, xi) => xi !== i ? x : { ...x, tecnico: val }) })); }} className="input-dark text-xs">
+                                       <option value="">— Nenhum —</option>
+                                       {funcionarios.map(f => <option key={f.id} value={f.nome}>{f.nome}</option>)}
+                                     </select>
+                                   </div>
+                                   <div className="w-16 flex-shrink-0">
+                                     <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
+                                     <input value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
+                                   </div>
+                                   <div className="w-20 flex-shrink-0">
+                                     <label className="text-xs text-gray-500 mb-1 block">Valor Unit.</label>
                                        <input
                                          type="text"
                                          inputMode="decimal"
@@ -1215,6 +1225,13 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                        <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
                                        <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
                                      </div>
+                                     <div className="col-span-3">
+                                       <label className="text-xs text-gray-500 mb-1 block">Técnico</label>
+                                       <select value={s.tecnico || ''} onChange={e => { const val = e.target.value; setForm(f => ({ ...f, servicos: f.servicos.map((x, xi) => xi !== i ? x : { ...x, tecnico: val }) })); }} className="input-dark text-sm">
+                                         <option value="">— Nenhum —</option>
+                                         {funcionarios.map(f => <option key={f.id} value={f.nome}>{f.nome}</option>)}
+                                       </select>
+                                     </div>
                                      <div>
                                        <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
                                        <input value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
@@ -1245,6 +1262,13 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                            </div>
                                            <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-1 mt-6"><Trash2 className="w-4 h-4" /></button>
                                          </div>
+                                       <div className="mb-2">
+                                         <label className="text-xs text-gray-500 mb-1 block">Técnico</label>
+                                         <select value={s.tecnico || ''} onChange={e => { const val = e.target.value; setForm(f => ({ ...f, servicos: f.servicos.map((x, xi) => xi !== i ? x : { ...x, tecnico: val }) })); }} className="input-dark text-sm w-full">
+                                           <option value="">— Nenhum —</option>
+                                           {funcionarios.map(f => <option key={f.id} value={f.nome}>{f.nome}</option>)}
+                                         </select>
+                                       </div>
                                        <div className="grid grid-cols-3 gap-2">
                                          <div>
                                            <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
