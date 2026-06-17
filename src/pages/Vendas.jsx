@@ -286,6 +286,25 @@ export default function Vendas() {
   }, 0);
   const fmtTotal = v => Math.round(Number(v || 0)).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
+  // Cálculo de comissão baseado nas configurações do AbaComissoes
+  const totalComissao = (() => {
+    const configsSalvas = localStorage.getItem("comissoes_config");
+    const configs = configsSalvas ? JSON.parse(configsSalvas) : [];
+    if (!configs.length) return null;
+    let total = 0;
+    ordensComFiltrosBase.forEach(o => {
+      (o.servicos || []).forEach(sv => {
+        const tecnico = (sv.tecnico || "").trim().toLowerCase();
+        const config = configs.find(c => (c.tecnico || "").trim().toLowerCase() === tecnico);
+        if (config && config.percentual > 0) {
+          const valorServico = Number(sv.valor || 0) * Number(sv.quantidade ?? 1);
+          total += valorServico * (Number(config.percentual) / 100);
+        }
+      });
+    });
+    return total;
+  })();
+
   // Vendas com peças sem custo (valor_custo === 0 ou undefined)
   const vendasSemCusto = ordens.filter(o =>
     o.status !== "Orçamento" &&
@@ -380,7 +399,7 @@ export default function Vendas() {
           </div>
           <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
             <span className="text-xs font-semibold text-gray-400 tracking-wide">COMISSÃO</span>
-            <span className="text-sm font-bold text-white">—</span>
+            <span className="text-sm font-bold text-white">{totalComissao !== null ? fmtTotal(totalComissao) : "—"}</span>
           </div>
           <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
             <span className="text-xs font-semibold text-gray-400 tracking-wide">LUCRO</span>
