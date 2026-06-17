@@ -356,20 +356,25 @@ export default function Dashboard() {
         const valorAtualAtivos = ativos.reduce((acc, a) => acc + Number(a.valor_atual || 0), 0);
         return (
           <>
-            <div className="grid grid-cols-3 gap-0.5">
-               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                 <p className="text-gray-400 text-xs">Produtos</p>
-                 <p className="text-white font-bold text-sm">{fmt(valorCusto)}</p>
-               </div>
-               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                 <p className="text-gray-400 text-xs">Ativos</p>
-                 <p className="text-white font-bold text-sm">{fmt(valorAtualAtivos)}</p>
-               </div>
-               <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                 <p className="text-gray-400 text-xs">Total</p>
-                 <p className="text-white font-bold text-sm">{fmt(valorCusto + valorAtualAtivos)}</p>
-               </div>
-             </div>
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
+              <div className="mb-2 text-center">
+                <h2 className="text-white font-bold text-base">Ativos</h2>
+              </div>
+              <div className="grid grid-cols-3 gap-0.5">
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                  <p className="text-gray-400 text-xs">Produtos</p>
+                  <p className="text-white font-bold text-sm">{fmt(valorCusto)}</p>
+                </div>
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                  <p className="text-gray-400 text-xs">Móveis</p>
+                  <p className="text-white font-bold text-sm">{fmt(valorAtualAtivos)}</p>
+                </div>
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
+                  <p className="text-gray-400 text-xs">Total</p>
+                  <p className="text-white font-bold text-sm">{fmt(valorCusto + valorAtualAtivos)}</p>
+                </div>
+              </div>
+            </div>
           </>
         );
       })()}
