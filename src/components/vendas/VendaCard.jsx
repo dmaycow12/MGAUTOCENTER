@@ -342,42 +342,40 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
       )}
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-        {/* Topo: Número + Data | Status buttons | Ações */}
-        <div className="flex flex-wrap items-center gap-1.5 px-3 py-2.5 border-b border-gray-800">
-          {/* Número + Data */}
-          <div className="flex items-center gap-2 mr-1">
-            <div className="text-white text-base font-bold"><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
-            <span className="text-gray-500 text-xs">{fmtData(os.data_entrada)}</span>
-          </div>
-          {/* Status buttons */}
-          <div className="flex gap-1">
-            <button onClick={() => alterarStatus("Aberto")} className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-all whitespace-nowrap ${os.status === "Aberto" ? "bg-red-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}>Aberto</button>
-            <button onClick={() => alterarStatus("Concluído")} className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-all whitespace-nowrap ${os.status === "Concluído" ? "bg-green-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}>Concluído</button>
-          </div>
-          {/* Ações */}
-          <div className="flex gap-0.5 ml-auto flex-shrink-0">
-            <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Editar"><Pencil className="w-3.5 h-3.5" /></button>
-            <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Imprimir"><Printer className="w-3.5 h-3.5" /></button>
-            <button onClick={handleExcluir} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all" title="Excluir"><Trash2 className="w-3.5 h-3.5" /></button>
-            <div className="relative flex-shrink-0">
-              <button ref={menuBtnRef} onClick={() => { setMenuOpen(v => !v); }}
-                className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
-                <MoreVertical className="w-3.5 h-3.5" />
-              </button>
-              {menuOpen && (
-                <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-[9999]">
-                  {menuItems.map((item, i) => {
-                    const Icon = item.icon;
-                    return (
-                      <button key={i} onClick={item.action}
-                        className="w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-700 transition-all">
-                        <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+        {/* Topo: linha 1 - Número + Data + Ações | linha 2 - Status */}
+        <div className="px-3 py-2 border-b border-gray-800">
+          {/* Linha 1: número, data e ações numa linha só */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="text-white text-base font-bold flex-shrink-0"><InlineEdit value={os.numero} onSave={v => saveField("numero", v)} placeholder="—" onNext={() => veiculoEditRef.current?.click()} /></div>
+              <span className="text-gray-500 text-xs flex-shrink-0">{fmtData(os.data_entrada)}</span>
+            </div>
+            <div className="flex items-center gap-0.5 flex-shrink-0">
+              <button onClick={() => alterarStatus("Aberto")} className={`px-2 py-1 text-xs font-medium rounded-lg transition-all whitespace-nowrap ${os.status === "Aberto" ? "bg-red-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}>Aberto</button>
+              <button onClick={() => alterarStatus("Concluído")} className={`px-2 py-1 text-xs font-medium rounded-lg transition-all whitespace-nowrap ${os.status === "Concluído" ? "bg-green-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}>Concluído</button>
+              <button onClick={() => onEdit?.()} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Editar"><Pencil className="w-3.5 h-3.5" /></button>
+              <button onClick={imprimir} className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" title="Imprimir"><Printer className="w-3.5 h-3.5" /></button>
+              <button onClick={handleExcluir} className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-all" title="Excluir"><Trash2 className="w-3.5 h-3.5" /></button>
+              <div className="relative flex-shrink-0">
+                <button ref={menuBtnRef} onClick={() => { setMenuOpen(v => !v); }}
+                  className="p-1.5 text-gray-500 hover:text-white transition-all rounded-lg hover:bg-gray-800">
+                  <MoreVertical className="w-3.5 h-3.5" />
+                </button>
+                {menuOpen && (
+                  <div ref={menuRef} className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-52 py-1 z-[9999]">
+                    {menuItems.map((item, i) => {
+                      const Icon = item.icon;
+                      return (
+                        <button key={i} onClick={item.action}
+                          className="w-full text-left flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-700 transition-all">
+                          <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                          {item.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -413,51 +411,51 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
         )}
 
         {/* Grid 2 colunas com campos */}
-        <div className="grid grid-cols-2 gap-0">
+        <div className="grid grid-cols-2 divide-y divide-x divide-gray-800" style={{borderTop: "none"}}>
           {camposVisiveis.cliente && (
-            <div className="px-3 py-2.5 border-r border-b border-gray-800">
+            <div className="px-3 py-2.5">
               <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Cliente</p>
               <p className="text-white text-sm font-medium truncate">{os.cliente_nome_fantasia || os.cliente_nome || "—"}</p>
             </div>
           )}
           {camposVisiveis.veiculo && (
-            <div className="px-3 py-2.5 border-b border-gray-800">
+            <div className="px-3 py-2.5">
               <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Veículo</p>
               <p className="text-white text-sm font-medium truncate">{os.veiculo_modelo || "—"}</p>
             </div>
           )}
           {camposVisiveis.placa && (
-            <div className="px-3 py-2.5 border-r border-b border-gray-800">
+            <div className="px-3 py-2.5">
               <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Placa</p>
               <p className="text-white text-sm font-medium">{os.veiculo_placa?.toUpperCase() || "—"}</p>
             </div>
           )}
           {camposVisiveis.km && (
-            <div className="px-3 py-2.5 border-b border-gray-800">
+            <div className="px-3 py-2.5">
               <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">KM</p>
               <p className="text-white text-sm font-medium">{os.quilometragem || "—"}</p>
             </div>
           )}
           {camposVisiveis.valor && (
-            <div className="px-3 py-2.5 border-r border-b border-gray-800">
+            <div className="px-3 py-2.5">
               <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Valor</p>
               <p className="text-green-400 text-sm font-bold">{fmtValor(os.valor_total)}</p>
             </div>
           )}
           {camposVisiveis.contato && (
-            <div className="px-3 py-2.5 border-b border-gray-800">
+            <div className="px-3 py-2.5">
               <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Contato</p>
               <p className="text-gray-300 text-sm font-medium truncate">{os.cliente_telefone || "—"}</p>
             </div>
           )}
           {camposVisiveis.nfe && (
-            <div className="px-3 py-2.5 border-r border-b border-gray-800">
+            <div className="px-3 py-2.5">
               <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">NFe/NFCe</p>
               <p className="text-gray-300 text-sm font-medium truncate">{notasOs.find(n => n.tipo === 'NFe' || n.tipo === 'NFCe')?.numero || "—"}</p>
             </div>
           )}
           {camposVisiveis.nfse && (
-            <div className="px-3 py-2.5 border-b border-gray-800">
+            <div className="px-3 py-2.5">
               <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">NFSe</p>
               <p className="text-gray-300 text-sm font-medium truncate">{notasOs.find(n => n.tipo === 'NFSe')?.numero || "—"}</p>
             </div>
