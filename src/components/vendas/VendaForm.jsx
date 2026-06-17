@@ -39,6 +39,7 @@ const defaultForm = () => ({
   fotos: [],
   observacoes: "",
   dados_adicionais: "",
+  tecnico: "",
 });
 
 function getFeriadosBrasil(ano) {
@@ -740,7 +741,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         return { ...p };
       });
 
-      const servicosLimpos = (form.servicos || []).map(({ _new, ...s }) => ({ ...s, codigo: s.codigo?.trim() || "101" }));
+      const servicosLimpos = (form.servicos || []).map(({ _new, ...s }) => ({ ...s, codigo: s.codigo?.trim() || "101", tecnico: s.tecnico || form.tecnico || "" }));
       let formFinal = { ...form, pecas: pecasLimpas, servicos: servicosLimpos, parcelas_detalhes: parcelasNormalizadas, forma_pagamento: formaPrincipal };
 
       // Para nova venda, usa o número já calculado no useEffect (form.numero)
@@ -1175,16 +1176,9 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                      <label className="text-xs text-gray-500 mb-1 block">Código</label>
                                      <input value={s.codigo || ''} onChange={e => updateServico(i, "codigo", e.target.value)} className="input-dark text-sm" autoComplete="off" />
                                    </div>
-                                   <div className="flex-1 min-w-[160px]">
+                                   <div className="flex-1 min-w-[200px]">
                                      <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
                                      <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
-                                   </div>
-                                   <div className="w-28 flex-shrink-0">
-                                     <label className="text-xs text-gray-500 mb-1 block">Técnico</label>
-                                     <select value={s.tecnico || ''} onChange={e => { const val = e.target.value; setForm(f => ({ ...f, servicos: f.servicos.map((x, xi) => xi !== i ? x : { ...x, tecnico: val }) })); }} className="input-dark text-xs">
-                                       <option value="">— Nenhum —</option>
-                                       {funcionarios.map(f => <option key={f.id} value={f.nome}>{f.nome}</option>)}
-                                     </select>
                                    </div>
                                    <div className="w-16 flex-shrink-0">
                                      <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
@@ -1225,13 +1219,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                        <label className="text-xs text-gray-500 mb-1 block">Serviço</label>
                                        <input value={s.descricao} onChange={e => updateServico(i, "descricao", e.target.value)} className="input-dark" autoComplete="off" />
                                      </div>
-                                     <div className="col-span-3">
-                                       <label className="text-xs text-gray-500 mb-1 block">Técnico</label>
-                                       <select value={s.tecnico || ''} onChange={e => { const val = e.target.value; setForm(f => ({ ...f, servicos: f.servicos.map((x, xi) => xi !== i ? x : { ...x, tecnico: val }) })); }} className="input-dark text-sm">
-                                         <option value="">— Nenhum —</option>
-                                         {funcionarios.map(f => <option key={f.id} value={f.nome}>{f.nome}</option>)}
-                                       </select>
-                                     </div>
                                      <div>
                                        <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
                                        <input value={s.quantidade ?? 1} onChange={e => updateServico(i, "quantidade", e.target.value)} className="input-dark" autoComplete="off" />
@@ -1262,13 +1249,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                                            </div>
                                            <button onClick={() => removeServico(i)} className="text-red-400 hover:text-red-300 flex-shrink-0 p-1 mt-6"><Trash2 className="w-4 h-4" /></button>
                                          </div>
-                                       <div className="mb-2">
-                                         <label className="text-xs text-gray-500 mb-1 block">Técnico</label>
-                                         <select value={s.tecnico || ''} onChange={e => { const val = e.target.value; setForm(f => ({ ...f, servicos: f.servicos.map((x, xi) => xi !== i ? x : { ...x, tecnico: val }) })); }} className="input-dark text-sm w-full">
-                                           <option value="">— Nenhum —</option>
-                                           {funcionarios.map(f => <option key={f.id} value={f.nome}>{f.nome}</option>)}
-                                         </select>
-                                       </div>
                                        <div className="grid grid-cols-3 gap-2">
                                          <div>
                                            <label className="text-xs text-gray-500 mb-1 block">Qtd</label>
@@ -1302,6 +1282,17 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   </button>
                 </div>
                 </Section>
+
+              <Section title="Técnico">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Field label="Técnico Responsável">
+                    <select value={form.tecnico || ''} onChange={e => setForm(f => ({ ...f, tecnico: e.target.value }))} className="input-dark">
+                      <option value="">— Selecionar Técnico —</option>
+                      {funcionarios.map(f => <option key={f.id} value={f.nome}>{f.nome}</option>)}
+                    </select>
+                  </Field>
+                </div>
+              </Section>
 
               <Section title="Pagamento">
                 {/* Desktop */}
