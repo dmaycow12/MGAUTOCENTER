@@ -12,26 +12,34 @@ function getPeriodoRange(mes, ano) {
 
 export default function AbaComissoes() {
   const [vendas, setVendas] = useState([]);
+  const [funcionarios, setFuncionarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const hoje = new Date();
   const [mes, setMes] = useState(hoje.getMonth() + 1);
   const [ano, setAno] = useState(hoje.getFullYear());
 
-  // Config de comissões por técnico (salvas no localStorage)
   const [comissaoConfig, setComissaoConfig] = useState(() => {
     try { return JSON.parse(localStorage.getItem("comissao_config")) || {}; } catch { return {}; }
   });
-  const [editandoTec, setEditandoTec] = useState(null);
-  const [novoTecNome, setNovoTecNome] = useState("");
-  const [novoTecPct, setNovoTecPct] = useState("10");
+
+  // Novo técnico a adicionar
   const [showAddTec, setShowAddTec] = useState(false);
+  const [novoTecSel, setNovoTecSel] = useState("");
+  const [novoTecPct, setNovoTecPct] = useState("10");
+
+  // Edição inline de %
+  const [editPct, setEditPct] = useState({});
 
   useEffect(() => { load(); }, []);
 
   const load = async () => {
     try {
-      const data = await base44.entities.Vendas.list("-created_date", 9999);
+      const [data, funcs] = await Promise.all([
+        base44.entities.Vendas.list("-created_date", 9999),
+        base44.entities.Cadastro.filter({ categoria: "Funcionário" }, "nome", 200),
+      ]);
       setVendas(data.filter(v => v.status !== "Orçamento"));
+      setFuncionarios(funcs);
     } catch (e) {
       console.error(e);
     } finally {
@@ -54,11 +62,11 @@ export default function AbaComissoes() {
   };
 
   const adicionarTecnico = () => {
-    if (!novoTecNome.trim()) return;
+    if (!novoTecSel) return;
+    const nome = novoTecSel.trim().toUpperCase();
     const pct = parseFloat(novoTecPct) || 10;
-    const cfg = { ...comissaoConfig, [novoTecNome.trim().toUpperCase()]: pct };
-    salvarConfig(cfg);
-    setNovoTecNome("");
+    salvarConfig({ ...comissaoConfig, [nome]: pct });
+    setNovoTecSel("");
     setNovoTecPct("10");
     setShowAddTec(false);
   };
@@ -69,6 +77,12 @@ export default function AbaComissoes() {
     salvarConfig(cfg);
   };
 
+  const salvarPct = (nome) => {
+    const val = parseFloat(editPct[nome]) || 0;
+    salvarConfig({ ...comissaoConfig, [nome]: val });
+    setEditPct(prev => { const n = {...prev}; delete n[nome]; return n; });
+  };
+
   const { inicio, fim } = getPeriodoRange(mes, ano);
 
   const vendasPeriodo = vendas.filter(v => {
@@ -76,21 +90,20 @@ export default function AbaComissoes() {
     return d >= inicio && d <= fim;
   });
 
-  // Calcular comissões por técnico
+  // Calcular comissões por técnico — IGNORA serviços sem técnico
   const comissoesPorTec = {};
   vendasPeriodo.forEach(v => {
     (v.servicos || []).forEach(s => {
-      const tec = (s.tecnico || "").trim().toUpperCase() || "SEM TÉCNICO";
+      const tec = (s.tecnico || "").trim().toUpperCase();
+      if (!tec) return; // ignora sem técnico
       const valServico = Number(s.valor || 0) * Number(s.quantidade ?? 1);
-      if (!comissoesPorTec[tec]) comissoesPorTec[tec] = { servicos: 0, pecas: 0, total: 0, vendas: new Set(), detalhes: [] };
+      if (!comissoesPorTec[tec]) comissoesPorTec[tec] = { servicos: 0, vendas: new Set(), detalhes: [] };
       comissoesPorTec[tec].servicos += valServico;
       comissoesPorTec[tec].vendas.add(v.id);
       comissoesPorTec[tec].detalhes.push({ venda: v.numero, cliente: v.cliente_nome_fantasia || v.cliente_nome, servico: s.descricao, valor: valServico });
     });
-    // Peças também podem ser associadas a técnico se quiser — aqui deixamos só serviços
   });
 
-  // Calcular valor da comissão
   const resultados = Object.entries(comissoesPorTec).map(([tec, dados]) => {
     const pct = comissaoConfig[tec] ?? comissaoConfig["*"] ?? 10;
     const comissao = dados.servicos * (pct / 100);
@@ -100,6 +113,9 @@ export default function AbaComissoes() {
   const totalComissoes = resultados.reduce((acc, r) => acc + r.comissao, 0);
 
   const [expandido, setExpandido] = useState(null);
+
+  // Funcionários não configurados ainda
+  const funcionariosDisponiveis = funcionarios.filter(f => !comissaoConfig[f.nome?.toUpperCase()]);
 
   if (loading) return <div className="py-12 text-center text-gray-500">Carregando...</div>;
 
@@ -133,12 +149,16 @@ export default function AbaComissoes() {
 
         {showAddTec && (
           <div className="flex gap-2 mb-3">
-            <input
-              value={novoTecNome}
-              onChange={e => setNovoTecNome(e.target.value)}
-              placeholder="Nome do técnico"
+            <select
+              value={novoTecSel}
+              onChange={e => setNovoTecSel(e.target.value)}
               className="flex-1 bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-orange-500"
-            />
+            >
+              <option value="">— Selecionar funcionário —</option>
+              {funcionariosDisponiveis.map(f => (
+                <option key={f.id} value={f.nome}>{f.nome}</option>
+              ))}
+            </select>
             <div className="flex items-center gap-1">
               <input
                 type="number"
@@ -161,33 +181,20 @@ export default function AbaComissoes() {
           <div className="space-y-2">
             {Object.entries(comissaoConfig).map(([nome, pct]) => (
               <div key={nome} className="flex items-center justify-between bg-gray-800 rounded-lg px-3 py-2">
-                {editandoTec === nome ? (
-                  <div className="flex items-center gap-2 flex-1">
-                    <span className="text-white text-xs flex-1">{nome}</span>
-                    <input
-                      type="number"
-                      defaultValue={pct}
-                      onBlur={e => {
-                        const novoPct = parseFloat(e.target.value) || 0;
-                        salvarConfig({ ...comissaoConfig, [nome]: novoPct });
-                        setEditandoTec(null);
-                      }}
-                      autoFocus
-                      className="w-16 bg-gray-700 border border-gray-600 text-white rounded px-2 py-1 text-xs focus:outline-none"
-                    />
-                    <span className="text-gray-400 text-xs">%</span>
-                  </div>
-                ) : (
-                  <>
-                    <span className="text-white text-xs">{nome}</span>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setEditandoTec(nome)} className="text-yellow-400 text-xs font-bold hover:underline">{pct}%</button>
-                      <button onClick={() => removerTecnico(nome)} className="text-red-400 hover:text-red-300">
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </>
-                )}
+                <span className="text-white text-xs flex-1">{nome}</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={editPct[nome] !== undefined ? editPct[nome] : pct}
+                    onChange={e => setEditPct(prev => ({ ...prev, [nome]: e.target.value }))}
+                    onBlur={() => salvarPct(nome)}
+                    className="w-16 bg-gray-700 border border-gray-600 text-white rounded px-2 py-1 text-xs focus:outline-none focus:border-orange-500 text-center"
+                  />
+                  <span className="text-gray-400 text-xs">%</span>
+                  <button onClick={() => removerTecnico(nome)} className="text-red-400 hover:text-red-300">
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -197,7 +204,7 @@ export default function AbaComissoes() {
       {/* Resultados */}
       {resultados.length === 0 ? (
         <div className="rounded-xl py-8 text-center text-gray-500 text-sm" style={{ background: "#0d1b2a", border: "1px solid #1e3a5f" }}>
-          Nenhum serviço com técnico neste período
+          Nenhum serviço com técnico atribuído neste período
         </div>
       ) : (
         <div className="space-y-2">
