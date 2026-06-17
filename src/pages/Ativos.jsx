@@ -395,31 +395,35 @@ function AtivoCard({ ativo, onEdit, onDelete, onUpdate }) {
 function AtivoRow({ ativo, onEdit, onDelete, onUpdate }) {
   const foto = ativo.fotos?.[0];
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl flex items-center gap-3 px-4 py-3 hover:border-gray-700 transition-all">
-      <div className="w-12 h-12 rounded-lg bg-gray-800 flex-shrink-0 overflow-hidden flex items-center justify-center">
-        {foto ? <img src={foto} alt="" className="w-full h-full object-cover" /> : <Image className="w-5 h-5 text-gray-600" />}
+    <div className="bg-gray-900 border border-gray-800 rounded-xl px-3 py-3 hover:border-gray-700 transition-all">
+      {/* Linha superior: foto + nome + botões */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-gray-800 flex-shrink-0 overflow-hidden flex items-center justify-center">
+          {foto ? <img src={foto} alt="" className="w-full h-full object-cover" /> : <Image className="w-4 h-4 text-gray-600" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-white font-semibold text-sm truncate">{ativo.nome || "—"}</p>
+          <p className="text-gray-500 text-xs truncate">{ativo.categoria || "—"}{ativo.data_aquisicao ? ` • ${fmtData(ativo.data_aquisicao)}` : ""}</p>
+        </div>
+        <div className="flex gap-0.5 flex-shrink-0">
+          <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button onClick={onDelete} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-white font-semibold text-sm truncate">{ativo.nome || "—"}</p>
-        <p className="text-gray-500 text-xs">{ativo.categoria || "—"} {ativo.data_aquisicao ? `• ${fmtData(ativo.data_aquisicao)}` : ""}</p>
-      </div>
-      <div className="flex items-center gap-6 flex-shrink-0">
-        <div className="text-center">
+      {/* Linha inferior: valores */}
+      <div className="flex gap-3 mt-2 pl-13">
+        <div className="flex-1 bg-gray-800 rounded-lg px-3 py-1.5 text-center">
           <p className="text-gray-500 text-xs mb-0.5">Custo</p>
           <InlineValue value={ativo.valor_aquisicao} color="#f87171" onSave={v => onUpdate(ativo.id, { valor_aquisicao: v })} />
         </div>
-        <div className="text-center">
+        <div className="flex-1 bg-gray-800 rounded-lg px-3 py-1.5 text-center">
           <p className="text-gray-500 text-xs mb-0.5">Valor Atual</p>
           <InlineValue value={ativo.valor_atual} color="#4ade80" onSave={v => onUpdate(ativo.id, { valor_atual: v })} />
         </div>
-      </div>
-      <div className="flex gap-0.5 flex-shrink-0">
-         <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-800 transition-all">
-          <Pencil className="w-4 h-4" />
-        </button>
-        <button onClick={onDelete} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-800 transition-all">
-          <Trash2 className="w-4 h-4" />
-        </button>
       </div>
     </div>
   );
