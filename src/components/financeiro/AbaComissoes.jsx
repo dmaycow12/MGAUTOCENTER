@@ -88,7 +88,7 @@ export default function AbaComissoes() {
       if (!comissoesPorTec[tec]) comissoesPorTec[tec] = { servicos: 0, vendas: new Set(), detalhes: [] };
       comissoesPorTec[tec].servicos += valServico;
       comissoesPorTec[tec].vendas.add(v.id);
-      comissoesPorTec[tec].detalhes.push({ venda: v.numero, cliente: v.cliente_nome_fantasia || v.cliente_nome, servico: s.descricao, valor: valServico });
+      comissoesPorTec[tec].detalhes.push({ venda: v.numero, cliente: v.cliente_nome_fantasia || v.cliente_nome, servico: s.descricao, valor: valServico, veiculo: [v.veiculo_modelo, v.veiculo_placa].filter(Boolean).join(" · ") });
     });
   });
 
@@ -117,15 +117,15 @@ export default function AbaComissoes() {
 
       {/* ── KPIs ── */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="rounded-xl px-4 py-3 flex flex-col gap-1" style={{ background: "#0a1929", border: "1px solid #1e3a5f" }}>
+        <div className="rounded-xl px-4 py-3 flex flex-col gap-1 items-center justify-center text-center" style={{ background: "#0a1929", border: "1px solid #1e3a5f" }}>
           <span className="text-gray-500 text-xs font-medium">BASE SERVIÇOS</span>
           <span className="text-white font-bold text-sm">{fmtV(totalBase)}</span>
         </div>
-        <div className="rounded-xl px-4 py-3 flex flex-col gap-1" style={{ background: "#0a1929", border: "1px solid #1e3a5f" }}>
+        <div className="rounded-xl px-4 py-3 flex flex-col gap-1 items-center justify-center text-center" style={{ background: "#0a1929", border: "1px solid #1e3a5f" }}>
           <span className="text-gray-500 text-xs font-medium">TOTAL COMISSÕES</span>
           <span className="text-white font-bold text-sm">{fmtV(totalComissoes)}</span>
         </div>
-        <div className="rounded-xl px-4 py-3 flex flex-col gap-1" style={{ background: "#0a1929", border: "1px solid #1e3a5f" }}>
+        <div className="rounded-xl px-4 py-3 flex flex-col gap-1 items-center justify-center text-center" style={{ background: "#0a1929", border: "1px solid #1e3a5f" }}>
           <span className="text-gray-500 text-xs font-medium">TÉCNICOS</span>
           <span className="text-white font-bold text-sm">{resultados.length}</span>
         </div>
@@ -206,9 +206,10 @@ export default function AbaComissoes() {
       ) : (
         <div className="rounded-xl overflow-hidden" style={{ background: "#0a1929", border: "1px solid #1e3a5f" }}>
           {/* Header tabela */}
-          <div className="grid px-4 py-2" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr", borderBottom: "1px solid #1e3a5f", background: "rgba(6,44,155,0.12)" }}>
+          <div className="grid px-4 py-2" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", borderBottom: "1px solid #1e3a5f", background: "rgba(6,44,155,0.12)" }}>
             <span className="text-gray-500 text-xs font-bold tracking-widest">TÉCNICO</span>
-            <span className="text-gray-500 text-xs font-bold text-center">VENDAS</span>
+            <span className="text-gray-500 text-xs font-bold text-center">Nº VENDA</span>
+            <span className="text-gray-500 text-xs font-bold text-center">VEÍCULO</span>
             <span className="text-gray-500 text-xs font-bold text-right">BASE</span>
             <span className="text-gray-500 text-xs font-bold text-right">COMISSÃO</span>
           </div>
@@ -219,7 +220,7 @@ export default function AbaComissoes() {
               <button
                 onClick={() => setExpandido(expandido === r.tec ? null : r.tec)}
                 className="w-full grid px-4 py-3 hover:bg-white/[0.04] transition-all items-center"
-                style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr" }}
+                style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr" }}
               >
                 {/* Nome */}
                 <div className="text-left">
@@ -228,7 +229,16 @@ export default function AbaComissoes() {
 
                 {/* Números das vendas */}
                 <div className="text-center text-white text-xs">
-                  {r.detalhes.map((d, i) => d.venda ? <span key={i} className="inline-block mr-1">#{d.venda}</span> : null)}
+                  {[...new Set(r.detalhes.map(d => d.venda).filter(Boolean))].map((num, i) => (
+                    <span key={i} className="inline-block mr-1">#{num}</span>
+                  ))}
+                </div>
+
+                {/* Veículo */}
+                <div className="text-center text-white text-xs">
+                  {[...new Set(r.detalhes.map(d => d.veiculo).filter(Boolean))].map((v, i) => (
+                    <span key={i} className="block">{v}</span>
+                  ))}
                 </div>
 
                 {/* Base */}
@@ -271,8 +281,9 @@ export default function AbaComissoes() {
           ))}
 
           {/* Rodapé total */}
-          <div className="grid px-4 py-3 items-center" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr", borderTop: "1px solid #1e3a5f", background: "rgba(6,44,155,0.08)" }}>
+          <div className="grid px-4 py-3 items-center" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", borderTop: "1px solid #1e3a5f", background: "rgba(6,44,155,0.08)" }}>
             <span className="text-gray-400 text-xs font-bold">TOTAL</span>
+            <span />
             <span />
             <span className="text-right text-white text-xs font-semibold">{fmtV(totalBase)}</span>
             <span className="text-right text-white text-sm font-bold">{fmtV(totalComissoes)}</span>
