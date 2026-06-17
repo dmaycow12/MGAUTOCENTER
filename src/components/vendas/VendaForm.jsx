@@ -274,18 +274,26 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     if (!os?.id) return;
     base44.entities.Financeiro.filter({ ordem_venda_id: os.id }, "-created_date", 100).then(fins => {
       if (!fins || fins.length === 0) return;
-      setParcelasSync(prev => prev.map(p => {
-        if (!p.financeiro_id) {
-          const idx = prev.indexOf(p);
-          const desc = `Parcela ${idx+1}/${prev.length}`;
-          const fin = fins.find(f => f.id === p.financeiro_id || f.descricao?.includes(desc));
+      setParcelasSync(prev => {
+        const total = prev.length;
+        return prev.map((p, idx) => {
+          // Se já tem financeiro_id, sincroniza o status do banco
+          if (p.financeiro_id) {
+            const fin = fins.find(f => f.id === p.financeiro_id);
+            if (fin) return { ...p, financeiro_status: fin.status };
+            return p;
+          }
+          // Sem financeiro_id: tenta associar pelo índice (Parcela N/total) ou qualquer parcela N
+          const descExata = `Parcela ${idx+1}/${total}`;
+          let fin = fins.find(f => f.descricao?.includes(descExata));
+          if (!fin) {
+            // Fallback: procura qualquer financeiro com "Parcela N/" onde N é o índice+1
+            fin = fins.find(f => f.descricao?.includes(`Parcela ${idx+1}/`));
+          }
           if (fin) return { ...p, financeiro_id: fin.id, financeiro_status: fin.status };
           return p;
-        }
-        const fin = fins.find(f => f.id === p.financeiro_id);
-        if (fin && fin.status !== p.financeiro_status) return { ...p, financeiro_status: fin.status };
-        return p;
-      }));
+        });
+      });
     });
   }, [os?.id]);
 
