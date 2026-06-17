@@ -342,12 +342,23 @@ export default function Financeiro() {
           <div className="relative flex-1" ref={periodoDropRef}>
             <button
               onClick={() => setPeriodoDropOpen(v => !v)}
-              className={`w-full flex items-center justify-center gap-2 px-4 h-11 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
+              className={`w-full h-full min-h-[48px] flex items-center justify-center gap-1 px-2 rounded-xl font-semibold transition-all ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
+              style={{fontSize:"clamp(11px,1.5vw,13px)"}}
             >
-              {usandoOutroPeriodo && customRange
-                ? `${customRange.inicio.split("-").reverse().join("/")} — ${customRange.fim.split("-").reverse().join("/")}`
-                : `${String(1).padStart(2, "0")}/${String(filtroMes).padStart(2, "0")}/${filtroAno} — ${String(new Date(filtroAno, filtroMes, 0).getDate()).padStart(2, "0")}/${String(filtroMes).padStart(2, "0")}/${filtroAno}`}
-              <ChevronDown className={`w-4 h-4 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
+              <span className="text-center leading-tight flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                <span>
+                  {usandoOutroPeriodo && customRange
+                    ? customRange.inicio.split("-").reverse().join("/")
+                    : `${String(1).padStart(2,"0")}/${String(filtroMes).padStart(2,"0")}/${filtroAno}`}
+                </span>
+                <span className="hidden sm:inline">—</span>
+                <span>
+                  {usandoOutroPeriodo && customRange
+                    ? customRange.fim.split("-").reverse().join("/")
+                    : `${String(new Date(filtroAno,filtroMes,0).getDate()).padStart(2,"0")}/${String(filtroMes).padStart(2,"0")}/${filtroAno}`}
+                </span>
+              </span>
+              <ChevronDown className={`w-3 h-3 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
             </button>
             {periodoDropOpen && (
               <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
@@ -387,71 +398,6 @@ export default function Financeiro() {
             )}
           </div>
         </div>
-
-        {/* Gráficos */}
-        <FluxoMes financeiro={itemsNoPeriodo} />
-
-        {/* Saldo do Caixa */}
-        {(() => {
-          const mesesComMovimento = new Set(items
-            .filter(f => f.status === "Pago" && (f.data_pagamento || f.data_vencimento))
-            .map(f => (f.data_pagamento || f.data_vencimento).substring(0, 7)));
-          const mesesFuturos = new Set(items
-            .filter(f => (f.data_vencimento || "") > hojeKey)
-            .map(f => f.data_vencimento.substring(0, 7)));
-          const todosMeses = Array.from(new Set([...mesesComMovimento, ...mesesFuturos, hojeKey])).sort();
-          const idxAtual = todosMeses.indexOf(saldoMesKey);
-          const saldoMesSeguro = idxAtual === -1 ? hojeKey : saldoMesKey;
-          const idxSeguro = idxAtual === -1 ? todosMeses.indexOf(hojeKey) : idxAtual;
-          const navSaldo = (dir) => {
-            const novoIdx = idxSeguro + dir;
-            if (novoIdx >= 0 && novoIdx < todosMeses.length) {
-              const novo = todosMeses[novoIdx];
-              setSaldoMesKey(novo);
-              localStorage.setItem("fin_saldoMes", novo);
-            }
-          };
-          const [saldoAno, saldoMesNum] = saldoMesSeguro.split("-").map(Number);
-          const fmtV = v => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-          const totalRecebido = items.filter(f => f.tipo === "Receita" && f.status === "Pago" && (f.data_vencimento || "").startsWith(saldoMesSeguro)).reduce((acc, f) => acc + Number(f.valor || 0), 0);
-          const totalPago = items.filter(f => f.tipo === "Despesa" && f.status === "Pago" && (f.data_vencimento || "").startsWith(saldoMesSeguro)).reduce((acc, f) => acc + Number(f.valor || 0), 0);
-          const saldoAnterior = items.filter(f => f.status === "Pago" && (f.data_vencimento || "") < saldoMesSeguro).reduce((acc, f) => acc + (f.tipo === "Receita" ? 1 : -1) * Number(f.valor || 0), 0);
-          const saldo = saldoAnterior + totalRecebido - totalPago;
-          return (
-            <div className="rounded-2xl p-4" style={{background: "linear-gradient(135deg, #0a1929 0%, #132642 100%)", border: "1px solid #1e4d7b"}}>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-white font-bold text-lg">Saldo do Caixa</h2>
-                <div className="flex items-center gap-0.5">
-                  <button onClick={() => navSaldo(-1)} disabled={idxSeguro === 0} className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-white/10 disabled:opacity-30 transition-all" style={{background:"rgba(255,255,255,0.07)"}}>
-                    <ChevronLeft className="w-3 h-3 text-white" />
-                  </button>
-                  <span className="text-white text-xs font-semibold px-2 min-w-[110px] text-center">{MESES[saldoMesNum - 1]} - {saldoAno}</span>
-                  <button onClick={() => navSaldo(1)} disabled={idxSeguro === todosMeses.length - 1} className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-white/10 disabled:opacity-30 transition-all" style={{background:"rgba(255,255,255,0.07)"}}>
-                    <ChevronRight className="w-3 h-3 text-white" />
-                  </button>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <div className="flex-1 rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1 min-w-0" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
-                  <span className="text-xs font-semibold text-gray-400 tracking-wide">Saldo Anterior</span>
-                  <span className="text-xs font-bold truncate" style={{color: saldoAnterior >= 0 ? "#60a5fa" : "#FF4444"}}>{saldoAnterior >= 0 ? fmtV(saldoAnterior) : `- ${fmtV(Math.abs(saldoAnterior))}`}</span>
-                </div>
-                <div className="flex-1 rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1 min-w-0" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
-                  <span className="text-xs font-semibold text-gray-400 tracking-wide">Recebido</span>
-                  <span className="text-xs font-bold text-green-400 truncate">{fmtV(totalRecebido)}</span>
-                </div>
-                <div className="flex-1 rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1 min-w-0" style={{background: "#0d1b2a", border: "1px solid #1e3a5f"}}>
-                  <span className="text-xs font-semibold text-gray-400 tracking-wide">Pago</span>
-                  <span className="text-xs font-bold text-red-400 truncate">{fmtV(totalPago)}</span>
-                </div>
-                <div className="flex-1 rounded-xl px-2 py-2 flex flex-col items-center justify-center gap-1 min-w-0" style={{background: saldo >= 0 ? "#0d1b2a" : "#2a0d0d", border: saldo >= 0 ? "1px solid #1e3a5f" : "1px solid #5f1e1e"}}>
-                  <span className="text-xs font-semibold text-gray-400 tracking-wide">Saldo Real</span>
-                  <span className="text-xs font-bold truncate" style={{color: saldo >= 0 ? "#00C957" : "#FF4444"}}>{saldo >= 0 ? fmtV(saldo) : `- ${fmtV(Math.abs(saldo))}`}</span>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
 
         {/* Linha 3: filtro tipo — Receita / Despesa / Todos */}
             <div className="flex gap-0.5">
