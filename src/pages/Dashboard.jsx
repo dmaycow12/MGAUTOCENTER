@@ -362,37 +362,12 @@ export default function Dashboard() {
                  <p className="text-white font-bold text-sm">{fmt(valorCusto)}</p>
                </div>
                <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                 <p className="text-gray-400 text-xs">Móveis</p>
+                 <p className="text-gray-400 text-xs">Ativos</p>
                  <p className="text-white font-bold text-sm">{fmt(valorAtualAtivos)}</p>
                </div>
                <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
                  <p className="text-gray-400 text-xs">Total</p>
                  <p className="text-white font-bold text-sm">{fmt(valorCusto + valorAtualAtivos)}</p>
-               </div>
-             </div>
-
-             {/* Card Ativos */}
-             <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
-               <div className="mb-2 text-center">
-                 <h2 className="text-white font-bold text-base">Ativos</h2>
-               </div>
-               <div className="grid grid-cols-2 sm:grid-cols-4 gap-0.5">
-                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                   <p className="text-gray-400 text-xs">Quantidade</p>
-                   <p className="text-white font-bold text-sm">{totalAtivos}</p>
-                 </div>
-                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                   <p className="text-gray-400 text-xs">Valor de Compra</p>
-                   <p className="text-white font-bold text-sm">{fmt(valorCompraAtivos)}</p>
-                 </div>
-                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                   <p className="text-gray-400 text-xs">Valor Atual</p>
-                   <p className="text-white font-bold text-sm">{fmt(valorAtualAtivos)}</p>
-                 </div>
-                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 text-center">
-                   <p className="text-gray-400 text-xs">Ativos</p>
-                   <p className="text-white font-bold text-sm">{ativos.filter(a => a.status === "Ativo").length}</p>
-                 </div>
                </div>
              </div>
           </>
