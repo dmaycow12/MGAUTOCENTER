@@ -350,7 +350,7 @@ export default function Vendas() {
         <div className="grid grid-cols-4 gap-0.5">
           <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
             <span className="text-xs font-semibold text-gray-400 tracking-wide">VENDAS</span>
-            <span className="text-sm font-bold text-green-400">{ordensComFiltrosBase.length}</span>
+            <span className="text-sm font-bold text-white">{ordensComFiltrosBase.length}</span>
           </div>
           {[
             { label: "PÁTIO", value: totalPatio },
@@ -359,27 +359,31 @@ export default function Vendas() {
           ].map(({ label, value }) => (
             <div key={label} className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
               <span className="text-xs font-semibold text-gray-400 tracking-wide">{label}</span>
-              <span className="text-sm font-bold text-green-400">{fmtTotal(value)}</span>
+              <span className="text-sm font-bold text-white">{fmtTotal(value)}</span>
             </div>
           ))}
         </div>
         {/* Cards de totais - linha 2 */}
-        <div className="grid grid-cols-4 gap-0.5">
+        <div className="grid grid-cols-5 gap-0.5">
           <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
             <span className="text-xs font-semibold text-gray-400 tracking-wide">CUSTO</span>
-            <span className="text-sm font-bold text-green-400">{fmtTotal(totalCusto)}</span>
+            <span className="text-sm font-bold text-white">{fmtTotal(totalCusto)}</span>
           </div>
           <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
             <span className="text-xs font-semibold text-gray-400 tracking-wide">LUCRO PEÇAS</span>
-            <span className={`text-sm font-bold ${totalLucroPecas >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmtTotal(totalLucroPecas)}</span>
+            <span className={`text-sm font-bold ${totalLucroPecas >= 0 ? 'text-white' : 'text-red-400'}`}>{fmtTotal(totalLucroPecas)}</span>
           </div>
           <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
             <span className="text-xs font-semibold text-gray-400 tracking-wide">SERVIÇOS</span>
-            <span className={`text-sm font-bold ${totalLucroServicos >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmtTotal(totalLucroServicos)}</span>
+            <span className={`text-sm font-bold ${totalLucroServicos >= 0 ? 'text-white' : 'text-red-400'}`}>{fmtTotal(totalLucroServicos)}</span>
           </div>
           <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
-            <span className="text-xs font-semibold text-gray-400 tracking-wide">LUCRO BRUTO</span>
-            <span className={`text-sm font-bold ${totalLucroBruto >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmtTotal(totalLucroBruto)}</span>
+            <span className="text-xs font-semibold text-gray-400 tracking-wide">COMISSÃO</span>
+            <span className="text-sm font-bold text-white">—</span>
+          </div>
+          <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
+            <span className="text-xs font-semibold text-gray-400 tracking-wide">LUCRO</span>
+            <span className={`text-sm font-bold ${totalLucroBruto >= 0 ? 'text-white' : 'text-red-400'}`}>{fmtTotal(totalLucroBruto)}</span>
           </div>
         </div>
 
