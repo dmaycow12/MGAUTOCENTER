@@ -15,7 +15,7 @@ function fmt(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-const COLORS = ["#062C9B", "#1d4ed8", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"];
+const COLORS = ["#062C9B", "#062C9B", "#062C9B", "#062C9B", "#062C9B", "#062C9B", "#062C9B", "#062C9B"];
 
 export default function EstatisticasProdutosServicos({ vendas, servicosCad = [], estoque = [] }) {
   const [aba, setAba] = useState(() => localStorage.getItem("eps_aba") || "produtos");
@@ -94,7 +94,7 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
     const totalProdutos = rankProdutos.reduce((acc, p) => acc + p.receita, 0);
 
     return { rankServicos, rankProdutos, rankServicosCodigo, rankProdutosCodigo, totalServicos, totalProdutos, semCodigoProdutos, semCodigoServicos };
-  }, [vendas]);
+  }, [vendas, estoque, servicosCad]);
 
   const rankAtualServicos = rankServicosCodigo;
   const rankAtualProdutos = rankProdutosCodigo;
@@ -186,10 +186,10 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
       {/* Gráfico top 8 */}
       {topChart.length > 0 && (
         <ResponsiveContainer width="100%" height={topChart.length * 26 + 10}>
-          <BarChart data={topChart} layout="vertical" margin={{ top: 0, right: 80, left: 0, bottom: 0 }} data-truncate={false}>
+          <BarChart data={topChart} layout="vertical" margin={{ top: 0, right: 90, left: 0, bottom: 0 }} data-truncate={false}>
             <XAxis type="number" hide />
-            <YAxis type="category" dataKey="label" width={200} tick={{ fill: "#9ca3af", fontSize: 9, textAnchor: "end" }} axisLine={false} tickLine={false} />
-            <Bar dataKey="valor" barSize={14} radius={[0, 4, 4, 0]} label={{ position: 'insideRight', formatter: (v) => fmt(v), fill: '#fff', fontSize: 10, dx: 75 }}>
+            <YAxis type="category" dataKey="label" width={160} tick={{ fill: "#9ca3af", fontSize: 9, textAnchor: "end" }} axisLine={false} tickLine={false} />
+            <Bar dataKey="valor" barSize={12} radius={[0, 4, 4, 0]} label={{ position: 'insideRight', formatter: (v) => fmt(v), fill: '#fff', fontSize: 10, dx: 85 }}>
               {topChart.map((_, i) => (
                 <Cell key={i} fill={COLORS[Math.min(i, COLORS.length - 1)]} />
               ))}
