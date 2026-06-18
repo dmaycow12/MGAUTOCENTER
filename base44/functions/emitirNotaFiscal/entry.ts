@@ -498,10 +498,13 @@ Deno.serve(async (req) => {
         ...(codigoMunicipioDestinatario ? { codigo_municipio_destinatario: codigoMunicipioDestinatario } : {}),
         uf_destinatario: cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
-        // Regra: sem IE => indicador 1 | com IE => indicador 9. IE só é enviada em produção.
-        indicador_inscricao_estadual_destinatario: (cliente_ie && cliente_ie.trim()) ? '9' : '1',
+        // Regra SEFAZ (indIEDest):
+        // - Cliente COM IE (contribuinte): indicador 1 + envia IE + consumidor_final 0
+        // - Cliente SEM IE (não contribuinte): indicador 9 + sem IE + consumidor_final 1
+        // Na homologação (preview) a IE nunca é enviada, então usa indicador 9 + consumidor_final 1.
+        indicador_inscricao_estadual_destinatario: (!isHomologacao && cliente_ie && cliente_ie.trim()) ? '1' : '9',
         ...(!isHomologacao && cliente_ie && cliente_ie.trim() ? { inscricao_estadual_destinatario: cliente_ie.replace(/\D/g, '') } : {}),
-        consumidor_final: (cliente_ie && cliente_ie.trim()) ? '0' : '1',
+        consumidor_final: (!isHomologacao && cliente_ie && cliente_ie.trim()) ? '0' : '1',
         modalidade_frete: '9',
         serie: SERIE_NFE,
         items: prodItems.map((it, idx) => ({
