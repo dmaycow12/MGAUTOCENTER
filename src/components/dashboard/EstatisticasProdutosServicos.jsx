@@ -47,8 +47,11 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
 
         if (codigoServico) {
           const cod = codigoServico.toUpperCase().trim();
-          const servicoDesc = servicosCad.find(sc => sc.codigo?.toUpperCase().trim() === cod)?.descricao || cod;
+          const servicoCad = servicosCad.find(sc => sc.codigo?.toUpperCase().trim() === cod);
+          const servicoDesc = servicoCad?.descricao ? normalizar(servicoCad.descricao) : normalizar(s.descricao || cod);
           if (!mapServicosCodigo[cod]) mapServicosCodigo[cod] = { codigo: cod, descricao: servicoDesc, receita: 0, custo: 0, quantidade: 0, vezes: 0 };
+          // Atualiza a descrição se o cadastro foi alterado depois
+          else if (servicoCad?.descricao) mapServicosCodigo[cod].descricao = normalizar(servicoCad.descricao);
           mapServicosCodigo[cod].receita += total;
           mapServicosCodigo[cod].custo += custo;
           mapServicosCodigo[cod].quantidade += Number(s.quantidade || 1);
@@ -74,8 +77,10 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
           const cod = p.codigo.toUpperCase().trim();
           // Sempre usa a descrição real do cadastro, nunca a editada na venda
           const itemCadastro = estoque.find(e => e.codigo?.toUpperCase().trim() === cod);
-          const descReal = itemCadastro?.descricao ? normalizar(itemCadastro.descricao) : cod;
+          const descReal = itemCadastro?.descricao ? normalizar(itemCadastro.descricao) : normalizar(p.descricao || cod);
           if (!mapProdutosCodigo[cod]) mapProdutosCodigo[cod] = { codigo: cod, descricao: descReal, receita: 0, custo: 0, quantidade: 0, vezes: 0 };
+          // Atualiza a descrição se o cadastro foi alterado depois
+          else if (itemCadastro?.descricao) mapProdutosCodigo[cod].descricao = normalizar(itemCadastro.descricao);
           mapProdutosCodigo[cod].receita += total;
           mapProdutosCodigo[cod].custo += custoPeca;
           mapProdutosCodigo[cod].quantidade += Number(p.quantidade || 1);
