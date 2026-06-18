@@ -48,10 +48,10 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
         if (codigoServico) {
           const cod = codigoServico.toUpperCase().trim();
           const servicoCad = servicosCad.find(sc => sc.codigo?.toUpperCase().trim() === cod);
+          // Sempre usa a descrição atual do cadastro
           const servicoDesc = servicoCad?.descricao ? normalizar(servicoCad.descricao) : normalizar(s.descricao || cod);
           if (!mapServicosCodigo[cod]) mapServicosCodigo[cod] = { codigo: cod, descricao: servicoDesc, receita: 0, custo: 0, quantidade: 0, vezes: 0 };
-          // Atualiza a descrição se o cadastro foi alterado depois
-          else if (servicoCad?.descricao) mapServicosCodigo[cod].descricao = normalizar(servicoCad.descricao);
+          else mapServicosCodigo[cod].descricao = servicoDesc;
           mapServicosCodigo[cod].receita += total;
           mapServicosCodigo[cod].custo += custo;
           mapServicosCodigo[cod].quantidade += Number(s.quantidade || 1);
@@ -75,16 +75,20 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
         // Por código (ignora sem código)
         if (p.codigo && p.codigo.trim()) {
           const cod = p.codigo.toUpperCase().trim();
-          // Sempre usa a descrição real do cadastro, nunca a editada na venda
-          const itemCadastro = estoque.find(e => e.codigo?.toUpperCase().trim() === cod);
+          // Busca no estoque por código principal OU códigos adicionais
+          const itemCadastro = estoque.find(e =>
+            e.codigo?.toUpperCase().trim() === cod ||
+            (e.codigos || []).some(c => c?.toUpperCase().trim() === cod)
+          );
+          // Sempre usa a descrição atual do cadastro
           const descReal = itemCadastro?.descricao ? normalizar(itemCadastro.descricao) : normalizar(p.descricao || cod);
-          if (!mapProdutosCodigo[cod]) mapProdutosCodigo[cod] = { codigo: cod, descricao: descReal, receita: 0, custo: 0, quantidade: 0, vezes: 0 };
-          // Atualiza a descrição se o cadastro foi alterado depois
-          else if (itemCadastro?.descricao) mapProdutosCodigo[cod].descricao = normalizar(itemCadastro.descricao);
-          mapProdutosCodigo[cod].receita += total;
-          mapProdutosCodigo[cod].custo += custoPeca;
-          mapProdutosCodigo[cod].quantidade += Number(p.quantidade || 1);
-          mapProdutosCodigo[cod].vezes += 1;
+          const codReal = itemCadastro?.codigo?.toUpperCase().trim() || cod;
+          if (!mapProdutosCodigo[codReal]) mapProdutosCodigo[codReal] = { codigo: codReal, descricao: descReal, receita: 0, custo: 0, quantidade: 0, vezes: 0 };
+          else mapProdutosCodigo[codReal].descricao = descReal;
+          mapProdutosCodigo[codReal].receita += total;
+          mapProdutosCodigo[codReal].custo += custoPeca;
+          mapProdutosCodigo[codReal].quantidade += Number(p.quantidade || 1);
+          mapProdutosCodigo[codReal].vezes += 1;
         } else if (total > 0) {
           semCodigoProdutos.push({ venda_numero: venda.numero || venda.id, cliente: venda.cliente_nome || '-', descricao: desc, valor: total });
         }
