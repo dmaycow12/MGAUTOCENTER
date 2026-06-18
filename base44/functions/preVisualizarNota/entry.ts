@@ -262,8 +262,9 @@ Deno.serve(async (req) => {
         uf_destinatario: nota.cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
         // Preview é SEMPRE homologação: nunca envia IE. Regra: sem IE => indicador 1, com IE => indicador 9.
+        // SEFAZ: indicador 9 (não contribuinte) exige consumidor_final 1; indicador 1 exige consumidor_final 0.
         indicador_inscricao_estadual_destinatario: (nota.cliente_ie && nota.cliente_ie.trim()) ? '9' : '1',
-        consumidor_final: (nota.cliente_ie && nota.cliente_ie.trim()) ? '0' : '1',
+        consumidor_final: (nota.cliente_ie && nota.cliente_ie.trim()) ? '1' : '0',
         modalidade_frete: '9',
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
