@@ -194,11 +194,11 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
 
       {/* Gráfico top 8 */}
       {topChart.length > 0 && (
-        <ResponsiveContainer width="100%" height={topChart.length * 26 + 10}>
-          <BarChart data={topChart} layout="vertical" margin={{ top: 0, right: 90, left: 0, bottom: 0 }} data-truncate={false}>
+        <ResponsiveContainer width="100%" height={topChart.length * 22 + 10}>
+          <BarChart data={topChart} layout="vertical" margin={{ top: 0, right: 100, left: 0, bottom: 0 }} data-truncate={false}>
             <XAxis type="number" hide />
-            <YAxis type="category" dataKey="label" width={160} tick={{ fill: "#9ca3af", fontSize: 9, textAnchor: "end" }} axisLine={false} tickLine={false} />
-            <Bar dataKey="valor" barSize={12} radius={[0, 4, 4, 0]} label={{ position: 'insideRight', formatter: (v) => fmt(v), fill: '#fff', fontSize: 10, dx: 85 }}>
+            <YAxis type="category" dataKey="label" width={220} tick={{ fill: "#9ca3af", fontSize: 9, textAnchor: "end", width: 215 }} axisLine={false} tickLine={false} />
+            <Bar dataKey="valor" barSize={8} radius={[0, 4, 4, 0]} label={{ position: 'insideRight', formatter: (v) => fmt(v), fill: '#fff', fontSize: 10, dx: 95 }}>
               {topChart.map((_, i) => (
                 <Cell key={i} fill={COLORS[Math.min(i, COLORS.length - 1)]} />
               ))}
