@@ -498,9 +498,10 @@ Deno.serve(async (req) => {
         ...(codigoMunicipioDestinatario ? { codigo_municipio_destinatario: codigoMunicipioDestinatario } : {}),
         uf_destinatario: cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
-        indicador_inscricao_estadual_destinatario: (cliente_ie && cliente_ie.trim()) ? '1' : '9',
-        ...(cliente_ie && cliente_ie.trim() ? { inscricao_estadual_destinatario: cliente_ie.replace(/\D/g, '') } : {}),
-        consumidor_final: (cliente_ie && cliente_ie.trim()) ? '0' : '1',
+        // Em homologação, a SEFAZ rejeita IE real — forçar não-contribuinte sem IE
+        indicador_inscricao_estadual_destinatario: (!isHomologacao && cliente_ie && cliente_ie.trim()) ? '1' : '9',
+        ...(!isHomologacao && cliente_ie && cliente_ie.trim() ? { inscricao_estadual_destinatario: cliente_ie.replace(/\D/g, '') } : {}),
+        consumidor_final: (!isHomologacao && cliente_ie && cliente_ie.trim()) ? '0' : '1',
         modalidade_frete: '9',
         serie: SERIE_NFE,
         items: prodItems.map((it, idx) => ({
