@@ -16,10 +16,9 @@ export default function AbaComissoes() {
   const [funcionarios, setFuncionarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [periodoRange, setPeriodoRange] = useState(() => getPeriodoRange(hoje.getMonth() + 1, hoje.getFullYear()));
+  const [configId, setConfigId] = useState(null); // id do registro Configuracao no banco
 
-  const [comissaoConfig, setComissaoConfig] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("comissao_config")) || {}; } catch { return {}; }
-  });
+  const [comissaoConfig, setComissaoConfig] = useState({});
 
   // Novo técnico a adicionar
   const [showAddTec, setShowAddTec] = useState(false);
@@ -33,12 +32,23 @@ export default function AbaComissoes() {
 
   const load = async () => {
     try {
-      const [data, funcs] = await Promise.all([
+      const [data, funcs, configs] = await Promise.all([
         base44.entities.Vendas.list("-created_date", 9999),
         base44.entities.Cadastro.filter({ categoria: "Funcionário" }, "nome", 200),
+        base44.entities.Configuracao.filter({ chave: "comissao_config" }),
       ]);
       setVendas(data.filter(v => v.status !== "Orçamento"));
       setFuncionarios(funcs);
+      if (configs.length > 0) {
+        setConfigId(configs[0].id);
+        try { setComissaoConfig(JSON.parse(configs[0].valor) || {}); } catch { setComissaoConfig({}); }
+      } else {
+        // migrar do localStorage se existir
+        const local = localStorage.getItem("comissao_config");
+        if (local) {
+          try { setComissaoConfig(JSON.parse(local) || {}); } catch {}
+        }
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -46,9 +56,15 @@ export default function AbaComissoes() {
     }
   };
 
-  const salvarConfig = (cfg) => {
+  const salvarConfig = async (cfg) => {
     setComissaoConfig(cfg);
-    localStorage.setItem("comissao_config", JSON.stringify(cfg));
+    const valor = JSON.stringify(cfg);
+    if (configId) {
+      await base44.entities.Configuracao.update(configId, { valor });
+    } else {
+      const novo = await base44.entities.Configuracao.create({ chave: "comissao_config", valor, descricao: "Percentuais de comissão por técnico" });
+      setConfigId(novo.id);
+    }
   };
 
   const adicionarTecnico = () => {

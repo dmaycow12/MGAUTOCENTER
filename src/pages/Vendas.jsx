@@ -169,22 +169,28 @@ export default function Vendas() {
     });
   };
 
+  const [comissaoConfig, setComissaoConfig] = useState({});
+
   useEffect(() => { load(); }, []);
 
   const load = async () => {
     try {
       console.log("Iniciando carregamento de Vendas...");
-      const [o, c, n, e] = await Promise.all([
+      const [o, c, n, e, configs] = await Promise.all([
         base44.entities.Vendas.list("-created_date", 2000),
         base44.entities.Cadastro.list("-created_date", 2000),
         base44.entities.NotaFiscal.list("-created_date", 1000),
         base44.entities.Estoque.list("-created_date", 500),
+        base44.entities.Configuracao.filter({ chave: "comissao_config" }),
       ]);
       console.log("Vendas carregadas:", o?.length || 0);
       setOrdens(o);
       setClientes(c);
       setNotas(n);
       setEstoque(e);
+      if (configs.length > 0) {
+        try { setComissaoConfig(JSON.parse(configs[0].valor) || {}); } catch {}
+      }
     } catch (err) {
       console.error("Erro ao carregar Vendas:", err);
       console.error("Stack:", err.stack);
@@ -286,24 +292,21 @@ export default function Vendas() {
   }, 0);
   const fmtTotal = v => Math.round(Number(v || 0)).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
-  // Cálculo de comissão baseado nas configurações do AbaComissoes
+  // Cálculo de comissão baseado nas configurações do AbaComissoes (banco de dados)
   const totalComissao = (() => {
-    try {
-      const comissaoConfig = JSON.parse(localStorage.getItem("comissao_config")) || {};
-      if (!Object.keys(comissaoConfig).length) return null;
-      let total = 0;
-      ordensComFiltrosBase.forEach(o => {
-        (o.servicos || []).forEach(sv => {
-          const tec = (sv.tecnico || "").trim().toUpperCase();
-          if (!tec) return;
-          const pct = comissaoConfig[tec] ?? comissaoConfig["*"] ?? null;
-          if (pct === null) return;
-          const valorServico = Number(sv.valor || 0) * Number(sv.quantidade ?? 1);
-          total += valorServico * (Number(pct) / 100);
-        });
+    if (!Object.keys(comissaoConfig).length) return null;
+    let total = 0;
+    ordensComFiltrosBase.forEach(o => {
+      (o.servicos || []).forEach(sv => {
+        const tec = (sv.tecnico || "").trim().toUpperCase();
+        if (!tec) return;
+        const pct = comissaoConfig[tec] ?? comissaoConfig["*"] ?? null;
+        if (pct === null) return;
+        const valorServico = Number(sv.valor || 0) * Number(sv.quantidade ?? 1);
+        total += valorServico * (Number(pct) / 100);
       });
-      return total;
-    } catch { return null; }
+    });
+    return total;
   })();
 
   // Vendas com peças sem custo (valor_custo === 0 ou undefined)
