@@ -16,19 +16,10 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const db = base44.asServiceRole;
     const body = await req.json();
-    const { nota_id, forcar, auth_secret } = body;
+    const { nota_id, forcar } = body;
 
-    const AUTH_SECRET = Deno.env.get('AUTH_SECRET') || '';
-    const reqSecret = req.headers.get('x-auth-secret') || auth_secret || '';
-    if (!AUTH_SECRET || reqSecret !== AUTH_SECRET) {
-      // Tenta autenticação Base44 como fallback (funciona no preview Base44)
-      try {
-        const user = await base44.auth.me();
-        if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
-      } catch (_) {
-        return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
-      }
-    }
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ sucesso: false, erro: 'Não autorizado' }, { status: 401 });
 
     if (!nota_id) return Response.json({ sucesso: false, erro: 'nota_id obrigatório' });
 
