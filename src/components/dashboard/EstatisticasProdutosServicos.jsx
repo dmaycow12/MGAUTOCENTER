@@ -192,20 +192,37 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
        </button>
       </div>
 
-      {/* Gráfico top 8 */}
-      {topChart.length > 0 && (
-        <ResponsiveContainer width="100%" height={topChart.length * 22 + 10}>
-          <BarChart data={topChart} layout="vertical" margin={{ top: 0, right: 100, left: 0, bottom: 0 }} data-truncate={false}>
-            <XAxis type="number" hide />
-            <YAxis type="category" dataKey="label" width={220} tick={{ fill: "#9ca3af", fontSize: 9, textAnchor: "end", width: 215 }} axisLine={false} tickLine={false} />
-            <Bar dataKey="valor" barSize={8} radius={[0, 4, 4, 0]} label={{ position: 'insideRight', formatter: (v) => fmt(v), fill: '#fff', fontSize: 10, dx: 95 }}>
-              {topChart.map((_, i) => (
-                <Cell key={i} fill={COLORS[Math.min(i, COLORS.length - 1)]} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      )}
+      {/* Gráfico top 8 - layout customizado: label esquerda, barra+valor direita */}
+      {topChart.length > 0 && (() => {
+        const maxVal = Math.max(...topChart.map(i => i.valor), 1);
+        return (
+          <div className="space-y-1.5">
+            {topChart.map((item, i) => {
+              const pct = Math.max(2, (item.valor / maxVal) * 100);
+              return (
+                <div key={i} className="flex items-center gap-2" style={{ minHeight: 20 }}>
+                  {/* Label: ocupa 45% à esquerda */}
+                  <div className="text-right shrink-0 text-gray-400 leading-tight" style={{ width: "45%", fontSize: 9 }}>
+                    {item.label}
+                  </div>
+                  {/* Barra + valor: ocupa 55% à direita */}
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                    <div className="flex-1 bg-gray-800 rounded" style={{ height: 8 }}>
+                      <div
+                        className="h-full rounded"
+                        style={{ width: `${pct}%`, background: "#062C9B" }}
+                      />
+                    </div>
+                    <span className="text-white shrink-0" style={{ fontSize: 9, minWidth: 70, textAlign: "right" }}>
+                      {fmt(item.valor)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Total no rodapé */}
       <div className="flex justify-end pt-1 border-t border-gray-800">
