@@ -190,6 +190,12 @@ export default function Vendas() {
       setEstoque(e);
       if (configs.length > 0) {
         try { setComissaoConfig(JSON.parse(configs[0].valor) || {}); } catch {}
+      } else {
+        // fallback: ler do localStorage
+        try {
+          const local = localStorage.getItem("comissao_config");
+          if (local) setComissaoConfig(JSON.parse(local) || {});
+        } catch {}
       }
     } catch (err) {
       console.error("Erro ao carregar Vendas:", err);

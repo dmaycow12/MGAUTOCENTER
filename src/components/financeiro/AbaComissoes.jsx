@@ -43,10 +43,17 @@ export default function AbaComissoes() {
         setConfigId(configs[0].id);
         try { setComissaoConfig(JSON.parse(configs[0].valor) || {}); } catch { setComissaoConfig({}); }
       } else {
-        // migrar do localStorage se existir
+        // migrar do localStorage para o banco automaticamente
         const local = localStorage.getItem("comissao_config");
         if (local) {
-          try { setComissaoConfig(JSON.parse(local) || {}); } catch {}
+          try {
+            const cfg = JSON.parse(local) || {};
+            if (Object.keys(cfg).length > 0) {
+              const novo = await base44.entities.Configuracao.create({ chave: "comissao_config", valor: local, descricao: "Percentuais de comissão por técnico" });
+              setConfigId(novo.id);
+              setComissaoConfig(cfg);
+            }
+          } catch { setComissaoConfig({}); }
         }
       }
     } catch (e) {
