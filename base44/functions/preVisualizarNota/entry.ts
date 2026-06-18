@@ -261,8 +261,8 @@ Deno.serve(async (req) => {
         ...(codigoMunicipioDestinatario ? { codigo_municipio_destinatario: codigoMunicipioDestinatario } : {}),
         uf_destinatario: nota.cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
-        indicador_inscricao_estadual_destinatario: (nota.cliente_ie && nota.cliente_ie.trim()) ? '1' : '9',
-        ...(nota.cliente_ie && nota.cliente_ie.trim() ? { inscricao_estadual_destinatario: nota.cliente_ie.replace(/\D/g, '') } : {}),
+        // Preview é SEMPRE homologação: nunca envia IE. Regra: sem IE => indicador 1, com IE => indicador 9.
+        indicador_inscricao_estadual_destinatario: (nota.cliente_ie && nota.cliente_ie.trim()) ? '9' : '1',
         consumidor_final: (nota.cliente_ie && nota.cliente_ie.trim()) ? '0' : '1',
         modalidade_frete: '9',
         items: prodItems.map((it, idx) => ({
