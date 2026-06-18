@@ -104,6 +104,10 @@
       "type": "string",
       "title": "NFSe Manual (hist\u00f3rico)"
     },
+    "tecnico": {
+      "type": "string",
+      "title": "T\u00e9cnico Respons\u00e1vel"
+    },
     "servicos": {
       "type": "array",
       "title": "Servi\u00e7os",

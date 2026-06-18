@@ -191,10 +191,16 @@ export default function Vendas() {
       if (configs.length > 0) {
         try { setComissaoConfig(JSON.parse(configs[0].valor) || {}); } catch {}
       } else {
-        // fallback: ler do localStorage
+        // migrar do localStorage para o banco automaticamente
         try {
           const local = localStorage.getItem("comissao_config");
-          if (local) setComissaoConfig(JSON.parse(local) || {});
+          if (local) {
+            const cfg = JSON.parse(local) || {};
+            if (Object.keys(cfg).length > 0) {
+              await base44.entities.Configuracao.create({ chave: "comissao_config", valor: local, descricao: "Percentuais de comissão por técnico" });
+              setComissaoConfig(cfg);
+            }
+          }
         } catch {}
       }
     } catch (err) {
