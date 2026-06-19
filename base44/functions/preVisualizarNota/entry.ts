@@ -252,8 +252,7 @@ Deno.serve(async (req) => {
         nome_destinatario: (nota.cliente_nome || 'Consumidor Final').substring(0, 60),
         numero: numeroPreview,
         serie: SERIE_NFE,
-        ...(cpfCnpjLimpo.length === 11 ? { cpf_destinatario: cpfCnpjLimpo } : {}),
-        ...(cpfCnpjLimpo.length === 14 ? { cnpj_destinatario: cpfCnpjLimpo } : {}),
+        // Em homologação: omitir CNPJ/CPF do destinatário e IE conforme Focus NFe
         logradouro_destinatario: nota.cliente_endereco || 'Rua Rui Barbosa',
         numero_destinatario: nota.cliente_numero || 'S/N',
         bairro_destinatario: nota.cliente_bairro || 'Santa Terezinha',
@@ -261,13 +260,8 @@ Deno.serve(async (req) => {
         ...(codigoMunicipioDestinatario ? { codigo_municipio_destinatario: codigoMunicipioDestinatario } : {}),
         uf_destinatario: nota.cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
-        // Preview é SEMPRE homologação: conforme orientação da Focus NFe:
-        // - indicador 9 (não contribuinte) + consumidor_final 1
-        // - Para PJ: enviar inscricao_estadual_destinatario: 'ISENTO' para evitar rejeição 232
-        // - Para PF/Consumidor: omitir IE
         indicador_inscricao_estadual_destinatario: '9',
         consumidor_final: '1',
-        ...(cpfCnpjLimpo.length === 14 ? { inscricao_estadual_destinatario: 'ISENTO' } : {}),
         modalidade_frete: '9',
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
