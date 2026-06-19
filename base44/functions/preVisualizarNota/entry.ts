@@ -252,7 +252,6 @@ Deno.serve(async (req) => {
         nome_destinatario: (nota.cliente_nome || 'Consumidor Final').substring(0, 60),
         numero: numeroPreview,
         serie: SERIE_NFE,
-        // Em homologação: manter CNPJ/CPF mas omitir IE conforme Focus NFe
         ...(cpfCnpjLimpo.length === 11 ? { cpf_destinatario: cpfCnpjLimpo } : {}),
         ...(cpfCnpjLimpo.length === 14 ? { cnpj_destinatario: cpfCnpjLimpo } : {}),
         logradouro_destinatario: nota.cliente_endereco || 'Rua Rui Barbosa',
@@ -262,7 +261,9 @@ Deno.serve(async (req) => {
         ...(codigoMunicipioDestinatario ? { codigo_municipio_destinatario: codigoMunicipioDestinatario } : {}),
         uf_destinatario: nota.cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
-        indicador_inscricao_estadual_destinatario: '9',
+        // Se o cliente tem IE informada: indicador 1 + IE. Caso contrário: indicador 9 (não contribuinte)
+        indicador_inscricao_estadual_destinatario: nota.cliente_ie ? '1' : '9',
+        ...(nota.cliente_ie ? { inscricao_estadual_destinatario: nota.cliente_ie } : {}),
         consumidor_final: '1',
         modalidade_frete: '9',
         items: prodItems.map((it, idx) => ({
