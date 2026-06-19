@@ -1150,15 +1150,15 @@ export default function NotasFiscais() {
              await showConfirm(`Autorizar ${preVisualizadas.length} nota(s) homologada(s) em produção?`, 'confirm');
              setConfirmModal(null);
              setAutorizandoMassa(true);
-             let ok = 0; let erros = 0;
-             for (const nota of preVisualizadas) {
+             const resultados = await Promise.all(preVisualizadas.map(async (nota) => {
                try {
                  const items = (() => { try { const p = JSON.parse(nota.xml_content); if (Array.isArray(p) && p.length > 0 && p[0].descricao) return p; } catch {} return [{ descricao: nota.observacoes || 'Produto/Serviço', quantidade: 1, valor_unitario: nota.valor_total, valor_total: nota.valor_total }]; })();
                  const res = await base44.functions.invoke('emitirNotaFiscal', { ...nota, nota_id: nota.id, items });
-                 if (res.data?.sucesso) ok++; else erros++;
-               } catch { erros++; }
-               await new Promise(r => setTimeout(r, 800));
-             }
+                 return res.data?.sucesso ? 'ok' : 'erro';
+               } catch { return 'erro'; }
+             }));
+             const ok = resultados.filter(r => r === 'ok').length;
+             const erros = resultados.filter(r => r === 'erro').length;
              setAutorizandoMassa(false);
              feedback('sucesso', `Autorização concluída: ${ok} emitida(s), ${erros} erro(s).`);
              load();
