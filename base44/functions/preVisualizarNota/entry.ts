@@ -261,10 +261,11 @@ Deno.serve(async (req) => {
         ...(codigoMunicipioDestinatario ? { codigo_municipio_destinatario: codigoMunicipioDestinatario } : {}),
         uf_destinatario: nota.cliente_estado || 'MG',
         cep_destinatario: cepLimpo,
-        // Preview é SEMPRE homologação: nunca envia IE. Regra: sem IE => indicador 1, com IE => indicador 9.
-        // SEFAZ: indicador 9 (não contribuinte) exige consumidor_final 1; indicador 1 exige consumidor_final 0.
-        indicador_inscricao_estadual_destinatario: (nota.cliente_ie && nota.cliente_ie.trim()) ? '9' : '1',
-        consumidor_final: (nota.cliente_ie && nota.cliente_ie.trim()) ? '1' : '0',
+        // Preview é SEMPRE homologação: conforme orientação da Focus NFe, em homologação
+        // não informar IE, usar indicador 9 (não contribuinte) e consumidor_final 1.
+        // Isso evita rejeição 233 "IE do destinatário não cadastrada" no ambiente de teste.
+        indicador_inscricao_estadual_destinatario: '9',
+        consumidor_final: '1',
         modalidade_frete: '9',
         items: prodItems.map((it, idx) => ({
           numero_item: idx + 1,
