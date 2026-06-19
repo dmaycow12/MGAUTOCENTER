@@ -252,7 +252,9 @@ Deno.serve(async (req) => {
         nome_destinatario: (nota.cliente_nome || 'Consumidor Final').substring(0, 60),
         numero: numeroPreview,
         serie: SERIE_NFE,
-        // Em homologação: omitir CNPJ/CPF do destinatário e IE conforme Focus NFe
+        // Em homologação: manter CNPJ/CPF mas omitir IE conforme Focus NFe
+        ...(cpfCnpjLimpo.length === 11 ? { cpf_destinatario: cpfCnpjLimpo } : {}),
+        ...(cpfCnpjLimpo.length === 14 ? { cnpj_destinatario: cpfCnpjLimpo } : {}),
         logradouro_destinatario: nota.cliente_endereco || 'Rua Rui Barbosa',
         numero_destinatario: nota.cliente_numero || 'S/N',
         bairro_destinatario: nota.cliente_bairro || 'Santa Terezinha',
