@@ -258,7 +258,7 @@ export default function Financeiro() {
   const filtrados = itemsNoPeriodo.filter(i => {
     const matchSearch = !search || i.descricao?.toLowerCase().includes(search.toLowerCase()) || i.categoria?.toLowerCase().includes(search.toLowerCase());
     const matchTipo = filtroTipo === "Todos" || i.tipo === filtroTipo || (filtroTipo === "Saída" && (i.tipo === "Saída" || i.tipo === "Despesa"));
-    const matchStatus = filtroStatus === "Todos" || i.status === filtroStatus;
+    const matchStatus = filtroStatus === "Todos" || i.status === filtroStatus || (filtroStatus === "Pendente" && i.status === "Atrasado");
     return matchSearch && matchTipo && matchStatus;
   });
 
