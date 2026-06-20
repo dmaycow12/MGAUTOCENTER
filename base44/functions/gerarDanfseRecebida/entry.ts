@@ -3,12 +3,12 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
 
 function gerarHtmlDanfse(nf) {
-  const fmt = (v) => (v != null && v !== '') ? String(v) : '-';
-  const fmtMoeda = (v) => v ? `R$ ${parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-';
-  const fmtData = (v) => { if (!v) return '-'; const d = v.substring(0, 10); const [ano, mes, dia] = d.split('-'); return `${dia}/${mes}/${ano}`; };
-  const fmtDataHora = (v) => { if (!v) return '-'; const [data, hora] = v.split('T'); if (!data) return '-'; const [ano, mes, dia] = data.split('-'); return `${dia}/${mes}/${ano}${hora ? ' ' + hora.substring(0, 8) : ''}`; };
-  const fmtCnpj = (v) => { if (!v) return '-'; const c = v.replace(/\D/g, ''); if (c.length === 14) return c.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5'); if (c.length === 11) return c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); return v; };
-  const fmtCep = (v) => { if (!v) return '-'; const c = v.replace(/\D/g, ''); if (c.length === 8) return c.replace(/(\d{5})(\d{3})/, '$1-$2'); return v; };
+  const fmt = (v) => (v != null && v !== '') ? String(v) : '—';
+  const fmtMoeda = (v) => v ? `R$ ${parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—';
+  const fmtData = (v) => { if (!v) return '—'; const d = v.substring(0, 10); const [ano, mes, dia] = d.split('-'); return `${dia}/${mes}/${ano}`; };
+  const fmtDataHora = (v) => { if (!v) return '—'; const [data, hora] = v.split('T'); if (!data) return '—'; const [ano, mes, dia] = data.split('-'); return `${dia}/${mes}/${ano}${hora ? ' ' + hora.substring(0, 8) : ''}`; };
+  const fmtCnpj = (v) => { if (!v) return '—'; const c = v.replace(/\D/g, ''); if (c.length === 14) return c.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5'); if (c.length === 11) return c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); return v; };
+  const fmtCep = (v) => { if (!v) return '—'; const c = v.replace(/\D/g, ''); if (c.length === 8) return c.replace(/(\d{5})(\d{3})/, '$1-$2'); return v; };
 
   const prestNome = fmt(nf.razao_social_prestador || nf.razao_social_emitente);
   const prestCnpj = fmtCnpj(nf.cnpj_prestador || nf.cnpj_emitente || nf.cpf_prestador);
@@ -31,11 +31,12 @@ function gerarHtmlDanfse(nf) {
 
   const municipioEmissor = fmt(nf.descricao_municipio_emissor || nf.descricao_municipio_prestacao);
   const uf = fmt(nf.uf_emitente || nf.uf_prestador);
-
-  const aliquota = nf.aliquota_iss ? (parseFloat(nf.aliquota_iss) * 100).toFixed(2) + '%' : '-';
-  const tributacaoIss = fmt(nf.tributacao_iss || nf.natureza_operacao);
-  const retencao = nf.retencao_iss ? 'Retido' : 'Não Retido';
-  const regimeEsp = fmt(nf.regime_especial_tributacao != null ? nf.regime_especial_tributacao : '0');
+  const municipioUf = municipioEmissor !== '—' ? `${municipioEmissor}${uf !== '—' ? ' - ' + uf : ''}` : '—';
+  const valorServico = parseFloat(nf.valor_servico || 0);
+  const valorLiquido = parseFloat(nf.valor_liquido || nf.valor_servico || 0);
+  const bcIss = parseFloat(nf.iss_base_calculo || nf.valor_servico || 0);
+  const deducoes = parseFloat(nf.valor_desconto_incondicionado || 0) + parseFloat(nf.valor_desconto_condicionado || 0);
+  const retencoes = parseFloat(nf.valor_iss_retido || 0) + parseFloat(nf.valor_total_retencao || 0);
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -43,284 +44,100 @@ function gerarHtmlDanfse(nf) {
 <meta charset="UTF-8">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; font-size: 8.5px; color: #000; background: #fff; padding: 10mm 10mm; }
-  table { width: 100%; border-collapse: collapse; }
-  td, th { font-family: Arial, Helvetica, sans-serif; font-size: 8.5px; color: #000; vertical-align: top; }
-  .sec-hdr { background: #e8e8e8; border: 1px solid #000; border-bottom: 1px solid #000; padding: 2px 4px; font-size: 7.5px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.3px; }
-  .lbl { font-size: 7px; font-weight: bold; color: #000; padding: 2px 4px 0 4px; text-transform: uppercase; white-space: nowrap; }
-  .val { font-size: 8.5px; padding: 0 4px 3px 4px; }
-  .val-bold { font-size: 8.5px; font-weight: bold; padding: 0 4px 3px 4px; }
-  .bd { border: 1px solid #000; }
-  .bd-r { border-right: 1px solid #000; }
-  .bd-b { border-bottom: 1px solid #000; }
-  .bd-t { border-top: 1px solid #000; }
-  .chave-val { font-family: 'Courier New', monospace; font-size: 8px; letter-spacing: 0.8px; padding: 2px 4px; word-break: break-all; }
-  .total-row td { background: #f0f0f0; border: 1px solid #000; }
-  .total-lbl { font-size: 9px; font-weight: bold; text-transform: uppercase; padding: 4px 8px; }
-  .total-val { font-size: 11px; font-weight: bold; text-align: right; padding: 4px 8px; }
-  .rodape-cell { font-size: 7.5px; color: #333; text-align: center; padding: 3px 4px; border: 1px solid #000; border-top: none; }
-  @media print { body { padding: 0; } @page { margin: 10mm; size: A4 portrait; } }
+  body { font-family: Arial, sans-serif; font-size: 10px; color: #000; background: #fff; padding: 20px; }
+  .titulo { text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 4px; border-bottom: 2px solid #000; padding-bottom: 6px; }
+  .subtitulo { text-align: center; font-size: 11px; color: #444; margin-bottom: 14px; }
+  .secao { border: 1px solid #999; border-radius: 4px; margin-bottom: 10px; }
+  .secao-titulo { background: #e8e8e8; font-weight: bold; font-size: 9px; padding: 3px 8px; text-transform: uppercase; border-bottom: 1px solid #999; border-radius: 4px 4px 0 0; }
+  .secao-corpo { padding: 8px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
+  .campo label { font-size: 8px; color: #666; display: block; text-transform: uppercase; margin-bottom: 2px; }
+  .campo span { font-size: 10px; font-weight: 500; }
+  .destaque { background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin-top: 10px; }
+  .chave { font-family: monospace; font-size: 9px; letter-spacing: 1px; word-break: break-all; background: #f5f5f5; padding: 4px 6px; border-radius: 3px; border: 1px solid #ddd; }
+  .rodape { text-align: center; font-size: 8px; color: #888; margin-top: 14px; border-top: 1px solid #ddd; padding-top: 6px; }
+  @media print { body { padding: 0; } @page { margin: 12mm; size: A4; } }
 </style>
 </head>
 <body>
 
-<!-- CABEÇALHO -->
-<table style="border: 1px solid #000; margin-bottom: 0;">
-  <tr>
-    <td style="width: 80px; min-width:80px; border-right: 1px solid #000; text-align:center; padding: 6px; vertical-align: middle;">
-      <svg viewBox="0 0 100 100" width="60" height="60" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="47" stroke="#1a3a6b" stroke-width="3" fill="white"/>
-        <text x="50" y="37" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="12" fill="#1a3a6b">NFS-e</text>
-        <text x="50" y="51" text-anchor="middle" font-family="Arial" font-size="7.5" fill="#1a3a6b">Nota Fiscal de</text>
-        <text x="50" y="62" text-anchor="middle" font-family="Arial" font-size="7.5" fill="#1a3a6b">Serviço eletrônica</text>
-      </svg>
-    </td>
-    <td style="text-align:center; border-right: 1px solid #000; vertical-align: middle; padding: 8px 4px;">
-      <div style="font-size:13px; font-weight:bold;">DANFSe v1.0</div>
-      <div style="font-size:10px; font-weight:bold;">Documento Auxiliar da NFS-e</div>
-    </td>
-    <td style="width: 190px; min-width:190px; padding: 6px 8px; vertical-align: middle;">
-      <div style="font-weight:bold; font-size:9px;">MUNICÍPIO DE ${municipioEmissor.toUpperCase()}</div>
-      <div style="font-size:8.5px;">${uf.toUpperCase()}</div>
-      <div style="font-size:8px;">Secretaria Municipal de Finanças</div>
-    </td>
-  </tr>
-</table>
+<div class="titulo">DANFSe — DOCUMENTO AUXILIAR DA NOTA FISCAL DE SERVIÇOS ELETRÔNICA</div>
+<div class="subtitulo">Nota Fiscal de Serviços Nacional — NFS-e</div>
 
-<!-- CHAVE DE ACESSO -->
-${nf.id_tag ? `
-<table style="border: 1px solid #000; border-top: none;">
-  <tr>
-    <td>
-      <div class="lbl" style="padding: 2px 4px;">CHAVE DE ACESSO DA NFS-E</div>
-      <div class="chave-val">${fmt(nf.id_tag)}</div>
-    </td>
-  </tr>
-</table>` : ''}
+<div class="secao">
+  <div class="secao-titulo">Identificação</div>
+  <div class="secao-corpo">
+    <div class="grid-4">
+      <div class="campo"><label>Número NFS-e</label><span>${fmt(nf.numero || nf.numero_dfse)}</span></div>
+      <div class="campo"><label>Data de Emissão</label><span>${fmtData(nf.data_emissao_completa || nf.data_emissao)}</span></div>
+      <div class="campo"><label>Data de Competência</label><span>${fmtData(nf.data_competencia || nf.data_emissao)}</span></div>
+      <div class="campo"><label>Município Emissor</label><span>${municipioUf}</span></div>
+    </div>
+    ${nf.id_tag ? `<div class="campo" style="margin-top:8px"><label>Chave de Acesso</label><div class="chave">${fmt(nf.id_tag)}</div></div>` : ''}
+  </div>
+</div>
 
-<!-- IDENTIFICAÇÃO -->
-<table style="border: 1px solid #000; border-top: none;">
-  <tr>
-    <td class="bd-r" style="width:25%">
-      <div class="lbl">Número da NFS-e</div>
-      <div class="val-bold">${fmt(nf.numero || nf.numero_dfse)}</div>
-    </td>
-    <td class="bd-r" style="width:25%">
-      <div class="lbl">Competência da NFS-e</div>
-      <div class="val">${fmtData(nf.data_competencia || nf.data_emissao)}</div>
-    </td>
-    <td class="bd-r" style="width:30%">
-      <div class="lbl">Data e Hora da emissão</div>
-      <div class="val">${fmtDataHora(nf.data_emissao_completa || nf.data_emissao)}</div>
-    </td>
-    <td style="width:20%">
-      <div class="lbl">Número da DPS</div>
-      <div class="val">${fmt(nf.numero_dfse || nf.numero)}</div>
-    </td>
-  </tr>
-</table>
+<div class="secao">
+  <div class="secao-titulo">Prestador</div>
+  <div class="secao-corpo">
+    <div class="grid-2">
+      <div class="campo"><label>Razão Social</label><span>${prestNome}</span></div>
+      <div class="campo"><label>CNPJ</label><span>${prestCnpj}</span></div>
+      <div class="campo"><label>Inscrição Municipal</label><span>${prestIm}</span></div>
+      <div class="campo"><label>E-mail</label><span>${prestEmail}</span></div>
+    </div>
+    ${(prestEnd !== '—' || prestFone !== '—') ? `
+    <div class="grid-2" style="margin-top:8px">
+      <div class="campo"><label>Endereço</label><span>${prestEnd}</span></div>
+      <div class="campo"><label>Município / CEP</label><span>${prestMunicipio !== '—' ? prestMunicipio + (prestUf !== '—' ? ' - ' + prestUf : '') : '—'}${prestCep !== '—' ? ' | ' + prestCep : ''}</span></div>
+    </div>` : ''}
+  </div>
+</div>
 
-<!-- EMITENTE -->
-<table style="border: 1px solid #000; border-top: none;">
-  <tr><td colspan="4" class="sec-hdr">EMITENTE DA NFS-E — PRESTADOR DO SERVIÇO</td></tr>
-  <tr>
-    <td class="bd-r bd-b" style="width:40%; padding:0">
-      <div class="lbl">NOME / NOME EMPRESARIAL</div>
-      <div class="val-bold">${prestNome}</div>
-    </td>
-    <td class="bd-r bd-b" style="width:20%; padding:0">
-      <div class="lbl">CNPJ / CPF / NIF</div>
-      <div class="val">${prestCnpj}</div>
-    </td>
-    <td class="bd-r bd-b" style="width:20%; padding:0">
-      <div class="lbl">INSCRIÇÃO MUNICIPAL</div>
-      <div class="val">${prestIm}</div>
-    </td>
-    <td class="bd-b" style="width:20%; padding:0">
-      <div class="lbl">TELEFONE</div>
-      <div class="val">${prestFone}</div>
-    </td>
-  </tr>
-  <tr>
-    <td class="bd-r" style="width:40%; padding:0">
-      <div class="lbl">ENDEREÇO</div>
-      <div class="val">${prestEnd}</div>
-    </td>
-    <td class="bd-r" style="width:20%; padding:0">
-      <div class="lbl">MUNICÍPIO</div>
-      <div class="val">${prestMunicipio} - ${prestUf}</div>
-    </td>
-    <td class="bd-r" style="width:20%; padding:0">
-      <div class="lbl">CEP</div>
-      <div class="val">${prestCep}</div>
-    </td>
-    <td style="width:20%; padding:0">
-      <div class="lbl">E-MAIL</div>
-      <div class="val">${prestEmail}</div>
-    </td>
-  </tr>
-</table>
+<div class="secao">
+  <div class="secao-titulo">Tomador</div>
+  <div class="secao-corpo">
+    <div class="grid-2">
+      <div class="campo"><label>Razão Social</label><span>${tomNome}</span></div>
+      <div class="campo"><label>CNPJ / CPF</label><span>${tomCnpj}</span></div>
+      <div class="campo"><label>Município</label><span>${tomMunicipio}</span></div>
+      <div class="campo"><label>E-mail</label><span>${tomEmail}</span></div>
+    </div>
+  </div>
+</div>
 
-<!-- TOMADOR -->
-<table style="border: 1px solid #000; border-top: none;">
-  <tr><td colspan="4" class="sec-hdr">TOMADOR DO SERVIÇO</td></tr>
-  <tr>
-    <td class="bd-r bd-b" style="width:40%; padding:0">
-      <div class="lbl">NOME / NOME EMPRESARIAL</div>
-      <div class="val-bold">${tomNome}</div>
-    </td>
-    <td class="bd-r bd-b" style="width:20%; padding:0">
-      <div class="lbl">CNPJ / CPF / NIF</div>
-      <div class="val">${tomCnpj}</div>
-    </td>
-    <td class="bd-r bd-b" style="width:20%; padding:0">
-      <div class="lbl">INSCRIÇÃO MUNICIPAL</div>
-      <div class="val">${tomIm}</div>
-    </td>
-    <td class="bd-b" style="width:20%; padding:0">
-      <div class="lbl">TELEFONE</div>
-      <div class="val">${tomFone}</div>
-    </td>
-  </tr>
-  <tr>
-    <td class="bd-r" style="width:40%; padding:0">
-      <div class="lbl">ENDEREÇO</div>
-      <div class="val">${tomEnd}</div>
-    </td>
-    <td class="bd-r" style="width:20%; padding:0">
-      <div class="lbl">MUNICÍPIO</div>
-      <div class="val">${tomMunicipio}</div>
-    </td>
-    <td class="bd-r" style="width:20%; padding:0">
-      <div class="lbl">CEP</div>
-      <div class="val">${tomCep}</div>
-    </td>
-    <td style="width:20%; padding:0">
-      <div class="lbl">E-MAIL</div>
-      <div class="val">${tomEmail}</div>
-    </td>
-  </tr>
-</table>
+<div class="secao">
+  <div class="secao-titulo">Serviço</div>
+  <div class="secao-corpo">
+    <div class="campo" style="margin-bottom:8px"><label>Descrição</label><span>${fmt(nf.descricao_servico)}</span></div>
+    <div class="grid-3">
+      <div class="campo"><label>Tributação Nacional</label><span>${fmt(nf.descricao_tributacao_nacional || nf.codigo_tributacao_nacional)}</span></div>
+      <div class="campo"><label>Município Prestação</label><span>${fmt(nf.descricao_municipio_prestacao || nf.descricao_municipio_emissor)}</span></div>
+      <div class="campo"><label>Tributação ISS</label><span>${fmt(nf.tributacao_iss || nf.natureza_operacao)}</span></div>
+    </div>
+    ${nf.informacoes_complementares ? `<div class="campo" style="margin-top:8px"><label>Informações Complementares</label><span>${fmt(nf.informacoes_complementares)}</span></div>` : ''}
+  </div>
+</div>
 
-<!-- SERVIÇO PRESTADO -->
-<table style="border: 1px solid #000; border-top: none;">
-  <tr><td colspan="3" class="sec-hdr">SERVIÇO PRESTADO</td></tr>
-  <tr>
-    <td class="bd-r bd-b" style="width:50%; padding:0">
-      <div class="lbl">CÓDIGO DE TRIBUTAÇÃO NACIONAL</div>
-      <div class="val">${fmt(nf.descricao_tributacao_nacional || nf.codigo_tributacao_nacional)}</div>
-    </td>
-    <td class="bd-r bd-b" style="width:25%; padding:0">
-      <div class="lbl">CÓDIGO DE TRIBUTAÇÃO MUNICIPAL</div>
-      <div class="val">${fmt(nf.codigo_tributacao_municipio)}</div>
-    </td>
-    <td class="bd-b" style="width:25%; padding:0">
-      <div class="lbl">LOCAL DA PRESTAÇÃO</div>
-      <div class="val">${fmt(nf.descricao_municipio_prestacao || nf.descricao_municipio_emissor)}</div>
-    </td>
-  </tr>
-  <tr>
-    <td colspan="3" style="padding:0">
-      <div class="lbl">DESCRIÇÃO DO SERVIÇO</div>
-      <div class="val">${fmt(nf.descricao_servico)}</div>
-    </td>
-  </tr>
-</table>
+<div class="secao">
+  <div class="secao-titulo">Valores</div>
+  <div class="secao-corpo">
+    <div class="grid-4">
+      <div class="campo"><label>Valor do Serviço</label><span>${fmtMoeda(valorServico)}</span></div>
+      <div class="campo"><label>Base Cálculo ISS</label><span>${fmtMoeda(bcIss)}</span></div>
+      <div class="campo"><label>Deduções</label><span>${fmtMoeda(deducoes)}</span></div>
+      <div class="campo"><label>Retenções</label><span>${fmtMoeda(retencoes)}</span></div>
+    </div>
+    <div class="destaque">
+      <span style="font-weight:bold;font-size:11px">VALOR LÍQUIDO</span>
+      <span style="font-size:16px;font-weight:bold">${fmtMoeda(valorLiquido)}</span>
+    </div>
+  </div>
+</div>
 
-<!-- TRIBUTAÇÃO MUNICIPAL -->
-<table style="border: 1px solid #000; border-top: none;">
-  <tr><td colspan="4" class="sec-hdr">TRIBUTAÇÃO MUNICIPAL</td></tr>
-  <tr>
-    <td class="bd-r bd-b" style="width:15%; padding:0">
-      <div class="lbl">TRIBUTAÇÃO DO ISSQN</div>
-      <div class="val">${tributacaoIss}</div>
-    </td>
-    <td class="bd-r bd-b" style="width:30%; padding:0">
-      <div class="lbl">MUNICÍPIO DE INCIDÊNCIA DO ISSQN</div>
-      <div class="val">${fmt(nf.descricao_municipio_prestacao || nf.descricao_municipio_emissor)}</div>
-    </td>
-    <td class="bd-r bd-b" style="width:25%; padding:0">
-      <div class="lbl">RETENÇÃO DO ISSQN</div>
-      <div class="val">${retencao}</div>
-    </td>
-    <td class="bd-b" style="width:30%; padding:0">
-      <div class="lbl">REGIME ESPECIAL DE TRIBUTAÇÃO</div>
-      <div class="val">${regimeEsp}</div>
-    </td>
-  </tr>
-  <tr>
-    <td class="bd-r" style="padding:0">
-      <div class="lbl">VALOR DO SERVIÇO</div>
-      <div class="val">${fmtMoeda(nf.valor_servico)}</div>
-    </td>
-    <td class="bd-r" style="padding:0">
-      <div class="lbl">DESCONTO INCONDICIONADO</div>
-      <div class="val">${fmtMoeda(nf.valor_desconto_incondicionado)}</div>
-    </td>
-    <td class="bd-r" style="padding:0">
-      <div class="lbl">BC ISSQN</div>
-      <div class="val">${fmtMoeda(nf.iss_base_calculo || nf.valor_servico)}</div>
-    </td>
-    <td style="padding:0; display: table-cell;">
-      <!-- Split last cell into 2 sub-cols via nested table -->
-      <table style="width:100%; border-collapse:collapse; height:100%;">
-        <tr>
-          <td class="bd-r" style="padding:0; width:50%">
-            <div class="lbl">ALÍQUOTA APLICADA</div>
-            <div class="val">${aliquota}</div>
-          </td>
-          <td style="padding:0; width:50%">
-            <div class="lbl">ISSQN APURADO</div>
-            <div class="val">${fmtMoeda(nf.valor_iss)}</div>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-
-<!-- VALOR TOTAL DA NFS-E -->
-<table style="border: 1px solid #000; border-top: none;">
-  <tr><td colspan="5" class="sec-hdr">VALOR TOTAL DA NFS-E</td></tr>
-  <tr>
-    <td class="bd-r" style="width:20%; padding:0">
-      <div class="lbl">VALOR DO SERVIÇO</div>
-      <div class="val">${fmtMoeda(nf.valor_servico)}</div>
-    </td>
-    <td class="bd-r" style="width:20%; padding:0">
-      <div class="lbl">DESCONTO CONDICIONADO</div>
-      <div class="val">${fmtMoeda(nf.valor_desconto_condicionado)}</div>
-    </td>
-    <td class="bd-r" style="width:20%; padding:0">
-      <div class="lbl">DESCONTO INCONDICIONADO</div>
-      <div class="val">${fmtMoeda(nf.valor_desconto_incondicionado)}</div>
-    </td>
-    <td class="bd-r" style="width:20%; padding:0">
-      <div class="lbl">ISSQN RETIDO</div>
-      <div class="val">${fmtMoeda(nf.valor_iss_retido)}</div>
-    </td>
-    <td style="width:20%; padding:0">
-      <div class="lbl">TOTAL DAS RETENÇÕES FEDERAIS</div>
-      <div class="val">${fmtMoeda(nf.valor_total_retencao)}</div>
-    </td>
-  </tr>
-</table>
-
-<!-- VALOR LÍQUIDO -->
-<table style="border: 1px solid #000; border-top: none;">
-  <tr class="total-row">
-    <td class="total-lbl bd-r" style="width:50%">VALOR LÍQUIDO DA NFS-E</td>
-    <td class="total-val" style="width:50%">${fmtMoeda(nf.valor_liquido || nf.valor_servico)}</td>
-  </tr>
-</table>
-
-${nf.informacoes_complementares ? `
-<table style="border: 1px solid #000; border-top: none;">
-  <tr><td class="sec-hdr">INFORMAÇÕES COMPLEMENTARES</td></tr>
-  <tr><td class="val" style="padding: 3px 4px;">${fmt(nf.informacoes_complementares)}</td></tr>
-</table>` : ''}
-
-<div class="rodape-cell">Nota Fiscal de Serviços Eletrônica — DANFSe v1.0 | Consulte a autenticidade em nfse.gov.br</div>
+<div class="rodape">Documento gerado pelo sistema | Consulte a autenticidade em nfse.gov.br</div>
 
 </body>
 </html>`;
