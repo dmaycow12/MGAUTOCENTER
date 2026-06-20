@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
-import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Edit, Trash2, FileText } from "lucide-react";
 
 const STATUS_OPTIONS = ["Pendente", "Pago"];
 
@@ -463,7 +463,7 @@ export default function Financeiro() {
                  <div className="w-px h-6 bg-gray-700 mx-1" />
                  <span className="text-xs font-semibold text-gray-400 w-44 flex-shrink-0 text-center">Status</span>
                  <div className="w-px h-6 bg-gray-700 mx-1" />
-                 <span className="text-xs font-semibold text-gray-400 w-14 flex-shrink-0 text-center">Ações</span>
+                 <span className="text-xs font-semibold text-gray-400 w-20 flex-shrink-0 text-center">Ações</span>
                </div>
               {sortedFiltrados.map(item => (
                 <ListRow key={item.id} item={item}
@@ -472,6 +472,7 @@ export default function Financeiro() {
                   onAlterarStatus={alterarStatus}
                   onAlterarPagamento={alterarPagamento}
                   onAlterarEtiqueta={alterarEtiqueta}
+                  onGerarBoleto={setItemBoleto}
                 />
               ))}
               </div>
@@ -609,7 +610,7 @@ function KpiCard({ icon: Icon, label, value, color }) {
 const ETIQUETA_OPTIONS = ["Receita", "Despesa", "Ativo", "Retirada"];
 const ETIQUETA_COLORS = { "Receita": "#16a34a", "Despesa": "#cc0000", "Ativo": "#062C9B", "Retirada": "#7c3aed" };
 
-function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, onAlterarEtiqueta }) {
+function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, onAlterarEtiqueta, onGerarBoleto }) {
   const [pagamentoOpen, setPagamentoOpen] = useState(false);
   const [etiquetaOpen, setEtiquetaOpen] = useState(false);
   const pagamentoRef = useRef(null);
@@ -837,7 +838,10 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Ações */}
-      <div className="flex gap-0.5 flex-shrink-0 w-14 justify-center">
+      <div className="flex gap-0.5 flex-shrink-0 w-20 justify-center">
+        {item.tipo === "Receita" && item.status !== "Pago" && (
+          <button onClick={() => onGerarBoleto?.(item)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all" title="Gerar Boleto"><FileText className="w-3.5 h-3.5"/></button>
+        )}
         <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all"><Edit className="w-3.5 h-3.5"/></button>
         <button onClick={onDelete} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
       </div>
