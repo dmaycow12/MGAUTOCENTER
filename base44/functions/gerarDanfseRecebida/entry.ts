@@ -42,6 +42,7 @@ function gerarHtmlDanfse(nf) {
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<title></title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: Arial, sans-serif; font-size: 10px; color: #000; background: #fff; padding: 20px; }
@@ -66,7 +67,12 @@ function gerarHtmlDanfse(nf) {
   .assinatura-linha { border-bottom: 1px solid #000; height: 22px; }
   .assinatura-label { font-size: 8px; font-weight: bold; text-transform: uppercase; text-align: center; color: #333; }
   .recibo-corte { font-size: 9px; color: #999; letter-spacing: 0px; margin-bottom: 10px; overflow: hidden; white-space: nowrap; }
-  @media print { body { padding: 0; } @page { margin: 0; size: A4; } body { margin: 12mm; } }
+  @media print {
+    @page { margin: 0; size: A4; }
+    body { padding: 0; margin: 12mm; }
+    html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+  @page { margin: 0; }
 </style>
 </head>
 <body>
