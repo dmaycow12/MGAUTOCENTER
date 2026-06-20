@@ -196,40 +196,16 @@ Deno.serve(async (req) => {
       if (chave) chavesExistentes.add(chave);
     }
 
-    // Gera PDFs para as notas recém importadas
+    // Gera HTML das DANFSe e salva como pdf_url (HTML renderizável pelo browser)
     let pdfsGerados = 0;
-    console.log('[PDF] notasParaPdf:', notasParaPdf.length);
     for (const { nf, id } of notasParaPdf) {
       try {
         const htmlContent = gerarHtmlDanfseLocal(nf, id);
-        const formData = new FormData();
         const htmlBlob = new Blob([htmlContent], { type: 'text/html; charset=utf-8' });
-        formData.append('files', htmlBlob, 'index.html');
-        formData.append('paperWidth', '8.5');
-        formData.append('paperHeight', '11');
-        formData.append('marginTop', '0.5');
-        formData.append('marginBottom', '0.5');
-        formData.append('marginLeft', '0.5');
-        formData.append('marginRight', '0.5');
-        const gotResp = await fetch('https://gotenberg.spedy.com.br/forms/chromium/convert/html', {
-          method: 'POST',
-          body: formData,
-        });
-        if (gotResp.ok) {
-          const pdfBuf = await gotResp.arrayBuffer();
-          const h = new Uint8Array(pdfBuf, 0, 4);
-          if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
-            const pdfFile = new File([pdfBuf], `nfse_${id}.pdf`, { type: 'application/pdf' });
-            const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
-            await base44.asServiceRole.entities.NotaFiscal.update(id, { pdf_url: file_url });
-            pdfsGerados++;
-          } else {
-            console.error('[PDF] Resposta inválida do Gotenberg, status:', gotResp.status);
-          }
-        } else {
-          const errTxt = await gotResp.text().catch(() => '');
-          console.error('[PDF] Gotenberg erro:', gotResp.status, errTxt.substring(0, 300));
-        }
+        const htmlFile = new File([htmlBlob], `danfse_${id}.html`, { type: 'text/html' });
+        const { file_url: htmlUrl } = await base44.asServiceRole.integrations.Core.UploadFile({ file: htmlFile });
+        await base44.asServiceRole.entities.NotaFiscal.update(id, { pdf_url: htmlUrl });
+        pdfsGerados++;
       } catch (pdfErr) {
         console.error('[PDF] Exceção:', pdfErr.message);
       }

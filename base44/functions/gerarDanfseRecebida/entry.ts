@@ -211,22 +211,28 @@ Deno.serve(async (req) => {
       body: formData,
     });
 
-    if (!gotResp.ok) {
-      // Fallback: retorna o HTML diretamente
-      return Response.json({ sucesso: true, html: htmlContent, aviso: 'PDF não gerado, HTML retornado.' });
+    // Tenta converter para PDF via Gotenberg, com fallback para HTML
+    let fileUrl = null;
+    if (gotResp.ok) {
+      const pdfBuf = await gotResp.arrayBuffer();
+      const h = new Uint8Array(pdfBuf, 0, 4);
+      if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
+        const pdfFile = new File([pdfBuf], `nfse_${nota_id}.pdf`, { type: 'application/pdf' });
+        const { file_url } = await db.integrations.Core.UploadFile({ file: pdfFile });
+        fileUrl = file_url;
+      }
     }
 
-    const pdfBuf = await gotResp.arrayBuffer();
-    const h = new Uint8Array(pdfBuf, 0, 4);
-    if (h[0] !== 0x25 || h[1] !== 0x50 || h[2] !== 0x44 || h[3] !== 0x46) {
-      return Response.json({ sucesso: true, html: htmlContent, aviso: 'Gotenberg não retornou PDF válido.' });
+    // Fallback: salva HTML como arquivo visualizável
+    if (!fileUrl) {
+      const htmlBlob = new Blob([htmlContent], { type: 'text/html; charset=utf-8' });
+      const htmlFile = new File([htmlBlob], `danfse_${nota_id}.html`, { type: 'text/html' });
+      const { file_url } = await db.integrations.Core.UploadFile({ file: htmlFile });
+      fileUrl = file_url;
     }
 
-    const pdfFile = new File([pdfBuf], `nfse_${nota_id}.pdf`, { type: 'application/pdf' });
-    const { file_url } = await db.integrations.Core.UploadFile({ file: pdfFile });
-    await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
-
-    return Response.json({ sucesso: true, pdf_url: file_url });
+    await db.entities.NotaFiscal.update(nota_id, { pdf_url: fileUrl });
+    return Response.json({ sucesso: true, pdf_url: fileUrl });
 
   } catch (error) {
     return Response.json({ sucesso: false, erro: error.message }, { status: 500 });
