@@ -2,48 +2,177 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
 
-function gerarHtmlDanfseLocal(nf, notaId) {
-  const fmt = (v) => v ? String(v) : '—';
-  const fmtMoeda = (v) => v ? `R$ ${parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'R$ 0,00';
-  const fmtData = (v) => { if (!v) return '—'; const d = v.substring(0, 10); const [ano, mes, dia] = d.split('-'); return `${dia}/${mes}/${ano}`; };
-  const fmtCnpj = (v) => { if (!v) return '—'; const c = v.replace(/\D/g, ''); if (c.length === 14) return c.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5'); if (c.length === 11) return c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); return v; };
-  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:10px;color:#000;background:#fff;padding:20px}.titulo{text-align:center;font-size:14px;font-weight:bold;margin-bottom:4px;border-bottom:2px solid #000;padding-bottom:6px}.subtitulo{text-align:center;font-size:11px;color:#444;margin-bottom:14px}.secao{border:1px solid #999;border-radius:4px;margin-bottom:10px}.secao-titulo{background:#e8e8e8;font-weight:bold;font-size:9px;padding:3px 8px;text-transform:uppercase;border-bottom:1px solid #999}.secao-corpo{padding:8px}.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}.campo label{font-size:8px;color:#666;display:block;text-transform:uppercase;margin-bottom:2px}.campo span{font-size:10px;font-weight:500}.destaque{background:#f9f9f9;border:1px solid #ddd;border-radius:4px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-top:4px}.chave{font-family:monospace;font-size:8px;word-break:break-all;background:#f0f0f0;padding:4px 6px;border-radius:3px}.rodape{text-align:center;font-size:8px;color:#888;margin-top:12px;border-top:1px solid #ccc;padding-top:8px}</style></head><body>
-  <div class="titulo">DANFSe — DOCUMENTO AUXILIAR DA NOTA FISCAL DE SERVIÇOS ELETRÔNICA</div>
-  <div class="subtitulo">Nota Fiscal de Serviços Nacional — NFS-e</div>
-  <div class="secao"><div class="secao-titulo">Identificação</div><div class="secao-corpo"><div class="grid-4">
-    <div class="campo"><label>Número NFS-e</label><span>${fmt(nf.numero || nf.numero_dfse)}</span></div>
-    <div class="campo"><label>Data de Emissão</label><span>${fmtData(nf.data_emissao)}</span></div>
-    <div class="campo"><label>Data de Competência</label><span>${fmtData(nf.data_competencia)}</span></div>
-    <div class="campo"><label>Município Emissor</label><span>${fmt(nf.descricao_municipio_emissor)} - ${fmt(nf.uf_emitente)}</span></div>
-  </div>${nf.id_tag ? `<div class="campo" style="margin-top:8px"><label>Chave de Acesso</label><div class="chave">${fmt(nf.id_tag)}</div></div>` : ''}</div></div>
-  <div class="secao"><div class="secao-titulo">Prestador</div><div class="secao-corpo"><div class="grid-2">
-    <div class="campo"><label>Razão Social</label><span>${fmt(nf.razao_social_prestador || nf.razao_social_emitente)}</span></div>
-    <div class="campo"><label>CNPJ</label><span>${fmtCnpj(nf.cnpj_prestador || nf.cnpj_emitente)}</span></div>
-    <div class="campo"><label>Inscrição Municipal</label><span>${fmt(nf.inscricao_municipal_prestador || nf.inscricao_municipal_emitente)}</span></div>
-    <div class="campo"><label>E-mail</label><span>${fmt(nf.email_prestador || nf.email_emitente)}</span></div>
-  </div></div></div>
-  <div class="secao"><div class="secao-titulo">Tomador</div><div class="secao-corpo"><div class="grid-2">
-    <div class="campo"><label>Razão Social</label><span>${fmt(nf.razao_social_tomador)}</span></div>
-    <div class="campo"><label>CNPJ</label><span>${fmtCnpj(nf.cnpj_tomador || nf.cpf_tomador)}</span></div>
-    <div class="campo"><label>Município</label><span>${fmt(nf.descricao_municipio_tomador)}</span></div>
-    <div class="campo"><label>E-mail</label><span>${fmt(nf.email_tomador)}</span></div>
-  </div></div></div>
-  <div class="secao"><div class="secao-titulo">Serviço</div><div class="secao-corpo">
-    <div class="campo" style="margin-bottom:8px"><label>Descrição</label><span>${fmt(nf.descricao_servico)}</span></div>
-    <div class="grid-3">
-      <div class="campo"><label>Tributação Nacional</label><span>${fmt(nf.descricao_tributacao_nacional)}</span></div>
-      <div class="campo"><label>Município Prestação</label><span>${fmt(nf.descricao_municipio_prestacao)}</span></div>
-      <div class="campo"><label>Tributação ISS</label><span>${fmt(nf.tributacao_iss)}</span></div>
+function gerarHtmlDanfseLocal(nf) {
+  const fmt = (v) => (v != null && v !== '') ? String(v) : '-';
+  const fmtMoeda = (v) => v ? `R$ ${parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-';
+  const fmtData = (v) => { if (!v) return '-'; const d = v.substring(0, 10); const [ano, mes, dia] = d.split('-'); return `${dia}/${mes}/${ano}`; };
+  const fmtDataHora = (v) => { if (!v) return '-'; const [data, hora] = v.split('T'); if (!data) return '-'; const [ano, mes, dia] = data.split('-'); return `${dia}/${mes}/${ano}${hora ? ' ' + hora.substring(0,8) : ''}`; };
+  const fmtCnpj = (v) => { if (!v) return '-'; const c = v.replace(/\D/g, ''); if (c.length === 14) return c.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5'); if (c.length === 11) return c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); return v; };
+
+  const prestNome = fmt(nf.razao_social_prestador || nf.razao_social_emitente);
+  const prestCnpj = fmtCnpj(nf.cnpj_prestador || nf.cnpj_emitente || nf.cpf_prestador);
+  const prestIm = fmt(nf.inscricao_municipal_prestador || nf.inscricao_municipal_emitente);
+  const prestEmail = fmt(nf.email_prestador || nf.email_emitente);
+  const prestFone = fmt(nf.telefone_prestador || nf.fone_prestador);
+  const prestEnd = [nf.logradouro_prestador || nf.logradouro_emitente, nf.numero_prestador || nf.numero_emitente, nf.bairro_prestador || nf.bairro_emitente].filter(Boolean).join(', ') || '-';
+  const prestMunicipio = fmt(nf.descricao_municipio_prestador || nf.descricao_municipio_emissor);
+  const prestUf = fmt(nf.uf_prestador || nf.uf_emitente);
+  const prestCep = fmt(nf.cep_prestador || nf.cep_emitente);
+  const tomNome = fmt(nf.razao_social_tomador);
+  const tomCnpj = fmtCnpj(nf.cnpj_tomador || nf.cpf_tomador);
+  const tomIm = fmt(nf.inscricao_municipal_tomador);
+  const tomEmail = fmt(nf.email_tomador);
+  const tomFone = fmt(nf.telefone_tomador);
+  const tomEnd = [nf.logradouro_tomador, nf.numero_tomador, nf.bairro_tomador].filter(Boolean).join(', ') || '-';
+  const tomMunicipio = fmt(nf.descricao_municipio_tomador);
+  const tomCep = fmt(nf.cep_tomador);
+  const municipioEmissor = fmt(nf.descricao_municipio_emissor || nf.descricao_municipio_prestacao);
+  const uf = fmt(nf.uf_emitente || nf.uf_prestador);
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 9px; color: #000; background: #fff; padding: 12px 16px; }
+  .cabecalho { display: flex; align-items: center; border: 1px solid #000; margin-bottom: 0; }
+  .cab-logo { width: 90px; min-width: 90px; border-right: 1px solid #000; display: flex; align-items: center; justify-content: center; padding: 6px; }
+  .cab-logo svg { width: 70px; height: 70px; }
+  .cab-centro { flex: 1; text-align: center; border-right: 1px solid #000; padding: 6px 4px; }
+  .cab-centro .doc-titulo { font-size: 12px; font-weight: bold; }
+  .cab-centro .doc-sub { font-size: 10px; font-weight: bold; }
+  .cab-direita { width: 180px; min-width: 180px; padding: 6px 8px; font-size: 8px; line-height: 1.5; }
+  .cab-direita .mun-nome { font-weight: bold; font-size: 9px; }
+  .bloco-chave { border: 1px solid #000; border-top: none; padding: 4px 8px; }
+  .bloco-chave .label-chave { font-size: 7.5px; font-weight: bold; text-transform: uppercase; }
+  .bloco-chave .valor-chave { font-family: monospace; font-size: 8.5px; letter-spacing: 0.5px; }
+  .bloco-ids { display: flex; border: 1px solid #000; border-top: none; }
+  .bloco-ids .id-item { flex: 1; padding: 4px 8px; border-right: 1px solid #000; }
+  .bloco-ids .id-item:last-child { border-right: none; }
+  .id-label { font-size: 7.5px; font-weight: bold; }
+  .id-valor { font-size: 9px; font-weight: bold; }
+  .id-valor-sm { font-size: 8.5px; }
+  .secao { border: 1px solid #000; border-top: none; }
+  .secao-header { background: #f0f0f0; border-bottom: 1px solid #000; padding: 2px 8px; font-size: 8px; font-weight: bold; text-transform: uppercase; }
+  .linha { display: flex; border-bottom: 1px solid #ddd; }
+  .linha:last-child { border-bottom: none; }
+  .cel { flex: 1; padding: 3px 8px; border-right: 1px solid #ddd; }
+  .cel:last-child { border-right: none; }
+  .cel-label { font-size: 7px; font-weight: bold; text-transform: uppercase; color: #444; margin-bottom: 1px; }
+  .cel-valor { font-size: 8.5px; }
+  .cel-valor-bold { font-size: 9px; font-weight: bold; }
+  .bloco-total { border: 1px solid #000; border-top: none; display: flex; align-items: center; justify-content: space-between; padding: 5px 12px; background: #f8f8f8; }
+  .total-label { font-size: 10px; font-weight: bold; text-transform: uppercase; }
+  .total-valor { font-size: 13px; font-weight: bold; }
+  .rodape { border: 1px solid #000; border-top: 1px solid #ccc; padding: 4px 8px; font-size: 7.5px; color: #555; text-align: center; }
+  @media print { body { padding: 0; } @page { margin: 10mm; size: A4; } }
+</style>
+</head>
+<body>
+  <div class="cabecalho">
+    <div class="cab-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="48" stroke="#1a3a6b" stroke-width="3"/>
+        <text x="50" y="38" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="11" fill="#1a3a6b">NFS-e</text>
+        <text x="50" y="52" text-anchor="middle" font-family="Arial" font-size="7" fill="#1a3a6b">Nota Fiscal de</text>
+        <text x="50" y="62" text-anchor="middle" font-family="Arial" font-size="7" fill="#1a3a6b">Serviço eletrônica</text>
+      </svg>
     </div>
-    ${nf.informacoes_complementares ? `<div class="campo" style="margin-top:6px"><label>Informações Complementares</label><span>${fmt(nf.informacoes_complementares)}</span></div>` : ''}
-  </div></div>
-  <div class="secao"><div class="secao-titulo">Valores</div><div class="secao-corpo"><div class="grid-4">
-    <div class="campo"><label>Valor do Serviço</label><span>${fmtMoeda(nf.valor_servico)}</span></div>
-    <div class="campo"><label>Base Cálculo ISS</label><span>${fmtMoeda(nf.iss_base_calculo)}</span></div>
-    <div class="campo"><label>Deduções</label><span>${fmtMoeda(nf.valor_deducao_servico || nf.valor_deducao_iss)}</span></div>
-    <div class="campo"><label>Retenções</label><span>${fmtMoeda(nf.valor_total_retencao)}</span></div>
-  </div><div class="destaque"><span style="font-weight:bold;font-size:11px">VALOR LÍQUIDO</span><span style="font-size:16px;font-weight:bold">${fmtMoeda(nf.valor_liquido || nf.valor_servico)}</span></div></div></div>
-  <div class="rodape">Documento gerado pelo sistema | Consulte a autenticidade em nfse.gov.br</div>
+    <div class="cab-centro">
+      <div class="doc-titulo">DANFSe v1.0</div>
+      <div class="doc-sub">Documento Auxiliar da NFS-e</div>
+    </div>
+    <div class="cab-direita">
+      <div class="mun-nome">MUNICÍPIO DE ${municipioEmissor.toUpperCase()}</div>
+      <div>${uf.toUpperCase()}</div>
+      <div>Secretaria Municipal de Finanças</div>
+    </div>
+  </div>
+  ${nf.id_tag ? `<div class="bloco-chave"><div class="label-chave">Chave de Acesso da NFS-e</div><div class="valor-chave">${fmt(nf.id_tag)}</div></div>` : ''}
+  <div class="bloco-ids">
+    <div class="id-item"><div class="id-label">Número da NFS-e</div><div class="id-valor">${fmt(nf.numero || nf.numero_dfse)}</div></div>
+    <div class="id-item"><div class="id-label">Competência da NFS-e</div><div class="id-valor-sm">${fmtData(nf.data_competencia || nf.data_emissao)}</div></div>
+    <div class="id-item"><div class="id-label">Data e Hora da emissão</div><div class="id-valor-sm">${fmtDataHora(nf.data_emissao_completa || nf.data_emissao)}</div></div>
+    <div class="id-item"><div class="id-label">Número da DPS</div><div class="id-valor-sm">${fmt(nf.numero_dfse || nf.numero)}</div></div>
+  </div>
+  <div class="secao">
+    <div class="secao-header">EMITENTE DA NFS-e — Prestador do Serviço</div>
+    <div class="linha">
+      <div class="cel" style="flex:2"><div class="cel-label">Nome / Nome Empresarial</div><div class="cel-valor-bold">${prestNome}</div></div>
+      <div class="cel"><div class="cel-label">CNPJ / CPF / NIF</div><div class="cel-valor">${prestCnpj}</div></div>
+      <div class="cel"><div class="cel-label">Inscrição Municipal</div><div class="cel-valor">${prestIm}</div></div>
+      <div class="cel"><div class="cel-label">Telefone</div><div class="cel-valor">${prestFone}</div></div>
+    </div>
+    <div class="linha">
+      <div class="cel" style="flex:2"><div class="cel-label">Endereço</div><div class="cel-valor">${prestEnd}</div></div>
+      <div class="cel"><div class="cel-label">Município</div><div class="cel-valor">${prestMunicipio} - ${prestUf}</div></div>
+      <div class="cel"><div class="cel-label">CEP</div><div class="cel-valor">${prestCep}</div></div>
+      <div class="cel"><div class="cel-label">E-mail</div><div class="cel-valor">${prestEmail}</div></div>
+    </div>
+  </div>
+  <div class="secao">
+    <div class="secao-header">TOMADOR DO SERVIÇO</div>
+    <div class="linha">
+      <div class="cel" style="flex:2"><div class="cel-label">Nome / Nome Empresarial</div><div class="cel-valor-bold">${tomNome}</div></div>
+      <div class="cel"><div class="cel-label">CNPJ / CPF / NIF</div><div class="cel-valor">${tomCnpj}</div></div>
+      <div class="cel"><div class="cel-label">Inscrição Municipal</div><div class="cel-valor">${tomIm}</div></div>
+      <div class="cel"><div class="cel-label">Telefone</div><div class="cel-valor">${tomFone}</div></div>
+    </div>
+    <div class="linha">
+      <div class="cel" style="flex:2"><div class="cel-label">Endereço</div><div class="cel-valor">${tomEnd}</div></div>
+      <div class="cel"><div class="cel-label">Município</div><div class="cel-valor">${tomMunicipio}</div></div>
+      <div class="cel"><div class="cel-label">CEP</div><div class="cel-valor">${tomCep}</div></div>
+      <div class="cel"><div class="cel-label">E-mail</div><div class="cel-valor">${tomEmail}</div></div>
+    </div>
+  </div>
+  <div class="secao">
+    <div class="secao-header">SERVIÇO PRESTADO</div>
+    <div class="linha">
+      <div class="cel" style="flex:2"><div class="cel-label">Código de Tributação Nacional</div><div class="cel-valor">${fmt(nf.descricao_tributacao_nacional || nf.codigo_tributacao_nacional)}</div></div>
+      <div class="cel"><div class="cel-label">Código de Tributação Municipal</div><div class="cel-valor">${fmt(nf.codigo_tributacao_municipio)}</div></div>
+      <div class="cel"><div class="cel-label">Local da Prestação</div><div class="cel-valor">${fmt(nf.descricao_municipio_prestacao || nf.descricao_municipio_emissor)}</div></div>
+    </div>
+    <div class="linha">
+      <div class="cel" style="flex:1"><div class="cel-label">Descrição do Serviço</div><div class="cel-valor">${fmt(nf.descricao_servico)}</div></div>
+    </div>
+  </div>
+  <div class="secao">
+    <div class="secao-header">TRIBUTAÇÃO MUNICIPAL</div>
+    <div class="linha">
+      <div class="cel"><div class="cel-label">Tributação do ISSQN</div><div class="cel-valor">${fmt(nf.tributacao_iss || nf.natureza_operacao)}</div></div>
+      <div class="cel"><div class="cel-label">Município de Incidência do ISSQN</div><div class="cel-valor">${fmt(nf.descricao_municipio_prestacao || nf.descricao_municipio_emissor)}</div></div>
+      <div class="cel"><div class="cel-label">Retenção do ISSQN</div><div class="cel-valor">${nf.retencao_iss ? 'Retido' : 'Não Retido'}</div></div>
+      <div class="cel"><div class="cel-label">Regime Especial de Tributação</div><div class="cel-valor">${fmt(nf.regime_especial_tributacao || 'Nenhum')}</div></div>
+    </div>
+    <div class="linha">
+      <div class="cel"><div class="cel-label">Valor do Serviço</div><div class="cel-valor">${fmtMoeda(nf.valor_servico)}</div></div>
+      <div class="cel"><div class="cel-label">Desconto Incondicionado</div><div class="cel-valor">${fmtMoeda(nf.valor_desconto_incondicionado)}</div></div>
+      <div class="cel"><div class="cel-label">BC ISSQN</div><div class="cel-valor">${fmtMoeda(nf.iss_base_calculo)}</div></div>
+      <div class="cel"><div class="cel-label">Alíquota Aplicada</div><div class="cel-valor">${nf.aliquota_iss ? (parseFloat(nf.aliquota_iss) * 100).toFixed(2) + '%' : '-'}</div></div>
+      <div class="cel"><div class="cel-label">ISSQN Apurado</div><div class="cel-valor">${fmtMoeda(nf.valor_iss)}</div></div>
+    </div>
+  </div>
+  <div class="secao">
+    <div class="secao-header">VALOR TOTAL DA NFS-E</div>
+    <div class="linha">
+      <div class="cel"><div class="cel-label">Valor do Serviço</div><div class="cel-valor">${fmtMoeda(nf.valor_servico)}</div></div>
+      <div class="cel"><div class="cel-label">Desconto Condicionado</div><div class="cel-valor">${fmtMoeda(nf.valor_desconto_condicionado)}</div></div>
+      <div class="cel"><div class="cel-label">Desconto Incondicionado</div><div class="cel-valor">${fmtMoeda(nf.valor_desconto_incondicionado)}</div></div>
+      <div class="cel"><div class="cel-label">ISSQN Retido</div><div class="cel-valor">${fmtMoeda(nf.valor_iss_retido)}</div></div>
+      <div class="cel"><div class="cel-label">Total das Retenções Federais</div><div class="cel-valor">${fmtMoeda(nf.valor_total_retencao)}</div></div>
+    </div>
+  </div>
+  <div class="bloco-total">
+    <span class="total-label">Valor Líquido da NFS-e</span>
+    <span class="total-valor">${fmtMoeda(nf.valor_liquido || nf.valor_servico)}</span>
+  </div>
+  ${nf.informacoes_complementares ? `
+  <div class="secao" style="border-top: 1px solid #000;">
+    <div class="secao-header">INFORMAÇÕES COMPLEMENTARES</div>
+    <div class="linha"><div class="cel"><div class="cel-valor">${fmt(nf.informacoes_complementares)}</div></div></div>
+  </div>` : ''}
+  <div class="rodape">Nota Fiscal de Serviços Eletrônica — DANFSe gerada pelo sistema | Consulte a autenticidade em nfse.gov.br</div>
 </body></html>`;
 }
 let API_KEY = '';
