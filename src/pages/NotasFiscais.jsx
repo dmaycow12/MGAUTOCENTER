@@ -982,8 +982,13 @@ export default function NotasFiscais() {
     let html = await resp.text();
     const toolbar = `
 <style>
-  @page { size: A4; margin: 0; }
-  @media print { #toolbar-impressao { display: none !important; } body { margin: 12mm !important; padding-top: 0 !important; } }
+  @page { size: A4; margin: 0 !important; }
+  @media print {
+    #toolbar-impressao { display: none !important; }
+    #tb-content-wrap { padding-top: 0 !important; }
+    body { margin: 12mm !important; padding: 0 !important; }
+    html { margin: 0 !important; }
+  }
   body { padding-top: 48px !important; }
   #toolbar-impressao {
     position: fixed; top: 0; left: 0; right: 0; height: 48px; z-index: 9999;
@@ -1018,7 +1023,7 @@ export default function NotasFiscais() {
     <button onclick="changeZoom(10)">+ Zoom</button>
   </div>
   <div class="tb-spacer"></div>
-  <button class="tb-btn" onclick="window.print()">Imprimir</button>
+  <button class="tb-btn" onclick="imprimirSemCabecalho()">Imprimir</button>
   <button class="tb-btn" onclick="salvarPdf()">Salvar PDF</button>
   <button class="tb-btn" onclick="window.close()">Fechar</button>
 </div>
@@ -1029,6 +1034,14 @@ export default function NotasFiscais() {
     document.getElementById('zoom-val').textContent = zoom + '%';
     var c = document.getElementById('tb-content-wrap');
     if (c) c.style.zoom = (zoom/100);
+  }
+  function imprimirSemCabecalho() {
+    // Injeta @page com margin 0 dinamicamente para garantir que sobrescreve qualquer CSS existente
+    var style = document.createElement('style');
+    style.textContent = '@page { margin: 0 !important; size: A4; } @media print { body { margin: 12mm !important; padding: 0 !important; } }';
+    document.head.appendChild(style);
+    window.print();
+    setTimeout(function() { document.head.removeChild(style); }, 1000);
   }
   function salvarPdf() {
     var a = document.createElement('a');
