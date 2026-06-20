@@ -197,6 +197,7 @@ Deno.serve(async (req) => {
 
     // Gera PDFs para as notas recém importadas
     let pdfsGerados = 0;
+    console.log('[PDF] notasParaPdf:', notasParaPdf.length);
     for (const { nf, id } of notasParaPdf) {
       try {
         const htmlContent = gerarHtmlDanfseLocal(nf, id);
