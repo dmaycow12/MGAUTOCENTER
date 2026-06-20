@@ -320,24 +320,6 @@ ${nf.informacoes_complementares ? `
   <tr><td class="val" style="padding: 3px 4px;">${fmt(nf.informacoes_complementares)}</td></tr>
 </table>` : ''}
 
-<!-- ASSINATURA DO TOMADOR -->
-<table style="border: 1px solid #000; border-top: none;">
-  <tr>
-    <td style="width:50%; border-right: 1px solid #000; padding: 4px 8px;">
-      <div class="lbl">NOME DO TOMADOR / RESPONSÁVEL PELO RECEBIMENTO</div>
-      <div style="height: 30px;"></div>
-    </td>
-    <td style="width:25%; border-right: 1px solid #000; padding: 4px 8px;">
-      <div class="lbl">ASSINATURA</div>
-      <div style="height: 30px;"></div>
-    </td>
-    <td style="width:25%; padding: 4px 8px;">
-      <div class="lbl">DATA DO RECEBIMENTO</div>
-      <div style="height: 30px;"></div>
-    </td>
-  </tr>
-</table>
-
 <div class="rodape-cell">Nota Fiscal de Serviços Eletrônica — DANFSe v1.0 | Consulte a autenticidade em nfse.gov.br</div>
 
 </body>
