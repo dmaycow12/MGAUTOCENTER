@@ -141,101 +141,18 @@ Deno.serve(async (req) => {
     // Para notas de entrada (Importada/Lançada), buscar pelo chave_acesso na SEFAZ via Focus NFe
     let result = null;
 
-    // NFSe recebida (Nacional): buscar DANFSe HTML via Focus NFe e converter para PDF
+    // NFSe recebida (Nacional): delega para gerarDanfseRecebida que gera PDF local
     if (nota.tipo === 'NFSe' && (nota.status === 'Importada' || nota.status === 'Lançada')) {
-      // Chave de acesso da NFSe (id_tag formato NFS...)
-      let chaveNfse = nota.chave_acesso || nota.spedy_id || '';
-
-      // Tenta extrair id_tag do XML salvo se a chave não parece ser o id_tag completo
-      if (chaveNfse && !chaveNfse.startsWith('NFS')) {
-        let xmlText = nota.xml_original || '';
-        if (!xmlText && nota.xml_url) {
-          try { const xr = await fetch(nota.xml_url); if (xr.ok) xmlText = await xr.text(); } catch (_) {}
-        }
-        if (xmlText) {
-          const mIdTag = xmlText.match(/<id_tag>([^<]+)<\/id_tag>/);
-          const mChave = xmlText.match(/<ChaveAcesso>(NFS[^<]+)<\/ChaveAcesso>/);
-          if (mIdTag) chaveNfse = mIdTag[1].trim();
-          else if (mChave) chaveNfse = mChave[1].trim();
-        }
+      const danfseRes = await base44.functions.invoke('gerarDanfseRecebida', { nota_id });
+      const danfseData = danfseRes.data;
+      if (danfseData?.pdf_url) {
+        return Response.json({ sucesso: true, pdf_url: danfseData.pdf_url });
       }
-      console.log('[NFSe recebida] chave usada:', chaveNfse);
-
-      if (chaveNfse) {
-        // 1) Tenta buscar PDF direto
-        const pdfResp = await fetch(`${FOCUSNFE_BASE_PROD}/nfsens_recebidas/${encodeURIComponent(chaveNfse)}.pdf`, {
-          headers: { 'Authorization': AUTH_HEADER_PROD, 'Accept': 'application/pdf' },
-          redirect: 'follow',
-        });
-        console.log('[NFSe recebida] PDF status:', pdfResp.status);
-        if (pdfResp.ok) {
-          const buf = await pdfResp.arrayBuffer();
-          const h = new Uint8Array(buf, 0, 4);
-          if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
-            const pdfFile = new File([buf], `nfse_${nota_id}.pdf`, { type: 'application/pdf' });
-            const { file_url } = await db.integrations.Core.UploadFile({ file: pdfFile });
-            await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
-            return Response.json({ sucesso: true, pdf_url: file_url });
-          }
-        }
-
-        // 2) Busca HTML da DANFSe e converte para PDF via Gotenberg
-        const htmlResp = await fetch(`${FOCUSNFE_BASE_PROD}/nfsens_recebidas/${encodeURIComponent(chaveNfse)}.html`, {
-          headers: { 'Authorization': AUTH_HEADER_PROD, 'Accept': 'text/html' },
-          redirect: 'follow',
-        });
-        console.log('[NFSe recebida] HTML status:', htmlResp.status);
-        if (htmlResp.ok) {
-          const htmlContent = await htmlResp.text();
-          console.log('[NFSe recebida] HTML tamanho:', htmlContent.length);
-
-          // Converte HTML → PDF via Gotenberg
-          try {
-            const formData = new FormData();
-            const htmlBlob = new Blob([htmlContent], { type: 'text/html; charset=utf-8' });
-            formData.append('files', htmlBlob, 'index.html');
-            formData.append('paperWidth', '8.5');
-            formData.append('paperHeight', '11');
-            formData.append('marginTop', '0.3');
-            formData.append('marginBottom', '0.3');
-            formData.append('marginLeft', '0.3');
-            formData.append('marginRight', '0.3');
-
-            const gotenbergResp = await fetch('https://gotenberg.spedy.com.br/forms/chromium/convert/html', {
-              method: 'POST',
-              body: formData,
-            });
-            console.log('[NFSe recebida] Gotenberg status:', gotenbergResp.status);
-
-            if (gotenbergResp.ok) {
-              const pdfBuf = await gotenbergResp.arrayBuffer();
-              const h = new Uint8Array(pdfBuf, 0, 4);
-              if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
-                const pdfFile = new File([pdfBuf], `nfse_${nota_id}.pdf`, { type: 'application/pdf' });
-                const { file_url } = await db.integrations.Core.UploadFile({ file: pdfFile });
-                await db.entities.NotaFiscal.update(nota_id, { pdf_url: file_url });
-                return Response.json({ sucesso: true, pdf_url: file_url });
-              }
-            }
-          } catch (gotErr) {
-            console.log('[NFSe recebida] Gotenberg erro:', gotErr.message);
-          }
-
-          // Fallback: salva HTML como URL temporária para o usuário visualizar
-          return Response.json({ sucesso: false, erro: 'Não foi possível converter o HTML para PDF. Tente fazer o upload manual do PDF.', html: htmlContent });
-        }
+      if (danfseData?.html) {
+        // Fallback: retorna HTML para o frontend abrir em nova aba
+        return Response.json({ sucesso: true, pdf_url: null, html: danfseData.html });
       }
-
-      // Fallback: portal gov
-      const urlPortal = chaveNfse
-        ? `https://www.nfse.gov.br/ConsultaNacional/ConsultarNfse?chaveacesso=${chaveNfse}`
-        : 'https://www.nfse.gov.br';
-      return Response.json({ 
-        sucesso: false, 
-        nfse_portal: true,
-        url_portal: urlPortal,
-        erro: 'PDF desta NFS-e Nacional não disponível via Focus NFe. Acesse o portal nfse.gov.br para baixar o PDF e faça o upload manualmente.' 
-      });
+      return Response.json({ sucesso: false, erro: danfseData?.erro || 'Erro ao gerar DANFSe.' });
     }
 
     if (nota.spedy_id && !(nota.status === 'Importada' || nota.status === 'Lançada')) {
