@@ -1437,18 +1437,6 @@ export default function NotasFiscais() {
                             <Pencil className="w-4 h-4" />
                           </button>
                         )}
-                        {nota.tipo === 'NFSe' && (nota.status === 'Importada' || nota.status === 'Lançada') && (
-                          <button title="Regerar DANFSe" onClick={async () => {
-                            feedback('sucesso', 'Gerando nova DANFSe...');
-                            try {
-                              const res = await base44.functions.invoke('gerarDanfseRecebida', { nota_id: nota.id });
-                              if (res.data?.sucesso) { feedback('sucesso', 'DANFSe gerada!'); load(); }
-                              else feedback('erro', res.data?.erro || 'Erro ao gerar DANFSe.');
-                            } catch (e) { feedback('erro', e.message); }
-                          }} className="p-1 text-gray-500 hover:text-yellow-400 transition-all">
-                            <RefreshCw className="w-4 h-4" />
-                          </button>
-                        )}
                         <button title="Abrir PDF" onClick={() => abrirPdfNota(nota)} className="p-1 transition-all" style={{ color: nota.pdf_url ? "#00ff00" : "#ef4444" }}>
                           <FileText className="w-4 h-4" />
                         </button>
