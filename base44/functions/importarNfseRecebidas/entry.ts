@@ -189,6 +189,7 @@ Deno.serve(async (req) => {
       });
 
       // Guarda dados da NF para gerar PDF depois
+      console.log('[PDF] Adicionando nota para PDF:', novaNota.id);
       notasParaPdf.push({ nf, id: novaNota.id });
 
       importadas++;
