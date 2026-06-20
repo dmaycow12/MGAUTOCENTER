@@ -977,9 +977,35 @@ export default function NotasFiscais() {
     }
   };
 
+  const abrirHtmlComoJanela = async (url) => {
+    const resp = await fetch(url);
+    let html = await resp.text();
+    // Injeta CSS de impressão A4 no head
+    const cssA4 = `<style>
+      @page { size: A4; margin: 10mm; }
+      @media print { body { margin: 0; } }
+      body { max-width: 210mm; margin: 0 auto; font-size: 11px; }
+    </style>
+    <script>window.onload = function() { window.print(); }<\/script>`;
+    html = html.replace('</head>', cssA4 + '</head>');
+    const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 120000);
+  };
+
   const abrirPdfNota = async (nota) => {
     if (nota.tipo === 'NFCe') {
       await abrirDanfeNfce(nota);
+      return;
+    }
+    // Se já tem URL HTML salva (DANFSe importada), abre direto
+    if (nota.pdf_url?.endsWith('.html')) {
+      feedback('sucesso', 'Abrindo DANFSe...');
+      try {
+        await abrirHtmlComoJanela(nota.pdf_url);
+        setMsgFeedback(null);
+      } catch (e) { feedback('erro', e.message); }
       return;
     }
     feedback('sucesso', 'Buscando PDF...');
@@ -987,7 +1013,11 @@ export default function NotasFiscais() {
       const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
       const data = res.data;
       if (data?.pdf_url) {
-        window.open(data.pdf_url, '_blank');
+        if (data.pdf_url.endsWith('.html')) {
+          await abrirHtmlComoJanela(data.pdf_url);
+        } else {
+          window.open(data.pdf_url, '_blank');
+        }
         setMsgFeedback(null);
         load();
         return;
