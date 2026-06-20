@@ -293,13 +293,9 @@ Deno.serve(async (req) => {
       if (chave && chavesExistentes.has(chave)) {
         const notaExistente = notasExistentes.find(n => n.chave_acesso === chave);
         if (notaExistente) {
-          const updates = {};
-          if (!notaExistente.xml_original && arquivosParaSalvar.xml_original) updates.xml_original = arquivosParaSalvar.xml_original;
-          if (!notaExistente.pdf_url && arquivosParaSalvar.pdf_url) updates.pdf_url = arquivosParaSalvar.pdf_url;
-          if (Object.keys(updates).length > 0) {
-            await base44.asServiceRole.entities.NotaFiscal.update(notaExistente.id, updates);
-            atualizadas++;
-          }
+          // Sempre regenera o HTML da DANFSe para garantir o layout atualizado
+          notasParaPdf.push({ nf, id: notaExistente.id });
+          atualizadas++;
         }
         continue;
       }
