@@ -131,6 +131,7 @@ Deno.serve(async (req) => {
 
     let importadas = 0;
     let atualizadas = 0;
+    const notasParaPdf = [];
 
     for (const nf of nfses) {
       const chave = nf.numero_dfse || nf.id_tag || '';
@@ -187,9 +188,18 @@ Deno.serve(async (req) => {
         ...arquivosParaSalvar,
       });
 
-      // Gera DANFSe (PDF) para a nota recém criada usando a mesma lógica inline
+      // Guarda dados da NF para gerar PDF depois
+      notasParaPdf.push({ nf, id: novaNota.id });
+
+      importadas++;
+      if (chave) chavesExistentes.add(chave);
+    }
+
+    // Gera PDFs para as notas recém importadas
+    let pdfsGerados = 0;
+    for (const { nf, id } of notasParaPdf) {
       try {
-        const htmlContent = gerarHtmlDanfseLocal(nf, novaNota.id);
+        const htmlContent = gerarHtmlDanfseLocal(nf, id);
         const formData = new FormData();
         const htmlBlob = new Blob([htmlContent], { type: 'text/html; charset=utf-8' });
         formData.append('files', htmlBlob, 'index.html');
@@ -207,22 +217,20 @@ Deno.serve(async (req) => {
           const pdfBuf = await gotResp.arrayBuffer();
           const h = new Uint8Array(pdfBuf, 0, 4);
           if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
-            const pdfFile = new File([pdfBuf], `nfse_${novaNota.id}.pdf`, { type: 'application/pdf' });
+            const pdfFile = new File([pdfBuf], `nfse_${id}.pdf`, { type: 'application/pdf' });
             const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
-            await base44.asServiceRole.entities.NotaFiscal.update(novaNota.id, { pdf_url: file_url });
+            await base44.asServiceRole.entities.NotaFiscal.update(id, { pdf_url: file_url });
+            pdfsGerados++;
           } else {
-            console.error('[PDF] Gotenberg retornou conteúdo inválido, status:', gotResp.status);
+            console.error('[PDF] Resposta inválida do Gotenberg, status:', gotResp.status);
           }
         } else {
           const errTxt = await gotResp.text().catch(() => '');
-          console.error('[PDF] Gotenberg erro:', gotResp.status, errTxt.substring(0, 200));
+          console.error('[PDF] Gotenberg erro:', gotResp.status, errTxt.substring(0, 300));
         }
       } catch (pdfErr) {
-        console.error('[PDF] Exceção ao gerar PDF:', pdfErr.message);
+        console.error('[PDF] Exceção:', pdfErr.message);
       }
-
-      importadas++;
-      if (chave) chavesExistentes.add(chave);
     }
 
     return Response.json({
@@ -235,6 +243,7 @@ Deno.serve(async (req) => {
       ].filter(Boolean).join(' '),
       importadas,
       atualizadas,
+      pdfsGerados,
       consultadas: nfses.length,
     });
 
