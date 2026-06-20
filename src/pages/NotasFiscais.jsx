@@ -979,85 +979,127 @@ export default function NotasFiscais() {
 
   const abrirHtmlComoJanela = async (url) => {
     const resp = await fetch(url);
-    let html = await resp.text();
-    const toolbar = `
+    const htmlOriginal = await resp.text();
+
+    // Extrai apenas o conteúdo do <body> do HTML original
+    const bodyMatch = htmlOriginal.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    const bodyContent = bodyMatch ? bodyMatch[1] : htmlOriginal;
+
+    // Monta uma nova página completa: toolbar preto + fundo cinza + folha A4 branca centralizada
+    const novaHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>DANFSe</title>
 <style>
-  @page { size: A4; margin: 0 !important; }
-  @media print {
-    #toolbar-impressao { display: none !important; }
-    #tb-content-wrap { padding-top: 0 !important; }
-    body { margin: 12mm !important; padding: 0 !important; }
-    html { margin: 0 !important; }
-  }
-  body { padding-top: 48px !important; }
-  #toolbar-impressao {
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { background: #404040; font-family: Arial, sans-serif; }
+
+  /* Toolbar */
+  #toolbar {
     position: fixed; top: 0; left: 0; right: 0; height: 48px; z-index: 9999;
     background: #111; color: #fff; display: flex; align-items: center;
-    padding: 0 20px; gap: 0; font-family: Arial, sans-serif; font-size: 13px;
-    border-bottom: 1px solid #333;
+    padding: 0 20px; gap: 0; font-size: 13px; border-bottom: 1px solid #333;
   }
-  #toolbar-impressao .tb-title {
-    font-weight: bold; font-size: 14px; letter-spacing: 1px; margin-right: 24px;
-  }
-  #toolbar-impressao .tb-sep { width: 1px; height: 28px; background: #444; margin: 0 12px; }
-  #toolbar-impressao .tb-zoom { display: flex; align-items: center; gap: 8px; }
-  #toolbar-impressao .tb-zoom button {
+  #toolbar .tb-title { font-weight: bold; font-size: 14px; letter-spacing: 1px; margin-right: 24px; }
+  #toolbar .tb-zoom { display: flex; align-items: center; gap: 8px; }
+  #toolbar .tb-zoom button {
     background: #222; color: #fff; border: 1px solid #444; border-radius: 4px;
     padding: 3px 10px; cursor: pointer; font-size: 13px;
   }
-  #toolbar-impressao .tb-zoom button:hover { background: #333; }
-  #toolbar-impressao .tb-zoom span { min-width: 40px; text-align: center; }
-  #toolbar-impressao .tb-spacer { flex: 1; }
-  #toolbar-impressao .tb-btn {
+  #toolbar .tb-zoom button:hover { background: #333; }
+  #toolbar .tb-zoom span { min-width: 40px; text-align: center; }
+  #toolbar .tb-spacer { flex: 1; }
+  #toolbar .tb-btn {
     background: none; color: #fff; border: none; padding: 6px 16px;
     cursor: pointer; font-size: 13px; border-radius: 4px;
   }
-  #toolbar-impressao .tb-btn:hover { background: #333; }
-  #toolbar-content { zoom: 1; transform-origin: top center; }
+  #toolbar .tb-btn:hover { background: #333; }
+
+  /* Área de visualização com fundo cinza escuro */
+  #viewer {
+    margin-top: 48px;
+    padding: 24px 0;
+    min-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #404040;
+  }
+
+  /* Folha A4 branca centralizada */
+  #a4-page {
+    background: #fff;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 12mm;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    transform-origin: top center;
+  }
+
+  /* Estilos originais do DANFSe injetados aqui */
+  #a4-page .secao { border: 1px solid #999; border-radius: 4px; margin-bottom: 10px; }
+  #a4-page .secao-titulo { background: #e8e8e8; font-weight: bold; font-size: 9px; padding: 3px 8px; text-transform: uppercase; border-bottom: 1px solid #999; border-radius: 4px 4px 0 0; }
+  #a4-page .secao-corpo { padding: 8px; }
+  #a4-page .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #a4-page .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  #a4-page .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
+  #a4-page .campo label { font-size: 8px; color: #666; display: block; text-transform: uppercase; margin-bottom: 2px; }
+  #a4-page .campo span { font-size: 10px; font-weight: 500; color: #000; }
+  #a4-page .destaque { background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin-top: 10px; }
+  #a4-page .chave { font-family: monospace; font-size: 9px; letter-spacing: 1px; word-break: break-all; background: #f5f5f5; padding: 4px 6px; border-radius: 3px; border: 1px solid #ddd; color: #000; }
+  #a4-page .rodape { text-align: center; font-size: 8px; color: #888; margin-top: 14px; border-top: 1px solid #ddd; padding-top: 6px; }
+  #a4-page .recibo { display: flex; justify-content: space-between; align-items: flex-start; border: 1px solid #999; border-radius: 4px; padding: 10px 12px; margin-bottom: 6px; gap: 12px; }
+  #a4-page .recibo-texto { font-size: 10px; flex: 1; line-height: 1.5; color: #000; }
+  #a4-page .recibo-lado { text-align: center; font-size: 10px; min-width: 110px; border-left: 1px solid #999; padding-left: 12px; line-height: 1.6; color: #000; }
+  #a4-page .assinatura-row { display: flex; gap: 16px; margin-bottom: 4px; padding: 0 4px; }
+  #a4-page .assinatura-campo { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  #a4-page .assinatura-linha { border-bottom: 1px solid #000; height: 22px; }
+  #a4-page .assinatura-label { font-size: 8px; font-weight: bold; text-transform: uppercase; text-align: center; color: #333; }
+  #a4-page .recibo-corte { font-size: 9px; color: #999; letter-spacing: 0px; margin-bottom: 10px; overflow: hidden; white-space: nowrap; }
+
+  /* Print: sem chrome do browser */
+  @page { size: A4; margin: 0; }
+  @media print {
+    #toolbar { display: none !important; }
+    #viewer { background: none !important; margin-top: 0 !important; padding: 0 !important; }
+    #a4-page { box-shadow: none !important; width: 100% !important; min-height: 0 !important; padding: 12mm !important; transform: none !important; }
+    body { background: #fff !important; }
+  }
 </style>
-<div id="toolbar-impressao">
+</head>
+<body>
+<div id="toolbar">
   <span class="tb-title">IMPRESSAO</span>
   <div class="tb-zoom">
     <button onclick="changeZoom(-10)">- Zoom</button>
     <span id="zoom-val">100%</span>
     <button onclick="changeZoom(10)">+ Zoom</button>
   </div>
-  <div class="tb-spacer"></div>
-  <button class="tb-btn" onclick="imprimirSemCabecalho()">Imprimir</button>
-  <button class="tb-btn" onclick="salvarPdf()">Salvar PDF</button>
+  <span class="tb-spacer"></span>
+  <button class="tb-btn" onclick="window.print()">Imprimir</button>
   <button class="tb-btn" onclick="window.close()">Fechar</button>
+</div>
+<div id="viewer">
+  <div id="a4-page">
+    ${bodyContent}
+  </div>
 </div>
 <script>
   var zoom = 100;
   function changeZoom(delta) {
     zoom = Math.max(50, Math.min(200, zoom + delta));
     document.getElementById('zoom-val').textContent = zoom + '%';
-    var c = document.getElementById('tb-content-wrap');
-    if (c) c.style.zoom = (zoom/100);
+    document.getElementById('a4-page').style.transform = 'scale(' + (zoom/100) + ')';
+    document.getElementById('a4-page').style.transformOrigin = 'top center';
+    document.getElementById('viewer').style.minHeight = 'calc(' + (zoom/100) + ' * 297mm + 96px)';
   }
-  function imprimirSemCabecalho() {
-    // Injeta @page com margin 0 dinamicamente para garantir que sobrescreve qualquer CSS existente
-    var style = document.createElement('style');
-    style.textContent = '@page { margin: 0 !important; size: A4; } @media print { body { margin: 12mm !important; padding: 0 !important; } }';
-    document.head.appendChild(style);
-    window.print();
-    setTimeout(function() { document.head.removeChild(style); }, 1000);
-  }
-  function salvarPdf() {
-    var a = document.createElement('a');
-    a.href = window.location.href;
-    a.download = 'danfse.html';
-    a.click();
-  }
-<\/script>`;
+<\/script>
+</body>
+</html>`;
 
-    // Envolve o conteúdo do body num wrapper para zoom
-    html = html.replace('</head>', toolbar + '</head>');
-    // Envolve body content
-    html = html.replace(/<body([^>]*)>/, '<body$1><div id="tb-content-wrap">');
-    html = html.replace('</body>', '</div></body>');
-
-    const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
+    const blob = new Blob([novaHtml], { type: 'text/html; charset=utf-8' });
     const blobUrl = URL.createObjectURL(blob);
     window.open(blobUrl, '_blank');
     setTimeout(() => URL.revokeObjectURL(blobUrl), 120000);
