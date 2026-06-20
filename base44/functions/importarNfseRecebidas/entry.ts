@@ -107,6 +107,60 @@ Deno.serve(async (req) => {
         arquivosParaSalvar.xml_original = xmlText;
       } catch (_) {}
 
+      // Tenta buscar DANFSe HTML e converter para PDF via Gotenberg
+      const idTag = nf.id_tag || chave;
+      if (idTag && idTag.startsWith('NFS')) {
+        try {
+          // Tenta PDF direto primeiro
+          const pdfResp = await fetch(`${FOCUSNFE_BASE}/nfsens_recebidas/${encodeURIComponent(idTag)}.pdf`, {
+            headers: { 'Authorization': AUTH_HEADER, 'Accept': 'application/pdf' },
+            redirect: 'follow',
+          });
+          if (pdfResp.ok) {
+            const buf = await pdfResp.arrayBuffer();
+            const h = new Uint8Array(buf, 0, 4);
+            if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
+              const pdfFile = new File([buf], `nfse_${idTag}.pdf`, { type: 'application/pdf' });
+              const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+              arquivosParaSalvar.pdf_url = file_url;
+            }
+          }
+
+          // Se não conseguiu PDF direto, tenta via HTML + Gotenberg
+          if (!arquivosParaSalvar.pdf_url) {
+            const htmlResp = await fetch(`${FOCUSNFE_BASE}/nfsens_recebidas/${encodeURIComponent(idTag)}.html`, {
+              headers: { 'Authorization': AUTH_HEADER, 'Accept': 'text/html' },
+              redirect: 'follow',
+            });
+            if (htmlResp.ok) {
+              const htmlContent = await htmlResp.text();
+              const formData = new FormData();
+              const htmlBlob = new Blob([htmlContent], { type: 'text/html; charset=utf-8' });
+              formData.append('files', htmlBlob, 'index.html');
+              formData.append('paperWidth', '8.5');
+              formData.append('paperHeight', '11');
+              formData.append('marginTop', '0.3');
+              formData.append('marginBottom', '0.3');
+              formData.append('marginLeft', '0.3');
+              formData.append('marginRight', '0.3');
+              const gotResp = await fetch('https://gotenberg.spedy.com.br/forms/chromium/convert/html', {
+                method: 'POST',
+                body: formData,
+              });
+              if (gotResp.ok) {
+                const pdfBuf = await gotResp.arrayBuffer();
+                const h = new Uint8Array(pdfBuf, 0, 4);
+                if (h[0] === 0x25 && h[1] === 0x50 && h[2] === 0x44 && h[3] === 0x46) {
+                  const pdfFile = new File([pdfBuf], `nfse_${idTag}.pdf`, { type: 'application/pdf' });
+                  const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+                  arquivosParaSalvar.pdf_url = file_url;
+                }
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
       if (chave && chavesExistentes.has(chave)) {
         const notaExistente = notasExistentes.find(n => n.chave_acesso === chave);
         if (notaExistente) {
