@@ -56,12 +56,31 @@ function gerarHtmlDanfseLocal(nf) {
   .destaque { background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin-top: 10px; }
   .chave { font-family: monospace; font-size: 9px; letter-spacing: 1px; word-break: break-all; background: #f5f5f5; padding: 4px 6px; border-radius: 3px; border: 1px solid #ddd; }
   .rodape { text-align: center; font-size: 8px; color: #888; margin-top: 14px; border-top: 1px solid #ddd; padding-top: 6px; }
-  @media print { body { padding: 0; } @page { margin: 12mm; size: A4; } }
+  .recibo { display: flex; justify-content: space-between; align-items: flex-start; border: 1px solid #999; border-radius: 4px; padding: 10px 12px; margin-bottom: 6px; gap: 12px; }
+  .recibo-texto { font-size: 10px; flex: 1; line-height: 1.5; }
+  .recibo-lado { text-align: center; font-size: 10px; min-width: 110px; border-left: 1px solid #999; padding-left: 12px; line-height: 1.6; }
+  .assinatura-row { display: flex; gap: 16px; margin-bottom: 4px; padding: 0 4px; }
+  .assinatura-campo { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .assinatura-linha { border-bottom: 1px solid #000; height: 22px; }
+  .assinatura-label { font-size: 8px; font-weight: bold; text-transform: uppercase; text-align: center; color: #333; }
+  .recibo-corte { font-size: 9px; color: #999; letter-spacing: 0px; margin-bottom: 10px; overflow: hidden; white-space: nowrap; }
+  @media print { body { padding: 0; } @page { margin: 0; size: A4; } body { margin: 12mm; } }
 </style>
 </head>
 <body>
-<div class="titulo">DANFSe — DOCUMENTO AUXILIAR DA NOTA FISCAL DE SERVIÇOS ELETRÔNICA</div>
-<div class="subtitulo">Nota Fiscal de Serviços Nacional — NFS-e</div>
+<div class="recibo">
+  <div class="recibo-texto">Recebemos de <strong>${prestNome}</strong> os serviços constantes na Nota Fiscal de Serviços Eletrônica indicada ao lado.<br>Destinatário: ${tomNome}. Valor total: ${fmtMoeda(valorLiquido)}.</div>
+  <div class="recibo-lado">
+    <div style="font-weight:bold;font-size:13px;">NFS-e</div>
+    <div>Nº: ${fmt(nf.numero || nf.numero_dfse)}</div>
+    <div>Emissão: ${fmtData(nf.data_emissao_completa || nf.data_emissao)}</div>
+  </div>
+</div>
+<div class="assinatura-row">
+  <div class="assinatura-campo"><div class="assinatura-linha"></div><div class="assinatura-label">DATA DE RECEBIMENTO</div></div>
+  <div class="assinatura-campo" style="flex:2"><div class="assinatura-linha"></div><div class="assinatura-label">IDENTIFICAÇÃO E ASSINATURA DO RECEBEDOR</div></div>
+</div>
+<div class="recibo-corte">...........................................................................................................................................................................</div>
 <div class="secao">
   <div class="secao-titulo">Identificação</div>
   <div class="secao-corpo">
