@@ -152,7 +152,7 @@ function gerarHtmlDanfseLocal(nf) {
     </div>
   </div>
 </div>
-<div class="rodape">Documento gerado pelo sistema | Consulte a autenticidade em nfse.gov.br</div>
+
 </body></html>`;
 }
 let API_KEY = '';
