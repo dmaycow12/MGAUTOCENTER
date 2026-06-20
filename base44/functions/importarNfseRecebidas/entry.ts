@@ -210,9 +210,16 @@ Deno.serve(async (req) => {
             const pdfFile = new File([pdfBuf], `nfse_${novaNota.id}.pdf`, { type: 'application/pdf' });
             const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
             await base44.asServiceRole.entities.NotaFiscal.update(novaNota.id, { pdf_url: file_url });
+          } else {
+            console.error('[PDF] Gotenberg retornou conteúdo inválido, status:', gotResp.status);
           }
+        } else {
+          const errTxt = await gotResp.text().catch(() => '');
+          console.error('[PDF] Gotenberg erro:', gotResp.status, errTxt.substring(0, 200));
         }
-      } catch (_) {}
+      } catch (pdfErr) {
+        console.error('[PDF] Exceção ao gerar PDF:', pdfErr.message);
+      }
 
       importadas++;
       if (chave) chavesExistentes.add(chave);
