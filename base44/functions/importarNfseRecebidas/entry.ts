@@ -65,12 +65,11 @@ function gerarHtmlDanfseLocal(nf) {
   .assinatura-linha { border-bottom: 1px solid #000; height: 22px; }
   .assinatura-label { font-size: 8px; font-weight: bold; text-transform: uppercase; text-align: center; color: #333; }
   .recibo-corte { font-size: 9px; color: #999; letter-spacing: 0px; margin-bottom: 10px; overflow: hidden; white-space: nowrap; }
+  @page { margin: 0; size: A4; }
   @media print {
-    @page { margin: 0; size: A4; }
-    body { padding: 0; margin: 12mm; }
+    body { padding: 0 !important; margin: 12mm !important; }
     html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
-  @page { margin: 0; }
 </style>
 </head>
 <body>

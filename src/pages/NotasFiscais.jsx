@@ -982,8 +982,8 @@ export default function NotasFiscais() {
     let html = await resp.text();
     const toolbar = `
 <style>
-  @page { size: A4; margin: 10mm; }
-  @media print { #toolbar-impressao { display: none !important; } body { margin: 0; padding-top: 0 !important; } }
+  @page { size: A4; margin: 0; }
+  @media print { #toolbar-impressao { display: none !important; } body { margin: 12mm !important; padding-top: 0 !important; } }
   body { padding-top: 48px !important; }
   #toolbar-impressao {
     position: fixed; top: 0; left: 0; right: 0; height: 48px; z-index: 9999;
@@ -1055,13 +1055,17 @@ export default function NotasFiscais() {
       await abrirDanfeNfce(nota);
       return;
     }
-    // Se já tem URL HTML salva (DANFSe importada), abre direto
+    // Se já tem URL HTML salva (DANFSe importada), abre com toolbar igual às NFe
     if (nota.pdf_url?.endsWith('.html')) {
       feedback('sucesso', 'Abrindo DANFSe...');
       try {
         await abrirHtmlComoJanela(nota.pdf_url);
         setMsgFeedback(null);
-      } catch (e) { feedback('erro', e.message); }
+      } catch (e) {
+        // fallback: abre direto
+        window.open(nota.pdf_url, '_blank');
+        setMsgFeedback(null);
+      }
       return;
     }
     feedback('sucesso', 'Buscando PDF...');
