@@ -1,0 +1,167 @@
+import React, { useState, useEffect } from "react";
+import { X, FileText, Copy, ExternalLink, Loader2 } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
+
+export default function ModalGerarBoleto({ item, onClose }) {
+  const [form, setForm] = useState({
+    nome: item?.cliente_id ? "" : "",
+    cpf_cnpj: "",
+    email: "",
+    valor: item?.valor || "",
+    vencimento: item?.data_vencimento || new Date().toISOString().split("T")[0],
+    descricao: item?.descricao || "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [resultado, setResultado] = useState(null);
+
+  // Pré-preenche com dados do cadastro se disponível
+  React.useEffect(() => {
+    if (item?.cliente_id) {
+      base44.entities.Cadastro.filter({ id: item.cliente_id }, "-created_date", 1)
+        .then(res => {
+          if (res[0]) {
+            setForm(f => ({
+              ...f,
+              nome: res[0].nome || "",
+              cpf_cnpj: res[0].cpf_cnpj || "",
+              email: res[0].email || "",
+            }));
+          }
+        }).catch(() => {});
+    }
+  }, [item?.cliente_id]);
+
+  const gerar = async () => {
+    if (!form.nome || !form.cpf_cnpj || !form.valor || !form.vencimento) {
+      toast.error("Preencha Nome, CPF/CNPJ, Valor e Vencimento.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await base44.functions.invoke("gerarBoleto", {
+        financeiro_id: item?.id,
+        nome: form.nome,
+        cpf_cnpj: form.cpf_cnpj,
+        email: form.email,
+        valor: Number(form.valor),
+        vencimento: form.vencimento,
+        descricao: form.descricao,
+      });
+      if (res.data?.sucesso) {
+        setResultado(res.data);
+        toast.success("Boleto gerado com sucesso!");
+      } else {
+        toast.error(res.data?.erro || "Erro ao gerar boleto");
+      }
+    } catch (err) {
+      toast.error("Erro: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copiar = (texto) => {
+    navigator.clipboard.writeText(texto);
+    toast.success("Copiado!");
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md">
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-gray-800">
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-blue-400" />
+            <h2 className="text-white font-semibold">Gerar Boleto — Asaas</h2>
+          </div>
+          <button onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
+        </div>
+
+        {!resultado ? (
+          <>
+            <div className="p-5 space-y-3">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Nome / Razão Social *</label>
+                <input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">CPF / CNPJ *</label>
+                  <input value={form.cpf_cnpj} onChange={e => setForm({ ...form, cpf_cnpj: e.target.value })}
+                    placeholder="000.000.000-00"
+                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">E-mail</label>
+                  <input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Valor (R$) *</label>
+                  <input type="number" step="0.01" value={form.valor} onChange={e => setForm({ ...form, valor: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Vencimento *</label>
+                  <input type="date" value={form.vencimento} onChange={e => setForm({ ...form, vencimento: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Descrição</label>
+                <input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 p-5 border-t border-gray-800">
+              <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white rounded-lg border border-gray-700 hover:border-gray-500 transition-all">Cancelar</button>
+              <button onClick={gerar} disabled={loading}
+                className="px-5 py-2 text-sm text-white rounded-lg font-medium transition-all flex items-center gap-2 disabled:opacity-50"
+                style={{ background: "#062C9B" }}>
+                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Gerando...</> : "Gerar Boleto"}
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="p-5 space-y-4">
+            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center">
+              <p className="text-green-400 font-semibold text-sm">Boleto gerado com sucesso!</p>
+              <p className="text-gray-400 text-xs mt-1">
+                Vencimento: {resultado.vencimento?.split("-").reverse().join("/")} · R$ {Number(resultado.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+
+            {resultado.linha_digitavel && (
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Linha Digitável</label>
+                <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2">
+                  <span className="flex-1 text-white text-xs font-mono break-all">{resultado.linha_digitavel}</span>
+                  <button onClick={() => copiar(resultado.linha_digitavel)} className="text-gray-400 hover:text-white flex-shrink-0">
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {resultado.boleto_url && (
+              <a href={resultado.boleto_url} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-3 text-sm font-semibold text-white rounded-xl transition-all"
+                style={{ background: "#062C9B" }}>
+                <ExternalLink className="w-4 h-4" />
+                Abrir / Imprimir Boleto
+              </a>
+            )}
+
+            <button onClick={onClose} className="w-full py-2 text-sm text-gray-400 hover:text-white rounded-lg border border-gray-700 transition-all">
+              Fechar
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

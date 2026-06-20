@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Edit, Trash2, ChevronDown } from "lucide-react";
+import { Edit, Trash2, ChevronDown, FileText } from "lucide-react";
 
 const STATUS_OPTIONS = ["Pendente", "Pago", "Atrasado"];
 const PAGAMENTO_OPTIONS = ["A Combinar", "Boleto", "Cartão", "Dinheiro", "PIX"];
@@ -21,7 +21,7 @@ function fmtValor(v) {
   return "R$ " + Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 }
 
-export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento }) {
+export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, onGerarBoleto }) {
   const [statusOpen, setStatusOpen] = useState(false);
   const [pagamentoOpen, setPagamentoOpen] = useState(false);
   const statusRef = useRef(null);
@@ -70,6 +70,11 @@ export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus
           )}
         </div>
 
+        {item.tipo === "Receita" && item.status !== "Pago" && (
+          <button onClick={() => onGerarBoleto?.(item)} className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-800 rounded-lg transition-all" title="Gerar Boleto">
+            <FileText className="w-3.5 h-3.5" />
+          </button>
+        )}
         <button onClick={() => onEdit?.(item)} className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-800 rounded-lg transition-all" title="Editar">
           <Edit className="w-3.5 h-3.5" />
         </button>

@@ -22,6 +22,7 @@ const STATUS_BG_LIST = { "Pendente": "#cc0000", "Pago": "#16a34a", "Atrasado": "
 import FinanceiroCard from "@/components/financeiro/FinanceiroCard";
 import FluxoMes from "@/components/dashboard/FluxoMes";
 import AbaComissoes from "@/components/financeiro/AbaComissoes";
+import ModalGerarBoleto from "@/components/financeiro/ModalGerarBoleto";
 
 const defaultForm = () => ({
   tipo: "Receita", categoria: "", descricao: "", valor: 0,
@@ -60,6 +61,7 @@ export default function Financeiro() {
   const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
   const [sortCol, setSortCol] = useState("data_vencimento");
   const [sortDir, setSortDir] = useState("asc");
+  const [itemBoleto, setItemBoleto] = useState(null);
   const periodoDropRef = useRef(null);
   const hojeKey = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
   const [saldoMesKey, setSaldoMesKey] = useState(() => localStorage.getItem("fin_saldoMes") || hojeKey);
@@ -439,7 +441,7 @@ export default function Financeiro() {
           ) : viewMode === "cards" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0.5">
               {sortedFiltrados.map(item => (
-                <FinanceiroCard key={item.id} item={item} onEdit={(i) => { setForm({ ...defaultForm(), ...i }); setEditando(i); setShowForm(true); }} onDelete={excluir} onAlterarStatus={alterarStatus} onAlterarPagamento={alterarPagamento} />
+                <FinanceiroCard key={item.id} item={item} onEdit={(i) => { setForm({ ...defaultForm(), ...i }); setEditando(i); setShowForm(true); }} onDelete={excluir} onAlterarStatus={alterarStatus} onAlterarPagamento={alterarPagamento} onGerarBoleto={setItemBoleto} />
               ))}
             </div>
           ) : (
@@ -533,6 +535,7 @@ export default function Financeiro() {
       )}
 
       <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#f97316; } .input-dark::placeholder { color:#6b7280; }`}</style>
+      {itemBoleto && <ModalGerarBoleto item={itemBoleto} onClose={() => setItemBoleto(null)} />}
       </React.Fragment>
       )} {/* fim abaAtiva === lancamentos */}
     </div>
