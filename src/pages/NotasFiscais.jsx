@@ -1019,7 +1019,7 @@ export default function NotasFiscais() {
   </div>
   <div class="tb-spacer"></div>
   <button class="tb-btn" onclick="window.print()">Imprimir</button>
-  <button class="tb-btn" onclick="window.print()">Salvar PDF</button>
+  <button class="tb-btn" onclick="salvarPdf()">Salvar PDF</button>
   <button class="tb-btn" onclick="window.close()">Fechar</button>
 </div>
 <script>
@@ -1029,6 +1029,12 @@ export default function NotasFiscais() {
     document.getElementById('zoom-val').textContent = zoom + '%';
     var c = document.getElementById('tb-content-wrap');
     if (c) c.style.zoom = (zoom/100);
+  }
+  function salvarPdf() {
+    var a = document.createElement('a');
+    a.href = window.location.href;
+    a.download = 'danfse.html';
+    a.click();
   }
 <\/script>`;
 
