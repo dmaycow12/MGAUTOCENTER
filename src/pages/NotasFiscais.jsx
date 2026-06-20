@@ -980,14 +980,23 @@ export default function NotasFiscais() {
   const abrirHtmlComoJanela = async (url) => {
     const resp = await fetch(url);
     let html = await resp.text();
-    // Injeta CSS de impressão A4 no head
+    // Injeta CSS de impressão A4 + botão imprimir no head
     const cssA4 = `<style>
       @page { size: A4; margin: 10mm; }
-      @media print { body { margin: 0; } }
+      @media print { #btn-imprimir { display: none !important; } body { margin: 0; } }
       body { max-width: 210mm; margin: 0 auto; font-size: 11px; }
-    </style>
-    <script>window.onload = function() { window.print(); }<\/script>`;
+      #btn-imprimir {
+        position: fixed; top: 12px; right: 12px; z-index: 9999;
+        background: #062C9B; color: #fff; border: none; border-radius: 8px;
+        padding: 10px 22px; font-size: 14px; font-weight: bold; cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      }
+      #btn-imprimir:hover { background: #041a4d; }
+    </style>`;
+    const btnHtml = `<button id="btn-imprimir" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>`;
     html = html.replace('</head>', cssA4 + '</head>');
+    html = html.replace('<body>', '<body>' + btnHtml);
+    if (!html.includes('<body>')) html = btnHtml + html;
     const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
     const blobUrl = URL.createObjectURL(blob);
     window.open(blobUrl, '_blank');
