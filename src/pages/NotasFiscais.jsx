@@ -980,23 +980,64 @@ export default function NotasFiscais() {
   const abrirHtmlComoJanela = async (url) => {
     const resp = await fetch(url);
     let html = await resp.text();
-    // Injeta CSS de impressão A4 + botão imprimir no head
-    const cssA4 = `<style>
-      @page { size: A4; margin: 10mm; }
-      @media print { #btn-imprimir { display: none !important; } body { margin: 0; } }
-      body { max-width: 210mm; margin: 0 auto; font-size: 11px; }
-      #btn-imprimir {
-        position: fixed; top: 12px; right: 12px; z-index: 9999;
-        background: #062C9B; color: #fff; border: none; border-radius: 8px;
-        padding: 10px 22px; font-size: 14px; font-weight: bold; cursor: pointer;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-      }
-      #btn-imprimir:hover { background: #041a4d; }
-    </style>`;
-    const btnHtml = `<button id="btn-imprimir" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>`;
-    html = html.replace('</head>', cssA4 + '</head>');
-    html = html.replace('<body>', '<body>' + btnHtml);
-    if (!html.includes('<body>')) html = btnHtml + html;
+    const toolbar = `
+<style>
+  @page { size: A4; margin: 10mm; }
+  @media print { #toolbar-impressao { display: none !important; } body { margin: 0; padding-top: 0 !important; } }
+  body { padding-top: 48px !important; }
+  #toolbar-impressao {
+    position: fixed; top: 0; left: 0; right: 0; height: 48px; z-index: 9999;
+    background: #111; color: #fff; display: flex; align-items: center;
+    padding: 0 20px; gap: 0; font-family: Arial, sans-serif; font-size: 13px;
+    border-bottom: 1px solid #333;
+  }
+  #toolbar-impressao .tb-title {
+    font-weight: bold; font-size: 14px; letter-spacing: 1px; margin-right: 24px;
+  }
+  #toolbar-impressao .tb-sep { width: 1px; height: 28px; background: #444; margin: 0 12px; }
+  #toolbar-impressao .tb-zoom { display: flex; align-items: center; gap: 8px; }
+  #toolbar-impressao .tb-zoom button {
+    background: #222; color: #fff; border: 1px solid #444; border-radius: 4px;
+    padding: 3px 10px; cursor: pointer; font-size: 13px;
+  }
+  #toolbar-impressao .tb-zoom button:hover { background: #333; }
+  #toolbar-impressao .tb-zoom span { min-width: 40px; text-align: center; }
+  #toolbar-impressao .tb-spacer { flex: 1; }
+  #toolbar-impressao .tb-btn {
+    background: none; color: #fff; border: none; padding: 6px 16px;
+    cursor: pointer; font-size: 13px; border-radius: 4px;
+  }
+  #toolbar-impressao .tb-btn:hover { background: #333; }
+  #toolbar-content { zoom: 1; transform-origin: top center; }
+</style>
+<div id="toolbar-impressao">
+  <span class="tb-title">IMPRESSAO</span>
+  <div class="tb-zoom">
+    <button onclick="changeZoom(-10)">- Zoom</button>
+    <span id="zoom-val">100%</span>
+    <button onclick="changeZoom(10)">+ Zoom</button>
+  </div>
+  <div class="tb-spacer"></div>
+  <button class="tb-btn" onclick="window.print()">Imprimir</button>
+  <button class="tb-btn" onclick="window.print()">Salvar PDF</button>
+  <button class="tb-btn" onclick="window.close()">Fechar</button>
+</div>
+<script>
+  var zoom = 100;
+  function changeZoom(delta) {
+    zoom = Math.max(50, Math.min(200, zoom + delta));
+    document.getElementById('zoom-val').textContent = zoom + '%';
+    var c = document.getElementById('tb-content-wrap');
+    if (c) c.style.zoom = (zoom/100);
+  }
+<\/script>`;
+
+    // Envolve o conteúdo do body num wrapper para zoom
+    html = html.replace('</head>', toolbar + '</head>');
+    // Envolve body content
+    html = html.replace(/<body([^>]*)>/, '<body$1><div id="tb-content-wrap">');
+    html = html.replace('</body>', '</div></body>');
+
     const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
     const blobUrl = URL.createObjectURL(blob);
     window.open(blobUrl, '_blank');
