@@ -952,15 +952,31 @@ export default function NotasFiscais() {
     return `${cliente}-${tipo}-${num}.pdf`;
   };
 
+  const abrirPdfUrl = (url) => {
+    const finalUrl = url?.startsWith('/api/') ? `${window.location.origin}${url}` : url;
+    if (!finalUrl) return false;
+    const opened = window.open(finalUrl, '_blank', 'noopener,noreferrer');
+    if (!opened) {
+      feedback('erro', 'O navegador bloqueou a abertura do PDF. Use o botão baixar ou permita pop-ups para este site.');
+      return false;
+    }
+    setMsgFeedback(null);
+    return true;
+  };
+
   const abrirDanfeNfce = async (nota) => {
+    if (nota.pdf_url && !nota.pdf_url.endsWith('.html')) {
+      abrirPdfUrl(nota.pdf_url);
+      return;
+    }
+
     feedback('sucesso', 'Carregando DANFE NFCe...');
     try {
       const res = await base44.functions.invoke('danfeNfce', { nota_id: nota.id });
       const data = res.data;
       if (data?.erro) { feedback('erro', data.erro); return; }
       if (data?.pdf_url) {
-        window.open(data.pdf_url, '_blank');
-        setMsgFeedback(null);
+        abrirPdfUrl(data.pdf_url);
         load();
         return;
       }
@@ -1123,8 +1139,7 @@ export default function NotasFiscais() {
     // PDFs restaurados/importados ja ficam em pdf_url, inclusive URLs locais /api/files/...
     // Abra diretamente antes de tentar gerar uma DANFE nova.
     if (nota.pdf_url) {
-      window.open(nota.pdf_url, '_blank');
-      setMsgFeedback(null);
+      abrirPdfUrl(nota.pdf_url);
       return;
     }
 
@@ -1141,7 +1156,7 @@ export default function NotasFiscais() {
         if (data.pdf_url.endsWith('.html')) {
           await abrirHtmlComoJanela(data.pdf_url);
         } else {
-          window.open(data.pdf_url, '_blank');
+          abrirPdfUrl(data.pdf_url);
         }
         setMsgFeedback(null);
         load();
@@ -1149,8 +1164,7 @@ export default function NotasFiscais() {
       }
       if (data?.processando) { feedback('erro', data.mensagem || 'SEFAZ ainda processando.'); return; }
       if (nota.pdf_url) {
-        window.open(nota.pdf_url, '_blank');
-        setMsgFeedback(null);
+        abrirPdfUrl(nota.pdf_url);
         return;
       }
       let erroMsg = data?.erro || 'PDF não disponível.';
