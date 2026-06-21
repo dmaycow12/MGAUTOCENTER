@@ -507,16 +507,22 @@ export default function Financeiro() {
                    );
                  })()}
                 <button onClick={async () => {
-                  const itens = sortedFiltrados.filter(i => selecionados.has(i.id));
-                  const hoje = new Date().toISOString().split("T")[0];
-                  for (const it of itens) {
-                    const obsLimpa = (it.observacoes || "").replace(/\nBoleto Asaas ID: \S+/g, "").replace(/Boleto Asaas ID: \S+\n?/g, "").replace(/\nLink: https?:\/\/\S+/g, "").replace(/Link: https?:\/\/\S+\n?/g, "").replace(/\nLinha: \S+/g, "").replace(/Linha: \S+\n?/g, "").trim();
-                    await base44.entities.Financeiro.update(it.id, { status: "Pago", data_pagamento: hoje, observacoes: obsLimpa });
-                    if (it.ordem_venda_id) await verificarEConcluirVenda(it.ordem_venda_id);
-                  }
-                  setSelecionados(new Set()); setModoSelecao(false); load();
-                  toast.success(`${itens.length} lançamento(s) marcado(s) como Pago`);
-                }}
+                   const itens = sortedFiltrados.filter(i => selecionados.has(i.id));
+                   const hoje = new Date().toISOString().split("T")[0];
+                   const delay = (ms) => new Promise(r => setTimeout(r, ms));
+                   for (const it of itens) {
+                     const obsLimpa = (it.observacoes || "").replace(/\nBoleto Asaas ID: \S+/g, "").replace(/Boleto Asaas ID: \S+\n?/g, "").replace(/\nLink: https?:\/\/\S+/g, "").replace(/Link: https?:\/\/\S+\n?/g, "").replace(/\nLinha: \S+/g, "").replace(/Linha: \S+\n?/g, "").trim();
+                     try {
+                       await base44.entities.Financeiro.update(it.id, { status: "Pago", data_pagamento: hoje, observacoes: obsLimpa });
+                       if (it.ordem_venda_id) await verificarEConcluirVenda(it.ordem_venda_id);
+                     } catch (e) {
+                       console.error("Erro ao atualizar lançamento:", it.id, e);
+                     }
+                     await delay(300);
+                   }
+                   setSelecionados(new Set()); setModoSelecao(false); load();
+                   toast.success(`${itens.length} lançamento(s) marcado(s) como Pago`);
+                 }}
                   className="px-4 py-1.5 text-sm font-semibold text-white rounded-lg transition-all flex items-center gap-1"
                   style={{ background: "#16a34a" }}>
                   Marcar Pago
