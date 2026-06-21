@@ -789,7 +789,7 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
   return (
     <div className="flex items-center px-2 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all" style={selecionado ? {background:"rgba(6,44,155,0.2)"} : {}}>
       {/* Checkbox seleção */}
-      {modoSelecao && item.tipo === "Receita" && item.status !== "Pago" && (
+      {modoSelecao && item.status !== "Pago" && (
         <button onClick={() => onToggleSelecao(item.id)} className="mr-1 flex-shrink-0">
           {selecionado ? <CheckSquare className="w-4 h-4 text-blue-400" /> : <Square className="w-4 h-4 text-gray-500" />}
         </button>
