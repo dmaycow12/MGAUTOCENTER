@@ -24,6 +24,7 @@ const store = process.env.DATABASE_URL
 const fileStore = new FileStore({
   uploadsDir,
   publicBaseUrl: process.env.PUBLIC_BASE_URL || '',
+  databaseUrl: process.env.DATABASE_URL || '',
 });
 const functionHandlers = createFunctionHandlers({ store, fileStore });
 
@@ -135,22 +136,23 @@ app.post('/api/functions/:functionName', asyncRoute(async (req, res) => {
 
 const upload = fileStore.middleware();
 
-app.post('/api/files', upload.single('file'), (req, res) => {
+app.post('/api/files', upload.single('file'), asyncRoute(async (req, res) => {
   if (!req.file) {
     res.status(400).json({ message: 'Arquivo não enviado.' });
     return;
   }
 
+  const result = await fileStore.persistUploadedFile(req.file);
+  await fileStore.deleteLocalUpload(req.file);
   res.status(201).json({
+    ...result,
     file_url: fileStore.buildPublicUrl(req, req.file.filename),
-    file_name: req.file.originalname,
-    size: req.file.size,
   });
-});
+}));
 
-app.get('/api/files/:filename', (req, res) => {
-  res.sendFile(path.join(uploadsDir, req.params.filename));
-});
+app.get('/api/files/:filename', asyncRoute(async (req, res) => {
+  await fileStore.sendFile(req, res);
+}));
 
 app.post('/api/integrations/core/extract-data', asyncRoute(async (req, res) => {
   res.json(await extractDataFromUploadedFile({ fileStore, payload: req.body || {} }));
