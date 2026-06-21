@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       const newDesc = `#${venda.numero} — ${nomeCliente}${veiculo}${placa} — ${parcelaStr}`;
 
       if (newDesc !== desc) {
-        toUpdate.push({ id: fin.id, descricao: newDesc });
+        toUpdate.push({ id: fin.id, descricao: newDesc, observacoes: fin.observacoes }); // preserva observacoes
       }
     }
 
@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
 
     // Sequential updates with delay to avoid rate limit
     for (let i = 0; i < toUpdate.length; i++) {
-      await base44.asServiceRole.entities.Financeiro.update(toUpdate[i].id, { descricao: toUpdate[i].descricao });
+      await base44.asServiceRole.entities.Financeiro.update(toUpdate[i].id, { descricao: toUpdate[i].descricao, ...(toUpdate[i].observacoes != null ? { observacoes: toUpdate[i].observacoes } : {}) });
       if ((i + 1) % 10 === 0) console.log(`Atualizado ${i + 1}/${toUpdate.length}`);
       await new Promise(r => setTimeout(r, 700));
     }
