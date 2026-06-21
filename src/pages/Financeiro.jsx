@@ -480,19 +480,32 @@ export default function Financeiro() {
             {modoSelecao && selecionados.size > 0 && (
               <div className="flex items-center gap-2 bg-blue-900/40 border border-blue-700 rounded-xl px-4 py-2.5">
                 <span className="text-blue-300 text-sm font-semibold flex-1">{selecionados.size} lançamento(s) selecionado(s) · R$ {sortedFiltrados.filter(i => selecionados.has(i.id)).reduce((a, i) => a + Number(i.valor || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                <button onClick={() => {
-                  const itens = sortedFiltrados.filter(i => selecionados.has(i.id));
-                  const totalValor = itens.reduce((a, i) => a + Number(i.valor || 0), 0);
-                  const descricao = itens.map(i => i.descricao).join(" + ");
-                  const vencimento = itens.map(i => i.data_vencimento).filter(Boolean).sort().reverse()[0] || new Date().toISOString().split("T")[0];
-                  const clienteId = itens[0]?.cliente_id;
-                  setItemBoleto({ _multiplos: itens, valor: totalValor, descricao, data_vencimento: vencimento, cliente_id: clienteId });
-                  setModoSelecao(false); setSelecionados(new Set());
-                }}
-                  className="px-4 py-1.5 text-sm font-semibold text-white rounded-lg transition-all flex items-center gap-1"
-                  style={{ background: "#062C9B" }}>
-                  <FileText className="w-3.5 h-3.5" /> Gerar Boleto Único
-                </button>
+                {(() => {
+                   const itens = sortedFiltrados.filter(i => selecionados.has(i.id));
+                   const temSaida = itens.some(i => i.tipo !== "Receita");
+                   if (temSaida) return (
+                     <button disabled
+                       className="px-4 py-1.5 text-sm font-semibold text-gray-500 rounded-lg flex items-center gap-1 cursor-not-allowed"
+                       style={{ background: "#374151", opacity: 0.5 }}
+                       title="Não é possível gerar boleto com Saídas selecionadas">
+                       <FileText className="w-3.5 h-3.5" /> Gerar Boleto Único
+                     </button>
+                   );
+                   return (
+                     <button onClick={() => {
+                       const totalValor = itens.reduce((a, i) => a + Number(i.valor || 0), 0);
+                       const descricao = itens.map(i => i.descricao).join(" + ");
+                       const vencimento = itens.map(i => i.data_vencimento).filter(Boolean).sort().reverse()[0] || new Date().toISOString().split("T")[0];
+                       const clienteId = itens[0]?.cliente_id;
+                       setItemBoleto({ _multiplos: itens, valor: totalValor, descricao, data_vencimento: vencimento, cliente_id: clienteId });
+                       setModoSelecao(false); setSelecionados(new Set());
+                     }}
+                       className="px-4 py-1.5 text-sm font-semibold text-white rounded-lg transition-all flex items-center gap-1"
+                       style={{ background: "#062C9B" }}>
+                       <FileText className="w-3.5 h-3.5" /> Gerar Boleto Único
+                     </button>
+                   );
+                 })()}
                 <button onClick={async () => {
                   const itens = sortedFiltrados.filter(i => selecionados.has(i.id));
                   const hoje = new Date().toISOString().split("T")[0];
