@@ -67,17 +67,13 @@ npm run dev
 
 ## Funcoes que ainda dependem de credenciais externas
 
-Estas funcoes existem como chamadas compatíveis, mas ainda retornam aviso de configuracao pendente:
+Estas funcoes ainda existem como chamadas compatíveis, mas continuam pendentes:
 
-- `emitirNotaFiscal`
-- `consultarStatusNotas`
-- `cancelarNota`
 - `preVisualizarNota`
 - `danfeNfce`
 - `consultarNotasRecebidas`
 - `importarNfseRecebidas`
 - `recuperarArquivosAusentes`
-- `gerarBoleto`
 
 Para portar completamente, configurar as chaves e contratos de:
 
@@ -86,21 +82,68 @@ Para portar completamente, configurar as chaves e contratos de:
 - Storage definitivo para XML/PDF.
 - Banco persistente definitivo.
 
+## Escolha recomendada de hospedagem
+
+Para a migração completa, a recomendação inicial é **Railway**:
+
+- 1 serviço Node para backend + frontend buildado.
+- 1 banco Postgres gerenciado.
+- 1 volume persistente para uploads/XML/PDF no começo.
+- Menos configuração inicial que separar frontend, backend, banco e storage em quatro provedores.
+
+Quando o volume de XML/PDF crescer, o storage pode ser migrado para S3, Cloudflare R2 ou Supabase Storage sem mudar o frontend.
+
+## Checklist para migrar tudo
+
+Antes de desligar a Base44, separar:
+
+- Backup completo dos dados gerado pelo sistema atual.
+- Token Focus NFe de produção.
+- Token Focus NFe de homologação.
+- CNPJ do emitente.
+- Inscrição estadual, se emitir NFe/NFCe.
+- Inscrição municipal, se emitir NFSe.
+- Código IBGE do município do emitente.
+- Séries usadas: NFe, NFCe e NFSe/DPS.
+- Token Asaas, se usar boleto.
+- Domínio que será apontado para o novo deploy.
+
+O backend novo também lê esses valores da entidade `Configuracao`, mantendo compatibilidade com a tela atual de configurações.
+
+## Integrações já iniciadas no backend novo
+
+- `gerarBoleto`: integração Asaas.
+- `emitirNotaFiscal`: envio Focus NFe com payload NFe/NFCe/NFSe básico e anti-duplicata inicial.
+- `consultarStatusNotas`: consulta Focus NFe e atualiza status/PDF/XML.
+- `cancelarNota`: cancelamento Focus NFe.
+- `buscarCnpj`: BrasilAPI.
+- `buscarCodigoMunicipio`: IBGE.
+
+As integrações fiscais precisam ser testadas primeiro em homologação, com dados reais da empresa, antes de produção.
+
 ## Deploy recomendado
 
 ### Opção simples em um serviço Node
 
 1. Configure variaveis do backend a partir de `backend/.env.example`.
-2. Rode build:
+2. Configure `DATABASE_URL` apontando para Postgres.
+3. Defina no ambiente de build:
+
+```bash
+VITE_API_PROVIDER=local
+VITE_LOCAL_API_URL=/api
+```
+
+4. Rode build:
 
 ```bash
 npm run build
 ```
 
-3. Suba o servidor:
+5. Suba o servidor:
 
 ```bash
-npm run backend
+npm start
 ```
 
 Quando `dist` existir, o backend tambem serve o frontend buildado.

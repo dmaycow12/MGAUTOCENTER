@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync } from 'node:fs';
 import { EntityStore } from './lib/entityStore.js';
+import { PostgresEntityStore } from './lib/postgresEntityStore.js';
 import { FileStore } from './lib/fileStore.js';
 import { createFunctionHandlers, extractDataFromUploadedFile } from './lib/functions.js';
 import { ENTITY_NAMES, isKnownEntity } from './config/entities.js';
@@ -17,7 +18,9 @@ const dataDir = process.env.DATA_DIR || path.join(__dirname, 'data');
 const uploadsDir = process.env.UPLOADS_DIR || path.join(__dirname, 'uploads');
 
 const app = express();
-const store = new EntityStore({ dataDir });
+const store = process.env.DATABASE_URL
+  ? new PostgresEntityStore({ connectionString: process.env.DATABASE_URL })
+  : new EntityStore({ dataDir });
 const fileStore = new FileStore({
   uploadsDir,
   publicBaseUrl: process.env.PUBLIC_BASE_URL || '',

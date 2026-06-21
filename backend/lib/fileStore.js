@@ -1,4 +1,4 @@
-import { mkdir, readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import multer from 'multer';
@@ -27,6 +27,18 @@ export class FileStore {
   buildPublicUrl(req, filename) {
     const baseUrl = this.publicBaseUrl || `${req.protocol}://${req.get('host')}`;
     return `${baseUrl}/api/files/${encodeURIComponent(filename)}`;
+  }
+
+  buildStoredFileUrl(filename) {
+    const encoded = encodeURIComponent(filename);
+    return this.publicBaseUrl ? `${this.publicBaseUrl}/api/files/${encoded}` : `/api/files/${encoded}`;
+  }
+
+  async saveBuffer({ filename, buffer }) {
+    await mkdir(this.uploadsDir, { recursive: true });
+    const storedName = `${Date.now()}-${randomUUID()}-${safeName(filename)}`;
+    await writeFile(path.join(this.uploadsDir, storedName), buffer);
+    return this.buildStoredFileUrl(storedName);
   }
 
   resolvePathFromUrl(fileUrl) {
