@@ -28,7 +28,9 @@ Deno.serve(async (req) => {
       const desc = fin.descricao || '';
       const parcelaMatch = desc.match(/Parcela (\d+\/\d+)/i);
       const parcelaStr = parcelaMatch ? parcelaMatch[1] : '1/1';
-      const newDesc = `Venda #${venda.numero} — ${venda.cliente_nome || 'CONSUMIDOR'} — Parcela ${parcelaStr}`;
+      const veiculo = venda.veiculo_modelo ? ` — ${venda.veiculo_modelo}` : '';
+      const placa = venda.veiculo_placa ? ` — ${venda.veiculo_placa}` : '';
+      const newDesc = `Venda #${venda.numero} — ${venda.cliente_nome || 'CONSUMIDOR'}${veiculo}${placa} — Parcela ${parcelaStr}`;
 
       if (newDesc !== desc) {
         toUpdate.push({ id: fin.id, descricao: newDesc });
@@ -41,7 +43,7 @@ Deno.serve(async (req) => {
     for (let i = 0; i < toUpdate.length; i++) {
       await base44.asServiceRole.entities.Financeiro.update(toUpdate[i].id, { descricao: toUpdate[i].descricao });
       if ((i + 1) % 10 === 0) console.log(`Atualizado ${i + 1}/${toUpdate.length}`);
-      await new Promise(r => setTimeout(r, 150));
+      await new Promise(r => setTimeout(r, 700));
     }
 
     return Response.json({ success: true, updated: toUpdate.length, total: financeiros.length });
