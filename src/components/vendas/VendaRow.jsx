@@ -256,6 +256,25 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
     }
     await base44.entities.Vendas.update(os.id, { [field]: val });
     onUpdate?.({ [field]: val }); // atualiza local sem recarregar tudo
+
+    // Atualiza descrição dos lançamentos financeiros quando campos relevantes mudam
+    if (["cliente_nome_fantasia", "veiculo_modelo", "veiculo_placa"].includes(field)) {
+      try {
+        const vendaAtualizada = { ...os, [field]: val };
+        const nomeCliente = vendaAtualizada.cliente_nome_fantasia || vendaAtualizada.cliente_nome || "";
+        const veiculo = vendaAtualizada.veiculo_modelo ? ` — ${vendaAtualizada.veiculo_modelo}` : "";
+        const placa = vendaAtualizada.veiculo_placa ? ` — ${vendaAtualizada.veiculo_placa}` : "";
+        const fins = await base44.entities.Financeiro.filter({ ordem_venda_id: os.id }, "-created_date", 100);
+        for (const f of fins) {
+          const parcelaMatch = (f.descricao || "").match(/(\d+\/\d+)/);
+          const parcelaStr = parcelaMatch ? parcelaMatch[1] : "1/1";
+          const novaDesc = `#${os.numero} — ${nomeCliente}${veiculo}${placa} — ${parcelaStr}`;
+          if (novaDesc !== f.descricao) {
+            await base44.entities.Financeiro.update(f.id, { descricao: novaDesc });
+          }
+        }
+      } catch (_) {}
+    }
   };
 
 
