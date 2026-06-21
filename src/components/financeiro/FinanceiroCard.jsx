@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Edit, Trash2, ChevronDown, FileText, Download } from "lucide-react";
 
-async function baixarBoleto(url) {
+async function baixarBoleto(paymentId, fallbackUrl) {
   try {
     const { appParams } = await import("@/lib/app-params");
     const { appId, token, appBaseUrl, functionsVersion } = appParams;
@@ -14,8 +14,11 @@ async function baixarBoleto(url) {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ paymentId }),
     });
+    if (!resp.ok) throw new Error("status " + resp.status);
+    const contentType = resp.headers.get("content-type") || "";
+    if (!contentType.includes("pdf") && !contentType.includes("octet")) throw new Error("não é PDF");
     const blob = await resp.blob();
     const blobUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -26,7 +29,7 @@ async function baixarBoleto(url) {
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
   } catch {
-    window.open(url, "_blank");
+    if (fallbackUrl) window.open(fallbackUrl, "_blank");
   }
 }
 
@@ -101,14 +104,17 @@ export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus
 
         {item.tipo === "Receita" && item.status !== "Pago" && (() => {
           const linkMatch = item.observacoes?.match(/Link: (https?:\/\/\S+)/);
-          const temBoleto = item.observacoes?.includes("Boleto Asaas ID:");
-          if (temBoleto && linkMatch?.[1]) {
+          const idMatch = item.observacoes?.match(/Boleto Asaas ID: (\S+)/);
+          const temBoleto = !!idMatch?.[1];
+          if (temBoleto) {
             return (<>
-              <a href={linkMatch[1]} target="_blank" rel="noopener noreferrer"
-                className="p-1.5 hover:bg-gray-800 rounded-lg transition-all" title="Abrir Boleto">
-                <FileText className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
-              </a>
-              <button onClick={() => baixarBoleto(linkMatch[1])}
+              {linkMatch?.[1] && (
+                <a href={linkMatch[1]} target="_blank" rel="noopener noreferrer"
+                  className="p-1.5 hover:bg-gray-800 rounded-lg transition-all" title="Abrir Boleto">
+                  <FileText className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
+                </a>
+              )}
+              <button onClick={() => baixarBoleto(idMatch[1], linkMatch?.[1])}
                 className="p-1.5 hover:bg-gray-800 rounded-lg transition-all" title="Baixar Boleto">
                 <Download className="w-3.5 h-3.5 text-gray-500 hover:text-gray-300" />
               </button>
