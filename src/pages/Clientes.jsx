@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, User, Phone, Mail, ChevronDown, ChevronUp, Car, X, LayoutGrid, List, Loader2 } from "lucide-react";
+import { Plus, Search, Edit, Trash2, User, Phone, Mail, ChevronDown, ChevronUp, Car, X, LayoutGrid, List, Loader2, AlertTriangle } from "lucide-react";
 
 const CATEGORIAS = ["Cliente", "Fornecedor", "Funcionário", "Transportadora"];
 
@@ -190,11 +190,27 @@ export default function Clientes() {
     }
   };
 
-  const excluir = async (c) => {
+  const [cadastroParaExcluir, setCadastroParaExcluir] = useState(null);
+  const [excluindo, setExcluindo] = useState(false);
+  const [erroExcluir, setErroExcluir] = useState(null);
+
+  const excluir = (c) => {
     if (isConsumidor(c)) { setAvisoConsumidor(true); return; }
-    if (!confirm("Excluir este cliente?")) return;
-    await base44.entities.Cadastro.delete(c.id);
-    load();
+    setCadastroParaExcluir(c);
+  };
+
+  const confirmarExclusao = async () => {
+    if (!cadastroParaExcluir) return;
+    setExcluindo(true);
+    try {
+      await base44.entities.Cadastro.delete(cadastroParaExcluir.id);
+      setCadastroParaExcluir(null);
+      load();
+    } catch (e) {
+      setErroExcluir(e?.message || "Não foi possível excluir este cadastro. Verifique se não há vendas ou notas vinculadas.");
+    } finally {
+      setExcluindo(false);
+    }
   };
 
 
@@ -565,6 +581,53 @@ export default function Clientes() {
               onMouseEnter={e=>e.currentTarget.style.background="#ea6b0a"}
               onMouseLeave={e=>e.currentTarget.style.background="#f97316"}>
               Corrigir
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal confirmação exclusão */}
+      {cadastroParaExcluir && (
+        <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-red-500/40 rounded-2xl w-full max-w-sm p-6 space-y-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6 text-red-400" />
+            </div>
+            <h3 className="text-white font-bold text-lg">Excluir Cadastro?</h3>
+            <p className="text-gray-400 text-sm">
+              Deseja realmente excluir o cadastro de <strong className="text-white">{cadastroParaExcluir.nome}</strong>? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex gap-2 pt-2">
+              <button onClick={() => setCadastroParaExcluir(null)} disabled={excluindo}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-300 border border-gray-600 hover:border-gray-500 transition-all disabled:opacity-50">
+                Cancelar
+              </button>
+              <button onClick={confirmarExclusao} disabled={excluindo}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                style={{background:"#cc0000"}}
+                onMouseEnter={e=>!excluindo && (e.currentTarget.style.background="#aa0000")}
+                onMouseLeave={e=>e.currentTarget.style.background="#cc0000"}>
+                {excluindo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                {excluindo ? "Excluindo..." : "Excluir"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal erro exclusão */}
+      {erroExcluir && (
+        <div className="fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-orange-500/40 rounded-2xl w-full max-w-sm p-6 space-y-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6 text-orange-400" />
+            </div>
+            <h3 className="text-white font-bold text-lg">Não foi possível excluir</h3>
+            <p className="text-gray-300 text-sm whitespace-pre-line">{erroExcluir}</p>
+            <button onClick={() => setErroExcluir(null)}
+              className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+              style={{background:"#f97316"}}>
+              Entendido
             </button>
           </div>
         </div>
