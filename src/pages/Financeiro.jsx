@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
-import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Edit, Trash2, FileText } from "lucide-react";
+import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Edit, Trash2, FileText, Download, CheckSquare, Square } from "lucide-react";
 
 const STATUS_OPTIONS = ["Pendente", "Pago"];
 
@@ -62,6 +62,8 @@ export default function Financeiro() {
   const [sortCol, setSortCol] = useState("data_vencimento");
   const [sortDir, setSortDir] = useState("asc");
   const [itemBoleto, setItemBoleto] = useState(null);
+  const [selecionados, setSelecionados] = useState(new Set());
+  const [modoSelecao, setModoSelecao] = useState(false);
   const periodoDropRef = useRef(null);
   const hojeKey = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
   const [saldoMesKey, setSaldoMesKey] = useState(() => localStorage.getItem("fin_saldoMes") || hojeKey);
@@ -421,11 +423,38 @@ export default function Financeiro() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input type="text" placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-orange-500" />
               </div>
+              <button onClick={() => { setModoSelecao(v => !v); setSelecionados(new Set()); }}
+                className="px-3 py-2 rounded-xl border transition-all text-xs font-semibold flex items-center gap-1"
+                style={{ background: modoSelecao ? "#062C9B" : "#1f2937", border: "1px solid #374151", color: "#fff" }}
+                title="Selecionar múltiplos para boleto">
+                <CheckSquare className="w-4 h-4" />
+              </button>
               <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
                 <button onClick={() => { setViewMode("list"); localStorage.setItem("financeiro_viewmode","list"); }} className="px-3 py-2 transition-all" style={{background:viewMode==="list"?"#062C9B":"transparent",color:viewMode==="list"?"#fff":"#6b7280"}}><List className="w-5 h-5"/></button>
                 <button onClick={() => { setViewMode("cards"); localStorage.setItem("financeiro_viewmode","cards"); }} className="px-3 py-2 transition-all" style={{background:viewMode==="cards"?"#062C9B":"transparent",color:viewMode==="cards"?"#fff":"#6b7280"}}><LayoutGrid className="w-5 h-5"/></button>
               </div>
             </div>
+
+            {/* Barra de seleção múltipla */}
+            {modoSelecao && selecionados.size > 0 && (
+              <div className="flex items-center gap-2 bg-blue-900/40 border border-blue-700 rounded-xl px-4 py-2.5">
+                <span className="text-blue-300 text-sm font-semibold flex-1">{selecionados.size} lançamento(s) selecionado(s) · R$ {sortedFiltrados.filter(i => selecionados.has(i.id)).reduce((a, i) => a + Number(i.valor || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                <button onClick={() => {
+                  const itens = sortedFiltrados.filter(i => selecionados.has(i.id));
+                  const totalValor = itens.reduce((a, i) => a + Number(i.valor || 0), 0);
+                  const descricao = itens.map(i => i.descricao).join(" + ");
+                  const vencimento = itens.map(i => i.data_vencimento).filter(Boolean).sort().reverse()[0] || new Date().toISOString().split("T")[0];
+                  const clienteId = itens[0]?.cliente_id;
+                  setItemBoleto({ _multiplos: itens, valor: totalValor, descricao, data_vencimento: vencimento, cliente_id: clienteId });
+                  setModoSelecao(false); setSelecionados(new Set());
+                }}
+                  className="px-4 py-1.5 text-sm font-semibold text-white rounded-lg transition-all flex items-center gap-1"
+                  style={{ background: "#062C9B" }}>
+                  <FileText className="w-3.5 h-3.5" /> Gerar Boleto Único
+                </button>
+                <button onClick={() => setSelecionados(new Set())} className="text-gray-400 hover:text-white text-xs">Limpar</button>
+              </div>
+            )}
           </div>
           {/* Cards/Lista */}
           {filtrados.length === 0 ? (
@@ -441,7 +470,13 @@ export default function Financeiro() {
           ) : viewMode === "cards" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0.5">
               {sortedFiltrados.map(item => (
-                <FinanceiroCard key={item.id} item={item} onEdit={(i) => { setForm({ ...defaultForm(), ...i }); setEditando(i); setShowForm(true); }} onDelete={excluir} onAlterarStatus={alterarStatus} onAlterarPagamento={alterarPagamento} onGerarBoleto={setItemBoleto} />
+                <FinanceiroCard key={item.id} item={item}
+                  onEdit={(i) => { setForm({ ...defaultForm(), ...i }); setEditando(i); setShowForm(true); }}
+                  onDelete={excluir} onAlterarStatus={alterarStatus} onAlterarPagamento={alterarPagamento} onGerarBoleto={setItemBoleto}
+                  modoSelecao={modoSelecao}
+                  selecionado={selecionados.has(item.id)}
+                  onToggleSelecao={(id) => setSelecionados(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; })}
+                />
               ))}
             </div>
           ) : (
@@ -463,7 +498,7 @@ export default function Financeiro() {
                  <div className="w-px h-6 bg-gray-700 mx-1" />
                  <span className="text-xs font-semibold text-gray-400 w-44 flex-shrink-0 text-center">Status</span>
                  <div className="w-px h-6 bg-gray-700 mx-1" />
-                 <span className="text-xs font-semibold text-gray-400 w-20 flex-shrink-0 text-center">Ações</span>
+                 <span className="text-xs font-semibold text-gray-400 w-28 flex-shrink-0 text-center">Ações</span>
                </div>
               {sortedFiltrados.map(item => (
                 <ListRow key={item.id} item={item}
@@ -473,6 +508,9 @@ export default function Financeiro() {
                   onAlterarPagamento={alterarPagamento}
                   onAlterarEtiqueta={alterarEtiqueta}
                   onGerarBoleto={setItemBoleto}
+                  modoSelecao={modoSelecao}
+                  selecionado={selecionados.has(item.id)}
+                  onToggleSelecao={(id) => setSelecionados(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; })}
                 />
               ))}
               </div>
@@ -610,7 +648,7 @@ function KpiCard({ icon: Icon, label, value, color }) {
 const ETIQUETA_OPTIONS = ["Receita", "Despesa", "Ativo", "Retirada"];
 const ETIQUETA_COLORS = { "Receita": "#16a34a", "Despesa": "#cc0000", "Ativo": "#062C9B", "Retirada": "#7c3aed" };
 
-function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, onAlterarEtiqueta, onGerarBoleto }) {
+function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, onAlterarEtiqueta, onGerarBoleto, modoSelecao, selecionado, onToggleSelecao }) {
   const [pagamentoOpen, setPagamentoOpen] = useState(false);
   const [etiquetaOpen, setEtiquetaOpen] = useState(false);
   const pagamentoRef = useRef(null);
@@ -693,7 +731,13 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
   const fmt = v => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 
   return (
-    <div className="flex items-center px-2 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all">
+    <div className="flex items-center px-2 py-3 border-b border-gray-800 last:border-0 hover:bg-gray-800/40 transition-all" style={selecionado ? {background:"rgba(6,44,155,0.2)"} : {}}>
+      {/* Checkbox seleção */}
+      {modoSelecao && item.tipo === "Receita" && item.status !== "Pago" && (
+        <button onClick={() => onToggleSelecao(item.id)} className="mr-1 flex-shrink-0">
+          {selecionado ? <CheckSquare className="w-4 h-4 text-blue-400" /> : <Square className="w-4 h-4 text-gray-500" />}
+        </button>
+      )}
       {/* Tipo badge */}
       <span className={`text-xs px-1 py-1 rounded-full font-medium flex-shrink-0 w-14 text-center ${item.tipo==="Receita"?"bg-green-500/10 text-green-400":"bg-red-500/10 text-red-400"}`}>{item.tipo === "Despesa" ? "Saída" : item.tipo}</span>
       <div className="w-px h-6 bg-gray-700 mx-1" />
@@ -838,17 +882,21 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
       <div className="w-px h-6 bg-gray-700 mx-1" />
 
       {/* Ações */}
-      <div className="flex gap-0.5 flex-shrink-0 w-20 justify-center">
+      <div className="flex gap-0.5 flex-shrink-0 w-28 justify-center">
         {item.tipo === "Receita" && item.status !== "Pago" && (() => {
           const linkMatch = item.observacoes?.match(/Link: (https?:\/\/\S+)/);
           const temBoleto = item.observacoes?.includes("Boleto Asaas ID:");
           if (temBoleto && linkMatch?.[1]) {
-            return (
+            return (<>
               <a href={linkMatch[1]} target="_blank" rel="noopener noreferrer"
                 className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all" title="Abrir Boleto">
                 <FileText className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
               </a>
-            );
+              <a href={linkMatch[1]} target="_blank" rel="noopener noreferrer" download
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all" title="Baixar Boleto">
+                <Download className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
+              </a>
+            </>);
           }
           return (
             <button onClick={() => onGerarBoleto?.(item)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all" title="Gerar Boleto">

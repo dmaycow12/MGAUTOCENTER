@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Edit, Trash2, ChevronDown, FileText } from "lucide-react";
+import { Edit, Trash2, ChevronDown, FileText, Download } from "lucide-react";
 
 const STATUS_OPTIONS = ["Pendente", "Pago", "Atrasado"];
 const PAGAMENTO_OPTIONS = ["A Combinar", "Boleto", "Cartão", "Dinheiro", "PIX"];
@@ -74,12 +74,16 @@ export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus
           const linkMatch = item.observacoes?.match(/Link: (https?:\/\/\S+)/);
           const temBoleto = item.observacoes?.includes("Boleto Asaas ID:");
           if (temBoleto && linkMatch?.[1]) {
-            return (
+            return (<>
               <a href={linkMatch[1]} target="_blank" rel="noopener noreferrer"
                 className="p-1.5 hover:bg-gray-800 rounded-lg transition-all" title="Abrir Boleto">
                 <FileText className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
               </a>
-            );
+              <a href={linkMatch[1]} target="_blank" rel="noopener noreferrer" download
+                className="p-1.5 hover:bg-gray-800 rounded-lg transition-all" title="Baixar Boleto">
+                <Download className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
+              </a>
+            </>);
           }
           return (
             <button onClick={() => onGerarBoleto?.(item)} className="p-1.5 hover:bg-gray-800 rounded-lg transition-all" title="Gerar Boleto">
