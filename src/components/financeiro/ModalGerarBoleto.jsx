@@ -3,9 +3,28 @@ import { X, FileText, Copy, ExternalLink, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
+// Extrai dados de boleto já salvo nas observações
+function extrairBoletoExistente(item) {
+  const obs = item?.observacoes || "";
+  if (!obs.includes("Boleto Asaas ID:")) return null;
+  const idMatch = obs.match(/Boleto Asaas ID: (\S+)/);
+  const linkMatch = obs.match(/Link: (https?:\/\/\S+)/);
+  const linhaMatch = obs.match(/Linha: (\S+)/);
+  return {
+    asaas_id: idMatch?.[1] || null,
+    boleto_url: linkMatch?.[1] || null,
+    linha_digitavel: linhaMatch?.[1] || null,
+    vencimento: item?.data_vencimento || "",
+    valor: item?.valor || 0,
+  };
+}
+
 export default function ModalGerarBoleto({ item, onClose }) {
+  const boletoExistente = extrairBoletoExistente(item);
+
+  const [tela, setTela] = useState(boletoExistente ? "existente" : "form"); // "existente" | "form" | "gerado"
   const [form, setForm] = useState({
-    nome: item?.cliente_id ? "" : "",
+    nome: "",
     cpf_cnpj: "",
     email: "",
     valor: item?.valor || "",
@@ -16,7 +35,7 @@ export default function ModalGerarBoleto({ item, onClose }) {
   const [resultado, setResultado] = useState(null);
 
   // Pré-preenche com dados do cadastro se disponível
-  React.useEffect(() => {
+  useEffect(() => {
     if (item?.cliente_id) {
       base44.entities.Cadastro.filter({ id: item.cliente_id }, "-created_date", 1)
         .then(res => {
@@ -50,6 +69,7 @@ export default function ModalGerarBoleto({ item, onClose }) {
       });
       if (res.data?.sucesso) {
         setResultado(res.data);
+        setTela("gerado");
         toast.success("Boleto gerado com sucesso!");
       } else {
         toast.error(res.data?.erro || "Erro ao gerar boleto");
@@ -66,6 +86,8 @@ export default function ModalGerarBoleto({ item, onClose }) {
     toast.success("Copiado!");
   };
 
+  const dadosExibir = tela === "gerado" ? resultado : boletoExistente;
+
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
       <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md">
@@ -78,7 +100,52 @@ export default function ModalGerarBoleto({ item, onClose }) {
           <button onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
         </div>
 
-        {!resultado ? (
+        {/* Tela: boleto existente */}
+        {(tela === "existente" || tela === "gerado") && dadosExibir && (
+          <div className="p-5 space-y-4">
+            <div className={`border rounded-xl p-4 text-center ${tela === "existente" ? "bg-yellow-500/10 border-yellow-500/30" : "bg-green-500/10 border-green-500/30"}`}>
+              <p className={`font-semibold text-sm ${tela === "existente" ? "text-yellow-400" : "text-green-400"}`}>
+                {tela === "existente" ? "Boleto já gerado anteriormente" : "Boleto gerado com sucesso!"}
+              </p>
+              <p className="text-gray-400 text-xs mt-1">
+                Vencimento: {dadosExibir.vencimento?.split("-").reverse().join("/")} · R$ {Number(dadosExibir.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+
+            {dadosExibir.linha_digitavel && (
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Linha Digitável</label>
+                <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2">
+                  <span className="flex-1 text-white text-xs font-mono break-all">{dadosExibir.linha_digitavel}</span>
+                  <button onClick={() => copiar(dadosExibir.linha_digitavel)} className="text-gray-400 hover:text-white flex-shrink-0">
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {dadosExibir.boleto_url && (
+              <a href={dadosExibir.boleto_url} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-3 text-sm font-semibold text-white rounded-xl transition-all"
+                style={{ background: "#062C9B" }}>
+                <ExternalLink className="w-4 h-4" />
+                Abrir / Imprimir Boleto
+              </a>
+            )}
+
+            {tela === "existente" && (
+              <button onClick={() => setTela("form")} className="w-full py-2 text-sm text-gray-400 hover:text-white rounded-lg border border-gray-700 transition-all">
+                Gerar Novo Boleto
+              </button>
+            )}
+            <button onClick={onClose} className="w-full py-2 text-sm text-gray-400 hover:text-white rounded-lg border border-gray-700 transition-all">
+              Fechar
+            </button>
+          </div>
+        )}
+
+        {/* Tela: formulário */}
+        {tela === "form" && (
           <>
             <div className="p-5 space-y-3">
               <div>
@@ -118,7 +185,7 @@ export default function ModalGerarBoleto({ item, onClose }) {
               </div>
             </div>
             <div className="flex justify-end gap-2 p-5 border-t border-gray-800">
-              <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white rounded-lg border border-gray-700 hover:border-gray-500 transition-all">Cancelar</button>
+              <button onClick={boletoExistente ? () => setTela("existente") : onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-white rounded-lg border border-gray-700 hover:border-gray-500 transition-all">Cancelar</button>
               <button onClick={gerar} disabled={loading}
                 className="px-5 py-2 text-sm text-white rounded-lg font-medium transition-all flex items-center gap-2 disabled:opacity-50"
                 style={{ background: "#062C9B" }}>
@@ -126,40 +193,6 @@ export default function ModalGerarBoleto({ item, onClose }) {
               </button>
             </div>
           </>
-        ) : (
-          <div className="p-5 space-y-4">
-            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center">
-              <p className="text-green-400 font-semibold text-sm">Boleto gerado com sucesso!</p>
-              <p className="text-gray-400 text-xs mt-1">
-                Vencimento: {resultado.vencimento?.split("-").reverse().join("/")} · R$ {Number(resultado.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-              </p>
-            </div>
-
-            {resultado.linha_digitavel && (
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Linha Digitável</label>
-                <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2">
-                  <span className="flex-1 text-white text-xs font-mono break-all">{resultado.linha_digitavel}</span>
-                  <button onClick={() => copiar(resultado.linha_digitavel)} className="text-gray-400 hover:text-white flex-shrink-0">
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {resultado.boleto_url && (
-              <a href={resultado.boleto_url} target="_blank" rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-3 text-sm font-semibold text-white rounded-xl transition-all"
-                style={{ background: "#062C9B" }}>
-                <ExternalLink className="w-4 h-4" />
-                Abrir / Imprimir Boleto
-              </a>
-            )}
-
-            <button onClick={onClose} className="w-full py-2 text-sm text-gray-400 hover:text-white rounded-lg border border-gray-700 transition-all">
-              Fechar
-            </button>
-          </div>
         )}
       </div>
     </div>
