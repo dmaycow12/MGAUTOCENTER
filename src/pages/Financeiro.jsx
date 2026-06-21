@@ -232,9 +232,18 @@ export default function Financeiro() {
     }
   };
 
+  const limparObsBoleto = (obs) => (obs || "")
+    .replace(/Boleto Asaas ID: \S+\n?/g, "")
+    .replace(/Link: https?:\/\/\S+\n?/g, "")
+    .replace(/Linha: \S+\n?/g, "")
+    .trim();
+
   const alterarStatus = async (item, novoStatus) => {
     const update = { status: novoStatus };
-    if (novoStatus === "Pago") update.data_pagamento = new Date().toISOString().split("T")[0];
+    if (novoStatus === "Pago") {
+      update.data_pagamento = new Date().toISOString().split("T")[0];
+      update.observacoes = limparObsBoleto(item.observacoes);
+    }
     if (novoStatus === "Pendente" || novoStatus === "Atrasado") update.data_pagamento = "";
     await base44.entities.Financeiro.update(item.id, update);
     if (novoStatus === "Pago" && item.ordem_venda_id) {
@@ -488,7 +497,8 @@ export default function Financeiro() {
                   const itens = sortedFiltrados.filter(i => selecionados.has(i.id));
                   const hoje = new Date().toISOString().split("T")[0];
                   for (const it of itens) {
-                    await base44.entities.Financeiro.update(it.id, { status: "Pago", data_pagamento: hoje });
+                    const obsLimpa = (it.observacoes || "").replace(/\nBoleto Asaas ID: \S+/g, "").replace(/Boleto Asaas ID: \S+\n?/g, "").replace(/\nLink: https?:\/\/\S+/g, "").replace(/Link: https?:\/\/\S+\n?/g, "").replace(/\nLinha: \S+/g, "").replace(/Linha: \S+\n?/g, "").trim();
+                    await base44.entities.Financeiro.update(it.id, { status: "Pago", data_pagamento: hoje, observacoes: obsLimpa });
                     if (it.ordem_venda_id) await verificarEConcluirVenda(it.ordem_venda_id);
                   }
                   setSelecionados(new Set()); setModoSelecao(false); load();
@@ -929,15 +939,11 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
 
       {/* Ações */}
       <div className="flex gap-0.5 flex-shrink-0 w-28 justify-center">
-        {item.tipo === "Receita" && item.status !== "Pago" && (() => {
-          const idMatch = item.observacoes?.match(/Boleto Asaas ID: (\S+)/);
-          const temBoleto = !!idMatch?.[1];
-          return (
-            <button onClick={() => onGerarBoleto?.(item)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all" title={temBoleto ? "Ver Boleto" : "Gerar Boleto"}>
-              <FileText className="w-3.5 h-3.5" style={{ color: temBoleto ? "#22c55e" : "#6b7280" }} />
-            </button>
-          );
-        })()}
+        {item.tipo === "Receita" && item.status !== "Pago" && (
+          <button onClick={() => onGerarBoleto?.(item)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all" title={item.observacoes?.includes("Boleto Asaas ID:") ? "Ver Boleto" : "Gerar Boleto"}>
+            <FileText className="w-3.5 h-3.5" style={{ color: item.observacoes?.includes("Boleto Asaas ID:") ? "#22c55e" : "#6b7280" }} />
+          </button>
+        )}
         <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all"><Edit className="w-3.5 h-3.5"/></button>
         <button onClick={onDelete} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
       </div>
