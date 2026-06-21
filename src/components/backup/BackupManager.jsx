@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Download, Upload, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Download, Upload, CheckCircle, AlertCircle, Loader2, AlertTriangle, X } from "lucide-react";
 import JSZip from "jszip";
 
 const ENTIDADES = ["Cadastro", "Estoque", "Financeiro", "Configuracao", "Servico", "Ativo", "Vendas"];
@@ -13,6 +13,8 @@ export default function BackupManager() {
   const [msgBaixar, setMsgBaixar] = useState(null);
   const [msgRestaurar, setMsgRestaurar] = useState(null);
   const [progressoRestauro, setProgressoRestauro] = useState(null);
+  const [confirmarImportar, setConfirmarImportar] = useState(false);
+  const [fileParaImportar, setFileParaImportar] = useState(null);
 
   // ===== BAIXAR BACKUP =====
   const baixarBackup = async () => {
@@ -136,10 +138,18 @@ export default function BackupManager() {
     input.onchange = async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      if (!confirm("ATENÇÃO: O backup será importado sem duplicar registros já existentes. Confirmar?")) return;
-      await restaurarBackup(file);
+      setFileParaImportar(file);
+      setConfirmarImportar(true);
     };
     input.click();
+  };
+
+  const executarImportacao = async () => {
+    if (fileParaImportar) {
+      setConfirmarImportar(false);
+      await restaurarBackup(fileParaImportar);
+      setFileParaImportar(null);
+    }
   };
 
   const restaurarBackup = async (file) => {
@@ -260,8 +270,67 @@ export default function BackupManager() {
               <span>{msgRestaurar.texto}</span>
             </div>
           )}
-        </div>
-      </div>
-    </div>
-  );
-}
+          </div>
+          </div>
+
+          {/* MODAL DE CONFIRMAÇÃO */}
+          {confirmarImportar && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-red-500/20 to-orange-500/20 border-b border-red-500/30 px-6 py-5 flex items-start gap-4">
+              <AlertTriangle className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h2 className="text-white font-bold text-lg">Importar Backup</h2>
+                <p className="text-gray-300 text-xs mt-1">Confirmar operação irreversível</p>
+              </div>
+              <button
+                onClick={() => setConfirmarImportar(false)}
+                className="text-gray-400 hover:text-white transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Conteúdo */}
+            <div className="px-6 py-5">
+              <p className="text-gray-200 text-sm font-semibold mb-3">⚠️ Atenção!</p>
+              <p className="text-gray-300 text-sm leading-relaxed mb-6">
+                O backup será importado <strong>sem duplicar registros já existentes</strong>. Registros duplicados serão <strong>pulados automaticamente</strong>.
+              </p>
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-6">
+                <p className="text-blue-300 text-xs font-semibold mb-2">ℹ️ O que vai acontecer:</p>
+                <ul className="text-blue-300 text-xs space-y-1.5">
+                  <li>✓ Novos registros serão importados</li>
+                  <li>↷ Registros duplicados serão ignorados</li>
+                  <li>📊 Você receberá um relatório ao final</li>
+                </ul>
+              </div>
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                <p className="text-red-300 text-xs font-semibold">⚡ Ação irreversível!</p>
+                <p className="text-red-300 text-xs mt-1">Certifique-se de ter backup dos dados atuais antes de prosseguir.</p>
+              </div>
+            </div>
+
+            {/* Botões */}
+            <div className="bg-gray-900 px-6 py-4 flex gap-3">
+              <button
+                onClick={() => setConfirmarImportar(false)}
+                className="flex-1 px-4 py-2.5 rounded-lg font-semibold text-gray-300 bg-gray-700 hover:bg-gray-600 transition text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={executarImportacao}
+                className="flex-1 px-4 py-2.5 rounded-lg font-semibold text-white bg-red-600 hover:bg-red-700 transition text-sm flex items-center justify-center gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                Importar
+              </button>
+            </div>
+          </div>
+          </div>
+          )}
+          </div>
+          );
+          }
