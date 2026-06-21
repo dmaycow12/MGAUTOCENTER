@@ -1,5 +1,11 @@
 **Welcome to your Base44 project** 
 
+## Migração paralela fora da Base44
+
+Este repositório agora também contém uma base de backend próprio em `backend/`, isolada do app Base44 atual. Por padrão o frontend continua usando Base44; para testar o backend novo, use `VITE_API_PROVIDER=local`.
+
+Veja os detalhes em [`docs/MIGRACAO_BASE44.md`](docs/MIGRACAO_BASE44.md).
+
 **About**
 
 View and Edit  your app on [Base44.com](http://Base44.com) 
