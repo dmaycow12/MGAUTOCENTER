@@ -71,8 +71,8 @@ export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus
         </div>
 
         {item.tipo === "Receita" && item.status !== "Pago" && (
-          <button onClick={() => onGerarBoleto?.(item)} className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-800 rounded-lg transition-all" title="Gerar Boleto">
-            <FileText className="w-3.5 h-3.5" />
+          <button onClick={() => onGerarBoleto?.(item)} className="p-1.5 hover:bg-gray-800 rounded-lg transition-all" title={item.observacoes?.includes("Boleto Asaas ID:") ? "Ver Boleto Gerado" : "Gerar Boleto"}>
+            <FileText className="w-3.5 h-3.5" style={{ color: item.observacoes?.includes("Boleto Asaas ID:") ? "#22c55e" : "#6b7280" }} />
           </button>
         )}
         <button onClick={() => onEdit?.(item)} className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-800 rounded-lg transition-all" title="Editar">

@@ -840,7 +840,9 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
       {/* Ações */}
       <div className="flex gap-0.5 flex-shrink-0 w-20 justify-center">
         {item.tipo === "Receita" && item.status !== "Pago" && (
-          <button onClick={() => onGerarBoleto?.(item)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all" title="Gerar Boleto"><FileText className="w-3.5 h-3.5"/></button>
+          <button onClick={() => onGerarBoleto?.(item)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all" title={item.observacoes?.includes("Boleto Asaas ID:") ? "Ver Boleto Gerado" : "Gerar Boleto"}>
+            <FileText className="w-3.5 h-3.5" style={{ color: item.observacoes?.includes("Boleto Asaas ID:") ? "#22c55e" : "#6b7280" }} />
+          </button>
         )}
         <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-blue-400 rounded-lg hover:bg-gray-700 transition-all"><Edit className="w-3.5 h-3.5"/></button>
         <button onClick={onDelete} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-400 rounded-lg hover:bg-gray-700 transition-all"><Trash2 className="w-3.5 h-3.5"/></button>
