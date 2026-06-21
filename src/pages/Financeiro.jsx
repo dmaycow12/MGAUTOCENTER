@@ -553,6 +553,19 @@ export default function Financeiro() {
               <div style={{minWidth: 1100}}>
               {/* Cabeçalho com ordenação */}
                <div className="flex items-center px-2 py-2 border-b border-gray-700 bg-gray-800/50">
+                 {modoSelecao && (
+                   <button onClick={() => {
+                     const todosIds = sortedFiltrados.filter(i => i.status !== "Pago").map(i => i.id);
+                     const todosSelecionados = todosIds.every(id => selecionados.has(id));
+                     if (todosSelecionados) setSelecionados(new Set());
+                     else setSelecionados(new Set(todosIds));
+                   }} className="mr-1 flex-shrink-0">
+                     {sortedFiltrados.filter(i => i.status !== "Pago").length > 0 &&
+                      sortedFiltrados.filter(i => i.status !== "Pago").every(i => selecionados.has(i.id))
+                       ? <CheckSquare className="w-4 h-4 text-blue-400" />
+                       : <Square className="w-4 h-4 text-gray-500" />}
+                   </button>
+                 )}
                  <span className="text-xs font-semibold text-gray-400 w-14 flex-shrink-0 text-center">Tipo</span>
                  <div className="w-px h-6 bg-gray-700 mx-1" />
                  <span className="text-xs font-semibold text-gray-400 w-16 flex-shrink-0 text-center">Data</span>
