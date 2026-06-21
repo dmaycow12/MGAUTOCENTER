@@ -58,8 +58,10 @@ export default function ModalGerarBoleto({ item, onClose }) {
     }
     setLoading(true);
     try {
+      // Para boleto múltiplo, passa o primeiro ID; depois atualizamos todos
+      const primeiroId = item?._multiplos ? item._multiplos[0]?.id : item?.id;
       const res = await base44.functions.invoke("gerarBoleto", {
-        financeiro_id: item?.id,
+        financeiro_id: primeiroId,
         nome: form.nome,
         cpf_cnpj: form.cpf_cnpj,
         email: form.email,
@@ -68,6 +70,22 @@ export default function ModalGerarBoleto({ item, onClose }) {
         descricao: form.descricao,
       });
       if (res.data?.sucesso) {
+        // Se for boleto múltiplo, salva referência em todos os lançamentos
+        if (item?._multiplos && item._multiplos.length > 1) {
+          const obsTexto = [
+            `Boleto Asaas ID: ${res.data.asaas_id}`,
+            res.data.boleto_url ? `Link: ${res.data.boleto_url}` : null,
+            res.data.linha_digitavel ? `Linha: ${res.data.linha_digitavel}` : null,
+          ].filter(Boolean).join('\n');
+          for (const lancamento of item._multiplos) {
+            try {
+              await base44.entities.Financeiro.update(lancamento.id, {
+                forma_pagamento: 'Boleto',
+                observacoes: obsTexto,
+              });
+            } catch (_) {}
+          }
+        }
         setResultado(res.data);
         setTela("gerado");
         toast.success("Boleto gerado com sucesso!");

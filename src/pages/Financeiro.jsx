@@ -927,10 +927,6 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
                   <FileText className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
                 </a>
               )}
-              <button onClick={() => baixarBoleto(idMatch[1], linkMatch?.[1])}
-                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-300 rounded-lg hover:bg-gray-700 transition-all" title="Baixar Boleto">
-                <Download className="w-3.5 h-3.5" />
-              </button>
             </>);
           }
           return (

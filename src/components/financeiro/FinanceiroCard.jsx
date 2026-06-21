@@ -114,10 +114,6 @@ export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus
                   <FileText className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
                 </a>
               )}
-              <button onClick={() => baixarBoleto(idMatch[1], linkMatch?.[1])}
-                className="p-1.5 hover:bg-gray-800 rounded-lg transition-all" title="Baixar Boleto">
-                <Download className="w-3.5 h-3.5 text-gray-500 hover:text-gray-300" />
-              </button>
             </>);
           }
           return (
