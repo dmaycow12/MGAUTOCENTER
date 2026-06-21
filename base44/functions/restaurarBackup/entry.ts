@@ -42,6 +42,17 @@ async function buscarChavesExistentes(entities, entidade, chaveFn) {
 
 Deno.serve(async (req) => {
   try {
+    // Validar AUTH_SECRET antes de prosseguir
+    if (!Deno.env.get("AUTH_SECRET")) {
+      return Response.json(
+        { 
+          error: 'AUTH_SECRET não configurado. Configure a chave nas Variáveis de Ambiente do app antes de usar esta função.',
+          detalhe: 'Vá em Dashboard → Configurações → Secrets/Variáveis de Ambiente e adicione a chave AUTH_SECRET'
+        }, 
+        { status: 500 }
+      );
+    }
+
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Não autenticado' }, { status: 401 });
