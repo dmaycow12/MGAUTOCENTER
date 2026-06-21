@@ -792,7 +792,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
           const fin = await base44.entities.Financeiro.create({
             tipo: "Receita",
             categoria: "Ordem de Venda",
-            descricao: `Venda #${formFinal.numero} — ${formFinal.cliente_nome || ""} — Parcela ${idx+1}/${parcelasAtualizadas.length}`,
+            descricao: `Venda #${formFinal.numero} — ${formFinal.cliente_nome || ""}${formFinal.veiculo_modelo ? ` — ${formFinal.veiculo_modelo}` : ""}${formFinal.veiculo_placa ? ` — ${formFinal.veiculo_placa}` : ""} — Parcela ${idx+1}/${parcelasAtualizadas.length}`,
             valor: parcela.valor || 0,
             data_vencimento: parcela.vencimento,
             status: statusSelecionado,

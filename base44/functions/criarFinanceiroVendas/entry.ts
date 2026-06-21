@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
         const fin = await withRetry(() => base44.asServiceRole.entities.Financeiro.create({
           tipo: "Receita",
           categoria: "Ordem de Venda",
-          descricao: `Venda #${venda.numero} — ${venda.cliente_nome || ""} — Parcela ${i+1}/${totalParcelas}`,
+          descricao: `Venda #${venda.numero} — ${venda.cliente_nome || ""}${venda.veiculo_modelo ? ` — ${venda.veiculo_modelo}` : ""}${venda.veiculo_placa ? ` — ${venda.veiculo_placa}` : ""} — Parcela ${i+1}/${totalParcelas}`,
           valor: parcelasAtualizadas[i].valor || 0,
           data_vencimento: parcelasAtualizadas[i].vencimento,
           status: "Pendente",
