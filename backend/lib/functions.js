@@ -49,9 +49,71 @@ const parseWorksheet = (buffer) => {
   return XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName], { defval: '' });
 };
 
+const normalizeZipNotaFiscalRecords = async ({ zip, fileStore }) => {
+  const folderPrefix = 'NotaFiscal/';
+  const jsonFiles = Object.values(zip.files).filter((file) => (
+    !file.dir &&
+    file.name.startsWith(folderPrefix) &&
+    file.name.endsWith('.json') &&
+    !file.name.endsWith('_indice.json') &&
+    file.name !== `${folderPrefix}NotaFiscal.json`
+  ));
+  const records = [];
+  const restoredFiles = { xml: 0, pdf: 0 };
+
+  const readSidecar = async (jsonFile, extension) => {
+    const sameBaseName = jsonFile.name.replace(/\.json$/i, extension);
+    const sidecar = zip.file(sameBaseName);
+    if (sidecar) return sidecar;
+
+    const parsed = JSON.parse(await jsonFile.async('string'));
+    const referencedName = extension === '.xml' ? parsed._xml_arquivo : parsed._pdf_arquivo;
+    if (referencedName) {
+      return zip.file(`${folderPrefix}${referencedName}`) || zip.file(referencedName);
+    }
+
+    return null;
+  };
+
+  for (const file of jsonFiles) {
+    const parsed = JSON.parse(await file.async('string'));
+    const noteRecords = Array.isArray(parsed) ? parsed : [parsed];
+
+    for (const record of noteRecords) {
+      if (!record || typeof record !== 'object') continue;
+
+      const enrichedRecord = { ...record };
+      const xmlFile = await readSidecar(file, '.xml');
+      if (xmlFile) {
+        const xmlText = await xmlFile.async('string');
+        if (xmlText.trim().startsWith('<')) {
+          enrichedRecord.xml_original = xmlText;
+          restoredFiles.xml += 1;
+        }
+      }
+
+      const pdfFile = await readSidecar(file, '.pdf');
+      if (pdfFile) {
+        const pdfBuffer = Buffer.from(await pdfFile.async('uint8array'));
+        enrichedRecord.pdf_url = await fileStore.saveBuffer({
+          filename: `${enrichedRecord.tipo || 'nota'}-${enrichedRecord.numero || enrichedRecord.id || Date.now()}.pdf`,
+          buffer: pdfBuffer,
+        });
+        restoredFiles.pdf += 1;
+      }
+
+      delete enrichedRecord._xml_arquivo;
+      delete enrichedRecord._pdf_arquivo;
+      records.push(enrichedRecord);
+    }
+  }
+
+  return { records, restoredFiles };
+};
+
 const normalizeRestorePayload = async ({ payload, fileStore }) => {
   if (payload?.backup && typeof payload.backup === 'object') {
-    return payload.backup;
+    return { backup: payload.backup, restoredFiles: { xml: 0, pdf: 0 } };
   }
 
   if (!payload?.zip_url) {
@@ -61,11 +123,20 @@ const normalizeRestorePayload = async ({ payload, fileStore }) => {
   const zipBuffer = await fileStore.readFromUrl(payload.zip_url);
   const zip = await JSZip.loadAsync(zipBuffer);
   const backup = {};
+  const restoredFiles = { xml: 0, pdf: 0 };
 
   for (const entityName of ENTITY_NAMES) {
     const directJson = zip.file(`${entityName}/${entityName}.json`) || zip.file(`${entityName}.json`);
     if (directJson) {
       backup[entityName] = JSON.parse(await directJson.async('string'));
+      continue;
+    }
+
+    if (entityName === 'NotaFiscal') {
+      const notas = await normalizeZipNotaFiscalRecords({ zip, fileStore });
+      backup[entityName] = notas.records;
+      restoredFiles.xml += notas.restoredFiles.xml;
+      restoredFiles.pdf += notas.restoredFiles.pdf;
       continue;
     }
 
@@ -86,14 +157,15 @@ const normalizeRestorePayload = async ({ payload, fileStore }) => {
     if (records.length) backup[entityName] = records;
   }
 
-  return backup;
+  return { backup, restoredFiles };
 };
 
 const restoreBackup = async ({ store, fileStore, payload }) => {
-  const backup = await normalizeRestorePayload({ payload, fileStore });
+  const { backup, restoredFiles } = await normalizeRestorePayload({ payload, fileStore });
   const resultados = {};
   let totalImportados = 0;
   let totalPulados = 0;
+  let totalAtualizados = 0;
 
   for (const entityName of ENTITY_NAMES) {
     const records = Array.isArray(backup[entityName]) ? backup[entityName] : [];
@@ -103,32 +175,53 @@ const restoreBackup = async ({ store, fileStore, payload }) => {
     }
 
     const current = await store.list(entityName);
-    const existingIds = new Set(current.map((item) => String(item.id)));
-    const nextRecords = [...current];
+    const currentById = new Map(current.map((item) => [String(item.id), item]));
     let importados = 0;
     let pulados = 0;
+    let atualizados = 0;
 
     for (const record of records) {
-      if (record?.id && existingIds.has(String(record.id))) {
+      if (!record || typeof record !== 'object') {
         pulados += 1;
         continue;
       }
-      nextRecords.push(record);
-      if (record?.id) existingIds.add(String(record.id));
+
+      const existing = record.id ? currentById.get(String(record.id)) : null;
+      if (existing) {
+        const merged = {
+          ...existing,
+          ...record,
+          id: existing.id,
+          created_date: existing.created_date || record.created_date,
+        };
+        if (JSON.stringify(existing) === JSON.stringify(merged)) {
+          pulados += 1;
+          continue;
+        }
+        const updated = await store.update(entityName, existing.id, merged);
+        currentById.set(String(existing.id), updated);
+        atualizados += 1;
+        continue;
+      }
+
+      const created = await store.create(entityName, record);
+      if (created?.id) currentById.set(String(created.id), created);
       importados += 1;
     }
 
-    await store.replaceAll(entityName, nextRecords);
-    resultados[entityName] = { importados, pulados };
+    resultados[entityName] = { importados, atualizados, pulados };
     totalImportados += importados;
+    totalAtualizados += atualizados;
     totalPulados += pulados;
   }
 
   return {
     sucesso: true,
-    msg: `${totalImportados} registros importados, ${totalPulados} pulados.`,
+    msg: `${totalImportados} registros importados, ${totalAtualizados} atualizados, ${totalPulados} pulados. Arquivos restaurados: ${restoredFiles.xml} XML e ${restoredFiles.pdf} PDF.`,
     totalImportados,
+    totalAtualizados,
     totalPulados,
+    arquivosRestaurados: restoredFiles,
     resultados,
   };
 };
