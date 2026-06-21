@@ -1,6 +1,23 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Edit, Trash2, ChevronDown, FileText, Download } from "lucide-react";
 
+async function baixarBoleto(url) {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = "boleto.pdf";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+  } catch {
+    window.open(url, "_blank");
+  }
+}
+
 const STATUS_OPTIONS = ["Pendente", "Pago", "Atrasado"];
 const PAGAMENTO_OPTIONS = ["A Combinar", "Boleto", "Cartão", "Dinheiro", "PIX"];
 
@@ -79,10 +96,10 @@ export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus
                 className="p-1.5 hover:bg-gray-800 rounded-lg transition-all" title="Abrir Boleto">
                 <FileText className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
               </a>
-              <a href={linkMatch[1]} target="_blank" rel="noopener noreferrer" download
+              <button onClick={() => baixarBoleto(linkMatch[1])}
                 className="p-1.5 hover:bg-gray-800 rounded-lg transition-all" title="Baixar Boleto">
                 <Download className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
-              </a>
+              </button>
             </>);
           }
           return (

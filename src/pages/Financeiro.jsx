@@ -4,6 +4,23 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Edit, Trash2, FileText, Download, CheckSquare, Square } from "lucide-react";
 
+async function baixarBoleto(url) {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = "boleto.pdf";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+  } catch {
+    window.open(url, "_blank");
+  }
+}
+
 const STATUS_OPTIONS = ["Pendente", "Pago"];
 
 function SortHeader({ label, col, sortCol, sortDir, onClick, className = "" }) {
@@ -892,10 +909,10 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
                 className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all" title="Abrir Boleto">
                 <FileText className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
               </a>
-              <a href={linkMatch[1]} target="_blank" rel="noopener noreferrer" download
+              <button onClick={() => baixarBoleto(linkMatch[1])}
                 className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all" title="Baixar Boleto">
                 <Download className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
-              </a>
+              </button>
             </>);
           }
           return (
