@@ -1106,10 +1106,6 @@ export default function NotasFiscais() {
   };
 
   const abrirPdfNota = async (nota) => {
-    if (nota.tipo === 'NFCe') {
-      await abrirDanfeNfce(nota);
-      return;
-    }
     // Se já tem URL HTML salva (DANFSe importada), abre com toolbar igual às NFe
     if (nota.pdf_url?.endsWith('.html')) {
       feedback('sucesso', 'Abrindo DANFSe...');
@@ -1123,6 +1119,20 @@ export default function NotasFiscais() {
       }
       return;
     }
+
+    // PDFs restaurados/importados ja ficam em pdf_url, inclusive URLs locais /api/files/...
+    // Abra diretamente antes de tentar gerar uma DANFE nova.
+    if (nota.pdf_url) {
+      window.open(nota.pdf_url, '_blank');
+      setMsgFeedback(null);
+      return;
+    }
+
+    if (nota.tipo === 'NFCe') {
+      await abrirDanfeNfce(nota);
+      return;
+    }
+
     feedback('sucesso', 'Buscando PDF...');
     try {
       const res = await base44.functions.invoke('proxyPdfNota', { nota_id: nota.id });
