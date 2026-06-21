@@ -484,6 +484,20 @@ export default function Financeiro() {
                   style={{ background: "#062C9B" }}>
                   <FileText className="w-3.5 h-3.5" /> Gerar Boleto Único
                 </button>
+                <button onClick={async () => {
+                  const itens = sortedFiltrados.filter(i => selecionados.has(i.id));
+                  const hoje = new Date().toISOString().split("T")[0];
+                  for (const it of itens) {
+                    await base44.entities.Financeiro.update(it.id, { status: "Pago", data_pagamento: hoje });
+                    if (it.ordem_venda_id) await verificarEConcluirVenda(it.ordem_venda_id);
+                  }
+                  setSelecionados(new Set()); setModoSelecao(false); load();
+                  toast.success(`${itens.length} lançamento(s) marcado(s) como Pago`);
+                }}
+                  className="px-4 py-1.5 text-sm font-semibold text-white rounded-lg transition-all flex items-center gap-1"
+                  style={{ background: "#16a34a" }}>
+                  Marcar Pago
+                </button>
                 <button onClick={() => setSelecionados(new Set())} className="text-gray-400 hover:text-white text-xs">Limpar</button>
               </div>
             )}
@@ -916,22 +930,11 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
       {/* Ações */}
       <div className="flex gap-0.5 flex-shrink-0 w-28 justify-center">
         {item.tipo === "Receita" && item.status !== "Pago" && (() => {
-          const linkMatch = item.observacoes?.match(/Link: (https?:\/\/\S+)/);
           const idMatch = item.observacoes?.match(/Boleto Asaas ID: (\S+)/);
           const temBoleto = !!idMatch?.[1];
-          if (temBoleto) {
-            return (<>
-              {linkMatch?.[1] && (
-                <a href={linkMatch[1]} target="_blank" rel="noopener noreferrer"
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all" title="Abrir Boleto">
-                  <FileText className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
-                </a>
-              )}
-            </>);
-          }
           return (
-            <button onClick={() => onGerarBoleto?.(item)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all" title="Gerar Boleto">
-              <FileText className="w-3.5 h-3.5" style={{ color: "#6b7280" }} />
+            <button onClick={() => onGerarBoleto?.(item)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all" title={temBoleto ? "Ver Boleto" : "Gerar Boleto"}>
+              <FileText className="w-3.5 h-3.5" style={{ color: temBoleto ? "#22c55e" : "#6b7280" }} />
             </button>
           );
         })()}

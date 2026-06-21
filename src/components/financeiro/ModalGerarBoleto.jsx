@@ -152,11 +152,7 @@ export default function ModalGerarBoleto({ item, onClose, onSuccess }) {
               </a>
             )}
 
-            {tela === "existente" && (
-              <button onClick={() => setTela("form")} className="w-full py-2 text-sm text-gray-400 hover:text-white rounded-lg border border-gray-700 transition-all">
-                Gerar Novo Boleto
-              </button>
-            )}
+
             <button onClick={onClose} className="w-full py-2 text-sm text-gray-400 hover:text-white rounded-lg border border-gray-700 transition-all">
               Fechar
             </button>
