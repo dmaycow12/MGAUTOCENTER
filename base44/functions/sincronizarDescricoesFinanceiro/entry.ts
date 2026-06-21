@@ -26,11 +26,12 @@ Deno.serve(async (req) => {
       if (!venda) continue;
 
       const desc = fin.descricao || '';
-      const parcelaMatch = desc.match(/Parcela (\d+\/\d+)/i);
+      const parcelaMatch = desc.match(/(\d+\/\d+)/);
       const parcelaStr = parcelaMatch ? parcelaMatch[1] : '1/1';
       const veiculo = venda.veiculo_modelo ? ` — ${venda.veiculo_modelo}` : '';
       const placa = venda.veiculo_placa ? ` — ${venda.veiculo_placa}` : '';
-      const newDesc = `Venda #${venda.numero} — ${venda.cliente_nome || 'CONSUMIDOR'}${veiculo}${placa} — Parcela ${parcelaStr}`;
+      const nomeCliente = venda.cliente_nome_fantasia || venda.cliente_nome || 'CONSUMIDOR';
+      const newDesc = `#${venda.numero} — ${nomeCliente}${veiculo}${placa} — ${parcelaStr}`;
 
       if (newDesc !== desc) {
         toUpdate.push({ id: fin.id, descricao: newDesc });
