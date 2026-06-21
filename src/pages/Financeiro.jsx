@@ -6,8 +6,20 @@ import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronD
 
 async function baixarBoleto(url) {
   try {
-    const res = await fetch(url);
-    const blob = await res.blob();
+    const { appParams } = await import("@/lib/app-params");
+    const { appId, token, appBaseUrl, functionsVersion } = appParams;
+    const baseUrl = appBaseUrl || "https://app.base44.com";
+    const ver = functionsVersion || "v3";
+    const endpoint = `${baseUrl}/api/apps/${appId}/functions/${ver}/baixarBoleto`;
+    const resp = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ url }),
+    });
+    const blob = await resp.blob();
     const blobUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = blobUrl;
@@ -910,8 +922,8 @@ function ListRow({ item, onEdit, onDelete, onAlterarStatus, onAlterarPagamento, 
                 <FileText className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
               </a>
               <button onClick={() => baixarBoleto(linkMatch[1])}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all" title="Baixar Boleto">
-                <Download className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
+                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-300 rounded-lg hover:bg-gray-700 transition-all" title="Baixar Boleto">
+                <Download className="w-3.5 h-3.5" />
               </button>
             </>);
           }

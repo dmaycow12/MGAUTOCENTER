@@ -3,8 +3,20 @@ import { Edit, Trash2, ChevronDown, FileText, Download } from "lucide-react";
 
 async function baixarBoleto(url) {
   try {
-    const res = await fetch(url);
-    const blob = await res.blob();
+    const { appParams } = await import("@/lib/app-params");
+    const { appId, token, appBaseUrl, functionsVersion } = appParams;
+    const baseUrl = appBaseUrl || "https://app.base44.com";
+    const ver = functionsVersion || "v3";
+    const endpoint = `${baseUrl}/api/apps/${appId}/functions/${ver}/baixarBoleto`;
+    const resp = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ url }),
+    });
+    const blob = await resp.blob();
     const blobUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = blobUrl;
@@ -98,7 +110,7 @@ export default function FinanceiroCard({ item, onEdit, onDelete, onAlterarStatus
               </a>
               <button onClick={() => baixarBoleto(linkMatch[1])}
                 className="p-1.5 hover:bg-gray-800 rounded-lg transition-all" title="Baixar Boleto">
-                <Download className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
+                <Download className="w-3.5 h-3.5 text-gray-500 hover:text-gray-300" />
               </button>
             </>);
           }
