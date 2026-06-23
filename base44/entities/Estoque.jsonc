@@ -71,6 +71,10 @@
       "type": "string",
       "title": "CEST"
     },
+    "etiqueta": {
+      "type": "string",
+      "title": "Etiqueta"
+    },
     "observacoes": {
       "type": "string",
       "title": "Observa\u00e7\u00f5es"

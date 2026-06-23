@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, ChevronUp, ChevronDown, Download, ClipboardCheck, Scale } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, ChevronUp, ChevronDown, Download, ClipboardCheck, Scale, Tag } from "lucide-react";
 import ProgressoReajuste from "../components/estoque/ProgressoReajuste";
 import ModalEstoqueForm from "../components/estoque/ModalEstoqueForm";
 import MovimentacoesEstoque from "../components/estoque/MovimentacoesEstoque";
 import LucroPecas from "../components/estoque/LucroPecas";
+import ModalEtiquetar from "../components/estoque/ModalEtiquetar";
 
 const arredondarVendaParaCinco = (valor) => {
   return Math.ceil(valor / 5) * 5;
@@ -51,12 +52,13 @@ export default function Estoque() {
   const [checklistSalvoEm, setChecklistSalvoEm] = useState(null);
   const [checklistConfigId, setChecklistConfigId] = useState(null);
   const [showRegularizar, setShowRegularizar] = useState(false);
+  const [showEtiquetar, setShowEtiquetar] = useState(false);
   const [discrepancias, setDiscrepancias] = useState([]);
   const [regularizando, setRegularizando] = useState(false);
   const [selecionadosReg, setSelecionadosReg] = useState([]);
   const [colunas, setColunas] = useState(() => {
     const saved = localStorage.getItem("estoque_colunas");
-    return saved ? JSON.parse(saved) : { codigo: true, marca: true, estoque_minimo: true, valor_custo: true, valor_venda: true };
+    return saved ? JSON.parse(saved) : { codigo: true, marca: true, estoque_minimo: true, valor_custo: true, valor_venda: true, etiqueta: false };
   });
   const marcaDropdownRef = useRef(null);
   const catDropdownRef = useRef(null);
@@ -110,6 +112,7 @@ export default function Estoque() {
     { key: "estoque_minimo", label: "ESTOQUE" },
     { key: "valor_custo", label: "CUSTO" },
     { key: "valor_venda", label: "VENDA" },
+    { key: "etiqueta", label: "ETIQUETA" },
   ];
 
   useEffect(() => { load(); }, []);
@@ -645,6 +648,18 @@ export default function Estoque() {
             <Package className="w-4 h-4" /> Regularizar Saldo
           </button>
           <button
+            onClick={() => {
+              if (selecionados.length === 0) return alert("Selecione um ou mais produtos para etiquetar.");
+              setShowEtiquetar(true);
+            }}
+            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
+            style={{background: "#00ff00", color: "#000"}}
+            onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
+            onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
+          >
+            <Tag className="w-4 h-4" /> Etiquetar
+          </button>
+          <button
             onClick={exportarEstoqueBaixo}
             title="Baixar lista de produtos com estoque abaixo do mínimo"
             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
@@ -816,6 +831,7 @@ export default function Estoque() {
                   {colunas.estoque_minimo && <th className="px-4 py-3 text-center cursor-pointer hover:text-white transition-all" onClick={() => handleSort("estoque_minimo")}><div className="flex items-center justify-center gap-1">Estoque {ordenacao.campo === "estoque_minimo" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
                   {colunas.valor_custo && <th className="px-4 py-3 text-right cursor-pointer hover:text-white transition-all" onClick={() => handleSort("valor_custo")}><div className="flex items-center justify-end gap-1">Custo {ordenacao.campo === "valor_custo" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
                   {colunas.valor_venda && <th className="px-4 py-3 text-right cursor-pointer hover:text-white transition-all" onClick={() => handleSort("valor_venda")}><div className="flex items-center justify-end gap-1">Venda {ordenacao.campo === "valor_venda" && (ordenacao.direcao === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}</div></th>}
+                  {colunas.etiqueta && <th className="px-4 py-3 text-center">Etiqueta</th>}
                   <th className="px-4 py-3 text-center">Ações</th>
                 </tr>
               </thead>
@@ -845,6 +861,7 @@ export default function Estoque() {
                     {colunas.estoque_minimo && <td className="px-4 py-3 text-center text-gray-500"><CellEdit item={item} field="estoque_minimo" className="text-gray-500" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
                     {colunas.valor_custo && <td className="px-4 py-3 text-right text-gray-400"><CellEdit item={item} field="valor_custo" className="text-gray-400" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
                     {colunas.valor_venda && <td className="px-4 py-3 text-right text-green-400 font-medium"><CellEdit item={item} field="valor_venda" className="text-green-400 font-medium" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
+                    {colunas.etiqueta && <td className="px-4 py-3 text-center"><CellEdit item={item} field="etiqueta" className="text-gray-400 text-center" editandoCell={editandoCell} onIniciar={iniciarEdicaoCell} onSalvar={salvarEdicaoCell} onCancelar={cancelarEdicaoCell} proximoItem={prox} /></td>}
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
                         <button onClick={() => editar(item)} className="p-1 text-gray-500 hover:text-blue-400 transition-all"><Edit className="w-4 h-4"/></button>
@@ -926,6 +943,14 @@ export default function Estoque() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal Etiquetar */}
+      {showEtiquetar && (
+        <ModalEtiquetar
+          items={items.filter(i => selecionados.includes(i.id))}
+          onClose={() => setShowEtiquetar(false)}
+        />
       )}
 
       {/* Modal Importar */}
