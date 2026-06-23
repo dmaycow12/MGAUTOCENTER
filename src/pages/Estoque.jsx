@@ -273,10 +273,10 @@ export default function Estoque() {
   const exportarEstoqueBaixo = () => {
     const baixo = items.filter(i => i.quantidade < i.estoque_minimo);
     if (baixo.length === 0) return alert("Nenhum produto com estoque baixo.");
-    const rows = [["Codigo", "Descricao", "Quantidade Faltante"]];
+    const rows = [["Quantidade Faltante", "Codigo do Produto"]];
     for (const i of baixo) {
       const falta = (Number(i.estoque_minimo || 0)) - (Number(i.quantidade || 0));
-      rows.push([i.codigo || "", i.descricao || "", falta]);
+      rows.push([falta, i.codigo || ""]);
     }
     // Montar xlsx manualmente (formato OOXML mínimo)
     const escapeXml = v => String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -299,7 +299,7 @@ export default function Estoque() {
     // Usar biblioteca xlsx se disponível, senão usar CSV como fallback
     import("xlsx").then(XLSX => {
       const ws = XLSX.utils.aoa_to_sheet(rows);
-      ws["!cols"] = [{wch:15},{wch:50},{wch:20}];
+      ws["!cols"] = [{wch:20},{wch:20}];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Reposicao");
       XLSX.writeFile(wb, "reposicao_estoque.xlsx");
