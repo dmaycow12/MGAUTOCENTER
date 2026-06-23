@@ -950,6 +950,12 @@ export default function Estoque() {
         <ModalEtiquetar
           items={items.filter(i => selecionados.includes(i.id))}
           onClose={() => setShowEtiquetar(false)}
+          onSalvar={async (etiqueta) => {
+            const sel = items.filter(i => selecionados.includes(i.id));
+            await base44.entities.Estoque.bulkUpdate(sel.map(i => ({ id: i.id, etiqueta })));
+            setItems(prev => prev.map(i => selecionados.includes(i.id) ? { ...i, etiqueta } : i));
+            setSelecionados([]);
+          }}
         />
       )}
 
