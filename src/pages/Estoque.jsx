@@ -278,7 +278,7 @@ export default function Estoque() {
       const falta = (Number(i.estoque_minimo || 0)) - (Number(i.quantidade || 0));
       rows.push([falta, i.codigo || ""]);
     }
-    // Montar xlsx manualmente (formato OOXML mínimo)
+    // Gerar xlsx com JSZip aplicando alinhamento centralizado em todas as células
     const escapeXml = v => String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     const cellRef = (r, c) => `${String.fromCharCode(64 + c)}${r}`;
     const cells = rows.map((row, ri) =>
@@ -286,25 +286,32 @@ export default function Estoque() {
         const ref = cellRef(ri + 1, ci + 1);
         const isNum = typeof val === "number";
         return isNum
-          ? `<c r="${ref}" t="n"><v>${val}</v></c>`
-          : `<c r="${ref}" t="inlineStr"><is><t>${escapeXml(val)}</t></is></c>`;
+          ? `<c r="${ref}" s="1" t="n"><v>${val}</v></c>`
+          : `<c r="${ref}" s="1" t="inlineStr"><is><t>${escapeXml(val)}</t></is></c>`;
       }).join("")
-    ).map((cells, ri) => `<row r="${ri + 1}">${cells}</row>`).join("");
+    ).map((c, ri) => `<row r="${ri + 1}">${c}</row>`).join("");
 
-    const sheetXml = `<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${cells}</sheetData></worksheet>`;
-    const wbXml = `<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Reposicao" sheetId="1" r:id="rId1"/></sheets></workbook>`;
-    const relsXml = `<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`;
-    const contentTypesXml = `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`;
+    const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="1" max="2" width="20" customWidth="1"/></cols><sheetData>${cells}</sheetData></worksheet>`;
+    const wbXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Reposicao" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+    const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts><fills count="1"><fill><patternFill patternType="none"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf></cellXfs></styleSheet>`;
+    const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`;
+    const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`;
+    const rootRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
 
-    // Usar biblioteca xlsx se disponível, senão usar CSV como fallback
-    import("xlsx").then(XLSX => {
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-      ws["!cols"] = [{wch:20},{wch:20}];
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Reposicao");
-      XLSX.writeFile(wb, "reposicao_estoque.xlsx");
+    import("jszip").then(async JSZip => {
+      const zip = new JSZip.default();
+      zip.file("[Content_Types].xml", contentTypesXml);
+      zip.folder("_rels").file(".rels", rootRelsXml);
+      zip.folder("xl").file("workbook.xml", wbXml);
+      zip.folder("xl").folder("_rels").file("workbook.xml.rels", relsXml);
+      zip.folder("xl").folder("worksheets").file("sheet1.xml", sheetXml);
+      zip.folder("xl").file("styles.xml", stylesXml);
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "reposicao_estoque.xlsx"; a.click();
+      URL.revokeObjectURL(url);
     }).catch(() => {
-      // fallback CSV
       const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(";")).join("\n");
       const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
