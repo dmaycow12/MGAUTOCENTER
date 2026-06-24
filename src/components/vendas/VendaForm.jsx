@@ -963,6 +963,12 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   <Field label="Modelo"><input ref={veiculoRef} value={form.veiculo_modelo} onChange={e => setForm(f => ({ ...f, veiculo_modelo: e.target.value }))} onKeyDown={e => handleNavKey(e, placaRef)} className="input-dark" autoComplete="new-password" /></Field>
                   <Field label="Placa"><input ref={placaRef} value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} onKeyDown={e => handleNavKey(e, kmRef)} className="input-dark" autoComplete="new-password" placeholder="AAA0000" /></Field>
                   <Field label="KM"><input ref={kmRef} value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
+                  <Field label="Técnico">
+                    <select value={form.tecnico || ''} onChange={e => setForm(f => ({ ...f, tecnico: e.target.value }))} className="input-dark">
+                      <option value="">— Selecionar Técnico —</option>
+                      {funcionarios.map(f => <option key={f.id} value={f.nome}>{f.nome}</option>)}
+                    </select>
+                  </Field>
                 </div>
               </div>
 
@@ -1282,17 +1288,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   </button>
                 </div>
                 </Section>
-
-              <Section title="Técnico">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="Técnico Responsável">
-                    <select value={form.tecnico || ''} onChange={e => setForm(f => ({ ...f, tecnico: e.target.value }))} className="input-dark">
-                      <option value="">— Selecionar Técnico —</option>
-                      {funcionarios.map(f => <option key={f.id} value={f.nome}>{f.nome}</option>)}
-                    </select>
-                  </Field>
-                </div>
-              </Section>
 
               <Section title="Pagamento">
                 {/* Desktop */}
