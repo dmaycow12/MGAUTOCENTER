@@ -15,7 +15,7 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
 }
 
 export const COLUNAS_PADRAO = {
-  data: true, cliente: true, contato: false, veiculo: true, placa: true, km: true,
+  data: true, cliente: true, contato: false, veiculo: true, placa: true, km: true, tecnico: true,
   status: true, custo: true, valor: true, lucro: true, nfe: true, nfse: true,
 };
 
@@ -562,6 +562,9 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
           onNext={() => kmRef.current?.startEdit()}
           onPrev={() => veiculoRef.current?.startEdit()} /></td>}
         {colunas.km && !ocultarVeiculo && <td className="px-4 py-3"><InlineEdit ref={kmRef} value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v || null)} placeholder="—"
+          onNext={goNextRow}
+          onPrev={() => placaRef.current?.startEdit()} /></td>}
+        {colunas.tecnico && <td className="px-4 py-3"><InlineEdit value={os.tecnico || ""} onSave={v => saveField("tecnico", v)} placeholder="—"
           onNext={goNextRow}
           onPrev={() => placaRef.current?.startEdit()} /></td>}
         {colunas.status && <td className="px-4 py-3">

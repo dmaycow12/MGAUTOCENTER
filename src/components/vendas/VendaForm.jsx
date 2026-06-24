@@ -1424,7 +1424,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
             onChange={e => setForm(f => ({ ...f, dados_adicionais: e.target.value }))}
             className="input-dark"
             rows={3}
-            placeholder="Informações adicionais para a nota..."
             autoComplete="off"
           />
         </div>
