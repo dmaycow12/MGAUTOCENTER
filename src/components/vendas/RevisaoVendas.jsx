@@ -135,10 +135,47 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                 </button>
               </div>
 
-              {/* Produtos e Serviços — sempre visíveis */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+              {/* Produtos, Serviços e Parcelas — empilhados verticalmente */}
+              <div className="flex flex-col gap-0">
+                {/* Produtos */}
+                <div className="p-3" style={{borderBottom:"1px solid #1e3a5f"}}>
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Produtos {(o.pecas || []).length > 0 && `(${o.pecas.length})`}</p>
+                  {(o.pecas || []).length === 0 ? (
+                    <p className="text-sm text-gray-600">Nenhum produto</p>
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="flex gap-2 text-xs text-gray-500 uppercase font-semibold pb-1" style={{borderBottom:"1px solid #1e3a5f"}}>
+                        <span className="flex-1">Descrição</span>
+                        <span className="w-16 text-right">Valor</span>
+                        <span className="w-8 text-right">Qtd</span>
+                        <span className="w-16 text-right">Total</span>
+                        <span className="w-16 text-right">Custo</span>
+                        <span className="w-16 text-right">Total</span>
+                      </div>
+                      {(o.pecas || []).map((p, i) => (
+                        <div key={i} className="flex gap-2 text-sm items-center">
+                          <span className="text-gray-300 flex-1 truncate">{p.descricao || p.codigo || "—"}</span>
+                          <span className="text-gray-200 w-16 text-right whitespace-nowrap">{fmtValor(p.valor_unitario)}</span>
+                          <span className="text-gray-500 w-8 text-right">{p.quantidade || 1}</span>
+                          <span className="text-gray-200 w-16 text-right whitespace-nowrap">{fmtValor((p.valor_unitario || 0) * (p.quantidade || 1))}</span>
+                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtValor(p.valor_custo)}</span>
+                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtInt((p.valor_custo || 0) * (p.quantidade || 1))}</span>
+                        </div>
+                      ))}
+                      <div className="flex gap-2 text-sm font-bold pt-1 mt-1" style={{borderTop:"1px solid #1e3a5f"}}>
+                        <span className="text-gray-400 flex-1 uppercase text-xs">Total</span>
+                        <span className="w-16"></span>
+                        <span className="w-8"></span>
+                        <span className="text-white w-16 text-right whitespace-nowrap">{fmtValor((o.pecas || []).reduce((s, p) => s + (p.valor_unitario || 0) * (p.quantidade || 1), 0))}</span>
+                        <span className="w-16"></span>
+                        <span className="text-gray-300 w-16 text-right whitespace-nowrap">{fmtInt((o.pecas || []).reduce((s, p) => s + (p.valor_custo || 0) * (p.quantidade || 1), 0))}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Serviços */}
-                <div className="p-3" style={{borderRight:"1px solid #1e3a5f"}}>
+                <div className="p-3" style={{borderBottom:"1px solid #1e3a5f"}}>
                   <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Serviços {(o.servicos || []).length > 0 && `(${o.servicos.length})`}</p>
                   {(o.servicos || []).length === 0 ? (
                     <p className="text-sm text-gray-600">Nenhum serviço</p>
@@ -174,38 +211,32 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                   )}
                 </div>
 
-                {/* Produtos */}
+                {/* Parcelas */}
                 <div className="p-3">
-                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Produtos {(o.pecas || []).length > 0 && `(${o.pecas.length})`}</p>
-                  {(o.pecas || []).length === 0 ? (
-                    <p className="text-sm text-gray-600">Nenhum produto</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Parcelas {(o.parcelas_detalhes || []).length > 0 && `(${o.parcelas_detalhes.length})`}</p>
+                  {(o.parcelas_detalhes || []).length === 0 ? (
+                    <p className="text-sm text-gray-600">Nenhuma parcela</p>
                   ) : (
                     <div className="space-y-1">
                       <div className="flex gap-2 text-xs text-gray-500 uppercase font-semibold pb-1" style={{borderBottom:"1px solid #1e3a5f"}}>
-                        <span className="flex-1">Descrição</span>
-                        <span className="w-16 text-right">Valor</span>
-                        <span className="w-8 text-right">Qtd</span>
-                        <span className="w-16 text-right">Total</span>
-                        <span className="w-16 text-right">Custo</span>
-                        <span className="w-16 text-right">Total</span>
+                        <span className="w-8 text-center">Nº</span>
+                        <span className="flex-1 text-right">Vencimento</span>
+                        <span className="w-24 text-right">Forma</span>
+                        <span className="w-20 text-right">Valor</span>
                       </div>
-                      {(o.pecas || []).map((p, i) => (
+                      {(o.parcelas_detalhes || []).map((par, i) => (
                         <div key={i} className="flex gap-2 text-sm items-center">
-                          <span className="text-gray-300 flex-1 truncate">{p.descricao || p.codigo || "—"}</span>
-                          <span className="text-gray-200 w-16 text-right whitespace-nowrap">{fmtValor(p.valor_unitario)}</span>
-                          <span className="text-gray-500 w-8 text-right">{p.quantidade || 1}</span>
-                          <span className="text-gray-200 w-16 text-right whitespace-nowrap">{fmtValor((p.valor_unitario || 0) * (p.quantidade || 1))}</span>
-                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtValor(p.valor_custo)}</span>
-                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtInt((p.valor_custo || 0) * (p.quantidade || 1))}</span>
+                          <span className="text-gray-300 w-8 text-center">{par.numero ?? i + 1}</span>
+                          <span className="text-gray-200 flex-1 text-right whitespace-nowrap">{fmtData(par.vencimento)}</span>
+                          <span className="text-gray-400 w-24 text-right truncate">{par.forma_pagamento || "—"}</span>
+                          <span className="text-gray-200 w-20 text-right whitespace-nowrap">{fmtValor(par.valor)}</span>
                         </div>
                       ))}
                       <div className="flex gap-2 text-sm font-bold pt-1 mt-1" style={{borderTop:"1px solid #1e3a5f"}}>
-                        <span className="text-gray-400 flex-1 uppercase text-xs">Total</span>
-                        <span className="w-16"></span>
-                        <span className="w-8"></span>
-                        <span className="text-white w-16 text-right whitespace-nowrap">{fmtValor((o.pecas || []).reduce((s, p) => s + (p.valor_unitario || 0) * (p.quantidade || 1), 0))}</span>
-                        <span className="w-16"></span>
-                        <span className="text-gray-300 w-16 text-right whitespace-nowrap">{fmtInt((o.pecas || []).reduce((s, p) => s + (p.valor_custo || 0) * (p.quantidade || 1), 0))}</span>
+                        <span className="text-gray-400 w-8"></span>
+                        <span className="text-gray-400 flex-1 uppercase text-xs text-right">Total</span>
+                        <span className="w-24"></span>
+                        <span className="text-white w-20 text-right whitespace-nowrap">{fmtValor((o.parcelas_detalhes || []).reduce((s, par) => s + (par.valor || 0), 0))}</span>
                       </div>
                     </div>
                   )}
