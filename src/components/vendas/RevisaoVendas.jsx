@@ -5,18 +5,28 @@ import { base44 } from "@/api/base44Client";
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
 export default function RevisaoVendas({ ordens, onEdit }) {
-  const [search, setSearch] = useState("");
-  const [filtroStatus, setFiltroStatus] = useState([]);
-  const [filtroSecoes, setFiltroSecoes] = useState(["Produtos", "Serviços", "Parcelas"]);
+  const STORAGE_KEY = "revisao_vendas_filtros";
   const hoje = new Date();
-  const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
-  const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
-  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(false);
-  const [customRange, setCustomRange] = useState(null);
+  const saved = (() => {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (_) { return null; }
+  })();
+  const [search, setSearch] = useState(saved?.search || "");
+  const [filtroStatus, setFiltroStatus] = useState(saved?.filtroStatus || []);
+  const [filtroSecoes, setFiltroSecoes] = useState(saved?.filtroSecoes || ["Produtos", "Serviços", "Parcelas"]);
+  const [filtroMes, setFiltroMes] = useState(saved?.filtroMes || hoje.getMonth() + 1);
+  const [filtroAno, setFiltroAno] = useState(saved?.filtroAno || hoje.getFullYear());
+  const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(!!saved?.usandoOutroPeriodo);
+  const [customRange, setCustomRange] = useState(saved?.customRange || null);
   const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
-  const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
-  const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
+  const [outroPeriodoInicio, setOutroPeriodoInicio] = useState(saved?.customRange?.inicio || "");
+  const [outroPeriodoFim, setOutroPeriodoFim] = useState(saved?.customRange?.fim || "");
   const periodoDropRef = useRef(null);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      search, filtroStatus, filtroSecoes, filtroMes, filtroAno, usandoOutroPeriodo, customRange
+    }));
+  }, [search, filtroStatus, filtroSecoes, filtroMes, filtroAno, usandoOutroPeriodo, customRange]);
   const [finStatus, setFinStatus] = useState({});
 
   useEffect(() => {
