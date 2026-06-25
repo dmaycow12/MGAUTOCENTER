@@ -44,7 +44,7 @@ export default function RevisaoVendas({ ordens, onEdit }) {
     }
   };
 
-  const fmtValor = v => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const fmtValor = v => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtData = d => d ? d.split("-").reverse().join("/") : "—";
 
   const filtradas = useMemo(() => {
@@ -143,28 +143,43 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                     <p className="text-sm text-gray-600">Nenhum serviço</p>
                   ) : (
                     <div className="space-y-1">
+                      <div className="flex gap-2 text-xs text-gray-500 uppercase font-semibold pb-1" style={{borderBottom:"1px solid #1e3a5f"}}>
+                        <span className="flex-1">Descrição</span>
+                        <span className="w-16 text-right">Valor Und</span>
+                        <span className="w-16 text-right">Custo</span>
+                        <span className="w-8 text-right">Qtd</span>
+                      </div>
                       {(o.servicos || []).map((sv, i) => (
-                        <div key={i} className="flex justify-between gap-2 text-sm">
+                        <div key={i} className="flex gap-2 text-sm items-center">
                           <span className="text-gray-300 flex-1 truncate">{sv.descricao || "—"}</span>
-                          {sv.tecnico && <span className="text-xs text-gray-500 whitespace-nowrap">{sv.tecnico}</span>}
-                          <span className="text-gray-200 whitespace-nowrap">{fmtValor(sv.valor)} × {sv.quantidade ?? 1}</span>
+                          <span className="text-gray-200 w-16 text-right whitespace-nowrap">{fmtValor(sv.valor)}</span>
+                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtValor(sv.valor_custo)}</span>
+                          <span className="text-gray-500 w-8 text-right">{sv.quantidade ?? 1}</span>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
 
-                {/* Peças */}
+                {/* Produtos */}
                 <div className="p-3">
-                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Peças {(o.pecas || []).length > 0 && `(${o.pecas.length})`}</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Produtos {(o.pecas || []).length > 0 && `(${o.pecas.length})`}</p>
                   {(o.pecas || []).length === 0 ? (
-                    <p className="text-sm text-gray-600">Nenhuma peça</p>
+                    <p className="text-sm text-gray-600">Nenhum produto</p>
                   ) : (
                     <div className="space-y-1">
+                      <div className="flex gap-2 text-xs text-gray-500 uppercase font-semibold pb-1" style={{borderBottom:"1px solid #1e3a5f"}}>
+                        <span className="flex-1">Descrição</span>
+                        <span className="w-16 text-right">Valor Und</span>
+                        <span className="w-16 text-right">Custo</span>
+                        <span className="w-8 text-right">Qtd</span>
+                      </div>
                       {(o.pecas || []).map((p, i) => (
-                        <div key={i} className="flex justify-between gap-2 text-sm">
+                        <div key={i} className="flex gap-2 text-sm items-center">
                           <span className="text-gray-300 flex-1 truncate">{p.descricao || p.codigo || "—"}</span>
-                          <span className="text-gray-200 whitespace-nowrap">{fmtValor(p.valor_unitario)} × {p.quantidade || 1}</span>
+                          <span className="text-gray-200 w-16 text-right whitespace-nowrap">{fmtValor(p.valor_unitario)}</span>
+                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtValor(p.valor_custo)}</span>
+                          <span className="text-gray-500 w-8 text-right">{p.quantidade || 1}</span>
                         </div>
                       ))}
                     </div>
