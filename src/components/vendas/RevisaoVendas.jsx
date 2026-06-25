@@ -1,12 +1,11 @@
 import { useState, useMemo } from "react";
-import { Search, Edit, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Edit, ChevronLeft, ChevronRight } from "lucide-react";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
 export default function RevisaoVendas({ ordens, onEdit }) {
   const [search, setSearch] = useState("");
   const [filtroStatus, setFiltroStatus] = useState([]);
-  const [expandido, setExpandido] = useState(null);
   const hoje = new Date();
   const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
   const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
@@ -45,16 +44,8 @@ export default function RevisaoVendas({ ordens, onEdit }) {
     }
   };
 
-  const getCustoPeca = (p) => Number(p.valor_custo || 0);
-  const getCustoTotal = (o) => {
-    const custoPecas = (o.pecas || []).reduce((s, p) => s + getCustoPeca(p) * Number(p.quantidade || 1), 0);
-    const custoServicos = (o.servicos || []).reduce((s, sv) => s + Number(sv.valor_custo || 0) * Number(sv.quantidade ?? 1), 0);
-    return custoPecas + custoServicos;
-  };
-  const getLucro = (o) => {
-    const custo = getCustoTotal(o);
-    return (o.valor_servicos || 0) + (o.valor_pecas || 0) - custo - (o.desconto || 0);
-  };
+  const fmtValor = v => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const fmtData = d => d ? d.split("-").reverse().join("/") : "—";
 
   const filtradas = useMemo(() => {
     return ordens.filter(o => {
@@ -70,13 +61,6 @@ export default function RevisaoVendas({ ordens, onEdit }) {
       return matchSearch && matchStatus && matchPeriodo;
     }).sort((a, b) => parseInt(b.numero || 0) - parseInt(a.numero || 0));
   }, [ordens, search, filtroStatus, periodoRange]);
-
-  const fmtValor = v => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  const fmtData = d => d ? d.split("-").reverse().join("/") : "—";
-
-  const totalValor = filtradas.reduce((acc, o) => acc + (o.valor_total || 0), 0);
-  const totalCusto = filtradas.reduce((acc, o) => acc + getCustoTotal(o), 0);
-  const totalLucro = filtradas.reduce((acc, o) => acc + getLucro(o), 0);
 
   const toggleStatus = (s) => {
     setFiltroStatus(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
@@ -125,142 +109,70 @@ export default function RevisaoVendas({ ordens, onEdit }) {
         </div>
       </div>
 
-      {/* Totais */}
-      <div className="grid grid-cols-4 gap-0.5">
-        <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
-          <span className="text-xs font-semibold text-gray-400 tracking-wide">QTD</span>
-          <span className="text-sm font-bold text-white">{filtradas.length}</span>
-        </div>
-        <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
-          <span className="text-xs font-semibold text-gray-400 tracking-wide">VALOR</span>
-          <span className="text-sm font-bold text-white">{fmtValor(totalValor)}</span>
-        </div>
-        <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
-          <span className="text-xs font-semibold text-gray-400 tracking-wide">CUSTO</span>
-          <span className="text-sm font-bold text-white">{fmtValor(totalCusto)}</span>
-        </div>
-        <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
-          <span className="text-xs font-semibold text-gray-400 tracking-wide">LUCRO</span>
-          <span className={`text-sm font-bold ${totalLucro >= 0 ? 'text-white' : 'text-red-400'}`}>{fmtValor(totalLucro)}</span>
-        </div>
-      </div>
-
-      {/* Tabela */}
+      {/* Lista de vendas com produtos e serviços visíveis */}
       {filtradas.length === 0 ? (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
           <p className="text-gray-400">Nenhuma venda encontrada</p>
         </div>
       ) : (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl">
-          <div style={{overflowX:'auto'}}>
-            <table className="w-full min-w-[600px]">
-              <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="text-left px-3 py-2.5 text-xs font-semibold text-gray-400 uppercase w-10"></th>
-                  <th className="text-left px-3 py-2.5 text-xs font-semibold text-gray-400 uppercase w-16">Nº</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-semibold text-gray-400 uppercase w-24">Data</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-semibold text-gray-400 uppercase">Cliente</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-semibold text-gray-400 uppercase w-28">Veículo</th>
-                  <th className="text-left px-3 py-2.5 text-xs font-semibold text-gray-400 uppercase w-20">Status</th>
-                  <th className="text-right px-3 py-2.5 text-xs font-semibold text-gray-400 uppercase w-28">Valor</th>
-                  <th className="text-right px-3 py-2.5 text-xs font-semibold text-gray-400 uppercase w-28">Custo</th>
-                  <th className="text-right px-3 py-2.5 text-xs font-semibold text-gray-400 uppercase w-28">Lucro</th>
-                  <th className="px-3 py-2.5 w-10"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtradas.map(o => {
-                  const isOpen = expandido === o.id;
-                  const lucro = getLucro(o);
-                  return (
-                    <>
-                      <tr key={o.id} className="border-t border-gray-800 hover:bg-gray-800/50 transition-colors">
-                        <td className="px-3 py-2">
-                          <button onClick={() => setExpandido(isOpen ? null : o.id)} className="text-gray-400 hover:text-white">
-                            <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-                          </button>
-                        </td>
-                        <td className="px-3 py-2 text-sm font-bold text-white">#{o.numero}</td>
-                        <td className="px-3 py-2 text-sm text-gray-300">{fmtData(o.data_entrada)}</td>
-                        <td className="px-3 py-2 text-sm text-gray-200">{o.cliente_nome || "—"}</td>
-                        <td className="px-3 py-2 text-sm text-gray-300">{o.veiculo_modelo || o.veiculo_placa || "—"}</td>
-                        <td className="px-3 py-2">
-                          <span className="text-xs px-2 py-0.5 rounded font-medium" style={{
-                            background: o.status === "Concluído" ? "#064e3b" : o.status === "Orçamento" ? "#78350f" : "#1e3a5f",
-                            color: o.status === "Concluído" ? "#6ee7b7" : o.status === "Orçamento" ? "#fbbf24" : "#93c5fd"
-                          }}>{o.status}</span>
-                        </td>
-                        <td className="px-3 py-2 text-sm text-right text-white font-medium">{fmtValor(o.valor_total)}</td>
-                        <td className="px-3 py-2 text-sm text-right text-gray-300">{fmtValor(getCustoTotal(o))}</td>
-                        <td className={`px-3 py-2 text-sm text-right font-medium ${lucro >= 0 ? 'text-white' : 'text-red-400'}`}>{fmtValor(lucro)}</td>
-                        <td className="px-3 py-2">
-                          <button onClick={() => onEdit(o)} className="text-gray-400 hover:text-white">
-                            <Edit className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                      {isOpen && (
-                        <tr className="border-t" style={{borderColor: "#1e3a5f", background: "#0a1628"}}>
-                          <td colSpan={10} className="px-6 py-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Serviços</p>
-                                {(o.servicos || []).length === 0 ? (
-                                  <p className="text-sm text-gray-600">Nenhum serviço</p>
-                                ) : (
-                                  <div className="space-y-1">
-                                    {(o.servicos || []).map((sv, i) => (
-                                      <div key={i} className="flex justify-between text-sm">
-                                        <span className="text-gray-300">{sv.descricao || "—"}</span>
-                                        <span className="text-gray-200">{fmtValor(sv.valor)} × {sv.quantidade ?? 1}{sv.tecnico ? ` (${sv.tecnico})` : ""}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                              <div>
-                                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Peças</p>
-                                {(o.pecas || []).length === 0 ? (
-                                  <p className="text-sm text-gray-600">Nenhuma peça</p>
-                                ) : (
-                                  <div className="space-y-1">
-                                    {(o.pecas || []).map((p, i) => (
-                                      <div key={i} className="flex justify-between text-sm">
-                                        <span className="text-gray-300">{p.descricao || p.codigo || "—"}</span>
-                                        <span className="text-gray-200">{fmtValor(p.valor_unitario)} × {p.quantidade || 1}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                              {o.defeito_relatado && (
-                                <div className="md:col-span-2">
-                                  <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Defeito Relatado</p>
-                                  <p className="text-sm text-gray-300">{o.defeito_relatado}</p>
-                                </div>
-                              )}
-                              {o.diagnostico && (
-                                <div className="md:col-span-2">
-                                  <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Diagnóstico</p>
-                                  <p className="text-sm text-gray-300">{o.diagnostico}</p>
-                                </div>
-                              )}
-                              {o.observacoes && (
-                                <div className="md:col-span-2">
-                                  <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Observações</p>
-                                  <p className="text-sm text-gray-300">{o.observacoes}</p>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+        <div className="space-y-1">
+          {filtradas.map(o => (
+            <div key={o.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+              {/* Cabeçalho da venda */}
+              <div className="flex items-center gap-3 px-4 py-2.5" style={{background:"#0d1b2a", borderBottom:"1px solid #1e3a5f"}}>
+                <span className="text-sm font-bold text-white whitespace-nowrap">#{o.numero}</span>
+                <span className="text-sm text-gray-400 whitespace-nowrap">{fmtData(o.data_entrada)}</span>
+                <span className="text-sm text-gray-200 flex-1 truncate">{o.cliente_nome || "—"}</span>
+                {o.veiculo_modelo && <span className="text-sm text-gray-400 whitespace-nowrap hidden sm:inline">{o.veiculo_modelo}</span>}
+                <span className="text-xs px-2 py-0.5 rounded font-medium whitespace-nowrap" style={{
+                  background: o.status === "Concluído" ? "#064e3b" : o.status === "Orçamento" ? "#78350f" : "#1e3a5f",
+                  color: o.status === "Concluído" ? "#6ee7b7" : o.status === "Orçamento" ? "#fbbf24" : "#93c5fd"
+                }}>{o.status}</span>
+                <span className="text-sm font-bold text-white whitespace-nowrap">{fmtValor(o.valor_total)}</span>
+                <button onClick={() => onEdit(o)} className="text-gray-400 hover:text-white flex-shrink-0">
+                  <Edit className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Produtos e Serviços — sempre visíveis */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+                {/* Serviços */}
+                <div className="p-3" style={{borderRight:"1px solid #1e3a5f"}}>
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Serviços {(o.servicos || []).length > 0 && `(${o.servicos.length})`}</p>
+                  {(o.servicos || []).length === 0 ? (
+                    <p className="text-sm text-gray-600">Nenhum serviço</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {(o.servicos || []).map((sv, i) => (
+                        <div key={i} className="flex justify-between gap-2 text-sm">
+                          <span className="text-gray-300 flex-1 truncate">{sv.descricao || "—"}</span>
+                          {sv.tecnico && <span className="text-xs text-gray-500 whitespace-nowrap">{sv.tecnico}</span>}
+                          <span className="text-gray-200 whitespace-nowrap">{fmtValor(sv.valor)} × {sv.quantidade ?? 1}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Peças */}
+                <div className="p-3">
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Peças {(o.pecas || []).length > 0 && `(${o.pecas.length})`}</p>
+                  {(o.pecas || []).length === 0 ? (
+                    <p className="text-sm text-gray-600">Nenhuma peça</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {(o.pecas || []).map((p, i) => (
+                        <div key={i} className="flex justify-between gap-2 text-sm">
+                          <span className="text-gray-300 flex-1 truncate">{p.descricao || p.codigo || "—"}</span>
+                          <span className="text-gray-200 whitespace-nowrap">{fmtValor(p.valor_unitario)} × {p.quantidade || 1}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
