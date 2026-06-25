@@ -111,7 +111,12 @@ export default function RevisaoVendas({ ordens, onEdit }) {
       const matchStatus = filtroStatus.length === 0 || filtroStatus.includes(o.status);
       const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
       return matchSearch && matchStatus && matchPeriodo;
-    }).sort((a, b) => parseInt(a.numero || 0) - parseInt(b.numero || 0));
+    }).sort((a, b) => {
+      const da = a.data_entrada || "";
+      const db = b.data_entrada || "";
+      if (da !== db) return da < db ? -1 : da > db ? 1 : 0;
+      return parseInt(a.numero || 0) - parseInt(b.numero || 0);
+    });
   }, [ordens, search, filtroStatus, periodoRange]);
 
   const toggleStatus = (s) => {
