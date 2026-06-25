@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Search, Edit, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { Search, Edit, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
@@ -12,6 +12,20 @@ export default function RevisaoVendas({ ordens, onEdit }) {
   const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
   const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(false);
   const [customRange, setCustomRange] = useState(null);
+  const [periodoDropOpen, setPeriodoDropOpen] = useState(false);
+  const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
+  const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
+  const periodoDropRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (periodoDropRef.current && !periodoDropRef.current.contains(e.target)) {
+        setPeriodoDropOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const pad = n => String(n).padStart(2, "0");
   const periodoRange = usandoOutroPeriodo && customRange
@@ -39,9 +53,45 @@ export default function RevisaoVendas({ ordens, onEdit }) {
       setCustomRange(null);
       setFiltroMes(hoje.getMonth() + 1);
       setFiltroAno(hoje.getFullYear());
+    } else if (tipo === 'mes_passado') {
+      let m = hoje.getMonth(), a = hoje.getFullYear();
+      if (m < 0) { m = 11; a--; }
+      setUsandoOutroPeriodo(false);
+      setCustomRange(null);
+      setFiltroMes(m + 1);
+      setFiltroAno(a);
     } else if (tipo === 'ano') {
       setCustomRange({ inicio: `${hoje.getFullYear()}-01-01`, fim: `${hoje.getFullYear()}-12-31` });
       setUsandoOutroPeriodo(true);
+    } else if (tipo === 'ano_passado') {
+      setCustomRange({ inicio: `${hoje.getFullYear()-1}-01-01`, fim: `${hoje.getFullYear()-1}-12-31` });
+      setUsandoOutroPeriodo(true);
+    } else if (tipo === 'hoje') {
+      setCustomRange({ inicio: fmt(hoje), fim: fmt(hoje) });
+      setUsandoOutroPeriodo(true);
+    } else if (tipo === 'ontem') {
+      const o = new Date(hoje); o.setDate(o.getDate() - 1);
+      setCustomRange({ inicio: fmt(o), fim: fmt(o) });
+      setUsandoOutroPeriodo(true);
+    } else if (tipo === 'semana') {
+      const seg = new Date(hoje); const dow = (seg.getDay() + 6) % 7; seg.setDate(seg.getDate() - dow);
+      const dom = new Date(seg); dom.setDate(dom.getDate() + 6);
+      setCustomRange({ inicio: fmt(seg), fim: fmt(dom) });
+      setUsandoOutroPeriodo(true);
+    } else if (tipo === 'semana_passada') {
+      const seg = new Date(hoje); const dow = (seg.getDay() + 6) % 7; seg.setDate(seg.getDate() - dow - 7);
+      const dom = new Date(seg); dom.setDate(dom.getDate() + 6);
+      setCustomRange({ inicio: fmt(seg), fim: fmt(dom) });
+      setUsandoOutroPeriodo(true);
+    }
+    setPeriodoDropOpen(false);
+  };
+
+  const aplicarOutroPeriodo = () => {
+    if (outroPeriodoInicio && outroPeriodoFim) {
+      setCustomRange({ inicio: outroPeriodoInicio, fim: outroPeriodoFim });
+      setUsandoOutroPeriodo(true);
+      setPeriodoDropOpen(false);
     }
   };
 
@@ -96,19 +146,75 @@ export default function RevisaoVendas({ ordens, onEdit }) {
         </div>
 
         {/* Período */}
-        <div className="flex gap-0.5">
+        <div className="flex gap-0.5 items-stretch">
           <div className={`flex-1 flex items-center rounded-xl text-sm font-semibold overflow-hidden ${!usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300"}`}>
-            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 hover:bg-white/20 flex-shrink-0" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
+            <button onClick={() => navegarMes(-1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderRight: "1px solid rgba(255,255,255,0.15)"}}>
               <ChevronLeft className="w-3 h-3" />
             </button>
-            <button onClick={() => { setUsandoOutroPeriodo(false); setCustomRange(null); }} className="flex-1 text-center py-3 hover:bg-white/10 px-1" style={{fontSize:"clamp(11px,1.5vw,15px)"}}>{MESES[filtroMes - 1]} - {filtroAno}</button>
-            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 hover:bg-white/20 flex-shrink-0" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
+            <button onClick={() => { setUsandoOutroPeriodo(false); setCustomRange(null); }} className="flex-1 text-center py-3 hover:bg-white/10 transition-all cursor-pointer px-1 leading-tight" style={{fontSize:"clamp(11px,1.5vw,15px)"}}>{MESES[filtroMes - 1]} - {filtroAno}</button>
+            <button onClick={() => navegarMes(1)} className="flex items-center justify-center h-full px-2 transition-all flex-shrink-0 hover:bg-white/20" style={{borderLeft: "1px solid rgba(255,255,255,0.15)"}}>
               <ChevronRight className="w-3 h-3" />
             </button>
           </div>
-          <button onClick={() => aplicarAtalho('tudo')} className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}>
-            Tudo
-          </button>
+
+          <div className="relative flex-1" ref={periodoDropRef}>
+            <button
+              onClick={() => setPeriodoDropOpen(v => !v)}
+              className={`w-full h-full min-h-[48px] flex items-center justify-center gap-1 px-2 rounded-xl font-semibold transition-all ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
+              style={{fontSize:"clamp(11px,1.5vw,13px)"}}
+            >
+              <span className="text-center leading-tight flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                <span>
+                  {usandoOutroPeriodo && customRange
+                    ? customRange.inicio.split("-").reverse().join("/")
+                    : `${String(1).padStart(2,"0")}/${String(filtroMes).padStart(2,"0")}/${filtroAno}`}
+                </span>
+                <span className="hidden sm:inline">—</span>
+                <span>
+                  {usandoOutroPeriodo && customRange
+                    ? customRange.fim.split("-").reverse().join("/")
+                    : `${String(new Date(filtroAno,filtroMes,0).getDate()).padStart(2,"0")}/${String(filtroMes).padStart(2,"0")}/${filtroAno}`}
+                </span>
+              </span>
+              <ChevronDown className={`w-3 h-3 transition-transform flex-shrink-0 ${periodoDropOpen ? "rotate-180" : ""}`} />
+            </button>
+            {periodoDropOpen && (
+              <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 w-64 space-y-3">
+                <p className="text-xs text-gray-400 font-medium">Atalhos</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[['hoje','Hoje'],['ontem','Ontem'],['semana','Semana'],['semana_passada','Sem. Passada'],['mes','Mês'],['mes_passado','Mês Passado'],['ano','Ano'],['ano_passado','Ano Passado'],['tudo','Tudo']].map(([tipo, label]) => (
+                    <button key={tipo} onClick={() => aplicarAtalho(tipo)}
+                      className="py-2 text-xs text-white bg-gray-800 hover:bg-[#062C9B] border border-gray-700 rounded-lg font-medium transition-all">
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="border-t border-gray-700 pt-3 space-y-3">
+                  <p className="text-xs text-gray-400 font-medium">Período personalizado</p>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">De</label>
+                    <input type="date" value={outroPeriodoInicio} onChange={e => setOutroPeriodoInicio(e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Até</label>
+                    <input type="date" value={outroPeriodoFim} onChange={e => setOutroPeriodoFim(e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none" />
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => setPeriodoDropOpen(false)}
+                      className="flex-1 py-2 text-xs text-gray-400 border border-gray-700 rounded-lg hover:text-white transition-all">
+                      Cancelar
+                    </button>
+                    <button onClick={aplicarOutroPeriodo}
+                      className="flex-1 py-2 text-xs text-white rounded-lg font-medium transition-all" style={{background: "#062C9B"}} onMouseEnter={e => e.currentTarget.style.background = "#041a4d"} onMouseLeave={e => e.currentTarget.style.background = "#062C9B"}>
+                      Aplicar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Busca */}
