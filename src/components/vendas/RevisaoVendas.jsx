@@ -145,16 +145,20 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                     <div className="space-y-1">
                       <div className="flex gap-2 text-xs text-gray-500 uppercase font-semibold pb-1" style={{borderBottom:"1px solid #1e3a5f"}}>
                         <span className="flex-1">Descrição</span>
-                        <span className="w-16 text-right">Valor Und</span>
-                        <span className="w-16 text-right">Custo</span>
+                        <span className="w-16 text-right">Valor</span>
                         <span className="w-8 text-right">Qtd</span>
+                        <span className="w-16 text-right">Total</span>
+                        <span className="w-16 text-right">Custo</span>
+                        <span className="w-16 text-right">Total Custo</span>
                       </div>
                       {(o.servicos || []).map((sv, i) => (
                         <div key={i} className="flex gap-2 text-sm items-center">
                           <span className="text-gray-300 flex-1 truncate">{sv.descricao || "—"}</span>
                           <span className="text-gray-200 w-16 text-right whitespace-nowrap">{fmtValor(sv.valor)}</span>
-                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtValor(sv.valor_custo)}</span>
                           <span className="text-gray-500 w-8 text-right">{sv.quantidade ?? 1}</span>
+                          <span className="text-gray-200 w-16 text-right whitespace-nowrap">{fmtValor((sv.valor || 0) * (sv.quantidade ?? 1))}</span>
+                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtValor(sv.valor_custo)}</span>
+                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtValor((sv.valor_custo || 0) * (sv.quantidade ?? 1))}</span>
                         </div>
                       ))}
                     </div>
@@ -170,16 +174,20 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                     <div className="space-y-1">
                       <div className="flex gap-2 text-xs text-gray-500 uppercase font-semibold pb-1" style={{borderBottom:"1px solid #1e3a5f"}}>
                         <span className="flex-1">Descrição</span>
-                        <span className="w-16 text-right">Valor Und</span>
-                        <span className="w-16 text-right">Custo</span>
+                        <span className="w-16 text-right">Valor</span>
                         <span className="w-8 text-right">Qtd</span>
+                        <span className="w-16 text-right">Total</span>
+                        <span className="w-16 text-right">Custo</span>
+                        <span className="w-16 text-right">Total Custo</span>
                       </div>
                       {(o.pecas || []).map((p, i) => (
                         <div key={i} className="flex gap-2 text-sm items-center">
                           <span className="text-gray-300 flex-1 truncate">{p.descricao || p.codigo || "—"}</span>
                           <span className="text-gray-200 w-16 text-right whitespace-nowrap">{fmtValor(p.valor_unitario)}</span>
-                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtValor(p.valor_custo)}</span>
                           <span className="text-gray-500 w-8 text-right">{p.quantidade || 1}</span>
+                          <span className="text-gray-200 w-16 text-right whitespace-nowrap">{fmtValor((p.valor_unitario || 0) * (p.quantidade || 1))}</span>
+                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtValor(p.valor_custo)}</span>
+                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtValor((p.valor_custo || 0) * (p.quantidade || 1))}</span>
                         </div>
                       ))}
                     </div>
