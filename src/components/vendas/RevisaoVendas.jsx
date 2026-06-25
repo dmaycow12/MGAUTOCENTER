@@ -150,7 +150,7 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                         <span className="w-8 text-right">Qtd</span>
                         <span className="w-16 text-right">Total</span>
                         <span className="w-16 text-right">Custo</span>
-                        <span className="w-16 text-right">Custo</span>
+                        <span className="w-16 text-right">Tot. Custo</span>
                       </div>
                       {(o.servicos || []).map((sv, i) => (
                         <div key={i} className="flex gap-2 text-sm items-center">
@@ -187,7 +187,7 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                         <span className="w-8 text-right">Qtd</span>
                         <span className="w-16 text-right">Total</span>
                         <span className="w-16 text-right">Custo</span>
-                        <span className="w-16 text-right">Custo</span>
+                        <span className="w-16 text-right">Tot. Custo</span>
                       </div>
                       {(o.pecas || []).map((p, i) => (
                         <div key={i} className="flex gap-2 text-sm items-center">
