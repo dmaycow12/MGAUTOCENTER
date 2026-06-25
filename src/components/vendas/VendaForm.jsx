@@ -661,9 +661,29 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     return (form.pecas || []).some(p => Number(p.valor_custo || 0) === 0);
   };
 
-  const pagarParcelaInternal = (i) => {
-    setParcelasSync(prev => prev.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pago" } : par));
+  const setStatusParcela = async (i, status) => {
+    const parcela = parcelasRef.current[i];
+    setParcelasSync(prev => prev.map((par, idx) => idx === i ? { ...par, financeiro_status: status } : par));
+    if (status === "Pendente" && form.status === "Concluído") {
+      setForm(f => ({ ...f, status: "Aberto" }));
+    }
+    if (!os?.id) return;
+    try {
+      const hojeStr = new Date().toISOString().split("T")[0];
+      if (parcela?.financeiro_id) {
+        await base44.entities.Financeiro.update(parcela.financeiro_id, {
+          status,
+          data_pagamento: status === "Pago" ? hojeStr : "",
+        });
+      }
+      const novas = parcelasRef.current.map((par, idx) => idx === i ? { ...par, financeiro_status: status } : par);
+      await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novas });
+    } catch (e) {
+      console.warn("Erro ao persistir status da parcela:", e);
+    }
   };
+
+  const pagarParcelaInternal = (i) => setStatusParcela(i, "Pago");
 
   const pagarParcela = (i) => {
     if (temCustoZero()) {
@@ -674,12 +694,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
     pagarParcelaInternal(i);
   };
 
-  const cancelarParcela = (i) => {
-    setParcelasSync(prev => prev.map((par, idx) => idx === i ? { ...par, financeiro_status: "Pendente" } : par));
-    if (form.status === "Concluído") {
-      setForm(f => ({ ...f, status: "Aberto" }));
-    }
-  };
+  const cancelarParcela = (i) => setStatusParcela(i, "Pendente");
 
   const onFormaParcelaChange = async (i, val) => {
     const p = parcelas[i];
@@ -1366,8 +1381,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                               </>
                             ) : (
                               <>
-                                <button type="button" onClick={() => { updateParcela(i, "financeiro_status", "Pendente"); if (form.status === "Conclu\u00eddo") { setForm(f => ({ ...f, status: "Aberto" })); if (os?.id) base44.entities.Vendas.update(os.id, { status: "Aberto" }); } }} className="text-xs font-semibold px-2 py-1.5 rounded whitespace-nowrap transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>Pend</button>
-                                <button type="button" onClick={() => updateParcela(i, "financeiro_status", "Pago")} className="text-xs font-semibold px-2 py-1.5 rounded whitespace-nowrap transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}>Pago</button>
+                                <button type="button" onClick={() => setStatusParcela(i, "Pendente")} className="text-xs font-semibold px-2 py-1.5 rounded whitespace-nowrap transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>Pend</button>
+                                <button type="button" onClick={() => setStatusParcela(i, "Pago")} className="text-xs font-semibold px-2 py-1.5 rounded whitespace-nowrap transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}>Pago</button>
                               </>
                             )}
                           </div>
@@ -1402,8 +1417,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                               </>
                             ) : (
                               <>
-                                <button type="button" onClick={() => { updateParcela(i, "financeiro_status", "Pendente"); if (form.status === "Conclu\u00eddo") { setForm(f => ({ ...f, status: "Aberto" })); if (os?.id) base44.entities.Vendas.update(os.id, { status: "Aberto" }); } }} className="flex-1 text-sm font-semibold py-2 rounded transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>Pendente</button>
-                                <button type="button" onClick={() => updateParcela(i, "financeiro_status", "Pago")} className="flex-1 text-sm font-semibold py-2 rounded transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}>Pago</button>
+                                <button type="button" onClick={() => setStatusParcela(i, "Pendente")} className="flex-1 text-sm font-semibold py-2 rounded transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pendente" ? "#062C9B" : "#374151", color: "#fff"}}>Pendente</button>
+                                <button type="button" onClick={() => setStatusParcela(i, "Pago")} className="flex-1 text-sm font-semibold py-2 rounded transition-all" style={{background: (p.financeiro_status || "Pendente") === "Pago" ? "#16a34a" : "#374151", color: "#fff"}}>Pago</button>
                               </>
                             )}
                           </div>
