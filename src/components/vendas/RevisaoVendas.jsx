@@ -45,6 +45,7 @@ export default function RevisaoVendas({ ordens, onEdit }) {
   };
 
   const fmtValor = v => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtInt = v => Math.round(Number(v || 0)).toLocaleString("pt-BR");
   const fmtData = d => d ? d.split("-").reverse().join("/") : "—";
 
   const filtradas = useMemo(() => {
@@ -149,7 +150,7 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                         <span className="w-8 text-right">Qtd</span>
                         <span className="w-16 text-right">Total</span>
                         <span className="w-16 text-right">Custo</span>
-                        <span className="w-16 text-right">Total Custo</span>
+                        <span className="w-16 text-right">Tot. Custo</span>
                       </div>
                       {(o.servicos || []).map((sv, i) => (
                         <div key={i} className="flex gap-2 text-sm items-center">
@@ -158,9 +159,17 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                           <span className="text-gray-500 w-8 text-right">{sv.quantidade ?? 1}</span>
                           <span className="text-gray-200 w-16 text-right whitespace-nowrap">{fmtValor((sv.valor || 0) * (sv.quantidade ?? 1))}</span>
                           <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtValor(sv.valor_custo)}</span>
-                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtValor((sv.valor_custo || 0) * (sv.quantidade ?? 1))}</span>
+                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtInt((sv.valor_custo || 0) * (sv.quantidade ?? 1))}</span>
                         </div>
                       ))}
+                      <div className="flex gap-2 text-sm font-bold pt-1 mt-1" style={{borderTop:"1px solid #1e3a5f"}}>
+                        <span className="text-gray-400 flex-1 uppercase text-xs">Total</span>
+                        <span className="text-white w-16 text-right whitespace-nowrap">{fmtValor((o.servicos || []).reduce((s, sv) => s + (sv.valor || 0) * (sv.quantidade ?? 1), 0))}</span>
+                        <span className="w-8"></span>
+                        <span className="text-white w-16 text-right whitespace-nowrap">{fmtValor((o.servicos || []).reduce((s, sv) => s + (sv.valor || 0) * (sv.quantidade ?? 1), 0))}</span>
+                        <span className="text-gray-300 w-16 text-right whitespace-nowrap">{fmtValor((o.servicos || []).reduce((s, sv) => s + (sv.valor_custo || 0) * (sv.quantidade ?? 1), 0))}</span>
+                        <span className="text-gray-300 w-16 text-right whitespace-nowrap">{fmtInt((o.servicos || []).reduce((s, sv) => s + (sv.valor_custo || 0) * (sv.quantidade ?? 1), 0))}</span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -178,7 +187,7 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                         <span className="w-8 text-right">Qtd</span>
                         <span className="w-16 text-right">Total</span>
                         <span className="w-16 text-right">Custo</span>
-                        <span className="w-16 text-right">Total Custo</span>
+                        <span className="w-16 text-right">Tot. Custo</span>
                       </div>
                       {(o.pecas || []).map((p, i) => (
                         <div key={i} className="flex gap-2 text-sm items-center">
@@ -187,9 +196,17 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                           <span className="text-gray-500 w-8 text-right">{p.quantidade || 1}</span>
                           <span className="text-gray-200 w-16 text-right whitespace-nowrap">{fmtValor((p.valor_unitario || 0) * (p.quantidade || 1))}</span>
                           <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtValor(p.valor_custo)}</span>
-                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtValor((p.valor_custo || 0) * (p.quantidade || 1))}</span>
+                          <span className="text-gray-400 w-16 text-right whitespace-nowrap">{fmtInt((p.valor_custo || 0) * (p.quantidade || 1))}</span>
                         </div>
                       ))}
+                      <div className="flex gap-2 text-sm font-bold pt-1 mt-1" style={{borderTop:"1px solid #1e3a5f"}}>
+                        <span className="text-gray-400 flex-1 uppercase text-xs">Total</span>
+                        <span className="text-white w-16 text-right whitespace-nowrap">{fmtValor((o.pecas || []).reduce((s, p) => s + (p.valor_unitario || 0) * (p.quantidade || 1), 0))}</span>
+                        <span className="w-8"></span>
+                        <span className="text-white w-16 text-right whitespace-nowrap">{fmtValor((o.pecas || []).reduce((s, p) => s + (p.valor_unitario || 0) * (p.quantidade || 1), 0))}</span>
+                        <span className="text-gray-300 w-16 text-right whitespace-nowrap">{fmtValor((o.pecas || []).reduce((s, p) => s + (p.valor_custo || 0) * (p.quantidade || 1), 0))}</span>
+                        <span className="text-gray-300 w-16 text-right whitespace-nowrap">{fmtInt((o.pecas || []).reduce((s, p) => s + (p.valor_custo || 0) * (p.quantidade || 1), 0))}</span>
+                      </div>
                     </div>
                   )}
                 </div>
