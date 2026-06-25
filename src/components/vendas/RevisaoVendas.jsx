@@ -6,6 +6,7 @@ const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Ag
 export default function RevisaoVendas({ ordens, onEdit }) {
   const [search, setSearch] = useState("");
   const [filtroStatus, setFiltroStatus] = useState([]);
+  const [filtroSecoes, setFiltroSecoes] = useState(["Produtos", "Serviços", "Parcelas"]);
   const hoje = new Date();
   const [filtroMes, setFiltroMes] = useState(hoje.getMonth() + 1);
   const [filtroAno, setFiltroAno] = useState(hoje.getFullYear());
@@ -66,6 +67,9 @@ export default function RevisaoVendas({ ordens, onEdit }) {
   const toggleStatus = (s) => {
     setFiltroStatus(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
   };
+  const toggleSecao = (s) => {
+    setFiltroSecoes(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+  };
 
   return (
     <div className="space-y-0.5">
@@ -76,6 +80,16 @@ export default function RevisaoVendas({ ordens, onEdit }) {
           {["Aberto", "Orçamento", "Concluído"].map(s => (
             <button key={s} onClick={() => toggleStatus(s)}
               className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroStatus.includes(s) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+              {s}
+            </button>
+          ))}
+        </div>
+
+        {/* Filtro seções */}
+        <div className="flex gap-0.5">
+          {["Produtos", "Serviços", "Parcelas"].map(s => (
+            <button key={s} onClick={() => toggleSecao(s)}
+              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all ${filtroSecoes.includes(s) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
               {s}
             </button>
           ))}
@@ -138,7 +152,7 @@ export default function RevisaoVendas({ ordens, onEdit }) {
               {/* Produtos, Serviços e Parcelas — empilhados verticalmente */}
               <div className="flex flex-col gap-0">
                 {/* Produtos */}
-                <div className="p-3" style={{borderBottom:"1px solid #1e3a5f"}}>
+                {filtroSecoes.includes("Produtos") && <div className="p-3" style={{borderBottom:"1px solid #1e3a5f"}}>
                   <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Produtos {(o.pecas || []).length > 0 && `(${o.pecas.length})`}</p>
                   {(o.pecas || []).length === 0 ? (
                     <p className="text-sm text-gray-600">Nenhum produto</p>
@@ -172,10 +186,10 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                       </div>
                     </div>
                   )}
-                </div>
+                </div>}
 
                 {/* Serviços */}
-                <div className="p-3" style={{borderBottom:"1px solid #1e3a5f"}}>
+                {filtroSecoes.includes("Serviços") && <div className="p-3" style={{borderBottom:"1px solid #1e3a5f"}}>
                   <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Serviços {(o.servicos || []).length > 0 && `(${o.servicos.length})`}</p>
                   {(o.servicos || []).length === 0 ? (
                     <p className="text-sm text-gray-600">Nenhum serviço</p>
@@ -209,10 +223,10 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                       </div>
                     </div>
                   )}
-                </div>
+                </div>}
 
                 {/* Parcelas */}
-                <div className="p-3">
+                {filtroSecoes.includes("Parcelas") && <div className="p-3">
                   <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Parcelas {(o.parcelas_detalhes || []).length > 0 && `(${o.parcelas_detalhes.length})`}</p>
                   {(o.parcelas_detalhes || []).length === 0 ? (
                     <p className="text-sm text-gray-600">Nenhuma parcela</p>
@@ -240,7 +254,7 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                       </div>
                     </div>
                   )}
-                </div>
+                </div>}
               </div>
             </div>
           ))}
