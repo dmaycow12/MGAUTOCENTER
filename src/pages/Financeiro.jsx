@@ -252,8 +252,9 @@ export default function Financeiro() {
         const vendas = await base44.entities.Vendas.filter({ id: item.ordem_venda_id }, "-created_date", 1);
         const venda = vendas[0];
         if (venda && Array.isArray(venda.parcelas_detalhes)) {
+          const statusNormalizado = novoStatus === "Pago" ? "Pago" : "Pendente";
           const parcelasAtualizadas = venda.parcelas_detalhes.map(p =>
-            p.financeiro_id === item.id ? { ...p, financeiro_status: novoStatus } : p
+            p.financeiro_id === item.id ? { ...p, financeiro_status: statusNormalizado } : p
           );
           await base44.entities.Vendas.update(venda.id, { parcelas_detalhes: parcelasAtualizadas });
         }

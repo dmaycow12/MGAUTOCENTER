@@ -300,7 +300,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         // 3) Casar por posição (índice) após ordenar por vencimento
         if (!fin) fin = finsOrdenados[idx] || null;
         if (fin) {
-          const novoStatus = fin.status || "Pendente";
+          // Fonte única da verdade: só existe "Pago" ou "Pendente" — qualquer outro status (Atrasado, Cancelado) vira Pendente
+          const novoStatus = fin.status === "Pago" ? "Pago" : "Pendente";
           if (p.financeiro_id !== fin.id || p.financeiro_status !== novoStatus) houveMudanca = true;
           return { ...p, financeiro_id: fin.id, financeiro_status: novoStatus };
         }
