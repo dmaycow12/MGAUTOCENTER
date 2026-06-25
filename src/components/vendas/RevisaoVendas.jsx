@@ -291,8 +291,11 @@ export default function RevisaoVendas({ ordens, onEdit }) {
               <div className="flex items-center gap-3 px-4 py-2.5" style={{background:"#0d1b2a", borderBottom:"1px solid #1e3a5f"}}>
                 <span className="text-sm font-bold text-white whitespace-nowrap">#{o.numero}</span>
                 <span className="text-sm text-gray-400 whitespace-nowrap">{fmtData(o.data_entrada)}</span>
-                <span className="text-sm text-gray-200 flex-1 truncate">{o.cliente_nome || "—"}</span>
+                <span className="text-sm text-gray-200 flex-1 truncate">{o.cliente_nome_fantasia || o.cliente_nome || "—"}</span>
                 {o.veiculo_modelo && <span className="text-sm text-gray-400 whitespace-nowrap hidden sm:inline">{o.veiculo_modelo}</span>}
+                {o.veiculo_placa && <span className="text-xs text-gray-400 whitespace-nowrap hidden md:inline px-1.5 py-0.5 rounded" style={{background:"#1e3a5f"}}>{o.veiculo_placa}</span>}
+                {o.quilometragem && <span className="text-xs text-gray-400 whitespace-nowrap hidden md:inline">{o.quilometragem} KM</span>}
+                {o.tecnico && <span className="text-xs text-gray-400 whitespace-nowrap hidden md:inline">{o.tecnico}</span>}
                 <span className="text-xs px-2 py-0.5 rounded font-medium whitespace-nowrap" style={{
                   background: o.status === "Concluído" ? "#064e3b" : o.status === "Orçamento" ? "#78350f" : "#1e3a5f",
                   color: o.status === "Concluído" ? "#6ee7b7" : o.status === "Orçamento" ? "#fbbf24" : "#93c5fd"
