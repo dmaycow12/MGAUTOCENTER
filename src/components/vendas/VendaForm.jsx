@@ -276,28 +276,41 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   useEffect(() => {
     if (!os?.id) return;
-    base44.entities.Financeiro.filter({ ordem_venda_id: os.id }, "-created_date", 100).then(fins => {
+    base44.entities.Financeiro.filter({ ordem_venda_id: os.id }, "-created_date", 100).then(async fins => {
       if (!fins || fins.length === 0) return;
-      setParcelasSync(prev => {
-        const total = prev.length;
-        return prev.map((p, idx) => {
-          // Se já tem financeiro_id, sincroniza o status do banco
-          if (p.financeiro_id) {
-            const fin = fins.find(f => f.id === p.financeiro_id);
-            if (fin) return { ...p, financeiro_status: fin.status };
-            return p;
-          }
-          // Sem financeiro_id: tenta associar pelo índice (Parcela N/total) ou qualquer parcela N
-          const descExata = `Parcela ${idx+1}/${total}`;
-          let fin = fins.find(f => f.descricao?.includes(descExata));
-          if (!fin) {
-            // Fallback: procura qualquer financeiro com "Parcela N/" onde N é o índice+1
-            fin = fins.find(f => f.descricao?.includes(`Parcela ${idx+1}/`));
-          }
-          if (fin) return { ...p, financeiro_id: fin.id, financeiro_status: fin.status };
-          return p;
-        });
+      // Ordena por vencimento para casar por posição quando não houver ID
+      const finsOrdenados = [...fins].sort((a, b) => (a.data_vencimento || "").localeCompare(b.data_vencimento || ""));
+      let houveMudanca = false;
+      const novasParcelas = parcelasRef.current.map((p, idx) => {
+        let fin = null;
+        // 1) Casar por financeiro_id
+        if (p.financeiro_id) fin = fins.find(f => f.id === p.financeiro_id);
+        // 2) Casar por descrição "Parcela N/total" ou "N/total"
+        if (!fin) {
+          const descExata = `Parcela ${idx+1}/${parcelasRef.current.length}`;
+          fin = fins.find(f => f.descricao?.includes(descExata));
+        }
+        if (!fin) {
+          fin = fins.find(f => f.descricao?.includes(`Parcela ${idx+1}/`));
+        }
+        if (!fin) {
+          const idxShort = ` ${idx+1}/${parcelasRef.current.length}`;
+          fin = fins.find(f => f.descricao?.endsWith(idxShort) || f.descricao?.includes(idxShort));
+        }
+        // 3) Casar por posição (índice) após ordenar por vencimento
+        if (!fin) fin = finsOrdenados[idx] || null;
+        if (fin) {
+          const novoStatus = fin.status || "Pendente";
+          if (p.financeiro_id !== fin.id || p.financeiro_status !== novoStatus) houveMudanca = true;
+          return { ...p, financeiro_id: fin.id, financeiro_status: novoStatus };
+        }
+        return p;
       });
+      setParcelasSync(novasParcelas);
+      // Persiste a correção na venda para unificar a fonte da verdade
+      if (houveMudanca) {
+        try { await base44.entities.Vendas.update(os.id, { parcelas_detalhes: novasParcelas }); } catch (_) {}
+      }
     });
   }, [os?.id]);
 
