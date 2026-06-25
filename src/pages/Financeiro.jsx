@@ -246,8 +246,21 @@ export default function Financeiro() {
     }
     if (novoStatus === "Pendente" || novoStatus === "Atrasado") update.data_pagamento = "";
     await base44.entities.Financeiro.update(item.id, update);
-    if (novoStatus === "Pago" && item.ordem_venda_id) {
-      await verificarEConcluirVenda(item.ordem_venda_id);
+    // Sincroniza o status de volta para a venda (parcelas_detalhes) — o Financeiro é a fonte da verdade
+    if (item.ordem_venda_id) {
+      try {
+        const vendas = await base44.entities.Vendas.filter({ id: item.ordem_venda_id }, "-created_date", 1);
+        const venda = vendas[0];
+        if (venda && Array.isArray(venda.parcelas_detalhes)) {
+          const parcelasAtualizadas = venda.parcelas_detalhes.map(p =>
+            p.financeiro_id === item.id ? { ...p, financeiro_status: novoStatus } : p
+          );
+          await base44.entities.Vendas.update(venda.id, { parcelas_detalhes: parcelasAtualizadas });
+        }
+      } catch (_) {}
+      if (novoStatus === "Pago") {
+        await verificarEConcluirVenda(item.ordem_venda_id);
+      }
     }
     load();
   };
