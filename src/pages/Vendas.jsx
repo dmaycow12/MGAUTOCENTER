@@ -5,6 +5,7 @@ import ModalEmissaoMassa from "@/components/notas/ModalEmissaoMassa";
 import VendaForm from "@/components/vendas/VendaForm";
 import VendaCard from "@/components/vendas/VendaCard";
 import VendaRow, { COLUNAS_PADRAO } from "@/components/vendas/VendaRow";
+import RevisaoVendas from "@/components/vendas/RevisaoVendas";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
@@ -328,10 +329,28 @@ export default function Vendas() {
   ).sort((a, b) => parseInt(b.numero || 0) - parseInt(a.numero || 0));
 
   const [showAlertaSemCusto, setShowAlertaSemCusto] = useState(false);
+  const [aba, setAba] = useState(() => localStorage.getItem("os_aba") || "vendas");
+  useEffect(() => { localStorage.setItem("os_aba", aba); }, [aba]);
 
   return (
     <div className="space-y-0.5">
 
+      {/* Abas */}
+      <div className="flex gap-0.5">
+        <button onClick={() => setAba("vendas")}
+          className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${aba === "vendas" ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+          Vendas
+        </button>
+        <button onClick={() => setAba("revisao")}
+          className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${aba === "revisao" ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>
+          Revisão
+        </button>
+      </div>
+
+    {aba === "revisao" ? (
+      <RevisaoVendas ordens={ordens} onEdit={(o) => { setEditando(o); setShowForm(true); }} />
+    ) : (
+      <>
        {/* Controles — mesmo padrão do Financeiro */}
        <div className="flex flex-col gap-0.5">
          {/* Linha 1: Nova OS — ocupa linha toda */}
@@ -676,6 +695,9 @@ export default function Vendas() {
           </div>
         </div>
       )}
+
+      </>
+    )}
 
       {/* Form Modal */}
       {showForm && (
