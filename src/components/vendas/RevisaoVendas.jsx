@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Search, Edit, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
@@ -16,6 +17,28 @@ export default function RevisaoVendas({ ordens, onEdit }) {
   const [outroPeriodoInicio, setOutroPeriodoInicio] = useState("");
   const [outroPeriodoFim, setOutroPeriodoFim] = useState("");
   const periodoDropRef = useRef(null);
+  const [finStatus, setFinStatus] = useState({});
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const map = {};
+        let skip = 0;
+        while (true) {
+          const batch = await base44.entities.Financeiro.list("-created_date", 500, skip);
+          if (!batch || !batch.length) break;
+          for (const f of batch) {
+            if (f.id) map[f.id] = f.status;
+          }
+          skip += 500;
+          if (batch.length < 500) break;
+        }
+        if (active) setFinStatus(map);
+      } catch (_) {}
+    })();
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     const handler = (e) => {
@@ -348,20 +371,27 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                         <span className="flex-1 text-right">Vencimento</span>
                         <span className="w-24 text-right">Forma</span>
                         <span className="w-20 text-right">Valor</span>
+                        <span className="w-20 text-right">Status</span>
                       </div>
-                      {(o.parcelas_detalhes || []).map((par, i) => (
-                        <div key={i} className="flex gap-2 text-sm items-center">
-                          <span className="text-gray-300 w-8 text-center">{par.numero ?? i + 1}</span>
-                          <span className="text-gray-200 flex-1 text-right whitespace-nowrap">{fmtData(par.vencimento)}</span>
-                          <span className="text-gray-400 w-24 text-right truncate">{par.forma_pagamento || "—"}</span>
-                          <span className="text-gray-200 w-20 text-right whitespace-nowrap">{fmtValor(par.valor)}</span>
-                        </div>
-                      ))}
+                      {(o.parcelas_detalhes || []).map((par, i) => {
+                        const st = (par.financeiro_id && finStatus[par.financeiro_id]) || par.financeiro_status || "Pendente";
+                        const cor = st === "Pago" ? "#6ee7b7" : st === "Atrasado" ? "#fca5a5" : st === "Cancelado" ? "#9ca3af" : "#fbbf24";
+                        return (
+                          <div key={i} className="flex gap-2 text-sm items-center">
+                            <span className="text-gray-300 w-8 text-center">{par.numero ?? i + 1}</span>
+                            <span className="text-gray-200 flex-1 text-right whitespace-nowrap">{fmtData(par.vencimento)}</span>
+                            <span className="text-gray-400 w-24 text-right truncate">{par.forma_pagamento || "—"}</span>
+                            <span className="text-gray-200 w-20 text-right whitespace-nowrap">{fmtValor(par.valor)}</span>
+                            <span className="w-20 text-right whitespace-nowrap font-medium" style={{color: cor}}>{st}</span>
+                          </div>
+                        );
+                      })}
                       <div className="flex gap-2 text-sm font-bold pt-1 mt-1" style={{borderTop:"1px solid #1e3a5f"}}>
                         <span className="text-gray-400 w-8"></span>
                         <span className="text-gray-400 flex-1 uppercase text-xs text-right">Total</span>
                         <span className="w-24"></span>
                         <span className="text-white w-20 text-right whitespace-nowrap">{fmtValor((o.parcelas_detalhes || []).reduce((s, par) => s + (par.valor || 0), 0))}</span>
+                        <span className="w-20"></span>
                       </div>
                     </div>
                   )}
