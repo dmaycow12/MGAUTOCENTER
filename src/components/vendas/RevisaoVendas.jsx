@@ -61,7 +61,7 @@ export default function RevisaoVendas({ ordens, onEdit }) {
       const matchStatus = filtroStatus.length === 0 || filtroStatus.includes(o.status);
       const matchPeriodo = !periodoRange || (o.data_entrada && o.data_entrada >= periodoRange.inicio && o.data_entrada <= periodoRange.fim);
       return matchSearch && matchStatus && matchPeriodo;
-    }).sort((a, b) => parseInt(b.numero || 0) - parseInt(a.numero || 0));
+    }).sort((a, b) => parseInt(a.numero || 0) - parseInt(b.numero || 0));
   }, [ordens, search, filtroStatus, periodoRange]);
 
   const toggleStatus = (s) => {
