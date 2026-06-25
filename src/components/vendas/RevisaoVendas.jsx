@@ -164,10 +164,10 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                       ))}
                       <div className="flex gap-2 text-sm font-bold pt-1 mt-1" style={{borderTop:"1px solid #1e3a5f"}}>
                         <span className="text-gray-400 flex-1 uppercase text-xs">Total</span>
-                        <span className="text-white w-16 text-right whitespace-nowrap">{fmtValor((o.servicos || []).reduce((s, sv) => s + (sv.valor || 0) * (sv.quantidade ?? 1), 0))}</span>
+                        <span className="w-16"></span>
                         <span className="w-8"></span>
                         <span className="text-white w-16 text-right whitespace-nowrap">{fmtValor((o.servicos || []).reduce((s, sv) => s + (sv.valor || 0) * (sv.quantidade ?? 1), 0))}</span>
-                        <span className="text-gray-300 w-16 text-right whitespace-nowrap">{fmtValor((o.servicos || []).reduce((s, sv) => s + (sv.valor_custo || 0) * (sv.quantidade ?? 1), 0))}</span>
+                        <span className="w-16"></span>
                         <span className="text-gray-300 w-16 text-right whitespace-nowrap">{fmtInt((o.servicos || []).reduce((s, sv) => s + (sv.valor_custo || 0) * (sv.quantidade ?? 1), 0))}</span>
                       </div>
                     </div>
@@ -201,10 +201,10 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                       ))}
                       <div className="flex gap-2 text-sm font-bold pt-1 mt-1" style={{borderTop:"1px solid #1e3a5f"}}>
                         <span className="text-gray-400 flex-1 uppercase text-xs">Total</span>
-                        <span className="text-white w-16 text-right whitespace-nowrap">{fmtValor((o.pecas || []).reduce((s, p) => s + (p.valor_unitario || 0) * (p.quantidade || 1), 0))}</span>
+                        <span className="w-16"></span>
                         <span className="w-8"></span>
                         <span className="text-white w-16 text-right whitespace-nowrap">{fmtValor((o.pecas || []).reduce((s, p) => s + (p.valor_unitario || 0) * (p.quantidade || 1), 0))}</span>
-                        <span className="text-gray-300 w-16 text-right whitespace-nowrap">{fmtValor((o.pecas || []).reduce((s, p) => s + (p.valor_custo || 0) * (p.quantidade || 1), 0))}</span>
+                        <span className="w-16"></span>
                         <span className="text-gray-300 w-16 text-right whitespace-nowrap">{fmtInt((o.pecas || []).reduce((s, p) => s + (p.valor_custo || 0) * (p.quantidade || 1), 0))}</span>
                       </div>
                     </div>
