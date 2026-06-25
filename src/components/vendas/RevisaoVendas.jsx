@@ -28,23 +28,33 @@ export default function RevisaoVendas({ ordens, onEdit }) {
     }));
   }, [search, filtroStatus, filtroSecoes, filtroMes, filtroAno, usandoOutroPeriodo, customRange]);
   const [finStatus, setFinStatus] = useState({});
+  const [finByVenda, setFinByVenda] = useState({});
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
         const map = {};
+        const byVenda = {};
         let skip = 0;
         while (true) {
           const batch = await base44.entities.Financeiro.list("-created_date", 500, skip);
           if (!batch || !batch.length) break;
           for (const f of batch) {
             if (f.id) map[f.id] = f.status;
+            if (f.ordem_venda_id) {
+              if (!byVenda[f.ordem_venda_id]) byVenda[f.ordem_venda_id] = [];
+              byVenda[f.ordem_venda_id].push({ id: f.id, status: f.status, data_vencimento: f.data_vencimento });
+            }
           }
           skip += 500;
           if (batch.length < 500) break;
         }
-        if (active) setFinStatus(map);
+        // Ordena cada venda por vencimento para casar por posição
+        for (const k of Object.keys(byVenda)) {
+          byVenda[k].sort((a, b) => (a.data_vencimento || "").localeCompare(b.data_vencimento || ""));
+        }
+        if (active) { setFinStatus(map); setFinByVenda(byVenda); }
       } catch (_) {}
     })();
     return () => { active = false; };
@@ -384,8 +394,16 @@ export default function RevisaoVendas({ ordens, onEdit }) {
                         <span className="w-20 text-right">Status</span>
                       </div>
                       {(o.parcelas_detalhes || []).map((par, i) => {
-                        const st = (par.financeiro_id && finStatus[par.financeiro_id]) || par.financeiro_status || "Pendente";
-                        const cor = st === "Pago" ? "#6ee7b7" : st === "Atrasado" ? "#fca5a5" : st === "Cancelado" ? "#9ca3af" : "#fbbf24";
+                        let st = "Pendente";
+                        if (par.financeiro_id && finStatus[par.financeiro_id]) {
+                          st = finStatus[par.financeiro_id] === "Pago" ? "Pago" : "Pendente";
+                        } else if (o.id && finByVenda[o.id] && finByVenda[o.id].length > 0) {
+                          const fin = finByVenda[o.id][i];
+                          if (fin) st = fin.status === "Pago" ? "Pago" : "Pendente";
+                        } else {
+                          st = (par.financeiro_status === "Pago") ? "Pago" : "Pendente";
+                        }
+                        const cor = st === "Pago" ? "#6ee7b7" : "#fbbf24";
                         return (
                           <div key={i} className="flex gap-2 text-sm items-center">
                             <span className="text-gray-300 w-8 text-center">{par.numero ?? i + 1}</span>
