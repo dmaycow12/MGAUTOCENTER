@@ -414,7 +414,7 @@ export default function Financeiro() {
           <div className="relative flex-1" ref={periodoDropRef}>
             <button
               onClick={() => setPeriodoDropOpen(v => !v)}
-              className={`w-full h-full min-h-[48px] flex items-center justify-center gap-1 px-2 rounded-xl font-semibold transition-all ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
+              className={`w-full h-11 flex items-center justify-center gap-1 px-2 rounded-xl font-semibold transition-all ${usandoOutroPeriodo ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-300 hover:text-white"}`}
               style={{fontSize:"clamp(11px,1.5vw,13px)"}}
             >
               <span className="text-center leading-tight flex flex-col sm:flex-row sm:items-center sm:gap-2">
