@@ -610,9 +610,9 @@ export default function Financeiro() {
                  )}
                  <span className="text-xs font-semibold text-gray-400 w-14 flex-shrink-0 text-center">Tipo</span>
                  <div className="w-px h-6 bg-gray-700 mx-1" />
-                 <span className="text-xs font-semibold text-gray-400 w-16 flex-shrink-0 text-center">Data</span>
+                 <SortHeader label="Data" col="data_vencimento" sortCol={sortCol} sortDir={sortDir} onClick={() => toggleSort("data_vencimento")} className="w-16 flex-shrink-0 justify-center" />
                  <div className="w-px h-6 bg-gray-700 mx-1" />
-                 <span className="flex-1 text-xs font-semibold text-gray-400 text-center">Descrição</span>
+                 <SortHeader label="Descrição" col="descricao" sortCol={sortCol} sortDir={sortDir} onClick={() => toggleSort("descricao")} className="flex-1 justify-center" />
                  <div className="w-px h-6 bg-gray-700 mx-1" />
                  <span className="text-xs font-semibold text-gray-400 w-20 flex-shrink-0 text-center">Valor</span>
                  <div className="w-px h-6 bg-gray-700 mx-1" />
