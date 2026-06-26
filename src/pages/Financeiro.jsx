@@ -465,13 +465,13 @@ export default function Financeiro() {
 
         {/* Cards: o que falta receber / o que falta pagar */}
         <div className="flex gap-0.5">
-          <div className="flex-1 rounded-xl py-2.5 flex flex-col items-center justify-center gap-0.5" style={{background:"#16202c"}}>
+          <div className="flex-1 rounded-xl py-2.5 flex items-center justify-center gap-2" style={{background:"#16202c"}}>
             <p className="text-xs font-medium" style={{color:"#8f9bb3"}}>A Receber</p>
-            <p className="text-base font-bold text-white whitespace-nowrap">{fmtMoney(aReceber)}</p>
+            <p className="text-base font-bold text-white whitespace-nowrap">{Math.round(aReceber).toLocaleString("pt-BR")}</p>
           </div>
-          <div className="flex-1 rounded-xl py-2.5 flex flex-col items-center justify-center gap-0.5" style={{background:"#16202c"}}>
+          <div className="flex-1 rounded-xl py-2.5 flex items-center justify-center gap-2" style={{background:"#16202c"}}>
             <p className="text-xs font-medium" style={{color:"#8f9bb3"}}>A Pagar</p>
-            <p className="text-base font-bold text-white whitespace-nowrap">{fmtMoney(aPagar)}</p>
+            <p className="text-base font-bold text-white whitespace-nowrap">{Math.round(aPagar).toLocaleString("pt-BR")}</p>
           </div>
         </div>
 
