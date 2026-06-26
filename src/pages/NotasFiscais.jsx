@@ -1263,15 +1263,16 @@ export default function NotasFiscais() {
              setBuscandoSefaz(true);
              try {
                const res1 = await base44.functions.invoke('consultarNotasRecebidas', {});
-               const res2 = await base44.functions.invoke('importarNfseRecebidas', {});
-               const data1 = res1.data;
-               const data2 = res2.data;
-               if (data1?.sucesso || data2?.sucesso) { 
-                 feedback('sucesso', 'NFe e NFSe importadas com sucesso!'); 
-                 load(); 
-               } else { 
-                 feedback('erro', data1?.erro || data2?.erro || 'Erro ao importar notas.'); 
-               }
+                 const res2 = await base44.functions.invoke('importarNfseRecebidas', {});
+                 const data1 = res1.data;
+                 const data2 = res2.data;
+                 if (data1?.sucesso || data2?.sucesso) {
+                   const msgs = [data1?.mensagem, data2?.mensagem].filter(Boolean).join(' | ');
+                   feedback('sucesso', msgs || 'NFe e NFSe importadas com sucesso!');
+                   load();
+                 } else {
+                   feedback('erro', data1?.erro || data2?.erro || 'Erro ao importar notas.');
+                 }
              } catch (e) { feedback('erro', 'Erro: ' + e.message); }
              setBuscandoSefaz(false);
            }}

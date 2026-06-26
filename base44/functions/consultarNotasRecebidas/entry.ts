@@ -99,32 +99,35 @@ Deno.serve(async (req) => {
 
       let xmlOriginal = null;
       if (chave) {
-        try {
-          const xmlEndpoints = [
-            `${FOCUSNFE_BASE}/nfes_recebidas/${chave}.xml`,
-            `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
-          ];
-          for (const endpoint of xmlEndpoints) {
-            const xmlResp = await fetch(endpoint, { headers: { 'Authorization': AUTH_HEADER } });
-            if (!xmlResp.ok) continue;
-            const ct = xmlResp.headers.get('content-type') || '';
-            let candidate = '';
-            if (ct.includes('xml')) {
-              candidate = await xmlResp.text();
-            } else {
-              const xmlData = await xmlResp.json().catch(() => ({}));
-              candidate = xmlData.xml || xmlData.xml_nota || xmlData.xml_nfe || '';
-              if (!candidate && xmlData.caminho_xml_nota_fiscal) {
-                const r2 = await fetch(xmlData.caminho_xml_nota_fiscal, { headers: { 'Authorization': AUTH_HEADER } });
-                if (r2.ok) candidate = await r2.text();
+        for (let tentativa = 0; tentativa < 2 && !xmlOriginal; tentativa++) {
+          if (tentativa > 0) await new Promise(r => setTimeout(r, 3000));
+          try {
+            const xmlEndpoints = [
+              `${FOCUSNFE_BASE}/nfes_recebidas/${chave}.xml`,
+              `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
+            ];
+            for (const endpoint of xmlEndpoints) {
+              const xmlResp = await fetch(endpoint, { headers: { 'Authorization': AUTH_HEADER } });
+              if (!xmlResp.ok) continue;
+              const ct = xmlResp.headers.get('content-type') || '';
+              let candidate = '';
+              if (ct.includes('xml')) {
+                candidate = await xmlResp.text();
+              } else {
+                const xmlData = await xmlResp.json().catch(() => ({}));
+                candidate = xmlData.xml || xmlData.xml_nota || xmlData.xml_nfe || '';
+                if (!candidate && xmlData.caminho_xml_nota_fiscal) {
+                  const r2 = await fetch(xmlData.caminho_xml_nota_fiscal, { headers: { 'Authorization': AUTH_HEADER } });
+                  if (r2.ok) candidate = await r2.text();
+                }
+              }
+              if (candidate && candidate.length > 500 && (candidate.includes('infNFe') || candidate.includes('nfeProc') || candidate.includes('<det'))) {
+                xmlOriginal = candidate;
+                break;
               }
             }
-            if (candidate && candidate.length > 500 && (candidate.includes('infNFe') || candidate.includes('nfeProc') || candidate.includes('<det'))) {
-              xmlOriginal = candidate;
-              break;
-            }
-          }
-        } catch (_) {}
+          } catch (_) {}
+        }
       }
 
       let xmlParaSalvar = {};
@@ -140,20 +143,23 @@ Deno.serve(async (req) => {
 
       let pdfParaSalvar = {};
       if (chave) {
-        try {
-          const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {
-            headers: { 'Authorization': AUTH_HEADER },
-          });
-          if (danfeResp.ok) {
-            const ct = danfeResp.headers.get('content-type') || '';
-            if (ct.includes('pdf') || ct.includes('octet')) {
-              const blob = await danfeResp.blob();
-              const pdfFile = new File([blob], `NF-${numeroNF || chave}.pdf`, { type: 'application/pdf' });
-              const uploadPdf = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
-              if (uploadPdf?.file_url) pdfParaSalvar = { pdf_url: uploadPdf.file_url };
+        for (let tentativa = 0; tentativa < 2 && !pdfParaSalvar.pdf_url; tentativa++) {
+          if (tentativa > 0) await new Promise(r => setTimeout(r, 3000));
+          try {
+            const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {
+              headers: { 'Authorization': AUTH_HEADER },
+            });
+            if (danfeResp.ok) {
+              const ct = danfeResp.headers.get('content-type') || '';
+              if (ct.includes('pdf') || ct.includes('octet')) {
+                const blob = await danfeResp.blob();
+                const pdfFile = new File([blob], `NF-${numeroNF || chave}.pdf`, { type: 'application/pdf' });
+                const uploadPdf = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+                if (uploadPdf?.file_url) pdfParaSalvar = { pdf_url: uploadPdf.file_url };
+              }
             }
-          }
-        } catch (_) {}
+          } catch (_) {}
+        }
       }
       
       // Se não conseguiu fazer download, tenta usar a URL direto da API se disponível
@@ -250,37 +256,49 @@ Deno.serve(async (req) => {
       n.chave_acesso &&
       (n.status === 'Importada' || n.status === 'Lançada') &&
       !n.xml_url
-    );
+    ).slice(0, 15);
 
     for (const nota of notasFaltantes) {
       const chave = nota.chave_acesso;
-      let xmlOriginal = null;
+      // Reenvia manifestação caso ainda não tenha sido processada
       try {
-        const xmlEndpoints = [
-          `${FOCUSNFE_BASE}/nfes_recebidas/${chave}.xml`,
-          `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
-        ];
-        for (const endpoint of xmlEndpoints) {
-          const xmlResp = await fetch(endpoint, { headers: { 'Authorization': AUTH_HEADER } });
-          if (!xmlResp.ok) continue;
-          const ct = xmlResp.headers.get('content-type') || '';
-          let candidate = '';
-          if (ct.includes('xml')) {
-            candidate = await xmlResp.text();
-          } else {
-            const xmlData = await xmlResp.json().catch(() => ({}));
-            candidate = xmlData.xml || xmlData.xml_nota || xmlData.xml_nfe || '';
-            if (!candidate && xmlData.caminho_xml_nota_fiscal) {
-              const r2 = await fetch(xmlData.caminho_xml_nota_fiscal, { headers: { 'Authorization': AUTH_HEADER } });
-              if (r2.ok) candidate = await r2.text();
+        await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}/manifestacoes`, {
+          method: 'POST',
+          headers: { 'Authorization': AUTH_HEADER, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tipo: 'ciencia_operacao' }),
+        });
+        await new Promise(r => setTimeout(r, 3000));
+      } catch (_) {}
+      let xmlOriginal = null;
+      for (let tentativa = 0; tentativa < 2 && !xmlOriginal; tentativa++) {
+        if (tentativa > 0) await new Promise(r => setTimeout(r, 3000));
+        try {
+          const xmlEndpoints = [
+            `${FOCUSNFE_BASE}/nfes_recebidas/${chave}.xml`,
+            `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
+          ];
+          for (const endpoint of xmlEndpoints) {
+            const xmlResp = await fetch(endpoint, { headers: { 'Authorization': AUTH_HEADER } });
+            if (!xmlResp.ok) continue;
+            const ct = xmlResp.headers.get('content-type') || '';
+            let candidate = '';
+            if (ct.includes('xml')) {
+              candidate = await xmlResp.text();
+            } else {
+              const xmlData = await xmlResp.json().catch(() => ({}));
+              candidate = xmlData.xml || xmlData.xml_nota || xmlData.xml_nfe || '';
+              if (!candidate && xmlData.caminho_xml_nota_fiscal) {
+                const r2 = await fetch(xmlData.caminho_xml_nota_fiscal, { headers: { 'Authorization': AUTH_HEADER } });
+                if (r2.ok) candidate = await r2.text();
+              }
+            }
+            if (candidate && candidate.length > 500 && (candidate.includes('infNFe') || candidate.includes('nfeProc') || candidate.includes('<det'))) {
+              xmlOriginal = candidate;
+              break;
             }
           }
-          if (candidate && candidate.length > 500 && (candidate.includes('infNFe') || candidate.includes('nfeProc') || candidate.includes('<det'))) {
-            xmlOriginal = candidate;
-            break;
-          }
-        }
-      } catch (_) {}
+        } catch (_) {}
+      }
 
       let updates = {};
 
@@ -296,20 +314,23 @@ Deno.serve(async (req) => {
       }
 
       if (!nota.pdf_url) {
-        try {
-          const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {
-            headers: { 'Authorization': AUTH_HEADER },
-          });
-          if (danfeResp.ok) {
-            const ct = danfeResp.headers.get('content-type') || '';
-            if (ct.includes('pdf') || ct.includes('octet')) {
-              const blob = await danfeResp.blob();
-              const pdfFile = new File([blob], `NF-${nota.numero || chave}.pdf`, { type: 'application/pdf' });
-              const uploadPdf = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
-              if (uploadPdf?.file_url) updates.pdf_url = uploadPdf.file_url;
+        for (let tentativa = 0; tentativa < 2 && !updates.pdf_url; tentativa++) {
+          if (tentativa > 0) await new Promise(r => setTimeout(r, 3000));
+          try {
+            const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {
+              headers: { 'Authorization': AUTH_HEADER },
+            });
+            if (danfeResp.ok) {
+              const ct = danfeResp.headers.get('content-type') || '';
+              if (ct.includes('pdf') || ct.includes('octet')) {
+                const blob = await danfeResp.blob();
+                const pdfFile = new File([blob], `NF-${nota.numero || chave}.pdf`, { type: 'application/pdf' });
+                const uploadPdf = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+                if (uploadPdf?.file_url) updates.pdf_url = uploadPdf.file_url;
+              }
             }
-          }
-        } catch (_) {}
+          } catch (_) {}
+        }
       }
 
       if (Object.keys(updates).length > 0) {
