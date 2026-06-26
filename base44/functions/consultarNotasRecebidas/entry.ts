@@ -30,9 +30,7 @@ async function buscarNFSesRecebidas(cnpjEmitente) {
   for (let i = 0; i < 40; i++) {
     const url = `${FOCUSNFE_BASE}/nfses_recebidas?cnpj=${cnpjEmitente}&versao=${versaoCursor}`;
     const resp = await fetch(url, { method: 'GET', headers: { 'Authorization': AUTH_HEADER } });
-    if (!resp.ok) {
-      break;
-    }
+    if (!resp.ok) break;
     const lote = await resp.json().catch(() => []);
     if (!Array.isArray(lote) || lote.length === 0) break;
     todas = todas.concat(lote);
@@ -61,7 +59,6 @@ Deno.serve(async (req) => {
     // Busca notas já existentes para evitar duplicatas
     const notasExistentes = await base44.asServiceRole.entities.NotaFiscal.list('-created_date', 2000);
     const chavesExistentes = new Set(notasExistentes.map(n => n.chave_acesso).filter(Boolean));
-    const spedyIds = new Set(notasExistentes.map(n => n.spedy_id).filter(Boolean));
 
     let importadas = 0;
 
@@ -72,12 +69,12 @@ Deno.serve(async (req) => {
       if (chave && chavesExistentes.has(chave)) continue;
 
       const data_emissao = (nf.data_emissao || '').substring(0, 10);
-
       if (data_emissao && data_emissao < '2026-04-01') continue;
 
       const situacao = (nf.situacao || '').toLowerCase();
       const status = situacao.includes('cancel') ? 'Cancelada' : 'Importada';
 
+      // Envia manifestação (fire-and-forget, sem esperar)
       if (chave) {
         try {
           await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}/manifestacoes`, {
@@ -85,8 +82,6 @@ Deno.serve(async (req) => {
             headers: { 'Authorization': AUTH_HEADER, 'Content-Type': 'application/json' },
             body: JSON.stringify({ tipo: 'ciencia_operacao' }),
           });
-          // Aguarda SEFAZ processar a manifestação antes de buscar XML
-          await new Promise(r => setTimeout(r, 3000));
         } catch (_) {}
       }
 
@@ -97,80 +92,44 @@ Deno.serve(async (req) => {
         numeroNF = String(parseInt(chave.substring(25, 34), 10));
       }
 
-      let xmlOriginal = null;
+      // Tenta baixar XML rapidamente (1 tentativa, sem espera)
+      let xmlParaSalvar = {};
       if (chave) {
-        for (let tentativa = 0; tentativa < 2 && !xmlOriginal; tentativa++) {
-          if (tentativa > 0) await new Promise(r => setTimeout(r, 3000));
-          try {
-            const xmlEndpoints = [
-              `${FOCUSNFE_BASE}/nfes_recebidas/${chave}.xml`,
-              `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
-            ];
-            for (const endpoint of xmlEndpoints) {
-              const xmlResp = await fetch(endpoint, { headers: { 'Authorization': AUTH_HEADER } });
-              if (!xmlResp.ok) continue;
-              const ct = xmlResp.headers.get('content-type') || '';
-              let candidate = '';
-              if (ct.includes('xml')) {
-                candidate = await xmlResp.text();
-              } else {
-                const xmlData = await xmlResp.json().catch(() => ({}));
-                candidate = xmlData.xml || xmlData.xml_nota || xmlData.xml_nfe || '';
-                if (!candidate && xmlData.caminho_xml_nota_fiscal) {
-                  const r2 = await fetch(xmlData.caminho_xml_nota_fiscal, { headers: { 'Authorization': AUTH_HEADER } });
-                  if (r2.ok) candidate = await r2.text();
-                }
-              }
-              if (candidate && candidate.length > 500 && (candidate.includes('infNFe') || candidate.includes('nfeProc') || candidate.includes('<det'))) {
-                xmlOriginal = candidate;
-                break;
+        try {
+          const xmlResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.xml`, { headers: { 'Authorization': AUTH_HEADER } });
+          if (xmlResp.ok) {
+            const ct = xmlResp.headers.get('content-type') || '';
+            let candidate = '';
+            if (ct.includes('xml')) {
+              candidate = await xmlResp.text();
+            } else {
+              const xmlData = await xmlResp.json().catch(() => ({}));
+              candidate = xmlData.xml || xmlData.xml_nota || xmlData.xml_nfe || '';
+            }
+            if (candidate && candidate.length > 500 && (candidate.includes('infNFe') || candidate.includes('nfeProc') || candidate.includes('<det'))) {
+              const xmlFile = new File([candidate], `NF-${numeroNF || chave}.xml`, { type: 'text/xml' });
+              const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
+              if (uploadResp?.file_url) {
+                xmlParaSalvar = { xml_url: uploadResp.file_url, xml_original_url: uploadResp.file_url };
               }
             }
-          } catch (_) {}
-        }
-      }
-
-      let xmlParaSalvar = {};
-      if (xmlOriginal) {
-        try {
-          const xmlFile = new File([xmlOriginal], `NF-${numeroNF || chave}.xml`, { type: 'text/xml' });
-          const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
-          if (uploadResp?.file_url) {
-            xmlParaSalvar = { xml_url: uploadResp.file_url, xml_original_url: uploadResp.file_url };
           }
         } catch (_) {}
       }
 
+      // Tenta baixar PDF rapidamente (1 tentativa, sem espera)
       let pdfParaSalvar = {};
       if (chave) {
-        for (let tentativa = 0; tentativa < 2 && !pdfParaSalvar.pdf_url; tentativa++) {
-          if (tentativa > 0) await new Promise(r => setTimeout(r, 3000));
-          try {
-            const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {
-              headers: { 'Authorization': AUTH_HEADER },
-            });
-            if (danfeResp.ok) {
-              const ct = danfeResp.headers.get('content-type') || '';
-              if (ct.includes('pdf') || ct.includes('octet')) {
-                const blob = await danfeResp.blob();
-                const pdfFile = new File([blob], `NF-${numeroNF || chave}.pdf`, { type: 'application/pdf' });
-                const uploadPdf = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
-                if (uploadPdf?.file_url) pdfParaSalvar = { pdf_url: uploadPdf.file_url };
-              }
-            }
-          } catch (_) {}
-        }
-      }
-      
-      // Se não conseguiu fazer download, tenta usar a URL direto da API se disponível
-      if (!pdfParaSalvar.pdf_url && nf.caminho_pdf_danfe) {
         try {
-          const pdfResp = await fetch(nf.caminho_pdf_danfe, { headers: { 'Authorization': AUTH_HEADER } });
-          if (pdfResp.ok) {
-            const blob = await pdfResp.blob();
-            const pdfFile = new File([blob], `NF-${numeroNF || chave}.pdf`, { type: 'application/pdf' });
-            const uploadPdf = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
-            if (uploadPdf?.file_url) pdfParaSalvar = { pdf_url: uploadPdf.file_url };
+          const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, { headers: { 'Authorization': AUTH_HEADER } });
+          if (danfeResp.ok) {
+            const ct = danfeResp.headers.get('content-type') || '';
+            if (ct.includes('pdf') || ct.includes('octet')) {
+              const blob = await danfeResp.blob();
+              const pdfFile = new File([blob], `NF-${numeroNF || chave}.pdf`, { type: 'application/pdf' });
+              const uploadPdf = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+              if (uploadPdf?.file_url) pdfParaSalvar = { pdf_url: uploadPdf.file_url };
+            }
           }
         } catch (_) {}
       }
@@ -212,9 +171,7 @@ Deno.serve(async (req) => {
       let pdfNFSe = nf.url || '';
       if (!pdfNFSe && chave) {
         try {
-          const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfses_recebidas/${chave}.pdf`, {
-            headers: { 'Authorization': AUTH_HEADER },
-          });
+          const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfses_recebidas/${chave}.pdf`, { headers: { 'Authorization': AUTH_HEADER } });
           if (danfeResp.ok) {
             const ct = danfeResp.headers.get('content-type') || '';
             if (ct.includes('pdf') || ct.includes('octet')) {
@@ -247,107 +204,12 @@ Deno.serve(async (req) => {
       if (chave) chavesExistentes.add(chave);
     }
 
-    // ===== ATUALIZAR XML/PDF FALTANTES EM NOTAS (INCLUI RECÉM-IMPORTADAS) =====
-    let atualizadas = 0;
-    // Re-busca TODAS as notas (incluindo as que acabaram de ser importadas)
-    const todasNotas = await base44.asServiceRole.entities.NotaFiscal.list('-created_date', 3000);
-    const notasFaltantes = todasNotas.filter(n =>
-      n.tipo === 'NFe' &&
-      n.chave_acesso &&
-      (n.status === 'Importada' || n.status === 'Lançada') &&
-      !n.xml_url
-    ).slice(0, 15);
-
-    for (const nota of notasFaltantes) {
-      const chave = nota.chave_acesso;
-      // Reenvia manifestação caso ainda não tenha sido processada
-      try {
-        await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}/manifestacoes`, {
-          method: 'POST',
-          headers: { 'Authorization': AUTH_HEADER, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tipo: 'ciencia_operacao' }),
-        });
-        await new Promise(r => setTimeout(r, 3000));
-      } catch (_) {}
-      let xmlOriginal = null;
-      for (let tentativa = 0; tentativa < 2 && !xmlOriginal; tentativa++) {
-        if (tentativa > 0) await new Promise(r => setTimeout(r, 3000));
-        try {
-          const xmlEndpoints = [
-            `${FOCUSNFE_BASE}/nfes_recebidas/${chave}.xml`,
-            `${FOCUSNFE_BASE}/nfes_recebidas/${chave}`,
-          ];
-          for (const endpoint of xmlEndpoints) {
-            const xmlResp = await fetch(endpoint, { headers: { 'Authorization': AUTH_HEADER } });
-            if (!xmlResp.ok) continue;
-            const ct = xmlResp.headers.get('content-type') || '';
-            let candidate = '';
-            if (ct.includes('xml')) {
-              candidate = await xmlResp.text();
-            } else {
-              const xmlData = await xmlResp.json().catch(() => ({}));
-              candidate = xmlData.xml || xmlData.xml_nota || xmlData.xml_nfe || '';
-              if (!candidate && xmlData.caminho_xml_nota_fiscal) {
-                const r2 = await fetch(xmlData.caminho_xml_nota_fiscal, { headers: { 'Authorization': AUTH_HEADER } });
-                if (r2.ok) candidate = await r2.text();
-              }
-            }
-            if (candidate && candidate.length > 500 && (candidate.includes('infNFe') || candidate.includes('nfeProc') || candidate.includes('<det'))) {
-              xmlOriginal = candidate;
-              break;
-            }
-          }
-        } catch (_) {}
-      }
-
-      let updates = {};
-
-      if (xmlOriginal) {
-        try {
-          const xmlFile = new File([xmlOriginal], `NF-${nota.numero || chave}.xml`, { type: 'text/xml' });
-          const uploadResp = await base44.asServiceRole.integrations.Core.UploadFile({ file: xmlFile });
-          if (uploadResp?.file_url) {
-            updates.xml_url = uploadResp.file_url;
-            updates.xml_original_url = uploadResp.file_url;
-          }
-        } catch (_) {}
-      }
-
-      if (!nota.pdf_url) {
-        for (let tentativa = 0; tentativa < 2 && !updates.pdf_url; tentativa++) {
-          if (tentativa > 0) await new Promise(r => setTimeout(r, 3000));
-          try {
-            const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, {
-              headers: { 'Authorization': AUTH_HEADER },
-            });
-            if (danfeResp.ok) {
-              const ct = danfeResp.headers.get('content-type') || '';
-              if (ct.includes('pdf') || ct.includes('octet')) {
-                const blob = await danfeResp.blob();
-                const pdfFile = new File([blob], `NF-${nota.numero || chave}.pdf`, { type: 'application/pdf' });
-                const uploadPdf = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
-                if (uploadPdf?.file_url) updates.pdf_url = uploadPdf.file_url;
-              }
-            }
-          } catch (_) {}
-        }
-      }
-
-      if (Object.keys(updates).length > 0) {
-        await base44.asServiceRole.entities.NotaFiscal.update(nota.id, updates);
-        atualizadas++;
-      }
-    }
-
     return Response.json({
       sucesso: true,
-      mensagem: [
-        importadas > 0 ? `${importadas} nota(s) importada(s).` : null,
-        atualizadas > 0 ? `${atualizadas} nota(s) atualizada(s) com XML/PDF faltantes.` : null,
-        importadas === 0 && atualizadas === 0 ? `Nenhuma nota nova encontrada. NFe: ${nfes.length}, NFSe: ${nfses.length} consultadas.` : null,
-      ].filter(Boolean).join(' '),
+      mensagem: importadas > 0
+        ? `${importadas} nota(s) importada(s). NFe: ${nfes.length}, NFSe: ${nfses.length} consultadas.`
+        : `Nenhuma nota nova encontrada. NFe: ${nfes.length}, NFSe: ${nfses.length} consultadas.`,
       importadas,
-      atualizadas,
       nfes_consultadas: nfes.length,
       nfses_consultadas: nfses.length,
     });
