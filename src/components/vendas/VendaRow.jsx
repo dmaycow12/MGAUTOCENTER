@@ -302,7 +302,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
       const pago = ["Dinheiro", "PIX"].includes(forma);
       const fin = await base44.entities.Financeiro.create({
         tipo: "Receita", categoria: "Ordem de Venda",
-        descricao: "Venda #" + osData.numero + " — " + (osData.cliente_nome || "") + " — Parcela " + (i+1) + "/" + parcelasAtualizadas.length,
+        descricao: "#" + osData.numero + " — " + (osData.cliente_nome_fantasia || osData.cliente_nome || "") + (osData.veiculo_modelo ? " — " + osData.veiculo_modelo : "") + (osData.veiculo_placa ? " — " + osData.veiculo_placa : "") + " — " + (i+1) + "/" + parcelasAtualizadas.length,
         valor: p.valor,
         data_vencimento: p.vencimento,
         status: pago ? "Pago" : "Pendente",
