@@ -55,6 +55,7 @@ import FinanceiroCard from "@/components/financeiro/FinanceiroCard";
 import FluxoMes from "@/components/dashboard/FluxoMes";
 import AbaComissoes from "@/components/financeiro/AbaComissoes";
 import ModalGerarBoleto from "@/components/financeiro/ModalGerarBoleto";
+import CardsAcompanhamento from "@/components/financeiro/CardsAcompanhamento";
 
 const defaultForm = () => ({
   tipo: "Receita", categoria: "", descricao: "", valor: 0,
@@ -386,6 +387,9 @@ export default function Financeiro() {
                 <Plus className="w-4 h-4" /> Saída
               </button>
             </div>
+
+        {/* Cards de acompanhamento */}
+        <CardsAcompanhamento items={itemsNoPeriodo} />
 
         {/* Filtro de Período */}
         <div className="flex gap-0.5 items-center">
