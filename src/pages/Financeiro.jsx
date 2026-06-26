@@ -354,6 +354,11 @@ export default function Financeiro() {
   const pendente = itemsNoPeriodo.filter(i => i.status === "Pendente").reduce((a, i) => a + Number(i.valor || 0), 0);
   const atrasado = itemsNoPeriodo.filter(i => i.status === "Atrasado").reduce((a, i) => a + Number(i.valor || 0), 0);
 
+  // Acompanhamento global: o que falta receber e o que falta pagar
+  const fmtMoney = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const aReceber = items.filter(i => i.tipo === "Receita" && i.status !== "Pago" && i.status !== "Cancelado").reduce((a, i) => a + Number(i.valor || 0), 0);
+  const aPagar = items.filter(i => i.tipo !== "Receita" && i.status !== "Pago" && i.status !== "Cancelado").reduce((a, i) => a + Number(i.valor || 0), 0);
+
   if (loading) return null;
 
   return (
@@ -371,6 +376,28 @@ export default function Financeiro() {
             {aba.label}
           </button>
         ))}
+      </div>
+
+      {/* Cards: o que falta receber / o que falta pagar */}
+      <div className="flex gap-0.5">
+        <div className="flex-1 rounded-xl p-3 flex items-center gap-3" style={{background:"#0d3b1e", border:"1px solid #16a34a"}}>
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{background:"#16a34a"}}>
+            <TrendingUp className="w-5 h-5 text-white" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-green-300 uppercase font-semibold truncate">A Receber</p>
+            <p className="text-lg font-bold text-white whitespace-nowrap">{fmtMoney(aReceber)}</p>
+          </div>
+        </div>
+        <div className="flex-1 rounded-xl p-3 flex items-center gap-3" style={{background:"#3b0d0d", border:"1px solid #dc2626"}}>
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{background:"#dc2626"}}>
+            <TrendingDown className="w-5 h-5 text-white" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-red-300 uppercase font-semibold truncate">A Pagar</p>
+            <p className="text-lg font-bold text-white whitespace-nowrap">{fmtMoney(aPagar)}</p>
+          </div>
+        </div>
       </div>
 
       {abaAtiva === "comissoes" && <AbaComissoes />}
