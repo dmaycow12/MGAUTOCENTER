@@ -267,6 +267,12 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      // Re-verifica no banco logo antes de criar (evita duplicata se outra importação rodou em paralelo)
+      if (chave) {
+        const jaExiste = await base44.asServiceRole.entities.NotaFiscal.filter({ chave_acesso: chave }, '-created_date', 1);
+        if (jaExiste && jaExiste.length > 0) { chavesExistentes.add(chave); continue; }
+      }
+
       const novaNota = await base44.asServiceRole.entities.NotaFiscal.create({
         tipo: 'NFSe',
         numero: nf.numero_dfse || nf.numero || '',

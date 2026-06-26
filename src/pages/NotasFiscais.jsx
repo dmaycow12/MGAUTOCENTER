@@ -1260,6 +1260,15 @@ export default function NotasFiscais() {
         <div className="grid grid-cols-3 gap-0.5">
          <button
            onClick={async () => {
+             // Bloqueio cross-tab: se outra aba iniciou importação há menos de 90s, ignora
+             const lockKey = 'nf_import_lock';
+             const lastLock = parseInt(localStorage.getItem(lockKey) || '0', 10);
+             const agora = Date.now();
+             if (lastLock && (agora - lastLock) < 90000) {
+               feedback('erro', 'Importação já em andamento. Aguarde concluir para evitar duplicatas.');
+               return;
+             }
+             localStorage.setItem(lockKey, String(agora));
              setBuscandoSefaz(true);
              try {
                const [res1, res2] = await Promise.all([
@@ -1277,6 +1286,7 @@ export default function NotasFiscais() {
                  }
              } catch (e) { feedback('erro', 'Erro: ' + e.message); }
              setBuscandoSefaz(false);
+             localStorage.removeItem(lockKey);
            }}
            disabled={buscandoSefaz}
            className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50"
