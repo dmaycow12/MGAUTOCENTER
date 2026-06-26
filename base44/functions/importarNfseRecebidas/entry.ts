@@ -239,7 +239,6 @@ Deno.serve(async (req) => {
     }
 
     let importadas = 0;
-    let atualizadas = 0;
     const notasParaPdf = [];
 
     for (const nf of nfses) {
@@ -265,12 +264,6 @@ Deno.serve(async (req) => {
       // PDF será gerado após criar a nota via gerarDanfseRecebida
 
       if (chave && chavesExistentes.has(chave)) {
-        const notaExistente = notasExistentes.find(n => n.chave_acesso === chave);
-        if (notaExistente) {
-          // Sempre regenera o HTML da DANFSe para garantir o layout atualizado
-          notasParaPdf.push({ nf, id: notaExistente.id });
-          atualizadas++;
-        }
         continue;
       }
 
@@ -320,12 +313,10 @@ Deno.serve(async (req) => {
       sucesso: true,
       mensagem: [
         importadas > 0 ? `${importadas} NFSe(s) importada(s).` : null,
-        atualizadas > 0 ? `${atualizadas} NFSe(s) atualizada(s) com XML.` : null,
-        importadas === 0 && atualizadas === 0 ? `Nenhuma NFSe nova. ${nfses.length} nota(s) consultada(s).` : null,
+        importadas === 0 ? `Nenhuma NFSe nova. ${nfses.length} nota(s) consultada(s).` : null,
         erro ? `Aviso: ${erro}` : null,
       ].filter(Boolean).join(' '),
       importadas,
-      atualizadas,
       pdfsGerados,
       consultadas: nfses.length,
     });

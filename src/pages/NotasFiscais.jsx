@@ -1262,8 +1262,10 @@ export default function NotasFiscais() {
            onClick={async () => {
              setBuscandoSefaz(true);
              try {
-               const res1 = await base44.functions.invoke('consultarNotasRecebidas', {});
-                 const res2 = await base44.functions.invoke('importarNfseRecebidas', {});
+               const [res1, res2] = await Promise.all([
+                 base44.functions.invoke('consultarNotasRecebidas', {}),
+                 base44.functions.invoke('importarNfseRecebidas', {}),
+               ]);
                  const data1 = res1.data;
                  const data2 = res2.data;
                  if (data1?.sucesso || data2?.sucesso) {
