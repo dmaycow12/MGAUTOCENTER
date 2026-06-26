@@ -798,15 +798,21 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       const parcelasAtualizadas = [...parcelasNormalizadas];
 
       // Processar todas as parcelas em PARALELO
+      const nomeClienteFin = formFinal.cliente_nome_fantasia || formFinal.cliente_nome || "";
+      const veiculoFin = formFinal.veiculo_modelo ? ` — ${formFinal.veiculo_modelo}` : "";
+      const placaFin = formFinal.veiculo_placa ? ` — ${formFinal.veiculo_placa}` : "";
       await Promise.all(parcelasAtualizadas.map(async (parcela, idx) => {
         const descParcela = `Parcela ${idx+1}/${parcelasAtualizadas.length}`;
+        const parcelaStr = `${idx+1}/${parcelasAtualizadas.length}`;
+        const descFin = `#${formFinal.numero} — ${nomeClienteFin}${veiculoFin}${placaFin} — ${parcelaStr}`;
         const jaExiste = parcela.financeiro_id
           ? finExistentes.find(f => f.id === parcela.financeiro_id)
-          : finExistentes.find(f => f.descricao?.includes(descParcela));
+          : finExistentes.find(f => f.descricao?.includes(descParcela) || f.descricao?.endsWith(` ${parcelaStr}`));
 
         if (jaExiste) {
           const statusFin = parcela.financeiro_status || "Pendente";
           await base44.entities.Financeiro.update(jaExiste.id, {
+            descricao: descFin,
             data_vencimento: parcela.vencimento,
             forma_pagamento: parcela.forma_pagamento || "A Combinar",
             valor: parcela.valor || 0,
@@ -821,7 +827,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
           const fin = await base44.entities.Financeiro.create({
             tipo: "Receita",
             categoria: "Ordem de Venda",
-            descricao: `Venda #${formFinal.numero} — ${formFinal.cliente_nome || ""}${formFinal.veiculo_modelo ? ` — ${formFinal.veiculo_modelo}` : ""}${formFinal.veiculo_placa ? ` — ${formFinal.veiculo_placa}` : ""} — Parcela ${idx+1}/${parcelasAtualizadas.length}`,
+            descricao: descFin,
             valor: parcela.valor || 0,
             data_vencimento: parcela.vencimento,
             status: statusSelecionado,
