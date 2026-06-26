@@ -364,8 +364,8 @@ export default function Financeiro() {
 
   // Acompanhamento global: o que falta receber e o que falta pagar
   const fmtMoney = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  const aReceber = items.filter(i => i.tipo === "Receita" && i.status !== "Pago" && i.status !== "Cancelado").reduce((a, i) => a + Number(i.valor || 0), 0);
-  const aPagar = items.filter(i => i.tipo !== "Receita" && i.status !== "Pago" && i.status !== "Cancelado").reduce((a, i) => a + Number(i.valor || 0), 0);
+  const aReceber = itemsNoPeriodo.filter(i => i.tipo === "Receita" && i.status !== "Pago" && i.status !== "Cancelado").reduce((a, i) => a + Number(i.valor || 0), 0);
+  const aPagar = itemsNoPeriodo.filter(i => i.tipo !== "Receita" && i.status !== "Pago" && i.status !== "Cancelado").reduce((a, i) => a + Number(i.valor || 0), 0);
 
   if (loading) return null;
 
