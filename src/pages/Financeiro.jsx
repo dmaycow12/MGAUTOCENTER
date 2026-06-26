@@ -82,8 +82,16 @@ export default function Financeiro() {
   const [viewMode, setViewMode] = useState(() => localStorage.getItem("financeiro_viewmode") || "cards");
   const hoje = new Date();
 
-  const [filtroTipo, setFiltroTipo] = useState(() => localStorage.getItem("fin_filtroTipo") || "Todos");
-  const [filtroStatus, setFiltroStatus] = useState(() => localStorage.getItem("fin_filtroStatus") || "Todos");
+  const [filtroTipos, setFiltroTipos] = useState(() => { try { return JSON.parse(localStorage.getItem("fin_filtroTipos")) || ["Receita", "Saída"]; } catch { return ["Receita", "Saída"]; } });
+  const [filtroStatuses, setFiltroStatuses] = useState(() => { try { return JSON.parse(localStorage.getItem("fin_filtroStatuses")) || ["Pendente", "Pago"]; } catch { return ["Pendente", "Pago"]; } });
+  const toggleTipo = (t) => setFiltroTipos(prev => {
+    if (prev.includes(t)) { if (prev.length === 1) return prev; const n = prev.filter(x => x !== t); localStorage.setItem("fin_filtroTipos", JSON.stringify(n)); return n; }
+    const n = [...prev, t]; localStorage.setItem("fin_filtroTipos", JSON.stringify(n)); return n;
+  });
+  const toggleStatus = (s) => setFiltroStatuses(prev => {
+    if (prev.includes(s)) { if (prev.length === 1) return prev; const n = prev.filter(x => x !== s); localStorage.setItem("fin_filtroStatuses", JSON.stringify(n)); return n; }
+    const n = [...prev, s]; localStorage.setItem("fin_filtroStatuses", JSON.stringify(n)); return n;
+  });
   const [filtroMes, setFiltroMes] = useState(() => Number(localStorage.getItem("fin_filtroMes")) || hoje.getMonth() + 1);
   const [filtroAno, setFiltroAno] = useState(() => Number(localStorage.getItem("fin_filtroAno")) || hoje.getFullYear());
   const [usandoOutroPeriodo, setUsandoOutroPeriodo] = useState(() => localStorage.getItem("fin_usandoOutro") === "true");
@@ -316,8 +324,8 @@ export default function Financeiro() {
 
   const filtrados = itemsNoPeriodo.filter(i => {
     const matchSearch = !search || i.descricao?.toLowerCase().includes(search.toLowerCase()) || i.categoria?.toLowerCase().includes(search.toLowerCase());
-    const matchTipo = filtroTipo === "Todos" || i.tipo === filtroTipo || (filtroTipo === "Saída" && (i.tipo === "Saída" || i.tipo === "Despesa"));
-    const matchStatus = filtroStatus === "Todos" || i.status === filtroStatus || (filtroStatus === "Pendente" && i.status === "Atrasado");
+    const matchTipo = filtroTipos.includes(i.tipo) || (filtroTipos.includes("Saída") && i.tipo === "Despesa");
+    const matchStatus = filtroStatuses.includes(i.status) || (filtroStatuses.includes("Pendente") && i.status === "Atrasado");
     return matchSearch && matchTipo && matchStatus;
   });
 
@@ -475,17 +483,14 @@ export default function Financeiro() {
           </div>
         </div>
 
-        {/* Linha 3: filtro tipo — Receita / Despesa / Todos */}
-            <div className="flex gap-0.5">
-              {["Todos","Receita","Saída"].map(t => (
-                 <button key={t} onClick={() => { setFiltroTipo(t); localStorage.setItem("fin_filtroTipo", t); }} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroTipo === t ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{t === "Todos" ? "Tudo" : t}</button>
-               ))}
-             </div>
-
-            {/* Linha 4: filtro status — Pendente / Atrasado / Pago / Todos */}
-            <div className="flex gap-0.5">
-              {["Todos","Pendente","Pago"].map(s => (
-                <button key={s} onClick={() => { setFiltroStatus(s); localStorage.setItem("fin_filtroStatus", s); }} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroStatus === s ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{s === "Todos" ? "Tudo" : s}</button>
+        {/* Filtros: Receita/Saída + Pendente/Pago na mesma linha (multi-seleção, mínimo 1 por grupo) */}
+            <div className="flex gap-0.5 items-center">
+              {["Receita","Saída"].map(t => (
+                <button key={t} onClick={() => toggleTipo(t)} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroTipos.includes(t) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{t}</button>
+              ))}
+              <div className="w-px h-7 bg-gray-700 mx-0.5 flex-shrink-0" />
+              {["Pendente","Pago"].map(s => (
+                <button key={s} onClick={() => toggleStatus(s)} className={`flex-1 h-11 rounded-xl text-sm font-medium transition-all ${filtroStatuses.includes(s) ? "bg-[#062C9B] text-white" : "bg-gray-800 border border-gray-700 text-gray-400 hover:text-white"}`}>{s}</button>
               ))}
             </div>
 
