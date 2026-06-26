@@ -373,7 +373,7 @@ export default function Financeiro() {
     <div className="space-y-0.5">
 
       {/* Abas principais */}
-      <div className="flex gap-0.5 mb-1">
+      <div className="flex gap-0.5">
         {[
           { key: "lancamentos", label: "Lançamentos" },
           { key: "comissoes", label: "Comissões" },
