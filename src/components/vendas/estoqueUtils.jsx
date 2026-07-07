@@ -158,6 +158,98 @@ export async function limparHistoricoVenda(vendaId) {
   await Promise.all(updates);
 }
 
+// ======================
+// SINCRONIZAÇÃO UNIFICADA (otimizada):
+// Compara pecas antigas vs novas de uma venda e aplica TODAS as mudanças de estoque
+// em uma única passada: uma busca de estoque + um bulkUpdate.
+// Substitui as múltiplas chamadas sequenciais de restaurarEstoque/reduzirEstoque.
+// ======================
+export async function sincronizarEstoqueVenda(oldPecas, newPecas, venda, estoquePreCarregado) {
+  oldPecas = oldPecas || [];
+  newPecas = newPecas || [];
+  if (oldPecas.length === 0 && newPecas.length === 0) return;
+
+  const vendaId = venda?.id;
+  if (!vendaId) return;
+
+  // Usa cache se fornecido, senão busca do banco (uma única vez)
+  const estoque = estoquePreCarregado && estoquePreCarregado.length > 0
+    ? estoquePreCarregado
+    : await base44.entities.Estoque.list("-created_date", 1000);
+
+  // Indexa pecas antigas e novas por estoque_id
+  const oldByItemId = {};
+  const newByItemId = {};
+
+  for (const p of oldPecas) {
+    const item = encontrarItemEstoque(estoque, p);
+    if (item) oldByItemId[item.id] = { peca: p, item };
+  }
+  for (const p of newPecas) {
+    const item = encontrarItemEstoque(estoque, p);
+    if (item) newByItemId[item.id] = { peca: p, item };
+  }
+
+  // Todos os itens de estoque que aparecem em old ou new
+  const allItemIds = new Set([...Object.keys(oldByItemId), ...Object.keys(newByItemId)]);
+
+  const bulkUpdates = [];
+
+  for (const itemId of allItemIds) {
+    const oldEntry = oldByItemId[itemId];
+    const newEntry = newByItemId[itemId];
+    const item = (oldEntry || newEntry).item;
+
+    const historicoAtual = Array.isArray(item.historico) ? item.historico : [];
+
+    // Remove TODOS os movimentos de saída desta venda do histórico
+    const historicoSemVenda = historicoAtual.filter(m => !isSaidaVenda(m, vendaId));
+
+    // Soma das saídas antigas a restaurar
+    const saidasAntigas = historicoAtual
+      .filter(m => isSaidaVenda(m, vendaId))
+      .reduce((sum, m) => sum + Number(m.quantidade || 0), 0);
+
+    // Quantidade atual + restauração das saídas antigas
+    let novaQtd = Number(item.quantidade || 0) + saidasAntigas;
+    let novoHistorico = historicoSemVenda;
+
+    // Se há uma peça nova para este item, adiciona o movimento de saída e reduz
+    if (newEntry) {
+      const peca = newEntry.peca;
+      const qtd = Number(peca.quantidade || 0);
+      if (qtd > 0) {
+        const novoMovimento = {
+          tipo: "saida",
+          data: (() => {
+            const d = venda?.data_entrada;
+            if (!d) return new Date().toLocaleDateString('en-CA');
+            if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+            return new Date(d).toLocaleDateString('en-CA');
+          })(),
+          quantidade: qtd,
+          valor_unitario: Number(peca.valor_unitario || peca.valor_venda || item.valor_venda || 0),
+          ordem_venda_numero: venda?.numero || "",
+          ordem_venda_id: vendaId || "",
+          observacao: "",
+        };
+        novoHistorico = [...novoHistorico, novoMovimento];
+        novaQtd -= qtd;
+      }
+    }
+
+    bulkUpdates.push({
+      id: itemId,
+      quantidade: novaQtd,
+      historico: novoHistorico,
+    });
+  }
+
+  if (bulkUpdates.length > 0) {
+    await base44.entities.Estoque.bulkUpdate(bulkUpdates);
+  }
+}
+
 export async function excluirLancamentosVenda(vendaId) {
   const financeiros = await base44.entities.Financeiro.list("-created_date", 500);
   const vinculados = financeiros.filter(f => f.ordem_venda_id === vendaId || f.ordem_servico_id === vendaId);

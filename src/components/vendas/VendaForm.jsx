@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { X, Plus, Trash2, AlertTriangle, Camera, Image, GripVertical } from "lucide-react";
 import SearchableSelect from "@/components/notas/SearchableSelect";
-import { reduzirEstoque, restaurarEstoque, restaurarEstoqueCompletoPeca } from "./estoqueUtils";
+import { reduzirEstoque, restaurarEstoque, restaurarEstoqueCompletoPeca, sincronizarEstoqueVenda } from "./estoqueUtils";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 const defaultForm = () => ({
@@ -857,33 +857,17 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       }
 
       log('Iniciando ajuste estoque');
-      // Ajuste de estoque: SEMPRE ao salvar (exceto Orçamento)
+      // Ajuste de estoque: sincronização unificada em uma única passada
       if (savedId) {
         const oldPecas = os?.pecas || [];
         const newPecas = formFinal.pecas || [];
-        // Reutiliza o estoque já carregado em memória — evita nova chamada ao banco
-        const estoqueAtual = estoque;
-
-        if (!os) {
-          // Nova venda: reduzir todas as peças
-          if (newPecas.length > 0) await reduzirEstoque(newPecas, { id: savedId, numero: formFinal.numero }, estoqueAtual);
-        } else {
-          // Editando: diff old vs new
-          const removidas = oldPecas.filter(op => op.estoque_id && !newPecas.find(np => np.estoque_id === op.estoque_id));
-          const adicionadas = newPecas.filter(np => np.estoque_id && !oldPecas.find(op => op.estoque_id === np.estoque_id));
-          const alteradas = newPecas.filter(np => {
-            if (!np.estoque_id) return false;
-            const old = oldPecas.find(op => op.estoque_id === np.estoque_id);
-            return old && Number(old.quantidade) !== Number(np.quantidade);
-          });
-          if (removidas.length > 0) await restaurarEstoque(removidas, os.id, estoqueAtual);
-          if (alteradas.length > 0) {
-            const oldAlteradas = alteradas.map(np => oldPecas.find(op => op.estoque_id === np.estoque_id));
-            await restaurarEstoque(oldAlteradas, os.id, estoqueAtual);
-            // Reutiliza estoqueAtual após restaurar (otimização: evita novo list)
-            await reduzirEstoque(alteradas, { id: savedId, numero: formFinal.numero }, estoqueAtual);
-          }
-          if (adicionadas.length > 0) await reduzirEstoque(adicionadas, { id: savedId, numero: formFinal.numero }, estoqueAtual);
+        if (oldPecas.length > 0 || newPecas.length > 0) {
+          await sincronizarEstoqueVenda(
+            oldPecas,
+            newPecas,
+            { id: savedId, numero: formFinal.numero, data_entrada: formFinal.data_entrada },
+            estoque // usa estoque já carregado no estado — sem nova busca ao banco
+          );
         }
       }
 
