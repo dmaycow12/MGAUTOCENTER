@@ -6,6 +6,7 @@ import ModalEstoqueForm from "../components/estoque/ModalEstoqueForm";
 import MovimentacoesEstoque from "../components/estoque/MovimentacoesEstoque";
 import LucroPecas from "../components/estoque/LucroPecas";
 import ModalEtiquetar from "../components/estoque/ModalEtiquetar";
+import AbaReposicao from "../components/estoque/AbaReposicao";
 
 const arredondarVendaParaCinco = (valor) => {
   return Math.ceil(valor / 5) * 5;
@@ -529,10 +530,12 @@ export default function Estoque() {
         <button onClick={() => setAbaEstoque("produtos")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={abaEstoque==="produtos"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Produtos</button>
         <button onClick={() => setAbaEstoque("movimentacoes")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={abaEstoque==="movimentacoes"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Movimentações</button>
         <button onClick={() => setAbaEstoque("lucro")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={abaEstoque==="lucro"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Lucro por Peça</button>
+        <button onClick={() => setAbaEstoque("reposicao")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={abaEstoque==="reposicao"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Reposição</button>
       </div>
 
       {abaEstoque === "movimentacoes" && <MovimentacoesEstoque items={items} onReload={load} />}
       {abaEstoque === "lucro" && <LucroPecas items={items} />}
+      {abaEstoque === "reposicao" && <AbaReposicao items={items} />}
 
       {abaEstoque === "produtos" && <>
       {/* Botão Principal */}
@@ -658,16 +661,6 @@ export default function Estoque() {
             onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
           >
             <Tag className="w-4 h-4" /> Etiquetar
-          </button>
-          <button
-            onClick={exportarEstoqueBaixo}
-            title="Baixar lista de produtos com estoque abaixo do mínimo"
-            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
-            style={{background: "#00ff00", color: "#000"}}
-            onMouseEnter={e => e.currentTarget.style.background = "#00dd00"}
-            onMouseLeave={e => e.currentTarget.style.background = "#00ff00"}
-          >
-            <AlertTriangle className="w-4 h-4" /> Reposição
           </button>
         </div>
 
