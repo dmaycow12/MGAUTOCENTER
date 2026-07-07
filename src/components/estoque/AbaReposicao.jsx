@@ -140,13 +140,13 @@ export default function AbaReposicao({ items, onReload }) {
             <AlertTriangle className="w-4 h-4" /> Gerar Lista de Produtos Faltantes
           </button>
           <button
-            onClick={exportar}
+            onClick={() => window.open("/ReposicaoPrint", "_blank")}
             className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all"
             style={{ background: "#00ff00", color: "#000" }}
             onMouseEnter={e => (e.currentTarget.style.background = "#00dd00")}
             onMouseLeave={e => (e.currentTarget.style.background = "#00ff00")}
           >
-            <Download className="w-4 h-4" /> Exportar Reposição
+            <Download className="w-4 h-4" /> Reposição
           </button>
         </div>
       </div>
