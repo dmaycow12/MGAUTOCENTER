@@ -535,7 +535,7 @@ export default function Estoque() {
 
       {abaEstoque === "movimentacoes" && <MovimentacoesEstoque items={items} onReload={load} />}
       {abaEstoque === "lucro" && <LucroPecas items={items} />}
-      {abaEstoque === "reposicao" && <AbaReposicao items={items} />}
+      {abaEstoque === "reposicao" && <AbaReposicao items={items} onReload={load} />}
 
       {abaEstoque === "produtos" && <>
       {/* Botão Principal */}

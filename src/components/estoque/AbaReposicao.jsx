@@ -1,8 +1,60 @@
-import React, { useState } from "react";
-import { AlertTriangle, Download } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { AlertTriangle, Download, Plus, X } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+import ModalEstoqueForm from "./ModalEstoqueForm";
 
-export default function AbaReposicao({ items }) {
-  const baixo = items.filter(i => Number(i.quantidade || 0) < Number(i.estoque_minimo || 0));
+const defaultForm = () => ({
+  codigo: "", codigos: [], descricao: "", marca: "",
+  quantidade: 0, estoque_minimo: 1, valor_custo: 0, valor_venda: 0,
+  ncm: "87089990", cfop: "5405", cest: "", observacoes: "", historico: []
+});
+
+export default function AbaReposicao({ items, onReload }) {
+  const [excluded, setExcluded] = useState(new Set());
+  const [configId, setConfigId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(defaultForm());
+
+  useEffect(() => {
+    base44.entities.Configuracao.list("-created_date", 100).then(configs => {
+      const cfg = configs.find(c => c.chave === "reposicao_excluded_ids");
+      if (cfg) {
+        setConfigId(cfg.id);
+        try { setExcluded(new Set(JSON.parse(cfg.valor || "[]"))); } catch {}
+      }
+    });
+  }, []);
+
+  const salvarExcluded = async (novoSet) => {
+    const valor = JSON.stringify([...novoSet]);
+    if (configId) {
+      await base44.entities.Configuracao.update(configId, { valor });
+    } else {
+      const novo = await base44.entities.Configuracao.create({ chave: "reposicao_excluded_ids", valor, descricao: "IDs excluidos da reposicao" });
+      setConfigId(novo.id);
+    }
+  };
+
+  const excluirDaLista = (id) => {
+    const novoSet = new Set(excluded);
+    novoSet.add(id);
+    setExcluded(novoSet);
+    salvarExcluded(novoSet);
+  };
+
+  const gerarLista = () => {
+    setExcluded(new Set());
+    salvarExcluded(new Set());
+    if (onReload) onReload();
+  };
+
+  const salvar = async () => {
+    if (!form.descricao) return alert("Informe a descricao.");
+    await base44.entities.Estoque.create(form);
+    setShowForm(false);
+    setForm(defaultForm());
+    if (onReload) onReload();
+  };
 
   const exportar = () => {
     if (baixo.length === 0) return alert("Nenhum produto com estoque baixo.");
@@ -53,22 +105,50 @@ export default function AbaReposicao({ items }) {
     });
   };
 
+  const baixo = items.filter(i =>
+    Number(i.quantidade || 0) < Number(i.estoque_minimo || 0) && !excluded.has(i.id)
+  );
+
   return (
     <div className="space-y-0.5">
-      <div className="flex items-center justify-between gap-0.5">
+      <div className="flex flex-wrap items-center justify-between gap-0.5">
         <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-yellow-400" />
-          <span className="text-white text-sm font-semibold">{baixo.length} produto(s) com estoque baixo</span>
+          <span className="text-white text-sm font-semibold">
+            {baixo.length} produto(s) com estoque baixo
+            {excluded.size > 0 && <span className="text-gray-500"> ({excluded.size} oculto(s))</span>}
+          </span>
         </div>
-        <button
-          onClick={exportar}
-          className="flex items-center justify-center gap-2 h-11 px-6 rounded-xl text-sm font-semibold transition-all"
-          style={{ background: "#00ff00", color: "#000" }}
-          onMouseEnter={e => (e.currentTarget.style.background = "#00dd00")}
-          onMouseLeave={e => (e.currentTarget.style.background = "#00ff00")}
-        >
-          <Download className="w-4 h-4" /> Exportar Reposição
-        </button>
+        <div className="flex gap-0.5">
+          <button
+            onClick={() => { setForm(defaultForm()); setShowForm(true); }}
+            className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all"
+            style={{ background: "#00ff00", color: "#000" }}
+            onMouseEnter={e => (e.currentTarget.style.background = "#00dd00")}
+            onMouseLeave={e => (e.currentTarget.style.background = "#00ff00")}
+          >
+            <Plus className="w-4 h-4" /> Novo Produto
+          </button>
+          <button
+            onClick={gerarLista}
+            title="Restaura a lista completa de produtos com estoque baixo"
+            className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all"
+            style={{ background: "#00ff00", color: "#000" }}
+            onMouseEnter={e => (e.currentTarget.style.background = "#00dd00")}
+            onMouseLeave={e => (e.currentTarget.style.background = "#00ff00")}
+          >
+            <AlertTriangle className="w-4 h-4" /> Gerar Lista de Produtos Faltantes
+          </button>
+          <button
+            onClick={exportar}
+            className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all"
+            style={{ background: "#00ff00", color: "#000" }}
+            onMouseEnter={e => (e.currentTarget.style.background = "#00dd00")}
+            onMouseLeave={e => (e.currentTarget.style.background = "#00ff00")}
+          >
+            <Download className="w-4 h-4" /> Exportar Reposição
+          </button>
+        </div>
       </div>
 
       {baixo.length === 0 ? (
@@ -88,6 +168,7 @@ export default function AbaReposicao({ items }) {
                   <th className="px-4 py-3 text-center">Qtd Atual</th>
                   <th className="px-4 py-3 text-center">Estoque Mín.</th>
                   <th className="px-4 py-3 text-center">Faltante</th>
+                  <th className="px-4 py-3 text-center w-12"></th>
                 </tr>
               </thead>
               <tbody>
@@ -101,6 +182,11 @@ export default function AbaReposicao({ items }) {
                       <td className="px-4 py-3 text-center font-bold text-red-400">{item.quantidade}</td>
                       <td className="px-4 py-3 text-center text-gray-400">{item.estoque_minimo}</td>
                       <td className="px-4 py-3 text-center font-bold text-yellow-400">{falta}</td>
+                      <td className="px-4 py-3 text-center">
+                        <button onClick={() => excluirDaLista(item.id)} title="Remover da lista" className="text-gray-500 hover:text-red-400 transition-all p-1">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -108,6 +194,16 @@ export default function AbaReposicao({ items }) {
             </table>
           </div>
         </div>
+      )}
+
+      {showForm && (
+        <ModalEstoqueForm
+          editando={null}
+          form={form}
+          setForm={setForm}
+          onSalvar={salvar}
+          onClose={() => setShowForm(false)}
+        />
       )}
     </div>
   );
