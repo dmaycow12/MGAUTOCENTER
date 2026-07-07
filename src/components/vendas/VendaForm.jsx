@@ -780,20 +780,22 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       const ficouConcluida = formFinal.status === "Concluído";
       let savedId = os?.id;
 
+      // Para vendas novas: cria primeiro (precisa do ID para o Financeiro)
       if (!os) {
         const criado = await base44.entities.Vendas.create(formFinal);
         savedId = criado.id;
         log('Venda criada');
-      } else {
-        await base44.entities.Vendas.update(os.id, formFinal);
-        log('Venda atualizada');
       }
 
       if (formFinal.status === "Orçamento") {
         onSave({ ...formFinal, id: savedId });
         return;
       }
-      const finExistentes = await base44.entities.Financeiro.filter({ ordem_venda_id: savedId }, "-created_date", 100);
+
+      // Busca financeiros existentes (já temos o ID, seja novo ou edição)
+      const finExistentes = savedId
+        ? await base44.entities.Financeiro.filter({ ordem_venda_id: savedId }, "-created_date", 100)
+        : [];
       log('Financeiro buscado');
       const parcelasAtualizadas = [...parcelasNormalizadas];
 
@@ -840,20 +842,34 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         }
       }));
 
-      // Salvar parcelas atualizadas e deletar financeiros órfãos em paralelo
+      // Deletar financeiros órfãos em paralelo
       const idsNovos = new Set(parcelasAtualizadas.map(p => p.financeiro_id).filter(Boolean));
       const finParaDeletar = finExistentes.filter(fin => !idsNovos.has(fin.id));
-      await Promise.all([
-        base44.entities.Vendas.update(savedId, { parcelas_detalhes: parcelasAtualizadas }),
-        ...finParaDeletar.map(fin => base44.entities.Financeiro.delete(fin.id)),
-      ]);
-      log('Parcelas/financeiro salvos');
+      if (finParaDeletar.length > 0) {
+        await Promise.all(finParaDeletar.map(fin => base44.entities.Financeiro.delete(fin.id)));
+      }
+      log('Financeiro sincronizado');
 
+      // Verificar se todas as parcelas foram pagas → marcar Concluído
       const todasPagas = parcelasAtualizadas.length > 0 && parcelasAtualizadas.every(p => (p.financeiro_status || "Pendente") === "Pago");
       if (todasPagas && formFinal.status !== "Concluído") {
-        const dataConclusao = new Date().toISOString().split("T")[0];
-        formFinal = { ...formFinal, status: "Concluído", data_conclusao: dataConclusao };
-        await base44.entities.Vendas.update(savedId, { status: "Concluído", data_conclusao: dataConclusao });
+        formFinal = { ...formFinal, status: "Concluído", data_conclusao: new Date().toISOString().split("T")[0] };
+      }
+
+      // ÚNICO Vendas.update com tudo: dados + parcelas + status (evita múltiplas automações)
+      const dadosFinais = {
+        ...formFinal,
+        pecas: pecasLimpas,
+        servicos: servicosLimpos,
+        parcelas_detalhes: parcelasAtualizadas,
+        forma_pagamento: formaPrincipal,
+      };
+      if (os) {
+        await base44.entities.Vendas.update(os.id, dadosFinais);
+        log('Venda atualizada (update único)');
+      } else {
+        await base44.entities.Vendas.update(savedId, { parcelas_detalhes: parcelasAtualizadas, status: formFinal.status, data_conclusao: formFinal.data_conclusao });
+        log('Venda atualizada (parcelas+status)');
       }
 
       log('Iniciando ajuste estoque');
