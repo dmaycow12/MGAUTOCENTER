@@ -792,8 +792,16 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         return;
       }
 
-      // Busca financeiros existentes (já temos o ID, seja novo ou edição)
-      const finExistentes = savedId
+      // Inicia sincronização de estoque em PARALELO (não depende do financeiro)
+      const oldPecas = os?.pecas || [];
+      const newPecas = formFinal.pecas || [];
+      const estoquePromise = (oldPecas.length > 0 || newPecas.length > 0) && savedId
+        ? sincronizarEstoqueVenda(oldPecas, newPecas, { id: savedId, numero: formFinal.numero, data_entrada: formFinal.data_entrada }, estoque)
+        : Promise.resolve();
+      log('Estoque sync iniciado em paralelo');
+
+      // Busca financeiros existentes (apenas para edição — nova venda não tem)
+      const finExistentes = savedId && os
         ? await base44.entities.Financeiro.filter({ ordem_venda_id: savedId }, "-created_date", 100)
         : [];
       log('Financeiro buscado');
@@ -872,20 +880,9 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         log('Venda atualizada (parcelas+status)');
       }
 
-      log('Iniciando ajuste estoque');
-      // Ajuste de estoque: sincronização unificada em uma única passada
-      if (savedId) {
-        const oldPecas = os?.pecas || [];
-        const newPecas = formFinal.pecas || [];
-        if (oldPecas.length > 0 || newPecas.length > 0) {
-          await sincronizarEstoqueVenda(
-            oldPecas,
-            newPecas,
-            { id: savedId, numero: formFinal.numero, data_entrada: formFinal.data_entrada },
-            estoque // usa estoque já carregado no estado — sem nova busca ao banco
-          );
-        }
-      }
+      // Aguarda estoque sync (já estava rodando em paralelo desde o início)
+      await estoquePromise;
+      log('Estoque sync concluído');
 
       log('FIM - tudo concluído');
       onSave({ ...formFinal, id: savedId });
