@@ -276,36 +276,52 @@ export default function Estoque() {
   const exportarEstoqueBaixo = () => {
     const baixo = items.filter(i => i.quantidade < i.estoque_minimo);
     if (baixo.length === 0) return alert("Nenhum produto com estoque baixo.");
-    const linhas = baixo.map(i => {
+    const rows = [["Quantidade Faltante", "Codigo do Produto"]];
+    for (const i of baixo) {
       const falta = (Number(i.estoque_minimo || 0)) - (Number(i.quantidade || 0));
-      return { falta, codigo: i.codigo || "", descricao: i.descricao || "" };
+      rows.push([falta, i.codigo || ""]);
+    }
+    // Gerar xlsx com JSZip aplicando alinhamento centralizado em todas as células
+    const escapeXml = v => String(v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const cellRef = (r, c) => `${String.fromCharCode(64 + c)}${r}`;
+    const cells = rows.map((row, ri) =>
+      row.map((val, ci) => {
+        const ref = cellRef(ri + 1, ci + 1);
+        const isNum = typeof val === "number";
+        return isNum
+          ? `<c r="${ref}" s="0" t="n"><v>${val}</v></c>`
+          : `<c r="${ref}" s="0" t="inlineStr"><is><t>${escapeXml(val)}</t></is></c>`;
+      }).join("")
+    ).map((c, ri) => `<row r="${ri + 1}">${c}</row>`).join("");
+
+    const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="1" max="2" width="20" customWidth="1"/></cols><sheetData>${cells}</sheetData></worksheet>`;
+    const wbXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Reposicao" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+    const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf></cellStyleXfs><cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+    const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`;
+    const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`;
+    const rootRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
+
+    import("jszip").then(async JSZip => {
+      const zip = new JSZip.default();
+      zip.file("[Content_Types].xml", contentTypesXml);
+      zip.folder("_rels").file(".rels", rootRelsXml);
+      zip.folder("xl").file("workbook.xml", wbXml);
+      zip.folder("xl").folder("_rels").file("workbook.xml.rels", relsXml);
+      zip.folder("xl").folder("worksheets").file("sheet1.xml", sheetXml);
+      zip.folder("xl").file("styles.xml", stylesXml);
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "reposicao_estoque.xlsx"; a.click();
+      URL.revokeObjectURL(url);
+    }).catch(() => {
+      const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(";")).join("\n");
+      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "reposicao_estoque.csv"; a.click();
+      URL.revokeObjectURL(url);
     });
-    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Reposição de Estoque</title>
-      <style>
-        * { font-family: Arial, sans-serif; }
-        body { margin: 0; padding: 20px; background: #f5f5f5; }
-        h1 { font-size: 18px; color: #333; margin-bottom: 16px; }
-        table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        th, td { padding: 10px 14px; text-align: center; border: 1px solid #ddd; font-size: 13px; }
-        th { background: #f0f0f0; font-weight: bold; color: #333; text-transform: uppercase; }
-        td.desc { text-align: left; }
-        tr:nth-child(even) { background: #fafafa; }
-        @media print { body { background: #fff; padding: 0; } table { box-shadow: none; } button { display: none; } }
-      </style></head>
-      <body>
-        <h1>Reposição de Estoque — ${linhas.length} produto(s)</h1>
-        <button onclick="window.print()" style="margin-bottom:12px;padding:8px 16px;background:#062C9B;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">Imprimir</button>
-        <table>
-          <thead><tr><th>Quantidade Faltante</th><th>Código do Produto</th><th>Descrição</th></tr></thead>
-          <tbody>
-            ${linhas.map(l => `<tr><td>${l.falta}</td><td>${l.codigo}</td><td class="desc">${l.descricao}</td></tr>`).join("")}
-          </tbody>
-        </table>
-      </body></html>`;
-    const blob = new Blob([html], { type: "text/html;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
   };
 
   const grupos = ["Todos"];
