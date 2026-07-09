@@ -16,7 +16,7 @@ function normalizarFormaPagamento(fp) {
 }
 
 function tiposDisponiveis(venda, notasCarregadas, clientes) {
-  if (venda.status !== 'Concluído') return [];
+  if (venda.status !== 'Concluído' && venda.status !== 'Aberto') return [];
 
   const cadastro = clientes.find(c => c.id === venda.cliente_id)
     || clientes.find(c => c.nome?.toLowerCase().trim() === venda.cliente_nome?.toLowerCase().trim());
