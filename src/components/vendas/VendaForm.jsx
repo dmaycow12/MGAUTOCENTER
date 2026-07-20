@@ -1451,8 +1451,8 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
               {funcionarios.map(f => <option key={f.id} value={f.nome}>{f.nome}</option>)}
             </select>
           </Field>
-          <Field label="Comissão (R$)">
-            <input type="number" step="0.01" value={form.comissao || 0} onChange={e => setForm(f => ({ ...f, comissao: Number(e.target.value) }))} className="input-dark" autoComplete="off" />
+          <Field label="Comissão">
+            <input type="text" inputMode="decimal" value={form.comissao || ""} onChange={e => setForm(f => ({ ...f, comissao: parseFloat(String(e.target.value).replace(",", ".")) || 0 }))} className="input-dark" autoComplete="off" />
           </Field>
         </div>
 
