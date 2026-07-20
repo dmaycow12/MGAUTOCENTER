@@ -201,7 +201,7 @@ export default function AbaReposicao({ items, onReload }) {
                         {editandoMin === item.id ? (
                           <input
                             autoFocus
-                            type="number"
+                            type="text"
                             value={valorMin}
                             onChange={e => setValorMin(e.target.value)}
                             onBlur={() => salvarMin(item)}

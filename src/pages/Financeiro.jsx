@@ -670,7 +670,7 @@ export default function Financeiro() {
                   <input value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} className="input-dark" placeholder="Ex: Aluguel, Material..." />
                 </F>
                 <F label="Valor (R$) *">
-                  <input type="number" step="0.01" value={form.valor} onChange={e => setForm({ ...form, valor: Number(e.target.value) })} className="input-dark" />
+                  <input type="text" step="0.01" value={form.valor} onChange={e => setForm({ ...form, valor: Number(e.target.value) })} className="input-dark" />
                 </F>
                 <F label="Data Vencimento">
                   <input type="date" value={form.data_vencimento} onChange={e => setForm({ ...form, data_vencimento: e.target.value })} className="input-dark" />

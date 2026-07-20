@@ -224,17 +224,17 @@ export default function ModalLancarEntradaManual({ nota, estoque, onClose, onSal
                     </div>
                     <div>
                       <label className="text-xs text-gray-400 mb-1 block">Quantidade</label>
-                      <input type="number" className="input-dark" value={item.quantidade}
+                      <input type="text" className="input-dark" value={item.quantidade}
                         onChange={e => atualizarItem(idx, "quantidade", e.target.value)} />
                     </div>
                     <div>
                       <label className="text-xs text-gray-400 mb-1 block">Valor Unitário (R$)</label>
-                      <input type="number" className="input-dark" value={item.valor_unitario}
+                      <input type="text" className="input-dark" value={item.valor_unitario}
                         onChange={e => atualizarItem(idx, "valor_unitario", e.target.value)} />
                     </div>
                     <div className="col-span-2">
                       <label className="text-xs text-gray-400 mb-1 block">Total (R$)</label>
-                      <input type="number" className="input-dark" value={item.valor_total}
+                      <input type="text" className="input-dark" value={item.valor_total}
                         onChange={e => atualizarItem(idx, "valor_total", e.target.value)} />
                     </div>
                   </div>
@@ -279,7 +279,7 @@ export default function ModalLancarEntradaManual({ nota, estoque, onClose, onSal
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">Número de Parcelas</label>
-                  <input type="number" className="input-dark" min={1} max={24} value={parcelas}
+                  <input type="text" className="input-dark" min={1} max={24} value={parcelas}
                     onChange={e => setParcelas(Math.max(1, parseInt(e.target.value) || 1))} />
                 </div>
               </div>

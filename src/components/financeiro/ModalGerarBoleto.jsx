@@ -189,7 +189,7 @@ export default function ModalGerarBoleto({ item, onClose, onSuccess }) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-gray-400 mb-1">Valor (R$) *</label>
-                  <input type="number" step="0.01" value={form.valor} onChange={e => setForm({ ...form, valor: e.target.value })}
+                  <input type="text" step="0.01" value={form.valor} onChange={e => setForm({ ...form, valor: e.target.value })}
                     className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
                 </div>
                 <div>
