@@ -6,6 +6,7 @@ import VendaForm from "@/components/vendas/VendaForm";
 import VendaCard from "@/components/vendas/VendaCard";
 import VendaRow, { COLUNAS_PADRAO } from "@/components/vendas/VendaRow";
 import RevisaoVendas from "@/components/vendas/RevisaoVendas";
+import { calcularComissaoVenda } from "@/components/vendas/comissaoUtils";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
@@ -306,21 +307,8 @@ export default function Vendas() {
   const fmtTotal = v => Math.round(Number(v || 0)).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
   // Cálculo de comissão baseado nas configurações do AbaComissoes (banco de dados)
-  const totalComissao = (() => {
-    if (!Object.keys(comissaoConfig).length) return null;
-    let total = 0;
-    ordensComFiltrosBase.forEach(o => {
-      (o.servicos || []).forEach(sv => {
-        const tec = (sv.tecnico || "").trim().toUpperCase();
-        if (!tec) return;
-        const pct = comissaoConfig[tec] ?? comissaoConfig["*"] ?? null;
-        if (pct === null) return;
-        const valorServico = Number(sv.valor || 0) * Number(sv.quantidade ?? 1);
-        total += valorServico * (Number(pct) / 100);
-      });
-    });
-    return total;
-  })();
+  const totalComissao = !Object.keys(comissaoConfig).length ? null
+    : ordensComFiltrosBase.reduce((acc, o) => acc + (calcularComissaoVenda(o, comissaoConfig) || 0), 0);
 
   // Vendas com peças sem custo (valor_custo === 0 ou undefined)
   const vendasSemCusto = ordens.filter(o =>
@@ -553,7 +541,8 @@ export default function Vendas() {
                     { key: 'lucro', label: 'Lucro' },
                     { key: 'nfe', label: 'NFe/NFCe' },
                     { key: 'nfse', label: 'NFSe' },
-                  ].map(({ key, label }) => (
+                    { key: 'comissao', label: 'Comissão' },
+                    ].map(({ key, label }) => (
                     <label key={key} className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
@@ -661,13 +650,14 @@ export default function Vendas() {
                   {colunasVisiveis.veiculo && filtroTipo.includes("patio") && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Veículo</th>}
                   {colunasVisiveis.placa && filtroTipo.includes("patio") && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">Placa</th>}
                   {colunasVisiveis.km && filtroTipo.includes("patio") && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">KM</th>}
-                  {colunasVisiveis.tecnico && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Técnico</th>}
                   <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Status</th>
                   {colunasVisiveis.valor && <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Valor</th>}
                   {colunasVisiveis.custo && <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Custo</th>}
                   {colunasVisiveis.lucro && <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-32">Lucro</th>}
                   {colunasVisiveis.nfe && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-20">NFe/NFCe</th>}
                   {colunasVisiveis.nfse && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-16">NFSe</th>}
+                  {colunasVisiveis.tecnico && <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-28">Técnico</th>}
+                  {colunasVisiveis.comissao && <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider w-24">Comissão</th>}
                   <th className="px-4 py-2.5 w-32"></th>
                 </tr>
               </thead>
@@ -680,6 +670,7 @@ export default function Vendas() {
                     clientes={clientes}
                     colunas={colunasVisiveis}
                     ocultarVeiculo={filtroTipo.includes("balcao") && !filtroTipo.includes("patio")}
+                    comissaoConfig={comissaoConfig}
                     onEdit={() => { setEditando(os); setShowForm(true); }}
                     onDelete={() => excluir(os.id)}
                     onRefresh={load}

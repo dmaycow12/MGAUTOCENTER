@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { Pencil, Printer, Trash2, AlertTriangle } from "lucide-react";
 import { gerarHTMLImpressao } from "./vendaImpressao";
 import { reduzirEstoque, restaurarEstoque, excluirLancamentosVenda, limparHistoricoVenda } from "./estoqueUtils";
+import { calcularComissaoVenda } from "./comissaoUtils";
 
 function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
   return (
@@ -16,7 +17,7 @@ function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
 
 export const COLUNAS_PADRAO = {
   data: true, cliente: true, contato: false, veiculo: true, placa: true, km: true, tecnico: true,
-  status: true, custo: true, valor: true, lucro: true, nfe: true, nfse: true,
+  status: true, custo: true, valor: true, lucro: true, nfe: true, nfse: true, comissao: true,
 };
 
 const formatTelefone = (val) => {
@@ -205,7 +206,7 @@ function PagamentoSelect({ os, onRefresh }) {
   );
 }
 
-function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefresh, onUpdate, colunas = COLUNAS_PADRAO, ocultarVeiculo = false, rowIndex, getRowRef, registerRef }, ref) {
+function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefresh, onUpdate, colunas = COLUNAS_PADRAO, ocultarVeiculo = false, rowIndex, getRowRef, registerRef, comissaoConfig = {} }, ref) {
   const clienteCadastro = clientes.find(c => c.id === os.cliente_id);
   const isConsumidor = os.cliente_nome?.toUpperCase() === "CONSUMIDOR";
   // Mostra apenas nome social: para CONSUMIDOR usa o da venda (ou "CONSUMIDOR" como padrão); para outros usa nome_fantasia do cadastro ou da venda
@@ -564,9 +565,6 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
         {colunas.km && !ocultarVeiculo && <td className="px-4 py-3"><InlineEdit ref={kmRef} value={os.quilometragem ? String(os.quilometragem) : ""} onSave={v => saveField("quilometragem", v || null)} placeholder="—"
           onNext={goNextRow}
           onPrev={() => placaRef.current?.startEdit()} /></td>}
-        {colunas.tecnico && <td className="px-4 py-3"><InlineEdit value={os.tecnico || ""} onSave={v => saveField("tecnico", v)} placeholder="—"
-          onNext={goNextRow}
-          onPrev={() => placaRef.current?.startEdit()} /></td>}
         {colunas.status && <td className="px-4 py-3">
           <div className="flex gap-1">
             {STATUS_OPTIONS.map(s => (
@@ -611,6 +609,15 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
           if (!(os.servicos?.length > 0)) return <span className="text-gray-700 text-xs">—</span>;
           return <button onClick={() => emitirNF('NFSe')} className="text-gray-700 hover:text-blue-400 text-xs transition-all">+ NFSe</button>;
         })()}</td>}
+        {colunas.tecnico && <td className="px-4 py-3"><InlineEdit value={os.tecnico || ""} onSave={v => saveField("tecnico", v)} placeholder="—"
+          onNext={goNextRow}
+          onPrev={() => placaRef.current?.startEdit()} /></td>}
+        {colunas.comissao && <td className="px-4 py-3 text-right text-gray-300 text-sm whitespace-nowrap">
+          {(() => {
+            const comissao = calcularComissaoVenda(os, comissaoConfig);
+            return comissao !== null ? fmtValorInteiro(comissao) : "—";
+          })()}
+        </td>}
         <td className="px-4 py-3">
           <div className="flex gap-1 justify-end" style={{whiteSpace:'nowrap'}}>
             <button onClick={() => onEdit?.()} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700 transition-all text-gray-500 hover:text-blue-400" title="Editar">
