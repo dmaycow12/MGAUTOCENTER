@@ -684,16 +684,6 @@ export default function Estoque() {
           >
             <Tag className="w-4 h-4" /> Etiquetar
           </button>
-          <button
-            onClick={mostrarArquivados ? restaurarSelecionados : arquivarSelecionados}
-            disabled={arquivando}
-            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
-            style={{background: mostrarArquivados ? "#00ff00" : "#6b7280", color: "#000"}}
-            title={mostrarArquivados ? "Restaurar selecionados do arquivo morto" : "Enviar selecionados para o arquivo morto"}
-          >
-            {mostrarArquivados ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
-            {arquivando ? "Processando..." : mostrarArquivados ? "Restaurar" : "Arquivo Morto"}
-          </button>
         </div>
 
         {/* Toggle Arquivo Morto */}
@@ -737,13 +727,11 @@ export default function Estoque() {
           <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2.5">
             <span className="text-red-400 text-sm font-medium flex-1">{selecionados.length} item(s) selecionado(s)</span>
             <button onClick={() => setSelecionados([])} className="text-gray-400 hover:text-white text-xs px-3 py-1.5 border border-gray-700 rounded-lg transition-all">Cancelar</button>
-            {mostrarArquivados && (
-              <button onClick={restaurarSelecionados} disabled={arquivando} className="flex items-center gap-2 text-black text-xs px-3 py-1.5 rounded-lg font-medium transition-all disabled:opacity-50" style={{background:"#00ff00"}} onMouseEnter={e=>!arquivando && (e.currentTarget.style.background="#00dd00")} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
-                <ArchiveRestore className="w-3.5 h-3.5" /> {arquivando ? "Restaurando..." : "Restaurar Selecionados"}
-              </button>
-            )}
+            <button onClick={mostrarArquivados ? restaurarSelecionados : arquivarSelecionados} disabled={arquivando} className="flex items-center gap-2 text-black text-xs px-3 py-1.5 rounded-lg font-medium transition-all disabled:opacity-50" style={{background:"#00ff00"}} onMouseEnter={e=>!arquivando && (e.currentTarget.style.background="#00dd00")} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
+              {mostrarArquivados ? <ArchiveRestore className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />} {arquivando ? "Aguarde..." : mostrarArquivados ? "Restaurar" : "Arquivo Morto"}
+            </button>
             <button onClick={excluirSelecionados} disabled={deletando} className="flex items-center gap-2 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition-all disabled:opacity-50" style={{background:"#cc0000"}} onMouseEnter={e=>!deletando && (e.currentTarget.style.background="#aa0000")} onMouseLeave={e=>e.currentTarget.style.background="#cc0000"}>
-              <Trash2 className="w-3.5 h-3.5" /> {deletando ? "Deletando..." : "Excluir Selecionados"}
+              <Trash2 className="w-3.5 h-3.5" /> {deletando ? "Deletando..." : "Excluir"}
             </button>
           </div>
         )}
