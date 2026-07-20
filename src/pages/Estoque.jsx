@@ -7,6 +7,7 @@ import MovimentacoesEstoque from "../components/estoque/MovimentacoesEstoque";
 import LucroPecas from "../components/estoque/LucroPecas";
 import ModalEtiquetar from "../components/estoque/ModalEtiquetar";
 import AbaReposicao from "../components/estoque/AbaReposicao";
+import ModalAviso from "../components/estoque/ModalAviso";
 
 const arredondarVendaParaCinco = (valor) => {
   return Math.ceil(valor / 5) * 5;
@@ -56,6 +57,10 @@ export default function Estoque() {
   const [showEtiquetar, setShowEtiquetar] = useState(false);
   const [mostrarArquivados, setMostrarArquivados] = useState(false);
   const [arquivando, setArquivando] = useState(false);
+  const [aviso, setAviso] = useState({ isOpen: false, tipo: 'alerta', mensagem: '', titulo: '', onConfirm: null });
+
+  const mostrarAlerta = (mensagem, titulo) => setAviso({ isOpen: true, tipo: 'alerta', mensagem, titulo: titulo || 'Aviso', onConfirm: () => setAviso(a => ({ ...a, isOpen: false })) });
+  const mostrarConfirm = (mensagem, onConfirm, titulo) => setAviso({ isOpen: true, tipo: 'confirm', mensagem, titulo: titulo || 'Confirmar Ação', onConfirm: () => { setAviso(a => ({ ...a, isOpen: false })); onConfirm(); } });
   const [discrepancias, setDiscrepancias] = useState([]);
   const [regularizando, setRegularizando] = useState(false);
   const [selecionadosReg, setSelecionadosReg] = useState([]);
@@ -145,7 +150,7 @@ export default function Estoque() {
   };
 
   const salvar = async () => {
-    if (!form.descricao) return alert("Informe a descrição.");
+    if (!form.descricao) return mostrarAlerta("Informe a descrição.", "Campo Obrigatório");
     if (editando) {
       await base44.entities.Estoque.update(editando.id, form);
     } else {
@@ -157,26 +162,28 @@ export default function Estoque() {
     load();
   };
 
-  const excluir = async (id) => {
-    if (!confirm("Excluir este item?")) return;
-    await base44.entities.Estoque.delete(id);
-    setSelecionados(prev => prev.filter(s => s !== id));
-    load();
+  const excluir = (id) => {
+    mostrarConfirm("Excluir este item? Esta ação não pode ser desfeita.", async () => {
+      await base44.entities.Estoque.delete(id);
+      setSelecionados(prev => prev.filter(s => s !== id));
+      load();
+    }, "Excluir Item");
   };
 
-  const excluirSelecionados = async () => {
+  const excluirSelecionados = () => {
     if (selecionados.length === 0) return;
-    if (!confirm(`Excluir ${selecionados.length} item(s) selecionado(s)?`)) return;
-    setDeletando(true);
-    const batch = 10;
-    for (let i = 0; i < selecionados.length; i += batch) {
-      const chunk = selecionados.slice(i, i + batch);
-      await Promise.all(chunk.map(id => base44.entities.Estoque.delete(id)));
-      await new Promise(r => setTimeout(r, 100));
-    }
-    setSelecionados([]);
-    setDeletando(false);
-    load();
+    mostrarConfirm(`Excluir ${selecionados.length} item(s) selecionado(s)? Esta ação não pode ser desfeita.`, async () => {
+      setDeletando(true);
+      const batch = 10;
+      for (let i = 0; i < selecionados.length; i += batch) {
+        const chunk = selecionados.slice(i, i + batch);
+        await Promise.all(chunk.map(id => base44.entities.Estoque.delete(id)));
+        await new Promise(r => setTimeout(r, 100));
+      }
+      setSelecionados([]);
+      setDeletando(false);
+      load();
+    }, "Excluir Selecionados");
   };
 
   const toggleSelecionado = (id) => {
@@ -191,18 +198,19 @@ export default function Estoque() {
     }
   };
 
-  const arquivarSelecionados = async () => {
-    if (selecionados.length === 0) return alert("Selecione um ou mais produtos para arquivar.");
-    if (!confirm(`Enviar ${selecionados.length} item(s) para o Arquivo Morto? Eles serão removidos da lista principal mas poderão ser restaurados.`)) return;
-    setArquivando(true);
-    await base44.entities.Estoque.bulkUpdate(selecionados.map(id => ({ id, arquivado: true })));
-    setSelecionados([]);
-    setArquivando(false);
-    load();
+  const arquivarSelecionados = () => {
+    if (selecionados.length === 0) return mostrarAlerta("Selecione um ou mais produtos para arquivar.", "Nenhuma Seleção");
+    mostrarConfirm(`Enviar ${selecionados.length} item(s) para o Arquivo Morto? Eles serão removidos da lista principal mas poderão ser restaurados.`, async () => {
+      setArquivando(true);
+      await base44.entities.Estoque.bulkUpdate(selecionados.map(id => ({ id, arquivado: true })));
+      setSelecionados([]);
+      setArquivando(false);
+      load();
+    }, "Arquivar Produtos");
   };
 
   const restaurarSelecionados = async () => {
-    if (selecionados.length === 0) return alert("Selecione um ou mais produtos para restaurar.");
+    if (selecionados.length === 0) return mostrarAlerta("Selecione um ou mais produtos para restaurar.", "Nenhuma Seleção");
     setArquivando(true);
     await base44.entities.Estoque.bulkUpdate(selecionados.map(id => ({ id, arquivado: false })));
     setSelecionados([]);
@@ -281,7 +289,7 @@ export default function Estoque() {
     const lista = selecionados.length > 0
       ? filtrados.filter(i => selecionados.includes(i.id))
       : filtrados;
-    if (lista.length === 0) return alert("Nenhum item para exportar.");
+    if (lista.length === 0) return mostrarAlerta("Nenhum item para exportar.", "Exportação");
     const header = ["Código", "Descrição", "Categoria", "Marca", "Quantidade", "Estoque Mínimo", "Valor Custo", "Valor Venda", "Localização", "Fornecedor"];
     const rows = lista.map(i => [
       i.codigo || "", i.descricao || "", i.categoria || "", i.marca || "",
@@ -298,7 +306,7 @@ export default function Estoque() {
   };
   const exportarEstoqueBaixo = () => {
     const baixo = items.filter(i => i.quantidade < i.estoque_minimo);
-    if (baixo.length === 0) return alert("Nenhum produto com estoque baixo.");
+    if (baixo.length === 0) return mostrarAlerta("Nenhum produto com estoque baixo.", "Exportação");
     const rows = [["Quantidade Faltante", "Codigo do Produto"]];
     for (const i of baixo) {
       const falta = (Number(i.estoque_minimo || 0)) - (Number(i.quantidade || 0));
@@ -378,7 +386,7 @@ export default function Estoque() {
       return null;
     }).filter(Boolean);
     if (lista.length === 0) {
-      alert('Nenhuma divergência encontrada. Todos os saldos estão consistentes com o histórico.');
+      mostrarAlerta('Nenhuma divergência encontrada. Todos os saldos estão consistentes com o histórico.', 'Regularizar Saldo');
       return;
     }
     setDiscrepancias(lista);
@@ -418,69 +426,69 @@ export default function Estoque() {
     load();
   };
 
-  const aplicarReajuste = async () => {
-    if (!reajusteValor || Number(reajusteValor) <= 0) return alert("Informe um valor válido.");
+  const aplicarReajuste = () => {
+    if (!reajusteValor || Number(reajusteValor) <= 0) return mostrarAlerta("Informe um valor válido.", "Reajuste");
     const qtd = reajusteGrupo === "Todos" ? items.length : items.filter(i => i.categoria === reajusteGrupo).length;
-    if (!confirm(`Reajustar preço de venda de ${qtd} produto(s)?`)) return;
-    
-    setAplicando(true);
-    setProgressoReajuste({ isOpen: true, progresso: 0, status: 'processando', sucessos: 0, erro: null });
-    setShowReajuste(false);
+    mostrarConfirm(`Reajustar preço de venda de ${qtd} produto(s)?`, async () => {
+      setAplicando(true);
+      setProgressoReajuste({ isOpen: true, progresso: 0, status: 'processando', sucessos: 0, erro: null });
+      setShowReajuste(false);
 
-    try {
-      const PAGE = 30;
-      let skip = 0;
-      let totalGeral = 0;
-      let sucessoTotal = 0;
-      let falhasTotal = 0;
-      let hasMore = true;
+      try {
+        const PAGE = 30;
+        let skip = 0;
+        let totalGeral = 0;
+        let sucessoTotal = 0;
+        let falhasTotal = 0;
+        let hasMore = true;
 
-      while (hasMore) {
-        const response = await base44.functions.invoke('reajustarEstoqueStream', {
-          reajusteTipo,
-          reajusteValor: Number(reajusteValor),
-          reajusteGrupo,
-          skip,
-          limit: PAGE,
-        });
+        while (hasMore) {
+          const response = await base44.functions.invoke('reajustarEstoqueStream', {
+            reajusteTipo,
+            reajusteValor: Number(reajusteValor),
+            reajusteGrupo,
+            skip,
+            limit: PAGE,
+          });
 
-        const { sucesso, falhas, total, hasMore: more, processados } = response.data;
-        totalGeral = total;
-        sucessoTotal += sucesso;
-        falhasTotal += falhas;
-        skip = processados;
-        hasMore = more;
+          const { sucesso, falhas, total, hasMore: more, processados } = response.data;
+          totalGeral = total;
+          sucessoTotal += sucesso;
+          falhasTotal += falhas;
+          skip = processados;
+          hasMore = more;
 
+          setProgressoReajuste(prev => ({
+            ...prev,
+            progresso: processados,
+            sucessos: sucessoTotal,
+            status: 'processando',
+            total: totalGeral,
+          }));
+        }
+
+        const mensagemErro = falhasTotal > 0 ? `${falhasTotal} produto(s) falharam.` : null;
         setProgressoReajuste(prev => ({
           ...prev,
-          progresso: processados,
+          progresso: totalGeral,
           sucessos: sucessoTotal,
-          status: 'processando',
-          total: totalGeral,
+          status: falhasTotal > 0 ? 'aviso' : 'sucesso',
+          erro: mensagemErro,
         }));
+
+        await new Promise(r => setTimeout(r, 2000));
+        load();
+      } catch (err) {
+        setProgressoReajuste(prev => ({
+          ...prev,
+          status: 'erro',
+          erro: String(err.message || 'Erro ao processar reajuste'),
+        }));
+      } finally {
+        setAplicando(false);
+        setReajusteValor("");
       }
-
-      const mensagemErro = falhasTotal > 0 ? `${falhasTotal} produto(s) falharam.` : null;
-      setProgressoReajuste(prev => ({
-        ...prev,
-        progresso: totalGeral,
-        sucessos: sucessoTotal,
-        status: falhasTotal > 0 ? 'aviso' : 'sucesso',
-        erro: mensagemErro,
-      }));
-
-      await new Promise(r => setTimeout(r, 2000));
-      load();
-    } catch (err) {
-      setProgressoReajuste(prev => ({
-        ...prev,
-        status: 'erro',
-        erro: String(err.message || 'Erro ao processar reajuste'),
-      }));
-    } finally {
-      setAplicando(false);
-      setReajusteValor("");
-    }
+    }, "Reajustar Preço");
   };
 
   const handleImport = async (e) => {
@@ -674,7 +682,7 @@ export default function Estoque() {
           </button>
           <button
             onClick={() => {
-              if (selecionados.length === 0) return alert("Selecione um ou mais produtos para etiquetar.");
+              if (selecionados.length === 0) return mostrarAlerta("Selecione um ou mais produtos para etiquetar.", "Nenhuma Seleção");
               setShowEtiquetar(true);
             }}
             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all"
@@ -1078,6 +1086,15 @@ export default function Estoque() {
         status={progressoReajuste.status}
         erro={progressoReajuste.erro}
         sucessos={progressoReajuste.sucessos}
+      />
+
+      <ModalAviso
+        isOpen={aviso.isOpen}
+        tipo={aviso.tipo}
+        titulo={aviso.titulo}
+        mensagem={aviso.mensagem}
+        onConfirm={aviso.onConfirm}
+        onCancel={() => setAviso(a => ({ ...a, isOpen: false }))}
       />
 
       <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; text-transform:uppercase; } .input-dark:focus { border-color:#f97316; } .input-dark::placeholder { color:#6b7280; text-transform:none; }`}</style>
