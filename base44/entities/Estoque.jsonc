@@ -75,6 +75,11 @@
       "type": "string",
       "title": "Etiqueta"
     },
+    "arquivado": {
+      "type": "boolean",
+      "title": "Arquivado (Arquivo Morto)",
+      "default": false
+    },
     "observacoes": {
       "type": "string",
       "title": "Observa\u00e7\u00f5es"

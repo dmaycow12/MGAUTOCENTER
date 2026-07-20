@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, ChevronUp, ChevronDown, Download, ClipboardCheck, Scale, Tag } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Package, AlertTriangle, X, TrendingUp, Upload, FileSpreadsheet, CheckCircle2, LayoutGrid, List, ChevronUp, ChevronDown, Download, ClipboardCheck, Scale, Tag, Archive, ArchiveRestore } from "lucide-react";
 import ProgressoReajuste from "../components/estoque/ProgressoReajuste";
 import ModalEstoqueForm from "../components/estoque/ModalEstoqueForm";
 import MovimentacoesEstoque from "../components/estoque/MovimentacoesEstoque";
@@ -54,6 +54,8 @@ export default function Estoque() {
   const [checklistConfigId, setChecklistConfigId] = useState(null);
   const [showRegularizar, setShowRegularizar] = useState(false);
   const [showEtiquetar, setShowEtiquetar] = useState(false);
+  const [mostrarArquivados, setMostrarArquivados] = useState(false);
+  const [arquivando, setArquivando] = useState(false);
   const [discrepancias, setDiscrepancias] = useState([]);
   const [regularizando, setRegularizando] = useState(false);
   const [selecionadosReg, setSelecionadosReg] = useState([]);
@@ -189,6 +191,25 @@ export default function Estoque() {
     }
   };
 
+  const arquivarSelecionados = async () => {
+    if (selecionados.length === 0) return alert("Selecione um ou mais produtos para arquivar.");
+    if (!confirm(`Enviar ${selecionados.length} item(s) para o Arquivo Morto? Eles serão removidos da lista principal mas poderão ser restaurados.`)) return;
+    setArquivando(true);
+    await base44.entities.Estoque.bulkUpdate(selecionados.map(id => ({ id, arquivado: true })));
+    setSelecionados([]);
+    setArquivando(false);
+    load();
+  };
+
+  const restaurarSelecionados = async () => {
+    if (selecionados.length === 0) return alert("Selecione um ou mais produtos para restaurar.");
+    setArquivando(true);
+    await base44.entities.Estoque.bulkUpdate(selecionados.map(id => ({ id, arquivado: false })));
+    setSelecionados([]);
+    setArquivando(false);
+    load();
+  };
+
   const editar = (item) => {
     setForm({ ...defaultForm(), ...item });
     setEditando(item);
@@ -230,7 +251,8 @@ export default function Estoque() {
       i.marca?.toLowerCase().includes(search.toLowerCase());
     const matchFiltro = filtro === "Todos" || (filtro === "Estoque Baixo" && i.quantidade < i.estoque_minimo);
     const matchMarca = filtroMarcas.length === 0 || filtroMarcas.includes(i.marca);
-    return matchSearch && matchFiltro && matchMarca;
+    const matchArquivado = mostrarArquivados ? i.arquivado === true : !i.arquivado;
+    return matchSearch && matchFiltro && matchMarca && matchArquivado;
   });
 
   // Aplicar ordenação
@@ -662,7 +684,31 @@ export default function Estoque() {
           >
             <Tag className="w-4 h-4" /> Etiquetar
           </button>
+          <button
+            onClick={mostrarArquivados ? restaurarSelecionados : arquivarSelecionados}
+            disabled={arquivando}
+            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
+            style={{background: mostrarArquivados ? "#00ff00" : "#6b7280", color: "#000"}}
+            title={mostrarArquivados ? "Restaurar selecionados do arquivo morto" : "Enviar selecionados para o arquivo morto"}
+          >
+            {mostrarArquivados ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+            {arquivando ? "Processando..." : mostrarArquivados ? "Restaurar" : "Arquivo Morto"}
+          </button>
         </div>
+
+        {/* Toggle Arquivo Morto */}
+        <button
+          onClick={() => { setMostrarArquivados(!mostrarArquivados); setSelecionados([]); }}
+          className="w-full flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold transition-all"
+          style={{
+            background: mostrarArquivados ? "rgba(239,68,68,0.15)" : "#1f2937",
+            color: mostrarArquivados ? "#f87171" : "#9ca3af",
+            border: mostrarArquivados ? "1px solid rgba(239,68,68,0.4)" : "1px solid #374151"
+          }}
+        >
+          {mostrarArquivados ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+          {mostrarArquivados ? "VER PRODUTOS ATIVOS" : `VER ARQUIVO MORTO (${items.filter(i => i.arquivado).length})`}
+        </button>
 
         {/* Barra de progresso check list */}
         {checklistMode && (
@@ -691,6 +737,11 @@ export default function Estoque() {
           <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2.5">
             <span className="text-red-400 text-sm font-medium flex-1">{selecionados.length} item(s) selecionado(s)</span>
             <button onClick={() => setSelecionados([])} className="text-gray-400 hover:text-white text-xs px-3 py-1.5 border border-gray-700 rounded-lg transition-all">Cancelar</button>
+            {mostrarArquivados && (
+              <button onClick={restaurarSelecionados} disabled={arquivando} className="flex items-center gap-2 text-black text-xs px-3 py-1.5 rounded-lg font-medium transition-all disabled:opacity-50" style={{background:"#00ff00"}} onMouseEnter={e=>!arquivando && (e.currentTarget.style.background="#00dd00")} onMouseLeave={e=>e.currentTarget.style.background="#00ff00"}>
+                <ArchiveRestore className="w-3.5 h-3.5" /> {arquivando ? "Restaurando..." : "Restaurar Selecionados"}
+              </button>
+            )}
             <button onClick={excluirSelecionados} disabled={deletando} className="flex items-center gap-2 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition-all disabled:opacity-50" style={{background:"#cc0000"}} onMouseEnter={e=>!deletando && (e.currentTarget.style.background="#aa0000")} onMouseLeave={e=>e.currentTarget.style.background="#cc0000"}>
               <Trash2 className="w-3.5 h-3.5" /> {deletando ? "Deletando..." : "Excluir Selecionados"}
             </button>
