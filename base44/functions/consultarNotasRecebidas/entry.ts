@@ -59,14 +59,20 @@ Deno.serve(async (req) => {
     // Busca notas já existentes para evitar duplicatas
     const notasExistentes = await base44.asServiceRole.entities.NotaFiscal.list('-created_date', 2000);
     const chavesExistentes = new Set(notasExistentes.map(n => n.chave_acesso).filter(Boolean));
+    // Mapa chave -> nota existente (para atualizar XML/PDF faltantes em notas já importadas)
+    const notasPorChave = new Map();
+    for (const n of notasExistentes) {
+      if (n.chave_acesso && !notasPorChave.has(n.chave_acesso)) notasPorChave.set(n.chave_acesso, n);
+    }
 
     let importadas = 0;
+    let atualizadas = 0;
+    // Notas já importadas mas sem XML/PDF serão atualizadas na reimportação
 
     // ===== NFe RECEBIDAS =====
     const nfes = await buscarNFesRecebidas(CNPJ_EMITENTE);
     for (const nf of nfes) {
       const chave = nf.chave_nfe || '';
-      if (chave && chavesExistentes.has(chave)) continue;
 
       const data_emissao = (nf.data_emissao || '').substring(0, 10);
       if (data_emissao && data_emissao < '2026-04-01') continue;
@@ -74,8 +80,17 @@ Deno.serve(async (req) => {
       const situacao = (nf.situacao || '').toLowerCase();
       const status = situacao.includes('cancel') ? 'Cancelada' : 'Importada';
 
-      // Envia manifestação (fire-and-forget, sem esperar)
-      if (chave) {
+      // Verifica se a nota já existe no banco
+      let notaExistente = chave ? (notasPorChave.get(chave) || null) : null;
+
+      // Se já existe e já tem XML e PDF, pula
+      if (notaExistente && notaExistente.xml_url && notaExistente.pdf_url) {
+        if (chave) chavesExistentes.add(chave);
+        continue;
+      }
+
+      // Envia manifestação apenas para notas novas (fire-and-forget, sem esperar)
+      if (chave && !notaExistente) {
         try {
           await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}/manifestacoes`, {
             method: 'POST',
@@ -92,9 +107,10 @@ Deno.serve(async (req) => {
         numeroNF = String(parseInt(chave.substring(25, 34), 10));
       }
 
-      // Tenta baixar XML rapidamente (1 tentativa, sem espera)
+      // Tenta baixar XML apenas se estiver faltando na nota existente (ou é nota nova)
+      const precisaXml = !notaExistente || !notaExistente.xml_url;
       let xmlParaSalvar = {};
-      if (chave) {
+      if (chave && precisaXml) {
         try {
           const xmlResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.xml`, { headers: { 'Authorization': AUTH_HEADER } });
           if (xmlResp.ok) {
@@ -117,9 +133,10 @@ Deno.serve(async (req) => {
         } catch (_) {}
       }
 
-      // Tenta baixar PDF rapidamente (1 tentativa, sem espera)
+      // Tenta baixar PDF apenas se estiver faltando na nota existente (ou é nota nova)
+      const precisaPdf = !notaExistente || !notaExistente.pdf_url;
       let pdfParaSalvar = {};
-      if (chave) {
+      if (chave && precisaPdf) {
         try {
           const danfeResp = await fetch(`${FOCUSNFE_BASE}/nfes_recebidas/${chave}.pdf`, { headers: { 'Authorization': AUTH_HEADER } });
           if (danfeResp.ok) {
@@ -132,6 +149,19 @@ Deno.serve(async (req) => {
             }
           }
         } catch (_) {}
+      }
+
+      // Se a nota já existe, atualiza XML/PDF que foram baixados
+      if (notaExistente) {
+        const updateData = {};
+        if (xmlParaSalvar.xml_url) { updateData.xml_url = xmlParaSalvar.xml_url; updateData.xml_original_url = xmlParaSalvar.xml_original_url; }
+        if (pdfParaSalvar.pdf_url) { updateData.pdf_url = pdfParaSalvar.pdf_url; }
+        if (Object.keys(updateData).length > 0) {
+          await base44.asServiceRole.entities.NotaFiscal.update(notaExistente.id, updateData);
+          atualizadas++;
+        }
+        if (chave) chavesExistentes.add(chave);
+        continue;
       }
 
       // Re-verifica no banco logo antes de criar (evita duplicata se outra importação rodou em paralelo)
@@ -164,7 +194,6 @@ Deno.serve(async (req) => {
     const nfses = await buscarNFSesRecebidas(CNPJ_EMITENTE);
     for (const nf of nfses) {
       const chave = nf.chave || '';
-      if (chave && chavesExistentes.has(chave)) continue;
 
       const situacao = (nf.status || '').toLowerCase();
       const status = situacao.includes('cancel') ? 'Cancelada' : 'Importada';
@@ -174,6 +203,16 @@ Deno.serve(async (req) => {
 
       if (data_emissao && data_emissao < '2026-04-01') continue;
 
+      // Verifica se a nota já existe no banco
+      let notaExistente = chave ? (notasPorChave.get(chave) || null) : null;
+
+      // Se já existe e já tem PDF, pula
+      if (notaExistente && notaExistente.pdf_url) {
+        if (chave) chavesExistentes.add(chave);
+        continue;
+      }
+
+      // Baixa PDF apenas se estiver faltando (ou é nota nova)
       let pdfNFSe = nf.url || '';
       if (!pdfNFSe && chave) {
         try {
@@ -188,6 +227,16 @@ Deno.serve(async (req) => {
             }
           }
         } catch (_) {}
+      }
+
+      // Se a nota já existe, atualiza o PDF que foi baixado
+      if (notaExistente) {
+        if (pdfNFSe) {
+          await base44.asServiceRole.entities.NotaFiscal.update(notaExistente.id, { pdf_url: pdfNFSe });
+          atualizadas++;
+        }
+        if (chave) chavesExistentes.add(chave);
+        continue;
       }
 
       // Re-verifica no banco logo antes de criar (evita duplicata se outra importação rodou em paralelo)
@@ -218,10 +267,9 @@ Deno.serve(async (req) => {
 
     return Response.json({
       sucesso: true,
-      mensagem: importadas > 0
-        ? `${importadas} nota(s) importada(s). NFe: ${nfes.length}, NFSe: ${nfses.length} consultadas.`
-        : `Nenhuma nota nova encontrada. NFe: ${nfes.length}, NFSe: ${nfses.length} consultadas.`,
+      mensagem: `${importadas} nota(s) importada(s) e ${atualizadas} nota(s) com XML/PDF atualizado(s). NFe: ${nfes.length}, NFSe: ${nfses.length} consultadas.`,
       importadas,
+      atualizadas,
       nfes_consultadas: nfes.length,
       nfses_consultadas: nfses.length,
     });
