@@ -79,33 +79,33 @@ export default function AbaComissoes() {
         <div className="rounded-xl overflow-hidden" style={{ background: "#0a1929", border: "1px solid #1e3a5f" }}>
           {/* Header tabela */}
           <div className="grid px-4 py-2" style={{ gridTemplateColumns: "1fr 1fr 2fr 1fr 1fr 1fr", borderBottom: "1px solid #1e3a5f", background: "rgba(6,44,155,0.12)" }}>
-            <span className="text-gray-500 text-xs font-bold tracking-widest">DATA</span>
-            <span className="text-gray-500 text-xs font-bold text-center">Nº VENDA</span>
-            <span className="text-gray-500 text-xs font-bold text-center">VEÍCULO</span>
-            <span className="text-gray-500 text-xs font-bold text-center">PLACA</span>
-            <span className="text-gray-500 text-xs font-bold text-center">TÉCNICO</span>
-            <span className="text-gray-500 text-xs font-bold text-right">COMISSÃO</span>
+            <span className="text-gray-500 text-xs font-bold tracking-widest px-2" style={{ borderRight: "1px solid #232b38" }}>DATA</span>
+            <span className="text-gray-500 text-xs font-bold text-center px-2" style={{ borderRight: "1px solid #232b38" }}>Nº VENDA</span>
+            <span className="text-gray-500 text-xs font-bold text-center px-2" style={{ borderRight: "1px solid #232b38" }}>VEÍCULO</span>
+            <span className="text-gray-500 text-xs font-bold text-center px-2" style={{ borderRight: "1px solid #232b38" }}>PLACA</span>
+            <span className="text-gray-500 text-xs font-bold text-center px-2" style={{ borderRight: "1px solid #232b38" }}>TÉCNICO</span>
+            <span className="text-gray-500 text-xs font-bold text-right px-2">COMISSÃO</span>
           </div>
 
           {vendasComissao.map((v, i) => (
             <div key={i} className="grid px-4 py-3 hover:bg-white/[0.04] transition-all items-center" style={{ gridTemplateColumns: "1fr 1fr 2fr 1fr 1fr 1fr", borderBottom: "1px solid #232b38" }}>
               {/* Data */}
-              <div className="text-left text-white text-xs">{v.data ? new Date(v.data + "T00:00:00").toLocaleDateString("pt-BR") : "—"}</div>
+              <div className="text-left text-white text-xs px-2" style={{ borderRight: "1px solid #232b38" }}>{v.data ? new Date(v.data + "T00:00:00").toLocaleDateString("pt-BR") : "—"}</div>
 
               {/* Nº Venda */}
-              <div className="text-center text-white text-xs font-bold">{v.numero ? `#${v.numero}` : "—"}</div>
+              <div className="text-center text-white text-xs font-bold px-2" style={{ borderRight: "1px solid #232b38" }}>{v.numero ? `#${v.numero}` : "—"}</div>
 
               {/* Veículo */}
-              <div className="text-center text-white text-xs truncate">{v.veiculo || "—"}</div>
+              <div className="text-center text-white text-xs truncate px-2" style={{ borderRight: "1px solid #232b38" }}>{v.veiculo || "—"}</div>
 
               {/* Placa */}
-              <div className="text-center text-white text-xs">{v.placa || "—"}</div>
+              <div className="text-center text-white text-xs px-2" style={{ borderRight: "1px solid #232b38" }}>{v.placa || "—"}</div>
 
               {/* Técnico */}
-              <div className="text-center text-white text-xs">{v.tecnico || "—"}</div>
+              <div className="text-center text-white text-xs px-2" style={{ borderRight: "1px solid #232b38" }}>{v.tecnico || "—"}</div>
 
               {/* Comissão */}
-              <div className="text-right">
+              <div className="text-right px-2">
                 <span className="text-white text-sm font-bold">{fmtV(v.comissao)}</span>
               </div>
             </div>
