@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import { mostrarAlerta, mostrarConfirm } from "@/lib/modalAviso";
 import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Edit, Trash2, FileText, Download, CheckSquare, Square } from "lucide-react";
 
 async function baixarBoleto(paymentId, fallbackUrl) {
@@ -208,8 +209,8 @@ export default function Financeiro() {
   };
 
   const salvar = async () => {
-    if (!form.descricao) return alert("Informe a descrição.");
-    if (!form.valor) return alert("Informe o valor.");
+    if (!form.descricao) return mostrarAlerta("Informe a descrição.");
+    if (!form.valor) return mostrarAlerta("Informe o valor.");
     if (editando) {
       await base44.entities.Financeiro.update(editando.id, form);
     } else {
@@ -221,10 +222,11 @@ export default function Financeiro() {
     load();
   };
 
-  const excluir = async (id) => {
-    if (!confirm("Excluir este lançamento?")) return;
-    await base44.entities.Financeiro.delete(id);
-    load();
+  const excluir = (id) => {
+    mostrarConfirm("Excluir este lançamento? Esta ação não pode ser desfeita.", async () => {
+      await base44.entities.Financeiro.delete(id);
+      load();
+    }, "Excluir Lançamento");
   };
 
   const verificarEConcluirVenda = async (vendaId) => {

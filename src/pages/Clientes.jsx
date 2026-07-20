@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Edit, Trash2, User, Phone, Mail, ChevronDown, ChevronUp, Car, X, LayoutGrid, List, Loader2, AlertTriangle } from "lucide-react";
+import { mostrarAlerta } from "@/lib/modalAviso";
 
 const CATEGORIAS = ["Cliente", "Fornecedor", "Funcionário", "Transportadora"];
 
@@ -74,7 +75,7 @@ export default function Clientes() {
 
   const buscarCnpj = async () => {
     const cnpj = form.cpf_cnpj.replace(/\D/g, '');
-    if (cnpj.length !== 14) return alert('Digite um CNPJ válido com 14 dígitos.');
+    if (cnpj.length !== 14) return mostrarAlerta('Digite um CNPJ válido com 14 dígitos.');
     setBuscandoCnpj(true);
     try {
       const resp = await base44.functions.invoke('buscarCnpj', { cnpj });
@@ -104,7 +105,7 @@ export default function Clientes() {
         estado: est?.estado?.sigla || f.estado,
       }));
     } catch (e) {
-      alert('Erro ao buscar CNPJ: ' + e.message);
+      mostrarAlerta('Erro ao buscar CNPJ: ' + e.message);
     }
     setBuscandoCnpj(false);
   };
@@ -160,20 +161,20 @@ export default function Clientes() {
   };
 
   const salvar = async () => {
-    if (!form.nome) return alert("Informe o nome do cliente.");
+    if (!form.nome) return mostrarAlerta("Informe o nome do cliente.");
     if (!validarTelefone(form.telefone)) {
       setErroTelefone("O telefone deve ter exatamente 10 ou 11 dígitos (DDD + número).\nEx: 34 3822 2085 ou 34 98885 1245");
       return;
     }
     const formNormalizado = { ...form, tipo: normalizarTipo(form.tipo), cpf_cnpj: formatCpfCnpj(form.cpf_cnpj) };
-    if (editando && isConsumidor(editando)) return alert("O cliente CONSUMIDOR não pode ser alterado.");
+    if (editando && isConsumidor(editando)) return mostrarAlerta("O cliente CONSUMIDOR não pode ser alterado.");
     // Validar CPF/CNPJ duplicado
     if (form.cpf_cnpj) {
       const cpfLimpo = form.cpf_cnpj.replace(/\D/g, "");
       const duplicado = clientes.find(c =>
         c.cpf_cnpj?.replace(/\D/g, "") === cpfLimpo && c.id !== editando?.id
       );
-      if (duplicado) return alert(`Já existe um cadastro com este CPF/CNPJ: ${duplicado.nome}`);
+      if (duplicado) return mostrarAlerta(`Já existe um cadastro com este CPF/CNPJ: ${duplicado.nome}`);
     }
     try {
       if (editando) {
@@ -186,7 +187,7 @@ export default function Clientes() {
       setForm(defaultForm());
       load();
     } catch (e) {
-      alert('Erro ao salvar cadastro: ' + (e?.message || e));
+      mostrarAlerta('Erro ao salvar cadastro: ' + (e?.message || e));
     }
   };
 
@@ -216,7 +217,7 @@ export default function Clientes() {
 
 
   const editarCliente = (c) => {
-    if (isConsumidor(c)) return alert("O cliente CONSUMIDOR não pode ser alterado.");
+    if (isConsumidor(c)) return mostrarAlerta("O cliente CONSUMIDOR não pode ser alterado.");
     setForm({ ...defaultForm(), ...c });
     setEditando(c);
     setShowForm(true);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { appParams } from "@/lib/app-params";
+import { mostrarAlerta } from "@/lib/modalAviso";
 import {
   FileText, Plus, Upload, Search, Trash2, X,
   CheckCircle, AlertCircle, PlusCircle, MinusCircle, RefreshCw, LayoutGrid, List, BarChart2, Pencil, Ban, LogIn, Code, Download, ChevronLeft, ChevronRight, ChevronDown
@@ -541,7 +542,7 @@ export default function NotasFiscais() {
   };
 
   const importarXML = async () => {
-    if (!xmlTexto.trim()) return alert("Cole o conteúdo do XML.");
+    if (!xmlTexto.trim()) return mostrarAlerta("Cole o conteúdo do XML.");
     setImportando(true);
     if (xmlTexto.includes('<tpEvento>110111</tpEvento>') || xmlTexto.includes('<procCancNFe')) {
       const chaveM = xmlTexto.match(/<chNFe>(\d{44})<\/chNFe>/);
@@ -656,7 +657,7 @@ export default function NotasFiscais() {
     if (rascunhoNota) {
       const clienteVinculado = clientes.find(c => c.id === rascunhoNota.cliente_id);
       if ((rascunhoNota.tipo === 'NFe' || rascunhoNota.tipo === 'NFSe') && !clienteVinculado?.cpf_cnpj?.trim()) {
-        alert('Esta nota exige um cliente com CPF ou CNPJ cadastrado.');
+        mostrarAlerta('Esta nota exige um cliente com CPF ou CNPJ cadastrado.');
         setTransmitindo(null);
         return;
       }
@@ -722,17 +723,17 @@ export default function NotasFiscais() {
       setErrosForm({});
     }
 
-    if (!f.cliente_nome) return alert("Informe o nome do cliente.");
-    if (!f.valor_total || f.valor_total <= 0) return alert("Informe o valor total.");
+    if (!f.cliente_nome) return mostrarAlerta("Informe o nome do cliente.");
+    if (!f.valor_total || f.valor_total <= 0) return mostrarAlerta("Informe o valor total.");
 
     const isConsumidor = f.cliente_nome?.toUpperCase() === "CONSUMIDOR";
     if (f.tipo === "NFSe") {
-      if (isConsumidor) return alert("NFSe não aceita o cliente CONSUMIDOR.");
-      if (!f.cliente_cpf_cnpj?.trim()) return alert("NFSe exige cliente com CPF ou CNPJ cadastrado.");
+      if (isConsumidor) return mostrarAlerta("NFSe não aceita o cliente CONSUMIDOR.");
+      if (!f.cliente_cpf_cnpj?.trim()) return mostrarAlerta("NFSe exige cliente com CPF ou CNPJ cadastrado.");
     }
     if (f.tipo === "NFe") {
-      if (isConsumidor) return alert("NFe não aceita CONSUMIDOR.");
-      if (!f.cliente_cpf_cnpj?.trim()) return alert("NFe exige cliente com CPF ou CNPJ cadastrado.");
+      if (isConsumidor) return mostrarAlerta("NFe não aceita CONSUMIDOR.");
+      if (!f.cliente_cpf_cnpj?.trim()) return mostrarAlerta("NFe exige cliente com CPF ou CNPJ cadastrado.");
     }
 
     if (rascunhoNota) setTransmitindo(rascunhoNota.id);

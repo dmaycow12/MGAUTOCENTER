@@ -3,6 +3,7 @@ import { X, FileDown, RefreshCw, AlertCircle } from "lucide-react";
 import { gerarArquivoSintegra } from "./gerarSintegra";
 import JSZip from "jszip";
 import * as XLSX from "xlsx";
+import { mostrarAlerta } from "@/lib/modalAviso";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
@@ -89,7 +90,7 @@ export default function ModalSintegra({ notas, estoque, configs, onClose }) {
 
   const gerar = async () => {
     const periodo = getPeriodo();
-    if (!periodo.inicio || !periodo.fim) return alert("Informe o período.");
+    if (!periodo.inicio || !periodo.fim) return mostrarAlerta("Informe o período.");
     setGerando(true);
     setResultado(null);
 

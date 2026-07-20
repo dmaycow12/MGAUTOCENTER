@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Pencil, Trash2, Camera, X, Image, Check, LayoutGrid, List, ChevronDown } from "lucide-react";
+import { mostrarAlerta, mostrarConfirm } from "@/lib/modalAviso";
 
 const CATEGORIAS_AUTORIZADAS = ["COZINHA", "ELÉTRICO", "EQUIPAMENTO", "ESCRITÓRIO", "ESTOQUE", "EXTINTOR", "FERRAMENTA", "OUTROS", "PNEUMÁTICO", "SEGURANÇA", "VEÍCULO"];
 
@@ -66,10 +67,11 @@ export default function Ativos() {
     setLoading(false);
   };
 
-  const excluir = async (id) => {
-    if (!confirm("Excluir este ativo?")) return;
-    await base44.entities.Ativo.delete(id);
-    load();
+  const excluir = (id) => {
+    mostrarConfirm("Excluir este ativo? Esta ação não pode ser desfeita.", async () => {
+      await base44.entities.Ativo.delete(id);
+      load();
+    }, "Excluir Ativo");
   };
 
   const atualizarCategorias = (cats) => {
@@ -80,7 +82,7 @@ export default function Ativos() {
   const adicionarCategoria = () => {
     // Não permite adicionar novas categorias - apenas as 11 autorizadas
     setNovaCategoria("");
-    alert("Use apenas as 11 categorias disponíveis");
+    mostrarAlerta("Use apenas as 11 categorias disponíveis");
   };
 
   const renomearCategoria = async (catAntiga, novoNome) => {
@@ -513,7 +515,7 @@ function AtivoForm({ ativo, categorias, onClose, onSave }) {
   };
 
   const salvar = async () => {
-    if (!form.nome) return alert("Informe o nome do ativo.");
+    if (!form.nome) return mostrarAlerta("Informe o nome do ativo.");
     setSaving(true);
     if (ativo) {
       await base44.entities.Ativo.update(ativo.id, form);

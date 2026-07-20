@@ -4,6 +4,7 @@ import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, Che
 import ModalEmissaoMassa from "@/components/notas/ModalEmissaoMassa";
 import VendaForm from "@/components/vendas/VendaForm";
 import VendaCard from "@/components/vendas/VendaCard";
+import { mostrarAlerta, mostrarConfirm } from "@/lib/modalAviso";
 import VendaRow, { COLUNAS_PADRAO } from "@/components/vendas/VendaRow";
 import RevisaoVendas from "@/components/vendas/RevisaoVendas";
 
@@ -189,16 +190,17 @@ export default function Vendas() {
     } catch (err) {
       console.error("Erro ao carregar Vendas:", err);
       console.error("Stack:", err.stack);
-      alert("Erro ao carregar vendas: " + err.message);
+      mostrarAlerta("Erro ao carregar vendas: " + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const excluir = async (id) => {
-    if (!confirm("Excluir esta Ordem de Serviço?")) return;
-    await base44.entities.Vendas.delete(id);
-    load();
+  const excluir = (id) => {
+    mostrarConfirm("Excluir esta Ordem de Serviço? Esta ação não pode ser desfeita.", async () => {
+      await base44.entities.Vendas.delete(id);
+      load();
+    }, "Excluir Ordem");
   };
 
   const atualizarOrdem = (id, dados) => {

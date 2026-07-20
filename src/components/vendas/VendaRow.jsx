@@ -4,6 +4,7 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { Pencil, Printer, Trash2, AlertTriangle } from "lucide-react";
 import { gerarHTMLImpressao } from "./vendaImpressao";
+import { mostrarAlerta } from "@/lib/modalAviso";
 import { reduzirEstoque, restaurarEstoque, excluirLancamentosVenda, limparHistoricoVenda } from "./estoqueUtils";
 
 
@@ -42,7 +43,7 @@ const InlineEdit = forwardRef(function InlineEdit({ value, onSave, placeholder =
     if (isPhone) {
       const digits = val.replace(/\D/g, '');
       if (digits.length > 0 && (digits.length < 10 || digits.length > 11)) {
-        alert("O telefone deve ter entre 10 e 11 dígitos.");
+        mostrarAlerta("O telefone deve ter entre 10 e 11 dígitos.");
         return;
       }
       const result = await onSave(digits.length > 0 ? formatTelefone(val) : "");
@@ -251,7 +252,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
       const existentes = await base44.entities.Vendas.filter({ numero: val }, "-created_date", 5);
       const duplicado = existentes.find(v => v.id !== os.id);
       if (duplicado) {
-        alert(`O número ${val} já está em uso pela venda do cliente "${duplicado.cliente_nome || "—"}". Escolha outro número.`);
+        mostrarAlerta(`O número ${val} já está em uso pela venda do cliente "${duplicado.cliente_nome || "—"}". Escolha outro número.`);
         return false;
       }
     }
@@ -376,7 +377,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
       setStatusPendente(null);
       onRefresh?.();
     } catch (err) {
-      alert("Erro ao alterar status: " + (err?.message || "Erro desconhecido"));
+      mostrarAlerta("Erro ao alterar status: " + (err?.message || "Erro desconhecido"));
     }
   };
 
@@ -404,7 +405,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
 
   const enviarWhatsApp = () => {
     const telefone = os.cliente_telefone?.replace(/\D/g, "");
-    if (!telefone) return alert("Telefone do cliente não cadastrado.");
+    if (!telefone) return mostrarAlerta("Telefone do cliente não cadastrado.");
     const fone = telefone.startsWith("55") ? telefone : "55" + telefone;
     const concluido = os.status === "Concluído";
 

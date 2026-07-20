@@ -4,6 +4,7 @@ import { X, Plus, Trash2, AlertTriangle, Camera, Image, GripVertical } from "luc
 import SearchableSelect from "@/components/notas/SearchableSelect";
 import { reduzirEstoque, restaurarEstoque, restaurarEstoqueCompletoPeca, sincronizarEstoqueVenda } from "./estoqueUtils";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { mostrarAlerta } from "@/lib/modalAviso";
 
 const defaultForm = () => ({
   numero: "",
@@ -158,7 +159,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const buscarCnpjNovoCliente = async () => {
     const cnpj = novoClienteForm.cpf_cnpj.replace(/\D/g, '');
-    if (cnpj.length !== 14) return alert('Digite um CNPJ válido com 14 dígitos.');
+    if (cnpj.length !== 14) return mostrarAlerta('Digite um CNPJ válido com 14 dígitos.');
     setBuscandoCnpj(true);
     try {
       const resp = await base44.functions.invoke('buscarCnpj', { cnpj });
@@ -183,7 +184,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         estado: est?.estado?.sigla || f.estado,
       }));
     } catch (e) {
-      alert('Erro ao buscar CNPJ: ' + e.message);
+      mostrarAlerta('Erro ao buscar CNPJ: ' + e.message);
     }
     setBuscandoCnpj(false);
   };
@@ -408,7 +409,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const salvarNovoCliente = async () => {
-    if (!novoClienteForm.nome.trim()) return alert("Informe o nome do cliente.");
+    if (!novoClienteForm.nome.trim()) return mostrarAlerta("Informe o nome do cliente.");
     setSalvandoCliente(true);
     const criado = await base44.entities.Cadastro.create({ ...novoClienteForm, categoria: "Cliente" });
     clientes.push(criado);
@@ -728,19 +729,19 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const salvar = async () => {
-    if (!form.cliente_nome && !form.cliente_id) return alert("Selecione ou informe o cliente.");
+    if (!form.cliente_nome && !form.cliente_id) return mostrarAlerta("Selecione ou informe o cliente.");
     if (!validarTelefone(form.cliente_telefone)) {
       setErroTelefone("O telefone de contato deve ter exatamente 10 ou 11 dígitos (DDD + número).\nEx: 34 3822 2085 ou 34 98885 1245");
       return;
     }
     const pecasPendentes = (form.pecas || []).filter(p => p._new);
     const servicosPendentes = (form.servicos || []).filter(s => s._new);
-    if (pecasPendentes.length > 0) return alert("Selecione o produto antes de salvar. Há produto(s) adicionados sem seleção.");
-    if (servicosPendentes.length > 0) return alert("Selecione o serviço antes de salvar. Há serviço(s) adicionados sem seleção.");
+    if (pecasPendentes.length > 0) return mostrarAlerta("Selecione o produto antes de salvar. Há produto(s) adicionados sem seleção.");
+    if (servicosPendentes.length > 0) return mostrarAlerta("Selecione o serviço antes de salvar. Há serviço(s) adicionados sem seleção.");
     const pecasSemCodigo = form.status !== "Orçamento" ? (form.pecas || []).filter(p => !p.codigo?.trim()) : [];
     const servicosSemCodigo = form.status !== "Orçamento" ? (form.servicos || []).filter(s => !s.codigo?.trim()) : [];
-    if (pecasSemCodigo.length > 0) return alert(`Produto(s) sem código: ${pecasSemCodigo.map(p => p.descricao || 'sem descrição').join(', ')}. Preencha o código antes de salvar.`);
-    if (servicosSemCodigo.length > 0) return alert(`Serviço(s) sem código: ${servicosSemCodigo.map(s => s.descricao || 'sem descrição').join(', ')}. Preencha o código antes de salvar.`);
+    if (pecasSemCodigo.length > 0) return mostrarAlerta(`Produto(s) sem código: ${pecasSemCodigo.map(p => p.descricao || 'sem descrição').join(', ')}. Preencha o código antes de salvar.`);
+    if (servicosSemCodigo.length > 0) return mostrarAlerta(`Serviço(s) sem código: ${servicosSemCodigo.map(s => s.descricao || 'sem descrição').join(', ')}. Preencha o código antes de salvar.`);
     const totalParcelas = parcelasRef.current.reduce((acc, p) => acc + (Number(p.valor) || 0), 0);
     const diff = Math.abs(totalParcelas - form.valor_total);
     if (diff > 0.05) {
@@ -888,7 +889,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       log('FIM - tudo concluído');
       onSave({ ...formFinal, id: savedId });
     } catch (err) {
-      alert("Erro ao salvar: " + (err?.message || "Erro desconhecido"));
+      mostrarAlerta("Erro ao salvar: " + (err?.message || "Erro desconhecido"));
     } finally {
       setSaving(false);
     }

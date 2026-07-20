@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { AlertTriangle, Download, Plus, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ModalEstoqueForm from "./ModalEstoqueForm";
+import { mostrarAlerta } from "@/lib/modalAviso";
 
 const defaultForm = () => ({
   codigo: "", codigos: [], descricao: "", marca: "",
@@ -49,7 +50,7 @@ export default function AbaReposicao({ items, onReload }) {
   };
 
   const salvar = async () => {
-    if (!form.descricao) return alert("Informe a descricao.");
+    if (!form.descricao) return mostrarAlerta("Informe a descricao.");
     await base44.entities.Estoque.create(form);
     setShowForm(false);
     setForm(defaultForm());
@@ -57,7 +58,7 @@ export default function AbaReposicao({ items, onReload }) {
   };
 
   const exportar = () => {
-    if (baixo.length === 0) return alert("Nenhum produto com estoque baixo.");
+    if (baixo.length === 0) return mostrarAlerta("Nenhum produto com estoque baixo.");
     const rows = [["Quantidade Faltante", "Codigo do Produto"]];
     for (const i of baixo) {
       const falta = (Number(i.estoque_minimo || 0)) - (Number(i.quantidade || 0));

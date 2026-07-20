@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
 import PasswordGate from '@/components/PasswordGate';
 import ReposicaoPrint from './pages/ReposicaoPrint';
+import ModalAvisoGlobal from '@/components/ModalAvisoGlobal';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -82,6 +83,7 @@ function App() {
         </AuthProvider>
       </Router>
       <Toaster />
+      <ModalAvisoGlobal />
     </QueryClientProvider>
     </PasswordGate>
   )

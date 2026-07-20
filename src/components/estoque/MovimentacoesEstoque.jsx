@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { Search, Trash2, Edit, X, Check } from "lucide-react";
+import { mostrarConfirm } from "@/lib/modalAviso";
 
 const TIPO_CORES = {
   entrada: { bg: "#00ff0022", color: "#00ff00", border: "#00ff0044", label: "ENTRADA" },
@@ -85,51 +86,49 @@ export default function MovimentacoesEstoque({ items, onReload }) {
 
   const selecionadosSet = new Set(selecionados);
 
-  const excluirSelecionados = async () => {
+  const excluirSelecionados = () => {
     if (!selecionados.length) return;
-    if (!confirm(`Excluir ${selecionados.length} ajuste(s)? O saldo de cada produto será corrigido automaticamente.`)) return;
-    setDeletando(true);
+    mostrarConfirm(`Excluir ${selecionados.length} ajuste(s)? O saldo de cada produto será corrigido automaticamente.`, async () => {
+      setDeletando(true);
 
-    const porItem = {};
-    for (const k of selecionados) {
-      const [itemId, movIdxStr] = k.split("_");
-      const movIdx = parseInt(movIdxStr);
-      if (!porItem[itemId]) porItem[itemId] = new Set();
-      porItem[itemId].add(movIdx);
-    }
+      const porItem = {};
+      for (const k of selecionados) {
+        const [itemId, movIdxStr] = k.split("_");
+        const movIdx = parseInt(movIdxStr);
+        if (!porItem[itemId]) porItem[itemId] = new Set();
+        porItem[itemId].add(movIdx);
+      }
 
-    for (const [itemId, idxSet] of Object.entries(porItem)) {
-       const item = items.find(i => i.id === itemId);
-       if (!item) continue;
+      for (const [itemId, idxSet] of Object.entries(porItem)) {
+         const item = items.find(i => i.id === itemId);
+         if (!item) continue;
 
-       // Calcula impacto na quantidade (entrada soma, saída subtrai)
-       let qtdImpacto = 0;
-       (item.historico || []).forEach((mov, idx) => {
-         if (idxSet.has(idx)) {
-           const tipo = normalizarTipo(mov.tipo);
-           const qtd = Number(mov.quantidade || 0);
-           // Se é entrada/ajuste positivo: subtrair
-           // Se é saída: somar (porque ao deletar saída, volta pro estoque)
-           if (tipo === "saida") {
-             qtdImpacto += qtd;
-           } else {
-             qtdImpacto -= qtd;
+         let qtdImpacto = 0;
+         (item.historico || []).forEach((mov, idx) => {
+           if (idxSet.has(idx)) {
+             const tipo = normalizarTipo(mov.tipo);
+             const qtd = Number(mov.quantidade || 0);
+             if (tipo === "saida") {
+               qtdImpacto += qtd;
+             } else {
+               qtdImpacto -= qtd;
+             }
            }
-         }
-       });
+         });
 
-       const novoHistorico = (item.historico || []).filter((_, idx) => !idxSet.has(idx));
-       const novaQtd = Number(item.quantidade || 0) + qtdImpacto;
+         const novoHistorico = (item.historico || []).filter((_, idx) => !idxSet.has(idx));
+         const novaQtd = Number(item.quantidade || 0) + qtdImpacto;
 
-       await base44.entities.Estoque.update(itemId, {
-         historico: novoHistorico,
-         quantidade: novaQtd,
-       });
-     }
+         await base44.entities.Estoque.update(itemId, {
+           historico: novoHistorico,
+           quantidade: novaQtd,
+         });
+       }
 
-    setSelecionados([]);
-    setDeletando(false);
-    onReload();
+      setSelecionados([]);
+      setDeletando(false);
+      onReload();
+    }, "Excluir Ajustes");
   };
 
   const abrirEdicao = (m) => {

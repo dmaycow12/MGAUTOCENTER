@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Pencil, Trash2, X, LayoutGrid, List } from "lucide-react";
+import { mostrarAlerta, mostrarConfirm } from "@/lib/modalAviso";
 
 const defaultForm = () => ({ codigo: "", descricao: "", categoria: "", valor: 0, observacoes: "" });
 
@@ -31,7 +32,7 @@ export default function Servicos() {
   const abrirEditar = (item) => { setForm({ ...item }); setEditando(item); setTabAtual("dados"); setShowForm(true); };
 
   const salvar = async () => {
-    if (!form.descricao) return alert("Informe a descrição do serviço.");
+    if (!form.descricao) return mostrarAlerta("Informe a descrição do serviço.");
     setSaving(true);
     if (editando) {
       await base44.entities.Servico.update(editando.id, form);
@@ -43,10 +44,11 @@ export default function Servicos() {
     load();
   };
 
-  const excluir = async (id) => {
-    if (!confirm("Excluir este serviço?")) return;
-    await base44.entities.Servico.delete(id);
-    load();
+  const excluir = (id) => {
+    mostrarConfirm("Excluir este serviço? Esta ação não pode ser desfeita.", async () => {
+      await base44.entities.Servico.delete(id);
+      load();
+    }, "Excluir Serviço");
   };
 
   const sortServicos = (list) => list.slice().sort((a, b) => {

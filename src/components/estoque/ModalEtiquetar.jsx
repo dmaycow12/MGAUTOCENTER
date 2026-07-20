@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { X, Tag, Save } from "lucide-react";
+import { mostrarAlerta } from "@/lib/modalAviso";
 
 export default function ModalEtiquetar({ items, onClose, onSalvar }) {
   const [etiqueta, setEtiqueta] = useState("");
@@ -12,13 +13,13 @@ export default function ModalEtiquetar({ items, onClose, onSalvar }) {
   }, [items]);
 
   const handleSalvar = async () => {
-    if (!etiqueta.trim()) return alert("Digite ou selecione uma etiqueta.");
+    if (!etiqueta.trim()) return mostrarAlerta("Digite ou selecione uma etiqueta.");
     setSalvando(true);
     try {
       await onSalvar(etiqueta.trim());
       onClose();
     } catch (e) {
-      alert("Erro ao salvar etiqueta: " + e.message);
+      mostrarAlerta("Erro ao salvar etiqueta: " + e.message);
     } finally {
       setSalvando(false);
     }

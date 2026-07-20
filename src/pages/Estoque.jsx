@@ -7,7 +7,7 @@ import MovimentacoesEstoque from "../components/estoque/MovimentacoesEstoque";
 import LucroPecas from "../components/estoque/LucroPecas";
 import ModalEtiquetar from "../components/estoque/ModalEtiquetar";
 import AbaReposicao from "../components/estoque/AbaReposicao";
-import ModalAviso from "../components/estoque/ModalAviso";
+import { mostrarAlerta, mostrarConfirm } from "@/lib/modalAviso";
 
 const arredondarVendaParaCinco = (valor) => {
   return Math.ceil(valor / 5) * 5;
@@ -57,10 +57,6 @@ export default function Estoque() {
   const [showEtiquetar, setShowEtiquetar] = useState(false);
   const [mostrarArquivados, setMostrarArquivados] = useState(false);
   const [arquivando, setArquivando] = useState(false);
-  const [aviso, setAviso] = useState({ isOpen: false, tipo: 'alerta', mensagem: '', titulo: '', onConfirm: null });
-
-  const mostrarAlerta = (mensagem, titulo) => setAviso({ isOpen: true, tipo: 'alerta', mensagem, titulo: titulo || 'Aviso', onConfirm: () => setAviso(a => ({ ...a, isOpen: false })) });
-  const mostrarConfirm = (mensagem, onConfirm, titulo) => setAviso({ isOpen: true, tipo: 'confirm', mensagem, titulo: titulo || 'Confirmar Ação', onConfirm: () => { setAviso(a => ({ ...a, isOpen: false })); onConfirm(); } });
   const [discrepancias, setDiscrepancias] = useState([]);
   const [regularizando, setRegularizando] = useState(false);
   const [selecionadosReg, setSelecionadosReg] = useState([]);
@@ -394,36 +390,33 @@ export default function Estoque() {
     setShowRegularizar(true);
   };
 
-  const confirmarRegularizar = async () => {
+  const confirmarRegularizar = () => {
     const paraRegularizar = discrepancias.filter(i => selecionadosReg.includes(i.id));
-    if (paraRegularizar.length === 0) return alert("Selecione ao menos um produto.");
-    if (!confirm(`Criar entradas de ajuste para ${paraRegularizar.length} produto(s)?`)) return;
-    setRegularizando(true);
-    const agora = new Date().toISOString().split('T')[0];
-    for (const item of paraRegularizar) {
-      // Remove ajustes anteriores
-      const histSemAjuste = (item.historico || []).filter(h => (h.observacao || '').toUpperCase() !== 'AJUSTE');
-      
-      // Se diferença é 0 após remover ajuste antigo, só apaga o ajuste
-      if (item._diferenca === 0) {
-        await base44.entities.Estoque.update(item.id, { historico: histSemAjuste });
-        continue;
+    if (paraRegularizar.length === 0) return mostrarAlerta("Selecione ao menos um produto.", "Regularizar Saldo");
+    mostrarConfirm(`Criar entradas de ajuste para ${paraRegularizar.length} produto(s)?`, async () => {
+      setRegularizando(true);
+      const agora = new Date().toISOString().split('T')[0];
+      for (const item of paraRegularizar) {
+        const histSemAjuste = (item.historico || []).filter(h => (h.observacao || '').toUpperCase() !== 'AJUSTE');
+        if (item._diferenca === 0) {
+          await base44.entities.Estoque.update(item.id, { historico: histSemAjuste });
+          continue;
+        }
+        const novoAjuste = {
+          tipo: item._diferenca > 0 ? 'entrada' : 'saida',
+          data: agora,
+          quantidade: Math.abs(item._diferenca),
+          valor_unitario: Number(item.valor_custo || 0),
+          observacao: 'Ajuste',
+        };
+        await base44.entities.Estoque.update(item.id, { historico: [...histSemAjuste, novoAjuste] });
       }
-
-      const novoAjuste = {
-        tipo: item._diferenca > 0 ? 'entrada' : 'saida',
-        data: agora,
-        quantidade: Math.abs(item._diferenca),
-        valor_unitario: Number(item.valor_custo || 0),
-        observacao: 'Ajuste',
-      };
-      await base44.entities.Estoque.update(item.id, { historico: [...histSemAjuste, novoAjuste] });
-    }
-    setRegularizando(false);
-    setShowRegularizar(false);
-    setSelecionadosReg([]);
-    alert(`${paraRegularizar.length} produto(s) regularizados com sucesso.`);
-    load();
+      setRegularizando(false);
+      setShowRegularizar(false);
+      setSelecionadosReg([]);
+      mostrarAlerta(`${paraRegularizar.length} produto(s) regularizados com sucesso.`, "Concluído");
+      load();
+    }, "Regularizar Saldo");
   };
 
   const aplicarReajuste = () => {
@@ -1086,15 +1079,6 @@ export default function Estoque() {
         status={progressoReajuste.status}
         erro={progressoReajuste.erro}
         sucessos={progressoReajuste.sucessos}
-      />
-
-      <ModalAviso
-        isOpen={aviso.isOpen}
-        tipo={aviso.tipo}
-        titulo={aviso.titulo}
-        mensagem={aviso.mensagem}
-        onConfirm={aviso.onConfirm}
-        onCancel={() => setAviso(a => ({ ...a, isOpen: false }))}
       />
 
       <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; text-transform:uppercase; } .input-dark:focus { border-color:#f97316; } .input-dark::placeholder { color:#6b7280; text-transform:none; }`}</style>

@@ -4,6 +4,7 @@ import { Plus, Search, Edit, Trash2, MessageCircle, Printer, X, ChevronDown, Che
 import ModalEmissaoMassa from "@/components/notas/ModalEmissaoMassa";
 import VendaForm from "@/components/os/VendaForm";
 import OrdemVendaCard from "@/components/os/OrdemVendaCard";
+import { mostrarAlerta, mostrarConfirm } from "@/lib/modalAviso";
 import OrdemVendaRow, { COLUNAS_PADRAO } from "@/components/os/OrdemVendaRow";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -142,16 +143,17 @@ export default function OrdemServico() {
     } catch (err) {
       console.error("Erro ao carregar Vendas:", err);
       console.error("Stack:", err.stack);
-      alert("Erro ao carregar vendas: " + err.message);
+      mostrarAlerta("Erro ao carregar vendas: " + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const excluir = async (id) => {
-    if (!confirm("Excluir esta Ordem de Serviço?")) return;
-    await base44.entities.Vendas.delete(id);
-    load();
+  const excluir = (id) => {
+    mostrarConfirm("Excluir esta Ordem de Serviço? Esta ação não pode ser desfeita.", async () => {
+      await base44.entities.Vendas.delete(id);
+      load();
+    }, "Excluir Ordem");
   };
 
   const pad = n => String(n).padStart(2, "0");
@@ -207,13 +209,13 @@ export default function OrdemServico() {
               try {
                 const res = await base44.functions.invoke('restaurarNFVendasAgressivo', {});
                 if (res.data?.sucesso) {
-                  alert(`✅ ${res.data.restauradas} notas de venda restauradas!`);
+                  mostrarAlerta(`✅ ${res.data.restauradas} notas de venda restauradas!`);
                   load();
                 } else {
-                  alert('❌ ' + (res.data?.erro || 'Erro ao restaurar'));
+                  mostrarAlerta('❌ ' + (res.data?.erro || 'Erro ao restaurar'));
                 }
               } catch (e) {
-                alert('❌ Erro: ' + e.message);
+                mostrarAlerta('❌ Erro: ' + e.message);
               }
               setRestaurando(false);
             }}

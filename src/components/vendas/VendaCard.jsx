@@ -4,6 +4,7 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { ChevronDown, Pencil, Printer, Trash2, FileText, MoreVertical, AlertTriangle } from "lucide-react";
 import { gerarHTMLImpressao } from "./vendaImpressao";
+import { mostrarAlerta } from "@/lib/modalAviso";
 import { reduzirEstoque, restaurarEstoque, excluirLancamentosVenda } from "./estoqueUtils";
 
 function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
@@ -215,7 +216,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
       setStatusPendenteCard(null);
       onRefresh?.();
     } catch (err) {
-      alert("Erro: " + err.message);
+      mostrarAlerta("Erro: " + err.message);
     }
   };
 
@@ -238,7 +239,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
   const enviarOrcamento = () => {
     setMenuOpen(false);
     const telefone = os.cliente_telefone?.replace(/\D/g, "");
-    if (!telefone) return alert("Telefone do cliente não cadastrado.");
+    if (!telefone) return mostrarAlerta("Telefone do cliente não cadastrado.");
     const linkOrcamento = `${window.location.origin}/OrcamentoPublico?id=${os.id}`;
     const servicosList = (os.servicos || []).map((s, i) => `  ${i+1}. ${s.descricao || "Serviço"} (x${s.quantidade || 1}) — ${fmtValor(Number(s.valor||0)*Number(s.quantidade||1))}`).join("\n");
     const pecasList = (os.pecas || []).map((p, i) => `  ${i+1}. ${p.descricao || "Peça"} (x${p.quantidade || 1}) — ${fmtValor(p.valor_total)}`).join("\n");
@@ -256,7 +257,7 @@ export default function VendaCard({ os, notas = [], onEdit, onDelete, onRefresh,
   const chamarWhatsApp = () => {
     setMenuOpen(false);
     const telefone = os.cliente_telefone?.replace(/\D/g, "");
-    if (!telefone) return alert("Telefone do cliente não cadastrado.");
+    if (!telefone) return mostrarAlerta("Telefone do cliente não cadastrado.");
     const fone = telefone.startsWith("55") ? telefone : "55" + telefone;
     window.open("https://wa.me/" + fone, "_blank");
   };
