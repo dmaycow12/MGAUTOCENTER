@@ -4,6 +4,11 @@ const FOCUSNFE_BASE = 'https://api.focusnfe.com.br/v2';
 let API_KEY = '';
 let AUTH_HEADER = '';
 
+// Chaves de notas bloqueadas para re-importação (ex: notas canceladas removidas manualmente)
+const CHAVES_BLOQUEADAS = new Set([
+  '31260542580092005305551700000509431243551811', // NFe 50943 - CIA BRASILEIRA DIST AUTO S.A
+]);
+
 // Busca paginada NFe recebidas usando cursor de versão
 async function buscarNFesRecebidas(cnpjEmitente) {
   let todas = [];
@@ -73,12 +78,14 @@ Deno.serve(async (req) => {
     const nfes = await buscarNFesRecebidas(CNPJ_EMITENTE);
     for (const nf of nfes) {
       const chave = nf.chave_nfe || '';
+      if (chave && CHAVES_BLOQUEADAS.has(chave)) continue; // Bloqueada para re-importação
 
       const data_emissao = (nf.data_emissao || '').substring(0, 10);
       if (data_emissao && data_emissao < '2026-04-01') continue;
 
       const situacao = (nf.situacao || '').toLowerCase();
-      const status = situacao.includes('cancel') ? 'Cancelada' : 'Importada';
+      if (situacao.includes('cancel')) continue; // Não importa notas canceladas
+      const status = 'Importada';
 
       // Verifica se a nota já existe no banco
       let notaExistente = chave ? (notasPorChave.get(chave) || null) : null;
@@ -196,7 +203,8 @@ Deno.serve(async (req) => {
       const chave = nf.chave || '';
 
       const situacao = (nf.status || '').toLowerCase();
-      const status = situacao.includes('cancel') ? 'Cancelada' : 'Importada';
+      if (situacao.includes('cancel')) continue; // Não importa notas canceladas
+      const status = 'Importada';
 
       const data_emissao = (nf.data_emissao || '').substring(0, 10);
       const valorTotal = parseFloat(nf.valor_servicos || '0');

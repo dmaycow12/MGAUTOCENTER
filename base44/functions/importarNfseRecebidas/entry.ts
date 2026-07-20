@@ -244,7 +244,8 @@ Deno.serve(async (req) => {
     for (const nf of nfses) {
       const chave = nf.numero_dfse || nf.id_tag || '';
       const situacao = (nf.status_mensagem || '').toLowerCase();
-      const status = situacao.includes('cancel') ? 'Cancelada' : 'Importada';
+      if (situacao.includes('cancel')) continue; // Não importa notas canceladas
+      const status = 'Importada';
       const data_emissao = (nf.data_emissao || nf.data_competencia || '').substring(0, 10);
       const valorTotal = parseFloat(nf.valor_servico || nf.valor_liquido || '0');
 
