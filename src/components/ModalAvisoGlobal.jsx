@@ -10,7 +10,7 @@ export default function ModalAvisoGlobal() {
   if (!state.isOpen) return null;
 
   const isConfirm = state.tipo === "confirm";
-  const corIcone = isConfirm ? "#f87171" : "#fbbf24";
+  const corIcone = isConfirm ? "#f87171" : "#00249c";
 
   return (
     <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4" onClick={fecharAviso}>
@@ -38,9 +38,9 @@ export default function ModalAvisoGlobal() {
           <button
             onClick={state.onConfirm}
             className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all"
-            style={{ background: isConfirm ? "#cc0000" : "#f97316" }}
-            onMouseEnter={e => e.currentTarget.style.background = isConfirm ? "#aa0000" : "#ea580c"}
-            onMouseLeave={e => e.currentTarget.style.background = isConfirm ? "#cc0000" : "#f97316"}
+            style={{ background: isConfirm ? "#cc0000" : "#00249c" }}
+            onMouseEnter={e => e.currentTarget.style.background = isConfirm ? "#aa0000" : "#001a6e"}
+            onMouseLeave={e => e.currentTarget.style.background = isConfirm ? "#cc0000" : "#00249c"}
           >
             {isConfirm ? "Confirmar" : "OK"}
           </button>
