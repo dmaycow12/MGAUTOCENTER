@@ -2099,7 +2099,8 @@ export default function NotasFiscais() {
         const temXmlSomenteUrl = (n) => !temXmlLocal(n) && n.xml_url && !n.xml_url.includes('base44');
         const temPdfSomenteUrl = (n) => !temPdfLocal(n) && n.pdf_url && !n.pdf_url.endsWith('.html') && (n.pdf_url.includes('focusnfe') || n.pdf_url.includes('amazonaws') || n.pdf_url.includes('s3.'));
         const notasSemXml = notasParaVerificar.filter(n => !temXmlLocal(n) && !temXmlSomenteUrl(n)).length;
-        const notasSemPdf = notasParaVerificar.filter(n => !temPdfLocal(n) && !temPdfSomenteUrl(n) && n.tipo !== 'NFCe').length;
+        const isNfseImportada = (n) => n.tipo === 'NFSe' && n.observacoes !== 'DEVOLUÇÃO' && (n.status === 'Importada' || n.status === 'Lançada');
+        const notasSemPdf = notasParaVerificar.filter(n => !temPdfLocal(n) && !temPdfSomenteUrl(n) && n.tipo !== 'NFCe' && !isNfseImportada(n)).length;
         const notasXmlExterno = notasParaVerificar.filter(temXmlSomenteUrl).length;
         const notasPdfExterno = notasParaVerificar.filter(temPdfSomenteUrl).length;
         const alerta = notasXmlExterno > 0 || notasPdfExterno > 0 || notasSemXml > 0 || notasSemPdf > 0 ? {

@@ -125,37 +125,39 @@ export default function AbaArquivos({ notas, onRefresh, alerta }) {
       }
 
       // PDF
+      // NFSe importadas (entrada) sem PDF: o sistema gera o PDF sob demanda — não exibir como ausente
+      const isNfseImportada = nota.tipo === 'NFSe' && operacao === 'entrada';
       if (nota.pdf_url && !nota.pdf_url.endsWith('.html')) {
-       // Detecta se é URL externa (Focus NFe/Amazon S3) ou local (Base44)
-       const isUrlExterna = nota.pdf_url.includes('focusnfe') || 
-                            nota.pdf_url.includes('amazonaws.com') ||
-                            nota.pdf_url.includes('s3.');
-       const statusPdf = isUrlExterna ? 'externo' : 'salvo';
-       items.push({
-         tipo: 'PDF',
-         nota_numero: nota.numero,
-         nota_tipo: nota.tipo,
-         nota_id: nota.id,
-         url: nota.pdf_url,
-         conteudo: null,
-         status: statusPdf,
-         data_emissao: nota.data_emissao,
-         cliente: nota.cliente_nome,
-         operacao: operacao,
-       });
-      } else {
-       items.push({
-         tipo: 'PDF',
-         nota_numero: nota.numero,
-         nota_tipo: nota.tipo,
-         nota_id: nota.id,
-         url: null,
-         conteudo: null,
-         status: 'ausente',
-         data_emissao: nota.data_emissao,
-         cliente: nota.cliente_nome,
-         operacao: operacao,
-       });
+        // Detecta se é URL externa (Focus NFe/Amazon S3) ou local (Base44)
+        const isUrlExterna = nota.pdf_url.includes('focusnfe') || 
+                             nota.pdf_url.includes('amazonaws.com') ||
+                             nota.pdf_url.includes('s3.');
+        const statusPdf = isUrlExterna ? 'externo' : 'salvo';
+        items.push({
+          tipo: 'PDF',
+          nota_numero: nota.numero,
+          nota_tipo: nota.tipo,
+          nota_id: nota.id,
+          url: nota.pdf_url,
+          conteudo: null,
+          status: statusPdf,
+          data_emissao: nota.data_emissao,
+          cliente: nota.cliente_nome,
+          operacao: operacao,
+        });
+      } else if (!isNfseImportada) {
+        items.push({
+          tipo: 'PDF',
+          nota_numero: nota.numero,
+          nota_tipo: nota.tipo,
+          nota_id: nota.id,
+          url: null,
+          conteudo: null,
+          status: 'ausente',
+          data_emissao: nota.data_emissao,
+          cliente: nota.cliente_nome,
+          operacao: operacao,
+        });
       }
 
       return items;
