@@ -281,7 +281,7 @@ Deno.serve(async (req) => {
         status,
         chave_acesso: chave,
         spedy_id: chave,
-        cliente_nome: nomePrestador,
+        cliente_nome: (nomePrestador || '').toUpperCase(),
         cliente_cpf_cnpj: docPrestador,
         valor_total: valorTotal,
         data_emissao,
