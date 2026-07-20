@@ -6,7 +6,6 @@ import VendaForm from "@/components/vendas/VendaForm";
 import VendaCard from "@/components/vendas/VendaCard";
 import VendaRow, { COLUNAS_PADRAO } from "@/components/vendas/VendaRow";
 import RevisaoVendas from "@/components/vendas/RevisaoVendas";
-import { calcularComissaoVenda } from "@/components/vendas/comissaoUtils";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
@@ -171,40 +170,22 @@ export default function Vendas() {
     });
   };
 
-  const [comissaoConfig, setComissaoConfig] = useState({});
-
   useEffect(() => { load(); }, []);
 
   const load = async () => {
     try {
       console.log("Iniciando carregamento de Vendas...");
-      const [o, c, n, e, configs] = await Promise.all([
+      const [o, c, n, e] = await Promise.all([
         base44.entities.Vendas.list("-created_date", 2000),
         base44.entities.Cadastro.list("-created_date", 2000),
         base44.entities.NotaFiscal.list("-created_date", 1000),
         base44.entities.Estoque.list("-created_date", 500),
-        base44.entities.Configuracao.filter({ chave: "comissao_config" }),
       ]);
       console.log("Vendas carregadas:", o?.length || 0);
       setOrdens(o);
       setClientes(c);
       setNotas(n);
       setEstoque(e);
-      if (configs.length > 0) {
-        try { setComissaoConfig(JSON.parse(configs[0].valor) || {}); } catch {}
-      } else {
-        // migrar do localStorage para o banco automaticamente
-        try {
-          const local = localStorage.getItem("comissao_config");
-          if (local) {
-            const cfg = JSON.parse(local) || {};
-            if (Object.keys(cfg).length > 0) {
-              await base44.entities.Configuracao.create({ chave: "comissao_config", valor: local, descricao: "Percentuais de comissão por técnico" });
-              setComissaoConfig(cfg);
-            }
-          }
-        } catch {}
-      }
     } catch (err) {
       console.error("Erro ao carregar Vendas:", err);
       console.error("Stack:", err.stack);
@@ -306,9 +287,8 @@ export default function Vendas() {
   }, 0);
   const fmtTotal = v => Math.round(Number(v || 0)).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
-  // Cálculo de comissão baseado nas configurações do AbaComissoes (banco de dados)
-  const totalComissao = !Object.keys(comissaoConfig).length ? null
-    : ordensComFiltrosBase.reduce((acc, o) => acc + (calcularComissaoVenda(o, comissaoConfig) || 0), 0);
+  // Comissão preenchida manualmente em cada venda
+  const totalComissao = ordensComFiltrosBase.reduce((acc, o) => acc + Number(o.comissao || 0), 0);
 
   // Vendas com peças sem custo (valor_custo === 0 ou undefined)
   const vendasSemCusto = ordens.filter(o =>
@@ -422,7 +402,7 @@ export default function Vendas() {
           </div>
           <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
             <span className="text-xs font-semibold text-gray-400 tracking-wide">COMISSÃO</span>
-            <span className="text-sm font-bold text-white">{totalComissao !== null ? fmtTotal(totalComissao) : "—"}</span>
+            <span className="text-sm font-bold text-white">{fmtTotal(totalComissao)}</span>
           </div>
           <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
             <span className="text-xs font-semibold text-gray-400 tracking-wide">LUCRO</span>
@@ -670,7 +650,6 @@ export default function Vendas() {
                     clientes={clientes}
                     colunas={colunasVisiveis}
                     ocultarVeiculo={filtroTipo.includes("balcao") && !filtroTipo.includes("patio")}
-                    comissaoConfig={comissaoConfig}
                     onEdit={() => { setEditando(os); setShowForm(true); }}
                     onDelete={() => excluir(os.id)}
                     onRefresh={load}

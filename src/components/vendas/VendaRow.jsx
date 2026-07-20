@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { Pencil, Printer, Trash2, AlertTriangle } from "lucide-react";
 import { gerarHTMLImpressao } from "./vendaImpressao";
 import { reduzirEstoque, restaurarEstoque, excluirLancamentosVenda, limparHistoricoVenda } from "./estoqueUtils";
-import { calcularComissaoVenda } from "./comissaoUtils";
+
 
 function WhatsAppIcon({ className = "w-3.5 h-3.5" }) {
   return (
@@ -206,7 +206,7 @@ function PagamentoSelect({ os, onRefresh }) {
   );
 }
 
-function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefresh, onUpdate, colunas = COLUNAS_PADRAO, ocultarVeiculo = false, rowIndex, getRowRef, registerRef, comissaoConfig = {} }, ref) {
+function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefresh, onUpdate, colunas = COLUNAS_PADRAO, ocultarVeiculo = false, rowIndex, getRowRef, registerRef }, ref) {
   const clienteCadastro = clientes.find(c => c.id === os.cliente_id);
   const isConsumidor = os.cliente_nome?.toUpperCase() === "CONSUMIDOR";
   // Mostra apenas nome social: para CONSUMIDOR usa o da venda (ou "CONSUMIDOR" como padrão); para outros usa nome_fantasia do cadastro ou da venda
@@ -613,10 +613,11 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
           onNext={goNextRow}
           onPrev={() => placaRef.current?.startEdit()} /></td>}
         {colunas.comissao && <td className="px-4 py-3 text-right text-gray-300 text-sm whitespace-nowrap">
-          {(() => {
-            const comissao = calcularComissaoVenda(os, comissaoConfig);
-            return comissao !== null ? fmtValorInteiro(comissao) : "—";
-          })()}
+          <InlineEdit value={os.comissao != null ? String(os.comissao) : ""} onSave={async (v) => {
+            const num = parseFloat(String(v).replace(",", ".")) || 0;
+            await saveField("comissao", num);
+            return true;
+          }} placeholder="—" onNext={goNextRow} onPrev={() => placaRef.current?.startEdit()} />
         </td>}
         <td className="px-4 py-3">
           <div className="flex gap-1 justify-end" style={{whiteSpace:'nowrap'}}>

@@ -40,6 +40,7 @@ const defaultForm = () => ({
   observacoes: "",
   dados_adicionais: "",
   tecnico: "",
+  comissao: 0,
 });
 
 function getFeriadosBrasil(ano) {
@@ -1000,6 +1001,9 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                       <option value=""> </option>
                       {funcionarios.map(f => <option key={f.id} value={f.nome}>{f.nome}</option>)}
                     </select>
+                  </Field>
+                  <Field label="Comissão (R$)">
+                    <input type="number" step="0.01" value={form.comissao || 0} onChange={e => setForm(f => ({ ...f, comissao: Number(e.target.value) }))} className="input-dark" autoComplete="off" />
                   </Field>
                 </div>
               </div>
