@@ -15,6 +15,8 @@ export default function AbaReposicao({ items, onReload }) {
   const [configId, setConfigId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(defaultForm());
+  const [editandoMin, setEditandoMin] = useState(null);
+  const [valorMin, setValorMin] = useState("");
 
   useEffect(() => {
     base44.entities.Configuracao.list("-created_date", 100).then(configs => {
@@ -107,8 +109,22 @@ export default function AbaReposicao({ items, onReload }) {
   };
 
   const baixo = items.filter(i =>
-    Number(i.quantidade || 0) < Number(i.estoque_minimo || 0) && !excluded.has(i.id)
+    Number(i.quantidade || 0) < Number(i.estoque_minimo || 0) && !excluded.has(i.id) && !i.arquivado
   );
+
+  const iniciarEdicaoMin = (item) => {
+    setEditandoMin(item.id);
+    setValorMin(String(item.estoque_minimo || 0));
+  };
+
+  const salvarMin = async (item) => {
+    const novoValor = Number(valorMin) || 0;
+    setEditandoMin(null);
+    if (novoValor === Number(item.estoque_minimo || 0)) return;
+    item.estoque_minimo = novoValor;
+    if (onReload) onReload();
+    await base44.entities.Estoque.update(item.id, { estoque_minimo: novoValor });
+  };
 
   return (
     <div className="space-y-0.5">
@@ -181,7 +197,23 @@ export default function AbaReposicao({ items, onReload }) {
                       <td className="px-4 py-3 text-white font-medium">{item.descricao}</td>
                       <td className="px-4 py-3 text-gray-400">{item.marca || "—"}</td>
                       <td className="px-4 py-3 text-center font-bold text-red-400">{item.quantidade}</td>
-                      <td className="px-4 py-3 text-center text-gray-400">{item.estoque_minimo}</td>
+                      <td className="px-4 py-3 text-center text-gray-400">
+                        {editandoMin === item.id ? (
+                          <input
+                            autoFocus
+                            type="number"
+                            value={valorMin}
+                            onChange={e => setValorMin(e.target.value)}
+                            onBlur={() => salvarMin(item)}
+                            onKeyDown={e => { if (e.key === "Enter") salvarMin(item); if (e.key === "Escape") setEditandoMin(null); }}
+                            className="w-16 bg-gray-800 border border-blue-500 rounded px-1 py-0.5 text-white text-center text-sm outline-none"
+                          />
+                        ) : (
+                          <button onClick={() => iniciarEdicaoMin(item)} className="hover:text-blue-400 transition-all cursor-text">
+                            {item.estoque_minimo}
+                          </button>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-center font-bold text-yellow-400">{falta}</td>
                       <td className="px-4 py-3 text-center">
                         <button onClick={() => excluirDaLista(item.id)} title="Remover da lista" className="text-gray-500 hover:text-red-400 transition-all p-1">
