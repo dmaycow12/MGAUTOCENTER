@@ -996,15 +996,6 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                   <Field label="Modelo"><input ref={veiculoRef} value={form.veiculo_modelo} onChange={e => setForm(f => ({ ...f, veiculo_modelo: e.target.value }))} onKeyDown={e => handleNavKey(e, placaRef)} className="input-dark" autoComplete="new-password" /></Field>
                   <Field label="Placa"><input ref={placaRef} value={form.veiculo_placa} onChange={e => setForm(f => ({ ...f, veiculo_placa: e.target.value }))} onKeyDown={e => handleNavKey(e, kmRef)} className="input-dark" autoComplete="new-password" /></Field>
                   <Field label="KM"><input ref={kmRef} value={form.quilometragem} onChange={e => setForm(f => ({ ...f, quilometragem: e.target.value }))} className="input-dark" autoComplete="new-password" /></Field>
-                  <Field label="Técnico">
-                    <select value={form.tecnico || ''} onChange={e => setForm(f => ({ ...f, tecnico: e.target.value }))} className="input-dark">
-                      <option value=""> </option>
-                      {funcionarios.map(f => <option key={f.id} value={f.nome}>{f.nome}</option>)}
-                    </select>
-                  </Field>
-                  <Field label="Comissão (R$)">
-                    <input type="number" step="0.01" value={form.comissao || 0} onChange={e => setForm(f => ({ ...f, comissao: Number(e.target.value) }))} className="input-dark" autoComplete="off" />
-                  </Field>
                 </div>
               </div>
 
@@ -1450,6 +1441,19 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 )}
               </Section>
               </React.Fragment>
+        </div>
+
+        {/* Técnico e Comissão */}
+        <div className="mx-5 mb-4 grid grid-cols-2 gap-4">
+          <Field label="Técnico">
+            <select value={form.tecnico || ''} onChange={e => setForm(f => ({ ...f, tecnico: e.target.value }))} className="input-dark">
+              <option value=""> </option>
+              {funcionarios.map(f => <option key={f.id} value={f.nome}>{f.nome}</option>)}
+            </select>
+          </Field>
+          <Field label="Comissão (R$)">
+            <input type="number" step="0.01" value={form.comissao || 0} onChange={e => setForm(f => ({ ...f, comissao: Number(e.target.value) }))} className="input-dark" autoComplete="off" />
+          </Field>
         </div>
 
         {/* Dados Adicionais */}
