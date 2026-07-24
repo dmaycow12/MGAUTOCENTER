@@ -38,6 +38,7 @@ export default function AbaComissoes() {
   const vendasComissao = vendasPeriodo
     .filter(v => Number(v.comissao || 0) > 0)
     .map(v => ({
+      id: v.id,
       data: (v.data_entrada || v.created_date || "").substring(0, 10),
       numero: v.numero,
       veiculo: v.veiculo_modelo || "",
@@ -46,6 +47,22 @@ export default function AbaComissoes() {
       tecnico: (v.tecnico || "").trim().toUpperCase(),
     }))
     .sort((a, b) => b.data.localeCompare(a.data));
+
+  // Técnicos únicos para o select
+  const tecnicosUnicos = [...new Set(vendas.map(v => (v.tecnico || "").trim().toUpperCase()).filter(Boolean))].sort();
+
+  const atualizarVenda = async (id, campo, valor) => {
+    // Atualiza local imediatamente
+    setVendas(prev => prev.map(v => v.id === id ? { ...v, [campo]: valor } : v));
+    try {
+      await base44.entities.Vendas.update(id, { [campo]: valor });
+    } catch (e) {
+      console.error("Erro ao atualizar venda:", e);
+    }
+  };
+
+  const [editandoComissao, setEditandoComissao] = useState(null);
+  const [valorComissao, setValorComissao] = useState("");
 
   const totalComissoes = vendasComissao.reduce((acc, v) => acc + v.comissao, 0);
   const qtdTecnicos = new Set(vendasComissao.map(v => v.tecnico).filter(Boolean)).size;
@@ -102,11 +119,45 @@ export default function AbaComissoes() {
               <div className="text-center text-white text-xs px-2" style={{ borderRight: "1px solid #232b38" }}>{v.placa || "—"}</div>
 
               {/* Técnico */}
-              <div className="text-center text-white text-xs px-2" style={{ borderRight: "1px solid #232b38" }}>{v.tecnico || "—"}</div>
+              <div className="text-center px-2" style={{ borderRight: "1px solid #232b38" }}>
+                <select
+                  value={v.tecnico}
+                  onChange={e => atualizarVenda(v.id, "tecnico", e.target.value)}
+                  className="bg-transparent text-white text-xs outline-none cursor-pointer hover:text-blue-400 focus:text-blue-400"
+                  style={{ border: "none", appearance: "none", textAlign: "center" }}
+                >
+                  <option value="" className="bg-gray-800">—</option>
+                  {tecnicosUnicos.map(t => <option key={t} value={t} className="bg-gray-800">{t}</option>)}
+                </select>
+              </div>
 
               {/* Comissão */}
               <div className="text-right px-2">
-                <span className="text-white text-sm font-bold">{fmtV(v.comissao)}</span>
+                {editandoComissao === v.id ? (
+                  <input
+                    type="text"
+                    autoFocus
+                    value={valorComissao}
+                    onChange={e => setValorComissao(e.target.value)}
+                    onBlur={() => {
+                      const num = parseFloat(valorComissao.replace(",", ".")) || 0;
+                      atualizarVenda(v.id, "comissao", num);
+                      setEditandoComissao(null);
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") e.target.blur();
+                      if (e.key === "Escape") setEditandoComissao(null);
+                    }}
+                    className="bg-gray-800 text-white text-sm font-bold text-right rounded px-1 py-0.5 w-24 outline-none border border-blue-500"
+                  />
+                ) : (
+                  <button
+                    onClick={() => { setEditandoComissao(v.id); setValorComissao(String(v.comissao).replace(".", ",")); }}
+                    className="text-white text-sm font-bold hover:text-blue-400 transition-colors"
+                  >
+                    {fmtV(v.comissao)}
+                  </button>
+                )}
               </div>
             </div>
           ))}
