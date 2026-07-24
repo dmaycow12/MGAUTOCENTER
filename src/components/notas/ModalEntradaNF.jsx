@@ -230,6 +230,18 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
   const [cadastrarFornecedor, setCadastrarFornecedor] = useState(false);
   const [nomeFornecedor, setNomeFornecedor] = useState("");
   const [erroDuplicada, setErroDuplicada] = useState("");
+  const [dividirFator, setDividirFator] = useState({});
+
+  const aplicarDivisao = (idx) => {
+    const fator = parseInt(dividirFator[idx]) || 0;
+    if (fator < 2) return;
+    setItens(prev => prev.map((it, i) => i === idx ? {
+      ...it,
+      quantidade: Number(it.quantidade) * fator,
+      valor_unitario: Number(it.valor_unitario) / fator,
+    } : it));
+    setDividirFator(f => ({ ...f, [idx]: "" }));
+  };
 
   useEffect(() => {
     const parsed = parsearXML(xmlTexto);
@@ -610,10 +622,13 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
               <div className="flex items-center justify-between">
                 <p className="text-xs text-gray-400">Marque os itens que devem entrar no estoque. Edite o código ou vincule a um produto existente.</p>
                 <button
-                  onClick={() => setItens(prev => prev.map(it => ({ ...it, dar_entrada_estoque: true })))}
+                  onClick={() => setItens(prev => {
+                    const allChecked = prev.length > 0 && prev.every(it => it.dar_entrada_estoque);
+                    return prev.map(it => ({ ...it, dar_entrada_estoque: !allChecked }));
+                  })}
                   className="flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg border border-green-500/40 text-green-400 hover:bg-green-500/10 transition-all"
                 >
-                  Lançar Produtos no Estoque
+                  {itens.length > 0 && itens.every(it => it.dar_entrada_estoque) ? "Desmarcar Todos" : "Lançar Produtos no Estoque"}
                 </button>
               </div>
               {itens.length === 0 ? (
@@ -693,6 +708,28 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                           <p className="font-bold" style={{ color: GREEN }}>R$ {Number(item.valor_total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
                         </div>
                       </div>
+
+                      {/* Dividir em unidades */}
+                      {item.dar_entrada_estoque && (
+                        <div className="px-3 pb-2 flex items-center gap-2 text-xs border-t border-gray-700/50 pt-2">
+                          <span className="text-gray-500">Dividir em unidades:</span>
+                          <input
+                            type="text"
+                            value={dividirFator[i] || ""}
+                            onChange={e => setDividirFator(f => ({ ...f, [i]: e.target.value }))}
+                            onKeyDown={e => { if (e.key === "Enter") aplicarDivisao(i); }}
+                            placeholder="Ex: 20"
+                            className="w-20 bg-gray-700 border border-gray-600 text-white rounded px-2 py-1 text-xs focus:outline-none focus:border-green-500"
+                          />
+                          <button
+                            onClick={() => aplicarDivisao(i)}
+                            className="px-2 py-1 text-xs font-semibold rounded border border-blue-500/40 text-blue-400 hover:bg-blue-500/10 transition-all"
+                          >
+                            Dividir
+                          </button>
+                          <span className="text-gray-600 text-[10px]">qtd × fator · preço unit. ÷ fator</span>
+                        </div>
+                      )}
 
                       {/* Campos edição (quando não vinculado e marcado) */}
                       {item.dar_entrada_estoque && !item.estoqueVinculado && (
