@@ -20,6 +20,7 @@ const COLORS = ["#062C9B", "#062C9B", "#062C9B", "#062C9B", "#062C9B", "#062C9B"
 export default function EstatisticasProdutosServicos({ vendas, servicosCad = [], estoque = [] }) {
   const [aba, setAba] = useState(() => localStorage.getItem("eps_aba") || "produtos");
   const [busca, setBusca] = useState("");
+  const [qtdVisivel, setQtdVisivel] = useState(20);
   const [mostrarTodos, setMostrarTodos] = useState(false);
   const [modoValor, setModoValor] = useState(() => localStorage.getItem("eps_modoValor") || "receita");
 
@@ -127,10 +128,12 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
   const totalAtual = lista.reduce((acc, i) => acc + i.valor, 0);
 
   const listaFiltrada = lista.filter(i =>
-    i.descricao.toLowerCase().includes(busca.toLowerCase())
+    i.descricao.toLowerCase().includes(busca.toLowerCase()) ||
+    (i.codigo || '').toLowerCase().includes(busca.toLowerCase())
   );
-  const topChart = aba === "semcodigo" ? [] : lista.slice(0, 8);
-  const listaExibida = mostrarTodos ? listaFiltrada : listaFiltrada.slice(0, 10);
+  const topChart = aba === "semcodigo" ? [] : listaFiltrada.slice(0, qtdVisivel);
+  const listaExibida = topChart;
+  const temMais = listaFiltrada.length > qtdVisivel;
 
   const semCodigoAtual = aba === "semcodigo"
     ? [...semCodigoProdutos.map(i => ({...i, tipo: 'PRODUTO'})), ...semCodigoServicos.map(i => ({...i, tipo: 'SERVIÇO'}))]
@@ -170,29 +173,40 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
       {/* Abas */}
       <div className="flex gap-1 bg-gray-800 p-1 rounded-lg">
        <button
-         onClick={() => { setAba("tudo"); localStorage.setItem("eps_aba", "tudo"); setMostrarTodos(false); setBusca(""); }}
+         onClick={() => { setAba("tudo"); localStorage.setItem("eps_aba", "tudo"); setMostrarTodos(false); setBusca(""); setQtdVisivel(20); }}
          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
          style={aba === "tudo" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
-       >
+         >
          Tudo
        </button>
        <button
-         onClick={() => { setAba("produtos"); localStorage.setItem("eps_aba", "produtos"); setMostrarTodos(false); setBusca(""); }}
+         onClick={() => { setAba("produtos"); localStorage.setItem("eps_aba", "produtos"); setMostrarTodos(false); setBusca(""); setQtdVisivel(20); }}
          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
          style={aba === "produtos" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
-       >
+         >
          Produtos
        </button>
        <button
-         onClick={() => { setAba("servicos"); localStorage.setItem("eps_aba", "servicos"); setMostrarTodos(false); setBusca(""); }}
+         onClick={() => { setAba("servicos"); localStorage.setItem("eps_aba", "servicos"); setMostrarTodos(false); setBusca(""); setQtdVisivel(20); }}
          className="flex-1 py-1.5 rounded-md text-xs font-semibold transition-all"
          style={aba === "servicos" ? { background: "#062C9B", color: "#fff" } : { color: "#9ca3af" }}
-       >
+         >
          Serviços
        </button>
       </div>
 
-      {/* Gráfico top 8 - layout customizado: label esquerda, barra+valor direita */}
+      {/* Busca */}
+      {aba !== "semcodigo" && (
+        <input
+          type="text"
+          placeholder="Buscar produto ou serviço..."
+          value={busca}
+          onChange={e => setBusca(e.target.value)}
+          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white"
+        />
+      )}
+
+      {/* Lista com barras de progresso */}
       {topChart.length > 0 && (() => {
         const maxVal = Math.max(...topChart.map(i => i.valor), 1);
         return (
@@ -223,6 +237,16 @@ export default function EstatisticasProdutosServicos({ vendas, servicosCad = [],
           </div>
         );
       })()}
+
+      {/* Botão carregar mais */}
+      {temMais && (
+        <button
+          onClick={() => setQtdVisivel(q => q + 20)}
+          className="w-full py-1.5 rounded-lg text-xs font-semibold text-gray-400 border border-gray-700 hover:bg-gray-800 hover:text-white transition-all"
+        >
+          Carregar mais ({listaFiltrada.length - qtdVisivel} restantes)
+        </button>
+      )}
 
       {/* Total no rodapé */}
       <div className="flex justify-end pt-1 border-t border-gray-800">
