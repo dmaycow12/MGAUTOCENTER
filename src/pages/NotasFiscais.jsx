@@ -350,10 +350,12 @@ export default function NotasFiscais() {
     }
     return true;
   }).sort((a, b) => {
+    const numA = parseInt(a.numero, 10) || 0;
+    const numB = parseInt(b.numero, 10) || 0;
+    if (numA !== numB) return numA - numB;
     const dateA = a.data_emissao || "";
     const dateB = b.data_emissao || "";
-    if (dateA !== dateB) return dateA.localeCompare(dateB);
-    return (parseInt(a.numero, 10) || 0) - (parseInt(b.numero, 10) || 0);
+    return dateA.localeCompare(dateB);
   });
 
   const totalNFeEmitida = filtradas.filter(n => n.tipo === 'NFe' && n.status === 'Emitida').reduce((s, n) => s + Number(n.valor_total || 0), 0);
