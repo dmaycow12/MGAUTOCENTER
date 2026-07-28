@@ -49,6 +49,13 @@ function defaultItem() {
   return { descricao: "", quantidade: 1, valor_unitario: 0, valor_total: 0 };
 }
 
+// Retorna a data de hoje em YYYY-MM-DD usando fuso horário local (Brasília)
+const hojeLocal = () => {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
 function defaultForm() {
   return {
     tipo: "NFSe",
@@ -56,7 +63,7 @@ function defaultForm() {
     serie: "1",
     natureza_operacao: "Venda de mercadoria",
     tipo_documento: "1",
-    data_emissao: new Date().toISOString().split("T")[0],
+    data_emissao: hojeLocal(),
     forma_pagamento: "A Combinar",
     parcelas: 1,
     parcelas_detalhes: [],
@@ -279,7 +286,7 @@ export default function NotasFiscais() {
 
         const dados_adicionais = gerarDadosAdicionaisDaVenda(venda);
 
-        const hojeStr = new Date().toISOString().split('T')[0];
+        const hojeStr = hojeLocal();
 
         // Sempre gera parcelas usando a data de hoje como base
         const qtdP = dadosCliente.parcelas || 1;
@@ -559,7 +566,7 @@ export default function NotasFiscais() {
 
   const gerarParcelas = (qtd, formaPgto, total, dataBase) => {
     const valorParcela = total / (qtd || 1);
-    const hoje = dataBase || new Date().toISOString().split('T')[0];
+    const hoje = dataBase || hojeLocal();
     return Array.from({ length: qtd }, (_, i) => {
       const dt = new Date(hoje + 'T12:00:00');
       dt.setMonth(dt.getMonth() + i);
@@ -670,7 +677,7 @@ export default function NotasFiscais() {
         parcelasRegeneradas = vendaOriginal.parcelas_detalhes;
       } else {
         const valorTotal = vendaOriginal?.valor_total || rascunhoNota.valor_total || 0;
-        const dataEntrada = vendaOriginal?.data_entrada || new Date().toISOString().split('T')[0];
+        const dataEntrada = vendaOriginal?.data_entrada || hojeLocal();
         parcelasRegeneradas = gerarParcelas(qtdParcelas, fpParcelas, valorTotal, dataEntrada);
       }
       
@@ -696,7 +703,7 @@ export default function NotasFiscais() {
         forma_pagamento: rascunhoNota.forma_pagamento || 'A Combinar',
         parcelas: qtdParcelas,
         parcelas_detalhes: parcelasRegeneradas,
-        data_emissao: new Date().toISOString().split('T')[0],
+        data_emissao: hojeLocal(),
         items: (() => {
           if (rascunhoNota.xml_content) {
             try {
@@ -758,7 +765,7 @@ export default function NotasFiscais() {
       const payload = {
         ...f,
         nota_id: rascunhoNota?.id || currentEditIdRef.current || null,
-        data_emissao: new Date().toISOString().split('T')[0],
+        data_emissao: hojeLocal(),
         serie_manual: f.serie || '1',
         items: f.items.map(it => ({
           ...it,
@@ -806,7 +813,7 @@ export default function NotasFiscais() {
     feedback('sucesso', 'Enviando para homologação — gerando DANFE de pré-visualização...');
     try {
       // Atualiza data_emissao para hoje antes de homologar
-      await base44.entities.NotaFiscal.update(nota.id, { data_emissao: new Date().toISOString().split('T')[0] });
+      await base44.entities.NotaFiscal.update(nota.id, { data_emissao: hojeLocal() });
       const res = await base44.functions.invoke('preVisualizarNota', { nota_id: nota.id });
       if (res.data?.sucesso) {
         setMsgFeedback(null);
@@ -882,7 +889,7 @@ export default function NotasFiscais() {
       tipo: nota.tipo || 'NFSe',
       numero: nota.numero || '',
       serie: nota.serie || '1',
-      data_emissao: nota.data_emissao || new Date().toISOString().split('T')[0],
+      data_emissao: nota.data_emissao || hojeLocal(),
       cliente_id: nota.cliente_id || '',
       cliente_nome: nota.cliente_nome || '',
       cliente_nome_fantasia: nota.cliente_nome_fantasia || '',
@@ -2009,7 +2016,7 @@ export default function NotasFiscais() {
                        let notaId = editId;
                        const { _editId, ...dadosForm } = form;
                        // Garante que data_emissao é sempre a correta (não hoje)
-                       dadosForm.data_emissao = dadosForm.data_emissao || new Date().toISOString().split('T')[0];
+                       dadosForm.data_emissao = dadosForm.data_emissao || hojeLocal();
                        if (!editId) { const novo = await base44.entities.NotaFiscal.create({ ...dadosForm, status: 'Rascunho', xml_content: JSON.stringify(form.items || []) }); notaId = novo.id; currentEditIdRef.current = notaId; }
                        else { await base44.entities.NotaFiscal.update(editId, { ...dadosForm, status: 'Rascunho', xml_content: JSON.stringify(form.items || []) }); }
                        setEmitindo(false); setShowForm(false); currentEditIdRef.current = null; setForm(defaultForm());

@@ -184,7 +184,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
       ordem_venda_id: venda.id,
       valor_total: valorTotal,
       xml_content: JSON.stringify(itensFinal),
-      data_emissao: new Date().toISOString().split('T')[0],
+      data_emissao: (() => { const d = new Date(); const p = n => String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; })(),
       forma_pagamento: formaPagamento,
       parcelas: venda?.parcelas || 1,
       parcelas_detalhes: parcelasDetalhes,

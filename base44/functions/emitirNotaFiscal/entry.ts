@@ -770,7 +770,7 @@ Deno.serve(async (req) => {
       spedy_id: ref,
       cliente_id: cliente_id || '',
       cliente_nome: cliente_nome || '',
-      data_emissao: data_emissao || new Date().toISOString().split('T')[0],
+      data_emissao: data_emissao || hojeStr,
       valor_total: Number(valor_total) || 0,
       pdf_url: pdfUrlFinal,
       ...(xmlOriginalTexto ? { xml_original: xmlOriginalTexto } : {}),
