@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHand
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { Pencil, Printer, Trash2, AlertTriangle, Unlink } from "lucide-react";
+import { Pencil, Printer, Trash2, AlertTriangle, X } from "lucide-react";
 import { gerarHTMLImpressao } from "./vendaImpressao";
 import { mostrarAlerta } from "@/lib/modalAviso";
 import { reduzirEstoque, restaurarEstoque, excluirLancamentosVenda, limparHistoricoVenda } from "./estoqueUtils";
@@ -604,7 +604,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
         {colunas?.nfe && <td className="px-4 py-3">{(() => {
           const nfe = notasOs.find(n => (n.tipo === 'NFe' || n.tipo === 'NFCe'));
           const manual = os.nfe_manual;
-          if (nfe) return <div className="flex items-center gap-1"><span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">{nfe.tipo}{nfe.numero}</span><button onClick={() => desvincularNota(nfe)} className="text-gray-500 hover:text-red-400 transition-all" title="Desvincular NF"><Unlink className="w-3.5 h-3.5" /></button></div>;
+          if (nfe) return <div className="flex items-center gap-1"><span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400 cursor-pointer hover:opacity-80" onClick={() => desvincularNota(nfe)} title="Clique para desvincular NF">{nfe.tipo}{nfe.numero}<X className="w-3 h-3 inline-block ml-1" /></span></div>;
           if (manual) { const n = normalizarNF(manual); return <span className="text-xs font-semibold px-2 py-1 rounded bg-green-500/20 text-green-400">{n}</span>; }
           if (!(os.pecas?.length > 0)) return <span className="text-gray-700 text-xs">—</span>;
           return <button onClick={() => emitirNF('NFe')} className="text-gray-700 hover:text-green-400 text-xs transition-all">+ NF</button>;
@@ -612,7 +612,7 @@ function VendaRowInner({ os, notas = [], clientes = [], onEdit, onDelete, onRefr
         {colunas.nfse && <td className="px-4 py-3">{(() => {
           const nfse = notasOs.find(n => n.tipo === 'NFSe');
           const manual = os.nfse_manual;
-          if (nfse) return <div className="flex items-center gap-1"><span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">NFSe{nfse.numero}</span><button onClick={() => desvincularNota(nfse)} className="text-gray-500 hover:text-red-400 transition-all" title="Desvincular NFSe"><Unlink className="w-3.5 h-3.5" /></button></div>;
+          if (nfse) return <div className="flex items-center gap-1"><span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400 cursor-pointer hover:opacity-80" onClick={() => desvincularNota(nfse)} title="Clique para desvincular NFSe">NFSe{nfse.numero}<X className="w-3 h-3 inline-block ml-1" /></span></div>;
           if (manual) { const n = normalizarNF(manual); return <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-500/20 text-blue-400">{n}</span>; }
           if (!(os.servicos?.length > 0)) return <span className="text-gray-700 text-xs">—</span>;
           return <button onClick={() => emitirNF('NFSe')} className="text-gray-700 hover:text-blue-400 text-xs transition-all">+ NFSe</button>;
