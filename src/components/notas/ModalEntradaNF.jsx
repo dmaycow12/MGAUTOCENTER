@@ -27,8 +27,62 @@ function limparNamespaces(xml) {
   return xml.replace(/<(\/?)[a-zA-Z0-9_]+:([a-zA-Z0-9_]+)/g, "<$1$2");
 }
 
+function parsearXMLNfse(xml) {
+  const get = (tag) => { const m = xml.match(new RegExp(`<${tag}[^>]*>([^<]*)<\\/${tag}>`)); return m ? m[1].trim() : ""; };
+  const getNode = (parentTag) => {
+    const start = xml.indexOf(`<${parentTag}`);
+    if (start === -1) return "";
+    const tagEnd = xml.indexOf(">", start);
+    if (tagEnd === -1) return "";
+    const closeIdx = xml.indexOf(`</${parentTag}>`, tagEnd);
+    if (closeIdx === -1) return "";
+    return xml.substring(tagEnd + 1, closeIdx);
+  };
+  const getIn = (node, tag) => { const m = node.match(new RegExp(`<${tag}[^>]*>([^<]*)<\\/${tag}>`)); return m ? m[1].trim() : ""; };
+
+  const isCustom = xml.includes("<NFSeNacional>");
+  let numero, chave, dataEmissao, valor, emitente, cnpjEmit, emit_mun = "", emit_uf = "";
+
+  if (isCustom) {
+    // Formato customizado gerado pelo importarNfseRecebidas
+    numero = get("Numero");
+    chave = get("ChaveAcesso");
+    dataEmissao = (get("DataEmissao") || "").substring(0, 10);
+    valor = parseFloat(get("ValorServico") || get("ValorLiquido") || "0");
+    const prestador = getNode("Prestador");
+    emitente = getIn(prestador, "RazaoSocial") || "";
+    cnpjEmit = getIn(prestador, "CNPJ") || "";
+    emit_mun = getIn(prestador, "Municipio") || "";
+    emit_uf = getIn(prestador, "UF") || "";
+  } else {
+    // Formato ABRASF NFS-e Nacional padrão (CompNfse / InfNfse)
+    numero = get("Numero");
+    chave = xml.match(/<InfNfse[^>]*Id="([^"]*)"/)?.[1] || get("CodigoVerificacao") || "";
+    dataEmissao = (get("DataEmissao") || "").substring(0, 10);
+    valor = parseFloat(get("ValorServicos") || get("ValorLiquidoNfse") || "0");
+    const prestador = getNode("PrestadorServico");
+    emitente = getIn(prestador, "RazaoSocial") || "";
+    cnpjEmit = getIn(prestador, "Cnpj") || getIn(prestador, "CNPJ") || "";
+  }
+
+  return {
+    chave, numero, serie: "", valor, dataEmissao, emitente, cnpjEmit,
+    dest_nome: "",
+    emit_logr: "", emit_nro: "", emit_bairro: "", emit_mun, emit_uf, emit_cep: "", emit_ie: "",
+    itens: [], pagamentos: [], boletos: [], forma_pagamento_detectada: "A Prazo",
+    isNfse: true,
+    vBC: 0, vICMS: 0, vIPI: 0, vPIS: 0, vCOFINS: 0, vDesc: 0, vFrete: 0, vProd_total: 0,
+    natOp: "", infCpl: "",
+  };
+}
+
 function parsearXML(xmlOriginal) {
   const xml = limparNamespaces(xmlOriginal);
+
+  // Detecta NFSe (formato customizado do app ou ABRASF NFS-e Nacional)
+  if (xml.includes("<NFSeNacional") || xml.includes("<InfNfse")) {
+    return parsearXMLNfse(xml);
+  }
   const get = (tag) => { const m = xml.match(new RegExp(`<${tag}[^>]*>([^<]*)<\\/${tag}>`)); return m ? m[1].trim() : ""; };
   const getAll = (tag) => {
     const results = []; const openTag = `<${tag}`; const closeTag = `</${tag}>`; let start = 0;
@@ -128,6 +182,7 @@ function parsearXML(xmlOriginal) {
     emit_logr, emit_nro, emit_bairro, emit_mun, emit_uf, emit_cep, emit_ie,
     itens, pagamentos, boletos, forma_pagamento_detectada,
     vBC, vICMS, vIPI, vPIS, vCOFINS, vDesc, vFrete, vProd_total, natOp, infCpl,
+    isNfse: false,
   };
 }
 
@@ -324,11 +379,16 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
     });
   }, []);
 
-  const abasConfig = [
-    { id: "fiscal", label: "Dados Fiscais", icon: FileText },
-    { id: "estoque", label: "Entrada Estoque", icon: Package },
-    { id: "financeiro", label: "Financeiro", icon: DollarSign },
-  ];
+  const abasConfig = dados?.isNfse
+    ? [
+        { id: "fiscal", label: "Dados Fiscais", icon: FileText },
+        { id: "financeiro", label: "Financeiro", icon: DollarSign },
+      ]
+    : [
+        { id: "fiscal", label: "Dados Fiscais", icon: FileText },
+        { id: "estoque", label: "Entrada Estoque", icon: Package },
+        { id: "financeiro", label: "Financeiro", icon: DollarSign },
+      ];
 
   const isDevolucao = !!dados?.natOp?.toLowerCase().includes("devol");
 
@@ -370,7 +430,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
           xml_content: JSON.stringify(itensParaSalvar),
           ...(xmlUrl ? { xml_url: xmlUrl } : {}),
           numero: dados.numero || "",
-          serie: dados.serie || "",
+          ...(dados.serie ? { serie: dados.serie } : {}),
           forma_pagamento: financeiro.forma_pagamento || "",
           ...(isDevolucao ? { observacoes: "DEVOLUÇÃO" } : {}),
         });
@@ -488,7 +548,9 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
       salvarMapa(mapaAtualizado);
 
       const tipoFinanceiro = isDevolucao ? "Receita" : "Despesa";
-      const categoriaFinanceiro = isDevolucao ? "Devolução de Compra" : "Compra de Peças / Materiais";
+      const categoriaFinanceiro = dados.isNfse
+        ? "Serviços"
+        : (isDevolucao ? "Devolução de Compra" : "Compra de Peças / Materiais");
 
       const isBoleto = financeiro.forma_pagamento === "Boleto" && boletos.length > 1;
       if (isBoleto) {
@@ -605,12 +667,12 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
                 Confira os dados acima e avance para configurar a entrada no estoque e o lançamento financeiro.
               </p>
               <div className="flex justify-end">
-                <button onClick={() => setAba("estoque")}
+                <button onClick={() => setAba(dados.isNfse ? "financeiro" : "estoque")}
                   className="flex items-center gap-2 text-black px-5 py-2 rounded-lg text-sm font-semibold transition-all"
                   style={{ background: GREEN }}
                   onMouseEnter={e => e.currentTarget.style.background = GREEN_DARK}
                   onMouseLeave={e => e.currentTarget.style.background = GREEN}>
-                  Próximo: Estoque <ChevronRight className="w-4 h-4" />
+                  Próximo: {dados.isNfse ? "Financeiro" : "Estoque"} <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -848,7 +910,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
               <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 space-y-2 text-sm">
                 <p className="text-white font-medium mb-2">Resumo da operação:</p>
                 <div className="flex items-center gap-2 text-gray-400"><FileText className="w-4 h-4 text-blue-400" /> NF será marcada como <span className="text-white font-medium">Lançada</span></div>
-                <div className="flex items-center gap-2 text-gray-400"><Package className="w-4 h-4 text-green-400" />{itens.filter(i => i.dar_entrada_estoque).length} iten(s) entram no estoque</div>
+                {!dados.isNfse && <div className="flex items-center gap-2 text-gray-400"><Package className="w-4 h-4 text-green-400" />{itens.filter(i => i.dar_entrada_estoque).length} iten(s) entram no estoque</div>}
                 <div className="flex items-center gap-2 text-gray-400"><DollarSign className="w-4 h-4" style={{ color: GREEN }} /> Lançamento de <span className={isDevolucao ? "text-green-400 font-medium" : "text-red-400 font-medium"}>{isDevolucao ? "Receita (Devolução)" : "Despesa"}</span> no financeiro — {financeiro.status}</div>
               </div>
 
@@ -859,7 +921,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
               )}
 
               <div className="flex justify-between">
-                <button onClick={() => setAba("estoque")} className="flex items-center gap-2 text-gray-400 hover:text-white text-sm px-4 py-2 border border-gray-700 rounded-lg transition-all">
+                <button onClick={() => setAba(dados.isNfse ? "fiscal" : "estoque")} className="flex items-center gap-2 text-gray-400 hover:text-white text-sm px-4 py-2 border border-gray-700 rounded-lg transition-all">
                   <ChevronLeft className="w-4 h-4" /> Voltar
                 </button>
                 <button onClick={finalizarImportacao} disabled={salvando}
