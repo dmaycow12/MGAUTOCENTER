@@ -488,7 +488,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const parseNum = (val) => Number(String(val).replace(',', '.')) || 0;
 
-  const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+  function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
 
   // Reordena um objeto indexado por posição (ex: xxCustos) ao mover um item de from→to
   const reorderIndexedMap = (map, from, to) => {
