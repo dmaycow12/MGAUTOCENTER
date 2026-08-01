@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Edit, Trash2, User, Phone, Mail, ChevronDown, ChevronUp, Car, X, LayoutGrid, List, Loader2, AlertTriangle } from "lucide-react";
 import { mostrarAlerta } from "@/lib/modalAviso";
+import { maskCpfCnpj, maskIE, maskTelefone, maskCep } from "@/lib/masks";
 
 const CATEGORIAS = ["Cliente", "Fornecedor", "Funcionário", "Transportadora"];
 
@@ -35,7 +36,7 @@ export default function Clientes() {
     if (isConsumidor(c)) return;
     e.stopPropagation();
     setEditCell({ clienteId: c.id, field });
-    setEditValue(c[field] || "");
+    setEditValue(maskField(field, c[field] || ""));
     setTimeout(() => { editInputRef.current?.focus(); editInputRef.current?.select(); }, 30);
   };
 
@@ -47,8 +48,10 @@ export default function Clientes() {
     }
     const cliente = clientes.find(c => c.id === clienteId);
     let finalValue = editValue;
-    if (field === 'telefone' && editValue) finalValue = formatTelefone(editValue);
-    if (field === 'cpf_cnpj' && editValue) finalValue = formatCpfCnpj(editValue);
+    if (field === 'telefone' && editValue) finalValue = maskTelefone(editValue);
+    if (field === 'cpf_cnpj' && editValue) finalValue = maskCpfCnpj(editValue);
+    if (field === 'rg_ie' && editValue) finalValue = maskIE(editValue);
+    if (field === 'cep' && editValue) finalValue = maskCep(editValue);
     if (cliente && String(cliente[field] || "") !== String(finalValue)) {
       await base44.entities.Cadastro.update(clienteId, { [field]: finalValue });
       setClientes(prev => prev.map(c => c.id === clienteId ? { ...c, [field]: finalValue } : c));
@@ -87,16 +90,16 @@ export default function Clientes() {
       const rawTel = est?.ddd1 && est?.telefone1 
         ? `${est.ddd1}${est.telefone1}`.replace(/\D/g, '')
         : form.telefone?.replace(/\D/g, '') || '';
-      const telefoneFormatado = rawTel ? formatTelefone(rawTel) : form.telefone;
+      const telefoneFormatado = rawTel ? maskTelefone(rawTel) : form.telefone;
       setForm(f => ({
         ...f,
         tipo: 'Pessoa Jurídica',
         nome: d.razao_social || f.nome,
         nome_fantasia: est?.nome_fantasia || f.nome_fantasia,
-        rg_ie: ie,
+        rg_ie: maskIE(ie),
         email: est?.email || f.email,
         telefone: telefoneFormatado,
-        cep: est?.cep || f.cep,
+        cep: maskCep(est?.cep || f.cep),
         endereco: est?.logradouro || f.endereco,
         numero: est?.numero || f.numero,
         complemento: est?.complemento || f.complemento,
@@ -133,23 +136,16 @@ export default function Clientes() {
     return digits.length === 10 || digits.length === 11;
   };
 
-  const formatCpfCnpj = (val) => {
-    if (!val) return val;
-    const digits = val.replace(/\D/g, '');
-    if (digits.length === 11) {
-      return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    }
-    if (digits.length === 14) {
-      return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-    }
+  const maskField = (field, val) => {
+    if (field === 'cpf_cnpj') return maskCpfCnpj(val);
+    if (field === 'rg_ie') return maskIE(val);
+    if (field === 'telefone') return maskTelefone(val);
+    if (field === 'cep') return maskCep(val);
     return val;
   };
-
-  const formatTelefone = (val) => {
-    const digits = val.replace(/\D/g, '');
-    if (digits.length === 10) return `${digits.slice(0,2)} ${digits.slice(2,6)} ${digits.slice(6)}`;
-    if (digits.length === 11) return `${digits.slice(0,2)} ${digits.slice(2,7)} ${digits.slice(7)}`;
-    return digits;
+  const formatField = (field, val) => {
+    if (val == null || val === '') return '—';
+    return maskField(field, val);
   };
   const isConsumidor = (c) => c?.nome?.toUpperCase() === "CONSUMIDOR";
 
@@ -166,7 +162,14 @@ export default function Clientes() {
       setErroTelefone("O telefone deve ter exatamente 10 ou 11 dígitos (DDD + número).\nEx: 34 3822 2085 ou 34 98885 1245");
       return;
     }
-    const formNormalizado = { ...form, tipo: normalizarTipo(form.tipo), cpf_cnpj: formatCpfCnpj(form.cpf_cnpj) };
+    const formNormalizado = {
+      ...form,
+      tipo: normalizarTipo(form.tipo),
+      cpf_cnpj: maskCpfCnpj(form.cpf_cnpj),
+      rg_ie: maskIE(form.rg_ie),
+      telefone: maskTelefone(form.telefone),
+      cep: maskCep(form.cep),
+    };
     if (editando && isConsumidor(editando)) return mostrarAlerta("O cliente CONSUMIDOR não pode ser alterado.");
     // Validar CPF/CNPJ duplicado
     if (form.cpf_cnpj) {
@@ -365,7 +368,7 @@ export default function Clientes() {
                           <input
                             ref={editInputRef}
                             value={editValue}
-                            onChange={e => setEditValue(e.target.value)}
+                            onChange={e => setEditValue(maskField(field, e.target.value))}
                             onBlur={() => commitEdit(c.id, field)}
                             onKeyDown={e => handleEditKeyDown(e, c.id, field)}
                             autoComplete="new-password"
@@ -384,8 +387,8 @@ export default function Clientes() {
                         onClick={e => !isConsumidor(c) && startEdit(c, field, e)}
                         title={!isConsumidor(c) ? "Clique para editar" : ""}
                       >
-                        {c[field] || "—"}
-                      </td>
+                        {formatField(field, c[field])}
+                        </td>
                     );
                   };
 
@@ -470,7 +473,7 @@ export default function Clientes() {
                 </FormGroup>
                 <FormGroup label="CPF / CNPJ">
                   <div className="flex gap-2">
-                    <input value={form.cpf_cnpj} onChange={e => setForm({ ...form, cpf_cnpj: e.target.value })} className="input-dark" autoComplete="off" name="cpf_cnpj_cliente" />
+                    <input value={maskCpfCnpj(form.cpf_cnpj)} onChange={e => setForm({ ...form, cpf_cnpj: maskCpfCnpj(e.target.value) })} className="input-dark" autoComplete="off" name="cpf_cnpj_cliente" />
                     {form.tipo === 'Pessoa Jurídica' && (
                       <button type="button" onClick={buscarCnpj} disabled={buscandoCnpj}
                         className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-white flex-shrink-0 disabled:opacity-50"
@@ -488,13 +491,13 @@ export default function Clientes() {
                  </FormGroup>
                 <FormGroup label="Inscrição Estadual">
                   <input
-                    value={form.rg_ie}
-                    onChange={e => setForm({ ...form, rg_ie: e.target.value.replace(/\D/g, '') })}
-                    className="input-dark"
-                    autoComplete="off"
-                    name="ie_cliente"
-                    inputMode="numeric"
-                  />
+                     value={maskIE(form.rg_ie)}
+                     onChange={e => setForm({ ...form, rg_ie: maskIE(e.target.value) })}
+                     className="input-dark"
+                     autoComplete="off"
+                     name="ie_cliente"
+                     inputMode="numeric"
+                   />
                 </FormGroup>
                 <FormGroup label="Inscrição Municipal (IM)">
                   <input
@@ -508,21 +511,8 @@ export default function Clientes() {
                 </FormGroup>
                 <FormGroup label="Contato">
                   <input
-                    value={form.telefone}
-                    onChange={e => {
-                      const nums = e.target.value.replace(/\D/g, '').slice(0, 11);
-                      let formatted = nums;
-                      if (nums.length === 11) {
-                        // Celular: DD XXXXX XXXX
-                        formatted = nums.slice(0, 2) + ' ' + nums.slice(2, 7) + ' ' + nums.slice(7);
-                      } else if (nums.length === 10) {
-                        // Fixo: DD XXXX XXXX
-                        formatted = nums.slice(0, 2) + ' ' + nums.slice(2, 6) + ' ' + nums.slice(6);
-                      } else if (nums.length > 2) {
-                        formatted = nums.slice(0, 2) + ' ' + nums.slice(2);
-                      }
-                      setForm({ ...form, telefone: formatted });
-                    }}
+                    value={maskTelefone(form.telefone)}
+                    onChange={e => setForm({ ...form, telefone: maskTelefone(e.target.value) })}
                     className="input-dark"
                     autoComplete="off"
                     name="tel_cliente"
@@ -531,7 +521,7 @@ export default function Clientes() {
                   />
                 </FormGroup>
                 <FormGroup label="CEP">
-                  <input value={form.cep} onChange={e => setForm({ ...form, cep: e.target.value })} className="input-dark" autoComplete="off" name="cep_cliente" />
+                  <input value={maskCep(form.cep)} onChange={e => setForm({ ...form, cep: maskCep(e.target.value) })} className="input-dark" autoComplete="off" name="cep_cliente" />
                 </FormGroup>
                 <FormGroup label="Endereço">
                  <input value={form.endereco} onChange={e => setForm({ ...form, endereco: e.target.value })} className="input-dark" autoComplete="off" name="end_cliente" />
