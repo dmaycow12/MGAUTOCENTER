@@ -115,6 +115,8 @@ function recalcular(servicos, pecas, desconto) {
 export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const [form, setForm] = useState(() => {
     const base = os ? { ...defaultForm(), ...os, fotos: os.fotos || [] } : defaultForm();
+    base.pecas = (base.pecas || []).map(p => p._uid ? p : { ...p, _uid: uid() });
+    base.servicos = (base.servicos || []).map(s => s._uid ? s : { ...s, _uid: uid() });
     if (!os && !base.data_entrada) {
       const hoje = new Date();
       base.data_entrada = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
@@ -443,7 +445,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const addServico = () => {
-    const novos = [...(form.servicos || []), { _new: true, codigo: "", descricao: "", quantidade: 1, valor: 0 }];
+    const novos = [...(form.servicos || []), { _uid: uid(), _new: true, codigo: "", descricao: "", quantidade: 1, valor: 0 }];
     const calc = recalcular(novos, form.pecas, form.desconto);
     setForm(f => ({ ...f, servicos: novos, ...calc }));
   };
@@ -479,12 +481,14 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   };
 
   const addPeca = () => {
-    const novos = [...(form.pecas || []), { _new: true, descricao: "", quantidade: 1, valor_unitario: 0, valor_total: 0 }];
+    const novos = [...(form.pecas || []), { _uid: uid(), _new: true, descricao: "", quantidade: 1, valor_unitario: 0, valor_total: 0 }];
     const calc = recalcular(form.servicos, novos, form.desconto);
     setForm(f => ({ ...f, pecas: novos, ...calc }));
   };
 
   const parseNum = (val) => Number(String(val).replace(',', '.')) || 0;
+
+  const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
   // Reordena um objeto indexado por posição (ex: xxCustos) ao mover um item de from→to
   const reorderIndexedMap = (map, from, to) => {
@@ -778,7 +782,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       const log = (msg) => console.log(`[SALVAR] ${msg} — ${(performance.now()-t0).toFixed(0)}ms`);
       const parcelasNormalizadas = parcelasRef.current.map(p => ({ ...p, valor: Number(p.valor) || 0 }));
       const formaPrincipal = parcelasNormalizadas[0]?.forma_pagamento || form.forma_pagamento || "A Combinar";
-      const pecasLimpas = (form.pecas || []).map(({ _new, _custoStr, ...p }, idx) => {
+      const pecasLimpas = (form.pecas || []).map(({ _new, _custoStr, _uid, ...p }, idx) => {
         const isXX = (p.codigo || '').toUpperCase() === 'XX';
         if (isXX) {
           const custoStr = xxCustos[idx];
@@ -790,7 +794,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
         return { ...p };
       });
 
-      const servicosLimpos = (form.servicos || []).map(({ _new, ...s }) => ({ ...s, codigo: s.codigo?.trim() || "101", tecnico: s.tecnico || form.tecnico || "" }));
+      const servicosLimpos = (form.servicos || []).map(({ _new, _uid, ...s }) => ({ ...s, codigo: s.codigo?.trim() || "101", tecnico: s.tecnico || form.tecnico || "" }));
       let formFinal = { ...form, pecas: pecasLimpas, servicos: servicosLimpos, parcelas_detalhes: parcelasNormalizadas, forma_pagamento: formaPrincipal };
 
       // Para nova venda, usa o número já calculado no useEffect (form.numero)
@@ -1026,7 +1030,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     {provided => (
                       <div ref={provided.innerRef} {...provided.droppableProps}>
                         {(form.pecas || []).map((p, i) => (
-                          <Draggable key={p.estoque_id ? `peca-${p.estoque_id}-${i}` : `peca-new-${i}`} draggableId={p.estoque_id ? `peca-${p.estoque_id}-${i}` : `peca-new-${i}`} index={i} isDragDisabled={p._new}>
+                          <Draggable key={p._uid || `peca-${i}`} draggableId={p._uid || `peca-${i}`} index={i} isDragDisabled={p._new}>
                             {(drag, snap) => (
                               <div ref={drag.innerRef} {...drag.draggableProps} className={`bg-gray-800/50 rounded-xl p-3 mb-2 ${snap.isDragging ? 'ring-2 ring-orange-500' : ''}`}>
                                 {p._new ? (
@@ -1203,7 +1207,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                     {provided => (
                       <div ref={provided.innerRef} {...provided.droppableProps}>
                         {(form.servicos || []).map((s, i) => (
-                          <Draggable key={s.codigo ? `servico-${s.codigo}-${i}` : `servico-new-${i}`} draggableId={s.codigo ? `servico-${s.codigo}-${i}` : `servico-new-${i}`} index={i} isDragDisabled={s._new}>
+                          <Draggable key={s._uid || `servico-${i}`} draggableId={s._uid || `servico-${i}`} index={i} isDragDisabled={s._new}>
                             {(drag, snap) => (
                               <div ref={drag.innerRef} {...drag.draggableProps} className={`bg-gray-800/50 rounded-xl p-3 mb-2 ${snap.isDragging ? 'ring-2 ring-orange-500' : ''}`}>
                                 {s._new ? (
