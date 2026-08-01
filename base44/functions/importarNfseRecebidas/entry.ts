@@ -241,79 +241,71 @@ Deno.serve(async (req) => {
     let importadas = 0;
     const notasParaPdf = [];
 
+    // Pré-filtra candidatos (descarta canceladas, antigas e já existentes) sem chamadas de banco
+    const candidatos = [];
     for (const nf of nfses) {
-      const chave = nf.numero_dfse || nf.id_tag || '';
       const situacao = (nf.status_mensagem || '').toLowerCase();
-      if (situacao.includes('cancel')) continue; // Não importa notas canceladas
-      const status = 'Importada';
+      if (situacao.includes('cancel')) continue;
+      const chave = nf.numero_dfse || nf.id_tag || '';
       const data_emissao = (nf.data_emissao || nf.data_competencia || '').substring(0, 10);
-      const valorTotal = parseFloat(nf.valor_servico || nf.valor_liquido || '0');
-
       if (data_emissao && data_emissao < '2026-04-01') continue;
-
+      if (chave && chavesExistentes.has(chave)) continue;
       const nomePrestador = nf.razao_social_prestador || nf.razao_social_emitente || nf.nome_fantasia_emitente || nf.emitente_dps || '';
       const docPrestador = nf.cnpj_prestador || nf.cpf_prestador || nf.cnpj_emitente || '';
       const descricaoServico = nf.descricao_servico || nf.descricao_tributacao_nacional || '';
       const municipio = nf.descricao_municipio_prestacao || nf.descricao_municipio_emissor || '';
-
       let arquivosParaSalvar = {};
-      try {
-        const xmlText = gerarXmlNfse(nf);
-        arquivosParaSalvar.xml_original = xmlText;
-      } catch (_) {}
-
-      // PDF será gerado após criar a nota via gerarDanfseRecebida
-
-      if (chave && chavesExistentes.has(chave)) {
-        continue;
-      }
-
-      // Re-verifica no banco logo antes de criar (evita duplicata se outra importação rodou em paralelo)
-      if (chave) {
-        const jaExiste = await base44.asServiceRole.entities.NotaFiscal.filter({ chave_acesso: chave }, '-created_date', 1);
-        if (jaExiste && jaExiste.length > 0) { chavesExistentes.add(chave); continue; }
-      }
-
-      const novaNota = await base44.asServiceRole.entities.NotaFiscal.create({
-        tipo: 'NFSe',
-        numero: nf.numero_dfse || nf.numero || '',
-        serie: nf.serie_dps || '1',
-        status,
-        chave_acesso: chave,
-        spedy_id: chave,
-        cliente_nome: (nomePrestador || '').toUpperCase(),
-        cliente_cpf_cnpj: docPrestador,
-        valor_total: valorTotal,
-        data_emissao,
-        observacoes: [
-          descricaoServico ? `Serviço: ${descricaoServico}` : null,
-          municipio ? `Município: ${municipio}` : null,
-        ].filter(Boolean).join(' | '),
-        mensagem_sefaz: nf.status_mensagem || '',
-        ...arquivosParaSalvar,
+      try { arquivosParaSalvar.xml_original = gerarXmlNfse(nf); } catch (_) {}
+      candidatos.push({
+        nf, chave,
+        payload: {
+          tipo: 'NFSe',
+          numero: nf.numero_dfse || nf.numero || '',
+          serie: nf.serie_dps || '1',
+          status: 'Importada',
+          chave_acesso: chave,
+          spedy_id: chave,
+          cliente_nome: (nomePrestador || '').toUpperCase(),
+          cliente_cpf_cnpj: docPrestador,
+          valor_total: parseFloat(nf.valor_servico || nf.valor_liquido || '0'),
+          data_emissao,
+          observacoes: [
+            descricaoServico ? `Serviço: ${descricaoServico}` : null,
+            municipio ? `Município: ${municipio}` : null,
+          ].filter(Boolean).join(' | '),
+          mensagem_sefaz: nf.status_mensagem || '',
+          ...arquivosParaSalvar,
+        },
       });
-
-      // Guarda dados da NF para gerar PDF depois
-      console.log('[PDF] Adicionando nota para PDF:', novaNota.id);
-      notasParaPdf.push({ nf, id: novaNota.id });
-
-      importadas++;
       if (chave) chavesExistentes.add(chave);
     }
 
-    // Gera HTML das DANFSe e salva como pdf_url (HTML renderizável pelo browser)
+    // Cria as notas em paralelo (lotes de 5) — cada create é uma chamada de rede
+    const lotesCreate = [];
+    for (let i = 0; i < candidatos.length; i += 5) lotesCreate.push(candidatos.slice(i, i + 5));
+    for (const lote of lotesCreate) {
+      const res = await Promise.allSettled(lote.map(async (c) => {
+        const novaNota = await base44.asServiceRole.entities.NotaFiscal.create(c.payload);
+        notasParaPdf.push({ nf: c.nf, id: novaNota.id });
+        return true;
+      }));
+      importadas += res.filter(r => r.status === 'fulfilled').length;
+    }
+
+    // Gera HTML das DANFSe e salva como pdf_url em paralelo (lotes de 5)
     let pdfsGerados = 0;
-    for (const { nf, id } of notasParaPdf) {
-      try {
+    const lotes = [];
+    for (let i = 0; i < notasParaPdf.length; i += 5) lotes.push(notasParaPdf.slice(i, i + 5));
+    for (const lote of lotes) {
+      const resultados = await Promise.allSettled(lote.map(async ({ nf, id }) => {
         const htmlContent = gerarHtmlDanfseLocal(nf, id);
         const htmlBlob = new Blob([htmlContent], { type: 'text/html; charset=utf-8' });
         const htmlFile = new File([htmlBlob], `danfse_${id}.html`, { type: 'text/html' });
         const { file_url: htmlUrl } = await base44.asServiceRole.integrations.Core.UploadFile({ file: htmlFile });
         await base44.asServiceRole.entities.NotaFiscal.update(id, { pdf_url: htmlUrl });
-        pdfsGerados++;
-      } catch (pdfErr) {
-        console.error('[PDF] Exceção:', pdfErr.message);
-      }
+        return true;
+      }));
+      pdfsGerados += resultados.filter(r => r.status === 'fulfilled').length;
     }
 
     return Response.json({
