@@ -194,7 +194,7 @@ function gerarXmlNfse(nf) {
   </IdentificacaoNFSe>
   <Prestador>
     <CNPJ>${esc(nf.cnpj_prestador)}</CNPJ>
-    <RazaoSocial>${esc(nf.razao_social_prestador)}</RazaoSocial>
+    <RazaoSocial>${esc(nf.razao_social_prestador || nf.razao_social_emitente || nf.nome_fantasia_emitente || nf.emitente_dps || '')}</RazaoSocial>
     <NomeFantasia>${esc(nf.nome_fantasia_emitente)}</NomeFantasia>
     <Municipio>${esc(nf.descricao_municipio_emissor)}</Municipio>
     <UF>${esc(nf.uf_emitente)}</UF>
