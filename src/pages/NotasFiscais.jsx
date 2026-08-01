@@ -115,6 +115,18 @@ export default function NotasFiscais() {
   const [filtroTipo, setFiltroTipo] = useState(() => { try { const s = localStorage.getItem("nf_filtroTipo"); return s ? JSON.parse(s) : ["Saída"]; } catch { return ["Saída"]; } });
   const [filtroModeloNF, setFiltroModeloNF] = useState(() => { try { const s = localStorage.getItem("nf_filtroModelo"); const parsed = s ? JSON.parse(s) : null; return parsed && parsed.length > 0 ? parsed : ["NFe", "NFCe", "NFSe"]; } catch { return ["NFe", "NFCe", "NFSe"]; } });
 
+  const [sortKey, setSortKey] = useState(() => localStorage.getItem("nf_sortKey") || "numero");
+  const [sortDir, setSortDir] = useState(() => localStorage.getItem("nf_sortDir") || "asc");
+  const toggleSort = (key) => {
+    if (sortKey === key) {
+      const novaDir = sortDir === "asc" ? "desc" : "asc";
+      setSortDir(novaDir); localStorage.setItem("nf_sortDir", novaDir);
+    } else {
+      setSortKey(key); localStorage.setItem("nf_sortKey", key);
+      setSortDir("asc"); localStorage.setItem("nf_sortDir", "asc");
+    }
+  };
+
   const [showImportBackup, setShowImportBackup] = useState(false);
   const [importandoBackup, setImportandoBackup] = useState(false);
   const [resultadoImportBackup, setResultadoImportBackup] = useState(null);
@@ -350,9 +362,14 @@ export default function NotasFiscais() {
     }
     return true;
   }).sort((a, b) => {
+    if (sortKey === "data_emissao") {
+      const cmp = (a.data_emissao || "").localeCompare(b.data_emissao || "");
+      return sortDir === "asc" ? cmp : -cmp;
+    }
+    // padrão: número
     const numA = parseInt(a.numero, 10) || 0;
     const numB = parseInt(b.numero, 10) || 0;
-    if (numA !== numB) return numA - numB;
+    if (numA !== numB) return sortDir === "asc" ? numA - numB : numB - numA;
     const dateA = a.data_emissao || "";
     const dateB = b.data_emissao || "";
     return dateA.localeCompare(dateB);
@@ -1428,14 +1445,18 @@ export default function NotasFiscais() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
-                  <th className="px-4 py-3">Tipo</th>
-                  <th className="px-4 py-3">Número</th>
-                  <th className="px-4 py-3">Cliente</th>
-                  <th className="px-4 py-3 hidden md:table-cell">Emissão</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Valor</th>
-                  <th className="px-4 py-3 text-center">Ações</th>
-                </tr>
+                   <th className="px-4 py-3">Tipo</th>
+                   <th className="px-4 py-3 cursor-pointer select-none hover:text-white transition-colors" onClick={() => toggleSort("numero")}>
+                     Número <span className="inline-block ml-0.5" style={{fontSize:"12px",fontWeight:900,color:"#60a5fa"}}>{sortKey === "numero" ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
+                   </th>
+                   <th className="px-4 py-3">Cliente</th>
+                   <th className="px-4 py-3 hidden md:table-cell cursor-pointer select-none hover:text-white transition-colors" onClick={() => toggleSort("data_emissao")}>
+                     Emissão <span className="inline-block ml-0.5" style={{fontSize:"12px",fontWeight:900,color:"#60a5fa"}}>{sortKey === "data_emissao" ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
+                   </th>
+                   <th className="px-4 py-3">Status</th>
+                   <th className="px-4 py-3 text-right">Valor</th>
+                   <th className="px-4 py-3 text-center">Ações</th>
+                 </tr>
               </thead>
               <tbody>
                 {filtradas.map(nota => (
