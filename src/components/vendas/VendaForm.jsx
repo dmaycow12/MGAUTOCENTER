@@ -486,6 +486,19 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
 
   const parseNum = (val) => Number(String(val).replace(',', '.')) || 0;
 
+  // Reordena um objeto indexado por posição (ex: xxCustos) ao mover um item de from→to
+  const reorderIndexedMap = (map, from, to) => {
+    if (!map || from === to) return map;
+    const arr = [];
+    Object.entries(map).forEach(([k, v]) => { arr[Number(k)] = v; });
+    if (arr[from] === undefined) return map;
+    const [item] = arr.splice(from, 1);
+    arr.splice(to, 0, item);
+    const result = {};
+    arr.forEach((v, i) => { if (v !== undefined) result[i] = v; });
+    return result;
+  };
+
   const updatePeca = (i, field, val) => {
     const valFinal = field === "descricao" ? sanitizar(val) : val;
     const novos = form.pecas.map((p, idx) => {
@@ -567,6 +580,11 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
       lista.splice(to, 0, item);
       return { ...f, [tipo]: lista, ...recalcular(tipo === 'servicos' ? lista : f.servicos, tipo === 'pecas' ? lista : f.pecas, f.desconto) };
     });
+    // Reordena mapas de estado indexados por posição para acompanhar os itens
+    if (tipo === 'pecas') {
+      setXXCustos(prev => reorderIndexedMap(prev, from, to));
+      setValorUnitRaw(prev => reorderIndexedMap(prev, from, to));
+    }
   };
 
   const onDesconto = (val) => {
