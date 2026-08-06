@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { AlertTriangle, Download, Plus, X } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { AlertTriangle, Download, Plus, X, Columns3 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ModalEstoqueForm from "./ModalEstoqueForm";
 import { mostrarAlerta } from "@/lib/modalAviso";
@@ -10,6 +10,15 @@ const defaultForm = () => ({
   ncm: "87089990", cfop: "5405", cest: "", observacoes: "", historico: []
 });
 
+const COLUNAS_DISPONIVEIS = [
+  { key: "codigo", label: "CÓDIGO" },
+  { key: "descricao", label: "DESCRIÇÃO" },
+  { key: "marca", label: "MARCA" },
+  { key: "faltante", label: "FALTANTE" },
+  { key: "quantidade", label: "QTD ATUAL" },
+  { key: "estoque_minimo", label: "ESTOQUE MÍN." },
+];
+
 export default function AbaReposicao({ items, onReload }) {
   const [excluded, setExcluded] = useState(new Set());
   const [configId, setConfigId] = useState(null);
@@ -17,6 +26,12 @@ export default function AbaReposicao({ items, onReload }) {
   const [form, setForm] = useState(defaultForm());
   const [editandoMin, setEditandoMin] = useState(null);
   const [valorMin, setValorMin] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterRef = useRef(null);
+  const [colunas, setColunas] = useState(() => {
+    const saved = localStorage.getItem("reposicao_colunas");
+    return saved ? JSON.parse(saved) : { codigo: true, descricao: true, marca: true, faltante: true, quantidade: true, estoque_minimo: true };
+  });
 
   useEffect(() => {
     base44.entities.Configuracao.list("-created_date", 100).then(configs => {
@@ -27,6 +42,20 @@ export default function AbaReposicao({ items, onReload }) {
       }
     });
   }, []);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (filterRef.current && !filterRef.current.contains(e.target)) setFilterOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const toggleColuna = (col) => {
+    const updated = { ...colunas, [col]: !colunas[col] };
+    setColunas(updated);
+    localStorage.setItem("reposicao_colunas", JSON.stringify(updated));
+  };
 
   const salvarExcluded = async (novoSet) => {
     const valor = JSON.stringify([...novoSet]);
@@ -57,6 +86,24 @@ export default function AbaReposicao({ items, onReload }) {
     setShowForm(false);
     setForm(defaultForm());
     if (onReload) onReload();
+  };
+
+  const baixo = items.filter(i =>
+    Number(i.quantidade || 0) < Number(i.estoque_minimo || 0) && !excluded.has(i.id) && !i.arquivado
+  );
+
+  const iniciarEdicaoMin = (item) => {
+    setEditandoMin(item.id);
+    setValorMin(String(item.estoque_minimo || 0));
+  };
+
+  const salvarMin = async (item) => {
+    const novoValor = Number(valorMin) || 0;
+    setEditandoMin(null);
+    if (novoValor === Number(item.estoque_minimo || 0)) return;
+    item.estoque_minimo = novoValor;
+    if (onReload) onReload();
+    await base44.entities.Estoque.update(item.id, { estoque_minimo: novoValor });
   };
 
   const exportar = () => {
@@ -108,24 +155,6 @@ export default function AbaReposicao({ items, onReload }) {
     });
   };
 
-  const baixo = items.filter(i =>
-    Number(i.quantidade || 0) < Number(i.estoque_minimo || 0) && !excluded.has(i.id) && !i.arquivado
-  );
-
-  const iniciarEdicaoMin = (item) => {
-    setEditandoMin(item.id);
-    setValorMin(String(item.estoque_minimo || 0));
-  };
-
-  const salvarMin = async (item) => {
-    const novoValor = Number(valorMin) || 0;
-    setEditandoMin(null);
-    if (novoValor === Number(item.estoque_minimo || 0)) return;
-    item.estoque_minimo = novoValor;
-    if (onReload) onReload();
-    await base44.entities.Estoque.update(item.id, { estoque_minimo: novoValor });
-  };
-
   return (
     <div className="space-y-0.5">
       <div className="flex flex-wrap items-center justify-between gap-0.5">
@@ -175,16 +204,37 @@ export default function AbaReposicao({ items, onReload }) {
         </div>
       ) : (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <div className="flex justify-end p-2 border-b border-gray-800">
+            <div ref={filterRef} className="relative">
+              <button
+                onClick={() => setFilterOpen(!filterOpen)}
+                className="px-4 py-2 bg-gray-800 border border-gray-700 text-white rounded-xl text-sm font-medium hover:bg-gray-700 transition-all flex items-center gap-2"
+              >
+                <Columns3 className="w-4 h-4" /> Colunas
+              </button>
+              {filterOpen && (
+                <div className="absolute right-0 top-full mt-2 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 z-50 w-56 space-y-2">
+                  <p className="text-xs text-gray-400 font-semibold mb-3">COLUNAS VISÍVEIS</p>
+                  {COLUNAS_DISPONIVEIS.map(col => (
+                    <label key={col.key} className="flex items-center gap-2 cursor-pointer hover:bg-gray-800 p-2 rounded transition-all">
+                      <input type="checkbox" checked={!!colunas[col.key]} onChange={() => toggleColuna(col.key)} className="w-4 h-4 accent-blue-500" />
+                      <span className="text-xs text-gray-300">{col.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm whitespace-nowrap">
               <thead>
                 <tr className="text-left text-xs text-gray-500 border-b border-gray-800 bg-gray-900/80">
-                  <th className="px-4 py-3">Código</th>
-                  <th className="px-4 py-3">Descrição</th>
-                  <th className="px-4 py-3">Marca</th>
-                  <th className="px-4 py-3 text-center">Qtd Atual</th>
-                  <th className="px-4 py-3 text-center">Estoque Mín.</th>
-                  <th className="px-4 py-3 text-center">Faltante</th>
+                  {colunas.codigo && <th className="px-4 py-3">Código</th>}
+                  {colunas.descricao && <th className="px-4 py-3">Descrição</th>}
+                  {colunas.marca && <th className="px-4 py-3">Marca</th>}
+                  {colunas.faltante && <th className="px-4 py-3 text-center">Faltante</th>}
+                  {colunas.quantidade && <th className="px-4 py-3 text-center">Qtd Atual</th>}
+                  {colunas.estoque_minimo && <th className="px-4 py-3 text-center">Estoque Mín.</th>}
                   <th className="px-4 py-3 text-center w-12"></th>
                 </tr>
               </thead>
@@ -193,28 +243,30 @@ export default function AbaReposicao({ items, onReload }) {
                   const falta = Number(item.estoque_minimo || 0) - Number(item.quantidade || 0);
                   return (
                     <tr key={item.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-all">
-                      <td className="px-4 py-3 text-gray-400 font-mono text-xs">{item.codigo || "—"}</td>
-                      <td className="px-4 py-3 text-white font-medium">{item.descricao}</td>
-                      <td className="px-4 py-3 text-gray-400">{item.marca || "—"}</td>
-                      <td className="px-4 py-3 text-center font-bold text-red-400">{item.quantidade}</td>
-                      <td className="px-4 py-3 text-center text-gray-400">
-                        {editandoMin === item.id ? (
-                          <input
-                            autoFocus
-                            type="text"
-                            value={valorMin}
-                            onChange={e => setValorMin(e.target.value)}
-                            onBlur={() => salvarMin(item)}
-                            onKeyDown={e => { if (e.key === "Enter") salvarMin(item); if (e.key === "Escape") setEditandoMin(null); }}
-                            className="w-16 bg-gray-800 border border-blue-500 rounded px-1 py-0.5 text-white text-center text-sm outline-none"
-                          />
-                        ) : (
-                          <button onClick={() => iniciarEdicaoMin(item)} className="hover:text-blue-400 transition-all cursor-text">
-                            {item.estoque_minimo}
-                          </button>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-center font-bold text-yellow-400">{falta}</td>
+                      {colunas.codigo && <td className="px-4 py-3 text-gray-400 font-mono text-xs">{item.codigo || "—"}</td>}
+                      {colunas.descricao && <td className="px-4 py-3 text-white font-medium">{item.descricao}</td>}
+                      {colunas.marca && <td className="px-4 py-3 text-gray-400">{item.marca || "—"}</td>}
+                      {colunas.faltante && <td className="px-4 py-3 text-center font-bold text-yellow-400">{falta}</td>}
+                      {colunas.quantidade && <td className="px-4 py-3 text-center font-bold text-red-400">{item.quantidade}</td>}
+                      {colunas.estoque_minimo && (
+                        <td className="px-4 py-3 text-center text-gray-400">
+                          {editandoMin === item.id ? (
+                            <input
+                              autoFocus
+                              type="text"
+                              value={valorMin}
+                              onChange={e => setValorMin(e.target.value)}
+                              onBlur={() => salvarMin(item)}
+                              onKeyDown={e => { if (e.key === "Enter") salvarMin(item); if (e.key === "Escape") setEditandoMin(null); }}
+                              className="w-16 bg-gray-800 border border-blue-500 rounded px-1 py-0.5 text-white text-center text-sm outline-none"
+                            />
+                          ) : (
+                            <button onClick={() => iniciarEdicaoMin(item)} className="hover:text-blue-400 transition-all cursor-text">
+                              {item.estoque_minimo}
+                            </button>
+                          )}
+                        </td>
+                      )}
                       <td className="px-4 py-3 text-center">
                         <button onClick={() => excluirDaLista(item.id)} title="Remover da lista" className="text-gray-500 hover:text-red-400 transition-all p-1">
                           <X className="w-4 h-4" />
