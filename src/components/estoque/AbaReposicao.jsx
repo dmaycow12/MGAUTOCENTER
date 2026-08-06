@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { AlertTriangle, Download, Plus, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ModalEstoqueForm from "./ModalEstoqueForm";
@@ -17,34 +17,6 @@ export default function AbaReposicao({ items, onReload }) {
   const [form, setForm] = useState(defaultForm());
   const [editandoMin, setEditandoMin] = useState(null);
   const [valorMin, setValorMin] = useState("");
-  const [colunas, setColunas] = useState(() => {
-    const saved = localStorage.getItem("reposicao_colunas");
-    return saved ? JSON.parse(saved) : { codigo: true, marca: true, faltante: true, qtd_atual: true, estoque_minimo: true };
-  });
-  const [colunasOpen, setColunasOpen] = useState(false);
-  const colunasRef = useRef(null);
-
-  const toggleColuna = (col) => {
-    const updated = { ...colunas, [col]: !colunas[col] };
-    setColunas(updated);
-    localStorage.setItem("reposicao_colunas", JSON.stringify(updated));
-  };
-
-  const colunasDisponiveis = [
-    { key: "codigo", label: "CÓDIGO" },
-    { key: "marca", label: "MARCA" },
-    { key: "faltante", label: "FALTANTE" },
-    { key: "qtd_atual", label: "QTD ATUAL" },
-    { key: "estoque_minimo", label: "ESTOQUE MÍN." },
-  ];
-
-  useEffect(() => {
-    const handleClick = (e) => {
-      if (colunasRef.current && !colunasRef.current.contains(e.target)) setColunasOpen(false);
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
 
   useEffect(() => {
     base44.entities.Configuracao.list("-created_date", 100).then(configs => {
@@ -165,25 +137,6 @@ export default function AbaReposicao({ items, onReload }) {
           </span>
         </div>
         <div className="flex gap-0.5">
-          <div ref={colunasRef} className="relative">
-            <button
-              onClick={() => setColunasOpen(!colunasOpen)}
-              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all bg-gray-800 border border-gray-700 text-white hover:bg-gray-700"
-            >
-              ⚙️ Colunas
-            </button>
-            {colunasOpen && (
-              <div className="absolute right-0 top-full mt-2 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 z-50 w-56 space-y-2">
-                <p className="text-xs text-gray-400 font-semibold mb-3">COLUNAS VISÍVEIS</p>
-                {colunasDisponiveis.map(col => (
-                  <label key={col.key} className="flex items-center gap-2 cursor-pointer hover:bg-gray-800 p-2 rounded transition-all">
-                    <input type="checkbox" checked={colunas[col.key]} onChange={() => toggleColuna(col.key)} className="w-4 h-4" />
-                    <span className="text-xs text-gray-300">{col.label}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
           <button
             onClick={() => { setForm(defaultForm()); setShowForm(true); }}
             className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all"
@@ -226,12 +179,12 @@ export default function AbaReposicao({ items, onReload }) {
             <table className="w-full text-sm whitespace-nowrap">
               <thead>
                 <tr className="text-left text-xs text-gray-500 border-b border-gray-800 bg-gray-900/80">
-                  {colunas.codigo && <th className="px-4 py-3">Código</th>}
+                  <th className="px-4 py-3">Código</th>
                   <th className="px-4 py-3">Descrição</th>
-                  {colunas.marca && <th className="px-4 py-3">Marca</th>}
-                  {colunas.faltante && <th className="px-4 py-3 text-center">Faltante</th>}
-                  {colunas.qtd_atual && <th className="px-4 py-3 text-center">Qtd Atual</th>}
-                  {colunas.estoque_minimo && <th className="px-4 py-3 text-center">Estoque Mín.</th>}
+                  <th className="px-4 py-3">Marca</th>
+                  <th className="px-4 py-3 text-center">Qtd Atual</th>
+                  <th className="px-4 py-3 text-center">Estoque Mín.</th>
+                  <th className="px-4 py-3 text-center">Faltante</th>
                   <th className="px-4 py-3 text-center w-12"></th>
                 </tr>
               </thead>
@@ -240,12 +193,11 @@ export default function AbaReposicao({ items, onReload }) {
                   const falta = Number(item.estoque_minimo || 0) - Number(item.quantidade || 0);
                   return (
                     <tr key={item.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-all">
-                      {colunas.codigo && <td className="px-4 py-3 text-gray-400 font-mono text-xs">{item.codigo || "—"}</td>}
+                      <td className="px-4 py-3 text-gray-400 font-mono text-xs">{item.codigo || "—"}</td>
                       <td className="px-4 py-3 text-white font-medium">{item.descricao}</td>
-                      {colunas.marca && <td className="px-4 py-3 text-gray-400">{item.marca || "—"}</td>}
-                      {colunas.faltante && <td className="px-4 py-3 text-center font-bold text-yellow-400">{falta}</td>}
-                      {colunas.qtd_atual && <td className="px-4 py-3 text-center font-bold text-red-400">{item.quantidade}</td>}
-                      {colunas.estoque_minimo && <td className="px-4 py-3 text-center text-gray-400">
+                      <td className="px-4 py-3 text-gray-400">{item.marca || "—"}</td>
+                      <td className="px-4 py-3 text-center font-bold text-red-400">{item.quantidade}</td>
+                      <td className="px-4 py-3 text-center text-gray-400">
                         {editandoMin === item.id ? (
                           <input
                             autoFocus
@@ -261,7 +213,8 @@ export default function AbaReposicao({ items, onReload }) {
                             {item.estoque_minimo}
                           </button>
                         )}
-                      </td>}
+                      </td>
+                      <td className="px-4 py-3 text-center font-bold text-yellow-400">{falta}</td>
                       <td className="px-4 py-3 text-center">
                         <button onClick={() => excluirDaLista(item.id)} title="Remover da lista" className="text-gray-500 hover:text-red-400 transition-all p-1">
                           <X className="w-4 h-4" />

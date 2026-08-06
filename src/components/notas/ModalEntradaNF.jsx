@@ -14,15 +14,6 @@ function fmtData(str) {
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
 
-// Soma dias a uma data YYYY-MM-DD e retorna YYYY-MM-DD
-function somarDiasData(dataStr, dias) {
-  if (!dataStr) return "";
-  const d = new Date(dataStr.substring(0, 10) + "T12:00:00");
-  d.setDate(d.getDate() + dias);
-  const pad = n => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
 // localStorage para memória de mapeamento codigo -> estoque
 const MAPA_KEY = "nf_produto_mapa";
 function lerMapa() {
@@ -328,9 +319,7 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
       ...f,
       forma_pagamento: parsed.forma_pagamento_detectada || "PIX",
       fornecedor: parsed.emitente,
-      data_vencimento: parsed.isNfse
-        ? somarDiasData(parsed.dataEmissao, 30)
-        : (parsed.boletos?.length > 0 ? (parsed.boletos[0].dVenc || parsed.dataEmissao) : parsed.dataEmissao),
+      data_vencimento: parsed.boletos?.length > 0 ? (parsed.boletos[0].dVenc || parsed.dataEmissao) : parsed.dataEmissao,
     }));
 
     Promise.all([
@@ -375,18 +364,6 @@ export default function ModalEntradaNF({ xmlTexto, notaId, onClose, onSalvo }) {
       if (chave) {
         const dup = nfs.find(n => n.chave_acesso === chave);
         if (dup) setErroDuplicada(`Esta nota fiscal já foi importada (NF ${dup.numero} em ${fmtData(dup.data_emissao)}).`);
-      }
-
-      // Fallback: se o XML não trouxer o nome do prestador, usa os dados da própria NotaFiscal
-      if (!parsed.emitente && notaId) {
-        const notaAtual = nfs.find(n => n.id === notaId);
-        if (notaAtual?.cliente_nome) {
-          parsed.emitente = notaAtual.cliente_nome;
-          parsed.cnpjEmit = parsed.cnpjEmit || notaAtual.cliente_cpf_cnpj || "";
-          setDados({ ...parsed });
-          setNomeFornecedor(notaAtual.cliente_nome);
-          setFinanceiro(f => ({ ...f, fornecedor: notaAtual.cliente_nome }));
-        }
       }
 
       const cnpjLimpo = parsed.cnpjEmit?.replace(/\D/g, "");
