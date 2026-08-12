@@ -146,7 +146,7 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
   const kmRef = useRef(null);
 
   const handleNavKey = (e, nextRef) => {
-    if (e.key === 'Enter' || e.key === 'Tab') {
+    if (e.key === 'Enter' || (e.key === 'Tab' && !e.shiftKey)) {
       e.preventDefault();
       nextRef?.current?.focus();
     }
@@ -1007,9 +1007,9 @@ export default function VendaForm({ os, clientes, veiculos, onClose, onSave }) {
                 <div className="border-b border-gray-700 pb-2 mb-3">
                   <h3 className="text-sm font-medium text-white">Veículo</h3>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {form.cliente_id && veiculosCliente.length > 0 && (
-                    <Field label="Selecionar Veículo" className="col-span-2 md:col-span-4">
+                    <Field label="Selecionar Veículo" className="md:col-span-3">
                       <select value={form.veiculo_id} onChange={e => onVeiculoChange(e.target.value)} className="input-dark">
                         <option value="">— Selecione —</option>
                         {veiculosCliente.map(v => <option key={v.id} value={v.id}>{v.placa} — {v.marca} {v.modelo} {v.ano}</option>)}
