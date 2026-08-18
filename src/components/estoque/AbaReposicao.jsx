@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { AlertTriangle, Download, Plus, X, Columns3, Printer } from "lucide-react";
+import { AlertTriangle, Plus, X, Columns3, Printer } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ModalEstoqueForm from "./ModalEstoqueForm";
 import { mostrarAlerta } from "@/lib/modalAviso";
@@ -78,6 +78,12 @@ export default function AbaReposicao({ items, onReload }) {
     setExcluded(new Set());
     salvarExcluded(new Set());
     if (onReload) onReload();
+  };
+
+  const imprimir = () => {
+    if (baixo.length === 0) return mostrarAlerta("Nenhum produto para imprimir.");
+    sessionStorage.setItem("reposicao_print_dados", JSON.stringify(baixo));
+    window.open("/ReposicaoPrint?print=1", "_blank");
   };
 
   const salvar = async () => {
@@ -165,7 +171,7 @@ export default function AbaReposicao({ items, onReload }) {
             {excluded.size > 0 && <span className="text-gray-500"> ({excluded.size} oculto(s))</span>}
           </span>
         </div>
-        <div className="flex gap-0.5">
+        <div className="flex gap-0.5 items-center">
           <button
             onClick={() => { setForm(defaultForm()); setShowForm(true); }}
             className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all"
@@ -186,16 +192,7 @@ export default function AbaReposicao({ items, onReload }) {
             <AlertTriangle className="w-4 h-4" /> Gerar Lista de Produtos Faltantes
           </button>
           <button
-            onClick={() => window.open("/ReposicaoPrint", "_blank")}
-            className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all"
-            style={{ background: "#00ff00", color: "#000" }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#00dd00")}
-            onMouseLeave={e => (e.currentTarget.style.background = "#00ff00")}
-          >
-            <Download className="w-4 h-4" /> Reposição
-          </button>
-          <button
-            onClick={() => window.open("/ReposicaoPrint?print=1", "_blank")}
+            onClick={imprimir}
             className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all"
             style={{ background: "#00ff00", color: "#000" }}
             onMouseEnter={e => (e.currentTarget.style.background = "#00dd00")}
@@ -203,6 +200,28 @@ export default function AbaReposicao({ items, onReload }) {
           >
             <Printer className="w-4 h-4" /> Imprimir
           </button>
+          <div ref={filterRef} className="relative">
+            <button
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all"
+              style={{ background: "#00ff00", color: "#000" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "#00dd00")}
+              onMouseLeave={e => (e.currentTarget.style.background = "#00ff00")}
+            >
+              <Columns3 className="w-4 h-4" /> Colunas
+            </button>
+            {filterOpen && (
+              <div className="absolute right-0 top-full mt-2 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 z-50 w-56 space-y-2">
+                <p className="text-xs text-gray-400 font-semibold mb-3">COLUNAS VISÍVEIS</p>
+                {COLUNAS_DISPONIVEIS.map(col => (
+                  <label key={col.key} className="flex items-center gap-2 cursor-pointer hover:bg-gray-800 p-2 rounded transition-all">
+                    <input type="checkbox" checked={!!colunas[col.key]} onChange={() => toggleColuna(col.key)} className="w-4 h-4 accent-blue-500" />
+                    <span className="text-xs text-gray-300">{col.label}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -213,27 +232,6 @@ export default function AbaReposicao({ items, onReload }) {
         </div>
       ) : (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-          <div className="flex justify-end p-2 border-b border-gray-800">
-            <div ref={filterRef} className="relative">
-              <button
-                onClick={() => setFilterOpen(!filterOpen)}
-                className="px-4 py-2 bg-gray-800 border border-gray-700 text-white rounded-xl text-sm font-medium hover:bg-gray-700 transition-all flex items-center gap-2"
-              >
-                <Columns3 className="w-4 h-4" /> Colunas
-              </button>
-              {filterOpen && (
-                <div className="absolute right-0 top-full mt-2 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4 z-50 w-56 space-y-2">
-                  <p className="text-xs text-gray-400 font-semibold mb-3">COLUNAS VISÍVEIS</p>
-                  {COLUNAS_DISPONIVEIS.map(col => (
-                    <label key={col.key} className="flex items-center gap-2 cursor-pointer hover:bg-gray-800 p-2 rounded transition-all">
-                      <input type="checkbox" checked={!!colunas[col.key]} onChange={() => toggleColuna(col.key)} className="w-4 h-4 accent-blue-500" />
-                      <span className="text-xs text-gray-300">{col.label}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm whitespace-nowrap">
               <thead>
