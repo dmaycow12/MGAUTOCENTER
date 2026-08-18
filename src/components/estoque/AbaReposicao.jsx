@@ -196,9 +196,9 @@ export default function AbaReposicao({ items, onReload }) {
           <button
             onClick={() => setFilterOpen(!filterOpen)}
             className="w-full flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all"
-            style={{ background: "#2563eb", color: "#fff" }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#1d4ed8")}
-            onMouseLeave={e => (e.currentTarget.style.background = "#2563eb")}
+            style={{ background: "#062C9B", color: "#fff" }}
+            onMouseEnter={e => (e.currentTarget.style.background = "#05247d")}
+            onMouseLeave={e => (e.currentTarget.style.background = "#062C9B")}
           >
             <Columns3 className="w-4 h-4 shrink-0" /> <span className="truncate">Colunas</span>
           </button>
