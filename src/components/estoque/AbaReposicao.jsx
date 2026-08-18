@@ -83,6 +83,7 @@ export default function AbaReposicao({ items, onReload }) {
   const imprimir = () => {
     if (baixo.length === 0) return mostrarAlerta("Nenhum produto para imprimir.");
     sessionStorage.setItem("reposicao_print_dados", JSON.stringify(baixo));
+    sessionStorage.setItem("reposicao_print_colunas", JSON.stringify(colunas));
     window.open("/ReposicaoPrint?print=1", "_blank");
   };
 
