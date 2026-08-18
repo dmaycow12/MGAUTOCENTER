@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { AlertTriangle, Download, Plus, X, Columns3 } from "lucide-react";
+import { AlertTriangle, Download, Plus, X, Columns3, Printer } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ModalEstoqueForm from "./ModalEstoqueForm";
 import { mostrarAlerta } from "@/lib/modalAviso";
@@ -193,6 +193,15 @@ export default function AbaReposicao({ items, onReload }) {
             onMouseLeave={e => (e.currentTarget.style.background = "#00ff00")}
           >
             <Download className="w-4 h-4" /> Reposição
+          </button>
+          <button
+            onClick={() => window.open("/ReposicaoPrint?print=1", "_blank")}
+            className="flex items-center justify-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold transition-all"
+            style={{ background: "#00ff00", color: "#000" }}
+            onMouseEnter={e => (e.currentTarget.style.background = "#00dd00")}
+            onMouseLeave={e => (e.currentTarget.style.background = "#00ff00")}
+          >
+            <Printer className="w-4 h-4" /> Imprimir
           </button>
         </div>
       </div>

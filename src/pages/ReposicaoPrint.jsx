@@ -12,9 +12,14 @@ export default function ReposicaoPrint() {
         try { JSON.parse(excludedCfg.valor || "[]").forEach(id => excluded.add(id)); } catch {}
       }
       const data = await base44.entities.Estoque.list("-created_date", 500);
-      setBaixo(data.filter(i =>
+      const filtrados = data.filter(i =>
         Number(i.quantidade || 0) < Number(i.estoque_minimo || 0) && !excluded.has(i.id)
-      ));
+      );
+      setBaixo(filtrados);
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("print") === "1") {
+        setTimeout(() => window.print(), 500);
+      }
     });
   }, []);
 
