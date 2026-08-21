@@ -46,14 +46,19 @@ function getTipoCliente(venda, clientes) {
 }
 
 const TIPO_COLORS = { NFSe: '#a78bfa', NFe: '#fb923c', NFCe: '#38bdf8' };
-const CONCURRENCY = 5;
+const CONCURRENCY = 5; // rascunhos (somente banco de dados)
+const CONCURRENCY_HOMOLOG = 1; // homologação (API Focus NFe — evita limite de autenticação)
+const DELAY_HOMOLOG_MS = 1500; // atraso entre cada envio à Focus NFe
 
-async function runParallel(tasks, concurrency) {
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+async function runParallel(tasks, concurrency, delayMs = 0) {
   const results = [];
   let idx = 0;
   async function worker() {
     while (idx < tasks.length) {
       const i = idx++;
+      if (delayMs > 0 && i > 0) await sleep(delayMs);
       results[i] = await tasks[i]();
     }
   }
@@ -245,7 +250,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
       }
     });
 
-    await runParallel(homologTasks, CONCURRENCY);
+    await runParallel(homologTasks, CONCURRENCY_HOMOLOG, DELAY_HOMOLOG_MS);
 
     setResultados(res);
     setEmitindo(false);
