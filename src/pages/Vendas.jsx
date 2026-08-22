@@ -409,7 +409,7 @@ export default function Vendas() {
           </div>
           <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
             <span className="text-xs font-semibold text-gray-400 tracking-wide">LUCRO</span>
-            <span className={`text-sm font-bold ${(totalValorPecas + totalLucroServicos - totalCusto) >= 0 ? 'text-white' : 'text-red-400'}`}>{fmtTotal(totalValorPecas + totalLucroServicos - totalCusto)}</span>
+            <span className={`text-sm font-bold ${totalLucroBruto >= 0 ? 'text-white' : 'text-red-400'}`}>{fmtTotal(totalLucroBruto)}</span>
           </div>
         </div>
 
