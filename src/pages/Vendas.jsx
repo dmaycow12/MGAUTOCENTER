@@ -282,6 +282,7 @@ export default function Vendas() {
     const custoServicos = (o.servicos || []).reduce((s, sv) => s + Number(sv.valor_custo || 0) * Number(sv.quantidade ?? 1), 0);
     return acc + (o.valor_servicos || 0) - custoServicos + (o.valor_pecas || 0) - custoPecas;
   }, 0);
+  const totalValorServicos = ordensComFiltrosBase.reduce((acc, o) => acc + (o.valor_servicos || 0), 0);
   const totalValorPecas = ordensComFiltrosBase.reduce((acc, o) => acc + (o.valor_pecas || 0), 0);
   const totalLucroPecas = ordensComFiltrosBase.reduce((acc, o) => {
     const custoPecas = (o.pecas || []).reduce((s, p) => s + getCustoPeca(p) * Number(p.quantidade || 1), 0);
@@ -400,7 +401,7 @@ export default function Vendas() {
           </div>
           <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
             <span className="text-xs font-semibold text-gray-400 tracking-wide">SERVIÇOS</span>
-            <span className={`text-sm font-bold ${totalLucroServicos >= 0 ? 'text-white' : 'text-red-400'}`}>{fmtTotal(totalLucroServicos)}</span>
+            <span className="text-sm font-bold text-white">{fmtTotal(totalValorServicos)}</span>
           </div>
           <div className="rounded-xl px-3 py-2.5 flex flex-col items-center justify-center gap-1" style={{background:"#0d1b2a", border:"1px solid #1e3a5f"}}>
             <span className="text-xs font-semibold text-gray-400 tracking-wide">COMISSÃO</span>
