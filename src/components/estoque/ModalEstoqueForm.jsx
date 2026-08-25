@@ -168,9 +168,6 @@ export default function ModalEstoqueForm({ editando, form, setForm, onSalvar, on
                   <F label="CFOP">
                     <input value={form.cfop || ""} onChange={e => setForm({ ...form, cfop: e.target.value })} className="input-dark" placeholder="5405" maxLength={4} />
                   </F>
-                  <F label="CEST" className="col-span-2">
-                    <input value={form.cest || ""} onChange={e => setForm({ ...form, cest: e.target.value })} className="input-dark" />
-                  </F>
                 </div>
               </div>
 

@@ -7,6 +7,7 @@ import MovimentacoesEstoque from "../components/estoque/MovimentacoesEstoque";
 import LucroPecas from "../components/estoque/LucroPecas";
 import ModalEtiquetar from "../components/estoque/ModalEtiquetar";
 import AbaReposicao from "../components/estoque/AbaReposicao";
+import AbaNcmCfop from "../components/estoque/AbaNcmCfop";
 import { mostrarAlerta, mostrarConfirm } from "@/lib/modalAviso";
 
 const arredondarVendaParaCinco = (valor) => {
@@ -16,7 +17,7 @@ const arredondarVendaParaCinco = (valor) => {
 const defaultForm = () => ({
   codigo: "", codigos: [], descricao: "", marca: "",
   quantidade: 0, estoque_minimo: 0, valor_custo: 0, valor_venda: 0,
-  ncm: "87089990", cfop: "5405", cest: "", observacoes: "", historico: []
+  ncm: "87089990", cfop: "5405", observacoes: "", historico: []
 });
 
 export default function Estoque() {
@@ -45,6 +46,7 @@ export default function Estoque() {
   const [ordenacao, setOrdenacao] = useState({ campo: "descricao", direcao: "asc" });
   const [deletando, setDeletando] = useState(false);
   const [abaEstoque, setAbaEstoque] = useState("produtos");
+  const [subAbaProdutos, setSubAbaProdutos] = useState("lista");
   const [progressoReajuste, setProgressoReajuste] = useState({ isOpen: false, progresso: 0, status: 'processando', sucessos: 0, erro: null });
   const [filtroMarcas, setFiltroMarcas] = useState([]);
   const [showMarcaDropdown, setShowMarcaDropdown] = useState(false);
@@ -513,7 +515,6 @@ export default function Estoque() {
                   fornecedor: { type: "string" },
                   ncm: { type: "string" },
                   cfop: { type: "string" },
-                  cest: { type: "string" },
                   }
               }
             }
@@ -561,6 +562,15 @@ export default function Estoque() {
       {abaEstoque === "reposicao" && <AbaReposicao items={items} onReload={load} />}
 
       {abaEstoque === "produtos" && <>
+      {/* Sub-abas de Produtos */}
+      <div className="flex bg-gray-900 border border-gray-800 rounded-xl p-1 gap-0.5">
+        <button onClick={() => setSubAbaProdutos("lista")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={subAbaProdutos==="lista"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>Lista de Produtos</button>
+        <button onClick={() => setSubAbaProdutos("ncmcfop")} className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all" style={subAbaProdutos==="ncmcfop"?{background:"#062C9B",color:"#fff"}:{color:"#6b7280"}}>NCM / CFOP</button>
+      </div>
+
+      {subAbaProdutos === "ncmcfop" ? (
+        <AbaNcmCfop items={items} onReload={load} />
+      ) : <>
       {/* Botão Principal */}
       <button
         onClick={() => { setShowForm(true); setEditando(null); setForm(defaultForm()); }}
@@ -1083,6 +1093,8 @@ export default function Estoque() {
 
       <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; text-transform:uppercase; } .input-dark:focus { border-color:#f97316; } .input-dark::placeholder { color:#6b7280; text-transform:none; }`}</style>
       </>}
+      </>
+      }
     </div>
   );
 }

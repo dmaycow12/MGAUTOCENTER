@@ -67,10 +67,6 @@
       "title": "CFOP",
       "default": "5405"
     },
-    "cest": {
-      "type": "string",
-      "title": "CEST"
-    },
     "etiqueta": {
       "type": "string",
       "title": "Etiqueta"
