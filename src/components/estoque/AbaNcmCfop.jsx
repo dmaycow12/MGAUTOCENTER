@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { Search, FileText, Check, X, AlertCircle } from "lucide-react";
+import { Search, FileText, Check, X } from "lucide-react";
 import { mostrarAlerta } from "@/lib/modalAviso";
 
 export default function AbaNcmCfop({ items, onReload }) {
@@ -41,8 +41,11 @@ export default function AbaNcmCfop({ items, onReload }) {
     }
   };
 
-  const semNcm = filtrados.filter(i => !i.ncm).length;
-  const semCfop = filtrados.filter(i => !i.cfop).length;
+  const ncmDiferentes = useMemo(() => {
+    const set = new Set();
+    filtrados.forEach(i => { if (i.ncm) set.add(i.ncm); });
+    return set.size;
+  }, [filtrados]);
 
   const CellEdit = ({ item, field, maxLength }) => {
     const isEdit = editando?.id === item.id && editando?.field === field;
@@ -95,18 +98,8 @@ export default function AbaNcmCfop({ items, onReload }) {
         <div className="flex gap-0.5">
           <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 flex items-center gap-2">
             <FileText className="w-4 h-4 text-blue-400" />
-            <span className="text-xs text-gray-400">Total:</span>
-            <span className="text-white text-sm font-bold">{filtrados.length}</span>
-          </div>
-          <div className="bg-gray-900 border border-red-500/30 rounded-xl px-4 py-3 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-red-400" />
-            <span className="text-xs text-gray-400">Sem NCM:</span>
-            <span className="text-red-400 text-sm font-bold">{semNcm}</span>
-          </div>
-          <div className="bg-gray-900 border border-red-500/30 rounded-xl px-4 py-3 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-red-400" />
-            <span className="text-xs text-gray-400">Sem CFOP:</span>
-            <span className="text-red-400 text-sm font-bold">{semCfop}</span>
+            <span className="text-xs text-gray-400">NCMs diferentes:</span>
+            <span className="text-white text-sm font-bold">{ncmDiferentes}</span>
           </div>
         </div>
       </div>
