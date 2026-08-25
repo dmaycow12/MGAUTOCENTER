@@ -2,11 +2,13 @@ import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { Search, FileText, Check, X } from "lucide-react";
 import { mostrarAlerta } from "@/lib/modalAviso";
+import ModalNcmContagem from "@/components/estoque/ModalNcmContagem";
 
 export default function AbaNcmCfop({ items, onReload }) {
   const [search, setSearch] = useState("");
   const [editando, setEditando] = useState(null); // { id, field }
   const [salvando, setSalvando] = useState(false);
+  const [showNcmModal, setShowNcmModal] = useState(false);
 
   const filtrados = useMemo(() => {
     const s = search.toLowerCase().trim();
@@ -45,6 +47,12 @@ export default function AbaNcmCfop({ items, onReload }) {
     const set = new Set();
     filtrados.forEach(i => { if (i.ncm) set.add(i.ncm); });
     return set.size;
+  }, [filtrados]);
+
+  const contagemNcm = useMemo(() => {
+    const map = {};
+    filtrados.forEach(i => { if (i.ncm) map[i.ncm] = (map[i.ncm] || 0) + 1; });
+    return map;
   }, [filtrados]);
 
   const CellEdit = ({ item, field, maxLength }) => {
@@ -96,17 +104,27 @@ export default function AbaNcmCfop({ items, onReload }) {
           />
         </div>
         <div className="flex gap-0.5">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 flex items-center gap-2">
+          <button
+            onClick={() => setShowNcmModal(true)}
+            className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 flex items-center gap-2 hover:border-blue-500/50 transition-all cursor-pointer"
+          >
             <FileText className="w-4 h-4 text-blue-400" />
             <span className="text-xs text-gray-400">NCMs diferentes:</span>
             <span className="text-white text-sm font-bold">{ncmDiferentes}</span>
-          </div>
+          </button>
         </div>
       </div>
 
       {salvando && (
         <div className="text-xs text-orange-400 px-2 py-1">Salvando...</div>
       )}
+
+      <ModalNcmContagem
+        aberto={showNcmModal}
+        contagem={contagemNcm}
+        total={filtrados.length}
+        onClose={() => setShowNcmModal(false)}
+      />
 
       {/* Tabela */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
