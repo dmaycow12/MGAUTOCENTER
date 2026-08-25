@@ -115,6 +115,10 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
 
   const totalSelecionado = Object.values(selecionadas).reduce((acc, tipos) => acc + tipos.length, 0);
 
+  const valorTotalSelecionado = vendasElegiveis
+    .filter(v => (selecionadas[v.id] || []).length > 0)
+    .reduce((acc, v) => acc + (v.valor_total || 0), 0);
+
   // Selecionar todos da lista filtrada
   const toggleAll = () => {
     if (totalSelecionado > 0) {
@@ -427,10 +431,15 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
 
             <div className="p-5 border-t border-gray-800 flex-shrink-0 flex items-center justify-between">
               <div>
-                <span className="text-gray-400 text-sm">{totalSelecionado} nota(s) selecionada(s)</span>
-                {emitindo && progresso.total > 0 && (
-                  <span className="text-gray-500 text-xs ml-3">{progresso.atual}/{progresso.total} enviadas</span>
-                )}
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-gray-400 text-sm">{totalSelecionado} nota(s) selecionada(s)</span>
+                  <span className="text-green-400 text-sm font-medium">
+                    Valor total: R$ {valorTotalSelecionado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  {emitindo && progresso.total > 0 && (
+                    <span className="text-gray-500 text-xs">{progresso.atual}/{progresso.total} enviadas</span>
+                  )}
+                </div>
               </div>
               <div className="flex gap-3">
                 <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 border border-gray-700 rounded-lg hover:text-white">Cancelar</button>
