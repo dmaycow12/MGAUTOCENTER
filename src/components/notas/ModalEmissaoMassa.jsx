@@ -81,6 +81,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
   // Filtros
   const [filtroTipo, setFiltroTipo] = useState('Todos'); // Todos, NFSe, NFe, NFCe
   const [filtroCliente, setFiltroCliente] = useState('Todos'); // Todos, PF, PJ, Consumidor
+  const [filtroStatus, setFiltroStatus] = useState('Todos'); // Todos, Aberto, Concluído
 
   useEffect(() => {
     base44.entities.Cadastro.list('-created_date', 5000).then(res => { if (res?.length > 0) setClientes(res); }).catch(() => {});
@@ -99,9 +100,10 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
       const tc = getTipoCliente(v, clientes);
       const matchTipo = filtroTipo === 'Todos' || tipos.includes(filtroTipo);
       const matchCliente = filtroCliente === 'Todos' || tc === filtroCliente;
-      return matchTipo && matchCliente;
+      const matchStatus = filtroStatus === 'Todos' || v.status === filtroStatus;
+      return matchTipo && matchCliente && matchStatus;
     });
-  }, [vendasElegiveis, filtroTipo, filtroCliente, notasCarregadas, clientes]);
+  }, [vendasElegiveis, filtroTipo, filtroCliente, filtroStatus, notasCarregadas, clientes]);
 
   const toggleTipo = (vendaId, tipo) => {
     setSelecionadas(prev => {
@@ -264,6 +266,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
 
   const tiposParaFiltro = ['NFSe', 'NFe', 'NFCe'];
   const clientesParaFiltro = ['PF', 'PJ', 'Consumidor'];
+  const statusParaFiltro = ['Aberto', 'Concluído'];
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
@@ -308,6 +311,23 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
                         background: filtroCliente === t ? '#062C9B' : 'transparent',
                         borderColor: filtroCliente === t ? '#062C9B' : '#374151',
                         color: '#9ca3af'
+                      }}>
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Filtro por status da venda */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500 w-20 flex-shrink-0">Status:</span>
+                <div className="flex gap-1">
+                  {['Todos', ...statusParaFiltro].map(t => (
+                    <button key={t} onClick={() => setFiltroStatus(t)}
+                      className="px-3 py-1 rounded text-xs font-bold border transition-all"
+                      style={{
+                        background: filtroStatus === t ? '#062C9B' : 'transparent',
+                        borderColor: filtroStatus === t ? '#062C9B' : '#374151',
+                        color: filtroStatus === t ? '#fff' : '#9ca3af'
                       }}>
                       {t}
                     </button>
