@@ -77,6 +77,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
   const [notasCarregadas, setNotasCarregadas] = useState(notas);
   const [notasFinais, setNotasFinais] = useState(null);
   const [servicos, setServicos] = useState([]);
+  const [estoque, setEstoque] = useState([]);
 
   // Filtros
   const [filtroTipo, setFiltroTipo] = useState('Todos'); // Todos, NFSe, NFe, NFCe
@@ -87,6 +88,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
     base44.entities.Cadastro.list('-created_date', 5000).then(res => { if (res?.length > 0) setClientes(res); }).catch(() => {});
     base44.entities.NotaFiscal.list('-created_date', 2000).then(res => { if (res?.length > 0) setNotasCarregadas(res); }).catch(() => {});
     base44.entities.Servico.list('-created_date', 5000).then(res => { if (res?.length > 0) setServicos(res); }).catch(() => {});
+    base44.entities.Estoque.list('-created_date', 5000).then(res => { if (res?.length > 0) setEstoque(res); }).catch(() => {});
   }, []);
 
   const vendasElegiveis = useMemo(() =>
@@ -166,7 +168,21 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
           const srvMatch = servicos.find(sv => sv.descricao?.toLowerCase().trim() === (s.descricao || '').toLowerCase().trim());
           return { descricao: s.descricao || 'Serviço', codigo: srvMatch?.codigo || '', servico_id: srvMatch?.id || '', quantidade: Number(s.quantidade ?? 1), valor_unitario: Number(s.valor || 0), valor_total: Number(s.valor || 0) * Number(s.quantidade ?? 1) };
         })
-      : (venda.pecas || []).map(p => ({ descricao: p.descricao || 'Peça', quantidade: Number(p.quantidade || 1), valor_unitario: Number(p.valor_unitario || 0), valor_total: Number(p.valor_total || 0), ncm: p.ncm || '87089990', cfop: p.cfop || '5405', unidade: p.unidade || 'UN', codigo: p.codigo || '' }));
+      : (venda.pecas || []).map(p => {
+          const estItem = estoque.find(e => e.id === p.estoque_id) || (p.codigo ? estoque.find(e => e.codigo === p.codigo) : null);
+          return {
+            descricao: p.descricao || estItem?.descricao || 'Peça',
+            quantidade: Number(p.quantidade || 1),
+            valor_unitario: Number(p.valor_unitario || 0),
+            valor_total: Number(p.valor_total || 0),
+            ncm: p.ncm || estItem?.ncm || '87089990',
+            cfop: p.cfop || estItem?.cfop || '5102',
+            cest: p.cest || estItem?.cest || '',
+            unidade: p.unidade || estItem?.unidade || 'UN',
+            codigo: p.codigo || estItem?.codigo || '',
+            estoque_id: p.estoque_id || '',
+          };
+        });
 
     const valorTotal = items.reduce((s, it) => s + it.valor_total, 0) || venda.valor_total || 0;
     const itensFinal = items.length > 0 ? items : [{ descricao: tipoNF === 'NFSe' ? 'Serviços' : 'Produtos', quantidade: 1, valor_unitario: valorTotal, valor_total: valorTotal }];
