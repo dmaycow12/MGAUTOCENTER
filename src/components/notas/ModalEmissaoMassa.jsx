@@ -119,7 +119,17 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
 
   const valorTotalSelecionado = vendasElegiveis
     .filter(v => (selecionadas[v.id] || []).length > 0)
-    .reduce((acc, v) => acc + (v.valor_total || 0), 0);
+    .reduce((acc, v) => {
+      const tiposSel = selecionadas[v.id] || [];
+      const valServicos = Number(v.valor_servicos || 0);
+      const valPecas = Number(v.valor_pecas || 0);
+      const somaNotas = tiposSel.reduce((s, tipo) => {
+        if (tipo === 'NFSe') return s + valServicos;
+        if (tipo === 'NFe' || tipo === 'NFCe') return s + valPecas;
+        return s;
+      }, 0);
+      return acc + somaNotas;
+    }, 0);
 
   // Selecionar todos da lista filtrada
   const toggleAll = () => {
