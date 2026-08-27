@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
     const CSOSN_PADRAO = '102';
     const validarNcm = (ncm) => /^[0-9]{8}$/.test((ncm || '').replace(/\D/g, '')) ? (ncm || '').replace(/\D/g, '') : NCM_PADRAO;
     const validarCest = (cest) => { if (!cest) return null; const s = (cest || '').replace(/\D/g, ''); return s.length > 0 ? s.padStart(7, '0') : null; };
-    const cfopValido = (cfop) => ajustarCfopSimples(cfop, CSOSN_PADRAO);
+    const cfopValido = (cfop, csosn) => ajustarCfopSimples(cfop, csosn || CSOSN_PADRAO);
 
     let cpfCnpjLimpo = (cliente_cpf_cnpj || '').replace(/\D/g, '');
     let cepLimpo = (cliente_cep || '').replace(/\D/g, '');
@@ -425,13 +425,13 @@ Deno.serve(async (req) => {
           codigo_produto: it.codigo || `REF${idx + 1}`,
           descricao: (it.descricao || 'Produto').substring(0, 120),
           codigo_ncm: validarNcm(it.ncm),
-          cfop: cfopValido(it.cfop),
+          cfop: cfopValido(it.cfop, it.csosn),
           unidade_comercial: it.unidade || 'UN',
           quantidade_comercial: Number(it.quantidade) || 1,
           valor_unitario_comercial: Number(it.valor_unitario) || Number(valor_total) || 1.0,
           valor_bruto: Number(it.valor_total) || Number(valor_total) || 1.0,
           icms_origem: '0',
-          icms_situacao_tributaria: '102',
+          icms_situacao_tributaria: it.csosn || '102',
           pis_situacao_tributaria: '07',
           cofins_situacao_tributaria: '07',
           ...(validarCest(it.cest) ? { cest: validarCest(it.cest) } : {}),
@@ -516,13 +516,13 @@ Deno.serve(async (req) => {
           codigo_produto: it.codigo || `REF${idx + 1}`,
           descricao: (it.descricao || 'Produto').substring(0, 120),
           codigo_ncm: validarNcm(it.ncm),
-          cfop: cfopValido(it.cfop),
+          cfop: cfopValido(it.cfop, it.csosn),
           unidade_comercial: it.unidade || 'UN',
           quantidade_comercial: Number(it.quantidade) || 1,
           valor_unitario_comercial: Number(it.valor_unitario) || Number(valor_total) || 1.0,
           valor_bruto: Number(it.valor_total) || Number(valor_total) || 1.0,
           icms_origem: '0',
-          icms_situacao_tributaria: '102',
+          icms_situacao_tributaria: it.csosn || '102',
           pis_situacao_tributaria: '07',
           cofins_situacao_tributaria: '07',
           ...(validarCest(it.cest) ? { cest: validarCest(it.cest) } : {}),

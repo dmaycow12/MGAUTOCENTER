@@ -18,7 +18,8 @@ export default function AbaNcmCfop({ items, onReload }) {
         (i.descricao || "").toLowerCase().includes(s) ||
         (i.codigo || "").toLowerCase().includes(s) ||
         (i.ncm || "").toLowerCase().includes(s) ||
-        (i.cfop || "").toLowerCase().includes(s))
+        (i.cfop || "").toLowerCase().includes(s) ||
+        (i.csosn || "").toLowerCase().includes(s))
       .sort((a, b) => (a.descricao || "").localeCompare(b.descricao || "", "pt-BR"));
   }, [items, search]);
 
@@ -143,6 +144,7 @@ export default function AbaNcmCfop({ items, onReload }) {
                   <th className="px-4 py-3">Marca</th>
                   <th className="px-4 py-3 text-center">NCM</th>
                   <th className="px-4 py-3 text-center">CFOP</th>
+                  <th className="px-4 py-3 text-center">CSOSN</th>
                 </tr>
               </thead>
               <tbody>
@@ -153,6 +155,7 @@ export default function AbaNcmCfop({ items, onReload }) {
                     <td className="px-4 py-3 text-gray-400">{item.marca || "—"}</td>
                     <td className="px-4 py-3 text-center"><CellEdit item={item} field="ncm" maxLength={8} /></td>
                     <td className="px-4 py-3 text-center"><CellEdit item={item} field="cfop" maxLength={4} /></td>
+                    <td className="px-4 py-3 text-center"><CellEdit item={item} field="csosn" maxLength={3} /></td>
                   </tr>
                 ))}
               </tbody>

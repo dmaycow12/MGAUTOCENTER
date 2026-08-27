@@ -187,6 +187,7 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
             valor_total: Number(p.valor_total || 0),
             ncm: p.ncm || estItem?.ncm || '87089990',
             cfop: p.cfop || estItem?.cfop || '5102',
+            csosn: p.csosn || estItem?.csosn || '102',
             cest: p.cest || estItem?.cest || '',
             unidade: p.unidade || estItem?.unidade || 'UN',
             codigo: p.codigo || estItem?.codigo || '',

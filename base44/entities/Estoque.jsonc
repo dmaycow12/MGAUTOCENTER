@@ -67,6 +67,22 @@
       "title": "CFOP",
       "default": "5405"
     },
+    "csosn": {
+      "type": "string",
+      "title": "CSOSN",
+      "enum": [
+        "102",
+        "103",
+        "300",
+        "400",
+        "201",
+        "202",
+        "203",
+        "500",
+        "900"
+      ],
+      "default": "102"
+    },
     "etiqueta": {
       "type": "string",
       "title": "Etiqueta"
