@@ -1,17 +1,20 @@
 /**
- * Ajusta o CFOP para ser compatível com o CSOSN do Simples Nacional.
+ * Ajusta o CFOP para ser compatível com o regime de tributação e o modelo de documento.
  *
- * A empresa opera no Simples Nacional usando CSOSN 102 (tributada sem permissão de crédito),
- * que NÃO admite CFOPs de substituição tributária (5405/6405/5655/6655). Quando o produto
- * está cadastrado com um CFOP de ST, a SEFAZ rejeita com "CFOP não permitido para o CSOSN".
- * Aqui normalizamos o CFOP para a venda de mercadoria equivalente sem ST.
+ * 1) Simples Nacional com CSOSN sem ST (102/103/300/400): não admite CFOPs de
+ *    substituição tributária (5405/6405/5655/6655). Convertemos para venda simples.
+ *
+ * 2) NFCe (DANFE Simplificado Tipo 2): a SEFAZ rejeita CFOPs de ST com o erro 725
+ *    ("NFC-e ou NF-e com DANFE Simplificado Tipo 2 com CFOP"), independentemente do
+ *    CSOSN (mesmo 500). Por isso, em NFCe SEMPRE convertemos ST para venda simples.
  *
  * Mesma UF (5xxx) -> 5102 | Outra UF (6xxx) -> 6102
  */
-export function ajustarCfopSimples(cfop: string, csosn = "102"): string {
+export function ajustarCfopSimples(cfop: string, csosn = "102", tipo?: string): string {
   const c = (cfop || "").replace(/\D/g, "");
   const semSt = ["102", "103", "300", "400"];
-  if (semSt.includes(csosn)) {
+  const isNFCe = tipo === "NFCe";
+  if (isNFCe || semSt.includes(csosn)) {
     if (c.startsWith("54") || c === "5655") return "5102";
     if (c.startsWith("64") || c === "6655") return "6102";
   }

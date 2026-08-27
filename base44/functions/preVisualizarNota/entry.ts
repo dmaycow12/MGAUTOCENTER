@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
     const CSOSN_PADRAO = '102';
     const validarNcm = (ncm) => /^[0-9]{8}$/.test((ncm || '').replace(/\D/g, '')) ? (ncm || '').replace(/\D/g, '') : NCM_PADRAO;
     const validarCest = (cest) => { if (!cest) return null; const sc = (cest || '').replace(/\D/g, ''); return sc.length > 0 ? sc.padStart(7, '0') : null; };
-    const cfopValido = (cfop, csosn) => ajustarCfopSimples(cfop, csosn || CSOSN_PADRAO);
+    const cfopValido = (cfop, csosn) => ajustarCfopSimples(cfop, csosn || CSOSN_PADRAO, tipo);
 
     let cpfCnpjLimpo = (nota.cliente_cpf_cnpj || '').replace(/\D/g, '');
     let cepLimpo = (nota.cliente_cep || '').replace(/\D/g, '');

@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
     const CSOSN_PADRAO = '102';
     const validarNcm = (ncm) => /^[0-9]{8}$/.test((ncm || '').replace(/\D/g, '')) ? (ncm || '').replace(/\D/g, '') : NCM_PADRAO;
     const validarCest = (cest) => { if (!cest) return null; const s = (cest || '').replace(/\D/g, ''); return s.length > 0 ? s.padStart(7, '0') : null; };
-    const cfopValido = (cfop, csosn) => ajustarCfopSimples(cfop, csosn || CSOSN_PADRAO);
+    const cfopValido = (cfop, csosn) => ajustarCfopSimples(cfop, csosn || CSOSN_PADRAO, tipo);
 
     let cpfCnpjLimpo = (cliente_cpf_cnpj || '').replace(/\D/g, '');
     let cepLimpo = (cliente_cep || '').replace(/\D/g, '');
