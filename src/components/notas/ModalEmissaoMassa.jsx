@@ -47,8 +47,9 @@ function getTipoCliente(venda, clientes) {
 
 const TIPO_COLORS = { NFSe: '#a78bfa', NFe: '#fb923c', NFCe: '#38bdf8' };
 const CONCURRENCY = 5; // rascunhos (somente banco de dados)
-const CONCURRENCY_HOMOLOG = 1; // homologação (API Focus NFe — evita limite de autenticação)
-const DELAY_HOMOLOG_MS = 1500; // atraso entre cada envio à Focus NFe
+const CONCURRENCY_HOMOLOG = 5; // homologação em paralelo (com retry até 100%)
+const DELAY_HOMOLOG_MS = 400; // atraso curto entre envios (paralelo + retry)
+const MAX_TENTATIVAS = 6; // retries automáticos das que falharem até atingir 100%
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
@@ -260,32 +261,46 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
 
     const rascunhosResult = await runParallel(rascunhosTasks, CONCURRENCY);
 
-    // Envia para homologação em paralelo (5 por vez)
-    const homologTasks = rascunhosResult.map((r) => async () => {
+    // Erros de criação de rascunho → resultado definitivo de erro
+    rascunhosResult.forEach((r) => {
       if (r.erro || !r.rascunho) {
-        const result = { venda: r.venda, tipo: r.tipoNF, sucesso: false, mensagem: r.erro || 'Erro ao criar rascunho' };
-        res[r.idx] = result;
-        setProgresso(p => ({ ...p, atual: p.atual + 1 }));
-        return result;
-      }
-      try {
-        const prevRes = await base44.functions.invoke('preVisualizarNota', { nota_id: r.rascunho.id });
-        const sucesso = prevRes.data?.sucesso;
-        const result = { venda: r.venda, tipo: r.tipoNF, sucesso, mensagem: sucesso ? 'Enviado para homologação' : (prevRes.data?.erro || 'Erro na homologação') };
-        res[r.idx] = result;
-        setProgresso(p => ({ ...p, atual: p.atual + 1 }));
-        return result;
-      } catch (e) {
-        const result = { venda: r.venda, tipo: r.tipoNF, sucesso: false, mensagem: e.message };
-        res[r.idx] = result;
-        setProgresso(p => ({ ...p, atual: p.atual + 1 }));
-        return result;
+        res[r.idx] = { venda: r.venda, tipo: r.tipoNF, sucesso: false, mensagem: r.erro || 'Erro ao criar rascunho' };
       }
     });
 
-    await runParallel(homologTasks, CONCURRENCY_HOMOLOG, DELAY_HOMOLOG_MS);
+    // Homologação com retry automático até 100% (ou esgotar MAX_TENTATIVAS)
+    const homologar = async (item) => {
+      try {
+        const prevRes = await base44.functions.invoke('preVisualizarNota', { nota_id: item.rascunho.id });
+        const sucesso = prevRes.data?.sucesso;
+        const mensagem = sucesso ? 'Homologada' : (prevRes.data?.erro || 'Erro na homologação');
+        return { ...item, sucesso, mensagem };
+      } catch (e) {
+        return { ...item, sucesso: false, mensagem: e.message };
+      }
+    };
 
-    setResultados(res);
+    let pendentes = rascunhosResult.filter(r => r.rascunho).map(r => ({ venda: r.venda, tipoNF: r.tipoNF, rascunho: r.rascunho, idx: r.idx }));
+    let tentativa = 1;
+    while (pendentes.length > 0 && tentativa <= MAX_TENTATIVAS) {
+      const lote = pendentes;
+      pendentes = [];
+      if (tentativa > 1) await sleep(800); // pequeno descanso entre tentativas
+      const results = await runParallel(
+        lote.map(item => async () => homologar(item)),
+        CONCURRENCY_HOMOLOG,
+        tentativa === 1 ? DELAY_HOMOLOG_MS : 200
+      );
+      for (const r of results) {
+        res[r.idx] = { venda: r.venda, tipo: r.tipoNF, sucesso: r.sucesso, mensagem: `Tentativa ${tentativa}: ${r.mensagem}` };
+        if (!r.sucesso) pendentes.push(r);
+      }
+      const sucessos = res.filter(Boolean).filter(x => x.sucesso).length;
+      setProgresso({ atual: sucessos, total: tarefas.length });
+      tentativa++;
+    }
+
+    setResultados(res.filter(Boolean));
     setEmitindo(false);
     setConcluido(true);
 

@@ -11,6 +11,7 @@ import ModalEntradaNF from "@/components/notas/ModalEntradaNF";
 import ModalSintegra from "@/components/notas/ModalSintegra";
 import ModalXML from "@/components/notas/ModalXML";
 import ModalPreVisualizacao from "@/components/notas/ModalPreVisualizacao";
+import ModalAutorizarMassa from "@/components/notas/ModalAutorizarMassa";
 import FiltroPerioodoAvancado from "@/components/notas/FiltroPerioodoAvancado";
 import SearchableSelect from "@/components/notas/SearchableSelect";
 import AbaArquivos from "@/components/notas/AbaArquivos";
@@ -132,6 +133,7 @@ export default function NotasFiscais() {
   const [resultadoImportBackup, setResultadoImportBackup] = useState(null);
   const [nfseParaImportar, setNfseParaImportar] = useState(null);
   const [autorizandoMassa, setAutorizandoMassa] = useState(false);
+  const [showAutorizarMassa, setShowAutorizarMassa] = useState(null);
   const [showSintegra, setShowSintegra] = useState(false);
   const [buscandoSefaz, setBuscandoSefaz] = useState(false);
   const [atualizandoStatus, setAtualizandoStatus] = useState(null);
@@ -1331,24 +1333,12 @@ export default function NotasFiscais() {
          <button
            onClick={async () => {
              const preVisualizadas = notas.filter(n => n.status === 'Homologada');
-             if (preVisualizadas.length === 0) { feedback('erro', 'Nenhuma nota em Pré-visualização para autorizar.'); return; }
+             if (preVisualizadas.length === 0) { feedback('erro', 'Nenhuma nota homologada para autorizar.'); return; }
              await showConfirm(`Autorizar ${preVisualizadas.length} nota(s) homologada(s) em produção?`, 'confirm');
              setConfirmModal(null);
-             setAutorizandoMassa(true);
-             let ok = 0; let erros = 0;
-             // Sequencial para garantir numeração correta (cada nota espera a anterior terminar)
-             for (const nota of preVisualizadas) {
-               try {
-                 const items = (() => { try { const p = JSON.parse(nota.xml_content); if (Array.isArray(p) && p.length > 0 && p[0].descricao) return p; } catch {} return [{ descricao: nota.observacoes || 'Produto/Serviço', quantidade: 1, valor_unitario: nota.valor_total, valor_total: nota.valor_total }]; })();
-                 const res = await base44.functions.invoke('emitirNotaFiscal', { ...nota, nota_id: nota.id, items });
-                 if (res.data?.sucesso) ok++; else erros++;
-               } catch { erros++; }
-             }
-             setAutorizandoMassa(false);
-             feedback('sucesso', `Autorização concluída: ${ok} emitida(s), ${erros} erro(s).`);
-             load();
+             setShowAutorizarMassa(preVisualizadas);
            }}
-           disabled={autorizandoMassa}
+           disabled={!!showAutorizarMassa || autorizandoMassa}
            className="flex items-center justify-center gap-2 h-9 rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50"
            style={{background:"#00ff00", color:"#000"}}
            onMouseEnter={e => { if (!autorizandoMassa) e.currentTarget.style.background="#00dd00"; }}
@@ -2088,6 +2078,14 @@ export default function NotasFiscais() {
           estoque={estoque}
           configs={configsNF}
           onClose={() => setShowSintegra(false)}
+        />
+      )}
+
+      {showAutorizarMassa && (
+        <ModalAutorizarMassa
+          notas={showAutorizarMassa}
+          onClose={() => setShowAutorizarMassa(null)}
+          onConcluido={() => { setShowAutorizarMassa(null); load(); }}
         />
       )}
 
