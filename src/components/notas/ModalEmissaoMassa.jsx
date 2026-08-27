@@ -46,10 +46,10 @@ function getTipoCliente(venda, clientes) {
 }
 
 const TIPO_COLORS = { NFSe: '#a78bfa', NFe: '#fb923c', NFCe: '#38bdf8' };
-const CONCURRENCY = 5; // rascunhos (somente banco de dados)
-const CONCURRENCY_HOMOLOG = 5; // homologação em paralelo (com retry até 100%)
-const DELAY_HOMOLOG_MS = 400; // atraso curto entre envios (paralelo + retry)
-const MAX_TENTATIVAS = 6; // retries automáticos das que falharem até atingir 100%
+const CONCURRENCY = 3; // rascunhos (somente banco de dados)
+const CONCURRENCY_HOMOLOG = 2; // homologação em paralelo (evita bloqueio de IP na FocusNFe)
+const DELAY_HOMOLOG_MS = 2500; // atraso entre envios para respeitar limite de autenticação da FocusNFe
+const MAX_TENTATIVAS = 4; // retries automáticos das que falharem (limitado para não estourar rate-limit)
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
