@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { ajustarCfopSimples } from '../../shared/ajustarCfopSimples.ts';
 
 const FOCUSNFE_BASE_PROD = 'https://api.focusnfe.com.br/v2';
 const FOCUSNFE_BASE_HOM = 'https://homologacao.focusnfe.com.br/v2';
@@ -117,8 +118,10 @@ Deno.serve(async (req) => {
     const dataEmissaoISO = `${hojeStr}T${h}:${m}:${s}-03:00`;
 
     const NCM_PADRAO = '87089990';
+    const CSOSN_PADRAO = '102';
     const validarNcm = (ncm) => /^[0-9]{8}$/.test((ncm || '').replace(/\D/g, '')) ? (ncm || '').replace(/\D/g, '') : NCM_PADRAO;
     const validarCest = (cest) => { if (!cest) return null; const sc = (cest || '').replace(/\D/g, ''); return sc.length > 0 ? sc.padStart(7, '0') : null; };
+    const cfopValido = (cfop) => ajustarCfopSimples(cfop, CSOSN_PADRAO);
 
     let cpfCnpjLimpo = (nota.cliente_cpf_cnpj || '').replace(/\D/g, '');
     let cepLimpo = (nota.cliente_cep || '').replace(/\D/g, '');
@@ -207,7 +210,7 @@ Deno.serve(async (req) => {
           codigo_produto: it.codigo || `REF${idx + 1}`,
           descricao: (it.descricao || 'Produto').substring(0, 120),
           codigo_ncm: validarNcm(it.ncm),
-          cfop: it.cfop || '5102',
+          cfop: cfopValido(it.cfop),
           unidade_comercial: it.unidade || 'UN',
           quantidade_comercial: Number(it.quantidade) || 1,
           valor_unitario_comercial: Number(it.valor_unitario) || Number(nota.valor_total) || 1.0,
@@ -271,7 +274,7 @@ Deno.serve(async (req) => {
           codigo_produto: it.codigo || `REF${idx + 1}`,
           descricao: (it.descricao || 'Produto').substring(0, 120),
           codigo_ncm: validarNcm(it.ncm),
-          cfop: it.cfop || '5102',
+          cfop: cfopValido(it.cfop),
           unidade_comercial: it.unidade || 'UN',
           quantidade_comercial: Number(it.quantidade) || 1,
           valor_unitario_comercial: Number(it.valor_unitario) || Number(nota.valor_total) || 1.0,
@@ -314,8 +317,15 @@ Deno.serve(async (req) => {
       const st = resultFinal.status || '';
       if (st === 'autorizado') break;
       if (st === 'erro_autorizacao' || st === 'rejeitado' || st === 'erro') {
-        const msgErro = resultFinal.erros ? resultFinal.erros.map(e => e.mensagem).join('; ') : (resultFinal.mensagem || st);
-        return Response.json({ sucesso: false, erro: `Erro na pré-visualização: ${msgErro}` });
+        const partes = [];
+        if (resultFinal.codigo_sefaz) partes.push(`Código SEFAZ: ${resultFinal.codigo_sefaz}`);
+        if (resultFinal.mensagem_sefaz) partes.push(resultFinal.mensagem_sefaz);
+        if (Array.isArray(resultFinal.erros) && resultFinal.erros.length) {
+          resultFinal.erros.forEach(e => partes.push(e.mensagem || e.erro || JSON.stringify(e)));
+        }
+        if (resultFinal.mensagem && !partes.includes(resultFinal.mensagem)) partes.push(resultFinal.mensagem);
+        if (partes.length === 0) partes.push(st);
+        return Response.json({ sucesso: false, erro: `Erro na pré-visualização: ${partes.join(' | ')}` });
       }
       await new Promise(r => setTimeout(r, intervaloMs));
       const consultaResp = await fetch(`${FOCUSNFE_BASE}/${epConsulta}/${ref}?completo=1`, { headers: { 'Authorization': AUTH_HOM } });
