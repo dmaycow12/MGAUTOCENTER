@@ -173,19 +173,29 @@ export default function Vendas() {
 
   useEffect(() => { load(); }, []);
 
+  // Carrega notas SEM o conteúdo XML (muito mais leve). Se falhar, cai para o carregamento completo.
+  const carregarNotas = async () => {
+    try {
+      const res = await base44.functions.invoke("listarNotasLeve", {});
+      return res?.data?.notas || [];
+    } catch (_) {
+      return await base44.entities.NotaFiscal.list("-created_date", 1000);
+    }
+  };
+
   const load = async () => {
     try {
       console.log("Iniciando carregamento de Vendas...");
       const [o, c, n, e] = await Promise.all([
         base44.entities.Vendas.list("-created_date", 2000),
         base44.entities.Cadastro.list("-created_date", 2000),
-        base44.functions.invoke("listarNotasLeve", {}),
+        carregarNotas(),
         base44.entities.Estoque.list("-created_date", 500),
       ]);
       console.log("Vendas carregadas:", o?.length || 0);
       setOrdens(o);
       setClientes(c);
-      setNotas(n?.data?.notas || []);
+      setNotas(n || []);
       setEstoque(e);
     } catch (err) {
       console.error("Erro ao carregar Vendas:", err);

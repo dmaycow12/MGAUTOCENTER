@@ -1,5 +1,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 
+const CAMPOS = [
+  'id', 'created_date', 'updated_date', 'ordem_venda_id', 'tipo', 'numero', 'serie', 'status',
+  'valor_total', 'data_emissao', 'chave_acesso', 'cliente_nome', 'cliente_cpf_cnpj',
+  'pdf_url', 'xml_url', 'xml_original_url'
+];
+
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -8,11 +14,11 @@ export default async function(req) {
 
     const notas = await base44.asServiceRole.entities.NotaFiscal.list('-created_date', 9999);
 
-    // Remove os campos de XML (pesados) — a tela só precisa dos metadados.
-    // O XML completo continua disponível na entidade e é buscado sob demanda.
+    // Retorna apenas os campos leves usados nas listagens (sem XML — evita ~6MB por carregamento).
     const notasLeves = notas.map(n => {
-      const { xml_content, xml_original, ...resto } = n;
-      return resto;
+      const leve = {};
+      for (const c of CAMPOS) { if (n[c] !== undefined) leve[c] = n[c]; }
+      return leve;
     });
 
     return Response.json({ notas: notasLeves });
