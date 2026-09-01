@@ -177,30 +177,32 @@ export default function Financeiro() {
 
   const load = async () => {
     try {
-      const [data, vendas] = await Promise.all([
+      const [data, vendasOrcamento] = await Promise.all([
         base44.entities.Financeiro.list("-data_vencimento", 9999),
-        base44.entities.Vendas.list("-created_date", 9999),
+        base44.entities.Vendas.filter({ status: "Orçamento" }, "-created_date", 9999),
       ]);
       // IDs de vendas com status Orçamento
-      const idsOrcamento = new Set(vendas.filter(v => v.status === "Orçamento").map(v => v.id));
+      const idsOrcamento = new Set(vendasOrcamento.map(v => v.id));
       // Filtra lançamentos vinculados a Orçamentos
       const semOrcamento = data.filter(i => {
         const vinculo = i.ordem_venda_id || i.ordem_servico_id;
         return !vinculo || !idsOrcamento.has(vinculo);
       });
-      // Auto-marcar como Atrasado se vencido e não pago
+      // Auto-marcar como Atrasado se vencido e não pago (em lote, sem recarregar tudo)
       const hoje = new Date().toISOString().split("T")[0];
       const aAtualizar = semOrcamento.filter(i => i.status === "Pendente" && i.data_vencimento && i.data_vencimento < hoje);
-      for (const item of aAtualizar) {
-        try { await base44.entities.Financeiro.update(item.id, { status: "Atrasado" }); } catch (_) {}
+      if (aAtualizar.length > 0) {
+        try {
+          await base44.entities.Financeiro.updateMany(
+            { id: { $in: aAtualizar.map(i => i.id) } },
+            { $set: { status: "Atrasado" } }
+          );
+        } catch (_) {}
+        const idsAtrasar = new Set(aAtualizar.map(i => i.id));
+        setItems(semOrcamento.map(i => idsAtrasar.has(i.id) ? { ...i, status: "Atrasado" } : i));
+      } else {
+        setItems(semOrcamento);
       }
-      const atualizado = aAtualizar.length > 0
-        ? (await base44.entities.Financeiro.list("-data_vencimento", 9999)).filter(i => {
-            const vinculo = i.ordem_venda_id || i.ordem_servico_id;
-            return !vinculo || !idsOrcamento.has(vinculo);
-          })
-        : semOrcamento;
-      setItems(atualizado);
     } catch (err) {
       console.error("Erro ao carregar financeiro:", err);
     } finally {
