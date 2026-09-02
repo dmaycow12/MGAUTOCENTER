@@ -36,7 +36,7 @@ export default function Clientes() {
     if (isConsumidor(c)) return;
     e.stopPropagation();
     setEditCell({ clienteId: c.id, field });
-    setEditValue(maskField(field, c[field] || ""));
+    setEditValue(maskField(field, c[field] || "", c.estado));
     setTimeout(() => { editInputRef.current?.focus(); editInputRef.current?.select(); }, 30);
   };
 
@@ -50,7 +50,7 @@ export default function Clientes() {
     let finalValue = editValue;
     if (field === 'telefone' && editValue) finalValue = maskTelefone(editValue);
     if (field === 'cpf_cnpj' && editValue) finalValue = maskCpfCnpj(editValue);
-    if (field === 'rg_ie' && editValue) finalValue = maskIE(editValue);
+    if (field === 'rg_ie' && editValue) finalValue = maskIE(editValue, cliente?.estado);
     if (field === 'cep' && editValue) finalValue = maskCep(editValue);
     if (cliente && String(cliente[field] || "") !== String(finalValue)) {
       await base44.entities.Cadastro.update(clienteId, { [field]: finalValue });
@@ -96,7 +96,7 @@ export default function Clientes() {
         tipo: 'Pessoa Jurídica',
         nome: d.razao_social || f.nome,
         nome_fantasia: est?.nome_fantasia || f.nome_fantasia,
-        rg_ie: maskIE(ie),
+        rg_ie: maskIE(ie, est?.estado?.sigla),
         email: est?.email || f.email,
         telefone: telefoneFormatado,
         cep: maskCep(est?.cep || f.cep),
@@ -136,16 +136,16 @@ export default function Clientes() {
     return digits.length === 10 || digits.length === 11;
   };
 
-  const maskField = (field, val) => {
+  const maskField = (field, val, uf) => {
     if (field === 'cpf_cnpj') return maskCpfCnpj(val);
-    if (field === 'rg_ie') return maskIE(val);
+    if (field === 'rg_ie') return maskIE(val, uf);
     if (field === 'telefone') return maskTelefone(val);
     if (field === 'cep') return maskCep(val);
     return val;
   };
-  const formatField = (field, val) => {
+  const formatField = (field, val, uf) => {
     if (val == null || val === '') return '—';
-    return maskField(field, val);
+    return maskField(field, val, uf);
   };
   const isConsumidor = (c) => c?.nome?.toUpperCase() === "CONSUMIDOR";
 
@@ -166,7 +166,7 @@ export default function Clientes() {
       ...form,
       tipo: normalizarTipo(form.tipo),
       cpf_cnpj: maskCpfCnpj(form.cpf_cnpj),
-      rg_ie: maskIE(form.rg_ie),
+      rg_ie: maskIE(form.rg_ie, form.estado),
       telefone: maskTelefone(form.telefone),
       cep: maskCep(form.cep),
     };
@@ -368,7 +368,7 @@ export default function Clientes() {
                           <input
                             ref={editInputRef}
                             value={editValue}
-                            onChange={e => setEditValue(maskField(field, e.target.value))}
+                            onChange={e => setEditValue(maskField(field, e.target.value, c.estado))}
                             onBlur={() => commitEdit(c.id, field)}
                             onKeyDown={e => handleEditKeyDown(e, c.id, field)}
                             autoComplete="new-password"
@@ -387,7 +387,7 @@ export default function Clientes() {
                         onClick={e => !isConsumidor(c) && startEdit(c, field, e)}
                         title={!isConsumidor(c) ? "Clique para editar" : ""}
                       >
-                        {formatField(field, c[field])}
+                        {formatField(field, c[field], c.estado)}
                         </td>
                     );
                   };
@@ -491,8 +491,8 @@ export default function Clientes() {
                  </FormGroup>
                 <FormGroup label="Inscrição Estadual">
                   <input
-                     value={maskIE(form.rg_ie)}
-                     onChange={e => setForm({ ...form, rg_ie: maskIE(e.target.value) })}
+                     value={maskIE(form.rg_ie, form.estado)}
+                     onChange={e => setForm({ ...form, rg_ie: maskIE(e.target.value, form.estado) })}
                      className="input-dark"
                      autoComplete="off"
                      name="ie_cliente"
