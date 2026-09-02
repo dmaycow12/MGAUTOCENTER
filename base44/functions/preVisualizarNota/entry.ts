@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { ajustarCfopSimples, ajustarCsosnSimples } from '../../shared/ajustarCfopSimples.ts';
-// redeploy marker v3 - forcar atualizacao do helper NFCe CFOP 725 + CSOSN
+// redeploy marker v4 - forcar atualizacao do helper NFe CFOP/CSOSN ST->venda simples (sem CEST)
 
 const FOCUSNFE_BASE_PROD = 'https://api.focusnfe.com.br/v2';
 const FOCUSNFE_BASE_HOM = 'https://homologacao.focusnfe.com.br/v2';
@@ -294,6 +294,7 @@ Deno.serve(async (req) => {
     // Envia para homologação
     const urlCompleta = `${FOCUSNFE_BASE}${endpoint}`;
     console.log('[PREVIEW HOM URL]', urlCompleta);
+    console.log('[PREVIEW PAYLOAD ITEMS]', (payload.items || []).map(i => ({ cfop: i.cfop, csosn: i.icms_situacao_tributaria, cest: i.cest || null })));
     const resp = await fetch(urlCompleta, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': AUTH_HOM },

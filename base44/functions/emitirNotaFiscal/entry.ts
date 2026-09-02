@@ -10,7 +10,7 @@ const FOCUSNFE_BASE_PROD = 'https://api.focusnfe.com.br/v2';
 const FOCUSNFE_BASE_HOM = 'https://homologacao.focusnfe.com.br/v2';
 
 import { ajustarCfopSimples, ajustarCsosnSimples } from '../../shared/ajustarCfopSimples.ts';
-// redeploy marker v3 - forcar atualizacao do helper NFCe CFOP 725 + CSOSN
+// redeploy marker v4 - forcar atualizacao do helper NFe CFOP/CSOSN ST->venda simples (sem CEST)
 
 // Valores padrão — serão sobrescritos pelas configs do banco
 const CNPJ_EMITENTE_PADRAO = '';
