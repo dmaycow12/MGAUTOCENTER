@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { ajustarCfopSimples, ajustarCsosnNFCe } from '../../shared/ajustarCfopSimples.ts';
+import { ajustarCfopSimples, ajustarCsosnSimples } from '../../shared/ajustarCfopSimples.ts';
 // redeploy marker v3 - forcar atualizacao do helper NFCe CFOP 725 + CSOSN
 
 const FOCUSNFE_BASE_PROD = 'https://api.focusnfe.com.br/v2';
@@ -217,7 +217,7 @@ Deno.serve(async (req) => {
           valor_unitario_comercial: Number(it.valor_unitario) || Number(nota.valor_total) || 1.0,
           valor_bruto: Number(it.valor_total) || Number(nota.valor_total) || 1.0,
           icms_origem: '0',
-          icms_situacao_tributaria: ajustarCsosnNFCe(it.csosn, tipo),
+          icms_situacao_tributaria: ajustarCsosnSimples(it.csosn, tipo),
           pis_situacao_tributaria: '07',
           cofins_situacao_tributaria: '07',
           ...(validarCest(it.cest) ? { cest: validarCest(it.cest) } : {}),
@@ -281,7 +281,7 @@ Deno.serve(async (req) => {
           valor_unitario_comercial: Number(it.valor_unitario) || Number(nota.valor_total) || 1.0,
           valor_bruto: Number(it.valor_total) || Number(nota.valor_total) || 1.0,
           icms_origem: '0',
-          icms_situacao_tributaria: it.csosn || '102',
+          icms_situacao_tributaria: ajustarCsosnSimples(it.csosn, tipo),
           pis_situacao_tributaria: '07',
           cofins_situacao_tributaria: '07',
           ...(validarCest(it.cest) ? { cest: validarCest(it.cest) } : {}),
