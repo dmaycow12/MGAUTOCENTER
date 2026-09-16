@@ -645,7 +645,8 @@ export default function NotasFiscais() {
     setForm(f => {
       const dadosAtuais = f.dados_adicionais || '';
       const idxParc = dadosAtuais.indexOf('Parc. ');
-      const base = idxParc > 0 ? dadosAtuais.substring(0, idxParc).replace(/\s*\|\s*$/, '') : dadosAtuais;
+      // idxParc >= 0: descarta tudo da primeira menção de "Parc." em diante (inclusive duplicatas antigas)
+      const base = idxParc >= 0 ? dadosAtuais.substring(0, idxParc).replace(/\s*\|\s*$/, '') : dadosAtuais;
       const novosDados = [base, parcelasStr].filter(Boolean).join(' | ');
       if (novosDados === dadosAtuais) return f;
       return { ...f, dados_adicionais: novosDados };
