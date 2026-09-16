@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { ajustarCfopSimples, ajustarCsosnSimples } from '../../shared/ajustarCfopSimples.ts';
-// redeploy marker v4 - forcar atualizacao do helper NFe CFOP/CSOSN ST->venda simples (sem CEST)
+// redeploy marker v5 - forcar atualizacao do helper NFe CFOP/CSOSN ST->venda simples (sem CEST)
 
 const FOCUSNFE_BASE_PROD = 'https://api.focusnfe.com.br/v2';
 const FOCUSNFE_BASE_HOM = 'https://homologacao.focusnfe.com.br/v2';

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { X, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { gerarDadosAdicionaisDaVenda } from '@/components/notas/gerarDadosAdicionais';
+import { ajustarCfopSimples, ajustarCsosnSimples } from '@/lib/ajustarFiscal';
 
 function normalizarFormaPagamento(fp) {
   if (!fp) return 'A Combinar';
@@ -187,9 +188,9 @@ export default function ModalEmissaoMassa({ ordens: vendas, notas = [], clientes
             valor_unitario: Number(p.valor_unitario || 0),
             valor_total: Number(p.valor_total || 0),
             ncm: p.ncm || estItem?.ncm || '87089990',
-            cfop: p.cfop || estItem?.cfop || '5102',
-            csosn: p.csosn || estItem?.csosn || '102',
-            cest: p.cest || estItem?.cest || '',
+            cfop: ajustarCfopSimples(p.cfop || estItem?.cfop || '5102', tipoNF),
+            csosn: ajustarCsosnSimples(p.csosn || estItem?.csosn || '102', tipoNF),
+            cest: '', // CEST não cadastrado: CFOP/CSOSN já convertidos para venda simples
             unidade: p.unidade || estItem?.unidade || 'UN',
             codigo: p.codigo || estItem?.codigo || '',
             estoque_id: p.estoque_id || '',
