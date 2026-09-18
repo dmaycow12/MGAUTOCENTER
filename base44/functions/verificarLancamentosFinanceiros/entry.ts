@@ -89,24 +89,28 @@ async function montarRelatorio(base44) {
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-    let user = null;
-    let authErro = "";
-    for (let i = 0; i < 2 && !user; i++) {
-      try {
-        user = await base44.auth.me();
-      } catch (e) {
-        authErro = e?.message || String(e);
-      }
-    }
-    if (!user) {
-      return Response.json({
-        error: authErro
-          ? `Falha ao confirmar sua sessão (${authErro}). Tente novamente — se persistir, feche o site, faça login e reabra.`
-          : "Não autorizado — faça login novamente.",
-      }, { status: 401 });
-    }
-
     const body = await req.json().catch(() => ({}));
+
+    // Portão de autenticação: valida o token do usuário logado.
+    // auth.me() tem falhado no site publicado ("Authentication required to view users"),
+    // então, como alternativa, valida com uma leitura leve no próprio Financeiro.
+    let autenticado = false;
+    let authErro = "";
+    try {
+      await base44.auth.me();
+      autenticado = true;
+    } catch (e) {
+      authErro = e?.message || String(e);
+    }
+    if (!autenticado) {
+      try {
+        await base44.entities.Financeiro.list("-created_date", 1);
+        autenticado = true;
+      } catch (e) {}
+    }
+    if (!autenticado) {
+      return Response.json({ error: `Não autenticado (${authErro || "token ausente"}). Faça login novamente.` }, { status: 401 });
+    }
     const acao = String((body && body.acao) || "verificar");
 
     if (acao === "lancar_faltantes") {
