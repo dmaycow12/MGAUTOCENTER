@@ -13,10 +13,11 @@ const mapearForma = (fp) => {
 };
 
 async function montarRelatorio(base44) {
+  // Carrega apenas o necessário (evita puxar XMLs pesados e registros demais — causa de erros 500 intermitentes)
   const [notas, fins, vendas] = await Promise.all([
-    base44.entities.NotaFiscal.list("-created_date", 9999),
+    base44.entities.NotaFiscal.filter({ status: "Lançada" }, "-created_date", 9999),
     base44.entities.Financeiro.list("-created_date", 9999),
-    base44.entities.Vendas.list("-created_date", 9999),
+    base44.entities.Vendas.filter({ status: "Concluído" }, "-created_date", 9999),
   ]);
 
   // 1) Notas de entrada com status "Lançada" que não têm lançamento financeiro correspondente
