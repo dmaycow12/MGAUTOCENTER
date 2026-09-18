@@ -420,13 +420,13 @@ export default function Financeiro() {
               </button>
             </div>
 
-        {relVerif && ((relVerif.faltantes?.length || 0) > 0 || (relVerif.duplicatas?.length || 0) > 0) && (
+        {relVerif && ((relVerif.faltantes?.length || 0) > 0 || (relVerif.duplicatas?.length || 0) > 0 || (relVerif.vendas_sem_financeiro?.length || 0) > 0) && (
           <button onClick={() => setVerificadorOpen(true)}
             className="w-full rounded-xl px-4 py-2.5 flex items-center gap-2 text-left transition-all"
             style={{ background: "#7f1d1d", border: "1px solid #dc2626", color: "#fff" }}>
             <AlertTriangle className="w-4 h-4 flex-shrink-0" />
             <span className="text-xs font-semibold">
-              ATENÇÃO: {relVerif.faltantes?.length || 0} NOTA(S) LANÇADA(S) SEM FINANCEIRO · {relVerif.duplicatas?.length || 0} DUPLICATA(S) — CLIQUE PARA CORRIGIR
+              ATENÇÃO: {relVerif.faltantes?.length || 0} NOTA(S) SEM FINANCEIRO · {relVerif.duplicatas?.length || 0} DUPLICATA(S) · {relVerif.vendas_sem_financeiro?.length || 0} VENDA(S) SEM FINANCEIRO — CLIQUE PARA VERIFICAR
             </span>
           </button>
         )}

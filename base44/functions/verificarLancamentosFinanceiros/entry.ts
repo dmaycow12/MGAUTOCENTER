@@ -13,9 +13,10 @@ const mapearForma = (fp) => {
 };
 
 async function montarRelatorio(base44) {
-  const [notas, fins] = await Promise.all([
+  const [notas, fins, vendas] = await Promise.all([
     base44.entities.NotaFiscal.list("-created_date", 9999),
     base44.entities.Financeiro.list("-created_date", 9999),
+    base44.entities.Vendas.list("-created_date", 9999),
   ]);
 
   // 1) Notas de entrada com status "Lançada" que não têm lançamento financeiro correspondente
@@ -59,6 +60,18 @@ async function montarRelatorio(base44) {
     }
   }
 
+  // 3) Vendas concluídas sem nenhum lançamento financeiro vinculado
+  const finVendas = new Set(fins.map((f) => f.ordem_venda_id).filter(Boolean));
+  const vendasSemFin = vendas
+    .filter((v) => v.status === "Concluído" && !finVendas.has(v.id))
+    .map((v) => ({
+      id: v.id,
+      numero: v.numero || "",
+      cliente: v.cliente_nome || "",
+      valor: Number(v.valor_total || 0),
+      data_conclusao: v.data_conclusao || "",
+    }));
+
   const soma = (arr) => Math.round(arr.reduce((s, x) => s + Number(x.valor || 0), 0) * 100) / 100;
 
   return {
@@ -68,6 +81,8 @@ async function montarRelatorio(base44) {
     duplicatas,
     faltantes_valor: soma(faltantes),
     duplicatas_valor: soma(duplicatas),
+    vendas_sem_financeiro: vendasSemFin,
+    vendas_sem_fin_valor: soma(vendasSemFin),
   };
 }
 

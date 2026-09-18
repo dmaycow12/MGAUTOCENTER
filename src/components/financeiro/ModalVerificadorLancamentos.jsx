@@ -59,7 +59,8 @@ export default function ModalVerificadorLancamentos({ onClose, onCorrigido }) {
 
   const faltantes = rel?.faltantes || [];
   const duplicatas = rel?.duplicatas || [];
-  const ok = rel && faltantes.length === 0 && duplicatas.length === 0;
+  const vendasSemFin = rel?.vendas_sem_financeiro || [];
+  const ok = rel && faltantes.length === 0 && duplicatas.length === 0 && vendasSemFin.length === 0;
 
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
@@ -146,6 +147,26 @@ export default function ModalVerificadorLancamentos({ onClose, onCorrigido }) {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {vendasSemFin.length > 0 && (
+                <div className="rounded-xl border p-4 space-y-3" style={{ background: "#0a1224", borderColor: "#062C9B" }}>
+                  <p className="text-sm font-semibold text-blue-300 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                    {vendasSemFin.length} venda(s) concluída(s) sem financeiro ({fmt(rel.vendas_sem_fin_valor)})
+                  </p>
+                  <div className="max-h-56 overflow-y-auto space-y-1">
+                    {vendasSemFin.map((v) => (
+                      <div key={v.id} className="flex items-center gap-2 text-xs bg-black/30 rounded-lg px-3 py-2">
+                        <span className="text-white font-semibold whitespace-nowrap">Venda {v.numero}</span>
+                        <span className="text-gray-400 truncate flex-1">{v.cliente}</span>
+                        <span className="text-gray-500 whitespace-nowrap">{fmtData(v.data_conclusao)}</span>
+                        <span className="text-blue-400 font-bold whitespace-nowrap">{fmt(v.valor)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500">Abra a venda e gere as parcelas para criar o financeiro.</p>
                 </div>
               )}
             </>
