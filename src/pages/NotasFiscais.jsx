@@ -332,7 +332,7 @@ export default function NotasFiscais() {
 
   const load = async () => {
     const [n, c, configs, vendas, est, srv] = await Promise.all([
-      base44.entities.NotaFiscal.list("-created_date", 500),
+      base44.entities.NotaFiscal.list("-created_date", 9999),
       base44.entities.Cadastro.list("-created_date", 500),
       base44.entities.Configuracao.list("-created_date", 100),
       base44.entities.Vendas.list("-created_date", 500),
@@ -574,7 +574,7 @@ export default function NotasFiscais() {
     setImportando(true);
     if (xmlTexto.includes('<tpEvento>110111</tpEvento>') || xmlTexto.includes('<procCancNFe')) {
       const chaveM = xmlTexto.match(/<chNFe>(\d{44})<\/chNFe>/);
-      const notas2 = chaveM ? await base44.entities.NotaFiscal.list('-created_date', 500) : [];
+      const notas2 = chaveM ? await base44.entities.NotaFiscal.list('-created_date', 9999) : [];
       const notaEx = notas2.find(n => n.chave_acesso === chaveM?.[1]);
       if (notaEx) await base44.entities.NotaFiscal.update(notaEx.id, { status: 'Cancelada', xml_original: xmlTexto });
       else if (chaveM) await base44.entities.NotaFiscal.create({ tipo:'NFe', status:'Cancelada', chave_acesso: chaveM[1], xml_original: xmlTexto });
