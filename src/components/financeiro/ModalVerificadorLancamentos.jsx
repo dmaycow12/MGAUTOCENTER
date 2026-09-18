@@ -91,20 +91,20 @@ export default function ModalVerificadorLancamentos({ onClose, onCorrigido }) {
           {rel && (
             <>
               <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-xl border border-gray-800 bg-black/40 p-3">
+                <div className="rounded-xl border border-gray-800 bg-black/40 p-3 flex flex-col items-center text-center">
                   <FileText className="w-4 h-4 mb-1.5" style={{ color: "#4d7fff" }} />
                   <p className="text-xl font-bold text-white leading-none">{rel.total_lancadas}</p>
                   <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wide">Notas de entrada lançadas</p>
                 </div>
-                <div className="rounded-xl border border-gray-800 bg-black/40 p-3">
-                  <Wallet className="w-4 h-4 mb-1.5" style={{ color: "#4d7fff" }} />
-                  <p className="text-xl font-bold text-white leading-none">{rel.total_financeiro}</p>
-                  <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wide">Lançamentos no financeiro</p>
-                </div>
-                <div className="rounded-xl border border-gray-800 bg-black/40 p-3">
+                <div className="rounded-xl border border-gray-800 bg-black/40 p-3 flex flex-col items-center text-center">
                   <ClipboardCheck className="w-4 h-4 mb-1.5" style={{ color: "#4d7fff" }} />
                   <p className="text-xl font-bold text-white leading-none">{rel.total_vendas_concluidas}</p>
                   <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wide">Vendas concluídas</p>
+                </div>
+                <div className="rounded-xl border border-gray-800 bg-black/40 p-3 flex flex-col items-center text-center">
+                  <Wallet className="w-4 h-4 mb-1.5" style={{ color: "#4d7fff" }} />
+                  <p className="text-xl font-bold text-white leading-none">{rel.total_financeiro}</p>
+                  <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wide">Lançamentos no financeiro</p>
                 </div>
               </div>
 
