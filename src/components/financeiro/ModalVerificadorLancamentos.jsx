@@ -18,7 +18,7 @@ export default function ModalVerificadorLancamentos({ onClose, onCorrigido }) {
       const res = await base44.functions.invoke("verificarLancamentosFinanceiros", { acao: "verificar" });
       setRel(res.data);
     } catch (e) {
-      setErro("Erro ao verificar: " + (e.message || e));
+      setErro(e?.response?.data?.error || e?.message || String(e));
     }
   }, []);
 
@@ -79,7 +79,16 @@ export default function ModalVerificadorLancamentos({ onClose, onCorrigido }) {
         </div>
 
         <div className="p-5 space-y-4 overflow-y-auto">
-          {erro && <div className="rounded-xl px-4 py-3 text-sm font-medium" style={{ background: "#7f1d1d", color: "#fff" }}>{erro}</div>}
+          {erro && (
+            <div className="rounded-xl px-4 py-3 text-sm font-medium flex items-center justify-between gap-2 flex-wrap" style={{ background: "#7f1d1d", color: "#fff" }}>
+              <span>{erro}</span>
+              <button onClick={verificar} disabled={!!processando}
+                className="px-3 py-1 text-xs font-semibold rounded-lg transition-all disabled:opacity-50"
+                style={{ background: "#991b1b" }}>
+                {processando === "verificar" ? "Verificando..." : "Tentar novamente"}
+              </button>
+            </div>
+          )}
           {msg && <div className="rounded-xl px-4 py-3 text-sm font-medium" style={{ background: "#14532d", color: "#fff" }}>{msg}</div>}
 
           {!rel && !erro && (

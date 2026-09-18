@@ -14,16 +14,15 @@ const mapearForma = (fp) => {
 
 async function montarRelatorio(base44) {
   const [notas, fins, vendas] = await Promise.all([
-    base44.entities.NotaFiscal.list("-created_date", 9999),
+    base44.entities.NotaFiscal.filter({ status: "Lançada" }, "-created_date", 9999),
     base44.entities.Financeiro.list("-created_date", 9999),
-    base44.entities.Vendas.list("-created_date", 9999),
+    base44.entities.Vendas.filter({ status: "Concluído" }, "-created_date", 9999),
   ]);
 
   // 1) Notas de entrada com status "Lançada" que não têm lançamento financeiro correspondente
   const finKeys = new Set(fins.map((f) => norm(f.descricao).slice(0, 30)));
   const faltantes = notas
     .filter((n) =>
-      n.status === "Lançada" &&
       n.tipo === "NFe" &&
       !finKeys.has(norm(`NF ${n.numero} — ${n.cliente_nome}`).slice(0, 30))
     )
@@ -63,7 +62,7 @@ async function montarRelatorio(base44) {
   // 3) Vendas concluídas sem nenhum lançamento financeiro vinculado
   const finVendas = new Set(fins.map((f) => f.ordem_venda_id).filter(Boolean));
   const vendasSemFin = vendas
-    .filter((v) => v.status === "Concluído" && !finVendas.has(v.id))
+    .filter((v) => !finVendas.has(v.id))
     .map((v) => ({
       id: v.id,
       numero: v.numero || "",
@@ -75,8 +74,8 @@ async function montarRelatorio(base44) {
   const soma = (arr) => Math.round(arr.reduce((s, x) => s + Number(x.valor || 0), 0) * 100) / 100;
 
   return {
-    total_lancadas: notas.filter((n) => n.status === "Lançada" && n.tipo === "NFe").length,
-    total_vendas_concluidas: vendas.filter((v) => v.status === "Concluído").length,
+    total_lancadas: notas.filter((n) => n.tipo === "NFe").length,
+    total_vendas_concluidas: vendas.length,
     total_financeiro: fins.length,
     faltantes,
     duplicatas,
@@ -90,7 +89,12 @@ async function montarRelatorio(base44) {
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    let user;
+    try {
+      user = await base44.auth.me();
+    } catch (e) {
+      return Response.json({ error: "Sessão expirada — faça login novamente" }, { status: 401 });
+    }
     if (!user) return Response.json({ error: "Não autorizado" }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
