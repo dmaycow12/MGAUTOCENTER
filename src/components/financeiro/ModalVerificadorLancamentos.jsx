@@ -88,11 +88,13 @@ export default function ModalVerificadorLancamentos({ onClose, onCorrigido }) {
                 <span>{rel.total_lancadas} nota(s) de entrada lançada(s) verificadas</span>
                 <span>·</span>
                 <span>{rel.total_financeiro} lançamento(s) no financeiro</span>
+                <span>·</span>
+                <span>{rel.total_vendas_concluidas} venda(s) concluída(s) verificada(s)</span>
               </div>
 
               {ok && (
                 <div className="rounded-xl px-4 py-6 flex items-center justify-center gap-2 font-semibold" style={{ background: "#14532d", color: "#fff" }}>
-                  <ShieldCheck className="w-5 h-5" /> Tudo certo — nenhum lançamento faltando ou duplicado
+                  <ShieldCheck className="w-5 h-5" /> Tudo certo — notas de entrada, vendas e duplicatas verificados, nada faltando
                 </div>
               )}
 

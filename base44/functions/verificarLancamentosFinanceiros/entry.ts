@@ -76,6 +76,7 @@ async function montarRelatorio(base44) {
 
   return {
     total_lancadas: notas.filter((n) => n.status === "Lançada" && n.tipo === "NFe").length,
+    total_vendas_concluidas: vendas.filter((v) => v.status === "Concluído").length,
     total_financeiro: fins.length,
     faltantes,
     duplicatas,
