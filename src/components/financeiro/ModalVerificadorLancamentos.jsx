@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { X, ShieldCheck, AlertTriangle, Loader2, FileText, Wallet, ClipboardCheck, Check, RefreshCw } from "lucide-react";
+import { X, ShieldCheck, AlertTriangle, Loader2, Check, RefreshCw } from "lucide-react";
+import OrigemLancamentos from "@/components/financeiro/OrigemLancamentos";
 import { mostrarConfirm } from "@/lib/modalAviso";
 
 const fmtValor = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -11,27 +12,6 @@ const AZUL_CLARO = "#4d7fff";
 const VERDE = "#16a34a";
 const VERMELHO = "#cc0000";
 const AMARELO = "#eab308";
-
-function LinhaCheck({ icone: Icon, titulo, detalhe, status }) {
-  const cor = status === "ok" ? VERDE : status === "erro" ? VERMELHO : AMARELO;
-  return (
-    <div className="flex items-center gap-3 px-4 py-3">
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#111" }}>
-        <Icon className="w-4 h-4" style={{ color: AZUL_CLARO }} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-white leading-tight">{titulo}</p>
-        <p className="text-xs text-gray-500 truncate">{detalhe}</p>
-      </div>
-      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full flex-shrink-0" style={{ background: `${cor}1a`, border: `1px solid ${cor}55` }}>
-        {status === "ok" ? <Check className="w-3 h-3" style={{ color: VERDE }} /> : <AlertTriangle className="w-3 h-3" style={{ color: cor }} />}
-        <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: cor }}>
-          {status === "ok" ? "OK" : "Verificar"}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 export default function ModalVerificadorLancamentos({ onClose, onCorrigido }) {
   const [rel, setRel] = useState(null);
@@ -159,33 +139,8 @@ export default function ModalVerificadorLancamentos({ onClose, onCorrigido }) {
                 </div>
               )}
 
-              {/* Checklist */}
-              <div className="rounded-xl border border-gray-800 divide-y divide-gray-800/70 overflow-hidden">
-                <LinhaCheck
-                  icone={FileText}
-                  titulo="Notas de entrada"
-                  detalhe={faltantes.length === 0
-                    ? `${rel.total_lancadas} lançada(s) — todas com financeiro`
-                    : `${faltantes.length} de ${rel.total_lancadas} sem financeiro (${fmtValor(rel.faltantes_valor)})`}
-                  status={faltantes.length === 0 ? "ok" : "erro"}
-                />
-                <LinhaCheck
-                  icone={ClipboardCheck}
-                  titulo="Vendas concluídas"
-                  detalhe={vendasSemFin.length === 0
-                    ? `${rel.total_vendas_concluidas} venda(s) — todas com financeiro`
-                    : `${vendasSemFin.length} de ${rel.total_vendas_concluidas} sem financeiro (${fmtValor(rel.vendas_sem_fin_valor)})`}
-                  status={vendasSemFin.length === 0 ? "ok" : "erro"}
-                />
-                <LinhaCheck
-                  icone={Wallet}
-                  titulo="Lançamentos duplicados"
-                  detalhe={duplicatas.length === 0
-                    ? `Nenhuma duplicata entre ${rel.total_financeiro} lançamento(s)`
-                    : `${duplicatas.length} duplicata(s) (${fmtValor(rel.duplicatas_valor)})`}
-                  status={duplicatas.length === 0 ? "ok" : "erro"}
-                />
-              </div>
+              {/* Origem dos lançamentos */}
+              {rel.origem && <OrigemLancamentos origem={rel.origem} />}
 
               {/* Pendências: notas sem financeiro */}
               {faltantes.length > 0 && (

@@ -72,12 +72,36 @@ async function montarRelatorio(base44) {
       data_conclusao: v.data_conclusao || "",
     }));
 
+  // 4) Classificação dos lançamentos por origem
+  const vendasIds = new Set(vendas.map((v) => v.id));
+  const notaKeys = new Set(
+    notas.filter((n) => n.tipo === "NFe").map((n) => norm(`NF ${n.numero} — ${n.cliente_nome}`).slice(0, 30))
+  );
+  const origem = { vendas: { qtd: 0, valor: 0 }, notas_entrada: { qtd: 0, valor: 0 }, avulsos: { qtd: 0, valor: 0 }, cancelados: 0 };
+  for (const f of fins) {
+    if (f.status === "Cancelado") { origem.cancelados++; continue; }
+    const v = Number(f.valor || 0);
+    if (f.ordem_venda_id && vendasIds.has(f.ordem_venda_id)) {
+      origem.vendas.qtd++; origem.vendas.valor += v;
+    } else if (notaKeys.has(norm(f.descricao).slice(0, 30))) {
+      origem.notas_entrada.qtd++; origem.notas_entrada.valor += v;
+    } else {
+      origem.avulsos.qtd++; origem.avulsos.valor += v;
+    }
+  }
+
   const soma = (arr) => Math.round(arr.reduce((s, x) => s + Number(x.valor || 0), 0) * 100) / 100;
 
   return {
     total_lancadas: notas.filter((n) => n.status === "Lançada" && n.tipo === "NFe").length,
     total_vendas_concluidas: vendas.filter((v) => v.status === "Concluído").length,
     total_financeiro: fins.length,
+    origem: {
+      vendas: { qtd: origem.vendas.qtd, valor: Math.round(origem.vendas.valor * 100) / 100 },
+      notas_entrada: { qtd: origem.notas_entrada.qtd, valor: Math.round(origem.notas_entrada.valor * 100) / 100 },
+      avulsos: { qtd: origem.avulsos.qtd, valor: Math.round(origem.avulsos.valor * 100) / 100 },
+      cancelados: origem.cancelados,
+    },
     faltantes,
     duplicatas,
     faltantes_valor: soma(faltantes),
