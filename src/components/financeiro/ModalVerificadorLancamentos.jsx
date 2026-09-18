@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { X, ShieldCheck, AlertTriangle, Loader2 } from "lucide-react";
+import { X, ShieldCheck, AlertTriangle, Loader2, FileText, Wallet, ClipboardCheck } from "lucide-react";
 import { mostrarConfirm } from "@/lib/modalAviso";
 
 const fmt = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -64,11 +64,17 @@ export default function ModalVerificadorLancamentos({ onClose, onCorrigido }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between p-5 border-b border-gray-800">
-          <h2 className="text-white font-semibold flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5" style={{ color: "#4d7fff" }} /> Verificador de Lançamentos
-          </h2>
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl shadow-black/60">
+        <div className="flex items-center justify-between p-5 border-b border-gray-800" style={{ background: "linear-gradient(180deg, rgba(6,44,155,0.15), transparent)" }}>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#062C9B" }}>
+              <ShieldCheck className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-white font-semibold leading-tight">Verificador de Lançamentos</h2>
+              <p className="text-[11px] text-gray-500">AUDITORIA DE NOTAS DE ENTRADA, VENDAS E FINANCEIRO</p>
+            </div>
+          </div>
           <button onClick={onClose}><X className="w-5 h-5 text-gray-400 hover:text-white" /></button>
         </div>
 
@@ -84,17 +90,31 @@ export default function ModalVerificadorLancamentos({ onClose, onCorrigido }) {
 
           {rel && (
             <>
-              <div className="flex items-center gap-2 text-xs text-gray-400">
-                <span>{rel.total_lancadas} nota(s) de entrada lançada(s) verificadas</span>
-                <span>·</span>
-                <span>{rel.total_financeiro} lançamento(s) no financeiro</span>
-                <span>·</span>
-                <span>{rel.total_vendas_concluidas} venda(s) concluída(s) verificada(s)</span>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-xl border border-gray-800 bg-black/40 p-3">
+                  <FileText className="w-4 h-4 mb-1.5" style={{ color: "#4d7fff" }} />
+                  <p className="text-xl font-bold text-white leading-none">{rel.total_lancadas}</p>
+                  <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wide">Notas de entrada lançadas</p>
+                </div>
+                <div className="rounded-xl border border-gray-800 bg-black/40 p-3">
+                  <Wallet className="w-4 h-4 mb-1.5" style={{ color: "#4d7fff" }} />
+                  <p className="text-xl font-bold text-white leading-none">{rel.total_financeiro}</p>
+                  <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wide">Lançamentos no financeiro</p>
+                </div>
+                <div className="rounded-xl border border-gray-800 bg-black/40 p-3">
+                  <ClipboardCheck className="w-4 h-4 mb-1.5" style={{ color: "#4d7fff" }} />
+                  <p className="text-xl font-bold text-white leading-none">{rel.total_vendas_concluidas}</p>
+                  <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wide">Vendas concluídas</p>
+                </div>
               </div>
 
               {ok && (
-                <div className="rounded-xl px-4 py-6 flex items-center justify-center gap-2 font-semibold" style={{ background: "#14532d", color: "#fff" }}>
-                  <ShieldCheck className="w-5 h-5" /> Tudo certo — notas de entrada, vendas e duplicatas verificados, nada faltando
+                <div className="rounded-2xl p-6 flex flex-col items-center text-center gap-2" style={{ background: "linear-gradient(135deg, #0d2b16, #14532d)", border: "1px solid rgba(22,163,74,0.5)" }}>
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "#16a34a" }}>
+                    <ShieldCheck className="w-6 h-6 text-white" />
+                  </div>
+                  <p className="text-white font-bold text-base">Tudo certo!</p>
+                  <p className="text-xs text-green-300/80">Notas de entrada, vendas e duplicatas verificados — nada faltando</p>
                 </div>
               )}
 
@@ -175,9 +195,8 @@ export default function ModalVerificadorLancamentos({ onClose, onCorrigido }) {
           )}
         </div>
 
-        <div className="flex justify-end gap-0.5 p-5 border-t border-gray-800">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-white rounded-lg font-medium transition-all"
-            style={{ background: "#cc0000" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#aa0000")} onMouseLeave={(e) => (e.currentTarget.style.background = "#cc0000")}>
+        <div className="flex justify-end p-5 border-t border-gray-800">
+          <button onClick={onClose} className="px-5 py-2 text-sm text-white rounded-lg font-medium transition-all hover:bg-gray-700" style={{ background: "#1f2937" }}>
             Fechar
           </button>
         </div>
