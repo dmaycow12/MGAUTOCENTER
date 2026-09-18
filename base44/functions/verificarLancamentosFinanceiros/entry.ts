@@ -89,13 +89,22 @@ async function montarRelatorio(base44) {
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-    let user;
-    try {
-      user = await base44.auth.me();
-    } catch (e) {
-      return Response.json({ error: "Sessão expirada — faça login novamente" }, { status: 401 });
+    let user = null;
+    let authErro = "";
+    for (let i = 0; i < 2 && !user; i++) {
+      try {
+        user = await base44.auth.me();
+      } catch (e) {
+        authErro = e?.message || String(e);
+      }
     }
-    if (!user) return Response.json({ error: "Não autorizado" }, { status: 401 });
+    if (!user) {
+      return Response.json({
+        error: authErro
+          ? `Falha ao confirmar sua sessão (${authErro}). Tente novamente — se persistir, feche o site, faça login e reabra.`
+          : "Não autorizado — faça login novamente.",
+      }, { status: 401 });
+    }
 
     const body = await req.json().catch(() => ({}));
     const acao = String((body && body.acao) || "verificar");

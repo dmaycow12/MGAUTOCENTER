@@ -32,7 +32,7 @@ export default function ModalVerificadorLancamentos({ onClose, onCorrigido }) {
       setMsg(res.data?.mensagem || "Lançamentos criados.");
       if (onCorrigido) onCorrigido();
     } catch (e) {
-      setErro(e.message || String(e));
+      setErro(e?.response?.data?.error || e?.message || String(e));
     }
     setProcessando("");
   };
@@ -49,7 +49,7 @@ export default function ModalVerificadorLancamentos({ onClose, onCorrigido }) {
           setMsg(res.data?.mensagem || "Duplicatas removidas.");
           if (onCorrigido) onCorrigido();
         } catch (e) {
-          setErro(e.message || String(e));
+          setErro(e?.response?.data?.error || e?.message || String(e));
         }
         setProcessando("");
       },
