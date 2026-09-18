@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { mostrarAlerta, mostrarConfirm } from "@/lib/modalAviso";
-import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Edit, Trash2, FileText, Download, CheckSquare, Square } from "lucide-react";
+import { Plus, Search, TrendingUp, TrendingDown, DollarSign, X, Filter, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List, Edit, Trash2, FileText, Download, CheckSquare, Square, ShieldCheck, AlertTriangle } from "lucide-react";
 
 async function baixarBoleto(paymentId, fallbackUrl) {
   try {
@@ -56,6 +56,7 @@ import FinanceiroCard from "@/components/financeiro/FinanceiroCard";
 import FluxoMes from "@/components/dashboard/FluxoMes";
 import AbaComissoes from "@/components/financeiro/AbaComissoes";
 import ModalGerarBoleto from "@/components/financeiro/ModalGerarBoleto";
+import ModalVerificador from "@/components/financeiro/ModalVerificadorLancamentos";
 
 const defaultForm = () => ({
   tipo: "Receita", categoria: "", descricao: "", valor: 0,
@@ -103,6 +104,8 @@ export default function Financeiro() {
   const [sortCol, setSortCol] = useState("data_vencimento");
   const [sortDir, setSortDir] = useState("asc");
   const [itemBoleto, setItemBoleto] = useState(null);
+  const [relVerif, setRelVerif] = useState(null);
+  const [verificadorOpen, setVerificadorOpen] = useState(false);
   const [selecionados, setSelecionados] = useState(new Set());
   const [modoSelecao, setModoSelecao] = useState(false);
   const periodoDropRef = useRef(null);
@@ -174,6 +177,14 @@ export default function Financeiro() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const verificarLancamentos = async () => {
+    try {
+      const res = await base44.functions.invoke("verificarLancamentosFinanceiros", { acao: "verificar" });
+      setRelVerif(res.data || null);
+    } catch (_) { setRelVerif(null); }
+  };
+  useEffect(() => { verificarLancamentos(); }, []);
 
   const load = async () => {
     try {
@@ -402,7 +413,23 @@ export default function Financeiro() {
               <button onClick={() => { setForm({ ...defaultForm(), tipo: "Saída" }); setShowForm(true); setEditando(null); }} className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all" style={{background: "#cc0000", color: "#fff"}} onMouseEnter={e => e.currentTarget.style.background = "#aa0000"} onMouseLeave={e => e.currentTarget.style.background = "#cc0000"}>
                 <Plus className="w-4 h-4" /> Saída
               </button>
+              <button onClick={() => setVerificadorOpen(true)}
+                className="w-32 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-all bg-gray-800 border border-gray-700 text-white hover:bg-[#062C9B] flex-shrink-0"
+                title="Conferir se as notas lançadas têm lançamento financeiro e se há duplicatas">
+                <ShieldCheck className="w-4 h-4" /> Verificar
+              </button>
             </div>
+
+        {relVerif && ((relVerif.faltantes?.length || 0) > 0 || (relVerif.duplicatas?.length || 0) > 0) && (
+          <button onClick={() => setVerificadorOpen(true)}
+            className="w-full rounded-xl px-4 py-2.5 flex items-center gap-2 text-left transition-all"
+            style={{ background: "#7f1d1d", border: "1px solid #dc2626", color: "#fff" }}>
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            <span className="text-xs font-semibold">
+              ATENÇÃO: {relVerif.faltantes?.length || 0} NOTA(S) LANÇADA(S) SEM FINANCEIRO · {relVerif.duplicatas?.length || 0} DUPLICATA(S) — CLIQUE PARA CORRIGIR
+            </span>
+          </button>
+        )}
 
         {/* Filtro de Período */}
         <div className="flex gap-0.5 items-center">
@@ -703,6 +730,7 @@ export default function Financeiro() {
 
       <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#f97316; } .input-dark::placeholder { color:#6b7280; }`}</style>
       {itemBoleto && <ModalGerarBoleto item={itemBoleto} onClose={() => { setItemBoleto(null); load(); }} onSuccess={load} />}
+      {verificadorOpen && <ModalVerificador onClose={() => { setVerificadorOpen(false); verificarLancamentos(); load(); }} onCorrigido={() => load()} />}
       </React.Fragment>
       )} {/* fim abaAtiva === lancamentos */}
     </div>
