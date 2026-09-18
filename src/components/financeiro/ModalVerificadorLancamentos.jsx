@@ -6,6 +6,13 @@ import { mostrarConfirm } from "@/lib/modalAviso";
 const fmt = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const fmtData = (d) => (d ? d.split("-").reverse().join("/") : "—");
 
+const BadgeOk = () => (
+  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide flex-shrink-0" style={{ background: "rgba(22,163,74,0.15)", color: "#4ade80", border: "1px solid rgba(22,163,74,0.4)" }}>OK</span>
+);
+const BadgeErro = () => (
+  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide flex-shrink-0" style={{ background: "rgba(204,0,0,0.15)", color: "#f87171", border: "1px solid rgba(204,0,0,0.4)" }}>Atenção</span>
+);
+
 export default function ModalVerificadorLancamentos({ onClose, onCorrigido }) {
   const [rel, setRel] = useState(null);
   const [erro, setErro] = useState("");
@@ -90,23 +97,47 @@ export default function ModalVerificadorLancamentos({ onClose, onCorrigido }) {
 
           {rel && (
             <>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-xl border border-gray-800 bg-black/40 p-3">
-                  <FileText className="w-4 h-4 mb-1.5" style={{ color: "#4d7fff" }} />
-                  <p className="text-xl font-bold text-white leading-none">{rel.total_lancadas}</p>
-                  <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wide">Notas de entrada lançadas</p>
+              <div className="rounded-xl border border-gray-800 bg-black/40 divide-y divide-gray-800/80">
+                <div className="flex items-center gap-3 p-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-4 h-4" style={{ color: "#4d7fff" }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white leading-tight">Notas de entrada (NFe)</p>
+                    <p className="text-xs text-gray-500">
+                      {rel.total_lancadas} nota(s) lançada(s) · {faltantes.length === 0 ? "todas com financeiro" : `${faltantes.length} sem financeiro`}
+                    </p>
+                  </div>
+                  {faltantes.length === 0 ? <BadgeOk /> : <BadgeErro />}
                 </div>
-                <div className="rounded-xl border border-gray-800 bg-black/40 p-3">
-                  <Wallet className="w-4 h-4 mb-1.5" style={{ color: "#4d7fff" }} />
-                  <p className="text-xl font-bold text-white leading-none">{rel.total_financeiro}</p>
-                  <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wide">Lançamentos no financeiro</p>
+                <div className="flex items-center gap-3 p-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0">
+                    <ClipboardCheck className="w-4 h-4" style={{ color: "#4d7fff" }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white leading-tight">Vendas concluídas</p>
+                    <p className="text-xs text-gray-500">
+                      {rel.total_vendas_concluidas} venda(s) · {vendasSemFin.length === 0 ? "todas com financeiro" : `${vendasSemFin.length} sem financeiro`}
+                    </p>
+                  </div>
+                  {vendasSemFin.length === 0 ? <BadgeOk /> : <BadgeErro />}
                 </div>
-                <div className="rounded-xl border border-gray-800 bg-black/40 p-3">
-                  <ClipboardCheck className="w-4 h-4 mb-1.5" style={{ color: "#4d7fff" }} />
-                  <p className="text-xl font-bold text-white leading-none">{rel.total_vendas_concluidas}</p>
-                  <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wide">Vendas concluídas</p>
+                <div className="flex items-center gap-3 p-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0">
+                    <Wallet className="w-4 h-4" style={{ color: "#4d7fff" }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white leading-tight">Duplicatas</p>
+                    <p className="text-xs text-gray-500">
+                      {duplicatas.length === 0 ? "nenhuma duplicata encontrada" : `${duplicatas.length} lançamento(s) duplicado(s)`}
+                    </p>
+                  </div>
+                  {duplicatas.length === 0 ? <BadgeOk /> : <BadgeErro />}
                 </div>
               </div>
+              <p className="text-[10px] text-gray-600 text-center">
+                BASE ANALISADA: {rel.total_lancadas} NOTAS LANÇADAS · {rel.total_vendas_concluidas} VENDAS CONCLUÍDAS · {rel.total_financeiro} LANÇAMENTOS NO FINANCEIRO
+              </p>
 
               {ok && (
                 <div className="rounded-2xl p-6 flex flex-col items-center text-center gap-2" style={{ background: "linear-gradient(135deg, #0d2b16, #14532d)", border: "1px solid rgba(22,163,74,0.5)" }}>
