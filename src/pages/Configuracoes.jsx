@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Settings, Save, CheckCircle, ChevronDown } from "lucide-react";
 import BackupManager from "../components/backup/BackupManager";
-import AreaDados from "../components/dados/AreaDados";
 
 export default function Configuracoes() {
   const CHAVES = ["nome_oficina", "cnpj", "telefone", "email", "endereco", "cidade", "estado", "cep",
@@ -230,8 +229,6 @@ export default function Configuracoes() {
       </div>
 
       <BackupManager />
-
-      <AreaDados />
 
       <style>{`.input-dark { width:100%; background:#1f2937; border:1px solid #374151; color:#fff; border-radius:8px; padding:8px 12px; font-size:14px; outline:none; } .input-dark:focus { border-color:#22c55e; } .input-dark::placeholder { color:#6b7280; }`}</style>
     </form>
