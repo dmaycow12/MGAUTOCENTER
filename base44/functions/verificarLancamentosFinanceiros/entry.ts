@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { autenticarRequisicao } from '../../shared/portaoAutenticacao.ts';
 
 const norm = (s) => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 
@@ -91,23 +92,8 @@ export default async function(req) {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
 
-    // Portão de autenticação: valida o token do usuário logado.
-    // auth.me() tem falhado no site publicado ("Authentication required to view users"),
-    // então, como alternativa, valida com uma leitura leve no próprio Financeiro.
-    let autenticado = false;
-    let authErro = "";
-    try {
-      await base44.auth.me();
-      autenticado = true;
-    } catch (e) {
-      authErro = e?.message || String(e);
-    }
-    if (!autenticado) {
-      try {
-        await base44.entities.Financeiro.list("-created_date", 1);
-        autenticado = true;
-      } catch (e) {}
-    }
+    // Portão de autenticação compartilhado (auth.me() + leitura leve no Financeiro como alternativa)
+    const { autenticado, authErro } = await autenticarRequisicao(base44);
     if (!autenticado) {
       return Response.json({ error: `Não autenticado (${authErro || "token ausente"}). Faça login novamente.` }, { status: 401 });
     }
