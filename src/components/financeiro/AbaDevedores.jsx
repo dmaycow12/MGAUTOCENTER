@@ -1,80 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
-import { Search, Users } from "lucide-react";
+import { Search, Users, ChevronDown } from "lucide-react";
 
 const PAGAMENTO_OPTIONS = ["A Combinar", "Boleto", "Cartão", "Dinheiro", "PIX"];
 const fmt = (v) => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
-const fmtData = (d) => !d ? "—" : d.split("-").reverse().join("/");
-
-function DevedorCard({ grupo, onAlterarStatus, onAlterarPagamento }) {
-  return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 transition-all overflow-hidden">
-      {/* Cabeçalho do devedor */}
-      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-800" style={{ background: "#16202c" }}>
-        <div className="flex-1 min-w-0">
-          <p className="text-white text-sm font-bold truncate">{grupo.nome}</p>
-          <p className="text-gray-400 text-xs">{grupo.registros.length} parcela(s) em aberto</p>
-        </div>
-        <span className="text-base font-bold text-white whitespace-nowrap">R$ {fmt(grupo.total)}</span>
-      </div>
-
-      {/* Parcelas */}
-      {grupo.registros.map(item => (
-        <div key={item.id} className="px-3 py-2.5 border-b border-gray-800 last:border-0">
-          <div className="flex items-center gap-2 mb-2">
-            <span className={`text-xs w-20 flex-shrink-0 ${item.status === "Atrasado" ? "text-red-400 font-bold" : "text-gray-400"}`}>
-              {fmtData(item.data_vencimento)}
-            </span>
-            <span className="flex-1 text-xs text-white truncate min-w-0">{item.descricao}</span>
-            <span className="text-xs font-bold text-green-400 whitespace-nowrap">R$ {fmt(item.valor)}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <select
-              value={item.forma_pagamento || ""}
-              onChange={e => { if (e.target.value) onAlterarPagamento(item, e.target.value); }}
-              className="bg-gray-800 border border-gray-700 text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-orange-500 flex-1 min-w-0"
-              title="Forma de pagamento"
-            >
-              <option value="">— Forma —</option>
-              {PAGAMENTO_OPTIONS.map(op => <option key={op} value={op}>{op}</option>)}
-            </select>
-            <div className="flex gap-0.5 flex-shrink-0">
-              {["Pendente", "Pago"].map(s => {
-                const bloqueado = s === "Pago" && (!item.forma_pagamento || item.forma_pagamento === "A Combinar");
-                const isActive = item.status === s || (s === "Pendente" && item.status === "Atrasado");
-                return (
-                  <button key={s}
-                    onClick={() => {
-                      if (bloqueado) return toast.error("Defina a forma de pagamento antes de marcar como Pago.");
-                      onAlterarStatus(item, s);
-                    }}
-                    className="rounded-lg text-xs font-bold transition-all"
-                    style={{
-                      width: 64,
-                      padding: "5px 0",
-                      background: isActive ? (s === "Pago" ? "#16a34a" : "#cc0000") : "#374151",
-                      color: "#fff",
-                      opacity: isActive ? 1 : bloqueado ? 0.25 : 0.45,
-                      cursor: bloqueado ? "not-allowed" : "pointer",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {s}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function AbaDevedores({ items, onAlterarStatus, onAlterarPagamento }) {
   const [nomesVendas, setNomesVendas] = useState({});
   const [search, setSearch] = useState("");
+  const [fechados, setFechados] = useState(new Set());
 
   const abertos = (items || []).filter(i => i.status === "Pendente" || i.status === "Atrasado");
 
@@ -112,7 +47,7 @@ export default function AbaDevedores({ items, onAlterarStatus, onAlterarPagament
     grupos[nome].push(i);
   });
 
-  const listaGrupos = Object.entries(grupos).map(([nome, registros]) => {
+  let listaGrupos = Object.entries(grupos).map(([nome, registros]) => {
     const nomeMatch = busca && nome.toLowerCase().includes(busca);
     const regs = nomeMatch ? registros : registros.filter(r => !busca || (r.descricao || "").toLowerCase().includes(busca));
     return {
@@ -120,9 +55,16 @@ export default function AbaDevedores({ items, onAlterarStatus, onAlterarPagament
       registros: [...regs].sort((a, b) => (a.data_vencimento || "").localeCompare(b.data_vencimento || "")),
       total: regs.reduce((a, i) => a + Number(i.valor || 0), 0),
     };
-  }).filter(g => g.registros.length > 0).sort((a, b) => b.total - a.total);
+  }).filter(g => g.registros.length > 0);
+  listaGrupos.sort((a, b) => b.total - a.total);
 
   const totalGeral = abertos.reduce((a, i) => a + Number(i.valor || 0), 0);
+
+  const toggleGrupo = (nome) => setFechados(prev => {
+    const n = new Set(prev);
+    if (n.has(nome)) n.delete(nome); else n.add(nome);
+    return n;
+  });
 
   return (
     <div className="flex flex-col gap-0.5">
@@ -142,16 +84,65 @@ export default function AbaDevedores({ items, onAlterarStatus, onAlterarPagament
         </div>
       </div>
 
-      {/* Cards por devedor */}
-      {listaGrupos.length === 0 ? (
+      {/* Grupos por devedor */}
+      {listaGrupos.map(g => (
+        <div key={g.nome} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <button onClick={() => toggleGrupo(g.nome)} className="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-800/40 transition-all">
+            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ${fechados.has(g.nome) ? "-rotate-90" : ""}`} />
+            <span className="text-white font-semibold text-sm flex-1 text-left truncate">{g.nome}</span>
+            <span className="text-xs text-gray-400 flex-shrink-0">{g.registros.length} parcela(s)</span>
+            <span className="text-sm font-bold text-white flex-shrink-0 w-28 text-right">R$ {fmt(g.total)}</span>
+          </button>
+          {!fechados.has(g.nome) && g.registros.map(item => (
+            <div key={item.id} className="flex items-center gap-2 px-4 py-2.5 border-t border-gray-800 hover:bg-gray-800/40 transition-all">
+              <span className={`text-xs w-20 text-center flex-shrink-0 ${item.status === "Atrasado" ? "text-red-400 font-bold" : "text-gray-400"}`}>
+                {item.data_vencimento ? item.data_vencimento.split("-").reverse().join("/") : "—"}
+              </span>
+              <span className="flex-1 text-xs text-white truncate min-w-0">{item.descricao}</span>
+              <span className="text-xs font-bold text-green-400 w-24 text-right flex-shrink-0">R$ {fmt(item.valor)}</span>
+              <select
+                value={item.forma_pagamento || ""}
+                onChange={e => { if (e.target.value) onAlterarPagamento(item, e.target.value); }}
+                className="bg-gray-800 border border-gray-700 text-white rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-orange-500 w-28 flex-shrink-0"
+                title="Forma de pagamento"
+              >
+                <option value="">—</option>
+                {PAGAMENTO_OPTIONS.map(op => <option key={op} value={op}>{op}</option>)}
+              </select>
+              <div className="flex gap-0.5 flex-shrink-0">
+                {["Pendente", "Pago"].map(s => {
+                  const bloqueado = s === "Pago" && (!item.forma_pagamento || item.forma_pagamento === "A Combinar");
+                  const isActive = item.status === s || (s === "Pendente" && item.status === "Atrasado");
+                  return (
+                    <button key={s}
+                      onClick={() => {
+                        if (bloqueado) return toast.error("Defina a forma de pagamento antes de marcar como Pago.");
+                        onAlterarStatus(item, s);
+                      }}
+                      className="rounded-lg text-xs font-bold transition-all"
+                      style={{
+                        width: 60,
+                        padding: "4px 0",
+                        background: isActive ? (s === "Pago" ? "#16a34a" : "#cc0000") : "#374151",
+                        color: "#fff",
+                        opacity: isActive ? 1 : bloqueado ? 0.25 : 0.45,
+                        cursor: bloqueado ? "not-allowed" : "pointer",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {s}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+
+      {listaGrupos.length === 0 && (
         <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-12 text-center">
           <p className="text-gray-500">Nenhuma parcela em aberto</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0.5">
-          {listaGrupos.map(g => (
-            <DevedorCard key={g.nome} grupo={g} onAlterarStatus={onAlterarStatus} onAlterarPagamento={onAlterarPagamento} />
-          ))}
         </div>
       )}
     </div>
