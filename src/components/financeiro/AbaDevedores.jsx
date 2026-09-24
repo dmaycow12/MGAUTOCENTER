@@ -9,7 +9,7 @@ const fmt = (v) => Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigit
 export default function AbaDevedores({ items, onAlterarStatus, onAlterarPagamento }) {
   const [nomesVendas, setNomesVendas] = useState({});
   const [search, setSearch] = useState("");
-  const [fechados, setFechados] = useState(new Set());
+  const [expandidos, setExpandidos] = useState(new Set());
 
   const abertos = (items || []).filter(i => i.status === "Pendente" || i.status === "Atrasado");
 
@@ -60,7 +60,7 @@ export default function AbaDevedores({ items, onAlterarStatus, onAlterarPagament
 
   const totalGeral = abertos.reduce((a, i) => a + Number(i.valor || 0), 0);
 
-  const toggleGrupo = (nome) => setFechados(prev => {
+  const toggleGrupo = (nome) => setExpandidos(prev => {
     const n = new Set(prev);
     if (n.has(nome)) n.delete(nome); else n.add(nome);
     return n;
@@ -88,12 +88,12 @@ export default function AbaDevedores({ items, onAlterarStatus, onAlterarPagament
       {listaGrupos.map(g => (
         <div key={g.nome} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
           <button onClick={() => toggleGrupo(g.nome)} className="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-800/40 transition-all">
-            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ${fechados.has(g.nome) ? "-rotate-90" : ""}`} />
+            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 ${expandidos.has(g.nome) ? "" : "-rotate-90"}`} />
             <span className="text-white font-semibold text-sm flex-1 text-left truncate">{g.nome}</span>
             <span className="text-xs text-gray-400 flex-shrink-0">{g.registros.length} parcela(s)</span>
             <span className="text-sm font-bold text-white flex-shrink-0 w-28 text-right">R$ {fmt(g.total)}</span>
           </button>
-          {!fechados.has(g.nome) && g.registros.map(item => (
+          {expandidos.has(g.nome) && g.registros.map(item => (
             <div key={item.id} className="flex items-center gap-2 px-4 py-2.5 border-t border-gray-800 hover:bg-gray-800/40 transition-all">
               <span className={`text-xs w-20 text-center flex-shrink-0 ${item.status === "Atrasado" ? "text-red-400 font-bold" : "text-gray-400"}`}>
                 {item.data_vencimento ? item.data_vencimento.split("-").reverse().join("/") : "—"}
