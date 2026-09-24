@@ -55,6 +55,7 @@ const STATUS_BG_LIST = { "Pendente": "#cc0000", "Pago": "#16a34a", "Atrasado": "
 import FinanceiroCard from "@/components/financeiro/FinanceiroCard";
 import FluxoMes from "@/components/dashboard/FluxoMes";
 import AbaComissoes from "@/components/financeiro/AbaComissoes";
+import AbaDevedores from "@/components/financeiro/AbaDevedores";
 import ModalGerarBoleto from "@/components/financeiro/ModalGerarBoleto";
 import ModalVerificador from "@/components/financeiro/ModalVerificadorLancamentos";
 
@@ -391,6 +392,7 @@ export default function Financeiro() {
       <div className="flex gap-0.5">
         {[
           { key: "lancamentos", label: "Lançamentos" },
+          { key: "devedores", label: "Devedores" },
           { key: "comissoes", label: "Comissões" },
         ].map(aba => (
           <button key={aba.key} onClick={() => { setAbaAtiva(aba.key); localStorage.setItem("fin_aba", aba.key); }}
@@ -400,6 +402,8 @@ export default function Financeiro() {
           </button>
         ))}
       </div>
+
+      {abaAtiva === "devedores" && <AbaDevedores items={items} onAlterarStatus={alterarStatus} onAlterarPagamento={alterarPagamento} />}
 
       {abaAtiva === "comissoes" && <AbaComissoes />}
 
